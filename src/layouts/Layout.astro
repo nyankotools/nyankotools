@@ -41,6 +41,22 @@ const fullTitle = `${title} | ${siteName}`;
 <!doctype html>
 <html lang={lang}>
   <head>
+    <script is:inline>
+      (function () {
+        try {
+          const stored = localStorage.getItem('theme');
+          const theme =
+            stored === 'light' || stored === 'dark' ? stored : 'system';
+          const isDark =
+            theme === 'dark' ||
+            (theme === 'system' &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.classList.toggle('dark', isDark);
+        } catch {
+          // localStorageが使えない環境では初期表示はライトのままにする
+        }
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{fullTitle}</title>
@@ -76,9 +92,9 @@ const fullTitle = `${title} | ${siteName}`;
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="generator" content={Astro.generator} />
   </head>
-  <body class="min-h-screen bg-gray-50 text-gray-900">
+  <body class="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
     <div class="flex min-h-screen flex-col md:flex-row">
-      <header class="flex items-center justify-between border-b border-gray-200 bg-white p-4 md:hidden">
+      <header class="flex items-center justify-between border-b border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900 md:hidden">
         <a href={lang === 'en' ? '/en/' : '/'} class="block">
           <img src="/logo.png" alt={siteName} class="h-8 w-auto" />
         </a>
@@ -88,7 +104,7 @@ const fullTitle = `${title} | ${siteName}`;
           aria-expanded="false"
           aria-controls="sidebar"
           aria-label={t('nav.menu.open')}
-          class="rounded p-2 text-gray-700 hover:bg-gray-100"
+          class="rounded p-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -114,7 +130,7 @@ const fullTitle = `${title} | ${siteName}`;
 
       <aside
         id="sidebar"
-        class="fixed inset-y-0 left-0 z-40 w-72 max-w-[80%] -translate-x-full overflow-y-auto border-r border-gray-200 bg-white p-4 transition-transform duration-200 ease-in-out md:static md:z-auto md:w-64 md:translate-x-0 md:border-r"
+        class="fixed inset-y-0 left-0 z-40 w-72 max-w-[80%] -translate-x-full overflow-y-auto border-r border-gray-200 bg-white p-4 transition-transform duration-200 ease-in-out dark:border-gray-800 dark:bg-gray-900 md:static md:z-auto md:w-64 md:translate-x-0 md:border-r"
       >
         <a href={lang === 'en' ? '/en/' : '/'} class="mb-4 hidden md:block">
           <img
@@ -136,7 +152,7 @@ const fullTitle = `${title} | ${siteName}`;
                 <li>
                   <a
                     href={href}
-                    class="block rounded px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 aria-[current=page]:bg-blue-50 aria-[current=page]:font-semibold aria-[current=page]:text-blue-700"
+                    class="block rounded px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 aria-[current=page]:bg-blue-50 aria-[current=page]:font-semibold aria-[current=page]:text-blue-700 dark:text-gray-300 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=page]:bg-blue-950/40 dark:aria-[current=page]:text-blue-400"
                     aria-current={pathname === href ? 'page' : undefined}
                   >
                     {tool.name}
@@ -146,7 +162,7 @@ const fullTitle = `${title} | ${siteName}`;
             })}
           </ul>
         </nav>
-        <div class="mt-4 border-t border-gray-200 pt-4">
+        <div class="mt-4 border-t border-gray-200 pt-4 dark:border-gray-800">
           <span class="sr-only">{t('nav.language')}</span>
           <div
             class="flex gap-2 text-sm"
@@ -157,21 +173,56 @@ const fullTitle = `${title} | ${siteName}`;
               href={jaURL.pathname}
               hreflang="ja"
               aria-current={lang === 'ja' ? 'true' : undefined}
-              class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=true]:font-semibold aria-[current=true]:text-blue-700"
+              class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=true]:font-semibold aria-[current=true]:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=true]:text-blue-400"
             >
               {languageNames.ja}
             </a>
-            <span class="text-gray-300" aria-hidden="true">
+            <span class="text-gray-300 dark:text-gray-700" aria-hidden="true">
               |
             </span>
             <a
               href={enURL.pathname}
               hreflang="en"
               aria-current={lang === 'en' ? 'true' : undefined}
-              class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=true]:font-semibold aria-[current=true]:text-blue-700"
+              class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=true]:font-semibold aria-[current=true]:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=true]:text-blue-400"
             >
               {languageNames.en}
             </a>
+          </div>
+        </div>
+
+        <div class="mt-4 border-t border-gray-200 pt-4 dark:border-gray-800">
+          <span class="sr-only">{t('nav.theme')}</span>
+          <div
+            id="theme-switcher"
+            class="flex gap-1 text-sm"
+            role="group"
+            aria-label={t('nav.theme')}
+          >
+            <button
+              type="button"
+              data-theme-option="light"
+              aria-pressed="false"
+              class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-pressed:font-semibold aria-pressed:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-pressed:text-blue-400"
+            >
+              {t('nav.theme.light')}
+            </button>
+            <button
+              type="button"
+              data-theme-option="dark"
+              aria-pressed="false"
+              class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-pressed:font-semibold aria-pressed:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-pressed:text-blue-400"
+            >
+              {t('nav.theme.dark')}
+            </button>
+            <button
+              type="button"
+              data-theme-option="system"
+              aria-pressed="false"
+              class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-pressed:font-semibold aria-pressed:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-pressed:text-blue-400"
+            >
+              {t('nav.theme.system')}
+            </button>
           </div>
         </div>
       </aside>
@@ -179,10 +230,10 @@ const fullTitle = `${title} | ${siteName}`;
         <div class="flex-1">
           <slot />
         </div>
-        <footer class="mt-10 border-t border-gray-200 pt-4 text-xs text-gray-500">
+        <footer class="mt-10 border-t border-gray-200 pt-4 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">
           <a
             href={lang === 'en' ? '/en/privacy-policy/' : '/privacy-policy/'}
-            class="hover:text-blue-700 hover:underline"
+            class="hover:text-blue-700 hover:underline dark:hover:text-blue-400"
           >
             {t('footer.privacy')}
           </a>
@@ -232,6 +283,62 @@ const fullTitle = `${title} | ${siteName}`;
       mql.addEventListener('change', (event) => {
         if (event.matches) {
           closeSidebar();
+        }
+      });
+
+      type Theme = 'light' | 'dark' | 'system';
+      const THEME_KEY = 'theme';
+      const themeButtons = document.querySelectorAll<HTMLButtonElement>(
+        '[data-theme-option]',
+      );
+      const darkMql = window.matchMedia('(prefers-color-scheme: dark)');
+
+      function getStoredTheme(): Theme {
+        try {
+          const stored = localStorage.getItem(THEME_KEY);
+          if (stored === 'light' || stored === 'dark') return stored;
+        } catch {
+          // localStorageが使えない環境は無視してシステム設定に従う
+        }
+        return 'system';
+      }
+
+      function applyTheme(theme: Theme) {
+        const isDark =
+          theme === 'dark' || (theme === 'system' && darkMql.matches);
+        document.documentElement.classList.toggle('dark', isDark);
+        themeButtons.forEach((button) => {
+          button.setAttribute(
+            'aria-pressed',
+            String(button.dataset.themeOption === theme),
+          );
+        });
+      }
+
+      function setTheme(theme: Theme) {
+        try {
+          if (theme === 'system') {
+            localStorage.removeItem(THEME_KEY);
+          } else {
+            localStorage.setItem(THEME_KEY, theme);
+          }
+        } catch {
+          // localStorageが使えない環境では保存せず今回の表示だけ反映する
+        }
+        applyTheme(theme);
+      }
+
+      applyTheme(getStoredTheme());
+
+      themeButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          setTheme(button.dataset.themeOption as Theme);
+        });
+      });
+
+      darkMql.addEventListener('change', () => {
+        if (getStoredTheme() === 'system') {
+          applyTheme('system');
         }
       });
     </script>

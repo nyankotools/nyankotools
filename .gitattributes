@@ -1,0 +1,11 @@
+# 改行コードを LF（世界標準）に統一する。
+# Windows でチェックアウトしても Git が自動で CRLF に変換しないようにする。
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.woff binary
+*.woff2 binary

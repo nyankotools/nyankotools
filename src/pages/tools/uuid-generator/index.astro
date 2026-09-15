@@ -1,5 +1,19 @@
 ---
+import Glossary from '../../../components/Glossary.astro';
 import Layout from '../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'UUID',
+    description:
+      'Universally Unique Identifier の略で、世界中で重複しないことを目的として生成される識別子です。データベースの主キーなど、一意性が求められる場面で使われます。',
+  },
+  {
+    term: 'RFC 4122',
+    description:
+      'UUIDの生成方法を定めたインターネット標準の仕様書です。このツールは「バージョン4」と呼ばれる、乱数を元にした生成方式に準拠しています。',
+  },
+];
 ---
 
 <Layout
@@ -86,6 +100,8 @@ import Layout from '../../../layouts/Layout.astro';
       class="h-64 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
     ></textarea>
   </div>
+
+  <Glossary terms={glossaryTerms} />
 </Layout>
 
 <script>

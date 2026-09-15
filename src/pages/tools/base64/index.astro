@@ -1,5 +1,19 @@
 ---
+import Glossary from '../../../components/Glossary.astro';
 import Layout from '../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'Base64',
+    description:
+      'バイナリデータを、英数字と一部の記号（A-Z, a-z, 0-9, +, /, =）のみの文字列に変換するエンコード方式です。メール添付やJSON内への画像埋め込みなど、テキストしか扱えない環境でデータをやり取りする際に使われます。',
+  },
+  {
+    term: 'エンコード／デコード',
+    description:
+      'エンコードはデータを別の形式に変換すること、デコードはその変換を元に戻すことです。Base64エンコードは暗号化ではなく、誰でも簡単に元のデータへ戻せる（デコードできる）ため、秘匿したい情報の保護には使えません。',
+  },
+];
 ---
 
 <Layout
@@ -98,6 +112,8 @@ import Layout from '../../../layouts/Layout.astro';
     hidden
     class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
   ></p>
+
+  <Glossary terms={glossaryTerms} />
 </Layout>
 
 <script>

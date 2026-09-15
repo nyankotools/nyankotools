@@ -34,6 +34,7 @@
    - `pnpm exec astro check` で型チェック。
    - `pnpm run lint` / `pnpm run format` でスタイルを揃える。
    - `pnpm build` でビルドが通ることを確認する。
+   - 必要に応じて `e2e/<slug>.spec.ts` に Playwright の E2E テストを追加し、`pnpm run test:e2e` で確認する（詳細は [conventions.md](./conventions.md) 参照）。
 
 ## チェックリスト
 

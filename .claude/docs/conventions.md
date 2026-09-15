@@ -20,6 +20,7 @@
 - 各ツールの実処理（パース、変換、計算など）は `src/lib/tools/<slug>.ts` に「フレームワーク非依存の素の TypeScript 関数」として書く。
 - ページ側の `<script>` タグはこの関数を import して DOM 更新に専念させる。ロジックをページ内に直接書かない。
 - テストは Vitest（`pnpm test` / `pnpm run test:watch`）。Astro ページではなく `src/lib/tools/*.ts` の純粋ロジックを対象にする（例: `src/lib/tools/char-counter.test.ts`）。
+- ブラウザ上の実際の挙動（ページ遷移、DOM 更新など）を確認する E2E テストは Playwright（`pnpm run test:e2e` / `pnpm run test:e2e:ui`）。テストファイルはリポジトリ直下の `e2e/*.spec.ts` に置く。`playwright.config.ts` の `webServer` が自動で `pnpm dev`（`http://localhost:4321`）を起動するため、事前にサーバーを立ち上げておく必要はない。初回実行前にブラウザ本体が必要なら `pnpm exec playwright install chromium` を実行する。
 
 ## コミットメッセージ
 

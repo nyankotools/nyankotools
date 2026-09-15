@@ -1,0 +1,148 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+---
+
+<Layout
+  title="UUID生成"
+  description="ランダムなUUID（v4）を1件〜100件まとめて生成できる無料ツールです。ハイフンなし・大文字表記にも対応。データはブラウザ内で処理され、サーバーには送信されません。"
+>
+  <h1 class="mb-2 text-2xl font-bold">UUID生成（v4）</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    ランダムなUUID（バージョン4・RFC
+    4122準拠）をまとめて生成します。データベースの主キーやテスト用のダミーIDなどにご利用ください。生成したUUIDをJSONデータに組み込む場合は
+    <a
+      href="/tools/json-formatter/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      JSON整形
+    </a>
+    もあわせてご利用ください。
+  </p>
+
+  <div class="flex flex-wrap items-end gap-4">
+    <div>
+      <label
+        for="uuid-generator-count"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        生成する個数（1〜100）
+      </label>
+      <input
+        id="uuid-generator-count"
+        type="number"
+        min="1"
+        max="100"
+        value="5"
+        class="h-11 w-28 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+    </div>
+
+    <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+      <input
+        id="uuid-generator-remove-hyphens"
+        type="checkbox"
+        class="h-4 w-4"
+      />
+      ハイフンなし
+    </label>
+
+    <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+      <input id="uuid-generator-uppercase" type="checkbox" class="h-4 w-4" />
+      大文字
+    </label>
+
+    <button
+      id="uuid-generator-generate-button"
+      type="button"
+      class="min-h-11 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+    >
+      生成する
+    </button>
+
+    <button
+      id="uuid-generator-copy-button"
+      type="button"
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      コピー
+    </button>
+    <span
+      id="uuid-generator-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4">
+    <label
+      for="uuid-generator-output"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      結果
+    </label>
+    <textarea
+      id="uuid-generator-output"
+      readonly
+      class="h-64 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    ></textarea>
+  </div>
+</Layout>
+
+<script>
+  import {
+    clampUuidCount,
+    generateUuids,
+  } from '../../../lib/tools/uuid-generator';
+
+  const countInput = document.getElementById(
+    'uuid-generator-count',
+  ) as HTMLInputElement;
+  const removeHyphensCheckbox = document.getElementById(
+    'uuid-generator-remove-hyphens',
+  ) as HTMLInputElement;
+  const uppercaseCheckbox = document.getElementById(
+    'uuid-generator-uppercase',
+  ) as HTMLInputElement;
+  const generateButton = document.getElementById(
+    'uuid-generator-generate-button',
+  )!;
+  const copyButton = document.getElementById('uuid-generator-copy-button')!;
+  const statusEl = document.getElementById('uuid-generator-status')!;
+  const output = document.getElementById(
+    'uuid-generator-output',
+  ) as HTMLTextAreaElement;
+
+  function generate() {
+    statusEl.textContent = '';
+    const uuids = generateUuids({
+      count: Number(countInput.value),
+      removeHyphens: removeHyphensCheckbox.checked,
+      uppercase: uppercaseCheckbox.checked,
+    });
+    output.value = uuids.join('\n');
+  }
+
+  function clampCountInput() {
+    countInput.value = String(clampUuidCount(Number(countInput.value)));
+  }
+
+  generateButton.addEventListener('click', generate);
+  countInput.addEventListener('change', () => {
+    clampCountInput();
+    generate();
+  });
+  removeHyphensCheckbox.addEventListener('change', generate);
+  uppercaseCheckbox.addEventListener('change', generate);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      statusEl.textContent = 'コピーしました';
+    } catch {
+      statusEl.textContent = 'コピーに失敗しました';
+    }
+  });
+
+  generate();
+</script>

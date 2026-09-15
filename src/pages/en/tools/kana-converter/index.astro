@@ -4,29 +4,33 @@ import Layout from '../../../../layouts/Layout.astro';
 
 const glossaryTerms = [
   {
-    term: 'Hiragana & Katakana',
+    term: 'When to use hiragana vs. katakana',
     description:
-      'Both are phonetic Japanese scripts (kana) representing the same set of sounds. Even for the same sound, hiragana and katakana are treated as different characters by computers, so converting between them is often needed to normalize inconsistent text or prepare data for full-text search.',
+      'Hiragana is used for native Japanese words and grammatical parts (particles, verb endings, etc.), while katakana is mainly used for loanwords from other languages (gairaigo), foreign names, onomatopoeia, and for emphasis — similar to italics in English. Seeing a word in both scripts can help you recognize it either way.',
   },
   {
-    term: 'Iteration marks',
+    term: 'Iteration marks (ゝゞ / ヽヾ)',
     description:
-      'Symbols that represent a repetition of the previous character: "ゝ"/"ゞ" in hiragana and "ヽ"/"ヾ" in katakana. This tool converts these as well.',
+      'Symbols that repeat the previous character, occasionally seen in names and older texts: "ゝ"/"ゞ" in hiragana and "ヽ"/"ヾ" in katakana. This tool converts these too, so they won’t be left behind by mistake.',
   },
 ];
 ---
 
 <Layout
-  title="Hiragana / Katakana Converter"
-  description="A free tool that converts between hiragana and katakana, including voiced, semi-voiced, contracted, and geminate sounds, plus iteration marks. Your data is processed in the browser and never sent to a server."
+  title="Hiragana / Katakana Converter for Japanese Learners"
+  description="Free online tool for Japanese learners: instantly convert text between hiragana and katakana, including voiced sounds, the small tsu, and iteration marks. Great for checking vocabulary, flashcards, and loanwords. Runs entirely in your browser — nothing is sent to a server."
 >
-  <h1 class="mb-2 text-2xl font-bold">Hiragana / Katakana Converter</h1>
+  <h1 class="mb-2 text-2xl font-bold">
+    Hiragana / Katakana Converter for Japanese Learners
+  </h1>
   <p class="mb-6 text-gray-600 dark:text-gray-400">
-    Enter text and it will be converted between hiragana and katakana, including
-    voiced and semi-voiced sounds, contracted and geminate sounds, "ゔ"/"ヴ",
-    and iteration marks (ゝゞ / ヽヾ). Kanji, alphanumerics, and other
-    characters are left unchanged. For text that includes half-width katakana,
-    try the
+    Paste in Japanese text and instantly see it in the other kana script — handy
+    when you're studying vocabulary, making flashcards, or double-checking how a
+    loanword (gairaigo) or name should be written in katakana. Voiced and
+    semi-voiced sounds, contracted sounds (ゃゅょ), the small tsu (っ),
+    "ゔ"/"ヴ", and iteration marks (ゝゞ / ヽヾ) are all converted
+    automatically, while kanji, romaji, and other characters are left untouched.
+    If you're also working with half-width katakana, try the
     <a
       href="/en/tools/zenkaku-hankaku/"
       class="text-blue-700 underline hover:no-underline dark:text-blue-400"

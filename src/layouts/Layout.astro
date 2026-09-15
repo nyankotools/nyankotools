@@ -1,0 +1,79 @@
+---
+import '../styles/global.css';
+import { tools } from '../data/tools';
+
+interface Props {
+  title: string;
+  description: string;
+  ogImage?: string;
+}
+
+const {
+  title,
+  description,
+  ogImage = 'https://nyankotools.com/ogp.png',
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title} | NyankoTools</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={`${title} | NyankoTools`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:site_name" content="NyankoTools" />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content="ja_JP" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nyankotools" />
+    <meta name="twitter:creator" content="@nyankotools" />
+    <meta name="twitter:title" content={`${title} | NyankoTools`} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body class="min-h-screen bg-gray-50 text-gray-900">
+    <div class="flex min-h-screen flex-col md:flex-row">
+      <aside class="w-full shrink-0 border-b border-gray-200 bg-white p-4 md:w-64 md:border-b-0 md:border-r">
+        <a href="/" class="mb-4 block text-lg font-bold text-blue-700">
+          🐾 NyankoTools
+        </a>
+        <nav>
+          <ul class="space-y-1">
+            {tools.map((tool) => (
+              <li>
+                <a
+                  href={`/tools/${tool.slug}/`}
+                  class="block rounded px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 aria-[current=page]:bg-blue-50 aria-[current=page]:font-semibold aria-[current=page]:text-blue-700"
+                  aria-current={
+                    Astro.url.pathname === `/tools/${tool.slug}/`
+                      ? 'page'
+                      : undefined
+                  }
+                >
+                  {tool.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </aside>
+      <main class="flex-1 p-6 md:p-10">
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>

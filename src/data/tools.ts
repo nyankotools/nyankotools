@@ -173,6 +173,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'unix-timestamp',
+    translations: {
+      ja: {
+        name: 'Unixタイムスタンプ変換',
+        description:
+          'Unixタイムスタンプ（エポック秒・ミリ秒）と日時を相互に変換します。現在時刻の取得にも対応。',
+        category: 'コード',
+      },
+      en: {
+        name: 'Unix Timestamp Converter',
+        description:
+          'Converts between a Unix timestamp (epoch seconds or milliseconds) and a date/time, and shows the current timestamp.',
+        category: 'Code',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

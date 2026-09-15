@@ -26,7 +26,7 @@ There is no test suite yet. When adding one, prefer testing the pure logic in `s
 
 ## Architecture
 
-**Stack:** Astro (static output, no SSR adapter) + Tailwind CSS v4 (via `@tailwindcss/vite`, not the older `@astrojs/tailwind` integration) + TypeScript. Deployed to Cloudflare Pages, which builds `pnpm build` and serves `dist/` directly — no Cloudflare adapter is needed since there is no server runtime.
+**Stack:** Astro (static output, no SSR adapter) + Tailwind CSS v4 (via `@tailwindcss/vite`, not the older `@astrojs/tailwind` integration) + TypeScript. Deployed to Cloudflare Workers as static assets (see `wrangler.jsonc`), which runs `pnpm build` and serves `dist/` directly — no Cloudflare adapter is needed since there is no server runtime.
 
 **Adding a new tool** touches two places:
 
@@ -45,3 +45,12 @@ Note: `og:image` currently points at `https://nyankotools.com/ogp.png`, which do
 - ESLint (`eslint.config.js`, flat config: `typescript-eslint` + `eslint-plugin-astro` + `eslint-config-prettier`) and Prettier (`.prettierrc.json`, with `prettier-plugin-astro`) enforce style. Run both before committing.
 - `typescript` is pinned to `6.0.3` (not the newer `7.x` line) because `astro check` and `typescript-eslint` do not yet support TypeScript 7's native/Go-based compiler API — don't bump past the 6.x line without checking that both tools have caught up.
 - `.claude/settings.json` currently auto-allows only file read/edit tools; shell commands (git, pnpm, etc.) intentionally still prompt for confirmation each time — this was an explicit choice, not an oversight.
+
+## Detailed docs
+
+More detailed rules and design docs live under `.claude/docs/`:
+
+- [`architecture.md`](.claude/docs/architecture.md) — stack, directory layout, data flow, static-only principle
+- [`conventions.md`](.claude/docs/conventions.md) — coding style, tool-logic structure, commit style
+- [`adding-a-tool.md`](.claude/docs/adding-a-tool.md) — step-by-step checklist for adding a new tool
+- [`deployment.md`](.claude/docs/deployment.md) — Cloudflare Workers static-asset deploy config

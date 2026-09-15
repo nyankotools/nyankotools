@@ -224,6 +224,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'yaml-json-converter',
+    translations: {
+      ja: {
+        name: 'YAML⇔JSON変換',
+        description:
+          'YAMLとJSONを相互に変換します。Docker ComposeやGitHub Actionsなどの設定ファイル確認に便利。',
+        category: 'コード',
+      },
+      en: {
+        name: 'YAML to JSON Converter',
+        description:
+          'Converts between YAML and JSON, handy for checking Docker Compose or GitHub Actions config files.',
+        category: 'Code',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

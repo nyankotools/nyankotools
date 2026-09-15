@@ -1,0 +1,243 @@
+---
+import Glossary from '../../../components/Glossary.astro';
+import Layout from '../../../layouts/Layout.astro';
+import { ERROR_CORRECTION_LEVEL_OPTIONS } from '../../../lib/tools/qr-generator';
+
+const glossaryTerms = [
+  {
+    term: 'QRコード',
+    description:
+      '白黒の格子模様でデータを表現する二次元コードです。URLや文字列などをスマートフォンのカメラで素早く読み取れます。',
+  },
+  {
+    term: '誤り訂正レベル',
+    description:
+      'QRコードの一部が汚れたり欠けたりしても読み取れるように、どれだけ復元用のデータを持たせるかの度合いです。レベルを上げるほど破損に強くなりますが、その分QRコードの模様は細かくなります。',
+  },
+  {
+    term: 'クワイエットゾーン',
+    description:
+      'QRコードの周囲に必要な余白のことです。この余白が狭すぎたり切れたりすると、カメラがコードの範囲を正しく認識できず読み取りに失敗することがあります。',
+  },
+];
+---
+
+<Layout
+  title="QRコード生成"
+  description="URLやテキストを入力するだけで無料でQRコードを作成できるツールです。誤り訂正レベルや画像サイズを選んでPNG画像としてダウンロードできます。データはブラウザ内で処理され、サーバーには送信されません。"
+>
+  <h1 class="mb-2 text-2xl font-bold">QRコード生成</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    URLやテキストを入力すると、その場でQRコードを生成しプレビューできます。ブラウザ内で処理され、入力内容がサーバーに送信されることはありません。入力できる文字数の目安を先に確認したい場合は
+    <a
+      href="/tools/char-counter/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      文字数カウント
+    </a>
+    もあわせてご利用ください。
+  </p>
+
+  <div class="grid gap-6 md:grid-cols-2">
+    <div>
+      <label
+        for="qr-generator-input"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        テキスト / URL
+      </label>
+      <textarea
+        id="qr-generator-input"
+        class="h-40 w-full rounded-lg border border-gray-300 p-4 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        placeholder="https://example.com"
+        spellcheck="false"
+      ></textarea>
+
+      <div class="mt-4 flex flex-wrap gap-4">
+        <div>
+          <label
+            for="qr-generator-level"
+            class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            誤り訂正レベル
+          </label>
+          <select
+            id="qr-generator-level"
+            class="h-11 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          >
+            {ERROR_CORRECTION_LEVEL_OPTIONS.map((option) => (
+              <option value={option.value} selected={option.value === 'M'}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label
+            for="qr-generator-size"
+            class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            ダウンロード画像サイズ
+          </label>
+          <select
+            id="qr-generator-size"
+            class="h-11 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          >
+            <option value="256">小（256px）</option>
+            <option value="512" selected>
+              中（512px）
+            </option>
+            <option value="1024">大（1024px）</option>
+            <option value="2048">特大（2048px）</option>
+          </select>
+        </div>
+      </div>
+
+      <p
+        id="qr-generator-error"
+        class="mt-3 text-sm text-red-600 dark:text-red-400"
+        aria-live="polite"
+      ></p>
+    </div>
+
+    <div class="flex flex-col items-center gap-3">
+      <canvas
+        id="qr-generator-canvas"
+        class="h-64 w-64 max-w-full rounded-lg border border-gray-300 bg-white dark:border-gray-700"
+      ></canvas>
+      <div class="flex items-center gap-3">
+        <button
+          id="qr-generator-download-button"
+          type="button"
+          disabled
+          class="min-h-11 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-700 dark:disabled:text-gray-400"
+        >
+          PNG画像をダウンロード
+        </button>
+      </div>
+      <span
+        id="qr-generator-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">注意事項</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>
+      入力できる文字数は誤り訂正レベルによって変わります。長い文章やURLを入力するとレベルを自動的に下げないと生成できない場合があるので、その際は誤り訂正レベルを下げてください。
+    </li>
+    <li>
+      生成後は実際にスマートフォンのカメラなどで読み取れるか確認することをおすすめします。
+    </li>
+    <li>QRコードは株式会社デンソーウェーブの登録商標です。</li>
+  </ul>
+
+  <Glossary terms={glossaryTerms} />
+</Layout>
+
+<script>
+  import { generateQrMatrix } from '../../../lib/tools/qr-generator';
+  import type {
+    ErrorCorrectionLevel,
+    QrMatrix,
+  } from '../../../lib/tools/qr-generator';
+
+  const QUIET_ZONE_MODULES = 4;
+
+  const input = document.getElementById(
+    'qr-generator-input',
+  ) as HTMLTextAreaElement;
+  const levelSelect = document.getElementById(
+    'qr-generator-level',
+  ) as HTMLSelectElement;
+  const sizeSelect = document.getElementById(
+    'qr-generator-size',
+  ) as HTMLSelectElement;
+  const canvas = document.getElementById(
+    'qr-generator-canvas',
+  ) as HTMLCanvasElement;
+  const ctx = canvas.getContext('2d')!;
+  const errorEl = document.getElementById('qr-generator-error')!;
+  const statusEl = document.getElementById('qr-generator-status')!;
+  const downloadButton = document.getElementById(
+    'qr-generator-download-button',
+  ) as HTMLButtonElement;
+
+  function drawMatrix(matrix: QrMatrix, targetSize: number) {
+    const cellSize = Math.max(
+      1,
+      Math.floor(targetSize / (matrix.moduleCount + QUIET_ZONE_MODULES * 2)),
+    );
+    const canvasSize = (matrix.moduleCount + QUIET_ZONE_MODULES * 2) * cellSize;
+
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvasSize, canvasSize);
+    ctx.fillStyle = '#000000';
+    for (let row = 0; row < matrix.moduleCount; row++) {
+      for (let col = 0; col < matrix.moduleCount; col++) {
+        if (matrix.isDark(row, col)) {
+          ctx.fillRect(
+            (col + QUIET_ZONE_MODULES) * cellSize,
+            (row + QUIET_ZONE_MODULES) * cellSize,
+            cellSize,
+            cellSize,
+          );
+        }
+      }
+    }
+  }
+
+  function clearCanvas() {
+    canvas.width = 256;
+    canvas.height = 256;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  function generate() {
+    statusEl.textContent = '';
+    errorEl.textContent = '';
+
+    const result = generateQrMatrix(
+      input.value,
+      levelSelect.value as ErrorCorrectionLevel,
+    );
+
+    if (!result.ok) {
+      clearCanvas();
+      downloadButton.disabled = true;
+      if (input.value !== '') {
+        errorEl.textContent = result.message;
+      }
+      return;
+    }
+
+    drawMatrix(result.matrix, Number(sizeSelect.value));
+    downloadButton.disabled = false;
+  }
+
+  input.addEventListener('input', generate);
+  levelSelect.addEventListener('change', generate);
+  sizeSelect.addEventListener('change', generate);
+
+  downloadButton.addEventListener('click', () => {
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'qrcode.png';
+      a.click();
+      URL.revokeObjectURL(url);
+      statusEl.textContent = 'ダウンロードしました';
+    }, 'image/png');
+  });
+
+  clearCanvas();
+  generate();
+</script>

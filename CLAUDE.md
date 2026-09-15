@@ -23,6 +23,10 @@ NyankoTools aims for future monetization (ads/affiliate). Organic search traffic
 
 - ユーザーから明示的に指示されるまで `git commit` を実行しないこと。実装が完了しても、コミットはせずユーザーの確認・指示を待つこと。
 
+## memo更新のルール
+
+- `memo/実装予定ツール一覧.md` に載っている予定ツールの実装が完了したら、該当行のチェックボックスにチェックを入れ、「実装済み」セクションへ移動すること（`src/data/tools.ts` への登録と合わせて行う）。
+
 ## Commands
 
 Package manager is **pnpm** (via Corepack).

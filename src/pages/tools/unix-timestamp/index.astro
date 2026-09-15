@@ -1,0 +1,332 @@
+---
+import Glossary from '../../../components/Glossary.astro';
+import Layout from '../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'Unixタイムスタンプ（Unix時間・エポック秒）',
+    description:
+      '協定世界時（UTC）の1970年1月1日 00:00:00 からの経過秒数で日時を表す形式です。タイムゾーンに依存しないため、システム間で日時をやり取りする際によく使われます。',
+  },
+  {
+    term: 'ミリ秒タイムスタンプ',
+    description:
+      'Unixタイムスタンプを1000倍し、ミリ秒単位で表したものです。JavaScriptの`Date.now()`やログのタイムスタンプなどでよく見られます。13桁前後の数値になります。',
+  },
+  {
+    term: 'UTC（協定世界時）',
+    description:
+      '世界共通の時刻基準です。日本時間（JST）はUTCより9時間進んでいます（UTC+9）。',
+  },
+];
+---
+
+<Layout
+  title="Unixタイムスタンプ変換（unixtime⇔日時）"
+  description="Unixタイムスタンプ（エポック秒・ミリ秒）と日時を相互に変換できる無料ツールです。現在時刻の取得にも対応。データはブラウザ内で処理され、サーバーには送信されません。"
+>
+  <h1 class="mb-2 text-2xl font-bold">Unixタイムスタンプ変換</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    Unixタイムスタンプ（エポック秒・ミリ秒）と日時をリアルタイムで相互変換します。秒とミリ秒は桁数から自動判定されますが、手動で切り替えることもできます。ブラウザ内で処理され、入力内容がサーバーに送信されることはありません。ログの日時整形などで文字数を確認したい場合は
+    <a
+      href="/tools/char-counter/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      文字数カウント
+    </a>
+    もあわせてご利用ください。
+  </p>
+
+  <section class="mb-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <h2 class="mb-2 text-lg font-bold">現在のUnix時間</h2>
+    <div class="flex flex-wrap items-center gap-3">
+      <span
+        id="unix-timestamp-now"
+        class="font-mono text-2xl tabular-nums"
+      ></span>
+      <button
+        type="button"
+        id="unix-timestamp-now-copy"
+        class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        コピー
+      </button>
+    </div>
+    <p
+      id="unix-timestamp-now-local"
+      class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+  </section>
+
+  <section class="mb-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <h2 class="mb-3 text-lg font-bold">Unixタイムスタンプ → 日時</h2>
+    <div class="flex flex-wrap items-end gap-3">
+      <div class="min-w-0 flex-1">
+        <label
+          for="unix-timestamp-input"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          タイムスタンプ
+        </label>
+        <input
+          id="unix-timestamp-input"
+          type="text"
+          inputmode="numeric"
+          placeholder="1700000000"
+          spellcheck="false"
+          class="h-11 w-full rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label
+          for="unix-timestamp-unit"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          単位
+        </label>
+        <select
+          id="unix-timestamp-unit"
+          class="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        >
+          <option value="auto">自動判定</option>
+          <option value="seconds">秒</option>
+          <option value="milliseconds">ミリ秒</option>
+        </select>
+      </div>
+    </div>
+    <p
+      id="unix-timestamp-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl class="mt-4 space-y-2 text-sm">
+      <div class="flex flex-wrap items-center gap-2">
+        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">
+          ローカル時刻
+        </dt>
+        <dd id="unix-timestamp-local" class="font-mono"></dd>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">UTC</dt>
+        <dd id="unix-timestamp-utc" class="font-mono"></dd>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">ISO 8601</dt>
+        <dd id="unix-timestamp-iso" class="font-mono"></dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <h2 class="mb-3 text-lg font-bold">日時 → Unixタイムスタンプ</h2>
+    <div class="flex flex-wrap items-end gap-3">
+      <div class="min-w-0 flex-1">
+        <label
+          for="unix-timestamp-datetime"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          日時（ローカル時刻）
+        </label>
+        <input
+          id="unix-timestamp-datetime"
+          type="datetime-local"
+          step="1"
+          class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        />
+      </div>
+      <button
+        type="button"
+        id="unix-timestamp-datetime-now"
+        class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        現在日時を使う
+      </button>
+    </div>
+
+    <dl class="mt-4 space-y-2 text-sm">
+      <div class="flex flex-wrap items-center gap-2">
+        <dt class="w-16 shrink-0 text-gray-500 dark:text-gray-400">秒</dt>
+        <dd id="unix-timestamp-result-seconds" class="font-mono"></dd>
+        <button
+          type="button"
+          data-copy-target="unix-timestamp-result-seconds"
+          class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          コピー
+        </button>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <dt class="w-16 shrink-0 text-gray-500 dark:text-gray-400">ミリ秒</dt>
+        <dd id="unix-timestamp-result-milliseconds" class="font-mono"></dd>
+        <button
+          type="button"
+          data-copy-target="unix-timestamp-result-milliseconds"
+          class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          コピー
+        </button>
+      </div>
+    </dl>
+    <span
+      id="unix-timestamp-status"
+      class="mt-2 block text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </section>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">注意事項</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>
+      「単位」を「自動判定」にすると、10桁以下は秒、11桁以上はミリ秒として扱います。マイクロ秒・ナノ秒単位のタイムスタンプには対応していません。
+    </li>
+    <li>
+      「日時 →
+      Unixタイムスタンプ」の入力欄は、お使いの端末のタイムゾーン（ローカル時刻）として扱われます。
+    </li>
+    <li>1970年より前の日時は負のタイムスタンプとして扱われます。</li>
+  </ul>
+
+  <Glossary terms={glossaryTerms} />
+</Layout>
+
+<script>
+  import {
+    dateToTimestamp,
+    detectTimestampUnit,
+    formatDateTimeLocalValue,
+    parseDateTimeLocalValue,
+    parseTimestampInput,
+    timestampToDate,
+    type TimestampUnit,
+  } from '../../../lib/tools/unix-timestamp';
+
+  const nowEl = document.getElementById('unix-timestamp-now')!;
+  const nowLocalEl = document.getElementById('unix-timestamp-now-local')!;
+  const nowCopyButton = document.getElementById(
+    'unix-timestamp-now-copy',
+  ) as HTMLButtonElement;
+
+  const input = document.getElementById(
+    'unix-timestamp-input',
+  ) as HTMLInputElement;
+  const unitSelect = document.getElementById(
+    'unix-timestamp-unit',
+  ) as HTMLSelectElement;
+  const errorEl = document.getElementById('unix-timestamp-error')!;
+  const localEl = document.getElementById('unix-timestamp-local')!;
+  const utcEl = document.getElementById('unix-timestamp-utc')!;
+  const isoEl = document.getElementById('unix-timestamp-iso')!;
+
+  const datetimeInput = document.getElementById(
+    'unix-timestamp-datetime',
+  ) as HTMLInputElement;
+  const datetimeNowButton = document.getElementById(
+    'unix-timestamp-datetime-now',
+  ) as HTMLButtonElement;
+  const resultSecondsEl = document.getElementById(
+    'unix-timestamp-result-seconds',
+  )!;
+  const resultMillisecondsEl = document.getElementById(
+    'unix-timestamp-result-milliseconds',
+  )!;
+  const statusEl = document.getElementById('unix-timestamp-status')!;
+
+  const localFormatter = new Intl.DateTimeFormat('ja-JP', {
+    dateStyle: 'full',
+    timeStyle: 'medium',
+  });
+  const utcFormatter = new Intl.DateTimeFormat('ja-JP', {
+    dateStyle: 'full',
+    timeStyle: 'medium',
+    timeZone: 'UTC',
+  });
+
+  function updateNow() {
+    const now = new Date();
+    nowEl.textContent = String(dateToTimestamp(now).seconds);
+    nowLocalEl.textContent = localFormatter.format(now);
+  }
+  updateNow();
+  setInterval(updateNow, 1000);
+
+  nowCopyButton.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(nowEl.textContent ?? '');
+    } catch {
+      // クリップボードが使えない環境では何もしない
+    }
+  });
+
+  function renderTimestampToDate() {
+    errorEl.textContent = '';
+    localEl.textContent = '';
+    utcEl.textContent = '';
+    isoEl.textContent = '';
+
+    if (input.value.trim() === '') return;
+
+    const value = parseTimestampInput(input.value);
+    if (value === null) {
+      errorEl.textContent =
+        '整数のタイムスタンプを入力してください（例: 1700000000）';
+      return;
+    }
+
+    const unitOption = unitSelect.value as TimestampUnit | 'auto';
+    const unit: TimestampUnit =
+      unitOption === 'auto' ? detectTimestampUnit(value) : unitOption;
+
+    const date = timestampToDate(value, unit);
+    if (!date) {
+      errorEl.textContent = '日時に変換できませんでした';
+      return;
+    }
+
+    localEl.textContent = localFormatter.format(date);
+    utcEl.textContent = utcFormatter.format(date);
+    isoEl.textContent = date.toISOString();
+  }
+
+  input.addEventListener('input', renderTimestampToDate);
+  unitSelect.addEventListener('change', renderTimestampToDate);
+
+  function renderDateToTimestamp() {
+    statusEl.textContent = '';
+    resultSecondsEl.textContent = '';
+    resultMillisecondsEl.textContent = '';
+
+    const date = parseDateTimeLocalValue(datetimeInput.value);
+    if (!date) return;
+
+    const { seconds, milliseconds } = dateToTimestamp(date);
+    resultSecondsEl.textContent = String(seconds);
+    resultMillisecondsEl.textContent = String(milliseconds);
+  }
+
+  datetimeInput.addEventListener('input', renderDateToTimestamp);
+
+  datetimeNowButton.addEventListener('click', () => {
+    datetimeInput.value = formatDateTimeLocalValue(new Date());
+    renderDateToTimestamp();
+  });
+
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-copy-target]')
+    .forEach((button) => {
+      button.addEventListener('click', async () => {
+        const targetId = button.dataset.copyTarget!;
+        const target = document.getElementById(targetId);
+        if (!target?.textContent) return;
+        try {
+          await navigator.clipboard.writeText(target.textContent);
+          statusEl.textContent = 'コピーしました';
+        } catch {
+          statusEl.textContent = 'コピーに失敗しました';
+        }
+      });
+    });
+
+  datetimeInput.value = formatDateTimeLocalValue(new Date());
+  renderDateToTimestamp();
+</script>

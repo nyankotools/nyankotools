@@ -173,6 +173,108 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'unix-timestamp',
+    translations: {
+      ja: {
+        name: 'Unixタイムスタンプ変換',
+        description:
+          'Unixタイムスタンプ（エポック秒・ミリ秒）と日時を相互に変換します。現在時刻の取得にも対応。',
+        category: 'コード',
+      },
+      en: {
+        name: 'Unix Timestamp Converter',
+        description:
+          'Converts between a Unix timestamp (epoch seconds or milliseconds) and a date/time, and shows the current timestamp.',
+        category: 'Code',
+      },
+    },
+  },
+  {
+    slug: 'zenkaku-hankaku',
+    translations: {
+      ja: {
+        name: '全角/半角変換',
+        description:
+          '英数字・記号・カタカナ・スペースを対象に、全角と半角を相互に変換します。変換したい文字種を個別に選択可能。',
+        category: 'テキスト',
+      },
+      en: {
+        name: 'Full-width / Half-width Converter',
+        description:
+          'Converts between full-width and half-width for alphanumerics, symbols, katakana, and spaces, with each character type selectable individually.',
+        category: 'Text',
+      },
+    },
+  },
+  {
+    slug: 'kana-converter',
+    translations: {
+      ja: {
+        name: 'ひらがな/カタカナ変換',
+        description:
+          'ひらがなとカタカナを相互に変換します。濁音・半濁音・拗音・促音・踊り字にも対応。',
+        category: 'テキスト',
+      },
+      en: {
+        name: 'Hiragana / Katakana Converter',
+        description:
+          'Converts Japanese text between hiragana and katakana — handy for learners checking vocabulary, flashcards, and loanwords.',
+        category: 'Text',
+      },
+    },
+  },
+  {
+    slug: 'yaml-json-converter',
+    translations: {
+      ja: {
+        name: 'YAML⇔JSON変換',
+        description:
+          'YAMLとJSONを相互に変換します。Docker ComposeやGitHub Actionsなどの設定ファイル確認に便利。',
+        category: 'コード',
+      },
+      en: {
+        name: 'YAML to JSON Converter',
+        description:
+          'Converts between YAML and JSON, handy for checking Docker Compose or GitHub Actions config files.',
+        category: 'Code',
+      },
+    },
+  },
+  {
+    slug: 'csv-json-converter',
+    translations: {
+      ja: {
+        name: 'CSV⇔JSON変換',
+        description:
+          'CSVとJSONを相互に変換します。ヘッダー行をキーとして使用し、カンマ・タブ区切りや引用符付きフィールドにも対応。',
+        category: 'コード',
+      },
+      en: {
+        name: 'CSV to JSON Converter',
+        description:
+          'Converts between CSV and JSON using the header row as keys, with support for comma/tab delimiters and quoted fields.',
+        category: 'Code',
+      },
+    },
+  },
+  {
+    slug: 'markdown-preview',
+    translations: {
+      ja: {
+        name: 'Markdown⇔HTML変換',
+        description:
+          'Markdownをリアルタイムプレビューしながら、HTMLと相互変換します。README や記事の下書き確認に便利。',
+        category: 'コード',
+      },
+      en: {
+        name: 'Markdown to HTML Converter',
+        description:
+          'Converts Markdown to HTML with a live preview, and HTML back to Markdown. Handy for checking a README or article draft.',
+        category: 'Code',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

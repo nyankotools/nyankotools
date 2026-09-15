@@ -25,7 +25,7 @@ NyankoTools aims for future monetization (ads/affiliate). Organic search traffic
 
 ## memo更新のルール
 
-- `memo/実装予定ツール一覧.md` に載っている予定ツールの実装が完了したら、該当行のチェックボックスにチェックを入れ、「実装済み」セクションへ移動すること（`src/data/tools.ts` への登録と合わせて行う）。
+- `memo/実装予定一覧.md` に載っている予定ツールの実装が完了したら、該当行のチェックボックスにチェックを入れ、「実装済み」セクションへ移動すること（`src/data/tools.ts` への登録と合わせて行う）。
 
 ## Commands
 

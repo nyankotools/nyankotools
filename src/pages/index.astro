@@ -1,0 +1,28 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { tools } from '../data/tools';
+---
+
+<Layout
+  title="便利なWebツール集"
+  description="NyankoToolsは、開発者やクリエイターに役立つブラウザ上で動作する便利Webツール集です。"
+>
+  <h1 class="mb-2 text-2xl font-bold">🐾 NyankoTools</h1>
+  <p class="mb-8 text-gray-600">
+    ブラウザだけで完結する便利ツール集です。データはどれもサーバーに送信されません。
+  </p>
+
+  <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {tools.map((tool) => (
+      <li>
+        <a
+          href={`/tools/${tool.slug}/`}
+          class="block h-full rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:shadow-md"
+        >
+          <h2 class="mb-1 font-semibold text-blue-700">{tool.name}</h2>
+          <p class="text-sm text-gray-600">{tool.description}</p>
+        </a>
+      </li>
+    ))}
+  </ul>
+</Layout>

@@ -1,0 +1,241 @@
+---
+import Glossary from '../../../components/Glossary.astro';
+import Layout from '../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'CSV',
+    description:
+      'Comma-Separated Values の略で、カンマ（または他の区切り文字）で列を区切ってデータを表現するテキスト形式です。Excelやスプレッドシートのエクスポート形式として広く使われています。',
+  },
+  {
+    term: 'JSON',
+    description:
+      'JavaScript Object Notation の略で、データをキーと値の組み合わせで表現するテキスト形式です。APIのやり取りや設定ファイルなど、幅広い場面で使われています。',
+  },
+  {
+    term: 'ヘッダー行',
+    description:
+      'CSVの1行目に置かれる、各列の名前を表す行です。このツールはヘッダー行の値をJSONのキーとして使用します。',
+  },
+  {
+    term: '引用符（クオート）',
+    description:
+      'CSVでフィールドの値にカンマや改行を含める場合、ダブルクォート（"）でフィールド全体を囲みます。値中のダブルクォートは2つ並べる（""）ことでエスケープします。',
+  },
+];
+---
+
+<Layout
+  title="CSV⇔JSON変換"
+  description="CSVとJSONを相互に変換できる無料ツールです。スプレッドシートからエクスポートしたCSVをAPI用のJSONに変換したい時などに便利。カンマ・タブ区切りや引用符付きフィールドにも対応。データはブラウザ内で処理され、サーバーには送信されません。"
+>
+  <h1 class="mb-2 text-2xl font-bold">CSV⇔JSON変換ツール</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    CSVを入力するとJSON配列に、JSON配列を入力するとCSVに変換します。ヘッダー行をキーとして使うので、ExcelやスプレッドシートからエクスポートしたデータをそのままAPI用のJSONに変換したい時などに便利です。変換後のJSONをさらに整形・検証したい場合は
+    <a
+      href="/tools/json-formatter/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      JSON整形
+    </a>
+    もあわせてご利用ください。
+  </p>
+
+  <div class="flex flex-wrap items-center gap-3">
+    <div
+      id="csv-json-converter-mode"
+      class="flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700"
+      role="group"
+      aria-label="変換方向"
+    >
+      <button
+        type="button"
+        data-mode="csvToJson"
+        aria-pressed="true"
+        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      >
+        CSV→JSON
+      </button>
+      <button
+        type="button"
+        data-mode="jsonToCsv"
+        aria-pressed="false"
+        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      >
+        JSON→CSV
+      </button>
+    </div>
+    <label
+      for="csv-json-converter-delimiter"
+      class="text-sm text-gray-700 dark:text-gray-300"
+    >
+      区切り文字
+    </label>
+    <select
+      id="csv-json-converter-delimiter"
+      class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    >
+      <option value=",">カンマ ( , )</option>
+      <option value="tab">タブ</option>
+    </select>
+    <button
+      id="csv-json-converter-copy-button"
+      type="button"
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      コピー
+    </button>
+    <span
+      id="csv-json-converter-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label
+        for="csv-json-converter-input"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        入力
+      </label>
+      <textarea
+        id="csv-json-converter-input"
+        class="h-80 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        placeholder={'name,age\nTaro,30\nHanako,25'}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label
+        for="csv-json-converter-output"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        結果
+      </label>
+      <textarea
+        id="csv-json-converter-output"
+        readonly
+        class="h-80 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="csv-json-converter-error"
+    hidden
+    class="mt-4 max-w-2xl whitespace-pre-line rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+  ></p>
+
+  <Glossary terms={glossaryTerms} />
+</Layout>
+
+<script>
+  import {
+    csvToJson,
+    jsonToCsv,
+    type ConvertOutcome,
+  } from '../../../lib/tools/csv-json-converter';
+
+  type Mode = 'csvToJson' | 'jsonToCsv';
+
+  const input = document.getElementById(
+    'csv-json-converter-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'csv-json-converter-output',
+  ) as HTMLTextAreaElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#csv-json-converter-mode [data-mode]',
+  );
+  const delimiterSelect = document.getElementById(
+    'csv-json-converter-delimiter',
+  ) as HTMLSelectElement;
+  const copyButton = document.getElementById('csv-json-converter-copy-button')!;
+  const statusEl = document.getElementById('csv-json-converter-status')!;
+  const errorEl = document.getElementById('csv-json-converter-error')!;
+
+  let mode: Mode = 'csvToJson';
+
+  const placeholders: Record<Mode, string> = {
+    csvToJson: 'name,age\nTaro,30\nHanako,25',
+    jsonToCsv: '[{"name": "Taro", "age": 30}, {"name": "Hanako", "age": 25}]',
+  };
+
+  function resolveDelimiter(): string {
+    return delimiterSelect.value === 'tab' ? '\t' : ',';
+  }
+
+  function describeError(result: Extract<ConvertOutcome, { success: false }>) {
+    switch (result.reason) {
+      case 'unterminated-quote':
+        return '引用符（"）が閉じられていません。';
+      case 'column-mismatch':
+        return `${result.line}行目: 列数がヘッダーと一致しません（ヘッダー: ${result.expectedColumns}列、データ: ${result.actualColumns}列）`;
+      case 'not-array':
+        return 'JSONは配列である必要があります（例: [{"a": 1}]）。';
+      case 'not-object':
+        return `${result.index + 1}番目の要素: 配列の各要素はオブジェクトである必要があります（例: {"a": 1}）。`;
+      case 'invalid-json':
+        return result.message;
+    }
+  }
+
+  function showError(message: string) {
+    output.value = '';
+    errorEl.textContent = `エラー: ${message}`;
+    errorEl.hidden = false;
+  }
+
+  function showOutput(value: string) {
+    output.value = value;
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function convert() {
+    statusEl.textContent = '';
+    if (input.value.trim() === '') {
+      showOutput('');
+      return;
+    }
+    const delimiter = resolveDelimiter();
+    const result: ConvertOutcome =
+      mode === 'csvToJson'
+        ? csvToJson(input.value, delimiter)
+        : jsonToCsv(input.value, delimiter);
+    if (result.success) {
+      showOutput(result.output);
+    } else {
+      showError(describeError(result));
+    }
+  }
+
+  input.addEventListener('input', convert);
+  delimiterSelect.addEventListener('change', convert);
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as Mode;
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      input.placeholder = placeholders[mode];
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      statusEl.textContent = 'コピーしました';
+    } catch {
+      statusEl.textContent = 'コピーに失敗しました';
+    }
+  });
+
+  convert();
+</script>

@@ -207,6 +207,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'kana-converter',
+    translations: {
+      ja: {
+        name: 'ひらがな/カタカナ変換',
+        description:
+          'ひらがなとカタカナを相互に変換します。濁音・半濁音・拗音・促音・踊り字にも対応。',
+        category: 'テキスト',
+      },
+      en: {
+        name: 'Hiragana / Katakana Converter',
+        description:
+          'Converts between hiragana and katakana, including voiced, semi-voiced, contracted, and geminate sounds, plus iteration marks.',
+        category: 'Text',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

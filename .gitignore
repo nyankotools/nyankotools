@@ -25,3 +25,9 @@ pnpm-debug.log*
 
 # local memo / idea notes (not part of the product)
 memo/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

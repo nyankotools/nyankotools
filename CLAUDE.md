@@ -8,6 +8,12 @@ NyankoTools (`nyankotools.com`) is a growing collection of small, browser-only u
 
 Users navigate via a persistent sidebar; each tool also has its own indexable URL (`/tools/<slug>/`) for SEO (long-tail keyword search traffic is a primary acquisition channel).
 
+NyankoTools aims for future monetization (ads/affiliate). Organic search traffic and user experience are the foundation for that, so SEO, responsive design, and (eventually) i18n are treated as first-class, not optional polish — see [`growth.md`](.claude/docs/growth.md) for the concrete rules to follow when adding or changing pages.
+
+## 基本原則
+
+- **日本語で応答すること**（コード・コマンド・技術用語を除く）
+
 ## Commands
 
 Package manager is **pnpm** (via Corepack).
@@ -20,9 +26,11 @@ pnpm preview          # preview the production build locally
 pnpm exec astro check # type-check .astro/.ts files
 pnpm run lint          # ESLint
 pnpm run format        # Prettier --write
+pnpm test             # Vitest (run once)
+pnpm run test:watch    # Vitest (watch mode)
 ```
 
-There is no test suite yet. When adding one, prefer testing the pure logic in `src/lib/tools/*.ts` directly rather than the Astro pages.
+Tests use **Vitest**. They target the pure logic in `src/lib/tools/*.ts` (e.g. `src/lib/tools/char-counter.test.ts`), not the Astro pages themselves — no config file is needed since there's no DOM/Astro dependency to set up for these unit tests.
 
 ## Architecture
 
@@ -45,6 +53,7 @@ Note: `og:image` currently points at `https://nyankotools.com/ogp.png`, which do
 - ESLint (`eslint.config.js`, flat config: `typescript-eslint` + `eslint-plugin-astro` + `eslint-config-prettier`) and Prettier (`.prettierrc.json`, with `prettier-plugin-astro`) enforce style. Run both before committing.
 - `typescript` is pinned to `6.0.3` (not the newer `7.x` line) because `astro check` and `typescript-eslint` do not yet support TypeScript 7's native/Go-based compiler API — don't bump past the 6.x line without checking that both tools have caught up.
 - `.claude/settings.json` currently auto-allows only file read/edit tools; shell commands (git, pnpm, etc.) intentionally still prompt for confirmation each time — this was an explicit choice, not an oversight.
+- Line endings are LF everywhere (enforced via `.gitattributes`: `* text=auto eol=lf`), regardless of the OS used for editing. Windows' `core.autocrlf=true` can still check files out with CRLF locally, but `.gitattributes` normalizes what's actually committed — don't rely on editor/OS defaults.
 
 ## Detailed docs
 
@@ -54,3 +63,4 @@ More detailed rules and design docs live under `.claude/docs/`:
 - [`conventions.md`](.claude/docs/conventions.md) — coding style, tool-logic structure, commit style
 - [`adding-a-tool.md`](.claude/docs/adding-a-tool.md) — step-by-step checklist for adding a new tool
 - [`deployment.md`](.claude/docs/deployment.md) — Cloudflare Workers static-asset deploy config
+- [`growth.md`](.claude/docs/growth.md) — monetization-driven rules for SEO, responsive design, and future i18n

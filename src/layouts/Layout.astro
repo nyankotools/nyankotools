@@ -37,6 +37,38 @@ const enURL = new URL(lang === 'en' ? pathname : alternatePath, Astro.site);
 
 const siteName = t('site.name');
 const fullTitle = `${title} | ${siteName}`;
+
+const isHome = pathname === '/' || pathname === '/en' || pathname === '/en/';
+const toolMatch = pathname.match(/^\/(?:en\/)?tools\/([^/]+)\/?$/);
+
+const jsonLd: Record<string, unknown> | null = noindex
+  ? null
+  : toolMatch
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'SoftwareApplication',
+        name: title,
+        description,
+        url: canonicalURL.toString(),
+        applicationCategory: 'UtilitiesApplication',
+        operatingSystem: 'Any',
+        inLanguage: lang,
+        offers: {
+          '@type': 'Offer',
+          price: '0',
+          priceCurrency: 'JPY',
+        },
+      }
+    : isHome
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: siteName,
+          description,
+          url: canonicalURL.toString(),
+          inLanguage: lang,
+        }
+      : null;
 ---
 
 <!doctype html>
@@ -97,6 +129,13 @@ const fullTitle = `${title} | ${siteName}`;
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="generator" content={Astro.generator} />
+    {jsonLd && (
+      <script
+        type="application/ld+json"
+        is:inline
+        set:html={JSON.stringify(jsonLd)}
+      ></script>
+    )}
   </head>
   <body class="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
     <div class="flex min-h-screen flex-col md:flex-row">

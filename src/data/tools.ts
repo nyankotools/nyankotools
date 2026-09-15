@@ -54,6 +54,74 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'base64',
+    translations: {
+      ja: {
+        name: 'Base64エンコード/デコード',
+        description:
+          'テキストとBase64文字列を相互に変換します。日本語などのマルチバイト文字にも対応。',
+        category: 'コード',
+      },
+      en: {
+        name: 'Base64 Encoder/Decoder',
+        description:
+          'Converts text to and from Base64, with full support for multibyte characters.',
+        category: 'Code',
+      },
+    },
+  },
+  {
+    slug: 'url-encode',
+    translations: {
+      ja: {
+        name: 'URLエンコード/デコード',
+        description:
+          'テキストとパーセントエンコード形式を相互に変換します。クエリパラメータの日本語などマルチバイト文字にも対応。',
+        category: 'コード',
+      },
+      en: {
+        name: 'URL Encoder/Decoder',
+        description:
+          'Converts text to and from percent-encoding, with full support for multibyte characters in query parameters.',
+        category: 'Code',
+      },
+    },
+  },
+  {
+    slug: 'uuid-generator',
+    translations: {
+      ja: {
+        name: 'UUID生成',
+        description:
+          'ランダムなUUID（v4）を1件〜100件まとめて生成します。ハイフンなし・大文字表記にも対応。',
+        category: 'コード',
+      },
+      en: {
+        name: 'UUID Generator',
+        description:
+          'Generates 1 to 100 random UUIDs (v4) at once, with optional hyphen removal and uppercase formatting.',
+        category: 'Code',
+      },
+    },
+  },
+  {
+    slug: 'password-generator',
+    translations: {
+      ja: {
+        name: 'パスワード生成',
+        description:
+          '文字種（大文字・小文字・数字・記号）と桁数を指定して、安全なランダムパスワードを生成します。強度の目安も表示。',
+        category: 'コード',
+      },
+      en: {
+        name: 'Password Generator',
+        description:
+          'Generates strong random passwords by choosing character types (uppercase, lowercase, numbers, symbols) and length, with a strength estimate.',
+        category: 'Code',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

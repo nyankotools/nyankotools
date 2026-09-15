@@ -1,0 +1,170 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+---
+
+<Layout
+  title="URL Encoder/Decoder"
+  description="A free tool that percent-encodes text or URLs, or decodes an encoded string back to the original text, with full support for multibyte characters in query parameters. Your data is processed in the browser and never sent to a server."
+>
+  <h1 class="mb-2 text-2xl font-bold">URL Encoder / Decoder</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    Type or paste text below to automatically percent-encode it (%XX format).
+    Switch to "Decode" to convert an encoded string back to text. Handy when you
+    need to include non-ASCII characters or symbols in a query parameter. Need
+    to convert to Base64 instead? Try the
+    <a
+      href="/en/tools/base64/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      Base64 Encoder/Decoder
+    </a>
+    .
+  </p>
+
+  <div class="flex flex-wrap items-center gap-3">
+    <div
+      id="url-encode-mode"
+      class="flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700"
+      role="group"
+      aria-label="Mode"
+    >
+      <button
+        type="button"
+        data-mode="encode"
+        aria-pressed="true"
+        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      >
+        Encode
+      </button>
+      <button
+        type="button"
+        data-mode="decode"
+        aria-pressed="false"
+        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      >
+        Decode
+      </button>
+    </div>
+    <button
+      id="url-encode-copy-button"
+      type="button"
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      Copy
+    </button>
+    <span
+      id="url-encode-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label
+        for="url-encode-input"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        Input
+      </label>
+      <textarea
+        id="url-encode-input"
+        class="h-64 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        placeholder="Enter text to convert"
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label
+        for="url-encode-output"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        Result
+      </label>
+      <textarea
+        id="url-encode-output"
+        readonly
+        class="h-64 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="url-encode-error"
+    hidden
+    class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+  ></p>
+</Layout>
+
+<script>
+  import { decodeUrl, encodeUrl } from '../../../../lib/tools/url-encode';
+
+  type Mode = 'encode' | 'decode';
+
+  const input = document.getElementById(
+    'url-encode-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'url-encode-output',
+  ) as HTMLTextAreaElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#url-encode-mode [data-mode]',
+  );
+  const copyButton = document.getElementById('url-encode-copy-button')!;
+  const statusEl = document.getElementById('url-encode-status')!;
+  const errorEl = document.getElementById('url-encode-error')!;
+
+  let mode: Mode = 'encode';
+
+  function showError() {
+    output.value = '';
+    errorEl.textContent =
+      'Could not decode this string as a URL-encoded value. Please check the %XX format.';
+    errorEl.hidden = false;
+  }
+
+  function showOutput(value: string) {
+    output.value = value;
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function convert() {
+    statusEl.textContent = '';
+    if (input.value === '') {
+      showOutput('');
+      return;
+    }
+    const result =
+      mode === 'encode' ? encodeUrl(input.value) : decodeUrl(input.value);
+    if (result.success) {
+      showOutput(result.output);
+    } else {
+      showError();
+    }
+  }
+
+  input.addEventListener('input', convert);
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as Mode;
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      statusEl.textContent = 'Copied';
+    } catch {
+      statusEl.textContent = 'Copy failed';
+    }
+  });
+
+  convert();
+</script>

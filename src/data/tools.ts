@@ -37,6 +37,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'json-formatter',
+    translations: {
+      ja: {
+        name: 'JSON整形',
+        description:
+          'JSONデータを整形・圧縮し、構文エラーがあれば分かりやすく表示します。',
+        category: 'コード',
+      },
+      en: {
+        name: 'JSON Formatter',
+        description:
+          'Formats and minifies JSON data, with clear syntax error messages.',
+        category: 'Code',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

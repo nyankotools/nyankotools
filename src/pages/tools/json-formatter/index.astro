@@ -1,5 +1,19 @@
 ---
+import Glossary from '../../../components/Glossary.astro';
 import Layout from '../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'JSON',
+    description:
+      'JavaScript Object Notation の略で、データをキーと値の組み合わせで表現するテキスト形式です。APIのやり取りや設定ファイルなど、幅広い場面で使われています。',
+  },
+  {
+    term: '構文エラー（シンタックスエラー）',
+    description:
+      'JSONのルール（括弧・カンマ・引用符の対応など）に違反した記述があるときに発生するエラーです。多くの場合、閉じ忘れた括弧や末尾の余分なカンマが原因です。',
+  },
+];
 ---
 
 <Layout
@@ -89,6 +103,8 @@ import Layout from '../../../layouts/Layout.astro';
     hidden
     class="mt-4 max-w-2xl whitespace-pre-line rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
   ></p>
+
+  <Glossary terms={glossaryTerms} />
 </Layout>
 
 <script>

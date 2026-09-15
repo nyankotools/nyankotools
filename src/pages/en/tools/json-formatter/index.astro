@@ -1,5 +1,19 @@
 ---
+import Glossary from '../../../../components/Glossary.astro';
 import Layout from '../../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'JSON',
+    description:
+      'Short for JavaScript Object Notation, a text format for representing data as key-value pairs. It is widely used for APIs and configuration files.',
+  },
+  {
+    term: 'Syntax error',
+    description:
+      "An error that occurs when JSON's rules (matching brackets, commas, quotes, etc.) are violated. It's usually caused by a missing closing bracket or a trailing comma.",
+  },
+];
 ---
 
 <Layout
@@ -90,6 +104,8 @@ import Layout from '../../../../layouts/Layout.astro';
     hidden
     class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
   ></p>
+
+  <Glossary terms={glossaryTerms} heading="Glossary" />
 </Layout>
 
 <script>

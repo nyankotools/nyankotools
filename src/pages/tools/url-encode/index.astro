@@ -1,5 +1,19 @@
 ---
+import Glossary from '../../../components/Glossary.astro';
 import Layout from '../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'パーセントエンコーディング',
+    description:
+      'URLに直接含められない文字（日本語や一部の記号など）を「%」に続く2桁の16進数で表す変換方式です。「URLエンコード」とも呼ばれます。',
+  },
+  {
+    term: 'クエリパラメータ',
+    description:
+      'URLの「?」以降に付与される、key=value形式のパラメータです。日本語や記号を含める場合はパーセントエンコーディングが必要になります。',
+  },
+];
 ---
 
 <Layout
@@ -91,6 +105,8 @@ import Layout from '../../../layouts/Layout.astro';
     hidden
     class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
   ></p>
+
+  <Glossary terms={glossaryTerms} />
 </Layout>
 
 <script>

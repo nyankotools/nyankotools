@@ -1,0 +1,196 @@
+---
+import type { Locale } from '../data/tools';
+import { useTranslations } from '../i18n/ui';
+
+interface Props {
+  url: string | URL;
+  title: string;
+  lang: Locale;
+}
+
+const { url, title, lang } = Astro.props;
+const t = useTranslations(lang);
+
+const shareUrl = url.toString();
+const encodedUrl = encodeURIComponent(shareUrl);
+const encodedTitle = encodeURIComponent(title);
+
+const xShareUrl = `https://x.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
+const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+const lineShareUrl = `https://social-plugins.line.me/lineit/share?url=${encodedUrl}&text=${encodedTitle}`;
+const hatenaShareUrl = `https://b.hatena.ne.jp/add?mode=confirm&url=${encodedUrl}&title=${encodedTitle}`;
+
+const badgeClass =
+  'inline-flex h-11 min-w-11 items-center justify-center rounded-lg border border-gray-300 px-3 text-sm font-bold hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800';
+---
+
+<section
+  class="mt-10 border-t border-gray-200 pt-6 dark:border-gray-800"
+  aria-label={t('share.heading')}
+>
+  <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+    {t('share.heading')}
+  </p>
+  <div
+    class="flex flex-wrap items-center gap-2"
+    data-share-buttons
+    data-share-url={shareUrl}
+    data-share-title={title}
+  >
+    <a
+      href={xShareUrl}
+      data-share-popup
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={t('share.x')}
+      title={t('share.x')}
+      class={`${badgeClass} text-gray-900 dark:text-gray-100`}
+    >
+      X
+    </a>
+
+    <a
+      href={facebookShareUrl}
+      data-share-popup
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={t('share.facebook')}
+      title={t('share.facebook')}
+      class={`${badgeClass} text-[#1877F2]`}
+    >
+      f
+    </a>
+
+    <a
+      href={lineShareUrl}
+      data-share-popup
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={t('share.line')}
+      title={t('share.line')}
+      class={`${badgeClass} text-[#06C755]`}
+    >
+      LINE
+    </a>
+
+    {lang === 'ja' && (
+      <a
+        href={hatenaShareUrl}
+        data-share-popup
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label={t('share.hatena')}
+        title={t('share.hatena')}
+        class={`${badgeClass} text-[#00A4DE]`}
+      >
+        B!
+      </a>
+    )}
+
+    <button
+      type="button"
+      data-share-copy
+      data-copied-text={t('share.copied')}
+      data-copy-failed-text={t('share.copyFailed')}
+      aria-label={t('share.copy')}
+      title={t('share.copy')}
+      class={`${badgeClass} text-gray-600 dark:text-gray-400`}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-5 w-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="1.5"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
+        />
+      </svg>
+    </button>
+
+    <button
+      type="button"
+      data-share-native
+      hidden
+      aria-label={t('share.native')}
+      title={t('share.native')}
+      class={`${badgeClass} text-gray-600 dark:text-gray-400`}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-5 w-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="1.5"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z"
+        />
+      </svg>
+    </button>
+
+    <span
+      data-share-status
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</section>
+
+<script>
+  document
+    .querySelectorAll<HTMLElement>('[data-share-buttons]')
+    .forEach((container) => {
+      const shareUrl = container.dataset.shareUrl ?? '';
+      const shareTitle = container.dataset.shareTitle ?? '';
+      const statusEl = container.querySelector<HTMLElement>(
+        '[data-share-status]',
+      );
+
+      container
+        .querySelectorAll<HTMLAnchorElement>('[data-share-popup]')
+        .forEach((link) => {
+          link.addEventListener('click', (event) => {
+            event.preventDefault();
+            window.open(
+              link.href,
+              'share',
+              'width=600,height=480,noopener,noreferrer',
+            );
+          });
+        });
+
+      const copyButton =
+        container.querySelector<HTMLButtonElement>('[data-share-copy]');
+      copyButton?.addEventListener('click', async () => {
+        if (!statusEl) return;
+        try {
+          await navigator.clipboard.writeText(shareUrl);
+          statusEl.textContent = copyButton.dataset.copiedText ?? '';
+        } catch {
+          statusEl.textContent = copyButton.dataset.copyFailedText ?? '';
+        }
+      });
+
+      const nativeButton = container.querySelector<HTMLButtonElement>(
+        '[data-share-native]',
+      );
+      if (nativeButton && typeof navigator.share === 'function') {
+        nativeButton.hidden = false;
+        nativeButton.addEventListener('click', async () => {
+          try {
+            await navigator.share({ url: shareUrl, title: shareTitle });
+          } catch {
+            // ユーザーがキャンセルした場合などは何もしない
+          }
+        });
+      }
+    });
+</script>

@@ -8,6 +8,8 @@ NyankoTools (`nyankotools.com`) is a growing collection of small, browser-only u
 
 Users navigate via a persistent sidebar; each tool also has its own indexable URL (`/tools/<slug>/`) for SEO (long-tail keyword search traffic is a primary acquisition channel).
 
+NyankoTools aims for future monetization (ads/affiliate). Organic search traffic and user experience are the foundation for that, so SEO, responsive design, and (eventually) i18n are treated as first-class, not optional polish — see [`growth.md`](.claude/docs/growth.md) for the concrete rules to follow when adding or changing pages.
+
 ## 基本原則
 
 - **日本語で応答すること**（コード・コマンド・技術用語を除く）
@@ -61,3 +63,4 @@ More detailed rules and design docs live under `.claude/docs/`:
 - [`conventions.md`](.claude/docs/conventions.md) — coding style, tool-logic structure, commit style
 - [`adding-a-tool.md`](.claude/docs/adding-a-tool.md) — step-by-step checklist for adding a new tool
 - [`deployment.md`](.claude/docs/deployment.md) — Cloudflare Workers static-asset deploy config
+- [`growth.md`](.claude/docs/growth.md) — monetization-driven rules for SEO, responsive design, and future i18n

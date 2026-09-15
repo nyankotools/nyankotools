@@ -219,7 +219,7 @@ export const tools: Tool[] = [
       en: {
         name: 'Hiragana / Katakana Converter',
         description:
-          'Converts between hiragana and katakana, including voiced, semi-voiced, contracted, and geminate sounds, plus iteration marks.',
+          'Converts Japanese text between hiragana and katakana — handy for learners checking vocabulary, flashcards, and loanwords.',
         category: 'Text',
       },
     },

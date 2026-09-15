@@ -258,6 +258,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'markdown-preview',
+    translations: {
+      ja: {
+        name: 'Markdown⇔HTML変換',
+        description:
+          'Markdownをリアルタイムプレビューしながら、HTMLと相互変換します。README や記事の下書き確認に便利。',
+        category: 'コード',
+      },
+      en: {
+        name: 'Markdown to HTML Converter',
+        description:
+          'Converts Markdown to HTML with a live preview, and HTML back to Markdown. Handy for checking a README or article draft.',
+        category: 'Code',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

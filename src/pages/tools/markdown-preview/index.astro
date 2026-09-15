@@ -1,0 +1,377 @@
+---
+import Glossary from '../../../components/Glossary.astro';
+import Layout from '../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'Markdown',
+    description:
+      '見出しや箇条書き、リンクなどを簡単な記号で表現できる軽量マークアップ言語です。READMEファイルやブログ記事の執筆などで広く使われています。',
+  },
+  {
+    term: 'HTML',
+    description:
+      'HyperText Markup Language の略で、Webページの構造を表現するマークアップ言語です。ブラウザはHTMLを解釈して画面に表示します。',
+  },
+  {
+    term: 'GFM（GitHub Flavored Markdown）',
+    description:
+      'GitHubで採用されている拡張Markdown記法です。テーブルや取り消し線、タスクリストなどが使えます。本ツールもGFM記法に対応しています。',
+  },
+  {
+    term: 'サニタイズ',
+    description:
+      '入力されたHTMLから、スクリプトの実行など危険な要素を安全に取り除く処理です。本ツールはプレビュー表示前に自動でサニタイズを行っています。',
+  },
+];
+---
+
+<Layout
+  title="Markdown⇔HTML変換"
+  description="Markdownをリアルタイムプレビューしながら、HTMLと相互変換できる無料ツールです。GitHubのREADMEやブログ記事の下書き確認、生成したHTMLソースのコピー、HTMLからMarkdownへの逆変換にも対応。データはブラウザ内で処理され、サーバーには送信されません。"
+>
+  <h1 class="mb-2 text-2xl font-bold">
+    Markdown⇔HTML変換ツール（プレビュー付き）
+  </h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    Markdownを入力すると、リアルタイムでHTMLに変換してプレビュー表示します。生成されたHTMLソースはそのままコピーでき、逆にHTMLを貼り付けてMarkdownに変換することもできます。GitHubのREADMEやブログ記事の下書き確認に便利です。変換後の文章の文字数を数えたい場合は
+    <a
+      href="/tools/char-counter/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      文字数カウント
+    </a>
+    もあわせてご利用ください。
+  </p>
+
+  <div class="flex flex-wrap items-center gap-3">
+    <div
+      id="markdown-preview-mode"
+      class="flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700"
+      role="group"
+      aria-label="変換方向"
+    >
+      <button
+        type="button"
+        data-mode="mdToHtml"
+        aria-pressed="true"
+        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      >
+        Markdown→HTML
+      </button>
+      <button
+        type="button"
+        data-mode="htmlToMd"
+        aria-pressed="false"
+        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      >
+        HTML→Markdown
+      </button>
+    </div>
+    <div
+      id="markdown-preview-view"
+      class="flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700"
+      role="group"
+      aria-label="表示形式"
+    >
+      <button
+        type="button"
+        data-view="preview"
+        aria-pressed="true"
+        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      >
+        プレビュー
+      </button>
+      <button
+        type="button"
+        data-view="html"
+        aria-pressed="false"
+        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      >
+        HTMLソース
+      </button>
+    </div>
+    <button
+      id="markdown-preview-copy-button"
+      type="button"
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      コピー
+    </button>
+    <span
+      id="markdown-preview-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label
+        for="markdown-preview-input"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        入力
+      </label>
+      <textarea
+        id="markdown-preview-input"
+        class="h-80 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        placeholder={
+          '# 見出し\n\n**太字**のテキストと[リンク](https://example.com)を書けます。'
+        }
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <span
+        id="markdown-preview-output-heading"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        プレビュー
+      </span>
+      <div
+        id="markdown-preview-render"
+        class="h-80 w-full overflow-auto rounded-lg border border-gray-300 bg-white p-4 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></div>
+      <textarea
+        id="markdown-preview-output"
+        readonly
+        hidden
+        class="h-80 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="markdown-preview-error"
+    hidden
+    class="mt-4 max-w-2xl whitespace-pre-line rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+  ></p>
+
+  <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+    ※ プレビューは安全のためサニタイズして表示しています。
+    <code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-gray-800">
+      &lt;script&gt;
+    </code>
+    タグなど一部の要素は表示されません。
+  </p>
+
+  <Glossary terms={glossaryTerms} />
+</Layout>
+
+<style>
+  #markdown-preview-render :global(h1),
+  #markdown-preview-render :global(h2),
+  #markdown-preview-render :global(h3),
+  #markdown-preview-render :global(h4) {
+    font-weight: 700;
+    line-height: 1.3;
+    margin-block: 1.25em 0.5em;
+  }
+  #markdown-preview-render :global(h1) {
+    font-size: 1.5em;
+  }
+  #markdown-preview-render :global(h2) {
+    font-size: 1.3em;
+  }
+  #markdown-preview-render :global(h3) {
+    font-size: 1.15em;
+  }
+  #markdown-preview-render :global(p) {
+    line-height: 1.7;
+    margin-block: 0.75em;
+  }
+  #markdown-preview-render :global(ul),
+  #markdown-preview-render :global(ol) {
+    margin-block: 0.75em;
+    padding-inline-start: 1.5em;
+  }
+  #markdown-preview-render :global(ul) {
+    list-style: disc;
+  }
+  #markdown-preview-render :global(ol) {
+    list-style: decimal;
+  }
+  #markdown-preview-render :global(li) {
+    margin-block: 0.25em;
+  }
+  #markdown-preview-render :global(a) {
+    color: #1d4ed8;
+    text-decoration: underline;
+  }
+  :global(.dark) #markdown-preview-render :global(a) {
+    color: #60a5fa;
+  }
+  #markdown-preview-render :global(code) {
+    background: rgba(125, 125, 125, 0.15);
+    border-radius: 0.25em;
+    padding: 0.1em 0.35em;
+    font-size: 0.9em;
+  }
+  #markdown-preview-render :global(pre) {
+    background: rgba(125, 125, 125, 0.15);
+    border-radius: 0.5em;
+    padding: 0.75em 1em;
+    overflow-x: auto;
+    margin-block: 0.75em;
+  }
+  #markdown-preview-render :global(pre code) {
+    background: none;
+    padding: 0;
+  }
+  #markdown-preview-render :global(blockquote) {
+    border-inline-start: 3px solid rgba(125, 125, 125, 0.4);
+    padding-inline-start: 1em;
+    margin-block: 0.75em;
+    color: rgb(107, 114, 128);
+  }
+  #markdown-preview-render :global(hr) {
+    border: none;
+    border-top: 1px solid rgba(125, 125, 125, 0.3);
+    margin-block: 1.5em;
+  }
+  #markdown-preview-render :global(table) {
+    border-collapse: collapse;
+    margin-block: 0.75em;
+    width: 100%;
+  }
+  #markdown-preview-render :global(th),
+  #markdown-preview-render :global(td) {
+    border: 1px solid rgba(125, 125, 125, 0.3);
+    padding: 0.4em 0.6em;
+    text-align: left;
+  }
+  #markdown-preview-render :global(img) {
+    max-width: 100%;
+  }
+</style>
+
+<script>
+  import DOMPurify from 'dompurify';
+  import {
+    htmlToMarkdown,
+    markdownToHtml,
+    type ConvertOutcome,
+  } from '../../../lib/tools/markdown-preview';
+
+  type Mode = 'mdToHtml' | 'htmlToMd';
+  type View = 'preview' | 'html';
+
+  const input = document.getElementById(
+    'markdown-preview-input',
+  ) as HTMLTextAreaElement;
+  const renderEl = document.getElementById('markdown-preview-render')!;
+  const output = document.getElementById(
+    'markdown-preview-output',
+  ) as HTMLTextAreaElement;
+  const outputHeading = document.getElementById(
+    'markdown-preview-output-heading',
+  )!;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#markdown-preview-mode [data-mode]',
+  );
+  const viewGroup = document.getElementById('markdown-preview-view')!;
+  const viewButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#markdown-preview-view [data-view]',
+  );
+  const copyButton = document.getElementById('markdown-preview-copy-button')!;
+  const statusEl = document.getElementById('markdown-preview-status')!;
+  const errorEl = document.getElementById('markdown-preview-error')!;
+
+  let mode: Mode = 'mdToHtml';
+  let view: View = 'preview';
+  let latestOutput = '';
+
+  const placeholders: Record<Mode, string> = {
+    mdToHtml:
+      '# 見出し\n\n**太字**のテキストと[リンク](https://example.com)を書けます。',
+    htmlToMd: '<h1>見出し</h1>\n<p><strong>太字</strong>のテキストです。</p>',
+  };
+
+  function updateVisibility() {
+    const isMdToHtml = mode === 'mdToHtml';
+    viewGroup.hidden = !isMdToHtml;
+    const showPreview = isMdToHtml && view === 'preview';
+    renderEl.hidden = !showPreview;
+    output.hidden = showPreview;
+    outputHeading.textContent = !isMdToHtml
+      ? '結果'
+      : view === 'preview'
+        ? 'プレビュー'
+        : 'HTMLソース';
+  }
+
+  function showError(message: string) {
+    latestOutput = '';
+    renderEl.innerHTML = '';
+    output.value = '';
+    errorEl.textContent = `エラー: ${message}`;
+    errorEl.hidden = false;
+  }
+
+  function showOutput(result: Extract<ConvertOutcome, { success: true }>) {
+    latestOutput = result.output;
+    output.value = result.output;
+    renderEl.innerHTML =
+      mode === 'mdToHtml' ? DOMPurify.sanitize(result.output) : '';
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function convert() {
+    statusEl.textContent = '';
+    if (input.value.trim() === '') {
+      latestOutput = '';
+      renderEl.innerHTML = '';
+      output.value = '';
+      errorEl.hidden = true;
+      return;
+    }
+    const result: ConvertOutcome =
+      mode === 'mdToHtml'
+        ? markdownToHtml(input.value)
+        : htmlToMarkdown(input.value);
+    if (result.success) {
+      showOutput(result);
+    } else {
+      showError(result.message);
+    }
+  }
+
+  input.addEventListener('input', convert);
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as Mode;
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      input.placeholder = placeholders[mode];
+      updateVisibility();
+      convert();
+    });
+  });
+
+  viewButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      view = button.dataset.view as View;
+      viewButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      updateVisibility();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!latestOutput) return;
+    try {
+      await navigator.clipboard.writeText(latestOutput);
+      statusEl.textContent = 'コピーしました';
+    } catch {
+      statusEl.textContent = 'コピーに失敗しました';
+    }
+  });
+
+  updateVisibility();
+  convert();
+</script>

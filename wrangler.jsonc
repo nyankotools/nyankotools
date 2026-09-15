@@ -2,6 +2,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "nyankotools",
   "compatibility_date": "2026-09-15",
+  "build": {
+    "command": "pnpm build",
+  },
   "assets": {
     "directory": "./dist",
     "not_found_handling": "404-page",

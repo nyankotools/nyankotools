@@ -24,9 +24,11 @@ pnpm preview          # preview the production build locally
 pnpm exec astro check # type-check .astro/.ts files
 pnpm run lint          # ESLint
 pnpm run format        # Prettier --write
+pnpm test             # Vitest (run once)
+pnpm run test:watch    # Vitest (watch mode)
 ```
 
-There is no test suite yet. When adding one, prefer testing the pure logic in `src/lib/tools/*.ts` directly rather than the Astro pages.
+Tests use **Vitest**. They target the pure logic in `src/lib/tools/*.ts` (e.g. `src/lib/tools/char-counter.test.ts`), not the Astro pages themselves — no config file is needed since there's no DOM/Astro dependency to set up for these unit tests.
 
 ## Architecture
 

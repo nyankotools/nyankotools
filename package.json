@@ -13,7 +13,9 @@
     "preview": "astro preview",
     "astro": "astro",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
@@ -34,6 +36,7 @@
     "prettier-plugin-astro": "^1.0.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.0",
+    "vitest": "^5.0.0",
     "wrangler": "^4.131.1"
   }
 }

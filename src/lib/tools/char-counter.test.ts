@@ -29,4 +29,8 @@ describe('countText', () => {
   it('前後の空白は単語数の計算から除外される', () => {
     expect(countText('  spaced out  ').words).toBe(2);
   });
+
+  it('スペースのない日本語文でも単語数を正しく数える', () => {
+    expect(countText('これはテストです').words).toBeGreaterThan(1);
+  });
 });

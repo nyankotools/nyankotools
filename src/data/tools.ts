@@ -71,6 +71,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'url-encode',
+    translations: {
+      ja: {
+        name: 'URLエンコード/デコード',
+        description:
+          'テキストとパーセントエンコード形式を相互に変換します。クエリパラメータの日本語などマルチバイト文字にも対応。',
+        category: 'コード',
+      },
+      en: {
+        name: 'URL Encoder/Decoder',
+        description:
+          'Converts text to and from percent-encoding, with full support for multibyte characters in query parameters.',
+        category: 'Code',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

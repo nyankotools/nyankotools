@@ -139,6 +139,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'qr-generator',
+    translations: {
+      ja: {
+        name: 'QRコード生成',
+        description:
+          'URLやテキストからQRコードを生成し、PNG画像としてダウンロードできます。誤り訂正レベルも選択可能。',
+        category: 'コード',
+      },
+      en: {
+        name: 'QR Code Generator',
+        description:
+          'Generates a QR code from a URL or text and downloads it as a PNG, with a selectable error correction level.',
+        category: 'Code',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

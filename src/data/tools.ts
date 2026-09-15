@@ -241,6 +241,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'csv-json-converter',
+    translations: {
+      ja: {
+        name: 'CSV⇔JSON変換',
+        description:
+          'CSVとJSONを相互に変換します。ヘッダー行をキーとして使用し、カンマ・タブ区切りや引用符付きフィールドにも対応。',
+        category: 'コード',
+      },
+      en: {
+        name: 'CSV to JSON Converter',
+        description:
+          'Converts between CSV and JSON using the header row as keys, with support for comma/tab delimiters and quoted fields.',
+        category: 'Code',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

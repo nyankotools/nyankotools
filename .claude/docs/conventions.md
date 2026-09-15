@@ -13,6 +13,7 @@
 - Format: Prettier（`.prettierrc.json`、`prettier-plugin-astro` 併用）。`singleQuote: true`。
 - コミット前に `pnpm run lint` と `pnpm run format` を実行すること。
 - `typescript` は `6.0.3` に固定（`^6.0.3`）。`astro check` と `typescript-eslint` が TypeScript 7 系のネイティブ（Go 製）コンパイラ API に未対応のため。両ツールの対応を確認するまで 7.x へ上げない。
+- 改行コードは LF（世界標準）に統一する。ルートの `.gitattributes`（`* text=auto eol=lf`）で強制しているため、Windows で `core.autocrlf=true` になっていてもコミットされる内容は常に LF。エディタやOSのデフォルトに任せない。
 
 ## ツールロジックの書き方
 

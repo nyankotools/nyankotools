@@ -51,6 +51,7 @@ Note: `og:image` currently points at `https://nyankotools.com/ogp.png`, which do
 - ESLint (`eslint.config.js`, flat config: `typescript-eslint` + `eslint-plugin-astro` + `eslint-config-prettier`) and Prettier (`.prettierrc.json`, with `prettier-plugin-astro`) enforce style. Run both before committing.
 - `typescript` is pinned to `6.0.3` (not the newer `7.x` line) because `astro check` and `typescript-eslint` do not yet support TypeScript 7's native/Go-based compiler API — don't bump past the 6.x line without checking that both tools have caught up.
 - `.claude/settings.json` currently auto-allows only file read/edit tools; shell commands (git, pnpm, etc.) intentionally still prompt for confirmation each time — this was an explicit choice, not an oversight.
+- Line endings are LF everywhere (enforced via `.gitattributes`: `* text=auto eol=lf`), regardless of the OS used for editing. Windows' `core.autocrlf=true` can still check files out with CRLF locally, but `.gitattributes` normalizes what's actually committed — don't rely on editor/OS defaults.
 
 ## Detailed docs
 

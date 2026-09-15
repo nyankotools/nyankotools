@@ -1,5 +1,29 @@
 ---
+import Glossary from '../../../../components/Glossary.astro';
 import Layout from '../../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'Hash value',
+    description:
+      'A fixed-length string computed from input data using a set procedure. The same input always produces the same hash, but you cannot reverse a hash back into the original data.',
+  },
+  {
+    term: 'MD5',
+    description:
+      'An older hash function. Methods for deliberately producing two different inputs with the same MD5 hash (collisions) are well known, so avoid it for security-sensitive uses such as tamper detection or password storage.',
+  },
+  {
+    term: 'SHA-1',
+    description:
+      "Widely used as MD5's successor, but it also has known weaknesses and is now discouraged for security purposes.",
+  },
+  {
+    term: 'SHA-256',
+    description:
+      'Part of the SHA-2 family. It is still considered secure and is used widely, including in digital certificates and blockchains.',
+  },
+];
 ---
 
 <Layout
@@ -80,6 +104,8 @@ import Layout from '../../../../layouts/Layout.astro';
     </li>
     <li>Input is matched exactly, including line breaks and spaces.</li>
   </ul>
+
+  <Glossary terms={glossaryTerms} heading="Glossary" />
 </Layout>
 
 <script>

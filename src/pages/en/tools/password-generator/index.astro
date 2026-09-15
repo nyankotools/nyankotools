@@ -1,5 +1,19 @@
 ---
+import Glossary from '../../../../components/Glossary.astro';
 import Layout from '../../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'Entropy',
+    description:
+      'A measure of how hard a password is to guess (its randomness), expressed in bits. The higher the number, the longer a brute-force attack would take to crack it.',
+  },
+  {
+    term: 'Web Crypto API',
+    description:
+      'A cryptography toolkit built into web browsers. This tool uses its random number generator, so passwords are built from unpredictable, secure randomness.',
+  },
+];
 ---
 
 <Layout
@@ -152,6 +166,8 @@ import Layout from '../../../../layouts/Layout.astro';
     <li>Avoid reusing the same password across different services</li>
     <li>Store generated passwords safely, such as in a password manager</li>
   </ul>
+
+  <Glossary terms={glossaryTerms} heading="Glossary" />
 </Layout>
 
 <script>

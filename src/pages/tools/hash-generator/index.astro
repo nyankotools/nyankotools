@@ -1,5 +1,29 @@
 ---
+import Glossary from '../../../components/Glossary.astro';
 import Layout from '../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'ハッシュ値',
+    description:
+      '元のデータから一定の計算手順で求められる、固定長の文字列です。同じ入力からは常に同じハッシュ値が得られますが、ハッシュ値だけから元のデータを逆算することはできません。',
+  },
+  {
+    term: 'MD5',
+    description:
+      '古くから使われているハッシュ関数の一つです。異なる入力から同じハッシュ値を意図的に作り出す方法（衝突）が知られており、改ざん検知やパスワード保存などセキュリティが求められる用途には使用しないでください。',
+  },
+  {
+    term: 'SHA-1',
+    description:
+      'MD5の後継として広く使われたハッシュ関数ですが、こちらも安全性の問題が指摘されており、現在はセキュリティ用途では非推奨とされています。',
+  },
+  {
+    term: 'SHA-256',
+    description:
+      'SHA-2ファミリーに属するハッシュ関数です。現在も安全性が高いとされ、デジタル証明書やブロックチェーンなど幅広い分野で利用されています。',
+  },
+];
 ---
 
 <Layout
@@ -77,6 +101,8 @@ import Layout from '../../../layouts/Layout.astro';
     </li>
     <li>入力は改行やスペースも含めて厳密に区別されます。</li>
   </ul>
+
+  <Glossary terms={glossaryTerms} />
 </Layout>
 
 <script>

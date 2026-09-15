@@ -54,6 +54,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'base64',
+    translations: {
+      ja: {
+        name: 'Base64エンコード/デコード',
+        description:
+          'テキストとBase64文字列を相互に変換します。日本語などのマルチバイト文字にも対応。',
+        category: 'コード',
+      },
+      en: {
+        name: 'Base64 Encoder/Decoder',
+        description:
+          'Converts text to and from Base64, with full support for multibyte characters.',
+        category: 'Code',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

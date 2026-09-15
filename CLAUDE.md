@@ -8,6 +8,10 @@ NyankoTools (`nyankotools.com`) is a growing collection of small, browser-only u
 
 Users navigate via a persistent sidebar; each tool also has its own indexable URL (`/tools/<slug>/`) for SEO (long-tail keyword search traffic is a primary acquisition channel).
 
+## 基本原則
+
+- **日本語で応答すること**（コード・コマンド・技術用語を除く）
+
 ## Commands
 
 Package manager is **pnpm** (via Corepack).

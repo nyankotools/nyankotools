@@ -105,6 +105,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'password-generator',
+    translations: {
+      ja: {
+        name: 'パスワード生成',
+        description:
+          '文字種（大文字・小文字・数字・記号）と桁数を指定して、安全なランダムパスワードを生成します。強度の目安も表示。',
+        category: 'コード',
+      },
+      en: {
+        name: 'Password Generator',
+        description:
+          'Generates strong random passwords by choosing character types (uppercase, lowercase, numbers, symbols) and length, with a strength estimate.',
+        category: 'Code',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

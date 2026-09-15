@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { filterTools, getCategories } from './home-filter';
-import type { Tool } from '../data/tools';
+import type { LocalizedTool } from '../data/tools';
 
-const tools: Tool[] = [
+const tools: LocalizedTool[] = [
   {
     slug: 'char-counter',
     name: '文字数カウント',

@@ -19,6 +19,14 @@ NyankoTools aims for future monetization (ads/affiliate). Organic search traffic
 - 実装が完了したら、ユーザー自身がブラウザで動作を確認できる状態にすること（`pnpm dev` を起動し、確認用URL（例: http://localhost:4321）を伝える等）。
 - 起動した開発サーバーなどのプロセスは、ユーザーから明示的に停止の指示があるまで終了しないこと。
 
+## コミットのルール
+
+- ユーザーから明示的に指示されるまで `git commit` を実行しないこと。実装が完了しても、コミットはせずユーザーの確認・指示を待つこと。
+
+## memo更新のルール
+
+- `memo/実装予定ツール一覧.md` に載っている予定ツールの実装が完了したら、該当行のチェックボックスにチェックを入れ、「実装済み」セクションへ移動すること（`src/data/tools.ts` への登録と合わせて行う）。
+
 ## Commands
 
 Package manager is **pnpm** (via Corepack).

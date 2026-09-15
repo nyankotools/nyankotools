@@ -14,6 +14,11 @@ NyankoTools aims for future monetization (ads/affiliate). Organic search traffic
 
 - **日本語で応答すること**（コード・コマンド・技術用語を除く）
 
+## 動作確認のルール
+
+- 実装が完了したら、ユーザー自身がブラウザで動作を確認できる状態にすること（`pnpm dev` を起動し、確認用URL（例: http://localhost:4321）を伝える等）。
+- 起動した開発サーバーなどのプロセスは、ユーザーから明示的に停止の指示があるまで終了しないこと。
+
 ## Commands
 
 Package manager is **pnpm** (via Corepack).

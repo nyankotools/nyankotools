@@ -122,6 +122,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'hash-generator',
+    translations: {
+      ja: {
+        name: 'ハッシュ生成',
+        description:
+          'テキストからMD5・SHA-1・SHA-256のハッシュ値をリアルタイムで計算します。',
+        category: 'コード',
+      },
+      en: {
+        name: 'Hash Generator',
+        description:
+          'Computes MD5, SHA-1, and SHA-256 hashes from text in real time.',
+        category: 'Code',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

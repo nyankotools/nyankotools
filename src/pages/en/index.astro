@@ -1,15 +1,15 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import { getLocalizedTools } from '../data/tools';
-import { getCategories } from '../lib/home-filter';
-import { useTranslations } from '../i18n/ui';
+import Layout from '../../layouts/Layout.astro';
+import { getLocalizedTools } from '../../data/tools';
+import { getCategories } from '../../lib/home-filter';
+import { useTranslations } from '../../i18n/ui';
 
-const t = useTranslations('ja');
-const tools = getLocalizedTools('ja');
+const t = useTranslations('en');
+const tools = getLocalizedTools('en');
 const categories = getCategories(tools);
 ---
 
-<Layout title="便利なWebツール集" description={t('home.meta.description')}>
+<Layout title="Handy Web Tools" description={t('home.meta.description')}>
   <h1 class="mb-2 text-2xl font-bold">{t('home.title')}</h1>
   <p class="mb-8 text-gray-600 dark:text-gray-400">{t('home.lead')}</p>
 
@@ -60,7 +60,7 @@ const categories = getCategories(tools);
     {tools.map((tool) => (
       <li data-tool-slug={tool.slug}>
         <a
-          href={`/tools/${tool.slug}/`}
+          href={`/en/tools/${tool.slug}/`}
           class="block h-full rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-900 dark:hover:border-blue-500"
         >
           <span class="mb-1 inline-block rounded bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
@@ -79,8 +79,8 @@ const categories = getCategories(tools);
 </Layout>
 
 <script>
-  import { getLocalizedTools } from '../data/tools';
-  import { filterTools } from '../lib/home-filter';
+  import { getLocalizedTools } from '../../data/tools';
+  import { filterTools } from '../../lib/home-filter';
 
   const tools = getLocalizedTools(
     document.documentElement.lang === 'en' ? 'en' : 'ja',

@@ -28,7 +28,7 @@
    - フォームや結果表示など静的マークアップを Astro テンプレート部分に書く。狭い画面幅（375px前後）でも崩れないか意識する。
    - `<script>` タグ内で手順 1 の関数を import し、`input` イベント等に応じて DOM を更新する。React/Vue/Svelte のアイランドは使わない。
 
-3. **レジストリに登録する**: `src/data/tools.ts` の `tools` 配列に `{ slug, name, description }` を追加する。ここに登録しないとトップページのグリッドにもサイドバーナビゲーションにも表示されない。
+3. **レジストリに登録する**: `src/data/tools.ts` の `tools` 配列に `{ slug, name, description, category }` を追加する。ここに登録しないとトップページのグリッドにもサイドバーナビゲーションにも表示されない。`category` はトップページの検索・カテゴリ絞り込み（`src/lib/home-filter.ts`）に使われる。既存のカテゴリ名と表記を揃えられないか先に確認し、揃えられない場合のみ新しいカテゴリ名にする。
 
 4. **確認する**:
    - `pnpm dev` でローカル起動し、サイドバー・トップページ・`/tools/<slug>/` の直接アクセスを確認する。
@@ -41,7 +41,7 @@
 
 - [ ] `src/lib/tools/<slug>.ts` にロジックを実装した
 - [ ] `src/pages/tools/<slug>/index.astro` を `Layout` でラップした
-- [ ] `src/data/tools.ts` に登録した
+- [ ] `src/data/tools.ts` に `category` を含めて登録した
 - [ ] クライアントサイドのみで完結し、サーバーに一切データを送っていない
 - [ ] ページ専用の `title` / `description` を設計し、`<h1>` は1つだけにした（[growth.md](./growth.md) 参照）
 - [ ] 375px前後の狭い画面幅でもレイアウトが崩れないことを確認した

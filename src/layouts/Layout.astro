@@ -1,43 +1,95 @@
 ---
 import '../styles/global.css';
-import { tools } from '../data/tools';
+import { getLocalizedTools, type Locale } from '../data/tools';
+import {
+  useTranslations,
+  languageNames,
+  ogLocaleMap,
+  getAlternatePath,
+} from '../i18n/ui';
 
 interface Props {
   title: string;
   description: string;
   ogImage?: string;
+  noindex?: boolean;
 }
 
 const {
   title,
   description,
   ogImage = 'https://nyankotools.com/ogp.png',
+  noindex = false,
 } = Astro.props;
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const lang: Locale = Astro.currentLocale === 'en' ? 'en' : 'ja';
+const t = useTranslations(lang);
+const localizedTools = getLocalizedTools(lang);
+
+const pathname = Astro.url.pathname;
+const alternatePath = getAlternatePath(pathname, lang);
+const alternateLang: Locale = lang === 'ja' ? 'en' : 'ja';
+
+const canonicalURL = new URL(pathname, Astro.site);
+const jaURL = new URL(lang === 'ja' ? pathname : alternatePath, Astro.site);
+const enURL = new URL(lang === 'en' ? pathname : alternatePath, Astro.site);
+
+const siteName = t('site.name');
+const fullTitle = `${title} | ${siteName}`;
 ---
 
 <!doctype html>
-<html lang="ja">
+<html lang={lang}>
   <head>
+    <script is:inline>
+      (function () {
+        try {
+          const stored = localStorage.getItem('theme');
+          const theme =
+            stored === 'light' || stored === 'dark' ? stored : 'system';
+          const isDark =
+            theme === 'dark' ||
+            (theme === 'system' &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.classList.toggle('dark', isDark);
+          document
+            .querySelector('meta[name="theme-color"]')
+            ?.setAttribute('content', isDark ? '#030712' : '#f9fafb');
+        } catch {
+          // localStorageが使えない環境では初期表示はライトのままにする
+        }
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title} | NyankoTools</title>
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f9fafb" />
+    <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalURL} />
+    {noindex ? (
+      <meta name="robots" content="noindex" />
+    ) : (
+      <>
+        <link rel="alternate" hreflang="ja" href={jaURL} />
+        <link rel="alternate" hreflang="en" href={enURL} />
+        <link rel="alternate" hreflang="x-default" href={jaURL} />
+      </>
+    )}
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalURL} />
-    <meta property="og:title" content={`${title} | NyankoTools`} />
+    <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:site_name" content="NyankoTools" />
+    <meta property="og:site_name" content={siteName} />
     <meta property="og:image" content={ogImage} />
-    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:locale" content={ogLocaleMap[lang]} />
+    <meta property="og:locale:alternate" content={ogLocaleMap[alternateLang]} />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@nyankotools" />
     <meta name="twitter:creator" content="@nyankotools" />
-    <meta name="twitter:title" content={`${title} | NyankoTools`} />
+    <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
 
@@ -45,19 +97,64 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="generator" content={Astro.generator} />
   </head>
-  <body class="min-h-screen bg-gray-50 text-gray-900">
+  <body class="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
     <div class="flex min-h-screen flex-col md:flex-row">
-      <header class="flex items-center justify-between border-b border-gray-200 bg-white p-4 md:hidden">
-        <a href="/" class="block">
-          <img src="/logo.png" alt="NyankoTools" class="h-8 w-auto" />
+      <header class="flex items-center justify-between border-b border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900 md:hidden">
+        <a href={lang === 'en' ? '/en/' : '/'} class="block">
+          <img src="/logo.png" alt={siteName} class="h-8 w-auto" />
         </a>
+        <div class="flex items-center gap-1">
+          <a
+            href={alternatePath}
+            hreflang={alternateLang}
+            aria-label={t('nav.language')}
+            class="rounded px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            {lang === 'ja' ? 'EN' : '日本語'}
+          </a>
+          <button
+            id="theme-toggle-mobile"
+            type="button"
+            aria-label={t('nav.theme')}
+            class="rounded p-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="block h-5 w-5 dark:hidden"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
+              />
+            </svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="hidden h-5 w-5 dark:block"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"
+              />
+            </svg>
+          </button>
+        </div>
         <button
           id="sidebar-toggle"
           type="button"
           aria-expanded="false"
           aria-controls="sidebar"
-          aria-label="メニューを開く"
-          class="rounded p-2 text-gray-700 hover:bg-gray-100"
+          aria-label={t('nav.menu.open')}
+          class="rounded p-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -83,34 +180,99 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
       <aside
         id="sidebar"
-        class="fixed inset-y-0 left-0 z-40 w-72 max-w-[80%] -translate-x-full overflow-y-auto border-r border-gray-200 bg-white p-4 transition-transform duration-200 ease-in-out md:static md:z-auto md:w-64 md:translate-x-0 md:border-r"
+        class="fixed inset-y-0 left-0 z-40 w-72 max-w-[80%] -translate-x-full overflow-y-auto border-r border-gray-200 bg-white p-4 transition-transform duration-200 ease-in-out dark:border-gray-800 dark:bg-gray-900 md:static md:z-auto md:w-64 md:translate-x-0 md:border-r"
       >
-        <a href="/" class="mb-4 hidden md:block">
+        <a href={lang === 'en' ? '/en/' : '/'} class="mb-4 hidden md:block">
           <img
             src="/logo.png"
-            alt="NyankoTools"
+            alt={siteName}
             class="h-auto w-full"
             width="1376"
             height="280"
           />
         </a>
+        <div class="mb-4 hidden border-b border-gray-200 pb-4 dark:border-gray-800 md:block">
+          <span class="sr-only">{t('nav.language')}</span>
+          <div
+            class="flex gap-2 text-sm"
+            role="group"
+            aria-label={t('nav.language')}
+          >
+            <a
+              href={jaURL.pathname}
+              hreflang="ja"
+              aria-current={lang === 'ja' ? 'true' : undefined}
+              class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=true]:font-semibold aria-[current=true]:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=true]:text-blue-400"
+            >
+              {languageNames.ja}
+            </a>
+            <span class="text-gray-300 dark:text-gray-700" aria-hidden="true">
+              |
+            </span>
+            <a
+              href={enURL.pathname}
+              hreflang="en"
+              aria-current={lang === 'en' ? 'true' : undefined}
+              class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=true]:font-semibold aria-[current=true]:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=true]:text-blue-400"
+            >
+              {languageNames.en}
+            </a>
+          </div>
+
+          <div class="mt-3">
+            <span class="sr-only">{t('nav.theme')}</span>
+            <div
+              id="theme-switcher"
+              class="flex gap-1 text-sm"
+              role="group"
+              aria-label={t('nav.theme')}
+            >
+              <button
+                type="button"
+                data-theme-option="light"
+                aria-pressed="false"
+                class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-pressed:font-semibold aria-pressed:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-pressed:text-blue-400"
+              >
+                {t('nav.theme.light')}
+              </button>
+              <button
+                type="button"
+                data-theme-option="dark"
+                aria-pressed="false"
+                class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-pressed:font-semibold aria-pressed:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-pressed:text-blue-400"
+              >
+                {t('nav.theme.dark')}
+              </button>
+              <button
+                type="button"
+                data-theme-option="system"
+                aria-pressed="false"
+                class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-pressed:font-semibold aria-pressed:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-pressed:text-blue-400"
+              >
+                {t('nav.theme.system')}
+              </button>
+            </div>
+          </div>
+        </div>
         <nav>
           <ul class="space-y-1">
-            {tools.map((tool) => (
-              <li>
-                <a
-                  href={`/tools/${tool.slug}/`}
-                  class="block rounded px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 aria-[current=page]:bg-blue-50 aria-[current=page]:font-semibold aria-[current=page]:text-blue-700"
-                  aria-current={
-                    Astro.url.pathname === `/tools/${tool.slug}/`
-                      ? 'page'
-                      : undefined
-                  }
-                >
-                  {tool.name}
-                </a>
-              </li>
-            ))}
+            {localizedTools.map((tool) => {
+              const href =
+                lang === 'en'
+                  ? `/en/tools/${tool.slug}/`
+                  : `/tools/${tool.slug}/`;
+              return (
+                <li>
+                  <a
+                    href={href}
+                    class="block rounded px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 aria-[current=page]:bg-blue-50 aria-[current=page]:font-semibold aria-[current=page]:text-blue-700 dark:text-gray-300 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=page]:bg-blue-950/40 dark:aria-[current=page]:text-blue-400"
+                    aria-current={pathname === href ? 'page' : undefined}
+                  >
+                    {tool.name}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </nav>
       </aside>
@@ -118,12 +280,12 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
         <div class="flex-1">
           <slot />
         </div>
-        <footer class="mt-10 border-t border-gray-200 pt-4 text-xs text-gray-500">
+        <footer class="mt-10 border-t border-gray-200 pt-4 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">
           <a
-            href="/privacy-policy/"
-            class="hover:text-blue-700 hover:underline"
+            href={lang === 'en' ? '/en/privacy-policy/' : '/privacy-policy/'}
+            class="hover:text-blue-700 hover:underline dark:hover:text-blue-400"
           >
-            プライバシーポリシー
+            {t('footer.privacy')}
           </a>
         </footer>
       </main>
@@ -172,6 +334,73 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
         if (event.matches) {
           closeSidebar();
         }
+      });
+
+      type Theme = 'light' | 'dark' | 'system';
+      const THEME_KEY = 'theme';
+      const themeButtons = document.querySelectorAll<HTMLButtonElement>(
+        '[data-theme-option]',
+      );
+      const darkMql = window.matchMedia('(prefers-color-scheme: dark)');
+
+      function getStoredTheme(): Theme {
+        try {
+          const stored = localStorage.getItem(THEME_KEY);
+          if (stored === 'light' || stored === 'dark') return stored;
+        } catch {
+          // localStorageが使えない環境は無視してシステム設定に従う
+        }
+        return 'system';
+      }
+
+      function applyTheme(theme: Theme) {
+        const isDark =
+          theme === 'dark' || (theme === 'system' && darkMql.matches);
+        document.documentElement.classList.toggle('dark', isDark);
+        document
+          .querySelector('meta[name="theme-color"]')
+          ?.setAttribute('content', isDark ? '#030712' : '#f9fafb');
+        themeButtons.forEach((button) => {
+          button.setAttribute(
+            'aria-pressed',
+            String(button.dataset.themeOption === theme),
+          );
+        });
+      }
+
+      function setTheme(theme: Theme) {
+        try {
+          if (theme === 'system') {
+            localStorage.removeItem(THEME_KEY);
+          } else {
+            localStorage.setItem(THEME_KEY, theme);
+          }
+        } catch {
+          // localStorageが使えない環境では保存せず今回の表示だけ反映する
+        }
+        applyTheme(theme);
+      }
+
+      applyTheme(getStoredTheme());
+
+      themeButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          setTheme(button.dataset.themeOption as Theme);
+        });
+      });
+
+      darkMql.addEventListener('change', () => {
+        if (getStoredTheme() === 'system') {
+          applyTheme('system');
+        }
+      });
+
+      const themeToggleMobile = document.getElementById('theme-toggle-mobile');
+      themeToggleMobile?.addEventListener('click', () => {
+        const next = document.documentElement.classList.contains('dark')
+          ? 'light'
+          : 'dark';
+        setTheme(next);
       });
     </script>
   </body>

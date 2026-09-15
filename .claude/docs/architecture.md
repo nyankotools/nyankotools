@@ -4,13 +4,13 @@ NyankoTools の技術構成とディレクトリ構造について。概要は [
 
 ## スタック
 
-| レイヤー         | 技術                                          |
-| ---------------- | --------------------------------------------- |
-| フレームワーク   | Astro（`output: static`、SSR アダプターなし） |
-| スタイリング     | Tailwind CSS v4（`@tailwindcss/vite`）        |
-| 言語             | TypeScript                                    |
-| デプロイ先       | Cloudflare Workers 静的アセット配信           |
-| パッケージ管理   | pnpm（Corepack 経由）                         |
+| レイヤー       | 技術                                          |
+| -------------- | --------------------------------------------- |
+| フレームワーク | Astro（`output: static`、SSR アダプターなし） |
+| スタイリング   | Tailwind CSS v4（`@tailwindcss/vite`）        |
+| 言語           | TypeScript                                    |
+| デプロイ先     | Cloudflare Workers 静的アセット配信           |
+| パッケージ管理 | pnpm（Corepack 経由）                         |
 
 Cloudflare 側は `wrangler.jsonc` で `pnpm build` を `build.command` に指定し、`dist/` を静的アセットとして配信する構成。サーバーランタイムを使わないため Cloudflare アダプターは不要。
 

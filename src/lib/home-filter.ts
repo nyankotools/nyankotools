@@ -1,4 +1,4 @@
-import type { Tool } from '../data/tools';
+import type { LocalizedTool } from '../data/tools';
 
 export interface HomeFilterOptions {
   query?: string;
@@ -8,9 +8,9 @@ export interface HomeFilterOptions {
 const ALL_CATEGORY = 'all';
 
 export function filterTools(
-  tools: Tool[],
+  tools: LocalizedTool[],
   options: HomeFilterOptions = {},
-): Tool[] {
+): LocalizedTool[] {
   const query = options.query?.trim().toLowerCase() ?? '';
   const category = options.category ?? ALL_CATEGORY;
 
@@ -27,6 +27,6 @@ export function filterTools(
   });
 }
 
-export function getCategories(tools: Tool[]): string[] {
+export function getCategories(tools: LocalizedTool[]): string[] {
   return Array.from(new Set(tools.map((tool) => tool.category)));
 }

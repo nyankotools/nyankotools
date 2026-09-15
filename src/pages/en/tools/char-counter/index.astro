@@ -1,0 +1,72 @@
+---
+import Layout from '../../../../layouts/Layout.astro';
+---
+
+<Layout
+  title="Character Counter"
+  description="A free tool that counts the characters, words, and lines of your text in real time. Your data is processed in the browser and never sent to a server."
+>
+  <h1 class="mb-2 text-2xl font-bold">Character Counter</h1>
+  <p class="mb-6 text-gray-600">
+    Type or paste text below to automatically see its character, word, and line
+    counts.
+  </p>
+
+  <textarea
+    id="char-counter-input"
+    class="h-64 w-full max-w-2xl rounded-lg border border-gray-300 p-4 focus:border-blue-400 focus:outline-none"
+    placeholder="Type or paste your text here"
+  ></textarea>
+
+  <dl class="mt-4 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
+    <div class="rounded-lg bg-white p-4 shadow-sm">
+      <dt class="text-xs text-gray-500">Characters</dt>
+      <dd id="char-counter-characters" class="text-xl font-semibold">
+        0
+      </dd>
+    </div>
+    <div class="rounded-lg bg-white p-4 shadow-sm">
+      <dt class="text-xs text-gray-500">Characters (no spaces)</dt>
+      <dd id="char-counter-characters-no-spaces" class="text-xl font-semibold">
+        0
+      </dd>
+    </div>
+    <div class="rounded-lg bg-white p-4 shadow-sm">
+      <dt class="text-xs text-gray-500">Words</dt>
+      <dd id="char-counter-words" class="text-xl font-semibold">
+        0
+      </dd>
+    </div>
+    <div class="rounded-lg bg-white p-4 shadow-sm">
+      <dt class="text-xs text-gray-500">Lines</dt>
+      <dd id="char-counter-lines" class="text-xl font-semibold">
+        0
+      </dd>
+    </div>
+  </dl>
+</Layout>
+
+<script>
+  import { countText } from '../../../../lib/tools/char-counter';
+
+  const input = document.getElementById(
+    'char-counter-input',
+  ) as HTMLTextAreaElement;
+  const charactersEl = document.getElementById('char-counter-characters')!;
+  const charactersNoSpacesEl = document.getElementById(
+    'char-counter-characters-no-spaces',
+  )!;
+  const wordsEl = document.getElementById('char-counter-words')!;
+  const linesEl = document.getElementById('char-counter-lines')!;
+
+  function update() {
+    const result = countText(input.value);
+    charactersEl.textContent = String(result.characters);
+    charactersNoSpacesEl.textContent = String(result.charactersNoSpaces);
+    wordsEl.textContent = String(result.words);
+    linesEl.textContent = String(result.lines);
+  }
+
+  input.addEventListener('input', update);
+  update();
+</script>

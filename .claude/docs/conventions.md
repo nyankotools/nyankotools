@@ -18,7 +18,7 @@
 
 - 各ツールの実処理（パース、変換、計算など）は `src/lib/tools/<slug>.ts` に「フレームワーク非依存の素の TypeScript 関数」として書く。
 - ページ側の `<script>` タグはこの関数を import して DOM 更新に専念させる。ロジックをページ内に直接書かない。
-- テストを追加する場合は、Astro ページではなく `src/lib/tools/*.ts` の純粋ロジックを対象にする（現状テストスイートは未整備）。
+- テストは Vitest（`pnpm test` / `pnpm run test:watch`）。Astro ページではなく `src/lib/tools/*.ts` の純粋ロジックを対象にする（例: `src/lib/tools/char-counter.test.ts`）。
 
 ## コミットメッセージ
 

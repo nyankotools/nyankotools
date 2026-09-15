@@ -1,28 +1,126 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { tools } from '../data/tools';
+import { getCategories } from '../lib/home-filter';
+
+const categories = getCategories(tools);
 ---
 
 <Layout
   title="便利なWebツール集"
-  description="NyankoToolsは、開発者やクリエイターに役立つブラウザ上で動作する便利Webツール集です。"
+  description="にゃんこツールは、開発者やクリエイターに役立つブラウザ上で動作する便利Webツール集です。"
 >
-  <h1 class="mb-2 text-2xl font-bold">🐾 NyankoTools</h1>
+  <h1 class="mb-2 text-2xl font-bold">🐾 にゃんこツール</h1>
   <p class="mb-8 text-gray-600">
     ブラウザだけで完結する便利ツール集です。データはどれもサーバーに送信されません。
   </p>
 
+  <div class="mb-6 space-y-4">
+    <div>
+      <label for="tool-search" class="sr-only">
+        ツールを検索
+      </label>
+      <input
+        id="tool-search"
+        type="search"
+        placeholder="ツールを検索（例: 文字数、変換）"
+        class="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100"
+      />
+    </div>
+
+    <div
+      class="flex flex-wrap gap-2"
+      role="group"
+      aria-label="カテゴリで絞り込み"
+    >
+      <button
+        type="button"
+        data-category-filter="all"
+        aria-pressed="true"
+        class="inline-flex min-h-11 items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700 aria-pressed:border-blue-600 aria-pressed:bg-blue-600 aria-pressed:text-white"
+      >
+        すべて
+      </button>
+      {categories.map((category) => (
+        <button
+          type="button"
+          data-category-filter={category}
+          aria-pressed="false"
+          class="inline-flex min-h-11 items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700 aria-pressed:border-blue-600 aria-pressed:bg-blue-600 aria-pressed:text-white"
+        >
+          {category}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <p id="no-results" hidden class="text-sm text-gray-500">
+    条件に一致するツールが見つかりませんでした。
+  </p>
+
   <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {tools.map((tool) => (
-      <li>
+      <li data-tool-slug={tool.slug}>
         <a
           href={`/tools/${tool.slug}/`}
           class="block h-full rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:shadow-md"
         >
-          <h2 class="mb-1 font-semibold text-blue-700">{tool.name}</h2>
+          <span class="mb-1 inline-block rounded bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+            {tool.category}
+          </span>
+          <h2 class="mb-1 mt-1 font-semibold text-blue-700">{tool.name}</h2>
           <p class="text-sm text-gray-600">{tool.description}</p>
         </a>
       </li>
     ))}
   </ul>
 </Layout>
+
+<script>
+  import { tools } from '../data/tools';
+  import { filterTools } from '../lib/home-filter';
+
+  const searchInput = document.getElementById(
+    'tool-search',
+  ) as HTMLInputElement | null;
+  const categoryButtons = document.querySelectorAll<HTMLButtonElement>(
+    '[data-category-filter]',
+  );
+  const items = document.querySelectorAll<HTMLLIElement>('[data-tool-slug]');
+  const noResults = document.getElementById('no-results');
+
+  let activeCategory = 'all';
+
+  function applyFilter() {
+    const query = searchInput?.value ?? '';
+    const visibleSlugs = new Set(
+      filterTools(tools, { query, category: activeCategory }).map(
+        (tool) => tool.slug,
+      ),
+    );
+
+    let visibleCount = 0;
+    items.forEach((item) => {
+      const slug = item.dataset.toolSlug;
+      const visible = slug !== undefined && visibleSlugs.has(slug);
+      item.hidden = !visible;
+      if (visible) visibleCount++;
+    });
+
+    if (noResults) {
+      noResults.hidden = visibleCount > 0;
+    }
+  }
+
+  searchInput?.addEventListener('input', applyFilter);
+
+  categoryButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      activeCategory = button.dataset.categoryFilter ?? 'all';
+      categoryButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      applyFilter();
+    });
+  });
+</script>

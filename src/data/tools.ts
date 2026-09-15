@@ -2,6 +2,7 @@ export interface Tool {
   slug: string;
   name: string;
   description: string;
+  category: string;
 }
 
 export const tools: Tool[] = [
@@ -10,5 +11,6 @@ export const tools: Tool[] = [
     name: '文字数カウント',
     description:
       '入力したテキストの文字数・単語数・行数をリアルタイムで数えます。',
+    category: 'テキスト',
   },
 ];

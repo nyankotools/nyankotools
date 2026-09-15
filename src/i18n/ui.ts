@@ -18,6 +18,10 @@ export const ui = {
     'site.name': 'にゃんこツール',
     'nav.menu.open': 'メニューを開く',
     'nav.language': '言語',
+    'nav.theme': '表示テーマ',
+    'nav.theme.light': 'ライト',
+    'nav.theme.dark': 'ダーク',
+    'nav.theme.system': 'システム',
     'footer.privacy': 'プライバシーポリシー',
     'home.title': '🐾 にゃんこツール',
     'home.lead':
@@ -38,6 +42,10 @@ export const ui = {
     'site.name': 'NyankoTools',
     'nav.menu.open': 'Open menu',
     'nav.language': 'Language',
+    'nav.theme': 'Theme',
+    'nav.theme.light': 'Light',
+    'nav.theme.dark': 'Dark',
+    'nav.theme.system': 'System',
     'footer.privacy': 'Privacy Policy',
     'home.title': '🐾 NyankoTools',
     'home.lead':

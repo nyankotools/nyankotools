@@ -1,5 +1,19 @@
 ---
+import Glossary from '../../../../components/Glossary.astro';
 import Layout from '../../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'Percent-encoding',
+    description:
+      'A way to represent characters that cannot appear directly in a URL (such as non-ASCII characters or certain symbols) as "%" followed by two hex digits. Also known as "URL encoding."',
+  },
+  {
+    term: 'Query parameter',
+    description:
+      'A key=value pair appended after the "?" in a URL. Non-ASCII characters or symbols in a query parameter need percent-encoding.',
+  },
+];
 ---
 
 <Layout
@@ -94,6 +108,8 @@ import Layout from '../../../../layouts/Layout.astro';
     hidden
     class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
   ></p>
+
+  <Glossary terms={glossaryTerms} heading="Glossary" />
 </Layout>
 
 <script>

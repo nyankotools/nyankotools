@@ -1,0 +1,27 @@
+---
+interface Term {
+  term: string;
+  description: string;
+}
+
+interface Props {
+  terms: Term[];
+  heading?: string;
+}
+
+const { terms, heading = '用語解説' } = Astro.props;
+---
+
+<h2 class="mt-10 mb-2 text-lg font-bold">{heading}</h2>
+<div class="space-y-2">
+  {terms.map((t) => (
+    <details class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+      <summary class="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300">
+        {t.term}
+      </summary>
+      <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        {t.description}
+      </p>
+    </details>
+  ))}
+</div>

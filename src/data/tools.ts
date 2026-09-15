@@ -190,6 +190,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'zenkaku-hankaku',
+    translations: {
+      ja: {
+        name: '全角/半角変換',
+        description:
+          '英数字・記号・カタカナ・スペースを対象に、全角と半角を相互に変換します。変換したい文字種を個別に選択可能。',
+        category: 'テキスト',
+      },
+      en: {
+        name: 'Full-width / Half-width Converter',
+        description:
+          'Converts between full-width and half-width for alphanumerics, symbols, katakana, and spaces, with each character type selectable individually.',
+        category: 'Text',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

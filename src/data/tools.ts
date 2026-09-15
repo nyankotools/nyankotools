@@ -88,6 +88,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'uuid-generator',
+    translations: {
+      ja: {
+        name: 'UUID生成',
+        description:
+          'ランダムなUUID（v4）を1件〜100件まとめて生成します。ハイフンなし・大文字表記にも対応。',
+        category: 'コード',
+      },
+      en: {
+        name: 'UUID Generator',
+        description:
+          'Generates 1 to 100 random UUIDs (v4) at once, with optional hyphen removal and uppercase formatting.',
+        category: 'Code',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -139,6 +139,40 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'qr-generator',
+    translations: {
+      ja: {
+        name: 'QRコード生成',
+        description:
+          'URLやテキストからQRコードを生成し、PNG画像としてダウンロードできます。誤り訂正レベルも選択可能。',
+        category: 'コード',
+      },
+      en: {
+        name: 'QR Code Generator',
+        description:
+          'Generates a QR code from a URL or text and downloads it as a PNG, with a selectable error correction level.',
+        category: 'Code',
+      },
+    },
+  },
+  {
+    slug: 'color-converter',
+    translations: {
+      ja: {
+        name: 'カラーコード変換',
+        description:
+          'HEX・RGB・HSLのカラーコードを相互に変換します。カラーピッカーで色を選ぶこともできます。',
+        category: 'コード',
+      },
+      en: {
+        name: 'Color Converter',
+        description:
+          'Converts color codes between HEX, RGB, and HSL, with a color picker for choosing colors visually.',
+        category: 'Code',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

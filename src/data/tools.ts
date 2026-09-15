@@ -156,6 +156,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'color-converter',
+    translations: {
+      ja: {
+        name: 'カラーコード変換',
+        description:
+          'HEX・RGB・HSLのカラーコードを相互に変換します。カラーピッカーで色を選ぶこともできます。',
+        category: 'コード',
+      },
+      en: {
+        name: 'Color Converter',
+        description:
+          'Converts color codes between HEX, RGB, and HSL, with a color picker for choosing colors visually.',
+        category: 'Code',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

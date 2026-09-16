@@ -496,6 +496,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'tax-calculator',
+    translations: {
+      ja: {
+        name: '消費税・割引計算機',
+        description:
+          '税込/税抜金額を相互に変換し、割引率や割引額からセール後の価格も計算します。標準税率10%・軽減税率8%・カスタム税率に対応。',
+        category: '計算',
+      },
+      en: {
+        name: 'Consumption Tax & Discount Calculator',
+        description:
+          'Converts between tax-included and tax-excluded prices, and calculates the discounted price from a discount rate or amount.',
+        category: 'Calculate',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

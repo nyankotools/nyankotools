@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { getLocalizedTools, type Locale } from '../data/tools';
+import { groupByCategory } from '../lib/home-filter';
 import {
   useTranslations,
   languageNames,
@@ -26,6 +27,7 @@ const {
 const lang: Locale = Astro.currentLocale === 'en' ? 'en' : 'ja';
 const t = useTranslations(lang);
 const localizedTools = getLocalizedTools(lang);
+const toolsByCategory = groupByCategory(localizedTools);
 
 const pathname = Astro.url.pathname;
 const alternatePath = getAlternatePath(pathname, lang);
@@ -277,27 +279,71 @@ const jsonLd: Record<string, unknown> | null = noindex
           </div>
         </div>
         <nav>
-          <ul class="space-y-1">
-            {localizedTools.map((tool) => {
+          {toolsByCategory.map(([category, categoryTools]) => {
+            const hasActiveTool = categoryTools.some((tool) => {
               const href =
                 lang === 'en'
                   ? `/en/tools/${tool.slug}/`
                   : `/tools/${tool.slug}/`;
-              return (
-                <li>
-                  <a
-                    href={href}
-                    class="block rounded px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 aria-[current=page]:bg-blue-50 aria-[current=page]:font-semibold aria-[current=page]:text-blue-700 dark:text-gray-300 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=page]:bg-blue-950/40 dark:aria-[current=page]:text-blue-400"
-                    aria-current={pathname === href ? 'page' : undefined}
+              return pathname === href;
+            });
+            return (
+              <details
+                class="group mb-1 last:mb-0"
+                data-category={category}
+                open={hasActiveTool}
+              >
+                <summary class="flex cursor-pointer items-center justify-between rounded px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
+                  {category}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-3 w-3 shrink-0 text-gray-400 transition-transform group-open:rotate-90 dark:text-gray-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
                   >
-                    {tool.name}
-                  </a>
-                </li>
-              );
-            })}
-          </ul>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                    />
+                  </svg>
+                </summary>
+                <ul class="space-y-1 pb-1">
+                  {categoryTools.map((tool) => {
+                    const href =
+                      lang === 'en'
+                        ? `/en/tools/${tool.slug}/`
+                        : `/tools/${tool.slug}/`;
+                    return (
+                      <li>
+                        <a
+                          href={href}
+                          class="block rounded px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 aria-[current=page]:bg-blue-50 aria-[current=page]:font-semibold aria-[current=page]:text-blue-700 dark:text-gray-300 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=page]:bg-blue-950/40 dark:aria-[current=page]:text-blue-400"
+                          aria-current={pathname === href ? 'page' : undefined}
+                        >
+                          {tool.name}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </details>
+            );
+          })}
         </nav>
       </aside>
+
+      <style>
+        nav summary {
+          list-style: none;
+        }
+        nav summary::-webkit-details-marker {
+          display: none;
+        }
+      </style>
       <main class="flex min-w-0 flex-1 flex-col p-4 sm:p-6 md:p-10">
         <div class="flex-1">
           <slot />
@@ -317,116 +363,15 @@ const jsonLd: Record<string, unknown> | null = noindex
     </div>
 
     <script>
-      const toggle = document.getElementById('sidebar-toggle');
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.getElementById('sidebar-overlay');
-      const mql = window.matchMedia('(min-width: 768px)');
+      import {
+        initSidebar,
+        initTheme,
+        initCategoryPersistence,
+      } from '../lib/layout-nav';
 
-      function openSidebar() {
-        sidebar?.classList.remove('-translate-x-full');
-        sidebar?.classList.add('translate-x-0');
-        overlay?.classList.remove('hidden');
-        toggle?.setAttribute('aria-expanded', 'true');
-        document.body.classList.add('overflow-hidden');
-      }
-
-      function closeSidebar() {
-        sidebar?.classList.add('-translate-x-full');
-        sidebar?.classList.remove('translate-x-0');
-        overlay?.classList.add('hidden');
-        toggle?.setAttribute('aria-expanded', 'false');
-        document.body.classList.remove('overflow-hidden');
-      }
-
-      toggle?.addEventListener('click', () => {
-        const isOpen = toggle.getAttribute('aria-expanded') === 'true';
-        if (isOpen) {
-          closeSidebar();
-        } else {
-          openSidebar();
-        }
-      });
-
-      overlay?.addEventListener('click', closeSidebar);
-
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-          closeSidebar();
-        }
-      });
-
-      mql.addEventListener('change', (event) => {
-        if (event.matches) {
-          closeSidebar();
-        }
-      });
-
-      type Theme = 'light' | 'dark' | 'system';
-      const THEME_KEY = 'theme';
-      const themeButtons = document.querySelectorAll<HTMLButtonElement>(
-        '[data-theme-option]',
-      );
-      const darkMql = window.matchMedia('(prefers-color-scheme: dark)');
-
-      function getStoredTheme(): Theme {
-        try {
-          const stored = localStorage.getItem(THEME_KEY);
-          if (stored === 'light' || stored === 'dark') return stored;
-        } catch {
-          // localStorageが使えない環境は無視してシステム設定に従う
-        }
-        return 'system';
-      }
-
-      function applyTheme(theme: Theme) {
-        const isDark =
-          theme === 'dark' || (theme === 'system' && darkMql.matches);
-        document.documentElement.classList.toggle('dark', isDark);
-        document
-          .querySelector('meta[name="theme-color"]')
-          ?.setAttribute('content', isDark ? '#030712' : '#f9fafb');
-        themeButtons.forEach((button) => {
-          button.setAttribute(
-            'aria-pressed',
-            String(button.dataset.themeOption === theme),
-          );
-        });
-      }
-
-      function setTheme(theme: Theme) {
-        try {
-          if (theme === 'system') {
-            localStorage.removeItem(THEME_KEY);
-          } else {
-            localStorage.setItem(THEME_KEY, theme);
-          }
-        } catch {
-          // localStorageが使えない環境では保存せず今回の表示だけ反映する
-        }
-        applyTheme(theme);
-      }
-
-      applyTheme(getStoredTheme());
-
-      themeButtons.forEach((button) => {
-        button.addEventListener('click', () => {
-          setTheme(button.dataset.themeOption as Theme);
-        });
-      });
-
-      darkMql.addEventListener('change', () => {
-        if (getStoredTheme() === 'system') {
-          applyTheme('system');
-        }
-      });
-
-      const themeToggleMobile = document.getElementById('theme-toggle-mobile');
-      themeToggleMobile?.addEventListener('click', () => {
-        const next = document.documentElement.classList.contains('dark')
-          ? 'light'
-          : 'dark';
-        setTheme(next);
-      });
+      initSidebar();
+      initTheme();
+      initCategoryPersistence();
     </script>
   </body>
 </html>

@@ -74,25 +74,7 @@ const jsonLd: Record<string, unknown> | null = noindex
 <!doctype html>
 <html lang={lang}>
   <head>
-    <script is:inline>
-      (function () {
-        try {
-          const stored = localStorage.getItem('theme');
-          const theme =
-            stored === 'light' || stored === 'dark' ? stored : 'system';
-          const isDark =
-            theme === 'dark' ||
-            (theme === 'system' &&
-              window.matchMedia('(prefers-color-scheme: dark)').matches);
-          document.documentElement.classList.toggle('dark', isDark);
-          document
-            .querySelector('meta[name="theme-color"]')
-            ?.setAttribute('content', isDark ? '#030712' : '#f9fafb');
-        } catch {
-          // localStorageが使えない環境では初期表示はライトのままにする
-        }
-      })();
-    </script>
+    <script src="/theme-init.js" is:inline></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filterTools, getCategories } from './home-filter';
+import { filterTools, getCategories, groupByCategory } from './home-filter';
 import type { LocalizedTool } from '../data/tools';
 
 const tools: LocalizedTool[] = [
@@ -65,5 +65,18 @@ describe('filterTools', () => {
 describe('getCategories', () => {
   it('returns unique categories in first-seen order', () => {
     expect(getCategories(tools)).toEqual(['テキスト', '変換']);
+  });
+});
+
+describe('groupByCategory', () => {
+  it('groups tools under their category, preserving first-seen category order', () => {
+    expect(groupByCategory(tools)).toEqual([
+      ['テキスト', [tools[0]]],
+      ['変換', [tools[1], tools[2]]],
+    ]);
+  });
+
+  it('returns an empty array when there are no tools', () => {
+    expect(groupByCategory([])).toEqual([]);
   });
 });

@@ -36,30 +36,98 @@ const glossaryTerms = [
     <h2 class="mb-3 text-lg font-bold">二つの日付の差</h2>
     <div class="flex flex-wrap items-end gap-3">
       <div>
-        <label
-          for="date-calc-diff-start"
+        <span
+          id="date-calc-diff-start-label"
           class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
         >
           開始日
-        </label>
-        <input
-          id="date-calc-diff-start"
-          type="date"
-          class="h-11 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-        />
+        </span>
+        <div
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="date-calc-diff-start-label"
+        >
+          <input
+            id="date-calc-diff-start-year"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="9999"
+            placeholder="2024"
+            aria-label="開始日の年（西暦）"
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">年</span>
+          <input
+            id="date-calc-diff-start-month"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="12"
+            placeholder="6"
+            aria-label="開始日の月"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">月</span>
+          <input
+            id="date-calc-diff-start-day"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            placeholder="15"
+            aria-label="開始日の日"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">日</span>
+        </div>
       </div>
       <div>
-        <label
-          for="date-calc-diff-end"
+        <span
+          id="date-calc-diff-end-label"
           class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
         >
           終了日
-        </label>
-        <input
-          id="date-calc-diff-end"
-          type="date"
-          class="h-11 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-        />
+        </span>
+        <div
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="date-calc-diff-end-label"
+        >
+          <input
+            id="date-calc-diff-end-year"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="9999"
+            placeholder="2024"
+            aria-label="終了日の年（西暦）"
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">年</span>
+          <input
+            id="date-calc-diff-end-month"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="12"
+            placeholder="6"
+            aria-label="終了日の月"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">月</span>
+          <input
+            id="date-calc-diff-end-day"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            placeholder="15"
+            aria-label="終了日の日"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">日</span>
+        </div>
       </div>
     </div>
     <label class="mt-3 flex min-h-11 w-fit items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
@@ -96,17 +164,51 @@ const glossaryTerms = [
     <h2 class="mb-3 text-lg font-bold">日付から計算（○日後・○日前）</h2>
     <div class="flex flex-wrap items-end gap-3">
       <div>
-        <label
-          for="date-calc-add-base"
+        <span
+          id="date-calc-add-base-label"
           class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
         >
           基準日
-        </label>
-        <input
-          id="date-calc-add-base"
-          type="date"
-          class="h-11 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-        />
+        </span>
+        <div
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="date-calc-add-base-label"
+        >
+          <input
+            id="date-calc-add-base-year"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="9999"
+            placeholder="2024"
+            aria-label="基準日の年（西暦）"
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">年</span>
+          <input
+            id="date-calc-add-base-month"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="12"
+            placeholder="6"
+            aria-label="基準日の月"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">月</span>
+          <input
+            id="date-calc-add-base-day"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            placeholder="15"
+            aria-label="基準日の日"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">日</span>
+        </div>
       </div>
       <div class="w-28">
         <label
@@ -160,9 +262,7 @@ const glossaryTerms = [
     <li>
       「初日を含めて数える」は、開始日・終了日の両方を1日として数える設定です（民法の原則は初日不算入ですが、契約期間や工期の計算では初日を含める運用も一般的です）。
     </li>
-    <li>
-      日付の入力範囲は西暦0001年〜9999年です（ブラウザの日付入力の仕様による制限）。
-    </li>
+    <li>日付の入力範囲は西暦0001年〜9999年です。</li>
   </ul>
 
   <Glossary terms={glossaryTerms} />
@@ -179,24 +279,53 @@ const glossaryTerms = [
 
   const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
 
-  function parseDateInputValue(value: string): DateParts | null {
-    const match = value.match(/^(\d{4,})-(\d{2})-(\d{2})$/);
-    if (!match) return null;
-    const [, y, m, d] = match;
-    return { year: Number(y), month: Number(m), day: Number(d) };
+  function readDateInputs(
+    yearInput: HTMLInputElement,
+    monthInput: HTMLInputElement,
+    dayInput: HTMLInputElement,
+  ): DateParts | null {
+    if (
+      yearInput.value.trim() === '' ||
+      monthInput.value.trim() === '' ||
+      dayInput.value.trim() === ''
+    ) {
+      return null;
+    }
+    return {
+      year: Number(yearInput.value),
+      month: Number(monthInput.value),
+      day: Number(dayInput.value),
+    };
   }
 
-  function formatDateInputValue(date: Date): string {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
-      date.getDate(),
-    ).padStart(2, '0')}`;
+  function setDateInputs(
+    yearInput: HTMLInputElement,
+    monthInput: HTMLInputElement,
+    dayInput: HTMLInputElement,
+    date: Date,
+  ) {
+    yearInput.value = String(date.getFullYear());
+    monthInput.value = String(date.getMonth() + 1);
+    dayInput.value = String(date.getDate());
   }
 
-  const diffStartInput = document.getElementById(
-    'date-calc-diff-start',
+  const diffStartYearInput = document.getElementById(
+    'date-calc-diff-start-year',
   ) as HTMLInputElement;
-  const diffEndInput = document.getElementById(
-    'date-calc-diff-end',
+  const diffStartMonthInput = document.getElementById(
+    'date-calc-diff-start-month',
+  ) as HTMLInputElement;
+  const diffStartDayInput = document.getElementById(
+    'date-calc-diff-start-day',
+  ) as HTMLInputElement;
+  const diffEndYearInput = document.getElementById(
+    'date-calc-diff-end-year',
+  ) as HTMLInputElement;
+  const diffEndMonthInput = document.getElementById(
+    'date-calc-diff-end-month',
+  ) as HTMLInputElement;
+  const diffEndDayInput = document.getElementById(
+    'date-calc-diff-end-day',
   ) as HTMLInputElement;
   const diffInclusiveCheckbox = document.getElementById(
     'date-calc-diff-inclusive',
@@ -212,8 +341,16 @@ const glossaryTerms = [
     diffNoteEl.textContent = '';
     diffWeeksEl.textContent = '';
 
-    const start = parseDateInputValue(diffStartInput.value);
-    const end = parseDateInputValue(diffEndInput.value);
+    const start = readDateInputs(
+      diffStartYearInput,
+      diffStartMonthInput,
+      diffStartDayInput,
+    );
+    const end = readDateInputs(
+      diffEndYearInput,
+      diffEndMonthInput,
+      diffEndDayInput,
+    );
     if (!start || !end) return;
 
     const inclusive = diffInclusiveCheckbox.checked;
@@ -247,12 +384,22 @@ const glossaryTerms = [
     }
   }
 
-  diffStartInput.addEventListener('input', renderDiff);
-  diffEndInput.addEventListener('input', renderDiff);
+  diffStartYearInput.addEventListener('input', renderDiff);
+  diffStartMonthInput.addEventListener('input', renderDiff);
+  diffStartDayInput.addEventListener('input', renderDiff);
+  diffEndYearInput.addEventListener('input', renderDiff);
+  diffEndMonthInput.addEventListener('input', renderDiff);
+  diffEndDayInput.addEventListener('input', renderDiff);
   diffInclusiveCheckbox.addEventListener('change', renderDiff);
 
-  const addBaseInput = document.getElementById(
-    'date-calc-add-base',
+  const addBaseYearInput = document.getElementById(
+    'date-calc-add-base-year',
+  ) as HTMLInputElement;
+  const addBaseMonthInput = document.getElementById(
+    'date-calc-add-base-month',
+  ) as HTMLInputElement;
+  const addBaseDayInput = document.getElementById(
+    'date-calc-add-base-day',
   ) as HTMLInputElement;
   const addDaysInput = document.getElementById(
     'date-calc-add-days',
@@ -267,7 +414,11 @@ const glossaryTerms = [
     addErrorEl.textContent = '';
     addResultEl.textContent = '';
 
-    const base = parseDateInputValue(addBaseInput.value);
+    const base = readDateInputs(
+      addBaseYearInput,
+      addBaseMonthInput,
+      addBaseDayInput,
+    );
     if (!base) return;
     if (addDaysInput.value.trim() === '') return;
 
@@ -291,16 +442,23 @@ const glossaryTerms = [
     addResultEl.textContent = `${result.year}年${result.month}月${result.day}日${weekdayLabel}`;
   }
 
-  addBaseInput.addEventListener('input', renderAddDays);
+  addBaseYearInput.addEventListener('input', renderAddDays);
+  addBaseMonthInput.addEventListener('input', renderAddDays);
+  addBaseDayInput.addEventListener('input', renderAddDays);
   addDaysInput.addEventListener('input', renderAddDays);
   addDirectionSelect.addEventListener('change', renderAddDays);
 
   const today = new Date();
-  diffStartInput.value = formatDateInputValue(today);
-  diffEndInput.value = formatDateInputValue(today);
+  setDateInputs(
+    diffStartYearInput,
+    diffStartMonthInput,
+    diffStartDayInput,
+    today,
+  );
+  setDateInputs(diffEndYearInput, diffEndMonthInput, diffEndDayInput, today);
   renderDiff();
 
-  addBaseInput.value = formatDateInputValue(today);
+  setDateInputs(addBaseYearInput, addBaseMonthInput, addBaseDayInput, today);
   addDaysInput.value = '7';
   renderAddDays();
 </script>

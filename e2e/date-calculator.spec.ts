@@ -9,8 +9,12 @@ test.describe('日数計算機（日本語版）', () => {
   test('二つの日付の差を計算できる', async ({ page }) => {
     await page.goto('/tools/date-calculator/');
 
-    await page.locator('#date-calc-diff-start').fill('2024-01-01');
-    await page.locator('#date-calc-diff-end').fill('2024-01-31');
+    await page.locator('#date-calc-diff-start-year').fill('2024');
+    await page.locator('#date-calc-diff-start-month').fill('1');
+    await page.locator('#date-calc-diff-start-day').fill('1');
+    await page.locator('#date-calc-diff-end-year').fill('2024');
+    await page.locator('#date-calc-diff-end-month').fill('1');
+    await page.locator('#date-calc-diff-end-day').fill('31');
 
     await expect(page.locator('#date-calc-diff-result')).toHaveText('30日');
     await expect(page.locator('#date-calc-diff-note')).toHaveText(
@@ -25,8 +29,12 @@ test.describe('日数計算機（日本語版）', () => {
   test('初日を含めて数えるチェックボックスで結果が変わる', async ({ page }) => {
     await page.goto('/tools/date-calculator/');
 
-    await page.locator('#date-calc-diff-start').fill('2024-01-01');
-    await page.locator('#date-calc-diff-end').fill('2024-01-31');
+    await page.locator('#date-calc-diff-start-year').fill('2024');
+    await page.locator('#date-calc-diff-start-month').fill('1');
+    await page.locator('#date-calc-diff-start-day').fill('1');
+    await page.locator('#date-calc-diff-end-year').fill('2024');
+    await page.locator('#date-calc-diff-end-month').fill('1');
+    await page.locator('#date-calc-diff-end-day').fill('31');
     await expect(page.locator('#date-calc-diff-result')).toHaveText('30日');
 
     await page.locator('#date-calc-diff-inclusive').check();
@@ -42,8 +50,12 @@ test.describe('日数計算機（日本語版）', () => {
   }) => {
     await page.goto('/tools/date-calculator/');
 
-    await page.locator('#date-calc-diff-start').fill('2024-01-01');
-    await page.locator('#date-calc-diff-end').fill('2024-01-01');
+    await page.locator('#date-calc-diff-start-year').fill('2024');
+    await page.locator('#date-calc-diff-start-month').fill('1');
+    await page.locator('#date-calc-diff-start-day').fill('1');
+    await page.locator('#date-calc-diff-end-year').fill('2024');
+    await page.locator('#date-calc-diff-end-month').fill('1');
+    await page.locator('#date-calc-diff-end-day').fill('1');
     await page.locator('#date-calc-diff-inclusive').check();
 
     await expect(page.locator('#date-calc-diff-result')).toHaveText('1日間');
@@ -55,8 +67,12 @@ test.describe('日数計算機（日本語版）', () => {
   test('終了日が開始日より前だと負の日数になる', async ({ page }) => {
     await page.goto('/tools/date-calculator/');
 
-    await page.locator('#date-calc-diff-start').fill('2024-01-31');
-    await page.locator('#date-calc-diff-end').fill('2024-01-01');
+    await page.locator('#date-calc-diff-start-year').fill('2024');
+    await page.locator('#date-calc-diff-start-month').fill('1');
+    await page.locator('#date-calc-diff-start-day').fill('31');
+    await page.locator('#date-calc-diff-end-year').fill('2024');
+    await page.locator('#date-calc-diff-end-month').fill('1');
+    await page.locator('#date-calc-diff-end-day').fill('1');
 
     await expect(page.locator('#date-calc-diff-result')).toHaveText('-30日');
     await expect(page.locator('#date-calc-diff-note')).toHaveText(
@@ -67,7 +83,9 @@ test.describe('日数計算機（日本語版）', () => {
   test('N日後の日付を計算できる', async ({ page }) => {
     await page.goto('/tools/date-calculator/');
 
-    await page.locator('#date-calc-add-base').fill('2024-01-31');
+    await page.locator('#date-calc-add-base-year').fill('2024');
+    await page.locator('#date-calc-add-base-month').fill('1');
+    await page.locator('#date-calc-add-base-day').fill('31');
     await page.locator('#date-calc-add-days').fill('1');
     await page.locator('#date-calc-add-direction').selectOption('after');
 
@@ -80,7 +98,9 @@ test.describe('日数計算機（日本語版）', () => {
   test('N日前の日付を計算できる', async ({ page }) => {
     await page.goto('/tools/date-calculator/');
 
-    await page.locator('#date-calc-add-base').fill('2024-01-01');
+    await page.locator('#date-calc-add-base-year').fill('2024');
+    await page.locator('#date-calc-add-base-month').fill('1');
+    await page.locator('#date-calc-add-base-day').fill('1');
     await page.locator('#date-calc-add-days').fill('1');
     await page.locator('#date-calc-add-direction').selectOption('before');
 
@@ -94,7 +114,9 @@ test.describe('日数計算機（日本語版）', () => {
   }) => {
     await page.goto('/tools/date-calculator/');
 
-    await page.locator('#date-calc-add-base').fill('2024-01-01');
+    await page.locator('#date-calc-add-base-year').fill('2024');
+    await page.locator('#date-calc-add-base-month').fill('1');
+    await page.locator('#date-calc-add-base-day').fill('1');
     await page.locator('#date-calc-add-days').fill('-5');
     await page.locator('#date-calc-add-direction').selectOption('before');
 
@@ -135,11 +157,17 @@ test.describe('Date Calculator (English)', () => {
     await page.goto('/en/tools/date-calculator/');
     await expect(page.locator('main h1')).toHaveText('Date Calculator');
 
-    await page.locator('#date-calc-diff-start').fill('2024-01-01');
-    await page.locator('#date-calc-diff-end').fill('2024-01-31');
+    await page.locator('#date-calc-diff-start-year').fill('2024');
+    await page.locator('#date-calc-diff-start-month').fill('1');
+    await page.locator('#date-calc-diff-start-day').fill('1');
+    await page.locator('#date-calc-diff-end-year').fill('2024');
+    await page.locator('#date-calc-diff-end-month').fill('1');
+    await page.locator('#date-calc-diff-end-day').fill('31');
     await expect(page.locator('#date-calc-diff-result')).toHaveText('30 days');
 
-    await page.locator('#date-calc-add-base').fill('2024-01-31');
+    await page.locator('#date-calc-add-base-year').fill('2024');
+    await page.locator('#date-calc-add-base-month').fill('1');
+    await page.locator('#date-calc-add-base-day').fill('31');
     await page.locator('#date-calc-add-days').fill('1');
     await page.locator('#date-calc-add-direction').selectOption('after');
     await expect(page.locator('#date-calc-add-result')).toHaveText(

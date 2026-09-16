@@ -1,0 +1,289 @@
+---
+import Glossary from '../../../../components/Glossary.astro';
+import Layout from '../../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'Lorem ipsum',
+    description:
+      'A long-standing placeholder text used for checking design and typesetting. It looks like meaningless Latin and is used to preview the amount of text and the overall layout before real content is ready.',
+  },
+  {
+    term: 'Placeholder text (dummy text)',
+    description:
+      'Text used as a stand-in while the real content is not yet finalized, so you can check layout and text length. It carries no real meaning and is meant to be replaced with the final copy later.',
+  },
+  {
+    term: 'Typesetting',
+    description:
+      'Adjusting font size, line spacing, and margins to make text readable. Flowing in placeholder text lets you check typesetting before the real copy is available.',
+  },
+];
+---
+
+<Layout
+  title="Dummy Text Generator (Lorem Ipsum & Japanese)"
+  description="Generates Lorem ipsum (Latin) or Japanese placeholder text by paragraphs, sentences, or words, in any count you choose. Handy for mocking up designs before real copy is ready. Your data is processed in the browser and never sent to a server."
+>
+  <h1 class="mb-2 text-2xl font-bold">Dummy Text Generator</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    Generates placeholder text for mocking up designs or drafts. Supports both
+    classic Lorem ipsum (Latin) and Japanese placeholder text, with a selectable
+    unit — paragraphs, sentences, or words — and a count. To check how much text
+    you generated, also try the
+    <a
+      href="/en/tools/char-counter/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      Character Counter
+    </a>
+    tool.
+  </p>
+
+  <div class="flex flex-wrap items-end gap-4">
+    <div>
+      <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+        Language
+      </span>
+      <div class="flex gap-4">
+        <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input
+            type="radio"
+            name="lorem-language"
+            id="lorem-language-latin"
+            value="latin"
+            class="h-4 w-4"
+            checked
+          />
+          Lorem ipsum (Latin)
+        </label>
+        <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input
+            type="radio"
+            name="lorem-language"
+            id="lorem-language-ja"
+            value="ja"
+            class="h-4 w-4"
+          />
+          Japanese
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-4">
+    <div>
+      <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+        Unit
+      </span>
+      <div class="flex gap-4">
+        <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input
+            type="radio"
+            name="lorem-unit"
+            id="lorem-unit-paragraphs"
+            value="paragraphs"
+            class="h-4 w-4"
+            checked
+          />
+          Paragraphs
+        </label>
+        <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input
+            type="radio"
+            name="lorem-unit"
+            id="lorem-unit-sentences"
+            value="sentences"
+            class="h-4 w-4"
+          />
+          Sentences
+        </label>
+        <label
+          id="lorem-unit-words-label"
+          class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
+        >
+          <input
+            type="radio"
+            name="lorem-unit"
+            id="lorem-unit-words"
+            value="words"
+            class="h-4 w-4"
+          />
+          Words
+        </label>
+      </div>
+    </div>
+
+    <div>
+      <label
+        for="lorem-count"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        Count (1-200)
+      </label>
+      <input
+        id="lorem-count"
+        type="number"
+        min="1"
+        max="200"
+        value="3"
+        class="h-11 w-28 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+    </div>
+
+    <button
+      id="lorem-generate-button"
+      type="button"
+      class="min-h-11 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+    >
+      Generate
+    </button>
+
+    <button
+      id="lorem-copy-button"
+      type="button"
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      Copy
+    </button>
+    <span
+      id="lorem-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4">
+    <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+      <input id="lorem-fixed-opening" type="checkbox" class="h-4 w-4" checked />
+      Start with the classic opening sentence
+    </label>
+  </div>
+
+  <div class="mt-4">
+    <label
+      for="lorem-output"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      Result
+    </label>
+    <textarea
+      id="lorem-output"
+      readonly
+      class="h-64 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm whitespace-pre-wrap focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    ></textarea>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">Notes</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>
+      Japanese text doesn't split naturally into space-separated words, so only
+      the paragraph and sentence units are available for it.
+    </li>
+    <li>
+      The generated content is random and carries no real meaning — it's meant
+      for checking design and text length only.
+    </li>
+  </ul>
+
+  <Glossary terms={glossaryTerms} heading="Glossary" />
+</Layout>
+
+<script>
+  import {
+    clampLoremCount,
+    generateLoremIpsum,
+    type LoremUnit,
+  } from '../../../../lib/tools/lorem-ipsum';
+
+  const languageLatinRadio = document.getElementById(
+    'lorem-language-latin',
+  ) as HTMLInputElement;
+  const languageJaRadio = document.getElementById(
+    'lorem-language-ja',
+  ) as HTMLInputElement;
+  const unitWordsLabel = document.getElementById('lorem-unit-words-label')!;
+  const unitWordsRadio = document.getElementById(
+    'lorem-unit-words',
+  ) as HTMLInputElement;
+  const countInput = document.getElementById('lorem-count') as HTMLInputElement;
+  const fixedOpeningCheckbox = document.getElementById(
+    'lorem-fixed-opening',
+  ) as HTMLInputElement;
+  const generateButton = document.getElementById('lorem-generate-button')!;
+  const copyButton = document.getElementById('lorem-copy-button')!;
+  const statusEl = document.getElementById('lorem-status')!;
+  const output = document.getElementById('lorem-output') as HTMLTextAreaElement;
+
+  function getLanguage(): 'latin' | 'ja' {
+    return languageJaRadio.checked ? 'ja' : 'latin';
+  }
+
+  function getUnit(): LoremUnit {
+    const checked = document.querySelector<HTMLInputElement>(
+      'input[name="lorem-unit"]:checked',
+    );
+    return (checked?.value as LoremUnit) ?? 'paragraphs';
+  }
+
+  function syncUnitAvailability() {
+    const isJa = getLanguage() === 'ja';
+    unitWordsRadio.disabled = isJa;
+    unitWordsLabel.classList.toggle('hidden', isJa);
+    if (isJa && unitWordsRadio.checked) {
+      unitWordsRadio.checked = false;
+      (
+        document.getElementById('lorem-unit-paragraphs') as HTMLInputElement
+      ).checked = true;
+    }
+  }
+
+  function generate() {
+    statusEl.textContent = '';
+    const count = clampLoremCount(Number(countInput.value));
+    countInput.value = String(count);
+    const language = getLanguage();
+    const unit = getUnit();
+    const fixedOpening = fixedOpeningCheckbox.checked;
+
+    output.value =
+      language === 'latin'
+        ? generateLoremIpsum({ language: 'latin', unit, count, fixedOpening })
+        : generateLoremIpsum({
+            language: 'ja',
+            unit: unit === 'words' ? 'sentences' : unit,
+            count,
+            fixedOpening,
+          });
+  }
+
+  languageLatinRadio.addEventListener('change', () => {
+    syncUnitAvailability();
+    generate();
+  });
+  languageJaRadio.addEventListener('change', () => {
+    syncUnitAvailability();
+    generate();
+  });
+  for (const radio of document.querySelectorAll<HTMLInputElement>(
+    'input[name="lorem-unit"]',
+  )) {
+    radio.addEventListener('change', generate);
+  }
+  countInput.addEventListener('change', generate);
+  fixedOpeningCheckbox.addEventListener('change', generate);
+  generateButton.addEventListener('click', generate);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      statusEl.textContent = 'Copied';
+    } catch {
+      statusEl.textContent = 'Copy failed';
+    }
+  });
+
+  syncUnitAvailability();
+  generate();
+</script>

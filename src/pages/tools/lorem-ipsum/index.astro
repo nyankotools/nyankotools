@@ -1,0 +1,285 @@
+---
+import Glossary from '../../../components/Glossary.astro';
+import Layout from '../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'Lorem ipsum（ロレム・イプサム）',
+    description:
+      'デザインや組版の確認用に古くから使われている、意味を持たないラテン語風のダミーテキストです。実際の原稿がまだ無い段階で、文字量やレイアウトの見た目を確認するために使われます。',
+  },
+  {
+    term: 'ダミーテキスト（プレースホルダーテキスト）',
+    description:
+      '本文が未確定の段階で、レイアウトや文字数の目安を確認するために仮置きする文章のことです。内容そのものに意味はなく、後で実際の原稿に差し替えることを前提としています。',
+  },
+  {
+    term: '文字組み（もじぐみ）',
+    description:
+      '文字の大きさ・行間・余白などを調整して、読みやすい見た目に整えることです。ダミーテキストを流し込むことで、実際の原稿を用意する前に文字組みの確認ができます。',
+  },
+];
+---
+
+<Layout
+  title="ダミーテキスト生成（Lorem ipsum・日本語対応）"
+  description="Lorem ipsum（欧文）または日本語のダミーテキストを、段落・文・単語単位で指定した個数だけ生成する無料ツールです。デザインカンプや原稿の仮置きに便利。データはブラウザ内で処理され、サーバーには送信されません。"
+>
+  <h1 class="mb-2 text-2xl font-bold">ダミーテキスト生成</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    デザインや原稿の仮置きに使えるダミーテキストを生成します。定番のLorem
+    ipsum（欧文）と日本語の2種類に対応し、段落・文・単語の単位で個数を指定できます。生成した文章量を確認したい場合は
+    <a
+      href="/tools/char-counter/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      文字数カウント
+    </a>
+    もあわせてご利用ください。
+  </p>
+
+  <div class="flex flex-wrap items-end gap-4">
+    <div>
+      <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+        言語
+      </span>
+      <div class="flex gap-4">
+        <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input
+            type="radio"
+            name="lorem-language"
+            id="lorem-language-latin"
+            value="latin"
+            class="h-4 w-4"
+            checked
+          />
+          Lorem ipsum（欧文）
+        </label>
+        <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input
+            type="radio"
+            name="lorem-language"
+            id="lorem-language-ja"
+            value="ja"
+            class="h-4 w-4"
+          />
+          日本語
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-4">
+    <div>
+      <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+        単位
+      </span>
+      <div class="flex gap-4">
+        <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input
+            type="radio"
+            name="lorem-unit"
+            id="lorem-unit-paragraphs"
+            value="paragraphs"
+            class="h-4 w-4"
+            checked
+          />
+          段落
+        </label>
+        <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input
+            type="radio"
+            name="lorem-unit"
+            id="lorem-unit-sentences"
+            value="sentences"
+            class="h-4 w-4"
+          />
+          文
+        </label>
+        <label
+          id="lorem-unit-words-label"
+          class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
+        >
+          <input
+            type="radio"
+            name="lorem-unit"
+            id="lorem-unit-words"
+            value="words"
+            class="h-4 w-4"
+          />
+          単語
+        </label>
+      </div>
+    </div>
+
+    <div>
+      <label
+        for="lorem-count"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        個数（1〜200）
+      </label>
+      <input
+        id="lorem-count"
+        type="number"
+        min="1"
+        max="200"
+        value="3"
+        class="h-11 w-28 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+    </div>
+
+    <button
+      id="lorem-generate-button"
+      type="button"
+      class="min-h-11 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+    >
+      生成する
+    </button>
+
+    <button
+      id="lorem-copy-button"
+      type="button"
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      コピー
+    </button>
+    <span
+      id="lorem-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4">
+    <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+      <input id="lorem-fixed-opening" type="checkbox" class="h-4 w-4" checked />
+      定番の書き出し文から始める
+    </label>
+  </div>
+
+  <div class="mt-4">
+    <label
+      for="lorem-output"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      結果
+    </label>
+    <textarea
+      id="lorem-output"
+      readonly
+      class="h-64 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm whitespace-pre-wrap focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    ></textarea>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">注意点</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>
+      日本語は「単語」単位での区切りが不自然なため、段落・文の単位のみ選択できます。
+    </li>
+    <li>
+      生成される内容はランダムであり、実際に意味のある文章ではありません。デザインや文字量の確認用としてご利用ください。
+    </li>
+  </ul>
+
+  <Glossary terms={glossaryTerms} />
+</Layout>
+
+<script>
+  import {
+    clampLoremCount,
+    generateLoremIpsum,
+    type LoremUnit,
+  } from '../../../lib/tools/lorem-ipsum';
+
+  const languageLatinRadio = document.getElementById(
+    'lorem-language-latin',
+  ) as HTMLInputElement;
+  const languageJaRadio = document.getElementById(
+    'lorem-language-ja',
+  ) as HTMLInputElement;
+  const unitWordsLabel = document.getElementById('lorem-unit-words-label')!;
+  const unitWordsRadio = document.getElementById(
+    'lorem-unit-words',
+  ) as HTMLInputElement;
+  const countInput = document.getElementById('lorem-count') as HTMLInputElement;
+  const fixedOpeningCheckbox = document.getElementById(
+    'lorem-fixed-opening',
+  ) as HTMLInputElement;
+  const generateButton = document.getElementById('lorem-generate-button')!;
+  const copyButton = document.getElementById('lorem-copy-button')!;
+  const statusEl = document.getElementById('lorem-status')!;
+  const output = document.getElementById('lorem-output') as HTMLTextAreaElement;
+
+  function getLanguage(): 'latin' | 'ja' {
+    return languageJaRadio.checked ? 'ja' : 'latin';
+  }
+
+  function getUnit(): LoremUnit {
+    const checked = document.querySelector<HTMLInputElement>(
+      'input[name="lorem-unit"]:checked',
+    );
+    return (checked?.value as LoremUnit) ?? 'paragraphs';
+  }
+
+  function syncUnitAvailability() {
+    const isJa = getLanguage() === 'ja';
+    unitWordsRadio.disabled = isJa;
+    unitWordsLabel.classList.toggle('hidden', isJa);
+    if (isJa && unitWordsRadio.checked) {
+      unitWordsRadio.checked = false;
+      (
+        document.getElementById('lorem-unit-paragraphs') as HTMLInputElement
+      ).checked = true;
+    }
+  }
+
+  function generate() {
+    statusEl.textContent = '';
+    const count = clampLoremCount(Number(countInput.value));
+    countInput.value = String(count);
+    const language = getLanguage();
+    const unit = getUnit();
+    const fixedOpening = fixedOpeningCheckbox.checked;
+
+    output.value =
+      language === 'latin'
+        ? generateLoremIpsum({ language: 'latin', unit, count, fixedOpening })
+        : generateLoremIpsum({
+            language: 'ja',
+            unit: unit === 'words' ? 'sentences' : unit,
+            count,
+            fixedOpening,
+          });
+  }
+
+  languageLatinRadio.addEventListener('change', () => {
+    syncUnitAvailability();
+    generate();
+  });
+  languageJaRadio.addEventListener('change', () => {
+    syncUnitAvailability();
+    generate();
+  });
+  for (const radio of document.querySelectorAll<HTMLInputElement>(
+    'input[name="lorem-unit"]',
+  )) {
+    radio.addEventListener('change', generate);
+  }
+  countInput.addEventListener('change', generate);
+  fixedOpeningCheckbox.addEventListener('change', generate);
+  generateButton.addEventListener('click', generate);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      statusEl.textContent = 'コピーしました';
+    } catch {
+      statusEl.textContent = 'コピーに失敗しました';
+    }
+  });
+
+  syncUnitAvailability();
+  generate();
+</script>

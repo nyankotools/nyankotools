@@ -1,0 +1,227 @@
+---
+import Glossary from '../../../../components/Glossary.astro';
+import Layout from '../../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'Machine-dependent characters (kishu-izon moji)',
+    description:
+      'Characters such as circled numbers (①②③), Roman numerals (ⅠⅡⅢ), and ligatures like ㈱ ㍉ ㍻ that were added outside the standard JIS character set by specific PC vendors. They may look fine on the sender\'s device but turn into different characters or "mojibake" (garbled text) on another device, OS, or mail client.',
+  },
+  {
+    term: 'Mojibake (garbled text)',
+    description:
+      'Text that displays as the wrong characters or as "�" placeholders because of a mismatch in character encoding interpretation. Many machine-dependent characters live in vendor-specific extension areas of encodings such as Shift_JIS, which makes them especially prone to this problem.',
+  },
+  {
+    term: 'Shift_JIS',
+    description:
+      'A character encoding once widely used on Japanese Windows systems. In addition to standard JIS kanji, PC vendors added their own extension areas (NEC special characters, IBM extension characters, and so on), which is the main source of machine-dependent characters.',
+  },
+];
+---
+
+<Layout
+  title="Machine-Dependent Character Checker"
+  description="A free tool that detects machine-dependent characters (environment-dependent characters) such as circled numbers (①②③), Roman numerals (ⅠⅡⅢ), and ligatures like ㈱ ㍉ ㍻. Lists every character that may turn into mojibake in email or other environments, with a safe replacement suggestion for each. Your data is processed in the browser and never sent to a server."
+>
+  <h1 class="mb-2 text-2xl font-bold">Machine-Dependent Character Checker</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    Scans your text for machine-dependent characters (also called
+    environment-dependent characters) such as circled numbers (①②③), Roman
+    numerals (ⅠⅡⅢ), and ligatures like ㈱ ㍉ ㍻. Use it before sending an email
+    or newsletter, or filling in a web form, to catch characters that might turn
+    into mojibake on the recipient's device. Need to convert between full-width
+    and half-width characters instead? Try the
+    <a
+      href="/en/tools/zenkaku-hankaku/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      Full-width / Half-width Converter
+    </a>
+    .
+  </p>
+
+  <div>
+    <label
+      for="kishu-izon-input"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      Input
+    </label>
+    <textarea
+      id="kishu-izon-input"
+      class="h-48 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      placeholder="Paste text to check (e.g. Orders ①②③ from ㈱Example are now open)"
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <span
+      id="kishu-izon-status"
+      class="text-sm font-medium text-gray-700 dark:text-gray-300"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-2">
+    <p class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+      Highlighted result
+    </p>
+    <div
+      id="kishu-izon-highlight"
+      class="min-h-24 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm break-words whitespace-pre-wrap dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    ></div>
+  </div>
+
+  <div id="kishu-izon-table-wrapper" class="mt-4 hidden">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+        Detected characters
+      </p>
+      <div class="flex items-center gap-3">
+        <button
+          id="kishu-izon-copy-button"
+          type="button"
+          class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          Copy text with replacements applied
+        </button>
+        <span
+          id="kishu-izon-copy-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+    <div class="mt-2 overflow-x-auto rounded-lg border border-gray-300 dark:border-gray-700">
+      <table class="w-full min-w-[640px] text-left text-sm">
+        <thead class="bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+          <tr>
+            <th class="px-3 py-2 font-medium">Character</th>
+            <th class="px-3 py-2 font-medium">Code point</th>
+            <th class="px-3 py-2 font-medium">Category</th>
+            <th class="px-3 py-2 font-medium">Description</th>
+            <th class="px-3 py-2 font-medium">Count</th>
+            <th class="px-3 py-2 font-medium">Suggested replacement</th>
+          </tr>
+        </thead>
+        <tbody
+          id="kishu-izon-table-body"
+          class="divide-y divide-gray-200 dark:divide-gray-800"
+        ></tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">Notes</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>
+      This tool checks for well-known machine-dependent characters (NEC special
+      characters, NEC-selected IBM extension characters, and similar). It does
+      not cover every environment-dependent character that exists.
+    </li>
+    <li>
+      The suggested replacements are general-purpose defaults. Depending on
+      context (for example, wanting to keep "㍿" as part of a company name), a
+      different replacement may be more appropriate — always review the replaced
+      text before using it.
+    </li>
+    <li>
+      IBM extension variants such as "髙" and "﨑" are sometimes used
+      intentionally in personal or place names. A mechanical replacement may not
+      always be appropriate for these.
+    </li>
+  </ul>
+
+  <Glossary terms={glossaryTerms} heading="Glossary" />
+</Layout>
+
+<script>
+  import { escapeHtml } from '../../../../lib/tools/html-escape';
+  import {
+    findKishuIzonMoji,
+    replaceKishuIzonMoji,
+    summarizeMatches,
+  } from '../../../../lib/tools/kishu-izon-checker';
+
+  const input = document.getElementById(
+    'kishu-izon-input',
+  ) as HTMLTextAreaElement;
+  const statusEl = document.getElementById('kishu-izon-status')!;
+  const highlightEl = document.getElementById('kishu-izon-highlight')!;
+  const tableWrapper = document.getElementById('kishu-izon-table-wrapper')!;
+  const tableBody = document.getElementById('kishu-izon-table-body')!;
+  const copyButton = document.getElementById(
+    'kishu-izon-copy-button',
+  ) as HTMLButtonElement;
+  const copyStatusEl = document.getElementById('kishu-izon-copy-status')!;
+
+  function render() {
+    copyStatusEl.textContent = '';
+    const text = input.value;
+    const matches = findKishuIzonMoji(text, 'en');
+
+    if (text === '') {
+      statusEl.textContent = '';
+      highlightEl.textContent = '';
+      tableWrapper.classList.add('hidden');
+      return;
+    }
+
+    if (matches.length === 0) {
+      statusEl.textContent = 'No machine-dependent characters were found.';
+      highlightEl.textContent = text;
+      tableWrapper.classList.add('hidden');
+      return;
+    }
+
+    const summary = summarizeMatches(matches);
+    statusEl.textContent = `Found ${matches.length} machine-dependent character${
+      matches.length === 1 ? '' : 's'
+    } (${summary.length} unique).`;
+
+    let html = '';
+    let lastIndex = 0;
+    for (const match of matches) {
+      html += escapeHtml(text.slice(lastIndex, match.index));
+      html += `<mark class="rounded bg-yellow-200 px-0.5 dark:bg-yellow-600 dark:text-gray-900">${escapeHtml(
+        match.char,
+      )}</mark>`;
+      lastIndex = match.index + match.char.length;
+    }
+    html += escapeHtml(text.slice(lastIndex));
+    highlightEl.innerHTML = html;
+
+    tableBody.innerHTML = summary
+      .map(
+        (item) => `<tr>
+          <td class="px-3 py-2 font-mono text-base">${escapeHtml(item.char)}</td>
+          <td class="px-3 py-2 font-mono text-xs text-gray-500 dark:text-gray-400">${item.codePoint}</td>
+          <td class="px-3 py-2">${escapeHtml(item.category)}</td>
+          <td class="px-3 py-2">${escapeHtml(item.label)}</td>
+          <td class="px-3 py-2">${item.count}</td>
+          <td class="px-3 py-2 font-mono">${escapeHtml(item.replacement)}</td>
+        </tr>`,
+      )
+      .join('');
+    tableWrapper.classList.remove('hidden');
+  }
+
+  input.addEventListener('input', render);
+
+  copyButton.addEventListener('click', async () => {
+    if (!input.value) return;
+    try {
+      await navigator.clipboard.writeText(
+        replaceKishuIzonMoji(input.value, 'en'),
+      );
+      copyStatusEl.textContent = 'Copied';
+    } catch {
+      copyStatusEl.textContent = 'Copy failed';
+    }
+  });
+
+  render();
+</script>

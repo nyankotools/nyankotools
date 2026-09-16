@@ -361,6 +361,23 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'text-list-tools',
+    translations: {
+      ja: {
+        name: '文字列の重複削除・ソート・シャッフル',
+        description:
+          '改行区切りのテキストの重複行削除・昇順/降順/数値ソート・ランダムシャッフルをまとめて行います。空行削除や前後の空白削除にも対応。',
+        category: 'テキスト',
+      },
+      en: {
+        name: 'Text List Deduplicate, Sort & Shuffle',
+        description:
+          'Deduplicates, sorts (alphabetical, reverse, or numeric), or randomly shuffles newline-separated text, with options to remove empty lines and trim whitespace.',
+        category: 'Text',
+      },
+    },
+  },
+  {
     slug: 'qr-generator',
     translations: {
       ja: {

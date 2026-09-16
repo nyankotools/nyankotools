@@ -68,3 +68,53 @@ test('Xシェアボタンのリンクに公式アカウント紐付け・ハッ�
   expect(href).toContain('via=nyankotools');
   expect(href).toContain('hashtags=NyankoTools');
 });
+
+test('関連ツールセクションに他ツールへのリンクが表示され、遷移できる', async ({
+  page,
+}) => {
+  await page.goto('/tools/char-counter/');
+
+  const relatedHeading = page.getByRole('heading', {
+    level: 2,
+    name: '関連ツール',
+  });
+  await expect(relatedHeading).toBeVisible();
+
+  const relatedLinks = [
+    { href: '/tools/zenkaku-hankaku/', name: '全角/半角変換' },
+    { href: '/tools/line-ending-converter/', name: '改行コード変換' },
+    {
+      href: '/tools/text-list-tools/',
+      name: '文字列の重複削除・ソート・シャッフル',
+    },
+    { href: '/tools/json-formatter/', name: 'JSON整形' },
+    { href: '/tools/markdown-preview/', name: 'Markdown⇔HTML変換' },
+    { href: '/tools/lorem-ipsum/', name: 'ダミーテキスト生成' },
+    { href: '/tools/qr-generator/', name: 'QRコード生成' },
+    { href: '/tools/unix-timestamp/', name: 'Unixタイムスタンプ変換' },
+  ];
+
+  for (const { href, name } of relatedLinks) {
+    await expect(
+      page.locator('main').getByRole('link', { name, exact: true }),
+    ).toHaveAttribute('href', href);
+  }
+
+  await page
+    .locator('main')
+    .getByRole('link', { name: '全角/半角変換', exact: true })
+    .click();
+
+  await expect(page).toHaveURL(/\/tools\/zenkaku-hankaku\/?$/);
+  await expect(page.locator('main h1')).toHaveText('全角/半角変換');
+});
+
+test('375px幅でも横スクロールが発生しない', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto('/tools/char-counter/');
+
+  const hasHorizontalOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > window.innerWidth + 1,
+  );
+  expect(hasHorizontalOverflow).toBe(false);
+});

@@ -445,6 +445,57 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'date-calculator',
+    translations: {
+      ja: {
+        name: '日数計算機',
+        description:
+          '二つの日付の差（日数）や、指定した日から○日後・○日前の日付を計算します。初日を含めて数えるかどうかも選択可能。',
+        category: '計算',
+      },
+      en: {
+        name: 'Date Calculator',
+        description:
+          'Calculates the difference in days between two dates, or the date a set number of days before or after a given date, with an option to count both endpoints.',
+        category: 'Calculate',
+      },
+    },
+  },
+  {
+    slug: 'age-calculator',
+    translations: {
+      ja: {
+        name: '年齢計算機',
+        description:
+          '生年月日から満年齢・数え年・生まれてから経過した日数・次の誕生日までの日数を計算します。基準日を指定して未来・過去時点の年齢も確認可能。',
+        category: '計算',
+      },
+      en: {
+        name: 'Age Calculator',
+        description:
+          'Calculates the exact age, traditional East Asian age, days lived, and days until the next birthday from a date of birth, with a customizable reference date.',
+        category: 'Calculate',
+      },
+    },
+  },
+  {
+    slug: 'hourly-wage-calculator',
+    translations: {
+      ja: {
+        name: '時給・日給・月給換算＆残業代計算機',
+        description:
+          '時給・日給・月給・年収を相互換算し、時間外労働・法定休日労働・深夜労働の割増賃金（残業代）もまとめてシミュレーションできます。',
+        category: '計算',
+      },
+      en: {
+        name: 'Hourly Wage Converter & Overtime Pay Calculator',
+        description:
+          'Converts between hourly, daily, monthly, and annual wages, and simulates overtime, holiday, and late-night premium pay.',
+        category: 'Calculate',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

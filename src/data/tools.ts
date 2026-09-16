@@ -378,6 +378,23 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'line-ending-converter',
+    translations: {
+      ja: {
+        name: '改行コード変換',
+        description:
+          'テキストの改行コード（LF/CRLF/CR）を判定し、指定した種類に統一変換します。',
+        category: 'テキスト',
+      },
+      en: {
+        name: 'Line Ending Converter',
+        description:
+          'Detects the line endings (LF, CRLF, or CR) in your text and converts them all to the type you choose.',
+        category: 'Text',
+      },
+    },
+  },
+  {
     slug: 'qr-generator',
     translations: {
       ja: {

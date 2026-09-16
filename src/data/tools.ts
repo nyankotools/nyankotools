@@ -275,6 +275,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'html-escape',
+    translations: {
+      ja: {
+        name: 'HTML/JS文字列エスケープ・アンエスケープ',
+        description:
+          'HTMLの特殊文字（& < > " \'）やJavaScript文字列内の改行・クォートなどを相互に変換します。XSS対策やコード生成時の文字列組み立てに便利。',
+        category: 'コード',
+      },
+      en: {
+        name: 'HTML/JS String Escape & Unescape',
+        description:
+          'Escapes and unescapes HTML special characters (& < > " \') and JavaScript string escape sequences such as newlines and quotes.',
+        category: 'Code',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

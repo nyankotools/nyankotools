@@ -1,0 +1,173 @@
+---
+import Glossary from '../../../components/Glossary.astro';
+import Layout from '../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'HTMLエスケープ',
+    description:
+      '「&」「<」「>」「"」「\'」などHTMLで特別な意味を持つ文字を、そのまま文字として表示されるように実体参照（&amp;や&lt;など）に変換することです。ユーザー入力をHTMLに埋め込む際のXSS（クロスサイトスクリプティング）対策としても使われます。',
+  },
+  {
+    term: 'JavaScript文字列エスケープ',
+    description:
+      'JavaScriptの文字列リテラル（\'...\'や"..."で囲まれた文字列）の中で、改行やクォート、バックスラッシュなどをそのまま含められるように、バックスラッシュ付きの記法（\\nや\\"など）に変換することです。',
+  },
+];
+---
+
+<Layout
+  title="HTML/JS文字列エスケープ・アンエスケープ"
+  description="HTMLの特殊文字（& < > &quot; '）やJavaScript文字列内の改行・クォートなどを、エスケープ・アンエスケープ変換できる無料ツールです。XSS対策やコード生成時の文字列組み立てに便利。データはブラウザ内で処理され、サーバーには送信されません。"
+>
+  <h1 class="mb-2 text-2xl font-bold">
+    HTML/JavaScript文字列 エスケープ・アンエスケープ
+  </h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    入力したテキストをHTMLの特殊文字（&amp; &lt; &gt; &quot;
+    '）としてエスケープしたり、実体参照から元の文字列に戻したりできます。JavaScriptの文字列リテラルに埋め込みたい場合は「JS文字列エスケープ」を選んでください。URLに含める文字列の変換が必要な場合は
+    <a
+      href="/tools/url-encode/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      URLエンコード/デコード
+    </a>
+    もあわせてご利用ください。
+  </p>
+
+  <div class="flex flex-wrap items-center gap-3">
+    <div
+      id="html-escape-mode"
+      class="flex flex-wrap gap-1 rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700"
+      role="group"
+      aria-label="変換モード"
+    >
+      <button
+        type="button"
+        data-mode="html-escape"
+        aria-pressed="true"
+        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      >
+        HTMLエスケープ
+      </button>
+      <button
+        type="button"
+        data-mode="html-unescape"
+        aria-pressed="false"
+        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      >
+        HTMLアンエスケープ
+      </button>
+      <button
+        type="button"
+        data-mode="js-escape"
+        aria-pressed="false"
+        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      >
+        JS文字列エスケープ
+      </button>
+      <button
+        type="button"
+        data-mode="js-unescape"
+        aria-pressed="false"
+        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      >
+        JS文字列アンエスケープ
+      </button>
+    </div>
+    <button
+      id="html-escape-copy-button"
+      type="button"
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      コピー
+    </button>
+    <span
+      id="html-escape-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label
+        for="html-escape-input"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        入力
+      </label>
+      <textarea
+        id="html-escape-input"
+        class="h-64 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        placeholder="変換したいテキストを入力"
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label
+        for="html-escape-output"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        結果
+      </label>
+      <textarea
+        id="html-escape-output"
+        readonly
+        class="h-64 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></textarea>
+    </div>
+  </div>
+
+  <Glossary terms={glossaryTerms} />
+</Layout>
+
+<script>
+  import {
+    convertEscape,
+    type EscapeMode,
+  } from '../../../lib/tools/html-escape';
+
+  const input = document.getElementById(
+    'html-escape-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'html-escape-output',
+  ) as HTMLTextAreaElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#html-escape-mode [data-mode]',
+  );
+  const copyButton = document.getElementById('html-escape-copy-button')!;
+  const statusEl = document.getElementById('html-escape-status')!;
+
+  let mode: EscapeMode = 'html-escape';
+
+  function convert() {
+    statusEl.textContent = '';
+    output.value = input.value === '' ? '' : convertEscape(input.value, mode);
+  }
+
+  input.addEventListener('input', convert);
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as EscapeMode;
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      statusEl.textContent = 'コピーしました';
+    } catch {
+      statusEl.textContent = 'コピーに失敗しました';
+    }
+  });
+
+  convert();
+</script>

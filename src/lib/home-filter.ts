@@ -30,3 +30,19 @@ export function filterTools(
 export function getCategories(tools: LocalizedTool[]): string[] {
   return Array.from(new Set(tools.map((tool) => tool.category)));
 }
+
+/** カテゴリごとにツールをグループ化する（カテゴリの順序は初出順） */
+export function groupByCategory(
+  tools: LocalizedTool[],
+): [string, LocalizedTool[]][] {
+  const groups = new Map<string, LocalizedTool[]>();
+  for (const tool of tools) {
+    const group = groups.get(tool.category);
+    if (group) {
+      group.push(tool);
+    } else {
+      groups.set(tool.category, [tool]);
+    }
+  }
+  return Array.from(groups.entries());
+}

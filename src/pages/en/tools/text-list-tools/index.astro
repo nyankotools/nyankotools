@@ -1,0 +1,237 @@
+---
+import Glossary from '../../../../components/Glossary.astro';
+import Layout from '../../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'Deduplication',
+    description:
+      'When multiple lines have the same content, only the first occurrence is kept and the rest are removed. Handy for cleaning up lists of email addresses or product codes.',
+  },
+  {
+    term: 'Lexicographic sort',
+    description:
+      'Sorting based on character order (alphabetical order). Comparing values as text can put "10" before "2", so use numeric sort instead when you want to compare by numeric value.',
+  },
+  {
+    term: 'Shuffle (randomize)',
+    description:
+      'Randomly reorders the lines in a list. Useful for randomizing the order of a raffle or survey questions. Each click produces a different result.',
+  },
+];
+---
+
+<Layout
+  title="Text List Deduplicate, Sort & Shuffle Tool"
+  description="Deduplicates lines, sorts them (alphabetical, reverse, or numeric), or shuffles them randomly for any newline-separated text. Also removes empty lines and trims whitespace. Your data is processed in the browser and never sent to a server."
+>
+  <h1 class="mb-2 text-2xl font-bold">Text List Deduplicate, Sort & Shuffle</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    Cleans up a list of one item per line by deduplicating lines, sorting them,
+    or shuffling them into a random order. Handy for tidying up email lists,
+    name rosters, or tag lists. To check the number of lines or characters, also
+    try the
+    <a
+      href="/en/tools/char-counter/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      Character Counter
+    </a>
+    tool.
+  </p>
+
+  <div>
+    <label
+      for="tlt-input"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      Input (one item per line)
+    </label>
+    <textarea
+      id="tlt-input"
+      class="h-52 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      placeholder={'e.g.\nbanana\napple\napple\ncherry'}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div class="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+    <label class="flex min-h-11 items-center gap-2">
+      <input id="tlt-trim" type="checkbox" class="h-4 w-4" />
+      <span class="text-gray-700 dark:text-gray-300">
+        Trim leading/trailing whitespace on each line
+      </span>
+    </label>
+    <label class="flex min-h-11 items-center gap-2">
+      <input id="tlt-remove-empty" type="checkbox" class="h-4 w-4" />
+      <span class="text-gray-700 dark:text-gray-300">Remove empty lines</span>
+    </label>
+    <label class="flex min-h-11 items-center gap-2">
+      <input id="tlt-dedupe" type="checkbox" class="h-4 w-4" />
+      <span class="text-gray-700 dark:text-gray-300">
+        Remove duplicate lines
+      </span>
+    </label>
+    <label class="flex min-h-11 items-center gap-2">
+      <input id="tlt-case-insensitive" type="checkbox" class="h-4 w-4" />
+      <span class="text-gray-700 dark:text-gray-300">
+        Ignore case (applies to deduplication and sorting)
+      </span>
+    </label>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-4">
+    <div>
+      <label
+        for="tlt-sort-order"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        Sort
+      </label>
+      <select
+        id="tlt-sort-order"
+        class="h-11 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      >
+        <option value="none">Keep original order</option>
+        <option value="asc">Ascending (A to Z)</option>
+        <option value="desc">Descending (Z to A)</option>
+        <option value="numericAsc">Numeric ascending</option>
+        <option value="numericDesc">Numeric descending</option>
+        <option value="shuffle">Shuffle (random)</option>
+      </select>
+    </div>
+
+    <button
+      id="tlt-reshuffle-button"
+      type="button"
+      class="hidden min-h-11 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+    >
+      Shuffle again
+    </button>
+
+    <button
+      id="tlt-copy-button"
+      type="button"
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      Copy
+    </button>
+    <span
+      id="tlt-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4">
+    <div class="mb-1 flex items-center justify-between">
+      <label
+        for="tlt-output"
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        Result
+      </label>
+      <span
+        id="tlt-count"
+        class="text-xs text-gray-500 dark:text-gray-400"
+      ></span>
+    </div>
+    <textarea
+      id="tlt-output"
+      readonly
+      class="h-52 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm whitespace-pre-wrap focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    ></textarea>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">Notes</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>
+      Deduplication keeps the first occurrence of each line. If you're not sure
+      which spelling will be kept, combine it with the whitespace-trim or
+      ignore-case options first.
+    </li>
+    <li>
+      Numeric sort compares lines using the first number found in each line.
+      Lines without a number are grouped at the end after sorting.
+    </li>
+    <li>
+      Shuffle produces a different random result every time. If you want to keep
+      a particular result, copy it instead of relying on the "Shuffle again"
+      button to reproduce it.
+    </li>
+    <li>
+      All processing happens in your browser — the text you enter is never sent
+      to a server.
+    </li>
+  </ul>
+
+  <Glossary terms={glossaryTerms} heading="Glossary" />
+</Layout>
+
+<script>
+  import {
+    processTextList,
+    type SortOrder,
+  } from '../../../../lib/tools/text-list-tools';
+
+  const input = document.getElementById('tlt-input') as HTMLTextAreaElement;
+  const trimCheckbox = document.getElementById('tlt-trim') as HTMLInputElement;
+  const removeEmptyCheckbox = document.getElementById(
+    'tlt-remove-empty',
+  ) as HTMLInputElement;
+  const dedupeCheckbox = document.getElementById(
+    'tlt-dedupe',
+  ) as HTMLInputElement;
+  const caseInsensitiveCheckbox = document.getElementById(
+    'tlt-case-insensitive',
+  ) as HTMLInputElement;
+  const sortOrderSelect = document.getElementById(
+    'tlt-sort-order',
+  ) as HTMLSelectElement;
+  const reshuffleButton = document.getElementById(
+    'tlt-reshuffle-button',
+  ) as HTMLButtonElement;
+  const copyButton = document.getElementById(
+    'tlt-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('tlt-status')!;
+  const countEl = document.getElementById('tlt-count')!;
+  const output = document.getElementById('tlt-output') as HTMLTextAreaElement;
+
+  function process() {
+    statusEl.textContent = '';
+    const sortOrder = sortOrderSelect.value as SortOrder;
+    reshuffleButton.classList.toggle('hidden', sortOrder !== 'shuffle');
+
+    const lines = processTextList(input.value, {
+      trimLines: trimCheckbox.checked,
+      removeEmptyLines: removeEmptyCheckbox.checked,
+      dedupe: dedupeCheckbox.checked,
+      caseInsensitive: caseInsensitiveCheckbox.checked,
+      sortOrder,
+    });
+
+    output.value = lines.join('\n');
+    countEl.textContent = `${lines.length} lines`;
+  }
+
+  input.addEventListener('input', process);
+  trimCheckbox.addEventListener('change', process);
+  removeEmptyCheckbox.addEventListener('change', process);
+  dedupeCheckbox.addEventListener('change', process);
+  caseInsensitiveCheckbox.addEventListener('change', process);
+  sortOrderSelect.addEventListener('change', process);
+  reshuffleButton.addEventListener('click', process);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      statusEl.textContent = 'Copied';
+    } catch {
+      statusEl.textContent = 'Copy failed';
+    }
+  });
+
+  process();
+</script>

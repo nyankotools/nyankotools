@@ -36,6 +36,7 @@
    - `pnpm run lint` / `pnpm run format` でスタイルを揃える。
    - `pnpm build` でビルドが通ることを確認する。
    - 必要に応じて `e2e/<slug>.spec.ts` に Playwright の E2E テストを追加し、`pnpm run test:e2e` で確認する（詳細は [conventions.md](./conventions.md) 参照）。
+   - 実装が完了したら、[CLAUDE.md](../../CLAUDE.md) の「レビュー・テストのルール」に従い、独立したレビュー専任エージェント（`tool-reviewer`）にレビューを依頼し、その完了報告を受けてから独立したQA専任エージェント（`tool-qa`）にテスト（lint / 型チェック / ビルド / 単体テスト / E2E・エッジケースの網羅性）を依頼する。`/tool-review` / `/qa-test` コマンドで手動起動することもできる。
 
 ## チェックリスト
 

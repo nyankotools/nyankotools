@@ -16,10 +16,13 @@ test('文字数カウントツールでテキストを入力すると結果が�
 test('サイドバーからツールページへ遷移できる', async ({ page }) => {
   await page.goto('/');
 
-  await page
-    .locator('#sidebar')
-    .getByRole('link', { name: '文字数カウント' })
-    .click();
+  // トップページではアクティブなツールがないため、カテゴリの<details>は
+  // 初期状態で閉じており、中のリンクはアクセシビリティツリー上に現れない。
+  // href指定で（隠れていても）要素を取得し、先に該当カテゴリを開いてから
+  // リンクをクリックする。
+  const link = page.locator('#sidebar a[href="/tools/char-counter/"]');
+  await link.locator('xpath=ancestor::details[1]/summary').click();
+  await link.click();
 
   await expect(page).toHaveURL(/\/tools\/char-counter\/?$/);
   await expect(page.locator('main h1')).toHaveText('文字数カウント');

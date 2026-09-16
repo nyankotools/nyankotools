@@ -462,6 +462,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'age-calculator',
+    translations: {
+      ja: {
+        name: '年齢計算機',
+        description:
+          '生年月日から満年齢・数え年・生まれてから経過した日数・次の誕生日までの日数を計算します。基準日を指定して未来・過去時点の年齢も確認可能。',
+        category: '計算',
+      },
+      en: {
+        name: 'Age Calculator',
+        description:
+          'Calculates the exact age, traditional East Asian age, days lived, and days until the next birthday from a date of birth, with a customizable reference date.',
+        category: 'Calculate',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

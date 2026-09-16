@@ -208,6 +208,23 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'kishu-izon-checker',
+    translations: {
+      ja: {
+        name: '機種依存文字チェッカー',
+        description:
+          '①②③などの丸数字やⅠⅡⅢのローマ数字、㈱㍉㍻といった機種依存文字（環境依存文字）を検出し、安全な表記への置き換え案も表示します。',
+        category: 'テキスト',
+      },
+      en: {
+        name: 'Machine-Dependent Character Checker',
+        description:
+          'Detects machine-dependent characters such as circled numbers, Roman numerals, and ligatures like ㈱ ㍉ ㍻, with a safe replacement suggestion for each.',
+        category: 'Text',
+      },
+    },
+  },
+  {
     slug: 'html-escape',
     translations: {
       ja: {

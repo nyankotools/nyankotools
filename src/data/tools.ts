@@ -344,6 +344,23 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'lorem-ipsum',
+    translations: {
+      ja: {
+        name: 'ダミーテキスト生成',
+        description:
+          'Lorem ipsum（欧文）または日本語のダミーテキストを、段落・文・単語単位で指定した個数だけ生成します。',
+        category: '生成',
+      },
+      en: {
+        name: 'Dummy Text Generator',
+        description:
+          'Generates Lorem ipsum (Latin) or Japanese placeholder text by paragraphs, sentences, or words, in any count you choose.',
+        category: 'Generate',
+      },
+    },
+  },
+  {
     slug: 'qr-generator',
     translations: {
       ja: {

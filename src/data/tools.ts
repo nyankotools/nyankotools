@@ -428,6 +428,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'japanese-era-converter',
+    translations: {
+      ja: {
+        name: '和暦⇔西暦変換',
+        description:
+          '明治・大正・昭和・平成・令和の和暦と西暦を相互に変換します。改元日をまたぐ日付にも対応した元号早見表付き。',
+        category: '変換',
+      },
+      en: {
+        name: 'Japanese Era Converter',
+        description:
+          'Converts between the Japanese era calendar (Meiji, Taisho, Showa, Heisei, Reiwa) and the Western year, with an era reference table covering transition dates.',
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

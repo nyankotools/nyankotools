@@ -310,6 +310,23 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'text-diff',
+    translations: {
+      ja: {
+        name: 'テキスト差分比較（diff）',
+        description:
+          '2つのテキストを行単位で比較し、追加・削除された箇所をハイライト表示します。空白や大文字小文字の違いを無視する比較にも対応。',
+        category: '開発',
+      },
+      en: {
+        name: 'Text Diff Checker',
+        description:
+          'Compares two texts line by line and highlights added and removed lines, with options to ignore whitespace or case differences.',
+        category: 'Development',
+      },
+    },
+  },
+  {
     slug: 'qr-generator',
     translations: {
       ja: {

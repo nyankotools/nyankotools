@@ -1,0 +1,95 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+---
+
+<Layout
+  title="About"
+  description="About page for NyankoTools, covering what the service is, who operates it, and how to get in touch."
+>
+  <h1 class="mb-2 text-2xl font-bold">About</h1>
+  <p class="mb-8 text-gray-600 dark:text-gray-400">
+    An overview of NyankoTools and who operates it.
+  </p>
+
+  <div class="max-w-2xl space-y-8 text-gray-800 dark:text-gray-300">
+    <section>
+      <h2 class="mb-2 text-lg font-semibold">About the Service</h2>
+      <p>
+        NyankoTools (nyankotools.com) is a free, browser-only toolkit covering
+        everyday tools like JSON formatting and Base64 conversion, plus careful
+        support for Japanese-specific text processing such as kana and
+        full-width/half-width conversion. No account is required, and nothing
+        you type is ever sent to our servers.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="mb-2 text-lg font-semibold">Operator</h2>
+      <p>
+        The Site is operated by an individual. We don't publish the operator's
+        name, but you can reach us via our official X account below, or through
+        the
+        <a
+          href="/en/contact/"
+          class="text-blue-700 underline hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+        >
+          contact form
+        </a>
+        .
+      </p>
+    </section>
+
+    <section>
+      <h2 class="mb-2 text-lg font-semibold">Official X</h2>
+      <p>
+        We announce new tools and maintenance updates on our official X account.
+      </p>
+      <a
+        href="https://x.com/nyankotools"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-blue-700 underline hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+      >
+        @nyankotools
+      </a>
+    </section>
+
+    <section>
+      <h2 class="mb-2 text-lg font-semibold">Related Pages</h2>
+      <ul class="list-disc space-y-1 pl-6">
+        <li>
+          <a
+            href="/en/contact/"
+            class="text-blue-700 underline hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            Contact
+          </a>
+        </li>
+        <li>
+          <a
+            href="/en/faq/"
+            class="text-blue-700 underline hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            FAQ
+          </a>
+        </li>
+        <li>
+          <a
+            href="/en/privacy-policy/"
+            class="text-blue-700 underline hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            Privacy Policy
+          </a>
+        </li>
+        <li>
+          <a
+            href="/en/terms-of-service/"
+            class="text-blue-700 underline hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            Terms of Service
+          </a>
+        </li>
+      </ul>
+    </section>
+  </div>
+</Layout>

@@ -1,0 +1,87 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout
+  title="運営者情報"
+  description="にゃんこツールの運営者情報ページです。サービス概要、運営者について、お問い合わせ方法を紹介しています。"
+>
+  <h1 class="mb-2 text-2xl font-bold">運営者情報</h1>
+  <p class="mb-8 text-gray-600 dark:text-gray-400">
+    にゃんこツールのサービス概要と運営者についてご案内します。
+  </p>
+
+  <div class="max-w-2xl space-y-8 text-gray-800 dark:text-gray-300">
+    <section>
+      <h2 class="mb-2 text-lg font-semibold">サービス概要</h2>
+      <p>
+        にゃんこツール（nyankotools.com）は、JSON整形やBase64変換などの定番ツールに加え、かな変換・全角/半角変換のような日本語特有の処理まで揃えた、無料のブラウザ完結型Webツール集です。会員登録は不要で、入力したデータが当サイトのサーバーに送信されることは一切ありません。
+      </p>
+    </section>
+
+    <section>
+      <h2 class="mb-2 text-lg font-semibold">運営者</h2>
+      <p>
+        当サイトは個人により運営されています。運営者の氏名等の詳細は公開しておりませんが、ご連絡は下記の公式X、または
+        <a
+          href="/contact/"
+          class="text-blue-700 underline hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+        >
+          お問い合わせフォーム
+        </a>
+        よりお願いいたします。
+      </p>
+    </section>
+
+    <section>
+      <h2 class="mb-2 text-lg font-semibold">公式X</h2>
+      <p>新着ツールやメンテナンス情報は公式Xアカウントでお知らせしています。</p>
+      <a
+        href="https://x.com/nyankotools"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-blue-700 underline hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+      >
+        @nyankotools
+      </a>
+    </section>
+
+    <section>
+      <h2 class="mb-2 text-lg font-semibold">関連ページ</h2>
+      <ul class="list-disc space-y-1 pl-6">
+        <li>
+          <a
+            href="/contact/"
+            class="text-blue-700 underline hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            お問い合わせ
+          </a>
+        </li>
+        <li>
+          <a
+            href="/faq/"
+            class="text-blue-700 underline hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            よくある質問（FAQ）
+          </a>
+        </li>
+        <li>
+          <a
+            href="/privacy-policy/"
+            class="text-blue-700 underline hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            プライバシーポリシー
+          </a>
+        </li>
+        <li>
+          <a
+            href="/terms-of-service/"
+            class="text-blue-700 underline hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+          >
+            利用規約
+          </a>
+        </li>
+      </ul>
+    </section>
+  </div>
+</Layout>

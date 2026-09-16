@@ -46,17 +46,50 @@ const glossaryTerms = [
     <h2 class="mb-3 text-lg font-bold">Western year &rarr; Japanese era</h2>
     <div class="flex flex-wrap items-end gap-3">
       <div>
-        <label
-          for="era-w2j-date"
+        <span
+          id="era-w2j-label"
           class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
         >
           Western date
-        </label>
-        <input
-          id="era-w2j-date"
-          type="date"
-          class="h-11 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-        />
+        </span>
+        <div
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="era-w2j-label"
+        >
+          <input
+            id="era-w2j-year"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="9999"
+            placeholder="2024"
+            aria-label="Western year"
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">-</span>
+          <input
+            id="era-w2j-month"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="12"
+            placeholder="6"
+            aria-label="Western month"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">-</span>
+          <input
+            id="era-w2j-day"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            placeholder="15"
+            aria-label="Western day"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+        </div>
       </div>
     </div>
     <p
@@ -209,8 +242,14 @@ const glossaryTerms = [
     westernToWareki,
   } from '../../../../lib/tools/japanese-era-converter';
 
-  const w2jDateInput = document.getElementById(
-    'era-w2j-date',
+  const w2jYearInput = document.getElementById(
+    'era-w2j-year',
+  ) as HTMLInputElement;
+  const w2jMonthInput = document.getElementById(
+    'era-w2j-month',
+  ) as HTMLInputElement;
+  const w2jDayInput = document.getElementById(
+    'era-w2j-day',
   ) as HTMLInputElement;
   const w2jErrorEl = document.getElementById('era-w2j-error')!;
   const w2jResultEl = document.getElementById('era-w2j-result')!;
@@ -219,11 +258,19 @@ const glossaryTerms = [
     w2jErrorEl.textContent = '';
     w2jResultEl.textContent = '';
 
-    const match = w2jDateInput.value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!match) return;
-    const [, y, m, d] = match;
+    if (
+      w2jYearInput.value === '' ||
+      w2jMonthInput.value === '' ||
+      w2jDayInput.value === ''
+    ) {
+      return;
+    }
 
-    const result = westernToWareki(Number(y), Number(m), Number(d));
+    const result = westernToWareki(
+      Number(w2jYearInput.value),
+      Number(w2jMonthInput.value),
+      Number(w2jDayInput.value),
+    );
     if (!result) {
       w2jErrorEl.textContent =
         'Could not convert (please enter a date on or after Meiji 1 / January 25, 1868)';
@@ -235,7 +282,9 @@ const glossaryTerms = [
     w2jResultEl.textContent = `${result.era.romaji} ${yearLabel}`;
   }
 
-  w2jDateInput.addEventListener('input', renderWesternToWareki);
+  w2jYearInput.addEventListener('input', renderWesternToWareki);
+  w2jMonthInput.addEventListener('input', renderWesternToWareki);
+  w2jDayInput.addEventListener('input', renderWesternToWareki);
 
   const j2wEraSelect = document.getElementById(
     'era-j2w-era',
@@ -285,9 +334,9 @@ const glossaryTerms = [
   j2wDayInput.addEventListener('input', renderWarekiToWestern);
 
   const today = new Date();
-  w2jDateInput.value = `${today.getFullYear()}-${String(
-    today.getMonth() + 1,
-  ).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  w2jYearInput.value = String(today.getFullYear());
+  w2jMonthInput.value = String(today.getMonth() + 1);
+  w2jDayInput.value = String(today.getDate());
   renderWesternToWareki();
 
   const todayWareki = westernToWareki(

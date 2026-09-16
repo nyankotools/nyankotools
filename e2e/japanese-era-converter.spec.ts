@@ -9,7 +9,9 @@ test.describe('和暦⇔西暦変換（日本語版）', () => {
   test('西暦→和暦の変換ができる', async ({ page }) => {
     await page.goto('/tools/japanese-era-converter/');
 
-    await page.locator('#era-w2j-date').fill('2024-06-15');
+    await page.locator('#era-w2j-year').fill('2024');
+    await page.locator('#era-w2j-month').fill('6');
+    await page.locator('#era-w2j-day').fill('15');
 
     await expect(page.locator('#era-w2j-result')).toHaveText('令和6年');
     await expect(page.locator('#era-w2j-error')).toBeEmpty();
@@ -33,13 +35,17 @@ test.describe('和暦⇔西暦変換（日本語版）', () => {
     page,
   }) => {
     await page.goto('/tools/japanese-era-converter/');
-    const dateInput = page.locator('#era-w2j-date');
+    const yearInput = page.locator('#era-w2j-year');
+    const monthInput = page.locator('#era-w2j-month');
+    const dayInput = page.locator('#era-w2j-day');
     const resultEl = page.locator('#era-w2j-result');
 
-    await dateInput.fill('1989-01-07');
+    await yearInput.fill('1989');
+    await monthInput.fill('1');
+    await dayInput.fill('7');
     await expect(resultEl).toHaveText('昭和64年');
 
-    await dateInput.fill('1989-01-08');
+    await dayInput.fill('8');
     await expect(resultEl).toHaveText('平成元年');
   });
 
@@ -47,13 +53,18 @@ test.describe('和暦⇔西暦変換（日本語版）', () => {
     page,
   }) => {
     await page.goto('/tools/japanese-era-converter/');
-    const dateInput = page.locator('#era-w2j-date');
+    const yearInput = page.locator('#era-w2j-year');
+    const monthInput = page.locator('#era-w2j-month');
+    const dayInput = page.locator('#era-w2j-day');
     const resultEl = page.locator('#era-w2j-result');
 
-    await dateInput.fill('2019-04-30');
+    await yearInput.fill('2019');
+    await monthInput.fill('4');
+    await dayInput.fill('30');
     await expect(resultEl).toHaveText('平成31年');
 
-    await dateInput.fill('2019-05-01');
+    await monthInput.fill('5');
+    await dayInput.fill('1');
     await expect(resultEl).toHaveText('令和元年');
   });
 
@@ -95,7 +106,9 @@ test.describe('和暦⇔西暦変換（日本語版）', () => {
   }) => {
     await page.goto('/tools/japanese-era-converter/');
 
-    await page.locator('#era-w2j-date').fill('1800-01-01');
+    await page.locator('#era-w2j-year').fill('1800');
+    await page.locator('#era-w2j-month').fill('1');
+    await page.locator('#era-w2j-day').fill('1');
 
     await expect(page.locator('#era-w2j-error')).toHaveText(
       '変換できませんでした（明治元年1868年1月25日以降の日付を指定してください）',
@@ -136,7 +149,9 @@ test.describe('Japanese Era Converter (English)', () => {
     await page.goto('/en/tools/japanese-era-converter/');
     await expect(page.locator('main h1')).toHaveText('Japanese Era Converter');
 
-    await page.locator('#era-w2j-date').fill('2024-06-15');
+    await page.locator('#era-w2j-year').fill('2024');
+    await page.locator('#era-w2j-month').fill('6');
+    await page.locator('#era-w2j-day').fill('15');
     await expect(page.locator('#era-w2j-result')).toHaveText('Reiwa 6');
 
     await page.locator('#era-j2w-era').selectOption('令和');

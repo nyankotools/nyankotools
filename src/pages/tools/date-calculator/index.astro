@@ -1,0 +1,464 @@
+---
+import Glossary from '../../../components/Glossary.astro';
+import Layout from '../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: '初日不算入（しょじつふさんにゅう）',
+    description:
+      '民法140条の原則で、期間を計算するとき開始日（初日）は含めず翌日から数えるという考え方です。日常の日数計算では「初日を含めるかどうか」で迷いやすいため、本ツールでは両方の数え方を選べるようにしています。',
+  },
+  {
+    term: 'うるう年（閏年）',
+    description:
+      '4年に一度、2月に29日が追加される年です。ただし100で割り切れる年はうるう年にならず、さらに400で割り切れる年は例外的にうるう年になります（例: 1900年はうるう年でないが2000年はうるう年）。',
+  },
+];
+---
+
+<Layout
+  title="日数計算機（二つの日付の差・N日後の日付）"
+  description="二つの日付の差（日数）や、指定した日から○日後・○日前の日付を計算できる無料ツールです。初日を含めて数えるかどうかも選択可能。データはブラウザ内で処理され、サーバーには送信されません。"
+>
+  <h1 class="mb-2 text-2xl font-bold">日数計算機</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    二つの日付の差（日数）や、指定した日から○日後・○日前の日付をリアルタイムで計算します。契約期間の日数確認や、納期・締切日の算出などに便利です。ブラウザ内で処理され、入力内容がサーバーに送信されることはありません。年月日を和暦で確認したい場合は
+    <a
+      href="/tools/japanese-era-converter/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      和暦⇔西暦変換
+    </a>
+    もあわせてご利用ください。
+  </p>
+
+  <section class="mb-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <h2 class="mb-3 text-lg font-bold">二つの日付の差</h2>
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <span
+          id="date-calc-diff-start-label"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          開始日
+        </span>
+        <div
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="date-calc-diff-start-label"
+        >
+          <input
+            id="date-calc-diff-start-year"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="9999"
+            placeholder="2024"
+            aria-label="開始日の年（西暦）"
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">年</span>
+          <input
+            id="date-calc-diff-start-month"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="12"
+            placeholder="6"
+            aria-label="開始日の月"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">月</span>
+          <input
+            id="date-calc-diff-start-day"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            placeholder="15"
+            aria-label="開始日の日"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">日</span>
+        </div>
+      </div>
+      <div>
+        <span
+          id="date-calc-diff-end-label"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          終了日
+        </span>
+        <div
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="date-calc-diff-end-label"
+        >
+          <input
+            id="date-calc-diff-end-year"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="9999"
+            placeholder="2024"
+            aria-label="終了日の年（西暦）"
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">年</span>
+          <input
+            id="date-calc-diff-end-month"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="12"
+            placeholder="6"
+            aria-label="終了日の月"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">月</span>
+          <input
+            id="date-calc-diff-end-day"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            placeholder="15"
+            aria-label="終了日の日"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">日</span>
+        </div>
+      </div>
+    </div>
+    <label class="mt-3 flex min-h-11 w-fit items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+      <input
+        id="date-calc-diff-inclusive"
+        type="checkbox"
+        class="h-4 w-4 rounded border-gray-300 dark:border-gray-700"
+      />
+      初日を含めて数える
+    </label>
+    <p
+      id="date-calc-diff-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+    <p
+      class="mt-4 text-2xl font-bold"
+      id="date-calc-diff-result"
+      aria-live="polite"
+    ></p>
+    <p
+      id="date-calc-diff-note"
+      class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+    <p
+      id="date-calc-diff-weeks"
+      class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+  </section>
+
+  <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <h2 class="mb-3 text-lg font-bold">日付から計算（○日後・○日前）</h2>
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <span
+          id="date-calc-add-base-label"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          基準日
+        </span>
+        <div
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="date-calc-add-base-label"
+        >
+          <input
+            id="date-calc-add-base-year"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="9999"
+            placeholder="2024"
+            aria-label="基準日の年（西暦）"
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">年</span>
+          <input
+            id="date-calc-add-base-month"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="12"
+            placeholder="6"
+            aria-label="基準日の月"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">月</span>
+          <input
+            id="date-calc-add-base-day"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            placeholder="15"
+            aria-label="基準日の日"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">日</span>
+        </div>
+      </div>
+      <div class="w-28">
+        <label
+          for="date-calc-add-days"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          日数
+        </label>
+        <input
+          id="date-calc-add-days"
+          type="number"
+          min="0"
+          inputmode="numeric"
+          placeholder="7"
+          class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label
+          for="date-calc-add-direction"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          方向
+        </label>
+        <select
+          id="date-calc-add-direction"
+          class="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        >
+          <option value="after">後</option>
+          <option value="before">前</option>
+        </select>
+      </div>
+    </div>
+    <p
+      id="date-calc-add-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+    <p
+      class="mt-4 text-2xl font-bold"
+      id="date-calc-add-result"
+      aria-live="polite"
+    ></p>
+  </section>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">注意事項</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>
+      本ツールはグレゴリオ暦を前提に計算しています。1582年より前の日付（改暦前）は実際の暦と一致しない場合があります。
+    </li>
+    <li>
+      「初日を含めて数える」は、開始日・終了日の両方を1日として数える設定です（民法の原則は初日不算入ですが、契約期間や工期の計算では初日を含める運用も一般的です）。
+    </li>
+    <li>日付の入力範囲は西暦0001年〜9999年です。</li>
+  </ul>
+
+  <Glossary terms={glossaryTerms} />
+</Layout>
+
+<script>
+  import {
+    addDays,
+    diffInDays,
+    getWeekday,
+    toWeeksAndDays,
+    type DateParts,
+  } from '../../../lib/tools/date-calculator';
+
+  const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
+
+  function readDateInputs(
+    yearInput: HTMLInputElement,
+    monthInput: HTMLInputElement,
+    dayInput: HTMLInputElement,
+  ): DateParts | null {
+    if (
+      yearInput.value.trim() === '' ||
+      monthInput.value.trim() === '' ||
+      dayInput.value.trim() === ''
+    ) {
+      return null;
+    }
+    return {
+      year: Number(yearInput.value),
+      month: Number(monthInput.value),
+      day: Number(dayInput.value),
+    };
+  }
+
+  function setDateInputs(
+    yearInput: HTMLInputElement,
+    monthInput: HTMLInputElement,
+    dayInput: HTMLInputElement,
+    date: Date,
+  ) {
+    yearInput.value = String(date.getFullYear());
+    monthInput.value = String(date.getMonth() + 1);
+    dayInput.value = String(date.getDate());
+  }
+
+  const diffStartYearInput = document.getElementById(
+    'date-calc-diff-start-year',
+  ) as HTMLInputElement;
+  const diffStartMonthInput = document.getElementById(
+    'date-calc-diff-start-month',
+  ) as HTMLInputElement;
+  const diffStartDayInput = document.getElementById(
+    'date-calc-diff-start-day',
+  ) as HTMLInputElement;
+  const diffEndYearInput = document.getElementById(
+    'date-calc-diff-end-year',
+  ) as HTMLInputElement;
+  const diffEndMonthInput = document.getElementById(
+    'date-calc-diff-end-month',
+  ) as HTMLInputElement;
+  const diffEndDayInput = document.getElementById(
+    'date-calc-diff-end-day',
+  ) as HTMLInputElement;
+  const diffInclusiveCheckbox = document.getElementById(
+    'date-calc-diff-inclusive',
+  ) as HTMLInputElement;
+  const diffErrorEl = document.getElementById('date-calc-diff-error')!;
+  const diffResultEl = document.getElementById('date-calc-diff-result')!;
+  const diffNoteEl = document.getElementById('date-calc-diff-note')!;
+  const diffWeeksEl = document.getElementById('date-calc-diff-weeks')!;
+
+  function renderDiff() {
+    diffErrorEl.textContent = '';
+    diffResultEl.textContent = '';
+    diffNoteEl.textContent = '';
+    diffWeeksEl.textContent = '';
+
+    const start = readDateInputs(
+      diffStartYearInput,
+      diffStartMonthInput,
+      diffStartDayInput,
+    );
+    const end = readDateInputs(
+      diffEndYearInput,
+      diffEndMonthInput,
+      diffEndDayInput,
+    );
+    if (!start || !end) return;
+
+    const inclusive = diffInclusiveCheckbox.checked;
+
+    // 注記は「開始日から見て何日後/前か」という暦上のオフセットなので、
+    // inclusive（両端算入の通算日数）とは独立に、常に非inclusiveの差分で判定する。
+    const calendarDiff = diffInDays(start, end, false);
+    if (calendarDiff === null) {
+      diffErrorEl.textContent = '存在しない日付です';
+      return;
+    }
+    const diff = inclusive ? diffInDays(start, end, true) : calendarDiff;
+    if (diff === null) {
+      diffErrorEl.textContent = '存在しない日付です';
+      return;
+    }
+
+    diffResultEl.textContent = inclusive ? `${diff}日間` : `${diff}日`;
+
+    if (calendarDiff === 0) {
+      diffNoteEl.textContent = '開始日と終了日は同じ日です';
+    } else if (calendarDiff > 0) {
+      diffNoteEl.textContent = `終了日は開始日の${calendarDiff}日後です`;
+    } else {
+      diffNoteEl.textContent = `終了日は開始日の${Math.abs(calendarDiff)}日前です`;
+    }
+
+    if (Math.abs(diff) >= 7) {
+      const { weeks, remainderDays } = toWeeksAndDays(diff);
+      diffWeeksEl.textContent = `＝ ${Math.abs(weeks)}週間${Math.abs(remainderDays)}日`;
+    }
+  }
+
+  diffStartYearInput.addEventListener('input', renderDiff);
+  diffStartMonthInput.addEventListener('input', renderDiff);
+  diffStartDayInput.addEventListener('input', renderDiff);
+  diffEndYearInput.addEventListener('input', renderDiff);
+  diffEndMonthInput.addEventListener('input', renderDiff);
+  diffEndDayInput.addEventListener('input', renderDiff);
+  diffInclusiveCheckbox.addEventListener('change', renderDiff);
+
+  const addBaseYearInput = document.getElementById(
+    'date-calc-add-base-year',
+  ) as HTMLInputElement;
+  const addBaseMonthInput = document.getElementById(
+    'date-calc-add-base-month',
+  ) as HTMLInputElement;
+  const addBaseDayInput = document.getElementById(
+    'date-calc-add-base-day',
+  ) as HTMLInputElement;
+  const addDaysInput = document.getElementById(
+    'date-calc-add-days',
+  ) as HTMLInputElement;
+  const addDirectionSelect = document.getElementById(
+    'date-calc-add-direction',
+  ) as HTMLSelectElement;
+  const addErrorEl = document.getElementById('date-calc-add-error')!;
+  const addResultEl = document.getElementById('date-calc-add-result')!;
+
+  function renderAddDays() {
+    addErrorEl.textContent = '';
+    addResultEl.textContent = '';
+
+    const base = readDateInputs(
+      addBaseYearInput,
+      addBaseMonthInput,
+      addBaseDayInput,
+    );
+    if (!base) return;
+    if (addDaysInput.value.trim() === '') return;
+
+    const days = Number(addDaysInput.value);
+    if (!Number.isInteger(days) || days < 0) {
+      addErrorEl.textContent = '日数には0以上の整数を入力してください';
+      return;
+    }
+    const signedDays = addDirectionSelect.value === 'before' ? -days : days;
+
+    const result = addDays(base, signedDays);
+    if (!result) {
+      addErrorEl.textContent =
+        '計算できませんでした（基準日または日数を確認してください）';
+      return;
+    }
+
+    const weekday = getWeekday(result.year, result.month, result.day);
+    const weekdayLabel =
+      weekday === null ? '' : `（${WEEKDAY_LABELS[weekday]}）`;
+    addResultEl.textContent = `${result.year}年${result.month}月${result.day}日${weekdayLabel}`;
+  }
+
+  addBaseYearInput.addEventListener('input', renderAddDays);
+  addBaseMonthInput.addEventListener('input', renderAddDays);
+  addBaseDayInput.addEventListener('input', renderAddDays);
+  addDaysInput.addEventListener('input', renderAddDays);
+  addDirectionSelect.addEventListener('change', renderAddDays);
+
+  const today = new Date();
+  setDateInputs(
+    diffStartYearInput,
+    diffStartMonthInput,
+    diffStartDayInput,
+    today,
+  );
+  setDateInputs(diffEndYearInput, diffEndMonthInput, diffEndDayInput, today);
+  renderDiff();
+
+  setDateInputs(addBaseYearInput, addBaseMonthInput, addBaseDayInput, today);
+  addDaysInput.value = '7';
+  renderAddDays();
+</script>

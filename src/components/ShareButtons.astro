@@ -15,7 +15,7 @@ const shareUrl = url.toString();
 const encodedUrl = encodeURIComponent(shareUrl);
 const encodedTitle = encodeURIComponent(title);
 
-const xShareUrl = `https://x.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}`;
+const xShareUrl = `https://x.com/intent/tweet?url=${encodedUrl}&text=${encodedTitle}&via=nyankotools&hashtags=NyankoTools`;
 const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
 const lineShareUrl = `https://social-plugins.line.me/lineit/share?url=${encodedUrl}&text=${encodedTitle}`;
 const hatenaShareUrl = `https://b.hatena.ne.jp/add?mode=confirm&url=${encodedUrl}&title=${encodedTitle}`;

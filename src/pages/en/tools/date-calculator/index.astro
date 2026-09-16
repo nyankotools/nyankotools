@@ -40,30 +40,96 @@ const glossaryTerms = [
     <h2 class="mb-3 text-lg font-bold">Difference between two dates</h2>
     <div class="flex flex-wrap items-end gap-3">
       <div>
-        <label
-          for="date-calc-diff-start"
+        <span
+          id="date-calc-diff-start-label"
           class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
         >
           Start date
-        </label>
-        <input
-          id="date-calc-diff-start"
-          type="date"
-          class="h-11 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-        />
+        </span>
+        <div
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="date-calc-diff-start-label"
+        >
+          <input
+            id="date-calc-diff-start-year"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="9999"
+            placeholder="2024"
+            aria-label="Start year"
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">-</span>
+          <input
+            id="date-calc-diff-start-month"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="12"
+            placeholder="6"
+            aria-label="Start month"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">-</span>
+          <input
+            id="date-calc-diff-start-day"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            placeholder="15"
+            aria-label="Start day"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+        </div>
       </div>
       <div>
-        <label
-          for="date-calc-diff-end"
+        <span
+          id="date-calc-diff-end-label"
           class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
         >
           End date
-        </label>
-        <input
-          id="date-calc-diff-end"
-          type="date"
-          class="h-11 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-        />
+        </span>
+        <div
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="date-calc-diff-end-label"
+        >
+          <input
+            id="date-calc-diff-end-year"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="9999"
+            placeholder="2024"
+            aria-label="End year"
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">-</span>
+          <input
+            id="date-calc-diff-end-month"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="12"
+            placeholder="6"
+            aria-label="End month"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">-</span>
+          <input
+            id="date-calc-diff-end-day"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            placeholder="15"
+            aria-label="End day"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+        </div>
       </div>
     </div>
     <label class="mt-3 flex min-h-11 w-fit items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
@@ -100,17 +166,50 @@ const glossaryTerms = [
     <h2 class="mb-3 text-lg font-bold">Date from a starting point</h2>
     <div class="flex flex-wrap items-end gap-3">
       <div>
-        <label
-          for="date-calc-add-base"
+        <span
+          id="date-calc-add-base-label"
           class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
         >
           Base date
-        </label>
-        <input
-          id="date-calc-add-base"
-          type="date"
-          class="h-11 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-        />
+        </span>
+        <div
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="date-calc-add-base-label"
+        >
+          <input
+            id="date-calc-add-base-year"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="9999"
+            placeholder="2024"
+            aria-label="Base year"
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">-</span>
+          <input
+            id="date-calc-add-base-month"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="12"
+            placeholder="6"
+            aria-label="Base month"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">-</span>
+          <input
+            id="date-calc-add-base-day"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            placeholder="15"
+            aria-label="Base day"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+        </div>
       </div>
       <div class="w-28">
         <label
@@ -167,10 +266,7 @@ const glossaryTerms = [
       "Count both dates (inclusive)" counts both the start date and end date as
       full days — commonly used for contract periods or project durations.
     </li>
-    <li>
-      The supported date range is year 0001 through 9999, a limit of the
-      browser's native date input.
-    </li>
+    <li>The supported date range is year 0001 through 9999.</li>
   </ul>
 
   <Glossary terms={glossaryTerms} heading="Glossary" />
@@ -187,24 +283,53 @@ const glossaryTerms = [
 
   const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  function parseDateInputValue(value: string): DateParts | null {
-    const match = value.match(/^(\d{4,})-(\d{2})-(\d{2})$/);
-    if (!match) return null;
-    const [, y, m, d] = match;
-    return { year: Number(y), month: Number(m), day: Number(d) };
+  function readDateInputs(
+    yearInput: HTMLInputElement,
+    monthInput: HTMLInputElement,
+    dayInput: HTMLInputElement,
+  ): DateParts | null {
+    if (
+      yearInput.value.trim() === '' ||
+      monthInput.value.trim() === '' ||
+      dayInput.value.trim() === ''
+    ) {
+      return null;
+    }
+    return {
+      year: Number(yearInput.value),
+      month: Number(monthInput.value),
+      day: Number(dayInput.value),
+    };
   }
 
-  function formatDateInputValue(date: Date): string {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
-      date.getDate(),
-    ).padStart(2, '0')}`;
+  function setDateInputs(
+    yearInput: HTMLInputElement,
+    monthInput: HTMLInputElement,
+    dayInput: HTMLInputElement,
+    date: Date,
+  ) {
+    yearInput.value = String(date.getFullYear());
+    monthInput.value = String(date.getMonth() + 1);
+    dayInput.value = String(date.getDate());
   }
 
-  const diffStartInput = document.getElementById(
-    'date-calc-diff-start',
+  const diffStartYearInput = document.getElementById(
+    'date-calc-diff-start-year',
   ) as HTMLInputElement;
-  const diffEndInput = document.getElementById(
-    'date-calc-diff-end',
+  const diffStartMonthInput = document.getElementById(
+    'date-calc-diff-start-month',
+  ) as HTMLInputElement;
+  const diffStartDayInput = document.getElementById(
+    'date-calc-diff-start-day',
+  ) as HTMLInputElement;
+  const diffEndYearInput = document.getElementById(
+    'date-calc-diff-end-year',
+  ) as HTMLInputElement;
+  const diffEndMonthInput = document.getElementById(
+    'date-calc-diff-end-month',
+  ) as HTMLInputElement;
+  const diffEndDayInput = document.getElementById(
+    'date-calc-diff-end-day',
   ) as HTMLInputElement;
   const diffInclusiveCheckbox = document.getElementById(
     'date-calc-diff-inclusive',
@@ -220,8 +345,16 @@ const glossaryTerms = [
     diffNoteEl.textContent = '';
     diffWeeksEl.textContent = '';
 
-    const start = parseDateInputValue(diffStartInput.value);
-    const end = parseDateInputValue(diffEndInput.value);
+    const start = readDateInputs(
+      diffStartYearInput,
+      diffStartMonthInput,
+      diffStartDayInput,
+    );
+    const end = readDateInputs(
+      diffEndYearInput,
+      diffEndMonthInput,
+      diffEndDayInput,
+    );
     if (!start || !end) return;
 
     const inclusive = diffInclusiveCheckbox.checked;
@@ -260,12 +393,22 @@ const glossaryTerms = [
     }
   }
 
-  diffStartInput.addEventListener('input', renderDiff);
-  diffEndInput.addEventListener('input', renderDiff);
+  diffStartYearInput.addEventListener('input', renderDiff);
+  diffStartMonthInput.addEventListener('input', renderDiff);
+  diffStartDayInput.addEventListener('input', renderDiff);
+  diffEndYearInput.addEventListener('input', renderDiff);
+  diffEndMonthInput.addEventListener('input', renderDiff);
+  diffEndDayInput.addEventListener('input', renderDiff);
   diffInclusiveCheckbox.addEventListener('change', renderDiff);
 
-  const addBaseInput = document.getElementById(
-    'date-calc-add-base',
+  const addBaseYearInput = document.getElementById(
+    'date-calc-add-base-year',
+  ) as HTMLInputElement;
+  const addBaseMonthInput = document.getElementById(
+    'date-calc-add-base-month',
+  ) as HTMLInputElement;
+  const addBaseDayInput = document.getElementById(
+    'date-calc-add-base-day',
   ) as HTMLInputElement;
   const addDaysInput = document.getElementById(
     'date-calc-add-days',
@@ -280,7 +423,11 @@ const glossaryTerms = [
     addErrorEl.textContent = '';
     addResultEl.textContent = '';
 
-    const base = parseDateInputValue(addBaseInput.value);
+    const base = readDateInputs(
+      addBaseYearInput,
+      addBaseMonthInput,
+      addBaseDayInput,
+    );
     if (!base) return;
     if (addDaysInput.value.trim() === '') return;
 
@@ -306,16 +453,23 @@ const glossaryTerms = [
     ).padStart(2, '0')}${weekdayLabel}`;
   }
 
-  addBaseInput.addEventListener('input', renderAddDays);
+  addBaseYearInput.addEventListener('input', renderAddDays);
+  addBaseMonthInput.addEventListener('input', renderAddDays);
+  addBaseDayInput.addEventListener('input', renderAddDays);
   addDaysInput.addEventListener('input', renderAddDays);
   addDirectionSelect.addEventListener('change', renderAddDays);
 
   const today = new Date();
-  diffStartInput.value = formatDateInputValue(today);
-  diffEndInput.value = formatDateInputValue(today);
+  setDateInputs(
+    diffStartYearInput,
+    diffStartMonthInput,
+    diffStartDayInput,
+    today,
+  );
+  setDateInputs(diffEndYearInput, diffEndMonthInput, diffEndDayInput, today);
   renderDiff();
 
-  addBaseInput.value = formatDateInputValue(today);
+  setDateInputs(addBaseYearInput, addBaseMonthInput, addBaseDayInput, today);
   addDaysInput.value = '7';
   renderAddDays();
 </script>

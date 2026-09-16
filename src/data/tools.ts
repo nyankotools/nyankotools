@@ -411,6 +411,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'cron-parser',
+    translations: {
+      ja: {
+        name: 'Cron式スケジュールシミュレーター',
+        description:
+          'cron式の意味を日本語で解説し、次回の実行予定日時を一覧表示します。crontabやGitHub Actionsの動作確認に便利。',
+        category: '開発',
+      },
+      en: {
+        name: 'Cron Expression Simulator',
+        description:
+          'Explains a cron expression in plain English and lists its upcoming run times. Handy for checking crontab or GitHub Actions schedules.',
+        category: 'Development',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

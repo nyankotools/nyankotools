@@ -1,5 +1,22 @@
 {
   "permissions": {
-    "allow": ["Read", "Edit", "Write", "MultiEdit", "Glob", "Grep"]
+    "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "MultiEdit",
+      "Glob",
+      "Grep",
+      "Bash(pnpm test*)",
+      "Bash(pnpm run test*)",
+      "Bash(pnpm exec vitest run*)",
+      "Bash(pnpm vitest run*)",
+      "Bash(pnpm exec astro check*)",
+      "Bash(pnpm run lint*)",
+      "Bash(pnpm exec playwright test*)",
+      "PowerShell(pnpm test*)",
+      "PowerShell(pnpm exec astro check*)",
+      "PowerShell(pnpm run lint*)"
+    ]
   }
 }

@@ -27,3 +27,44 @@ test('サイドバーからツールページへ遷移できる', async ({ page 
   await expect(page).toHaveURL(/\/tools\/char-counter\/?$/);
   await expect(page.locator('main h1')).toHaveText('文字数カウント');
 });
+
+test('フッターに公式Xアカウントへのリンクが表示される（日本語版）', async ({
+  page,
+}) => {
+  await page.goto('/tools/char-counter/');
+
+  const footerXLink = page.locator('footer a', { hasText: '公式X' });
+  await expect(footerXLink).toHaveAttribute(
+    'href',
+    'https://x.com/nyankotools',
+  );
+  await expect(footerXLink).toHaveAttribute('target', '_blank');
+  await expect(footerXLink).toHaveAttribute('rel', 'noopener noreferrer');
+});
+
+test('フッターに公式Xアカウントへのリンクが表示される（英語版）', async ({
+  page,
+}) => {
+  await page.goto('/en/tools/char-counter/');
+
+  const footerXLink = page.locator('footer a', { hasText: 'Official X' });
+  await expect(footerXLink).toHaveAttribute(
+    'href',
+    'https://x.com/nyankotools',
+  );
+  await expect(footerXLink).toHaveAttribute('target', '_blank');
+  await expect(footerXLink).toHaveAttribute('rel', 'noopener noreferrer');
+});
+
+test('Xシェアボタンのリンクに公式アカウント紐付け・ハッシュタグのパラメータが含まれる', async ({
+  page,
+}) => {
+  await page.goto('/tools/char-counter/');
+
+  const xShareLink = page.locator('[data-share-popup]', { hasText: 'X' });
+  const href = await xShareLink.getAttribute('href');
+
+  expect(href).toContain('https://x.com/intent/tweet?');
+  expect(href).toContain('via=nyankotools');
+  expect(href).toContain('hashtags=NyankoTools');
+});

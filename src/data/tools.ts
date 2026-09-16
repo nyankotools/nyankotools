@@ -445,6 +445,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'date-calculator',
+    translations: {
+      ja: {
+        name: '日数計算機',
+        description:
+          '二つの日付の差（日数）や、指定した日から○日後・○日前の日付を計算します。初日を含めて数えるかどうかも選択可能。',
+        category: '計算',
+      },
+      en: {
+        name: 'Date Calculator',
+        description:
+          'Calculates the difference in days between two dates, or the date a set number of days before or after a given date, with an option to count both endpoints.',
+        category: 'Calculate',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

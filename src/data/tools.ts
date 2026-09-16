@@ -293,6 +293,23 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'regex-tester',
+    translations: {
+      ja: {
+        name: '正規表現テスター',
+        description:
+          '正規表現のパターンとテスト文字列を入力すると、マッチ箇所のハイライト表示・キャプチャグループの一覧・置換結果のプレビューができます。',
+        category: '開発',
+      },
+      en: {
+        name: 'Regex Tester',
+        description:
+          'Tests a regular expression against sample text with match highlighting, a capture group list, and a live replacement preview.',
+        category: 'Development',
+      },
+    },
+  },
+  {
     slug: 'qr-generator',
     translations: {
       ja: {

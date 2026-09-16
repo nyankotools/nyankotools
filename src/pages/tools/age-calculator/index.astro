@@ -1,0 +1,314 @@
+---
+import Glossary from '../../../components/Glossary.astro';
+import Layout from '../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: '数え年（かぞえどし）',
+    description:
+      '生まれた年を1歳とし、誕生日に関わらず元日（1月1日）を迎えるたびに1歳加算する伝統的な年齢の数え方です。七五三や厄年、長寿祝いなどで使われることがあります。満年齢とは異なり、誕生日を迎えたかどうかは関係ありません。',
+  },
+  {
+    term: '早生まれ',
+    description:
+      '「年齢計算ニ関スル法律」により、満年齢は誕生日の前日の終了時点（実質的に誕生日の前日）に加算されます。この規定により、4月1日生まれの人は3月31日に加齢したものとして扱われるため、同学年の中で最も早く生まれた「早生まれ」（1月〜4月1日生まれ）として扱われます。本ツールが表示する満年齢は誕生日当日に加齢する一般的な数え方であり、この法律上の1日のズレは反映していません。',
+  },
+  {
+    term: 'うるう年（閏年）',
+    description:
+      '4年に一度、2月に29日が追加される年です。ただし100で割り切れる年はうるう年にならず、さらに400で割り切れる年は例外的にうるう年になります。2月29日生まれの方の誕生日は、うるう年でない年では便宜上2月28日として計算しています。',
+  },
+];
+---
+
+<Layout
+  title="年齢計算機（満年齢・数え年・生まれてからの日数）"
+  description="生年月日と基準日を入力するだけで、満年齢・数え年・生まれてから経過した日数・次の誕生日までの日数を無料で計算できるツールです。データはブラウザ内で処理され、サーバーには送信されません。"
+>
+  <h1 class="mb-2 text-2xl font-bold">年齢計算機</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    生年月日を入力すると、満年齢・数え年・生まれてから経過した日数・次の誕生日までの日数をリアルタイムで計算します。基準日は今日の日付が初期値ですが、変更すると「〇年〇月〇日時点で何歳か」も確認できます。ブラウザ内で処理され、入力内容がサーバーに送信されることはありません。二つの日付の日数差を計算したい場合は
+    <a
+      href="/tools/date-calculator/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      日数計算機
+    </a>
+    、生年月日を和暦で確認したい場合は
+    <a
+      href="/tools/japanese-era-converter/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      和暦⇔西暦変換
+    </a>
+    もあわせてご利用ください。
+  </p>
+
+  <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <span
+          id="age-calc-birth-label"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          生年月日
+        </span>
+        <div
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="age-calc-birth-label"
+        >
+          <input
+            id="age-calc-birth-year"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="9999"
+            placeholder="1990"
+            aria-label="生年（西暦）"
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">年</span>
+          <input
+            id="age-calc-birth-month"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="12"
+            placeholder="6"
+            aria-label="生まれ月"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">月</span>
+          <input
+            id="age-calc-birth-day"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            placeholder="15"
+            aria-label="生まれた日"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">日</span>
+        </div>
+      </div>
+      <div>
+        <span
+          id="age-calc-reference-label"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          基準日
+        </span>
+        <div
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="age-calc-reference-label"
+        >
+          <input
+            id="age-calc-reference-year"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="9999"
+            placeholder="2024"
+            aria-label="基準日の年（西暦）"
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">年</span>
+          <input
+            id="age-calc-reference-month"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="12"
+            placeholder="6"
+            aria-label="基準日の月"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">月</span>
+          <input
+            id="age-calc-reference-day"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            placeholder="15"
+            aria-label="基準日の日"
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">日</span>
+        </div>
+      </div>
+    </div>
+    <p
+      id="age-calc-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl id="age-calc-results" class="mt-4 hidden space-y-3" aria-live="polite">
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">満年齢</dt>
+        <dd class="text-2xl font-bold" id="age-calc-full-age"></dd>
+        <dd
+          class="text-sm text-gray-600 dark:text-gray-400"
+          id="age-calc-precise-age"
+        ></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">数え年</dt>
+        <dd class="text-lg font-semibold" id="age-calc-kazoedoshi"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          生まれてから経過した日数
+        </dt>
+        <dd class="text-lg font-semibold" id="age-calc-days-lived"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">生まれた曜日</dt>
+        <dd class="text-lg font-semibold" id="age-calc-weekday"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">次の誕生日</dt>
+        <dd class="text-lg font-semibold" id="age-calc-next-birthday"></dd>
+      </div>
+    </dl>
+  </section>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">注意事項</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>
+      本ツールの満年齢は「誕生日当日に加齢する」一般的な数え方です。法律上の加齢日（誕生日の前日）を厳密に扱うものではありません（詳細は「早生まれ」の用語解説を参照）。
+    </li>
+    <li>本ツールはグレゴリオ暦を前提に計算しています。</li>
+    <li>日付の入力範囲は西暦0001年〜9999年です。</li>
+  </ul>
+
+  <Glossary terms={glossaryTerms} />
+</Layout>
+
+<script>
+  import {
+    calculateDaysLived,
+    calculateFullAge,
+    calculateKazoedoshi,
+    calculateNextBirthday,
+    calculatePreciseAge,
+  } from '../../../lib/tools/age-calculator';
+  import {
+    getWeekday,
+    type DateParts,
+  } from '../../../lib/tools/date-calculator';
+
+  const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
+
+  function readDateInputs(
+    yearInput: HTMLInputElement,
+    monthInput: HTMLInputElement,
+    dayInput: HTMLInputElement,
+  ): DateParts | null {
+    if (
+      yearInput.value.trim() === '' ||
+      monthInput.value.trim() === '' ||
+      dayInput.value.trim() === ''
+    ) {
+      return null;
+    }
+    return {
+      year: Number(yearInput.value),
+      month: Number(monthInput.value),
+      day: Number(dayInput.value),
+    };
+  }
+
+  const birthYearInput = document.getElementById(
+    'age-calc-birth-year',
+  ) as HTMLInputElement;
+  const birthMonthInput = document.getElementById(
+    'age-calc-birth-month',
+  ) as HTMLInputElement;
+  const birthDayInput = document.getElementById(
+    'age-calc-birth-day',
+  ) as HTMLInputElement;
+  const referenceYearInput = document.getElementById(
+    'age-calc-reference-year',
+  ) as HTMLInputElement;
+  const referenceMonthInput = document.getElementById(
+    'age-calc-reference-month',
+  ) as HTMLInputElement;
+  const referenceDayInput = document.getElementById(
+    'age-calc-reference-day',
+  ) as HTMLInputElement;
+
+  const errorEl = document.getElementById('age-calc-error')!;
+  const resultsEl = document.getElementById('age-calc-results')!;
+  const fullAgeEl = document.getElementById('age-calc-full-age')!;
+  const preciseAgeEl = document.getElementById('age-calc-precise-age')!;
+  const kazoedoshiEl = document.getElementById('age-calc-kazoedoshi')!;
+  const daysLivedEl = document.getElementById('age-calc-days-lived')!;
+  const weekdayEl = document.getElementById('age-calc-weekday')!;
+  const nextBirthdayEl = document.getElementById('age-calc-next-birthday')!;
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    const birth = readDateInputs(
+      birthYearInput,
+      birthMonthInput,
+      birthDayInput,
+    );
+    const reference = readDateInputs(
+      referenceYearInput,
+      referenceMonthInput,
+      referenceDayInput,
+    );
+    if (!birth || !reference) return;
+
+    const fullAge = calculateFullAge(birth, reference);
+    if (fullAge === null) {
+      errorEl.textContent =
+        '計算できませんでした（生年月日は基準日以前の実在する日付を入力してください）';
+      return;
+    }
+
+    const precise = calculatePreciseAge(birth, reference)!;
+    const kazoedoshi = calculateKazoedoshi(birth, reference)!;
+    const daysLived = calculateDaysLived(birth, reference)!;
+    const weekday = getWeekday(birth.year, birth.month, birth.day)!;
+    const next = calculateNextBirthday(birth, reference)!;
+
+    fullAgeEl.textContent = `${fullAge}歳`;
+    preciseAgeEl.textContent = `（${precise.years}歳${precise.months}ヶ月${precise.days}日）`;
+    kazoedoshiEl.textContent = `${kazoedoshi}歳`;
+    daysLivedEl.textContent = `${daysLived.toLocaleString('ja-JP')}日`;
+    weekdayEl.textContent = `${WEEKDAY_LABELS[weekday]}曜日`;
+
+    if (next.daysUntil === 0) {
+      nextBirthdayEl.textContent = `本日${next.ageAtNextBirthday}歳の誕生日です`;
+    } else {
+      nextBirthdayEl.textContent = `${next.date.year}年${next.date.month}月${next.date.day}日（あと${next.daysUntil}日、${next.ageAtNextBirthday}歳になります）`;
+    }
+
+    resultsEl.classList.remove('hidden');
+  }
+
+  birthYearInput.addEventListener('input', render);
+  birthMonthInput.addEventListener('input', render);
+  birthDayInput.addEventListener('input', render);
+  referenceYearInput.addEventListener('input', render);
+  referenceMonthInput.addEventListener('input', render);
+  referenceDayInput.addEventListener('input', render);
+
+  birthYearInput.value = '2000';
+  birthMonthInput.value = '1';
+  birthDayInput.value = '1';
+
+  const today = new Date();
+  referenceYearInput.value = String(today.getFullYear());
+  referenceMonthInput.value = String(today.getMonth() + 1);
+  referenceDayInput.value = String(today.getDate());
+  render();
+</script>

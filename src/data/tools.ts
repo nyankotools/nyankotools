@@ -327,6 +327,23 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'jwt-decoder',
+    translations: {
+      ja: {
+        name: 'JWTデコーダー',
+        description:
+          'JWT（JSON Web Token）のヘッダーとペイロードをデコードして整形表示します。exp/iat等の日時クレームも人が読める形式に変換。署名の検証は行いません。',
+        category: '開発',
+      },
+      en: {
+        name: 'JWT Decoder',
+        description:
+          'Decodes a JWT (JSON Web Token) and displays its header and payload as formatted JSON, with time-based claims like exp/iat shown as human-readable dates. The signature is not verified.',
+        category: 'Development',
+      },
+    },
+  },
+  {
     slug: 'qr-generator',
     translations: {
       ja: {

@@ -1,0 +1,462 @@
+---
+import Glossary from '../../../../components/Glossary.astro';
+import Layout from '../../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'Premium pay (wariwashi chingin)',
+    description:
+      "Under Japan's Labor Standards Act, employers must pay a premium on top of the regular wage for statutory overtime, holiday work, and late-night work. The minimum premium rate is set by law for each category, though a company's work rules can set a higher rate.",
+  },
+  {
+    term: 'Statutory overtime and the 60-hour rule',
+    description:
+      'Work beyond 8 hours a day or 40 hours a week (the statutory working hours) requires a premium of at least 25%. For the portion of monthly overtime that exceeds 60 hours, the premium rises to at least 50%. This 60-hour rule used to apply only to large companies, but has applied to small and medium-sized businesses as well since April 2023.',
+  },
+  {
+    term: 'Statutory holiday work',
+    description:
+      "Work performed on a statutory holiday — at least one day off per week, guaranteed by law — requires a premium of at least 35%. Work on a company's own non-statutory days off is instead treated as overtime (at least 25%) depending on weekly hours, and is distinct from statutory holiday work.",
+  },
+  {
+    term: 'Late-night work',
+    description:
+      'Work performed between 10 PM and 5 AM requires a premium of at least 25%. When late-night work overlaps with overtime or holiday work, the premium rates are added together (for example, late-night overtime is at least 25% + 25% = 50%).',
+  },
+];
+---
+
+<Layout
+  title="Hourly Wage Converter & Overtime Pay Calculator"
+  description="Enter an hourly wage to instantly convert it to a daily, monthly, or annual wage, and simulate premium pay (overtime pay) for statutory overtime, holiday work, and late-night work. Your data is processed in the browser and never sent to a server."
+>
+  <h1 class="mb-2 text-2xl font-bold">
+    Hourly Wage Converter & Overtime Pay Calculator
+  </h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    Enter just one of hourly, daily, monthly, or annual wage and the rest are
+    calculated automatically. You can also enter hours and premium rates for
+    each overtime pay category to simulate premium pay (overtime pay) for
+    statutory overtime, statutory holiday work, and late-night work. Everything
+    happens in your browser, and nothing you type is ever sent to a server.
+  </p>
+
+  <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <h2 class="mb-3 text-lg font-bold">1. Wage conversion</h2>
+
+    <div class="mb-3">
+      <span
+        id="wage-calc-unit-label"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        Wage type
+      </span>
+      <div
+        class="flex flex-wrap gap-3"
+        role="radiogroup"
+        aria-labelledby="wage-calc-unit-label"
+      >
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="wage-calc-unit" value="hourly" checked />
+          Hourly
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="wage-calc-unit" value="daily" />
+          Daily
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="wage-calc-unit" value="monthly" />
+          Monthly
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="wage-calc-unit" value="annual" />
+          Annual
+        </label>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label
+          for="wage-calc-amount"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          Amount (JPY)
+        </label>
+        <input
+          id="wage-calc-amount"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          placeholder="1200"
+          class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label
+          for="wage-calc-hours-per-day"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          Hours per day
+        </label>
+        <div class="flex items-center gap-1">
+          <input
+            id="wage-calc-hours-per-day"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="0.5"
+            placeholder="8"
+            class="h-11 w-20 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">hrs</span>
+        </div>
+      </div>
+      <div>
+        <label
+          for="wage-calc-days-per-month"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          Days per month
+        </label>
+        <div class="flex items-center gap-1">
+          <input
+            id="wage-calc-days-per-month"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="0.5"
+            placeholder="20"
+            class="h-11 w-20 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">days</span>
+        </div>
+      </div>
+    </div>
+
+    <p
+      id="wage-calc-conversion-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl
+      id="wage-calc-conversion-results"
+      class="mt-4 hidden grid grid-cols-2 gap-3 sm:grid-cols-4"
+      aria-live="polite"
+    >
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">Hourly</dt>
+        <dd class="text-lg font-semibold" id="wage-calc-result-hourly"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">Daily</dt>
+        <dd class="text-lg font-semibold" id="wage-calc-result-daily"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">Monthly</dt>
+        <dd class="text-lg font-semibold" id="wage-calc-result-monthly"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">Annual</dt>
+        <dd class="text-lg font-semibold" id="wage-calc-result-annual"></dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="mt-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <h2 class="mb-3 text-lg font-bold">2. Overtime (premium) pay simulator</h2>
+
+    <div class="mb-4">
+      <label
+        for="wage-calc-base-hourly"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        Base hourly wage (JPY)
+      </label>
+      <input
+        id="wage-calc-base-hourly"
+        type="number"
+        inputmode="decimal"
+        min="0"
+        placeholder="1200"
+        class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      />
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-500">
+        Automatically filled once the hourly wage above is calculated (you can
+        still edit it).
+      </p>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[560px] text-sm">
+        <thead>
+          <tr class="border-b border-gray-200 text-left text-gray-600 dark:border-gray-700 dark:text-gray-400">
+            <th class="py-2 pr-2 font-medium">Category</th>
+            <th class="py-2 pr-2 font-medium">Hours</th>
+            <th class="py-2 pr-2 font-medium">Premium rate</th>
+            <th class="py-2 pr-2 font-medium">Premium pay</th>
+          </tr>
+        </thead>
+        <tbody id="wage-calc-overtime-rows"></tbody>
+      </table>
+    </div>
+
+    <p
+      id="wage-calc-overtime-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl
+      id="wage-calc-overtime-results"
+      class="mt-4 hidden space-y-1"
+      aria-live="polite"
+    >
+      <div class="flex justify-between border-t border-gray-200 pt-2 dark:border-gray-700">
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          Total premium pay
+        </dt>
+        <dd class="text-lg font-semibold" id="wage-calc-total-premium"></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          Total pay including base wage
+        </dt>
+        <dd class="text-lg font-semibold" id="wage-calc-total-pay"></dd>
+      </div>
+    </dl>
+  </section>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">Notes</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>
+      Each premium pay category is calculated independently. If the same hours
+      fall into more than one category (for example, overtime hours that are
+      also late-night hours), split the hours between categories or enter a
+      combined premium rate for the overlapping hours yourself.
+    </li>
+    <li>
+      The displayed premium rates (25% / 35% / 50%) are the statutory minimums
+      under Japan's Labor Standards Act. Actual pay may differ depending on a
+      company's work rules or employment contract.
+    </li>
+    <li>
+      Annual wage is simply the monthly wage multiplied by 12, and does not
+      include bonuses or allowances.
+    </li>
+    <li>
+      This tool provides a rough simulation only and cannot be used as a basis
+      for actual payroll, tax, or labor procedures.
+    </li>
+  </ul>
+
+  <Glossary terms={glossaryTerms} heading="Glossary" />
+</Layout>
+
+<script>
+  import {
+    calculateOvertimePay,
+    convertWage,
+    type WageUnit,
+  } from '../../../../lib/tools/hourly-wage-calculator';
+
+  const OVERTIME_CATEGORY_DEFAULTS = [
+    { label: 'Overtime (up to 60 hrs/month)', ratePercent: 25 },
+    { label: 'Overtime (over 60 hrs/month)', ratePercent: 50 },
+    { label: 'Statutory holiday work', ratePercent: 35 },
+    { label: 'Late-night work (10 PM-5 AM)', ratePercent: 25 },
+  ];
+
+  const yen = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+
+  // --- 1. Wage conversion ---
+
+  const amountInput = document.getElementById(
+    'wage-calc-amount',
+  ) as HTMLInputElement;
+  const hoursPerDayInput = document.getElementById(
+    'wage-calc-hours-per-day',
+  ) as HTMLInputElement;
+  const daysPerMonthInput = document.getElementById(
+    'wage-calc-days-per-month',
+  ) as HTMLInputElement;
+  const unitInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="wage-calc-unit"]',
+  );
+
+  const conversionErrorEl = document.getElementById(
+    'wage-calc-conversion-error',
+  )!;
+  const conversionResultsEl = document.getElementById(
+    'wage-calc-conversion-results',
+  )!;
+  const resultHourlyEl = document.getElementById('wage-calc-result-hourly')!;
+  const resultDailyEl = document.getElementById('wage-calc-result-daily')!;
+  const resultMonthlyEl = document.getElementById('wage-calc-result-monthly')!;
+  const resultAnnualEl = document.getElementById('wage-calc-result-annual')!;
+
+  const baseHourlyInput = document.getElementById(
+    'wage-calc-base-hourly',
+  ) as HTMLInputElement;
+  let baseHourlyManuallyEdited = false;
+
+  function selectedUnit(): WageUnit {
+    return (
+      (Array.from(unitInputs).find((el) => el.checked)?.value as WageUnit) ??
+      'hourly'
+    );
+  }
+
+  function renderConversion() {
+    conversionErrorEl.textContent = '';
+    conversionResultsEl.classList.add('hidden');
+
+    if (amountInput.value.trim() === '') return;
+
+    const result = convertWage({
+      amount: Number(amountInput.value),
+      unit: selectedUnit(),
+      hoursPerDay: Number(hoursPerDayInput.value),
+      daysPerMonth: Number(daysPerMonthInput.value),
+    });
+
+    if (result === null) {
+      conversionErrorEl.textContent =
+        'Could not calculate (amount, hours per day, and days per month must all be greater than 0)';
+      return;
+    }
+
+    resultHourlyEl.textContent = yen.format(result.hourly);
+    resultDailyEl.textContent = yen.format(result.daily);
+    resultMonthlyEl.textContent = yen.format(result.monthly);
+    resultAnnualEl.textContent = yen.format(result.annual);
+    conversionResultsEl.classList.remove('hidden');
+
+    if (!baseHourlyManuallyEdited) {
+      baseHourlyInput.value = String(Math.round(result.hourly));
+      renderOvertime();
+    }
+  }
+
+  amountInput.addEventListener('input', renderConversion);
+  hoursPerDayInput.addEventListener('input', renderConversion);
+  daysPerMonthInput.addEventListener('input', renderConversion);
+  unitInputs.forEach((el) => el.addEventListener('change', renderConversion));
+
+  // --- 2. Overtime (premium) pay simulator ---
+
+  const overtimeRowsEl = document.getElementById('wage-calc-overtime-rows')!;
+  const overtimeErrorEl = document.getElementById('wage-calc-overtime-error')!;
+  const overtimeResultsEl = document.getElementById(
+    'wage-calc-overtime-results',
+  )!;
+  const totalPremiumEl = document.getElementById('wage-calc-total-premium')!;
+  const totalPayEl = document.getElementById('wage-calc-total-pay')!;
+
+  const hoursInputs: HTMLInputElement[] = [];
+  const rateInputs: HTMLInputElement[] = [];
+
+  OVERTIME_CATEGORY_DEFAULTS.forEach((category, index) => {
+    const row = document.createElement('tr');
+    row.className = 'border-b border-gray-100 dark:border-gray-800';
+    row.innerHTML = `
+      <td class="py-2 pr-2">${category.label}</td>
+      <td class="py-2 pr-2">
+        <div class="flex items-center gap-1">
+          <input
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="0.5"
+            value="0"
+            data-role="hours"
+            aria-label="${category.label} hours"
+            class="h-9 w-20 rounded-lg border border-gray-300 px-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          />
+          <span class="text-xs text-gray-500 dark:text-gray-500">hrs</span>
+        </div>
+      </td>
+      <td class="py-2 pr-2">
+        <div class="flex items-center gap-1">
+          <input
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="1"
+            value="${category.ratePercent}"
+            data-role="rate"
+            aria-label="${category.label} premium rate"
+            class="h-9 w-16 rounded-lg border border-gray-300 px-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          />
+          <span class="text-xs text-gray-500 dark:text-gray-500">%</span>
+        </div>
+      </td>
+      <td class="py-2 pr-2 font-medium" data-role="premium"></td>
+    `;
+    overtimeRowsEl.appendChild(row);
+
+    const hoursInput = row.querySelector(
+      '[data-role="hours"]',
+    ) as HTMLInputElement;
+    const rateInput = row.querySelector(
+      '[data-role="rate"]',
+    ) as HTMLInputElement;
+    hoursInputs[index] = hoursInput;
+    rateInputs[index] = rateInput;
+
+    hoursInput.addEventListener('input', renderOvertime);
+    rateInput.addEventListener('input', renderOvertime);
+  });
+
+  function renderOvertime() {
+    overtimeErrorEl.textContent = '';
+    overtimeResultsEl.classList.add('hidden');
+
+    if (baseHourlyInput.value.trim() === '') return;
+
+    const categories = OVERTIME_CATEGORY_DEFAULTS.map((category, index) => ({
+      label: category.label,
+      hours: Number(hoursInputs[index].value),
+      ratePercent: Number(rateInputs[index].value),
+    }));
+
+    const result = calculateOvertimePay(
+      Number(baseHourlyInput.value),
+      categories,
+    );
+
+    if (result === null) {
+      overtimeErrorEl.textContent =
+        'Could not calculate (base hourly wage must be greater than 0, and hours/premium rates must be 0 or more)';
+      const cells = overtimeRowsEl.querySelectorAll('[data-role="premium"]');
+      cells.forEach((cell) => (cell.textContent = ''));
+      return;
+    }
+
+    const rows = overtimeRowsEl.querySelectorAll('tr');
+    result.categories.forEach((category, index) => {
+      const cell = rows[index].querySelector('[data-role="premium"]')!;
+      cell.textContent = yen.format(category.premiumPay);
+    });
+
+    totalPremiumEl.textContent = yen.format(result.totalPremiumPay);
+    totalPayEl.textContent = yen.format(result.totalPay);
+    overtimeResultsEl.classList.remove('hidden');
+  }
+
+  baseHourlyInput.addEventListener('input', () => {
+    baseHourlyManuallyEdited = true;
+    renderOvertime();
+  });
+
+  hoursPerDayInput.value = '8';
+  daysPerMonthInput.value = '20';
+  amountInput.value = '1200';
+  renderConversion();
+  renderOvertime();
+</script>

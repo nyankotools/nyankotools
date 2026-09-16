@@ -479,6 +479,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'hourly-wage-calculator',
+    translations: {
+      ja: {
+        name: '時給・日給・月給換算＆残業代計算機',
+        description:
+          '時給・日給・月給・年収を相互換算し、時間外労働・法定休日労働・深夜労働の割増賃金（残業代）もまとめてシミュレーションできます。',
+        category: '計算',
+      },
+      en: {
+        name: 'Hourly Wage Converter & Overtime Pay Calculator',
+        description:
+          'Converts between hourly, daily, monthly, and annual wages, and simulates overtime, holiday, and late-night premium pay.',
+        category: 'Calculate',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

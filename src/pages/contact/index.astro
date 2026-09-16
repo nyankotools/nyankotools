@@ -1,0 +1,183 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { CONTACT_EMAIL } from '../../lib/contact-form';
+---
+
+<Layout
+  title="お問い合わせ"
+  description="にゃんこツールへのお問い合わせページです。不具合報告やご要望などを、サーバーを介さずお使いのメールソフト経由で送信できます。"
+>
+  <h1 class="mb-2 text-2xl font-bold">お問い合わせ</h1>
+  <p class="mb-6 max-w-2xl text-gray-600 dark:text-gray-400">
+    不具合のご報告、ご要望、ツールに関するご質問など、お気軽にご連絡ください。
+  </p>
+
+  <div class="mb-8 max-w-2xl rounded-lg bg-blue-50 p-4 text-sm text-gray-700 dark:bg-blue-950/30 dark:text-gray-300">
+    当サイトはサーバーを持たない完全に静的なWebサイトです。そのため、一般的なお問い合わせフォームのようにサーバーを経由してメッセージを送信する仕組みは採用していません。下記の入力内容はすべてお使いのブラウザ内でのみ処理され、「メールソフトで送信」を押すとお使いのメールソフトが起動し、入力内容を差し込んだメール作成画面が開きます。メールソフトが設定されていない場合は「本文をコピー」でコピーし、お使いのメールサービスから直接お送りください。
+  </div>
+
+  <div id="contact-form" class="max-w-2xl space-y-4">
+    <div>
+      <label
+        for="contact-category"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        お問い合わせ種別
+      </label>
+      <select
+        id="contact-category"
+        class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      >
+        <option>不具合の報告</option>
+        <option>ご要望</option>
+        <option>ツールについての質問</option>
+        <option>その他</option>
+      </select>
+    </div>
+
+    <div>
+      <label
+        for="contact-name"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        お名前（任意）
+      </label>
+      <input
+        id="contact-name"
+        type="text"
+        class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        placeholder="にゃんこ太郎"
+      />
+    </div>
+
+    <div>
+      <label
+        for="contact-message"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        お問い合わせ内容
+      </label>
+      <textarea
+        id="contact-message"
+        class="h-40 w-full rounded-lg border border-gray-300 p-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        placeholder="不具合の内容やご要望などをご記入ください"
+      ></textarea>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <button
+        id="contact-mailto"
+        type="button"
+        class="min-h-11 rounded-lg bg-blue-600 px-4 text-sm font-semibold text-white hover:bg-blue-700"
+      >
+        メールソフトで送信
+      </button>
+      <button
+        id="contact-copy"
+        type="button"
+        class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-semibold hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+      >
+        本文をコピー
+      </button>
+      <span id="contact-status" class="text-sm" aria-live="polite"></span>
+    </div>
+  </div>
+
+  <section class="mt-10 max-w-2xl border-t border-gray-200 pt-6 dark:border-gray-800">
+    <h2 class="mb-2 text-lg font-semibold">メールソフトを起動できない場合</h2>
+    <p class="mb-2 text-gray-600 dark:text-gray-400">
+      お使いの環境でメールソフトが設定されていない場合は、下記アドレス宛に直接メールをお送りください。
+    </p>
+    <div class="flex items-center gap-2">
+      <code class="rounded bg-gray-100 px-2 py-1 text-sm dark:bg-gray-800">
+        {CONTACT_EMAIL}
+      </code>
+      <button
+        id="contact-email-copy"
+        type="button"
+        class="min-h-11 rounded-lg border border-gray-300 px-3 text-sm hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+      >
+        コピー
+      </button>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  import {
+    buildMailtoLink,
+    formatMailBody,
+    CONTACT_EMAIL,
+  } from '../../lib/contact-form';
+
+  const categorySelect = document.getElementById(
+    'contact-category',
+  ) as HTMLSelectElement;
+  const nameInput = document.getElementById('contact-name') as HTMLInputElement;
+  const messageInput = document.getElementById(
+    'contact-message',
+  ) as HTMLTextAreaElement;
+  const statusEl = document.getElementById('contact-status')!;
+  const mailtoButton = document.getElementById(
+    'contact-mailto',
+  ) as HTMLButtonElement;
+  const copyButton = document.getElementById(
+    'contact-copy',
+  ) as HTMLButtonElement;
+  const emailCopyButton = document.getElementById(
+    'contact-email-copy',
+  ) as HTMLButtonElement;
+
+  const labels = { categoryLabel: '種別', nameLabel: 'お名前' };
+  const subjectPrefix = '【にゃんこツールお問い合わせ】';
+
+  const SUCCESS_CLASS = 'text-sm text-green-600 dark:text-green-400';
+  const ERROR_CLASS = 'text-sm text-red-600 dark:text-red-400';
+
+  function setStatus(message: string, isError: boolean) {
+    statusEl.textContent = message;
+    statusEl.className = isError ? ERROR_CLASS : SUCCESS_CLASS;
+  }
+
+  function getValues() {
+    return {
+      category: categorySelect.value,
+      name: nameInput.value,
+      message: messageInput.value,
+    };
+  }
+
+  function validate(): boolean {
+    if (!messageInput.value.trim()) {
+      setStatus('お問い合わせ内容を入力してください', true);
+      messageInput.focus();
+      return false;
+    }
+    return true;
+  }
+
+  mailtoButton.addEventListener('click', () => {
+    if (!validate()) return;
+    setStatus('', false);
+    window.location.href = buildMailtoLink(getValues(), labels, subjectPrefix);
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!validate()) return;
+    try {
+      await navigator.clipboard.writeText(formatMailBody(getValues(), labels));
+      setStatus('コピーしました', false);
+    } catch {
+      setStatus('コピーに失敗しました', true);
+    }
+  });
+
+  emailCopyButton.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(CONTACT_EMAIL);
+      setStatus('メールアドレスをコピーしました', false);
+    } catch {
+      setStatus('コピーに失敗しました', true);
+    }
+  });
+</script>

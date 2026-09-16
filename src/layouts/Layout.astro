@@ -368,6 +368,12 @@ const jsonLd: Record<string, unknown> | null = noindex
             {t('footer.terms')}
           </a>
           <a
+            href={lang === 'en' ? '/en/contact/' : '/contact/'}
+            class="hover:text-blue-700 hover:underline dark:hover:text-blue-400"
+          >
+            {t('footer.contact')}
+          </a>
+          <a
             href="https://x.com/nyankotools"
             target="_blank"
             rel="noopener noreferrer"

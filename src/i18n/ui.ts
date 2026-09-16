@@ -34,14 +34,14 @@ export const ui = {
     'share.native': '共有',
     'home.title': '🐾 にゃんこツール',
     'home.lead':
-      'ブラウザだけで完結する便利ツール集です。データはどれもサーバーに送信されません。',
+      'JSON整形やBase64変換などの定番ツールに加え、かな変換・全角/半角変換のような日本語特有の処理まで丁寧にカバー。ブラウザだけで完結し、入力したデータがサーバーに送信されることはありません。',
     'home.search.label': 'ツールを検索',
     'home.search.placeholder': 'ツールを検索（例: 文字数、変換）',
     'home.category.all': 'すべて',
     'home.category.groupLabel': 'カテゴリで絞り込み',
     'home.noResults': '条件に一致するツールが見つかりませんでした。',
     'home.meta.description':
-      'にゃんこツールは、開発者やクリエイターに役立つブラウザ上で動作する便利Webツール集です。',
+      'にゃんこツールは、JSON整形やBase64変換などの定番ツールから、かな変換・全角半角変換など日本語処理まで揃った、ブラウザ完結・登録不要の無料Webツール集です。',
     '404.title': '404 - ページが見つかりません',
     '404.description':
       'お探しのページは見つかりませんでした。URLをご確認いただくか、トップページからツールをお探しください。',
@@ -67,14 +67,14 @@ export const ui = {
     'share.native': 'Share',
     'home.title': '🐾 NyankoTools',
     'home.lead':
-      'A collection of handy tools that run entirely in your browser. None of your data is ever sent to a server.',
+      'Everyday tools like JSON formatting and Base64 conversion, plus careful support for Japanese-specific text processing like kana and full-width/half-width conversion — all running entirely in your browser. Nothing you type is ever sent to a server.',
     'home.search.label': 'Search tools',
     'home.search.placeholder': 'Search tools (e.g. character count, convert)',
     'home.category.all': 'All',
     'home.category.groupLabel': 'Filter by category',
     'home.noResults': 'No tools match your search.',
     'home.meta.description':
-      'NyankoTools is a collection of handy browser-based web tools for developers and creators.',
+      'NyankoTools is a free, browser-only toolkit covering everyday developer tools like JSON formatting and Base64 conversion, plus careful support for Japanese text processing such as kana and full-width/half-width conversion.',
     '404.title': '404 - Page Not Found',
     '404.description':
       "The page you're looking for could not be found. Please check the URL or find a tool from the homepage.",

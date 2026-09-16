@@ -19,6 +19,12 @@ NyankoTools aims for future monetization (ads/affiliate). Organic search traffic
 - 実装が完了したら、ユーザー自身がブラウザで動作を確認できる状態にすること（`pnpm dev` を起動し、確認用URL（例: http://localhost:4321）を伝える等）。
 - 起動した開発サーバーなどのプロセスは、ユーザーから明示的に停止の指示があるまで終了しないこと。
 
+## レビュー・テストのルール
+
+- コード変更を伴う実装（ツールの追加・修正など）が完了したら、まず独立したレビュー専任エージェント（`tool-reviewer`、`.claude/agents/tool-reviewer.md`）にレビューを依頼すること。
+- レビューエージェントから完了報告を受け取ったら、続けて独立したQA専任エージェント（`tool-qa`、`.claude/agents/tool-qa.md`）にテストを依頼すること。順序は 実装 → レビュー → テスト で、並行実行はしない。
+- レビューでバグ・セキュリティ上の懸念など重大な指摘があった場合は、テスト依頼の前に対応（修正）するか、ユーザーに報告して方針を確認する。指摘が軽微な提案のみであれば、そのままテスト依頼に進んでよい。
+
 ## コミットのルール
 
 - ユーザーから明示的に指示されるまで `git commit` を実行しないこと。実装が完了しても、コミットはせずユーザーの確認・指示を待つこと。
@@ -43,7 +49,9 @@ pnpm test             # Vitest (run once)
 pnpm run test:watch    # Vitest (watch mode)
 ```
 
-Tests use **Vitest**. They target the pure logic in `src/lib/tools/*.ts` (e.g. `src/lib/tools/char-counter.test.ts`), not the Astro pages themselves — no config file is needed since there's no DOM/Astro dependency to set up for these unit tests.
+Tests use **Vitest**. They target the pure logic in `src/lib/tools/*.ts` (e.g. `src/lib/tools/char-counter.test.ts`), not the Astro pages themselves — no config file is needed since there's no DOM/Astro dependency to set up for these unit tests. Browser-level behavior is covered by Playwright E2E specs under `e2e/*.spec.ts` (`pnpm run test:e2e`).
+
+After implementing or changing a tool, follow the review-then-test flow in "レビュー・テストのルール" above: an independent review-only subagent (`tool-reviewer`, `.claude/agents/tool-reviewer.md`) checks correctness, simplification, convention/architecture compliance, SEO/responsive requirements, and security without editing any code, then an independent QA subagent (`tool-qa`, `.claude/agents/tool-qa.md`) runs lint/typecheck/build/Vitest/Playwright and fills in missing unit/E2E tests itself. `/tool-review` and `/qa-test` also trigger these agents manually on demand — see [`conventions.md`](.claude/docs/conventions.md) and [`adding-a-tool.md`](.claude/docs/adding-a-tool.md) for details.
 
 ## Architecture
 

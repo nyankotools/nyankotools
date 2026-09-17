@@ -513,6 +513,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'sql-formatter',
+    translations: {
+      ja: {
+        name: 'SQL整形',
+        description:
+          'SQLクエリを整形・ミニファイします。MySQL・PostgreSQL・SQLite・BigQuery等の方言、インデント幅、キーワードの大文字/小文字に対応。',
+        category: '変換',
+      },
+      en: {
+        name: 'SQL Formatter',
+        description:
+          'Formats and minifies SQL queries, with support for MySQL, PostgreSQL, SQLite, BigQuery and other dialects, indent width, and keyword case.',
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -25,6 +25,7 @@
     "dompurify": "^3.4.15",
     "marked": "^18.0.13",
     "qrcode-generator": "^2.0.4",
+    "sql-formatter": "^15.8.2",
     "tailwindcss": "^4.3.3",
     "turndown": "^7.2.4",
     "yaml": "^2.9.1"

@@ -564,6 +564,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'cidr-calculator',
+    translations: {
+      ja: {
+        name: 'CIDR/サブネット計算機',
+        description:
+          'CIDR表記やIPアドレス+サブネットマスクから、ネットワークアドレス・ブロードキャストアドレス・利用可能ホスト数を計算します。',
+        category: '開発',
+      },
+      en: {
+        name: 'CIDR / Subnet Calculator',
+        description:
+          'Calculates the network address, broadcast address, and usable host count from CIDR notation or an IP address plus subnet mask.',
+        category: 'Development',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

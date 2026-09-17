@@ -598,6 +598,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'viewport-checker',
+    translations: {
+      ja: {
+        name: 'スクリーンサイズ・Viewportチェッカー',
+        description:
+          'ビューポートサイズ・ウィンドウサイズ・画面解像度・デバイスピクセル比・Tailwind CSSのブレークポイントをリアルタイムで表示します。レスポンシブデザインの確認に便利。',
+        category: '開発',
+      },
+      en: {
+        name: 'Screen Size & Viewport Checker',
+        description:
+          'Shows the viewport size, window size, screen resolution, device pixel ratio, and current Tailwind CSS breakpoint in real time. Handy for checking responsive designs.',
+        category: 'Development',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

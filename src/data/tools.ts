@@ -547,6 +547,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'chmod-calculator',
+    translations: {
+      ja: {
+        name: 'Chmodパーミッション計算機',
+        description:
+          'ファイルパーミッションをチェックボックス・8進数（755等）・シンボル表記（rwxr-xr-x等）で相互変換します。setuid/setgid/スティッキービットにも対応。',
+        category: '開発',
+      },
+      en: {
+        name: 'Chmod Permission Calculator',
+        description:
+          'Converts file permissions between checkboxes, octal notation (e.g. 755), and symbolic notation (e.g. rwxr-xr-x), with setuid/setgid/sticky bit support.',
+        category: 'Development',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

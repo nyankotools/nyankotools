@@ -581,6 +581,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'keycode-checker',
+    translations: {
+      ja: {
+        name: 'キーコード（e.code/e.key）チェッカー',
+        description:
+          '押したキーのevent.key・event.code・keyCode・location・修飾キーの状態をリアルタイムで表示します。JavaScriptのキーボードイベント実装時の値確認に便利。',
+        category: '開発',
+      },
+      en: {
+        name: 'Keycode (e.code / e.key) Checker',
+        description:
+          'Shows the event.key, event.code, keyCode, location, and modifier keys of any key you press, in real time. Handy for checking values while implementing keyboard event handling.',
+        category: 'Development',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

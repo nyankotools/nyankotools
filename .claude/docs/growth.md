@@ -19,9 +19,23 @@ NyankoTools は将来的な収益化（広告掲載・アフィリエイト等�
 - タップで操作する要素（ボタン・リンク・チェックボックス等）は十分なタップ領域（目安 44px 四方以上）を確保する。
 - `pnpm dev` でブラウザの幅を変えながら実機確認するか、Playwright E2Eテストにモバイルビューポート（`devices['iPhone ...']` 等）のケースを追加することが望ましい。
 
-## 多言語化（将来対応）
+## 多言語化
 
-- 現状は日本語のみ（`<html lang="ja">` 固定）。多言語化自体は未着手だが、将来 Astro 組み込みの `i18n` ルーティング機能（`astro.config.mjs` の `i18n` 設定、ロケール別ディレクトリ構成）を使う前提を崩さないよう、今のうちから以下を意識する。
-  - UI文言はテンプレート（`.astro`）側にまとめ、文字列を分割して連結する組み立て方（例:「"〇〇" + 変数 + "〇〇"」）を避け、翻訳しやすい完全な文単位で保持する。
-  - `src/lib/tools/<slug>.ts` のロジック関数はUI文言を持たない設計を保つ（既存の「フレームワーク非依存の純粋関数」方針と一致）。エラーメッセージ等どうしても文言が必要な場合は、呼び出し側のページ `<script>` で日本語文言に変換する形にし、ロジック層を文言から独立させる。
-  - 多言語化に着手する際は `hreflang` タグ・ロケール別 canonical URL・`og:locale` の切り替えが必要になることを踏まえておく（現状の `Layout.astro` は `ja_JP` 固定）。
+- 日本語（`ja`、デフォルトロケール）と英語（`en`）に対応済み。Astro 組み込みの `i18n` ルーティング機能を使用し、`astro.config.mjs` で `defaultLocale: 'ja'` / `locales: ['ja', 'en']` / `routing.prefixDefaultLocale: false` を設定している。ja はプレフィックスなし（`/tools/<slug>/`）、en は `/en/` 配下（`/en/tools/<slug>/`）という URL 構成。
+- **ルーティングはロケール別ディレクトリ。** `src/pages/tools/<slug>/index.astro`（ja）と `src/pages/en/tools/<slug>/index.astro`（en）が実URLに対応する（Astro の i18n ルーティング機能が前提とする構成）。トップページや利用規約等の静的ページも同様に `src/pages/en/` 配下に対になるページを置く。将来 3言語目以降を追加する場合も、ロケールコードのディレクトリを増やすだけでよい。
+- **ページの中身は「共有コンポーネント＋ロケール別の薄いルートファイル」で1ツール1箇所にまとめる（対応言語を増やしていく前提のための方針）。** 言語ごとに `.astro` ファイルを丸ごと複製すると、マークアップの変更を言語数ぶん手作業で反映する必要があり、対応言語が増えるほどコストが線形に増える。そのため以下の構成を標準とする（`base64` が実装例 = `src/i18n/tools/base64.ts` + `src/components/tool-pages/Base64Page.astro` + `src/pages/tools/base64/index.astro` + `src/pages/en/tools/base64/index.astro`）。
+  - `src/i18n/tools/<slug>.ts`: そのツールのページ専用の文言（title/description/見出し/ラベル/プレースホルダー/エラーメッセージ/用語解説など）を `Record<Locale, XxxContent>` の辞書として持つ。文単位で保持し、文中にリンクを含む場合は文字列を分割して前後をJSXで組み立てるのではなく、`introHtml` のように `<a>` タグを含んだ完結した文字列を1本持たせ、テンプレート側は `set:html` で描画する（言語によって語順・リンク位置が変わっても破綻しないようにするため）。
+  - `src/components/tool-pages/<Slug>Page.astro`: 実際のマークアップと `<script>` を1つだけ持つ共有コンポーネント。`locale` を prop として受け取り、`src/i18n/tools/<slug>.ts` の辞書から文言を解決して描画する。`<script>` 側でロケール別の文言（コピー成功/失敗メッセージ等）が必要な場合は、frontmatter から直接渡せないため `data-*` 属性経由でDOMに埋め込み、クライアント側スクリプトで読み取る。
+  - `src/pages/tools/<slug>/index.astro` と `src/pages/en/tools/<slug>/index.astro` は、この共有コンポーネントを `locale` を変えて呼び出すだけの薄いラッパーにする。
+  - 既存ツールはこの構成への移行を順次進めている途中で、未移行のツールは引き続き ja/en 別ファイルの完全複製のままになっている（移行済みかどうかは `src/components/tool-pages/` の有無で判別できる）。新規ツールを追加する場合はこの新しい構成で実装すること（詳細は [adding-a-tool.md](./adding-a-tool.md)）。
+- **サイト共通UI文言**: サイドバー・フッター・トップページの見出し等、ツールをまたいで使う文言は `src/i18n/ui.ts` の `ui.ja` / `ui.en` 辞書に集約し、`useTranslations(locale)` が返す `t()` 関数経由で参照する（ツール固有文言の `src/i18n/tools/<slug>.ts` とは別の辞書）。
+- **ツール名・説明文（ホーム/サイドバー用）**: `src/data/tools.ts` の `Tool.translations` に `{ ja: { name, description, category }, en: { name, description, category } }` の形で両ロケール分を持つ。`getLocalizedTools(locale)` で解決した配列がトップページ・サイドバーの表示に使われる（ツールページ本体の文言は上記の `src/i18n/tools/<slug>.ts` が別途持つ）。
+- `src/lib/tools/<slug>.ts` のロジック関数はUI文言を持たない設計を保つ（既存の「フレームワーク非依存の純粋関数」方針と一致）。エラーメッセージ等どうしても文言が必要な場合は、`src/i18n/tools/<slug>.ts` の辞書に持たせ、ロジック層を文言から独立させる。
+- **SEOメタ情報**: `src/layouts/Layout.astro` が以下をロケールに応じて自動的に出し分ける。個別ページ側で追加対応は不要。
+  - `<html lang={lang}>`
+  - 自己参照の `canonical`（ロケール版を1つのURLに集約しない）
+  - `hreflang`（ja⇔enの相互参照＋自己参照＋`x-default`＝ja。`noindex` ページでは出力しない）
+  - `og:locale` / `og:locale:alternate`（`ja_JP` / `en_US`）
+  - JSON-LD の `inLanguage`
+  - `astro.config.mjs` の `@astrojs/sitemap` 側 `i18n` オプションで、サイトマップにも hreflang alternate を出力している。
+- ブラウザの `Accept-Language` やIPジオロケーションによる自動リダイレクトは行わない（Googleが非推奨とする方式のため）。ロケール切り替えはサイドバー/ヘッダーの言語スイッチャーからユーザーが明示的に行う。

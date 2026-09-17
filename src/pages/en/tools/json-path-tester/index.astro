@@ -1,0 +1,331 @@
+---
+import Glossary from '../../../../components/Glossary.astro';
+import Layout from '../../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'JSONPath',
+    description:
+      'A query language for pointing to specific values inside JSON data, similar to XPath for XML. `$.store.book[0].title` walks down the object/array hierarchy: `$` is the root, `.` accesses a property, `[*]` is a wildcard (every element), and `..` is recursive descent (matches at any depth).',
+  },
+  {
+    term: 'JSON Pointer',
+    description:
+      'A simple notation defined in RFC 6901 for pointing to a single location in JSON. `/store/book/0/title` walks down keys and array indices separated by "/". Unlike JSONPath it has no wildcards and always points to exactly one location. A literal "/" in a key is escaped as "~1" and "~" as "~0".',
+  },
+  {
+    term: 'Filter expression',
+    description:
+      'A JSONPath syntax for narrowing down elements with a condition, such as `[?(@.price > 10)]`. `@` refers to the element currently being examined.',
+  },
+];
+---
+
+<Layout
+  title="JSON Path / JSON Pointer Tester (Online Validator)"
+  description="A free tool for testing JSONPath and JSON Pointer (RFC 6901) queries live in your browser. Enter your JSON data and a query to see every matched value and its absolute path. Your data is processed in the browser and never sent to a server."
+>
+  <h1 class="mb-2 text-2xl font-bold">JSON Path / JSON Pointer Tester</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    Enter some JSON data and a query (JSONPath or JSON Pointer) to see every
+    matched value along with its absolute path. Handy for checking a query
+    before pulling a value out of an API response, or for validating an
+    expression before passing it to jq or a JSONPath library. To format or
+    validate JSON itself, also try the
+    <a
+      href="/en/tools/json-formatter/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      JSON Formatter
+    </a>
+    tool.
+  </p>
+
+  <div>
+    <label
+      for="json-path-tester-input"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      JSON data
+    </label>
+    <textarea
+      id="json-path-tester-input"
+      class="h-56 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <p
+    id="json-path-tester-json-error"
+    hidden
+    role="alert"
+    class="mt-2 max-w-2xl whitespace-pre-line rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+  ></p>
+
+  <div class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+    <span class="font-medium text-gray-700 dark:text-gray-300">
+      Query format
+    </span>
+    <label class="flex min-h-11 items-center gap-2">
+      <input
+        type="radio"
+        name="json-path-tester-mode"
+        id="json-path-tester-mode-jsonpath"
+        value="jsonpath"
+        checked
+        class="h-4 w-4"
+      />
+      <span class="text-gray-700 dark:text-gray-300">JSONPath</span>
+    </label>
+    <label class="flex min-h-11 items-center gap-2">
+      <input
+        type="radio"
+        name="json-path-tester-mode"
+        id="json-path-tester-mode-pointer"
+        value="pointer"
+        class="h-4 w-4"
+      />
+      <span class="text-gray-700 dark:text-gray-300">
+        JSON Pointer (RFC 6901)
+      </span>
+    </label>
+  </div>
+
+  <div class="mt-2">
+    <label
+      for="json-path-tester-query"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      Query
+    </label>
+    <input
+      id="json-path-tester-query"
+      type="text"
+      class="w-full rounded-lg border border-gray-300 p-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      spellcheck="false"
+      autocomplete="off"
+    />
+    <p
+      id="json-path-tester-query-hint"
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    >
+      e.g. <code>$.store.book[*].title</code>
+    </p>
+  </div>
+
+  <div
+    id="json-path-tester-query-error"
+    hidden
+    class="mt-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+    role="alert"
+  ></div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <span
+      id="json-path-tester-status"
+      class="text-sm font-medium text-gray-700 dark:text-gray-300"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-2 overflow-x-auto rounded-lg border border-gray-300 dark:border-gray-700">
+    <table class="w-full min-w-[560px] text-left text-sm">
+      <thead class="bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+        <tr>
+          <th class="px-3 py-2 font-medium">#</th>
+          <th class="px-3 py-2 font-medium">Path</th>
+          <th class="px-3 py-2 font-medium">Value</th>
+        </tr>
+      </thead>
+      <tbody
+        id="json-path-tester-results"
+        class="divide-y divide-gray-200 dark:divide-gray-800"
+      ></tbody>
+    </table>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">Notes</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>
+      JSONPath follows the{' '}
+      <a
+        href="https://github.com/s3u/JSONPath"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+      >
+        jsonpath-plus
+      </a>{' '}
+      library implementation. Extended syntax such as filter expressions (
+      <code>[?(@.price&gt;10)]</code>) and recursive descent (<code>..</code>)
+      is supported, though exact behavior can vary between implementations.
+    </li>
+    <li>
+      A JSON Pointer always points to exactly one location, so it always
+      produces a single result (or an error). Use JSONPath if you need to
+      collect multiple values at once.
+    </li>
+    <li>
+      A JSON Pointer with a leading <code>#</code> (the URI fragment form used
+      in OpenAPI/JSON Schema, e.g. <code>$ref: "#/components/schemas/Foo"</code>
+      ) is also accepted — the <code>#</code> is simply stripped.
+    </li>
+    <li>
+      Everything runs entirely in your browser — the JSON and query you enter
+      are never sent to a server.
+    </li>
+  </ul>
+
+  <Glossary terms={glossaryTerms} heading="Glossary" />
+</Layout>
+
+<script>
+  import {
+    evaluateJsonPath,
+    evaluateJsonPointer,
+    parseJsonInput,
+    type JsonPointerFailure,
+  } from '../../../../lib/tools/json-path-tester';
+
+  const jsonInput = document.getElementById(
+    'json-path-tester-input',
+  ) as HTMLTextAreaElement;
+  const jsonErrorEl = document.getElementById('json-path-tester-json-error')!;
+  const modeJsonPath = document.getElementById(
+    'json-path-tester-mode-jsonpath',
+  ) as HTMLInputElement;
+  const modePointer = document.getElementById(
+    'json-path-tester-mode-pointer',
+  ) as HTMLInputElement;
+  const queryInput = document.getElementById(
+    'json-path-tester-query',
+  ) as HTMLInputElement;
+  const queryHint = document.getElementById('json-path-tester-query-hint')!;
+  const queryErrorEl = document.getElementById('json-path-tester-query-error')!;
+  const statusEl = document.getElementById('json-path-tester-status')!;
+  const resultsBody = document.getElementById('json-path-tester-results')!;
+
+  const jsonPathHint = 'e.g. $.store.book[*].title';
+  const pointerHint = 'e.g. /store/book/0/title';
+
+  function formatValue(value: unknown): string {
+    if (value === undefined) return 'undefined';
+    return JSON.stringify(value, null, 2);
+  }
+
+  function describeJsonPointerError(result: JsonPointerFailure): string {
+    switch (result.reason) {
+      case 'invalid-format':
+        return 'A JSON Pointer must be empty or start with "/".';
+      case 'trailing-dash':
+        return `"${result.path}": "-" points to the append position and cannot be dereferenced.`;
+      case 'invalid-array-index':
+        return `"${result.path}": invalid array index ("${result.token}").`;
+      case 'index-out-of-range':
+        return `"${result.path}": index out of range (array length: ${result.length}).`;
+      case 'key-not-found':
+        return `"${result.path}": key "${result.key}" not found.`;
+      case 'not-traversable':
+        return `"${result.path}": cannot go further (the value is neither an object nor an array).`;
+    }
+  }
+
+  function showRow(path: string, pointer: string | null, value: unknown) {
+    const tr = document.createElement('tr');
+    const pathCell = document.createElement('td');
+    pathCell.className = 'px-3 py-2 align-top font-mono text-xs';
+    const pathLine = document.createElement('div');
+    pathLine.textContent = path;
+    pathCell.appendChild(pathLine);
+    if (pointer !== null && pointer !== path) {
+      const pointerLine = document.createElement('div');
+      pointerLine.className = 'mt-1 text-gray-400 dark:text-gray-500';
+      pointerLine.textContent = `Pointer: ${pointer}`;
+      pathCell.appendChild(pointerLine);
+    }
+    const valueCell = document.createElement('td');
+    valueCell.className =
+      'px-3 py-2 align-top font-mono text-xs whitespace-pre-wrap break-all';
+    valueCell.textContent = formatValue(value);
+    const indexCell = document.createElement('td');
+    indexCell.className = 'px-3 py-2 align-top';
+    indexCell.textContent = String(resultsBody.children.length + 1);
+    tr.append(indexCell, pathCell, valueCell);
+    resultsBody.appendChild(tr);
+  }
+
+  function render() {
+    resultsBody.innerHTML = '';
+    queryErrorEl.hidden = true;
+    queryErrorEl.textContent = '';
+    statusEl.textContent = '';
+
+    if (jsonInput.value.trim() === '') {
+      jsonErrorEl.hidden = true;
+      return;
+    }
+
+    const parsed = parseJsonInput(jsonInput.value);
+    if (!parsed.success) {
+      jsonErrorEl.hidden = false;
+      jsonErrorEl.textContent = `Invalid JSON: ${parsed.error}`;
+      return;
+    }
+    jsonErrorEl.hidden = true;
+
+    const query = queryInput.value;
+    if (query.trim() === '') return;
+
+    if (modeJsonPath.checked) {
+      const result = evaluateJsonPath(parsed.value, query);
+      if (!result.success) {
+        queryErrorEl.hidden = false;
+        queryErrorEl.textContent = `Invalid JSONPath: ${result.error}`;
+        return;
+      }
+      statusEl.textContent = `${result.matches.length} match${
+        result.matches.length === 1 ? '' : 'es'
+      } found.`;
+      for (const match of result.matches) {
+        showRow(match.path, match.pointer, match.value);
+      }
+    } else {
+      const result = evaluateJsonPointer(parsed.value, query);
+      if (!result.success) {
+        queryErrorEl.hidden = false;
+        queryErrorEl.textContent = describeJsonPointerError(result);
+        return;
+      }
+      statusEl.textContent = '1 match found.';
+      showRow(query === '' ? '(root)' : query, null, result.value);
+    }
+  }
+
+  function updateModeUI() {
+    queryHint.textContent = modeJsonPath.checked ? jsonPathHint : pointerHint;
+    queryInput.placeholder = modeJsonPath.checked
+      ? '$.store.book[*].title'
+      : '/store/book/0/title';
+    render();
+  }
+
+  jsonInput.addEventListener('input', render);
+  queryInput.addEventListener('input', render);
+  modeJsonPath.addEventListener('change', updateModeUI);
+  modePointer.addEventListener('change', updateModeUI);
+
+  jsonInput.value = JSON.stringify(
+    {
+      store: {
+        book: [
+          { title: 'The Great Gatsby', price: 12 },
+          { title: 'Moby Dick', price: 15 },
+        ],
+      },
+    },
+    null,
+    2,
+  );
+  queryInput.value = '$.store.book[*].title';
+  updateModeUI();
+</script>

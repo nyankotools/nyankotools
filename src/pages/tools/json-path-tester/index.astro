@@ -1,0 +1,322 @@
+---
+import Glossary from '../../../components/Glossary.astro';
+import Layout from '../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'JSONPath',
+    description:
+      'JSONデータの中から特定の値を指し示すためのクエリ言語です。`$.store.book[0].title` のように、XPathのJSON版に近い記法でオブジェクトや配列の階層をたどれます。`$` はルート、`.` はプロパティ、`[*]` はワイルドカード（すべての要素）、`..` は再帰下降（階層を問わず一致するものをすべて検索）を表します。',
+  },
+  {
+    term: 'JSON Pointer',
+    description:
+      'RFC 6901で定義された、JSON内の1箇所を指し示すためのシンプルな記法です。`/store/book/0/title` のように "/" 区切りでキーや配列インデックスをたどります。JSONPathと異なり複数マッチやワイルドカードには対応せず、常に1箇所だけを指します。キーに含まれる "/" は "~1"、"~" は "~0" としてエスケープします。',
+  },
+  {
+    term: 'フィルタ式',
+    description:
+      'JSONPathで `[?(@.price > 10)]` のように条件付きで要素を絞り込む記法です。`@` は現在たどっている要素自身を表します。',
+  },
+];
+---
+
+<Layout
+  title="JSON Path / JSON Pointerテスター（オンライン検証）"
+  description="JSONPathやJSON Pointer（RFC 6901）のクエリをブラウザ上でその場に検証できる無料ツールです。JSONデータとクエリを入力するだけで、マッチした値と絶対パスを一覧表示します。データはブラウザ内で処理され、サーバーには送信されません。"
+>
+  <h1 class="mb-2 text-2xl font-bold">JSON Path / JSON Pointerテスター</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    JSONデータとクエリ（JSONPathまたはJSON
+    Pointer）を入力すると、マッチした値とその絶対パスを一覧表示します。APIレスポンスから特定の値を取り出すクエリの動作確認や、jq・各種JSONPathライブラリに渡す式の事前検証に便利です。JSON自体の整形や構文チェックをしたい場合は
+    <a
+      href="/tools/json-formatter/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      JSON整形
+    </a>
+    もあわせてご利用ください。
+  </p>
+
+  <div>
+    <label
+      for="json-path-tester-input"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      JSONデータ
+    </label>
+    <textarea
+      id="json-path-tester-input"
+      class="h-56 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <p
+    id="json-path-tester-json-error"
+    hidden
+    role="alert"
+    class="mt-2 max-w-2xl whitespace-pre-line rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+  ></p>
+
+  <div class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+    <span class="font-medium text-gray-700 dark:text-gray-300">クエリ形式</span>
+    <label class="flex min-h-11 items-center gap-2">
+      <input
+        type="radio"
+        name="json-path-tester-mode"
+        id="json-path-tester-mode-jsonpath"
+        value="jsonpath"
+        checked
+        class="h-4 w-4"
+      />
+      <span class="text-gray-700 dark:text-gray-300">JSONPath</span>
+    </label>
+    <label class="flex min-h-11 items-center gap-2">
+      <input
+        type="radio"
+        name="json-path-tester-mode"
+        id="json-path-tester-mode-pointer"
+        value="pointer"
+        class="h-4 w-4"
+      />
+      <span class="text-gray-700 dark:text-gray-300">
+        JSON Pointer（RFC 6901）
+      </span>
+    </label>
+  </div>
+
+  <div class="mt-2">
+    <label
+      for="json-path-tester-query"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      クエリ
+    </label>
+    <input
+      id="json-path-tester-query"
+      type="text"
+      class="w-full rounded-lg border border-gray-300 p-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      spellcheck="false"
+      autocomplete="off"
+    />
+    <p
+      id="json-path-tester-query-hint"
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    >
+      例: <code>$.store.book[*].title</code>
+    </p>
+  </div>
+
+  <div
+    id="json-path-tester-query-error"
+    hidden
+    class="mt-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+    role="alert"
+  ></div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <span
+      id="json-path-tester-status"
+      class="text-sm font-medium text-gray-700 dark:text-gray-300"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-2 overflow-x-auto rounded-lg border border-gray-300 dark:border-gray-700">
+    <table class="w-full min-w-[560px] text-left text-sm">
+      <thead class="bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+        <tr>
+          <th class="px-3 py-2 font-medium">#</th>
+          <th class="px-3 py-2 font-medium">パス</th>
+          <th class="px-3 py-2 font-medium">値</th>
+        </tr>
+      </thead>
+      <tbody
+        id="json-path-tester-results"
+        class="divide-y divide-gray-200 dark:divide-gray-800"
+      ></tbody>
+    </table>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">注意点</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>
+      JSONPathは
+      <a
+        href="https://github.com/s3u/JSONPath"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+      >
+        jsonpath-plus
+      </a>
+      ライブラリの実装に準拠します。フィルタ式（<code>[?(@.price&gt;10)]</code>
+      ）や再帰下降（<code>..</code>
+      ）を含む拡張構文に対応しますが、実装によって細部の挙動が異なる場合があります。
+    </li>
+    <li>
+      JSON
+      Pointerは1箇所だけを指す記法のため、常に単一の結果（またはエラー）になります。複数の値をまとめて取得したい場合はJSONPathを使用してください。
+    </li>
+    <li>
+      JSON Pointerの先頭に <code>#</code> が付いた形式（例: OpenAPI/JSON
+      Schemaの<code>$ref: "#/components/schemas/Foo"</code>）も、その
+      <code>#</code> を読み飛ばして解釈します。
+    </li>
+    <li>
+      すべての処理はブラウザ内で完結しており、入力したJSONやクエリがサーバーに送信されることはありません。
+    </li>
+  </ul>
+
+  <Glossary terms={glossaryTerms} />
+</Layout>
+
+<script>
+  import {
+    evaluateJsonPath,
+    evaluateJsonPointer,
+    parseJsonInput,
+    type JsonPointerFailure,
+  } from '../../../lib/tools/json-path-tester';
+
+  const jsonInput = document.getElementById(
+    'json-path-tester-input',
+  ) as HTMLTextAreaElement;
+  const jsonErrorEl = document.getElementById('json-path-tester-json-error')!;
+  const modeJsonPath = document.getElementById(
+    'json-path-tester-mode-jsonpath',
+  ) as HTMLInputElement;
+  const modePointer = document.getElementById(
+    'json-path-tester-mode-pointer',
+  ) as HTMLInputElement;
+  const queryInput = document.getElementById(
+    'json-path-tester-query',
+  ) as HTMLInputElement;
+  const queryHint = document.getElementById('json-path-tester-query-hint')!;
+  const queryErrorEl = document.getElementById('json-path-tester-query-error')!;
+  const statusEl = document.getElementById('json-path-tester-status')!;
+  const resultsBody = document.getElementById('json-path-tester-results')!;
+
+  const jsonPathHint = '例: $.store.book[*].title';
+  const pointerHint = '例: /store/book/0/title';
+
+  function formatValue(value: unknown): string {
+    if (value === undefined) return 'undefined';
+    return JSON.stringify(value, null, 2);
+  }
+
+  function describeJsonPointerError(result: JsonPointerFailure): string {
+    switch (result.reason) {
+      case 'invalid-format':
+        return 'JSON Pointerは空文字列か "/" から始まる必要があります。';
+      case 'trailing-dash':
+        return `"${result.path}": "-" は末尾への追加位置を指すため、既存の値を参照できません。`;
+      case 'invalid-array-index':
+        return `"${result.path}": 配列のインデックスが不正です（"${result.token}"）。`;
+      case 'index-out-of-range':
+        return `"${result.path}": インデックスが範囲外です（配列の長さ: ${result.length}）。`;
+      case 'key-not-found':
+        return `"${result.path}": キー "${result.key}" が見つかりません。`;
+      case 'not-traversable':
+        return `"${result.path}": これ以上たどれません（オブジェクトでも配列でもない値です）。`;
+    }
+  }
+
+  function showRow(path: string, pointer: string | null, value: unknown) {
+    const tr = document.createElement('tr');
+    const pathCell = document.createElement('td');
+    pathCell.className = 'px-3 py-2 align-top font-mono text-xs';
+    const pathLine = document.createElement('div');
+    pathLine.textContent = path;
+    pathCell.appendChild(pathLine);
+    if (pointer !== null && pointer !== path) {
+      const pointerLine = document.createElement('div');
+      pointerLine.className = 'mt-1 text-gray-400 dark:text-gray-500';
+      pointerLine.textContent = `Pointer: ${pointer}`;
+      pathCell.appendChild(pointerLine);
+    }
+    const valueCell = document.createElement('td');
+    valueCell.className =
+      'px-3 py-2 align-top font-mono text-xs whitespace-pre-wrap break-all';
+    valueCell.textContent = formatValue(value);
+    const indexCell = document.createElement('td');
+    indexCell.className = 'px-3 py-2 align-top';
+    indexCell.textContent = String(resultsBody.children.length + 1);
+    tr.append(indexCell, pathCell, valueCell);
+    resultsBody.appendChild(tr);
+  }
+
+  function render() {
+    resultsBody.innerHTML = '';
+    queryErrorEl.hidden = true;
+    queryErrorEl.textContent = '';
+    statusEl.textContent = '';
+
+    if (jsonInput.value.trim() === '') {
+      jsonErrorEl.hidden = true;
+      return;
+    }
+
+    const parsed = parseJsonInput(jsonInput.value);
+    if (!parsed.success) {
+      jsonErrorEl.hidden = false;
+      jsonErrorEl.textContent = `JSONの構文エラー: ${parsed.error}`;
+      return;
+    }
+    jsonErrorEl.hidden = true;
+
+    const query = queryInput.value;
+    if (query.trim() === '') return;
+
+    if (modeJsonPath.checked) {
+      const result = evaluateJsonPath(parsed.value, query);
+      if (!result.success) {
+        queryErrorEl.hidden = false;
+        queryErrorEl.textContent = `JSONPathが不正です: ${result.error}`;
+        return;
+      }
+      statusEl.textContent = `${result.matches.length}件マッチしました。`;
+      for (const match of result.matches) {
+        showRow(match.path, match.pointer, match.value);
+      }
+    } else {
+      const result = evaluateJsonPointer(parsed.value, query);
+      if (!result.success) {
+        queryErrorEl.hidden = false;
+        queryErrorEl.textContent = describeJsonPointerError(result);
+        return;
+      }
+      statusEl.textContent = '1件マッチしました。';
+      showRow(query === '' ? '(ルート)' : query, null, result.value);
+    }
+  }
+
+  function updateModeUI() {
+    queryHint.textContent = modeJsonPath.checked ? jsonPathHint : pointerHint;
+    queryInput.placeholder = modeJsonPath.checked
+      ? '$.store.book[*].title'
+      : '/store/book/0/title';
+    render();
+  }
+
+  jsonInput.addEventListener('input', render);
+  queryInput.addEventListener('input', render);
+  modeJsonPath.addEventListener('change', updateModeUI);
+  modePointer.addEventListener('change', updateModeUI);
+
+  jsonInput.value = JSON.stringify(
+    {
+      store: {
+        book: [
+          { title: '吾輩は猫である', price: 800 },
+          { title: '坊っちゃん', price: 700 },
+        ],
+      },
+    },
+    null,
+    2,
+  );
+  queryInput.value = '$.store.book[*].title';
+  updateModeUI();
+</script>

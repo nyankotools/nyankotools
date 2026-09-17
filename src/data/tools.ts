@@ -123,6 +123,23 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'toml-converter',
+    translations: {
+      ja: {
+        name: 'TOML⇔JSON/YAML変換',
+        description:
+          'TOML・JSON・YAMLを相互に変換します。Cargo.tomlやpyproject.tomlなどのTOML設定ファイル確認に便利。',
+        category: '変換',
+      },
+      en: {
+        name: 'TOML to JSON/YAML Converter',
+        description:
+          'Converts between TOML, JSON, and YAML, handy for checking a TOML config file like Cargo.toml or pyproject.toml.',
+        category: 'Convert',
+      },
+    },
+  },
+  {
     slug: 'markdown-preview',
     translations: {
       ja: {

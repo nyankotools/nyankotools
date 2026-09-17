@@ -28,6 +28,7 @@
     "marked": "^18.0.13",
     "prettier": "^3.9.6",
     "qrcode-generator": "^2.0.4",
+    "smol-toml": "^1.8.0",
     "sql-formatter": "^15.8.2",
     "tailwindcss": "^4.3.3",
     "terser": "^5.51.2",

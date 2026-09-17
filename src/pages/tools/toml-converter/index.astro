@@ -1,0 +1,299 @@
+---
+import Glossary from '../../../components/Glossary.astro';
+import Layout from '../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'TOML',
+    description:
+      "Tom's Obvious, Minimal Language の略で、`key = value` の形で設定を書くシンプルなデータ記述形式です。Rustの`Cargo.toml`やPythonの`pyproject.toml`など、プログラミング言語のパッケージ設定ファイルで広く使われています。",
+  },
+  {
+    term: 'YAML',
+    description:
+      'インデント（字下げ）で階層構造を表す、人が読み書きしやすいデータ記述形式です。設定ファイル（Docker Compose・GitHub Actions・Kubernetesマニフェストなど）で広く使われています。',
+  },
+  {
+    term: 'JSON',
+    description:
+      'JavaScript Object Notation の略で、データをキーと値の組み合わせで表現するテキスト形式です。APIのやり取りや設定ファイルなど、幅広い場面で使われています。',
+  },
+  {
+    term: 'テーブル',
+    description:
+      'TOMLで「オブジェクト（入れ子構造）」に相当する概念です。`[address]`のように角括弧で見出しを書くと、それ以降の`key = value`がそのテーブルの中身として扱われます。',
+  },
+];
+---
+
+<Layout
+  title="TOML⇔JSON/YAML変換"
+  description="TOML・JSON・YAMLを相互に変換できる無料ツールです。Cargo.tomlやpyproject.tomlの内容をJSON/YAMLで確認したい時などに便利。構文エラーの内容も分かりやすく表示します。データはブラウザ内で処理され、サーバーには送信されません。"
+>
+  <h1 class="mb-2 text-2xl font-bold">TOML⇔JSON/YAML変換ツール</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    TOML・JSON・YAMLの3形式を自由に組み合わせて相互変換します。Cargo.tomlやpyproject.tomlなどのTOML設定ファイルをJSONやYAMLで確認したい時に便利です。JSON⇔YAMLの変換だけなら
+    <a
+      href="/tools/yaml-json-converter/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      YAML⇔JSON変換
+    </a>
+    、変換後のJSONをさらに整形・検証したい場合は
+    <a
+      href="/tools/json-formatter/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      JSON整形
+    </a>
+    もあわせてご利用ください。
+  </p>
+
+  <div class="flex flex-wrap items-end gap-3">
+    <div>
+      <label
+        for="toml-converter-from"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        変換元
+      </label>
+      <select
+        id="toml-converter-from"
+        class="min-h-11 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      >
+        <option value="toml" selected>
+          TOML
+        </option>
+        <option value="json">JSON</option>
+        <option value="yaml">YAML</option>
+      </select>
+    </div>
+    <button
+      id="toml-converter-swap-button"
+      type="button"
+      aria-label="変換元と変換先を入れ替える"
+      title="変換元と変換先を入れ替える"
+      class="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-5 w-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="2"
+        aria-hidden="true"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M8 7h12m0 0-4-4m4 4-4 4M16 17H4m0 0 4 4m-4-4 4-4"
+        />
+      </svg>
+    </button>
+    <div>
+      <label
+        for="toml-converter-to"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        変換先
+      </label>
+      <select
+        id="toml-converter-to"
+        class="min-h-11 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      >
+        <option value="toml">TOML</option>
+        <option value="json" selected>
+          JSON
+        </option>
+        <option value="yaml">YAML</option>
+      </select>
+    </div>
+    <div id="toml-converter-indent-wrapper">
+      <label
+        for="toml-converter-indent"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        インデント幅
+      </label>
+      <select
+        id="toml-converter-indent"
+        class="min-h-11 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      >
+        <option value="2">半角スペース2個</option>
+        <option value="4">半角スペース4個</option>
+      </select>
+    </div>
+    <button
+      id="toml-converter-copy-button"
+      type="button"
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      コピー
+    </button>
+    <span
+      id="toml-converter-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label
+        for="toml-converter-input"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        入力
+      </label>
+      <textarea
+        id="toml-converter-input"
+        class="h-80 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label
+        for="toml-converter-output"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        結果
+      </label>
+      <textarea
+        id="toml-converter-output"
+        readonly
+        class="h-80 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="toml-converter-error"
+    hidden
+    role="alert"
+    class="mt-4 max-w-2xl overflow-x-auto rounded-lg border border-red-200 bg-red-50 p-3 font-mono text-xs whitespace-pre-wrap text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+  ></p>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">注意点</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>
+      TOMLはトップレベルが必ずテーブル（オブジェクト）である必要があります。JSONやYAMLのトップレベルが配列や文字列などの場合はTOMLに変換できません。
+    </li>
+    <li>
+      TOMLには <code>null</code> に相当する値がありません。JSON/YAMLの
+      <code>null</code> フィールドはTOML出力時に除外されます。
+    </li>
+    <li>
+      変換元と変換先に同じ形式を選ぶと、その場で構文を整形し直せます（例:
+      TOML→TOMLでインデントや空白を統一）。
+    </li>
+    <li>
+      すべての処理はブラウザ内で完結しており、入力したデータがサーバーに送信されることはありません。
+    </li>
+  </ul>
+
+  <Glossary terms={glossaryTerms} />
+</Layout>
+
+<script>
+  import { convert, type DataFormat } from '../../../lib/tools/toml-converter';
+
+  const input = document.getElementById(
+    'toml-converter-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'toml-converter-output',
+  ) as HTMLTextAreaElement;
+  const fromSelect = document.getElementById(
+    'toml-converter-from',
+  ) as HTMLSelectElement;
+  const toSelect = document.getElementById(
+    'toml-converter-to',
+  ) as HTMLSelectElement;
+  const swapButton = document.getElementById('toml-converter-swap-button')!;
+  const indentWrapper = document.getElementById(
+    'toml-converter-indent-wrapper',
+  )!;
+  const indentSelect = document.getElementById(
+    'toml-converter-indent',
+  ) as HTMLSelectElement;
+  const copyButton = document.getElementById('toml-converter-copy-button')!;
+  const statusEl = document.getElementById('toml-converter-status')!;
+  const errorEl = document.getElementById('toml-converter-error')!;
+
+  const samples: Record<DataFormat, string> = {
+    toml: 'name = "Taro"\nhobbies = ["reading", "coding"]\n',
+    json: '{\n  "name": "Taro",\n  "hobbies": ["reading", "coding"]\n}\n',
+    yaml: 'name: Taro\nhobbies:\n  - reading\n  - coding\n',
+  };
+
+  function showError(message: string) {
+    output.value = '';
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function showOutput(value: string) {
+    output.value = value;
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function updateIndentVisibility() {
+    indentWrapper.classList.toggle('hidden', toSelect.value === 'toml');
+  }
+
+  function runConvert() {
+    statusEl.textContent = '';
+    if (input.value.trim() === '') {
+      showOutput('');
+      return;
+    }
+    const from = fromSelect.value as DataFormat;
+    const to = toSelect.value as DataFormat;
+    const indent = Number(indentSelect.value);
+    const result = convert(from, to, input.value, indent);
+    if (result.success) {
+      showOutput(result.output);
+    } else {
+      showError(`構文エラー: ${result.message}`);
+    }
+  }
+
+  input.addEventListener('input', runConvert);
+  indentSelect.addEventListener('change', runConvert);
+
+  fromSelect.addEventListener('change', () => {
+    input.value = samples[fromSelect.value as DataFormat];
+    runConvert();
+  });
+
+  toSelect.addEventListener('change', () => {
+    updateIndentVisibility();
+    runConvert();
+  });
+
+  swapButton.addEventListener('click', () => {
+    const from = fromSelect.value;
+    const to = toSelect.value;
+    fromSelect.value = to;
+    toSelect.value = from;
+    input.value = output.value || samples[fromSelect.value as DataFormat];
+    updateIndentVisibility();
+    runConvert();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      statusEl.textContent = 'コピーしました';
+    } catch {
+      statusEl.textContent = 'コピーに失敗しました';
+    }
+  });
+
+  input.value = samples.toml;
+  updateIndentVisibility();
+  runConvert();
+</script>

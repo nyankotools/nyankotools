@@ -1,0 +1,222 @@
+---
+import Glossary from '../../../components/Glossary.astro';
+import Layout from '../../../layouts/Layout.astro';
+import { TAILWIND_BREAKPOINTS } from '../../../lib/tools/viewport-checker';
+
+const breakpointRows: {
+  id: string;
+  label: string;
+  minWidth: number | null;
+}[] = [
+  { id: 'none', label: 'なし', minWidth: null },
+  ...TAILWIND_BREAKPOINTS.slice()
+    .reverse()
+    .map((bp) => ({ id: bp.name, label: bp.name, minWidth: bp.minWidth })),
+];
+
+const glossaryTerms = [
+  {
+    term: 'ビューポート',
+    description:
+      'ブラウザの中でWebページが実際に表示されている領域の幅・高さ（`window.innerWidth`/`innerHeight`）です。アドレスバーやスクロールバーは含みません。レスポンシブデザインの`@media`クエリはこの値を基準に判定されます。',
+  },
+  {
+    term: 'デバイスピクセル比（DPR）',
+    description:
+      'CSS上の1pxが実際の物理ピクセル何個分に相当するかを表す値です（`window.devicePixelRatio`）。Retinaディスプレイ等の高解像度端末では2や3になり、画像を高解像度で用意すべきかの判断に使われます。',
+  },
+  {
+    term: 'ブレークポイント',
+    description:
+      'レスポンシブデザインにおいて、レイアウトを切り替える画面幅の境目のことです。本ツールではTailwind CSSのデフォルト値（sm/md/lg/xl/2xl）を基準に、現在の幅がどの段階に該当するかを表示します。',
+  },
+  {
+    term: 'prefers-color-scheme',
+    description:
+      'OS・ブラウザ側のダークモード/ライトモード設定を検知するCSSメディア特性です。`window.matchMedia("(prefers-color-scheme: dark)")`で取得でき、サイト側のテーマ初期値の決定などに使われます。',
+  },
+];
+---
+
+<Layout
+  title="スクリーンサイズ・Viewportチェッカー（画面幅・DPR・ブレークポイント確認）"
+  description="ブラウザのビューポートサイズ・ウィンドウサイズ・画面解像度・デバイスピクセル比（DPR）・Tailwind CSSのブレークポイントなどをリアルタイムで確認できる無料ツールです。レスポンシブデザインの実機確認やデバッグに便利。データはブラウザ内で処理され、サーバーには送信されません。"
+>
+  <h1 class="mb-2 text-2xl font-bold">スクリーンサイズ・Viewportチェッカー</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    このページを開いているブラウザの
+    <code class="rounded bg-gray-100 px-1 py-0.5 font-mono text-sm dark:bg-gray-800">
+      window.innerWidth
+    </code>
+    などのビューポートサイズ・ウィンドウサイズ・画面解像度・デバイスピクセル比・現在のTailwind
+    CSSブレークポイントなどをリアルタイムで表示します。ウィンドウサイズを変更したり、開発者ツールのデバイスツールバーで端末を切り替えたりすると、下の表が自動的に更新されます。ブラウザ内で処理され、値がサーバーに送信されることはありません。キーボードイベントの値を確認したい場合は
+    <a
+      href="/tools/keycode-checker/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      キーコード（e.code/e.key）チェッカー
+    </a>
+    もあわせてご利用ください。
+  </p>
+
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[420px] border-collapse text-sm">
+      <tbody>
+        {[
+          { id: 'viewport', label: 'ビューポートサイズ' },
+          { id: 'window', label: 'ブラウザウィンドウサイズ' },
+          { id: 'screen', label: '画面解像度' },
+          { id: 'avail', label: '利用可能な画面サイズ' },
+          { id: 'dpr', label: 'デバイスピクセル比（DPR）' },
+          { id: 'orientation', label: '画面の向き' },
+          { id: 'breakpoint', label: '現在のブレークポイント' },
+          { id: 'color-scheme', label: 'OSのカラースキーム設定' },
+          { id: 'touch', label: 'タッチ操作' },
+        ].map(({ id, label }) => (
+          <tr class="border-b border-gray-100 dark:border-gray-800">
+            <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">{label}</td>
+            <td
+              id={`viewport-${id}`}
+              class="py-2 text-right font-mono text-gray-900 dark:text-gray-100"
+            />
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">
+    ブレークポイント早見表（Tailwind CSS）
+  </h2>
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[320px] border-collapse text-sm">
+      <thead>
+        <tr class="border-b border-gray-200 dark:border-gray-800">
+          <th class="py-2 pr-4 text-left text-gray-600 dark:text-gray-400">
+            名前
+          </th>
+          <th class="py-2 text-left text-gray-600 dark:text-gray-400">
+            最小幅
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {breakpointRows.map(({ id, label, minWidth }) => (
+          <tr
+            id={`viewport-bp-row-${id}`}
+            class="border-b border-gray-100 dark:border-gray-800"
+          >
+            <td class="py-2 pr-4 font-mono">{label}</td>
+            <td class="py-2 font-mono">
+              {minWidth === null ? '〜639px' : `${minWidth}px〜`}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">こんな時に便利</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>
+      レスポンシブデザインの実装中に、実機やブラウザのウィンドウサイズが今どのブレークポイントに該当するかを確認したいとき。
+    </li>
+    <li>
+      Retinaディスプレイ等の高解像度端末でデバイスピクセル比（DPR）がいくつになるか確認したいとき。
+    </li>
+    <li>
+      問い合わせ対応や不具合調査で、ユーザーの画面サイズ・向き・タッチ操作対応状況をざっくり把握したいとき。
+    </li>
+  </ul>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">注意事項</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>
+      「画面解像度」「利用可能な画面サイズ」はOS・ディスプレイ設定の拡大率（スケーリング）の影響を受けるため、ディスプレイの物理解像度とは一致しない場合があります。
+    </li>
+    <li>
+      「タッチ操作」の判定は端末がタッチ入力に対応しているかの簡易的な目安であり、実際にタッチ操作可能かはOS・入力デバイスの状態にも依存します。
+    </li>
+    <li>
+      「OSのカラースキーム設定」はOS・ブラウザ側の`prefers-color-scheme`の値であり、このサイト自体の表示（サイドバーのテーマ切り替えで手動選択したライト/ダーク）とは独立しています。両者が食い違うことがあります。
+    </li>
+    <li>
+      ブレークポイントの区分はTailwind CSSのデフォルト値（sm: 640px / md: 768px
+      / lg: 1024px / xl: 1280px / 2xl:
+      1536px）に基づいており、プロジェクトごとにカスタマイズされている場合は実際の設定値と異なることがあります。
+    </li>
+  </ul>
+
+  <Glossary terms={glossaryTerms} />
+</Layout>
+
+<script>
+  import {
+    getActiveBreakpoint,
+    getOrientation,
+  } from '../../../lib/tools/viewport-checker';
+
+  type FieldId =
+    | 'viewport'
+    | 'window'
+    | 'screen'
+    | 'avail'
+    | 'dpr'
+    | 'orientation'
+    | 'breakpoint'
+    | 'color-scheme'
+    | 'touch';
+
+  function fieldEl(id: FieldId): HTMLElement {
+    return document.getElementById(`viewport-${id}`)!;
+  }
+
+  const breakpointRowIds = ['none', 'sm', 'md', 'lg', 'xl', '2xl'] as const;
+
+  function highlightBreakpoint(activeId: string) {
+    for (const id of breakpointRowIds) {
+      const row = document.getElementById(`viewport-bp-row-${id}`);
+      row?.classList.toggle('bg-blue-50', id === activeId);
+      row?.classList.toggle('dark:bg-blue-950/40', id === activeId);
+      row?.classList.toggle('font-semibold', id === activeId);
+    }
+  }
+
+  function render() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    fieldEl('viewport').textContent = `${width} × ${height} px`;
+    fieldEl('window').textContent =
+      `${window.outerWidth} × ${window.outerHeight} px`;
+    fieldEl('screen').textContent = `${screen.width} × ${screen.height} px`;
+    fieldEl('avail').textContent =
+      `${screen.availWidth} × ${screen.availHeight} px`;
+    fieldEl('dpr').textContent = `${window.devicePixelRatio}x`;
+
+    const orientation = getOrientation(width, height);
+    fieldEl('orientation').textContent =
+      orientation === 'landscape'
+        ? '横向き（landscape）'
+        : '縦向き（portrait）';
+
+    const breakpoint = getActiveBreakpoint(width);
+    fieldEl('breakpoint').textContent = breakpoint ?? 'なし（640px未満）';
+    highlightBreakpoint(breakpoint ?? 'none');
+
+    fieldEl('color-scheme').textContent = window.matchMedia(
+      '(prefers-color-scheme: dark)',
+    ).matches
+      ? 'ダーク'
+      : 'ライト';
+
+    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    fieldEl('touch').textContent = hasTouch ? '対応' : '非対応';
+  }
+
+  render();
+  window.addEventListener('resize', render);
+  window
+    .matchMedia('(prefers-color-scheme: dark)')
+    .addEventListener('change', render);
+</script>

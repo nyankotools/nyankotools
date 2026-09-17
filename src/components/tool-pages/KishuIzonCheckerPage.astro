@@ -1,0 +1,203 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { kishuIzonCheckerContent } from '../../i18n/tools/kishu-izon-checker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = kishuIzonCheckerContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div>
+    <label
+      for="kishu-izon-input"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="kishu-izon-input"
+      data-locale={locale}
+      class="h-48 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <span
+      id="kishu-izon-status"
+      data-no-matches={t.noMatchesStatus}
+      data-matches-singular={t.matchesFoundSingular}
+      data-matches-plural={t.matchesFoundPlural}
+      class="text-sm font-medium text-gray-700 dark:text-gray-300"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-2">
+    <p class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.highlightHeading}
+    </p>
+    <div
+      id="kishu-izon-highlight"
+      class="min-h-24 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm break-words whitespace-pre-wrap dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    ></div>
+  </div>
+
+  <div id="kishu-izon-table-wrapper" class="mt-4 hidden">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+        {t.detectedHeading}
+      </p>
+      <div class="flex items-center gap-3">
+        <button
+          id="kishu-izon-copy-button"
+          type="button"
+          data-copied={t.copied}
+          data-copy-failed={t.copyFailed}
+          class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          {t.copyReplaced}
+        </button>
+        <span
+          id="kishu-izon-copy-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+    <div class="mt-2 overflow-x-auto rounded-lg border border-gray-300 dark:border-gray-700">
+      <table class="w-full min-w-[640px] text-left text-sm">
+        <thead class="bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+          <tr>
+            <th class="px-3 py-2 font-medium">{t.tableColumnChar}</th>
+            <th class="px-3 py-2 font-medium">{t.tableColumnCodePoint}</th>
+            <th class="px-3 py-2 font-medium">{t.tableColumnCategory}</th>
+            <th class="px-3 py-2 font-medium">{t.tableColumnDescription}</th>
+            <th class="px-3 py-2 font-medium">{t.tableColumnCount}</th>
+            <th class="px-3 py-2 font-medium">{t.tableColumnReplacement}</th>
+          </tr>
+        </thead>
+        <tbody
+          id="kishu-izon-table-body"
+          data-count-template={t.countCellTemplate}
+          class="divide-y divide-gray-200 dark:divide-gray-800"
+        ></tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import { escapeHtml } from '../../lib/tools/html-escape';
+  import {
+    findKishuIzonMoji,
+    replaceKishuIzonMoji,
+    summarizeMatches,
+    type Locale,
+  } from '../../lib/tools/kishu-izon-checker';
+
+  const input = document.getElementById(
+    'kishu-izon-input',
+  ) as HTMLTextAreaElement;
+  const statusEl = document.getElementById('kishu-izon-status')!;
+  const highlightEl = document.getElementById('kishu-izon-highlight')!;
+  const tableWrapper = document.getElementById('kishu-izon-table-wrapper')!;
+  const tableBody = document.getElementById('kishu-izon-table-body')!;
+  const copyButton = document.getElementById(
+    'kishu-izon-copy-button',
+  ) as HTMLButtonElement;
+  const copyStatusEl = document.getElementById('kishu-izon-copy-status')!;
+
+  const locale = (input.dataset.locale as Locale) ?? 'ja';
+  const countTemplate = tableBody.dataset.countTemplate ?? '{count}';
+
+  function render() {
+    copyStatusEl.textContent = '';
+    const text = input.value;
+    const matches = findKishuIzonMoji(text, locale);
+
+    if (text === '') {
+      statusEl.textContent = '';
+      highlightEl.textContent = '';
+      tableWrapper.classList.add('hidden');
+      return;
+    }
+
+    if (matches.length === 0) {
+      statusEl.textContent = statusEl.dataset.noMatches ?? '';
+      highlightEl.textContent = text;
+      tableWrapper.classList.add('hidden');
+      return;
+    }
+
+    const summary = summarizeMatches(matches);
+    const template =
+      matches.length === 1
+        ? (statusEl.dataset.matchesSingular ?? '')
+        : (statusEl.dataset.matchesPlural ?? '');
+    statusEl.textContent = template
+      .replace('{count}', String(matches.length))
+      .replace('{unique}', String(summary.length));
+
+    let html = '';
+    let lastIndex = 0;
+    for (const match of matches) {
+      html += escapeHtml(text.slice(lastIndex, match.index));
+      html += `<mark class="rounded bg-yellow-200 px-0.5 dark:bg-yellow-600 dark:text-gray-900">${escapeHtml(
+        match.char,
+      )}</mark>`;
+      lastIndex = match.index + match.char.length;
+    }
+    html += escapeHtml(text.slice(lastIndex));
+    highlightEl.innerHTML = html;
+
+    tableBody.innerHTML = summary
+      .map(
+        (item) => `<tr>
+          <td class="px-3 py-2 font-mono text-base">${escapeHtml(item.char)}</td>
+          <td class="px-3 py-2 font-mono text-xs text-gray-500 dark:text-gray-400">${item.codePoint}</td>
+          <td class="px-3 py-2">${escapeHtml(item.category)}</td>
+          <td class="px-3 py-2">${escapeHtml(item.label)}</td>
+          <td class="px-3 py-2">${countTemplate.replace('{count}', String(item.count))}</td>
+          <td class="px-3 py-2 font-mono">${escapeHtml(item.replacement)}</td>
+        </tr>`,
+      )
+      .join('');
+    tableWrapper.classList.remove('hidden');
+  }
+
+  input.addEventListener('input', render);
+
+  copyButton.addEventListener('click', async () => {
+    if (!input.value) return;
+    try {
+      await navigator.clipboard.writeText(
+        replaceKishuIzonMoji(input.value, locale),
+      );
+      copyStatusEl.textContent = copyButton.dataset.copied ?? '';
+    } catch {
+      copyStatusEl.textContent = copyButton.dataset.copyFailed ?? '';
+    }
+  });
+
+  render();
+</script>

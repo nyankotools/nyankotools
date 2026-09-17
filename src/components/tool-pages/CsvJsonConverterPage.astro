@@ -1,0 +1,244 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { csvJsonConverterContent } from '../../i18n/tools/csv-json-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = csvJsonConverterContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div
+    id="csv-json-converter-controls"
+    class="flex flex-wrap items-center gap-3"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-placeholder-csv-to-json={t.inputPlaceholderCsvToJson}
+    data-placeholder-json-to-csv={t.inputPlaceholderJsonToCsv}
+    data-error-template={t.errorTemplate}
+    data-error-unterminated-quote={t.errorUnterminatedQuote}
+    data-error-column-mismatch-template={t.errorColumnMismatchTemplate}
+    data-error-not-array={t.errorNotArray}
+    data-error-not-object-template={t.errorNotObjectTemplate}
+  >
+    <div
+      id="csv-json-converter-mode"
+      class="flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700"
+      role="group"
+      aria-label={t.modeAriaLabel}
+    >
+      <button
+        type="button"
+        data-mode="csvToJson"
+        aria-pressed="true"
+        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      >
+        {t.modeCsvToJson}
+      </button>
+      <button
+        type="button"
+        data-mode="jsonToCsv"
+        aria-pressed="false"
+        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      >
+        {t.modeJsonToCsv}
+      </button>
+    </div>
+    <label
+      for="csv-json-converter-delimiter"
+      class="text-sm text-gray-700 dark:text-gray-300"
+    >
+      {t.delimiterLabel}
+    </label>
+    <select
+      id="csv-json-converter-delimiter"
+      class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    >
+      {t.delimiterOptions.map(({ value, label }) => (
+        <option value={value}>{label}</option>
+      ))}
+    </select>
+    <button
+      id="csv-json-converter-copy-button"
+      type="button"
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      {t.copyButton}
+    </button>
+    <span
+      id="csv-json-converter-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label
+        for="csv-json-converter-input"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="csv-json-converter-input"
+        class="h-80 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholderCsvToJson}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label
+        for="csv-json-converter-output"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="csv-json-converter-output"
+        readonly
+        class="h-80 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="csv-json-converter-error"
+    hidden
+    class="mt-4 max-w-2xl whitespace-pre-line rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+  ></p>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    csvToJson,
+    jsonToCsv,
+    type ConvertOutcome,
+  } from '../../lib/tools/csv-json-converter';
+
+  type Mode = 'csvToJson' | 'jsonToCsv';
+
+  const controls = document.getElementById('csv-json-converter-controls')!;
+  const copied = controls.dataset.copied ?? '';
+  const copyFailed = controls.dataset.copyFailed ?? '';
+  const errorTemplate = controls.dataset.errorTemplate ?? '';
+  const errorUnterminatedQuote = controls.dataset.errorUnterminatedQuote ?? '';
+  const errorColumnMismatchTemplate =
+    controls.dataset.errorColumnMismatchTemplate ?? '';
+  const errorNotArray = controls.dataset.errorNotArray ?? '';
+  const errorNotObjectTemplate = controls.dataset.errorNotObjectTemplate ?? '';
+
+  const input = document.getElementById(
+    'csv-json-converter-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'csv-json-converter-output',
+  ) as HTMLTextAreaElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#csv-json-converter-mode [data-mode]',
+  );
+  const delimiterSelect = document.getElementById(
+    'csv-json-converter-delimiter',
+  ) as HTMLSelectElement;
+  const copyButton = document.getElementById('csv-json-converter-copy-button')!;
+  const statusEl = document.getElementById('csv-json-converter-status')!;
+  const errorEl = document.getElementById('csv-json-converter-error')!;
+
+  let mode: Mode = 'csvToJson';
+
+  const placeholders: Record<Mode, string> = {
+    csvToJson: controls.dataset.placeholderCsvToJson ?? '',
+    jsonToCsv: controls.dataset.placeholderJsonToCsv ?? '',
+  };
+
+  function resolveDelimiter(): string {
+    return delimiterSelect.value === 'tab' ? '\t' : ',';
+  }
+
+  function describeError(result: Extract<ConvertOutcome, { success: false }>) {
+    switch (result.reason) {
+      case 'unterminated-quote':
+        return errorUnterminatedQuote;
+      case 'column-mismatch':
+        return errorColumnMismatchTemplate
+          .replace('{line}', String(result.line))
+          .replace('{expectedColumns}', String(result.expectedColumns))
+          .replace('{actualColumns}', String(result.actualColumns));
+      case 'not-array':
+        return errorNotArray;
+      case 'not-object':
+        return errorNotObjectTemplate.replace(
+          '{index}',
+          String(result.index + 1),
+        );
+      case 'invalid-json':
+        return result.message;
+    }
+  }
+
+  function showError(message: string) {
+    output.value = '';
+    errorEl.textContent = errorTemplate.replace('{message}', message);
+    errorEl.hidden = false;
+  }
+
+  function showOutput(value: string) {
+    output.value = value;
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function convert() {
+    statusEl.textContent = '';
+    if (input.value.trim() === '') {
+      showOutput('');
+      return;
+    }
+    const delimiter = resolveDelimiter();
+    const result: ConvertOutcome =
+      mode === 'csvToJson'
+        ? csvToJson(input.value, delimiter)
+        : jsonToCsv(input.value, delimiter);
+    if (result.success) {
+      showOutput(result.output);
+    } else {
+      showError(describeError(result));
+    }
+  }
+
+  input.addEventListener('input', convert);
+  delimiterSelect.addEventListener('change', convert);
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as Mode;
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      input.placeholder = placeholders[mode];
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      statusEl.textContent = copied;
+    } catch {
+      statusEl.textContent = copyFailed;
+    }
+  });
+
+  convert();
+</script>

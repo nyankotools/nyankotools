@@ -1,0 +1,310 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { lineEndingConverterContent } from '../../i18n/tools/line-ending-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = lineEndingConverterContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div>
+    <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.loadFileLabel}
+    </span>
+    <div
+      id="lec-dropzone"
+      class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
+    >
+      <input
+        id="lec-file-input"
+        type="file"
+        accept=".txt,.md,.csv,.json,.yml,.yaml,.log,text/plain"
+        class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200 dark:text-gray-300 dark:file:bg-gray-800 dark:file:text-gray-200 dark:hover:file:bg-gray-700"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="lec-file-name"
+      data-loaded-template={t.loadedFileTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+  </div>
+
+  <div class="mt-4">
+    <label
+      for="lec-input"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="lec-input"
+      class="h-52 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+      {t.textareaNote}
+    </p>
+    <p
+      id="lec-stats"
+      data-current-template={t.currentStatsTemplate}
+      data-stats-format-template={t.statsFormatTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+  </div>
+
+  <div class="mt-4">
+    <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.targetLabel}
+    </span>
+    <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+      <label class="flex min-h-11 items-center gap-2">
+        <input
+          type="radio"
+          name="lec-target"
+          value="lf"
+          id="lec-target-lf"
+          class="h-4 w-4"
+          checked
+        />
+        <span class="text-gray-700 dark:text-gray-300">{t.targetLf}</span>
+      </label>
+      <label class="flex min-h-11 items-center gap-2">
+        <input
+          type="radio"
+          name="lec-target"
+          value="crlf"
+          id="lec-target-crlf"
+          class="h-4 w-4"
+        />
+        <span class="text-gray-700 dark:text-gray-300">{t.targetCrlf}</span>
+      </label>
+      <label class="flex min-h-11 items-center gap-2">
+        <input
+          type="radio"
+          name="lec-target"
+          value="cr"
+          id="lec-target-cr"
+          class="h-4 w-4"
+        />
+        <span class="text-gray-700 dark:text-gray-300">{t.targetCr}</span>
+      </label>
+    </div>
+  </div>
+
+  <div
+    class="mt-4 flex flex-wrap items-center gap-4"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-downloaded={t.downloaded}
+  >
+    <button
+      id="lec-copy-button"
+      type="button"
+      disabled
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      {t.copyButton}
+    </button>
+    <button
+      id="lec-download-button"
+      type="button"
+      disabled
+      class="min-h-11 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-700 dark:disabled:text-gray-400"
+    >
+      {t.downloadButton}
+    </button>
+    <span
+      id="lec-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4">
+    <div class="mb-1 flex items-center justify-between">
+      <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+        {t.resultLabel}
+      </span>
+      <span
+        id="lec-output-stats"
+        data-converted-template={t.convertedStatsTemplate}
+        data-stats-format-template={t.statsFormatTemplate}
+        class="text-xs text-gray-500 dark:text-gray-400"
+      ></span>
+    </div>
+    <pre
+      id="lec-output"
+      class="h-52 w-full overflow-auto rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm whitespace-pre-wrap dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    ></pre>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    convertLineEndings,
+    countLineEndings,
+    type LineEnding,
+    type LineEndingStats,
+  } from '../../lib/tools/line-ending-converter';
+
+  const input = document.getElementById('lec-input') as HTMLTextAreaElement;
+  const dropzone = document.getElementById('lec-dropzone')!;
+  const fileInput = document.getElementById(
+    'lec-file-input',
+  ) as HTMLInputElement;
+  const fileNameEl = document.getElementById('lec-file-name')!;
+  const statsEl = document.getElementById('lec-stats')!;
+  const outputEl = document.getElementById('lec-output') as HTMLPreElement;
+  const outputStatsEl = document.getElementById('lec-output-stats')!;
+  const copyButton = document.getElementById(
+    'lec-copy-button',
+  ) as HTMLButtonElement;
+  const downloadButton = document.getElementById(
+    'lec-download-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('lec-status')!;
+  const actionsEl = copyButton.closest('div')!;
+  const targetRadios = document.querySelectorAll<HTMLInputElement>(
+    'input[name="lec-target"]',
+  );
+
+  const loadedFileTemplate = fileNameEl.dataset.loadedTemplate ?? '';
+  const currentStatsTemplate = statsEl.dataset.currentTemplate ?? '';
+  const convertedStatsTemplate = outputStatsEl.dataset.convertedTemplate ?? '';
+  const statsFormatTemplate = statsEl.dataset.statsFormatTemplate ?? '';
+  const copied = actionsEl.dataset.copied ?? '';
+  const copyFailed = actionsEl.dataset.copyFailed ?? '';
+  const downloaded = actionsEl.dataset.downloaded ?? '';
+
+  // <textarea>は仕様上CRLF/CRをLFへ正規化してしまうため、実際に判定・変換に使う
+  // テキストはこの変数で保持し、input.valueを読み直さない
+  let currentText = '';
+  let convertedText = '';
+
+  function getTarget(): LineEnding {
+    return (
+      (Array.from(targetRadios).find((r) => r.checked)?.value as LineEnding) ??
+      'lf'
+    );
+  }
+
+  function formatStats(stats: LineEndingStats): string {
+    return statsFormatTemplate
+      .replace('{lf}', String(stats.lf))
+      .replace('{crlf}', String(stats.crlf))
+      .replace('{cr}', String(stats.cr));
+  }
+
+  function process() {
+    statusEl.textContent = '';
+
+    const stats = countLineEndings(currentText);
+    statsEl.textContent =
+      currentText === ''
+        ? ''
+        : currentStatsTemplate.replace('{stats}', formatStats(stats));
+
+    convertedText = convertLineEndings(currentText, getTarget());
+    outputEl.textContent = convertedText;
+
+    const outputStats = countLineEndings(convertedText);
+    outputStatsEl.textContent =
+      convertedText === ''
+        ? ''
+        : convertedStatsTemplate.replace('{stats}', formatStats(outputStats));
+
+    const hasResult = convertedText !== '';
+    copyButton.disabled = !hasResult;
+    downloadButton.disabled = !hasResult;
+  }
+
+  input.addEventListener('input', () => {
+    currentText = input.value;
+    process();
+  });
+
+  function loadFile(file: File) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      currentText = typeof reader.result === 'string' ? reader.result : '';
+      input.value = currentText;
+      fileNameEl.textContent = loadedFileTemplate.replace(
+        '{fileName}',
+        file.name,
+      );
+      process();
+    };
+    reader.readAsText(file);
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    loadFile(file);
+  });
+
+  const dropzoneActiveClasses = ['border-blue-400', 'bg-blue-50'];
+
+  dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add(...dropzoneActiveClasses);
+  });
+
+  dropzone.addEventListener('dragleave', () => {
+    dropzone.classList.remove(...dropzoneActiveClasses);
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove(...dropzoneActiveClasses);
+    const file = e.dataTransfer?.files?.[0];
+    if (!file) return;
+    loadFile(file);
+  });
+
+  targetRadios.forEach((radio) => radio.addEventListener('change', process));
+
+  copyButton.addEventListener('click', async () => {
+    if (!convertedText) return;
+    try {
+      await navigator.clipboard.writeText(convertedText);
+      statusEl.textContent = copied;
+    } catch {
+      statusEl.textContent = copyFailed;
+    }
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (!convertedText) return;
+    const blob = new Blob([convertedText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `converted-${getTarget()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    statusEl.textContent = downloaded;
+  });
+
+  process();
+</script>

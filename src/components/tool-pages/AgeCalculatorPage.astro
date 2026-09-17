@@ -1,0 +1,340 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { ageCalculatorContent } from '../../i18n/tools/age-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = ageCalculatorContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-locale={locale}
+    data-error-invalid-date={t.errorInvalidDate}
+    data-weekday-labels={JSON.stringify(t.weekdayLabels)}
+  >
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <span
+          id="age-calc-birth-label"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.birthLabel}
+        </span>
+        <div
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="age-calc-birth-label"
+        >
+          <input
+            id="age-calc-birth-year"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="9999"
+            placeholder={t.yearPlaceholder}
+            aria-label={t.birthYearAriaLabel}
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.yearUnit}
+          </span>
+          <input
+            id="age-calc-birth-month"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="12"
+            placeholder={t.birthMonthPlaceholder}
+            aria-label={t.birthMonthAriaLabel}
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.monthUnit}
+          </span>
+          <input
+            id="age-calc-birth-day"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            placeholder={t.birthDayPlaceholder}
+            aria-label={t.birthDayAriaLabel}
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          {t.dayUnit && (
+            <span class="text-sm text-gray-600 dark:text-gray-400">
+              {t.dayUnit}
+            </span>
+          )}
+        </div>
+      </div>
+      <div>
+        <span
+          id="age-calc-reference-label"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.referenceLabel}
+        </span>
+        <div
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="age-calc-reference-label"
+        >
+          <input
+            id="age-calc-reference-year"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="9999"
+            placeholder={t.referenceYearPlaceholder}
+            aria-label={t.referenceYearAriaLabel}
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.yearUnit}
+          </span>
+          <input
+            id="age-calc-reference-month"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="12"
+            placeholder={t.birthMonthPlaceholder}
+            aria-label={t.referenceMonthAriaLabel}
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.monthUnit}
+          </span>
+          <input
+            id="age-calc-reference-day"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            placeholder={t.birthDayPlaceholder}
+            aria-label={t.referenceDayAriaLabel}
+            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          {t.dayUnit && (
+            <span class="text-sm text-gray-600 dark:text-gray-400">
+              {t.dayUnit}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+    <p
+      id="age-calc-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl id="age-calc-results" class="mt-4 hidden space-y-3" aria-live="polite">
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.fullAgeLabel}
+        </dt>
+        <dd class="text-2xl font-bold" id="age-calc-full-age"></dd>
+        <dd
+          class="text-sm text-gray-600 dark:text-gray-400"
+          id="age-calc-precise-age"
+        ></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.kazoedoshiLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="age-calc-kazoedoshi"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.daysLivedLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="age-calc-days-lived"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.weekdayLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="age-calc-weekday"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.nextBirthdayLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="age-calc-next-birthday"></dd>
+      </div>
+    </dl>
+  </section>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    calculateDaysLived,
+    calculateFullAge,
+    calculateKazoedoshi,
+    calculateNextBirthday,
+    calculatePreciseAge,
+  } from '../../lib/tools/age-calculator';
+  import { getWeekday, type DateParts } from '../../lib/tools/date-calculator';
+
+  const container = document.querySelector<HTMLElement>(
+    'section[data-locale]',
+  )!;
+  const isJa = container.dataset.locale === 'ja';
+  const errorInvalidDate = container.dataset.errorInvalidDate ?? '';
+  const WEEKDAY_LABELS: string[] = JSON.parse(
+    container.dataset.weekdayLabels ?? '[]',
+  );
+
+  function readDateInputs(
+    yearInput: HTMLInputElement,
+    monthInput: HTMLInputElement,
+    dayInput: HTMLInputElement,
+  ): DateParts | null {
+    if (
+      yearInput.value.trim() === '' ||
+      monthInput.value.trim() === '' ||
+      dayInput.value.trim() === ''
+    ) {
+      return null;
+    }
+    return {
+      year: Number(yearInput.value),
+      month: Number(monthInput.value),
+      day: Number(dayInput.value),
+    };
+  }
+
+  const birthYearInput = document.getElementById(
+    'age-calc-birth-year',
+  ) as HTMLInputElement;
+  const birthMonthInput = document.getElementById(
+    'age-calc-birth-month',
+  ) as HTMLInputElement;
+  const birthDayInput = document.getElementById(
+    'age-calc-birth-day',
+  ) as HTMLInputElement;
+  const referenceYearInput = document.getElementById(
+    'age-calc-reference-year',
+  ) as HTMLInputElement;
+  const referenceMonthInput = document.getElementById(
+    'age-calc-reference-month',
+  ) as HTMLInputElement;
+  const referenceDayInput = document.getElementById(
+    'age-calc-reference-day',
+  ) as HTMLInputElement;
+
+  const errorEl = document.getElementById('age-calc-error')!;
+  const resultsEl = document.getElementById('age-calc-results')!;
+  const fullAgeEl = document.getElementById('age-calc-full-age')!;
+  const preciseAgeEl = document.getElementById('age-calc-precise-age')!;
+  const kazoedoshiEl = document.getElementById('age-calc-kazoedoshi')!;
+  const daysLivedEl = document.getElementById('age-calc-days-lived')!;
+  const weekdayEl = document.getElementById('age-calc-weekday')!;
+  const nextBirthdayEl = document.getElementById('age-calc-next-birthday')!;
+
+  function pluralize(count: number, unit: string): string {
+    return `${count} ${unit}${count === 1 ? '' : 's'}`;
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    const birth = readDateInputs(
+      birthYearInput,
+      birthMonthInput,
+      birthDayInput,
+    );
+    const reference = readDateInputs(
+      referenceYearInput,
+      referenceMonthInput,
+      referenceDayInput,
+    );
+    if (!birth || !reference) return;
+
+    const fullAge = calculateFullAge(birth, reference);
+    if (fullAge === null) {
+      errorEl.textContent = errorInvalidDate;
+      return;
+    }
+
+    const precise = calculatePreciseAge(birth, reference)!;
+    const kazoedoshi = calculateKazoedoshi(birth, reference)!;
+    const daysLived = calculateDaysLived(birth, reference)!;
+    const weekday = getWeekday(birth.year, birth.month, birth.day)!;
+    const next = calculateNextBirthday(birth, reference)!;
+
+    if (isJa) {
+      fullAgeEl.textContent = `${fullAge}歳`;
+      preciseAgeEl.textContent = `（${precise.years}歳${precise.months}ヶ月${precise.days}日）`;
+      kazoedoshiEl.textContent = `${kazoedoshi}歳`;
+      daysLivedEl.textContent = `${daysLived.toLocaleString('ja-JP')}日`;
+      weekdayEl.textContent = `${WEEKDAY_LABELS[weekday]}曜日`;
+      if (next.daysUntil === 0) {
+        nextBirthdayEl.textContent = `本日${next.ageAtNextBirthday}歳の誕生日です`;
+      } else {
+        nextBirthdayEl.textContent = `${next.date.year}年${next.date.month}月${next.date.day}日（あと${next.daysUntil}日、${next.ageAtNextBirthday}歳になります）`;
+      }
+    } else {
+      fullAgeEl.textContent = pluralize(fullAge, 'year old');
+      preciseAgeEl.textContent = `(${pluralize(precise.years, 'year')}, ${pluralize(
+        precise.months,
+        'month',
+      )}, ${pluralize(precise.days, 'day')})`;
+      kazoedoshiEl.textContent = pluralize(kazoedoshi, 'year old');
+      daysLivedEl.textContent = `${daysLived.toLocaleString('en-US')} days`;
+      weekdayEl.textContent = WEEKDAY_LABELS[weekday];
+      if (next.daysUntil === 0) {
+        nextBirthdayEl.textContent = `Today is the birthday — turning ${next.ageAtNextBirthday}!`;
+      } else {
+        nextBirthdayEl.textContent = `${next.date.year}-${String(next.date.month).padStart(2, '0')}-${String(
+          next.date.day,
+        ).padStart(
+          2,
+          '0',
+        )} (in ${pluralize(next.daysUntil, 'day')}, turning ${next.ageAtNextBirthday})`;
+      }
+    }
+
+    resultsEl.classList.remove('hidden');
+  }
+
+  birthYearInput.addEventListener('input', render);
+  birthMonthInput.addEventListener('input', render);
+  birthDayInput.addEventListener('input', render);
+  referenceYearInput.addEventListener('input', render);
+  referenceMonthInput.addEventListener('input', render);
+  referenceDayInput.addEventListener('input', render);
+
+  birthYearInput.value = '2000';
+  birthMonthInput.value = '1';
+  birthDayInput.value = '1';
+
+  const today = new Date();
+  referenceYearInput.value = String(today.getFullYear());
+  referenceMonthInput.value = String(today.getMonth() + 1);
+  referenceDayInput.value = String(today.getDate());
+  render();
+</script>

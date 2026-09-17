@@ -1,0 +1,235 @@
+---
+import Glossary from '../../../components/Glossary.astro';
+import Layout from '../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'event.key',
+    description:
+      '押されたキーが表す「文字」または機能名を表します（例: "a"、"Enter"、"ArrowUp"）。キーボード配列やShiftキーの状態、IME変換中かどうかによって値が変わることがあります。',
+  },
+  {
+    term: 'event.code',
+    description:
+      'キーボード上の「物理的な位置」を表す文字列です（例: "KeyA"、"Digit1"）。数字キーの「1」を押したとき、Shiftキーの状態でevent.keyは"1"や"!"に変わりますが、event.codeは常に"Digit1"のままで、キーボード配列にも依存しません。',
+  },
+  {
+    term: 'KeyboardEvent.location',
+    description:
+      'Shift・Ctrl・Alt・Enterなど、キーボード上に複数存在するキーを区別するための値です。0が標準、1が左側、2が右側、3がテンキー側のキーを表します。',
+  },
+  {
+    term: 'keyCode / which（非推奨）',
+    description:
+      'キーを数値で表す古いブラウザAPIです。ブラウザや配列によって値の解釈が揺れることがあるため非推奨とされており、新規実装ではevent.keyやevent.codeを使うことが推奨されています。',
+  },
+  {
+    term: '修飾キー（モディファイアキー）',
+    description:
+      'Ctrl・Alt・Shift・Metaなど、他のキーと組み合わせて使う特殊キーの総称です。Metaキーは、Windowsではウィンドウズキー、Macではcommandキーに対応します。',
+  },
+];
+---
+
+<Layout
+  title="キーコード（e.code/e.key）チェッカー（JavaScriptキーイベント確認）"
+  description="押したキーのevent.key・event.code・keyCode・location・修飾キーなどのキーボードイベント情報をリアルタイムで確認できる無料ツールです。event.keyとevent.codeの違いやキーボード配列の違いの確認に便利。データはブラウザ内で処理され、サーバーには送信されません。"
+>
+  <h1 class="mb-2 text-2xl font-bold">キーコード（e.code/e.key）チェッカー</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    下の入力エリアをクリックしてフォーカスし、任意のキーを押すと、
+    <code class="rounded bg-gray-100 px-1 py-0.5 font-mono text-sm dark:bg-gray-800">
+      event.key
+    </code>
+    ・
+    <code class="rounded bg-gray-100 px-1 py-0.5 font-mono text-sm dark:bg-gray-800">
+      event.code
+    </code>
+    ・keyCode・location・修飾キーの状態をリアルタイムで表示します。JavaScriptのキーボードイベント処理を実装する際の、実機での値確認やevent.keyとevent.codeの違いの確認に便利です。ブラウザ内で処理され、押したキーの情報がサーバーに送信されることはありません。入力値のパターンマッチングを試したい場合は
+    <a
+      href="/tools/regex-tester/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      正規表現テスター
+    </a>
+    もあわせてご利用ください。
+  </p>
+
+  <div
+    id="keycode-capture"
+    tabindex="0"
+    role="application"
+    aria-label="キー入力検知エリア"
+    class="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-6 text-center text-gray-500 focus:border-blue-400 focus:text-blue-600 focus:outline-none dark:border-gray-700 dark:text-gray-400 dark:focus:border-blue-400 dark:focus:text-blue-400"
+  >
+    <p id="keycode-placeholder">
+      ここをクリックしてフォーカスし、任意のキーを押してください
+    </p>
+  </div>
+
+  <div id="keycode-result" class="mt-6 hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[420px] border-collapse text-sm">
+        <tbody>
+          {[
+            { id: 'key', label: 'event.key' },
+            { id: 'code', label: 'event.code' },
+            { id: 'keycode', label: 'keyCode（非推奨）' },
+            { id: 'location', label: 'location' },
+            { id: 'modifiers', label: '修飾キー' },
+            { id: 'repeat', label: 'リピート（長押し）' },
+          ].map(({ id, label }) => (
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                {label}
+              </td>
+              <td
+                id={`keycode-${id}`}
+                class="py-2 text-right font-mono text-gray-900 dark:text-gray-100"
+              />
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="mb-2 flex items-center justify-between">
+      <h2 class="text-lg font-bold">履歴（最新10件）</h2>
+      <button
+        type="button"
+        id="keycode-clear-button"
+        class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        履歴をクリア
+      </button>
+    </div>
+    <ol
+      id="keycode-history"
+      class="flex flex-col-reverse gap-1"
+      aria-live="polite"
+    ></ol>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">注意事項</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>
+      キー入力を検知するには、上の入力エリアをクリックしてフォーカスしてから任意のキーを押してください。
+    </li>
+    <li>
+      入力エリアにフォーカスしている間は、Tabキーによるフォーカス移動やF5キーの再読み込みなど、ブラウザ標準の動作を防止して表示します（エリア外をクリックする、またはEscapeキーを押すと通常の動作に戻ります）。
+    </li>
+    <li>
+      日本語入力（IME）で変換中に押したキーは、環境によってevent.keyが"Process"などの特殊な値になる場合があります。
+    </li>
+    <li>
+      キーボードの配列（JIS配列/US配列等）によって、同じ物理キーでもevent.keyの値が異なる場合があります。event.codeは配列に依存しない物理的な位置を表します。
+    </li>
+    <li>
+      ブラウザ・OSの組み合わせによっては、メディアキーやブラウザに予約されたショートカットキーなど、検出できないキーもあります。
+    </li>
+  </ul>
+
+  <Glossary terms={glossaryTerms} />
+</Layout>
+
+<script>
+  import {
+    buildKeyEventInfo,
+    type KeyEventInfo,
+    type KeyEventLabels,
+    type KeyLocation,
+  } from '../../../lib/tools/keycode-checker';
+
+  const LABELS: KeyEventLabels = {
+    location: {
+      standard: '標準',
+      left: '左側',
+      right: '右側',
+      numpad: 'テンキー',
+      unknown: '不明',
+    },
+    none: 'なし',
+  };
+
+  const capture = document.getElementById('keycode-capture')!;
+  const placeholderEl = document.getElementById('keycode-placeholder')!;
+  const resultEl = document.getElementById('keycode-result')!;
+  const historyEl = document.getElementById(
+    'keycode-history',
+  ) as HTMLOListElement;
+  const clearButton = document.getElementById(
+    'keycode-clear-button',
+  ) as HTMLButtonElement;
+
+  type FieldId =
+    'key' | 'code' | 'keycode' | 'location' | 'modifiers' | 'repeat';
+
+  function fieldEl(id: FieldId): HTMLElement {
+    return document.getElementById(`keycode-${id}`)!;
+  }
+
+  const MAX_HISTORY = 10;
+
+  function displayKey(key: string): string {
+    return key === ' ' ? 'Space（" "）' : key;
+  }
+
+  function render(info: KeyEventInfo) {
+    fieldEl('key').textContent = displayKey(info.key);
+    fieldEl('code').textContent = info.code;
+    fieldEl('keycode').textContent = String(info.keyCode);
+    fieldEl('location').textContent =
+      `${info.location}（${info.locationLabel}）`;
+    fieldEl('modifiers').textContent = info.modifierLabel;
+    fieldEl('repeat').textContent = info.repeat ? 'はい（長押し）' : 'いいえ';
+    placeholderEl.classList.add('hidden');
+    resultEl.classList.remove('hidden');
+  }
+
+  function addHistory(info: KeyEventInfo) {
+    const li = document.createElement('li');
+    li.className =
+      'rounded border border-gray-200 px-2 py-1 font-mono text-xs text-gray-700 dark:border-gray-700 dark:text-gray-300';
+    li.textContent = `${info.code}（${displayKey(info.key)}）`;
+    historyEl.append(li);
+    while (historyEl.children.length > MAX_HISTORY) {
+      historyEl.removeChild(historyEl.firstElementChild!);
+    }
+  }
+
+  capture.addEventListener('keydown', (event) => {
+    // Escapeキーだけは既定動作を奪わず、フォーカスを外してTabキーによる離脱経路を確保する
+    if (event.key !== 'Escape') {
+      event.preventDefault();
+    }
+    const info = buildKeyEventInfo(
+      {
+        key: event.key,
+        code: event.code,
+        keyCode: event.keyCode,
+        location: event.location as KeyLocation,
+        shiftKey: event.shiftKey,
+        ctrlKey: event.ctrlKey,
+        altKey: event.altKey,
+        metaKey: event.metaKey,
+        repeat: event.repeat,
+      },
+      LABELS,
+    );
+    render(info);
+    if (!info.repeat) {
+      addHistory(info);
+    }
+    if (event.key === 'Escape') {
+      capture.blur();
+    }
+  });
+
+  capture.addEventListener('click', () => capture.focus());
+
+  clearButton.addEventListener('click', () => {
+    historyEl.replaceChildren();
+  });
+</script>

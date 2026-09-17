@@ -530,6 +530,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'code-minifier',
+    translations: {
+      ja: {
+        name: 'CSS/JS/HTMLミニファイ＆整形',
+        description:
+          'CSS・JavaScript・HTMLのコードを整形・ミニファイします。インデント幅の指定にも対応。',
+        category: '変換',
+      },
+      en: {
+        name: 'CSS/JS/HTML Minifier',
+        description:
+          'Formats and minifies CSS, JavaScript, and HTML code, with a selectable indent width.',
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

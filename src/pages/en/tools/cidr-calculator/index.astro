@@ -1,0 +1,233 @@
+---
+import Glossary from '../../../../components/Glossary.astro';
+import Layout from '../../../../layouts/Layout.astro';
+
+const glossaryTerms = [
+  {
+    term: 'CIDR notation (e.g. 192.168.1.0/24)',
+    description:
+      'An IP address followed by a "/" and a prefix length (the number of network bits). "/24" means the first 24 bits are the network part and the remaining 8 bits are the host part.',
+  },
+  {
+    term: 'Subnet mask (e.g. 255.255.255.0)',
+    description:
+      'A dotted-decimal value with the network-part bits set to 1, showing how much of the address is the network. It maps one-to-one to a CIDR prefix length (/24 = 255.255.255.0).',
+  },
+  {
+    term: 'Network address & broadcast address',
+    description:
+      "The network address is the first address in a subnet (all host bits zero) and identifies the network itself — it can't be assigned to a host. The broadcast address is the last one (all host bits one) and is used to send to every host on that subnet at once.",
+  },
+  {
+    term: 'Wildcard mask',
+    description:
+      'The bitwise inverse of a subnet mask, used in place of a subnet mask in access control list (ACL) configuration on Cisco devices, for example.',
+  },
+  {
+    term: 'Usable host count',
+    description:
+      'The number of addresses that can actually be assigned to devices in a subnet. Normally this excludes the network and broadcast addresses, but /31 is treated as a point-to-point link (RFC 3021) with both addresses usable, and /32 is treated as a single host with just 1 usable address.',
+  },
+];
+---
+
+<Layout
+  title="CIDR / Subnet Calculator (Network Address & Host Count)"
+  description="Calculates the network address, broadcast address, subnet mask, and usable host count from CIDR notation (e.g. 192.168.1.0/24) or an IP address plus subnet mask — free, and works entirely in your browser. Your data is processed locally and never sent to a server."
+>
+  <h1 class="mb-2 text-2xl font-bold">CIDR / Subnet Calculator</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">
+    Enter an IPv4 address with a CIDR prefix (e.g. 192.168.1.10/24) or a subnet
+    mask (e.g. 192.168.1.10/255.255.255.0), and this tool calculates the network
+    address, broadcast address, subnet mask, wildcard mask, and the range and
+    count of usable hosts in real time. Handy for network design and checking
+    subnet splits. Everything happens in your browser, and nothing you type is
+    ever sent to a server. If you need to check file permissions, try the
+    <a
+      href="/en/tools/chmod-calculator/"
+      class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+    >
+      Chmod Permission Calculator
+    </a>
+    as well.
+  </p>
+
+  <div>
+    <label
+      for="cidr-input"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      IP Address / CIDR
+    </label>
+    <input
+      id="cidr-input"
+      type="text"
+      placeholder="192.168.1.10/24"
+      spellcheck="false"
+      class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+    />
+  </div>
+
+  <p
+    id="cidr-error"
+    class="mt-2 text-sm text-red-600 dark:text-red-400"
+    aria-live="polite"
+  ></p>
+
+  <div id="cidr-result" class="mt-6">
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[420px] border-collapse text-sm">
+        <tbody>
+          {[
+            { id: 'network-address', label: 'Network address' },
+            { id: 'broadcast-address', label: 'Broadcast address' },
+            { id: 'subnet-mask', label: 'Subnet mask' },
+            { id: 'wildcard-mask', label: 'Wildcard mask' },
+            { id: 'first-host', label: 'First usable host' },
+            { id: 'last-host', label: 'Last usable host' },
+            { id: 'usable-host-count', label: 'Usable host count' },
+            { id: 'total-address-count', label: 'Total address count' },
+          ].map(({ id, label }) => (
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                {label}
+              </td>
+              <td
+                id={`cidr-${id}`}
+                class="py-2 text-right font-mono text-gray-900 dark:text-gray-100"
+              />
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <button
+      type="button"
+      id="cidr-copy-button"
+      class="mt-4 min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      Copy result
+    </button>
+    <span
+      id="cidr-status"
+      class="ml-2 text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">Notes</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>Only IPv4 is supported; IPv6 addresses are not.</li>
+    <li>
+      The part after the slash can be either a bit-count prefix ("/24") or a
+      dotted subnet mask ("/255.255.255.0").
+    </li>
+    <li>
+      An IP address octet with a leading zero (e.g. "01") is treated as invalid,
+      to avoid any ambiguity with octal interpretation.
+    </li>
+    <li>
+      /31 is treated as a point-to-point link (RFC 3021) with both addresses
+      usable, and /32 is treated as a single host with just 1 usable address.
+    </li>
+  </ul>
+
+  <Glossary terms={glossaryTerms} heading="Glossary" />
+</Layout>
+
+<script>
+  import {
+    calculateCidr,
+    type CidrInfo,
+  } from '../../../../lib/tools/cidr-calculator';
+
+  const input = document.getElementById('cidr-input') as HTMLInputElement;
+  const errorEl = document.getElementById('cidr-error')!;
+  const resultEl = document.getElementById('cidr-result')!;
+  const statusEl = document.getElementById('cidr-status')!;
+  const copyButton = document.getElementById(
+    'cidr-copy-button',
+  ) as HTMLButtonElement;
+
+  type FieldId =
+    | 'network-address'
+    | 'broadcast-address'
+    | 'subnet-mask'
+    | 'wildcard-mask'
+    | 'first-host'
+    | 'last-host'
+    | 'usable-host-count'
+    | 'total-address-count';
+
+  function fieldEl(id: FieldId): HTMLElement {
+    return document.getElementById(`cidr-${id}`)!;
+  }
+
+  function render(result: CidrInfo) {
+    fieldEl('network-address').textContent = result.networkAddress;
+    fieldEl('broadcast-address').textContent = result.broadcastAddress;
+    fieldEl('subnet-mask').textContent = result.subnetMask;
+    fieldEl('wildcard-mask').textContent = result.wildcardMask;
+    fieldEl('first-host').textContent = result.firstUsableHost ?? '-';
+    fieldEl('last-host').textContent = result.lastUsableHost ?? '-';
+    fieldEl('usable-host-count').textContent =
+      result.usableHostCount.toLocaleString('en-US');
+    fieldEl('total-address-count').textContent =
+      result.totalAddressCount.toLocaleString('en-US');
+    resultEl.classList.remove('hidden');
+  }
+
+  function toClipboardText(result: CidrInfo): string {
+    return [
+      `IP address: ${result.ipAddress}/${result.prefixLength}`,
+      `Network address: ${result.networkAddress}`,
+      `Broadcast address: ${result.broadcastAddress}`,
+      `Subnet mask: ${result.subnetMask}`,
+      `Wildcard mask: ${result.wildcardMask}`,
+      `First usable host: ${result.firstUsableHost ?? '-'}`,
+      `Last usable host: ${result.lastUsableHost ?? '-'}`,
+      `Usable host count: ${result.usableHostCount}`,
+      `Total address count: ${result.totalAddressCount}`,
+    ].join('\n');
+  }
+
+  let lastResult: CidrInfo | null = null;
+
+  function update() {
+    statusEl.textContent = '';
+    const value = input.value.trim();
+    if (value === '') {
+      errorEl.textContent = '';
+      resultEl.classList.add('hidden');
+      lastResult = null;
+      return;
+    }
+    const result = calculateCidr(value);
+    if (!result) {
+      errorEl.textContent =
+        'Invalid format (e.g. 192.168.1.10/24 or 192.168.1.10/255.255.255.0)';
+      resultEl.classList.add('hidden');
+      lastResult = null;
+      return;
+    }
+    errorEl.textContent = '';
+    lastResult = result;
+    render(result);
+  }
+
+  input.addEventListener('input', update);
+
+  copyButton.addEventListener('click', async () => {
+    if (!lastResult) return;
+    try {
+      await navigator.clipboard.writeText(toClipboardText(lastResult));
+      statusEl.textContent = 'Copied';
+    } catch {
+      statusEl.textContent = 'Copy failed';
+    }
+  });
+
+  input.value = '192.168.1.10/24';
+  update();
+</script>

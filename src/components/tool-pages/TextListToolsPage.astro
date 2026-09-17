@@ -1,0 +1,202 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { textListToolsContent } from '../../i18n/tools/text-list-tools';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = textListToolsContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div>
+    <label
+      for="tlt-input"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="tlt-input"
+      class="h-52 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div class="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+    <label class="flex min-h-11 items-center gap-2">
+      <input id="tlt-trim" type="checkbox" class="h-4 w-4" />
+      <span class="text-gray-700 dark:text-gray-300">{t.trimLabel}</span>
+    </label>
+    <label class="flex min-h-11 items-center gap-2">
+      <input id="tlt-remove-empty" type="checkbox" class="h-4 w-4" />
+      <span class="text-gray-700 dark:text-gray-300">{t.removeEmptyLabel}</span>
+    </label>
+    <label class="flex min-h-11 items-center gap-2">
+      <input id="tlt-dedupe" type="checkbox" class="h-4 w-4" />
+      <span class="text-gray-700 dark:text-gray-300">{t.dedupeLabel}</span>
+    </label>
+    <label class="flex min-h-11 items-center gap-2">
+      <input id="tlt-case-insensitive" type="checkbox" class="h-4 w-4" />
+      <span class="text-gray-700 dark:text-gray-300">
+        {t.caseInsensitiveLabel}
+      </span>
+    </label>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-4">
+    <div>
+      <label
+        for="tlt-sort-order"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.sortLabel}
+      </label>
+      <select
+        id="tlt-sort-order"
+        class="h-11 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      >
+        <option value="none">{t.sortOptionNone}</option>
+        <option value="asc">{t.sortOptionAsc}</option>
+        <option value="desc">{t.sortOptionDesc}</option>
+        <option value="numericAsc">{t.sortOptionNumericAsc}</option>
+        <option value="numericDesc">{t.sortOptionNumericDesc}</option>
+        <option value="shuffle">{t.sortOptionShuffle}</option>
+      </select>
+    </div>
+
+    <button
+      id="tlt-reshuffle-button"
+      type="button"
+      class="hidden min-h-11 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+    >
+      {t.reshuffleButton}
+    </button>
+
+    <button
+      id="tlt-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="tlt-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4">
+    <div class="mb-1 flex items-center justify-between">
+      <label
+        for="tlt-output"
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.outputLabel}
+      </label>
+      <span
+        id="tlt-count"
+        data-count-template={t.countTemplate}
+        class="text-xs text-gray-500 dark:text-gray-400"
+      ></span>
+    </div>
+    <textarea
+      id="tlt-output"
+      readonly
+      class="h-52 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm whitespace-pre-wrap focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    ></textarea>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    processTextList,
+    type SortOrder,
+  } from '../../lib/tools/text-list-tools';
+
+  const input = document.getElementById('tlt-input') as HTMLTextAreaElement;
+  const trimCheckbox = document.getElementById('tlt-trim') as HTMLInputElement;
+  const removeEmptyCheckbox = document.getElementById(
+    'tlt-remove-empty',
+  ) as HTMLInputElement;
+  const dedupeCheckbox = document.getElementById(
+    'tlt-dedupe',
+  ) as HTMLInputElement;
+  const caseInsensitiveCheckbox = document.getElementById(
+    'tlt-case-insensitive',
+  ) as HTMLInputElement;
+  const sortOrderSelect = document.getElementById(
+    'tlt-sort-order',
+  ) as HTMLSelectElement;
+  const reshuffleButton = document.getElementById(
+    'tlt-reshuffle-button',
+  ) as HTMLButtonElement;
+  const copyButton = document.getElementById(
+    'tlt-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('tlt-status')!;
+  const countEl = document.getElementById('tlt-count')!;
+  const output = document.getElementById('tlt-output') as HTMLTextAreaElement;
+
+  const countTemplate = countEl.dataset.countTemplate ?? '{count}';
+
+  function process() {
+    statusEl.textContent = '';
+    const sortOrder = sortOrderSelect.value as SortOrder;
+    reshuffleButton.classList.toggle('hidden', sortOrder !== 'shuffle');
+
+    const lines = processTextList(input.value, {
+      trimLines: trimCheckbox.checked,
+      removeEmptyLines: removeEmptyCheckbox.checked,
+      dedupe: dedupeCheckbox.checked,
+      caseInsensitive: caseInsensitiveCheckbox.checked,
+      sortOrder,
+    });
+
+    output.value = lines.join('\n');
+    countEl.textContent = countTemplate.replace(
+      '{count}',
+      String(lines.length),
+    );
+  }
+
+  input.addEventListener('input', process);
+  trimCheckbox.addEventListener('change', process);
+  removeEmptyCheckbox.addEventListener('change', process);
+  dedupeCheckbox.addEventListener('change', process);
+  caseInsensitiveCheckbox.addEventListener('change', process);
+  sortOrderSelect.addEventListener('change', process);
+  reshuffleButton.addEventListener('click', process);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      statusEl.textContent = copyButton.dataset.copied ?? '';
+    } catch {
+      statusEl.textContent = copyButton.dataset.copyFailed ?? '';
+    }
+  });
+
+  process();
+</script>

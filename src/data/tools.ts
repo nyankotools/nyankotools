@@ -615,6 +615,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'json-path-tester',
+    translations: {
+      ja: {
+        name: 'JSON Path / JSON Pointerテスター',
+        description:
+          'JSONPathやJSON Pointer（RFC 6901）のクエリを入力すると、マッチした値と絶対パスを一覧表示します。APIレスポンスから値を取り出すクエリの動作確認に便利。',
+        category: '開発',
+      },
+      en: {
+        name: 'JSON Path / JSON Pointer Tester',
+        description:
+          'Tests a JSONPath or JSON Pointer (RFC 6901) query against your JSON data and lists every matched value with its absolute path. Handy for checking a query before pulling a value out of an API response.',
+        category: 'Development',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

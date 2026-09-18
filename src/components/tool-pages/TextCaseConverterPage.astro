@@ -1,0 +1,122 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import {
+  textCaseConverterContent,
+  textCaseOrder,
+} from '../../i18n/tools/text-case-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = textCaseConverterContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div>
+    <label
+      for="text-case-input"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="text-case-input"
+      class="h-32 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div class="mt-4 flex items-center gap-3">
+    <span
+      id="text-case-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-2 space-y-3">
+    {textCaseOrder.map((key) => (
+      <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+        <label
+          for={`text-case-output-${key}`}
+          class="text-sm font-medium text-gray-700 sm:w-36 sm:shrink-0 dark:text-gray-300"
+        >
+          {t.labels[key]}
+        </label>
+        <div class="flex flex-1 items-center gap-2">
+          <input
+            id={`text-case-output-${key}`}
+            data-case={key}
+            type="text"
+            readonly
+            class="min-h-11 w-full rounded-lg border border-gray-300 bg-gray-50 px-3 font-mono text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          />
+          <button
+            type="button"
+            data-copy-for={key}
+            data-copied={t.copied}
+            data-copy-failed={t.copyFailed}
+            class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            {t.copy}
+          </button>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    convertTextCase,
+    type TextCaseResult,
+  } from '../../lib/tools/text-case-converter';
+
+  type CaseKey = keyof TextCaseResult;
+
+  const input = document.getElementById(
+    'text-case-input',
+  ) as HTMLTextAreaElement;
+  const outputs = document.querySelectorAll<HTMLInputElement>('[data-case]');
+  const copyButtons =
+    document.querySelectorAll<HTMLButtonElement>('[data-copy-for]');
+  const statusEl = document.getElementById('text-case-status')!;
+
+  function convert() {
+    const result = convertTextCase(input.value);
+    outputs.forEach((el) => {
+      const key = el.dataset.case as CaseKey;
+      el.value = result[key];
+    });
+  }
+
+  input.addEventListener('input', convert);
+
+  copyButtons.forEach((button) => {
+    button.addEventListener('click', async () => {
+      const key = button.dataset.copyFor as CaseKey;
+      const target = document.querySelector<HTMLInputElement>(
+        `[data-case="${key}"]`,
+      );
+      if (!target || !target.value) return;
+      try {
+        await navigator.clipboard.writeText(target.value);
+        statusEl.textContent = button.dataset.copied ?? '';
+      } catch {
+        statusEl.textContent = button.dataset.copyFailed ?? '';
+      }
+    });
+  });
+
+  convert();
+</script>

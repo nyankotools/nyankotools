@@ -116,20 +116,11 @@ export function initTheme(): void {
 const SIDEBAR_OPEN_CATEGORIES_KEY = 'sidebar-open-categories';
 
 export function initCategoryPersistence(): void {
+  // 開閉状態の初回復元は、展開チラつきを防ぐため Layout.astro 内の
+  // 同期インラインスクリプトが初回ペイント前に行う。ここではトグル時の保存のみ担う。
   const categoryDetails = document.querySelectorAll<HTMLDetailsElement>(
     'nav details[data-category]',
   );
-
-  function getStoredOpenCategories(): Set<string> | null {
-    try {
-      const raw = localStorage.getItem(SIDEBAR_OPEN_CATEGORIES_KEY);
-      if (!raw) return null;
-      return new Set(JSON.parse(raw) as string[]);
-    } catch {
-      // localStorageが使えない、または保存内容が壊れている場合は無視する
-      return null;
-    }
-  }
 
   function saveOpenCategories() {
     try {
@@ -140,16 +131,6 @@ export function initCategoryPersistence(): void {
     } catch {
       // localStorageが使えない環境では保存せず今回の表示だけ反映する
     }
-  }
-
-  const storedOpenCategories = getStoredOpenCategories();
-  if (storedOpenCategories) {
-    categoryDetails.forEach((el) => {
-      // 現在のページを含むカテゴリはサーバー側で開いた状態なので、それ以外だけ復元する
-      if (!el.open && el.dataset.category) {
-        el.open = storedOpenCategories.has(el.dataset.category);
-      }
-    });
   }
 
   categoryDetails.forEach((el) => {

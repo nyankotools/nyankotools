@@ -335,6 +335,16 @@ const jsonLd: Record<string, unknown> | null = noindex
             );
           })}
         </nav>
+
+        <!--
+          ツール切り替え時（ページ全体の再読み込み）に、保存済みの開閉状態を
+          レイアウト確定前（初回ペイント前）に反映することで、複数カテゴリが
+          開いている場合の展開チラつきを防ぐ。トグル時の保存処理は
+          initCategoryPersistence（layout-nav.ts）側で行う。
+          外部ファイル + src属性にしているのは、インラインスクリプトの中身は
+          AstroのCSP自動ハッシュ化の対象外でブロックされるため（theme-init.jsと同じ理由）。
+        -->
+        <script src="/sidebar-category-init.js" is:inline></script>
       </aside>
 
       <style>

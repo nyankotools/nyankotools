@@ -1,0 +1,193 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { jsonFormatterContent } from '../../i18n/tools/json-formatter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = jsonFormatterContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div class="flex flex-wrap items-center gap-3">
+    <label
+      for="json-formatter-indent"
+      class="text-sm text-gray-700 dark:text-gray-300"
+    >
+      {t.indentLabel}
+    </label>
+    <select
+      id="json-formatter-indent"
+      class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    >
+      {t.indentOptions.map((option) => (
+        <option value={option.value}>{option.label}</option>
+      ))}
+    </select>
+    <button
+      id="json-formatter-minify-button"
+      type="button"
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      {t.minify}
+    </button>
+    <button
+      id="json-formatter-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="json-formatter-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label
+        for="json-formatter-input"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="json-formatter-input"
+        class="h-80 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        placeholder={'{"key": "value"}'}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label
+        for="json-formatter-output"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="json-formatter-output"
+        readonly
+        class="h-80 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="json-formatter-error"
+    hidden
+    data-error-template={t.errorTemplate}
+    data-error-explanations={JSON.stringify(t.errorExplanations)}
+    data-error-fallback={t.errorExplanationFallback}
+    class="mt-4 max-w-2xl whitespace-pre-line rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+  ></p>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import { formatJson, minifyJson } from '../../lib/tools/json-formatter';
+
+  const input = document.getElementById(
+    'json-formatter-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'json-formatter-output',
+  ) as HTMLTextAreaElement;
+  const indentSelect = document.getElementById(
+    'json-formatter-indent',
+  ) as HTMLSelectElement;
+  const minifyButton = document.getElementById('json-formatter-minify-button')!;
+  const copyButton = document.getElementById(
+    'json-formatter-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('json-formatter-status')!;
+  const errorEl = document.getElementById('json-formatter-error')!;
+
+  const errorTemplate = errorEl.dataset.errorTemplate ?? '{message}';
+  const errorExplanations: { pattern: string; explanation: string }[] =
+    JSON.parse(errorEl.dataset.errorExplanations ?? '[]');
+  const errorExplanationFallback = errorEl.dataset.errorFallback ?? '';
+
+  function getIndent(): number | string {
+    return indentSelect.value === 'tab' ? '\t' : Number(indentSelect.value);
+  }
+
+  function explainJsonError(message: string): string {
+    for (const entry of errorExplanations) {
+      if (new RegExp(entry.pattern).test(message)) {
+        return entry.explanation;
+      }
+    }
+    return errorExplanationFallback;
+  }
+
+  function showError(message: string) {
+    output.value = '';
+    errorEl.textContent = errorTemplate
+      .replace('{message}', message)
+      .replace('{explanation}', explainJsonError(message));
+    errorEl.hidden = false;
+  }
+
+  function showOutput(value: string) {
+    output.value = value;
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function format() {
+    statusEl.textContent = '';
+    if (input.value.trim() === '') {
+      showOutput('');
+      return;
+    }
+    const result = formatJson(input.value, getIndent());
+    if (result.success) {
+      showOutput(result.output);
+    } else {
+      showError(result.message);
+    }
+  }
+
+  function minify() {
+    statusEl.textContent = '';
+    if (input.value.trim() === '') {
+      showOutput('');
+      return;
+    }
+    const result = minifyJson(input.value);
+    if (result.success) {
+      showOutput(result.output);
+    } else {
+      showError(result.message);
+    }
+  }
+
+  input.addEventListener('input', format);
+  indentSelect.addEventListener('change', format);
+  minifyButton.addEventListener('click', minify);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      statusEl.textContent = copyButton.dataset.copied ?? '';
+    } catch {
+      statusEl.textContent = copyButton.dataset.copyFailed ?? '';
+    }
+  });
+
+  format();
+</script>

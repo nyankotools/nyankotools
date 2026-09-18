@@ -1,0 +1,340 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { chmodCalculatorContent } from '../../i18n/tools/chmod-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = chmodCalculatorContent[locale];
+
+const kinds = ['read', 'write', 'execute'] as const;
+const kindAriaLabels: Record<(typeof kinds)[number], string> = {
+  read: t.ariaReadLabel,
+  write: t.ariaWriteLabel,
+  execute: t.ariaExecuteLabel,
+};
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div class="overflow-x-auto">
+    <table class="w-full min-w-[420px] border-collapse text-sm">
+      <thead>
+        <tr class="border-b border-gray-200 dark:border-gray-700">
+          <th class="py-2 text-left font-medium text-gray-700 dark:text-gray-300">
+            {t.columnSubject}
+          </th>
+          <th class="py-2 text-center font-medium text-gray-700 dark:text-gray-300">
+            {t.columnRead}
+          </th>
+          <th class="py-2 text-center font-medium text-gray-700 dark:text-gray-300">
+            {t.columnWrite}
+          </th>
+          <th class="py-2 text-center font-medium text-gray-700 dark:text-gray-300">
+            {t.columnExecute}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {t.subjectRows.map(({ subject, label }) => (
+          <tr class="border-b border-gray-100 dark:border-gray-800">
+            <td class="py-2 text-gray-700 dark:text-gray-300">{label}</td>
+            {kinds.map((kind) => (
+              <td class="py-2 text-center">
+                <label class="flex h-11 items-center justify-center">
+                  <input
+                    id={`chmod-${subject}-${kind}`}
+                    type="checkbox"
+                    class="h-5 w-5"
+                    aria-label={`${label} ${kindAriaLabels[kind]}`}
+                  />
+                </label>
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+    <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+      <input id="chmod-setuid" type="checkbox" class="h-4 w-4" />
+      {t.setuidLabel}
+    </label>
+    <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+      <input id="chmod-setgid" type="checkbox" class="h-4 w-4" />
+      {t.setgidLabel}
+    </label>
+    <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+      <input id="chmod-sticky" type="checkbox" class="h-4 w-4" />
+      {t.stickyLabel}
+    </label>
+  </div>
+
+  <div
+    class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-sample-file-name={t.sampleFileName}
+  >
+    <div>
+      <label
+        for="chmod-octal-input"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.octalLabel}
+      </label>
+      <div class="flex gap-2">
+        <input
+          id="chmod-octal-input"
+          type="text"
+          placeholder={t.octalPlaceholder}
+          spellcheck="false"
+          class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+        <button
+          type="button"
+          data-copy-target="chmod-octal-input"
+          class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          {t.copyButton}
+        </button>
+      </div>
+    </div>
+    <div>
+      <label
+        for="chmod-symbolic-input"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.symbolicLabel}
+      </label>
+      <div class="flex gap-2">
+        <input
+          id="chmod-symbolic-input"
+          type="text"
+          placeholder={t.symbolicPlaceholder}
+          spellcheck="false"
+          class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+        <button
+          type="button"
+          data-copy-target="chmod-symbolic-input"
+          class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          {t.copyButton}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <label
+      for="chmod-command-output"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.commandLabel}
+    </label>
+    <div class="flex gap-2">
+      <input
+        id="chmod-command-output"
+        type="text"
+        readonly
+        class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-gray-50 px-3 font-mono text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+      <button
+        type="button"
+        data-copy-target="chmod-command-output"
+        class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        {t.copyButton}
+      </button>
+    </div>
+  </div>
+
+  <p
+    id="chmod-error"
+    data-error-invalid-octal={t.errorInvalidOctal}
+    data-error-invalid-symbolic={t.errorInvalidSymbolic}
+    class="mt-2 text-sm text-red-600 dark:text-red-400"
+    aria-live="polite"
+  ></p>
+  <span
+    id="chmod-status"
+    class="mt-2 block text-sm text-green-600 dark:text-green-400"
+    aria-live="polite"
+  ></span>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    type ChmodPermissions,
+    octalToPermissions,
+    permissionsToChmodCommand,
+    permissionsToOctal,
+    permissionsToSymbolic,
+    symbolicToPermissions,
+  } from '../../lib/tools/chmod-calculator';
+
+  const subjects = ['owner', 'group', 'other'] as const;
+  const kinds = ['read', 'write', 'execute'] as const;
+
+  function checkbox(subject: string, kind: string): HTMLInputElement {
+    return document.getElementById(
+      `chmod-${subject}-${kind}`,
+    ) as HTMLInputElement;
+  }
+
+  const setuidCheckbox = document.getElementById(
+    'chmod-setuid',
+  ) as HTMLInputElement;
+  const setgidCheckbox = document.getElementById(
+    'chmod-setgid',
+  ) as HTMLInputElement;
+  const stickyCheckbox = document.getElementById(
+    'chmod-sticky',
+  ) as HTMLInputElement;
+
+  const octalInput = document.getElementById(
+    'chmod-octal-input',
+  ) as HTMLInputElement;
+  const symbolicInput = document.getElementById(
+    'chmod-symbolic-input',
+  ) as HTMLInputElement;
+  const commandOutput = document.getElementById(
+    'chmod-command-output',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('chmod-error')!;
+  const statusEl = document.getElementById('chmod-status')!;
+  const copyContainer = octalInput.closest('[data-copied]') as HTMLElement;
+
+  const copied = copyContainer.dataset.copied ?? '';
+  const copyFailed = copyContainer.dataset.copyFailed ?? '';
+  const sampleFileName = copyContainer.dataset.sampleFileName ?? '';
+  const errorInvalidOctal = errorEl.dataset.errorInvalidOctal ?? '';
+  const errorInvalidSymbolic = errorEl.dataset.errorInvalidSymbolic ?? '';
+
+  function readPermissionsFromCheckboxes(): ChmodPermissions {
+    return {
+      owner: {
+        read: checkbox('owner', 'read').checked,
+        write: checkbox('owner', 'write').checked,
+        execute: checkbox('owner', 'execute').checked,
+      },
+      group: {
+        read: checkbox('group', 'read').checked,
+        write: checkbox('group', 'write').checked,
+        execute: checkbox('group', 'execute').checked,
+      },
+      other: {
+        read: checkbox('other', 'read').checked,
+        write: checkbox('other', 'write').checked,
+        execute: checkbox('other', 'execute').checked,
+      },
+      setuid: setuidCheckbox.checked,
+      setgid: setgidCheckbox.checked,
+      sticky: stickyCheckbox.checked,
+    };
+  }
+
+  function applyPermissionsToCheckboxes(permissions: ChmodPermissions) {
+    for (const subject of subjects) {
+      for (const kind of kinds) {
+        checkbox(subject, kind).checked = permissions[subject][kind];
+      }
+    }
+    setuidCheckbox.checked = permissions.setuid;
+    setgidCheckbox.checked = permissions.setgid;
+    stickyCheckbox.checked = permissions.sticky;
+  }
+
+  type Source = 'checkbox' | 'octal' | 'symbolic' | 'init';
+
+  function render(permissions: ChmodPermissions, source: Source) {
+    errorEl.textContent = '';
+    if (source !== 'octal') octalInput.value = permissionsToOctal(permissions);
+    if (source !== 'symbolic')
+      symbolicInput.value = permissionsToSymbolic(permissions);
+    if (source !== 'checkbox') applyPermissionsToCheckboxes(permissions);
+    commandOutput.value = permissionsToChmodCommand(
+      permissions,
+      sampleFileName,
+    );
+  }
+
+  for (const subject of subjects) {
+    for (const kind of kinds) {
+      checkbox(subject, kind).addEventListener('change', () => {
+        statusEl.textContent = '';
+        render(readPermissionsFromCheckboxes(), 'checkbox');
+      });
+    }
+  }
+  for (const el of [setuidCheckbox, setgidCheckbox, stickyCheckbox]) {
+    el.addEventListener('change', () => {
+      statusEl.textContent = '';
+      render(readPermissionsFromCheckboxes(), 'checkbox');
+    });
+  }
+
+  octalInput.addEventListener('input', () => {
+    statusEl.textContent = '';
+    if (octalInput.value.trim() === '') {
+      errorEl.textContent = '';
+      return;
+    }
+    const permissions = octalToPermissions(octalInput.value);
+    if (!permissions) {
+      errorEl.textContent = errorInvalidOctal;
+      return;
+    }
+    render(permissions, 'octal');
+  });
+
+  symbolicInput.addEventListener('input', () => {
+    statusEl.textContent = '';
+    if (symbolicInput.value.trim() === '') {
+      errorEl.textContent = '';
+      return;
+    }
+    const permissions = symbolicToPermissions(symbolicInput.value);
+    if (!permissions) {
+      errorEl.textContent = errorInvalidSymbolic;
+      return;
+    }
+    render(permissions, 'symbolic');
+  });
+
+  const copyButtons =
+    document.querySelectorAll<HTMLButtonElement>('[data-copy-target]');
+  copyButtons.forEach((button) => {
+    button.addEventListener('click', async () => {
+      const targetId = button.dataset.copyTarget!;
+      const target = document.getElementById(targetId) as HTMLInputElement;
+      if (!target.value) return;
+      try {
+        await navigator.clipboard.writeText(target.value);
+        statusEl.textContent = copied;
+      } catch {
+        statusEl.textContent = copyFailed;
+      }
+    });
+  });
+
+  render(octalToPermissions('755')!, 'init');
+</script>

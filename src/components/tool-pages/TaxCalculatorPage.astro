@@ -1,0 +1,515 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { taxCalculatorContent } from '../../i18n/tools/tax-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = taxCalculatorContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error-tax={t.errorTax}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.section1Heading}</h2>
+
+    <div class="mb-3">
+      <span
+        id="tax-calc-mode-label"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.modeLegend}
+      </span>
+      <div
+        class="flex flex-wrap gap-3"
+        role="radiogroup"
+        aria-labelledby="tax-calc-mode-label"
+      >
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="tax-calc-mode" value="exclusive" checked />
+          {t.modeExclusive}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="tax-calc-mode" value="inclusive" />
+          {t.modeInclusive}
+        </label>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <span
+        id="tax-calc-rate-label"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.rateLegend}
+      </span>
+      <div
+        class="flex flex-wrap items-center gap-3"
+        role="radiogroup"
+        aria-labelledby="tax-calc-rate-label"
+      >
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="tax-calc-rate" value="10" checked />
+          {t.rateStandard}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="tax-calc-rate" value="8" />
+          {t.rateReduced}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="tax-calc-rate" value="custom" />
+          {t.rateCustom}
+        </label>
+        <input
+          id="tax-calc-rate-custom"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="0.1"
+          placeholder={t.rateCustomPlaceholder}
+          disabled
+          class="h-9 w-20 rounded-lg border border-gray-300 px-2 text-sm focus:border-blue-400 focus:outline-none disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        />
+        <span class="text-sm text-gray-600 dark:text-gray-400">%</span>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label
+          for="tax-calc-amount"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.amountLabel}
+        </label>
+        <input
+          id="tax-calc-amount"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          placeholder={t.amountPlaceholder}
+          class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <span
+          id="tax-calc-rounding-label"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.roundingLegend}
+        </span>
+        <div
+          class="flex flex-wrap gap-3"
+          role="radiogroup"
+          aria-labelledby="tax-calc-rounding-label"
+        >
+          <label class="flex items-center gap-1 text-sm">
+            <input
+              type="radio"
+              name="tax-calc-rounding"
+              value="floor"
+              checked
+            />
+            {t.roundingFloor}
+          </label>
+          <label class="flex items-center gap-1 text-sm">
+            <input type="radio" name="tax-calc-rounding" value="round" />
+            {t.roundingRound}
+          </label>
+          <label class="flex items-center gap-1 text-sm">
+            <input type="radio" name="tax-calc-rounding" value="ceil" />
+            {t.roundingCeil}
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <p
+      id="tax-calc-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl
+      id="tax-calc-results"
+      class="mt-4 hidden grid grid-cols-1 gap-3 sm:grid-cols-3"
+      aria-live="polite"
+    >
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultExcludedLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="tax-calc-result-excluded"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultTaxLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="tax-calc-result-tax"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultIncludedLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="tax-calc-result-included"></dd>
+      </div>
+    </dl>
+  </section>
+
+  <section
+    class="mt-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-error-discount={t.errorDiscount}
+    data-discount-type-percent={t.discountTypePercent}
+    data-discount-type-amount={t.discountTypeAmount}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.section2Heading}</h2>
+
+    <div class="mb-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label
+          for="discount-calc-original"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.originalPriceLabel}
+        </label>
+        <input
+          id="discount-calc-original"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          placeholder={t.originalPricePlaceholder}
+          class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <span
+          id="discount-calc-type-label"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.discountTypeLegend}
+        </span>
+        <div
+          class="flex flex-wrap gap-3"
+          role="radiogroup"
+          aria-labelledby="discount-calc-type-label"
+        >
+          <label class="flex items-center gap-1 text-sm">
+            <input
+              type="radio"
+              name="discount-calc-type"
+              value="percent"
+              checked
+            />
+            {t.discountTypePercent}
+          </label>
+          <label class="flex items-center gap-1 text-sm">
+            <input type="radio" name="discount-calc-type" value="amount" />
+            {t.discountTypeAmount}
+          </label>
+        </div>
+      </div>
+      <div>
+        <label
+          for="discount-calc-value"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.discountValueLabel}
+        </label>
+        <input
+          id="discount-calc-value"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          placeholder={t.discountValuePlaceholder}
+          class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <span
+          id="discount-calc-rounding-label"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.discountRoundingLegend}
+        </span>
+        <div
+          class="flex flex-wrap gap-3"
+          role="radiogroup"
+          aria-labelledby="discount-calc-rounding-label"
+        >
+          <label class="flex items-center gap-1 text-sm">
+            <input
+              type="radio"
+              name="discount-calc-rounding"
+              value="floor"
+              checked
+            />
+            {t.roundingFloor}
+          </label>
+          <label class="flex items-center gap-1 text-sm">
+            <input type="radio" name="discount-calc-rounding" value="round" />
+            {t.roundingRound}
+          </label>
+          <label class="flex items-center gap-1 text-sm">
+            <input type="radio" name="discount-calc-rounding" value="ceil" />
+            {t.roundingCeil}
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <p
+      id="discount-calc-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl
+      id="discount-calc-results"
+      class="mt-4 hidden grid grid-cols-1 gap-3 sm:grid-cols-3"
+      aria-live="polite"
+    >
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultDiscountAmountLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="discount-calc-result-amount"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultDiscountPriceLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="discount-calc-result-price"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultDiscountRateLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="discount-calc-result-rate"></dd>
+      </div>
+    </dl>
+  </section>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    calculateDiscount,
+    calculateTax,
+    type DiscountType,
+    type RoundingMode,
+  } from '../../lib/tools/tax-calculator';
+
+  const taxSection = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = taxSection.dataset.numberLocale ?? 'en-US';
+  const errorTax = taxSection.dataset.errorTax ?? '';
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const percent = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 2,
+  });
+
+  // --- 1. 税込/税抜金額の計算 ---
+
+  const amountInput = document.getElementById(
+    'tax-calc-amount',
+  ) as HTMLInputElement;
+  const modeInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="tax-calc-mode"]',
+  );
+  const rateInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="tax-calc-rate"]',
+  );
+  const rateCustomInput = document.getElementById(
+    'tax-calc-rate-custom',
+  ) as HTMLInputElement;
+  const roundingInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="tax-calc-rounding"]',
+  );
+
+  const taxErrorEl = document.getElementById('tax-calc-error')!;
+  const taxResultsEl = document.getElementById('tax-calc-results')!;
+  const resultExcludedEl = document.getElementById('tax-calc-result-excluded')!;
+  const resultTaxEl = document.getElementById('tax-calc-result-tax')!;
+  const resultIncludedEl = document.getElementById('tax-calc-result-included')!;
+
+  function selectedMode(): boolean {
+    return (
+      Array.from(modeInputs).find((el) => el.checked)?.value === 'inclusive'
+    );
+  }
+
+  function selectedTaxRounding(): RoundingMode {
+    return (
+      (Array.from(roundingInputs).find((el) => el.checked)
+        ?.value as RoundingMode) ?? 'floor'
+    );
+  }
+
+  function selectedTaxRate(): number {
+    const selected = Array.from(rateInputs).find((el) => el.checked);
+    if (selected?.value === 'custom') return Number(rateCustomInput.value);
+    return Number(selected?.value ?? 10);
+  }
+
+  function renderTax() {
+    taxErrorEl.textContent = '';
+    taxResultsEl.classList.add('hidden');
+
+    if (amountInput.value.trim() === '') return;
+
+    const result = calculateTax({
+      amount: Number(amountInput.value),
+      taxRatePercent: selectedTaxRate(),
+      priceIncludesTax: selectedMode(),
+      rounding: selectedTaxRounding(),
+    });
+
+    if (result === null) {
+      taxErrorEl.textContent = errorTax;
+      return;
+    }
+
+    resultExcludedEl.textContent = yen.format(result.taxExcludedAmount);
+    resultTaxEl.textContent = yen.format(result.taxAmount);
+    resultIncludedEl.textContent = yen.format(result.taxIncludedAmount);
+    taxResultsEl.classList.remove('hidden');
+  }
+
+  amountInput.addEventListener('input', renderTax);
+  rateCustomInput.addEventListener('input', renderTax);
+  modeInputs.forEach((el) => el.addEventListener('change', renderTax));
+  roundingInputs.forEach((el) => el.addEventListener('change', renderTax));
+  rateInputs.forEach((el) =>
+    el.addEventListener('change', () => {
+      rateCustomInput.disabled =
+        Array.from(rateInputs).find((r) => r.checked)?.value !== 'custom';
+      renderTax();
+    }),
+  );
+
+  // --- 2. 割引後の価格計算 ---
+
+  const discountSection = document.querySelector<HTMLElement>(
+    'section[data-error-discount]',
+  )!;
+  const errorDiscount = discountSection.dataset.errorDiscount ?? '';
+  const discountTypePercentLabel =
+    discountSection.dataset.discountTypePercent ?? '';
+  const discountTypeAmountLabel =
+    discountSection.dataset.discountTypeAmount ?? '';
+
+  const originalInput = document.getElementById(
+    'discount-calc-original',
+  ) as HTMLInputElement;
+  const discountTypeInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="discount-calc-type"]',
+  );
+  const discountValueInput = document.getElementById(
+    'discount-calc-value',
+  ) as HTMLInputElement;
+  const discountValueLabel = document.querySelector(
+    'label[for="discount-calc-value"]',
+  )!;
+  const discountRoundingInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="discount-calc-rounding"]',
+  );
+
+  const discountErrorEl = document.getElementById('discount-calc-error')!;
+  const discountResultsEl = document.getElementById('discount-calc-results')!;
+  const resultDiscountAmountEl = document.getElementById(
+    'discount-calc-result-amount',
+  )!;
+  const resultDiscountPriceEl = document.getElementById(
+    'discount-calc-result-price',
+  )!;
+  const resultDiscountRateEl = document.getElementById(
+    'discount-calc-result-rate',
+  )!;
+
+  function selectedDiscountType(): DiscountType {
+    return (
+      (Array.from(discountTypeInputs).find((el) => el.checked)
+        ?.value as DiscountType) ?? 'percent'
+    );
+  }
+
+  function selectedDiscountRounding(): RoundingMode {
+    return (
+      (Array.from(discountRoundingInputs).find((el) => el.checked)
+        ?.value as RoundingMode) ?? 'floor'
+    );
+  }
+
+  function renderDiscount() {
+    discountErrorEl.textContent = '';
+    discountResultsEl.classList.add('hidden');
+
+    if (
+      originalInput.value.trim() === '' ||
+      discountValueInput.value.trim() === ''
+    )
+      return;
+
+    const result = calculateDiscount({
+      originalPrice: Number(originalInput.value),
+      discountType: selectedDiscountType(),
+      discountValue: Number(discountValueInput.value),
+      rounding: selectedDiscountRounding(),
+    });
+
+    if (result === null) {
+      discountErrorEl.textContent = errorDiscount;
+      return;
+    }
+
+    resultDiscountAmountEl.textContent = yen.format(result.discountAmount);
+    resultDiscountPriceEl.textContent = yen.format(result.discountedPrice);
+    resultDiscountRateEl.textContent = `${percent.format(result.discountRatePercent)}%`;
+    discountResultsEl.classList.remove('hidden');
+  }
+
+  originalInput.addEventListener('input', renderDiscount);
+  discountValueInput.addEventListener('input', renderDiscount);
+  discountTypeInputs.forEach((el) =>
+    el.addEventListener('change', () => {
+      discountValueLabel.textContent =
+        selectedDiscountType() === 'percent'
+          ? discountTypePercentLabel
+          : discountTypeAmountLabel;
+      renderDiscount();
+    }),
+  );
+  discountRoundingInputs.forEach((el) =>
+    el.addEventListener('change', renderDiscount),
+  );
+
+  amountInput.value = '1000';
+  originalInput.value = '5000';
+  discountValueInput.value = '20';
+  renderTax();
+  renderDiscount();
+</script>

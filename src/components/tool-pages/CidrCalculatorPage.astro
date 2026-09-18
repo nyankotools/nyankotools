@@ -1,0 +1,210 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { cidrCalculatorContent } from '../../i18n/tools/cidr-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cidrCalculatorContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div>
+    <label
+      for="cidr-input"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.inputLabel}
+    </label>
+    <input
+      id="cidr-input"
+      type="text"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+      class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+    />
+  </div>
+
+  <p
+    id="cidr-error"
+    data-error-message={t.errorMessage}
+    class="mt-2 text-sm text-red-600 dark:text-red-400"
+    aria-live="polite"
+  ></p>
+
+  <div
+    id="cidr-result"
+    class="mt-6"
+    data-clipboard-ip-address={t.clipboardIpAddress}
+    data-clipboard-network-address={t.clipboardNetworkAddress}
+    data-clipboard-broadcast-address={t.clipboardBroadcastAddress}
+    data-clipboard-subnet-mask={t.clipboardSubnetMask}
+    data-clipboard-wildcard-mask={t.clipboardWildcardMask}
+    data-clipboard-first-host={t.clipboardFirstHost}
+    data-clipboard-last-host={t.clipboardLastHost}
+    data-clipboard-usable-host-count={t.clipboardUsableHostCount}
+    data-clipboard-total-address-count={t.clipboardTotalAddressCount}
+    data-empty-value-placeholder={t.emptyValuePlaceholder}
+    data-number-locale={t.numberLocale}
+  >
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[420px] border-collapse text-sm">
+        <tbody>
+          {t.fieldRows.map(({ id, label }) => (
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                {label}
+              </td>
+              <td
+                id={`cidr-${id}`}
+                class="py-2 text-right font-mono text-gray-900 dark:text-gray-100"
+              />
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <button
+      type="button"
+      id="cidr-copy-button"
+      class="mt-4 min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      {t.copyResult}
+    </button>
+    <span
+      id="cidr-status"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ml-2 text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    calculateCidr,
+    type CidrInfo,
+  } from '../../lib/tools/cidr-calculator';
+
+  const input = document.getElementById('cidr-input') as HTMLInputElement;
+  const errorEl = document.getElementById('cidr-error')!;
+  const resultEl = document.getElementById('cidr-result')!;
+  const statusEl = document.getElementById('cidr-status')!;
+  const copyButton = document.getElementById(
+    'cidr-copy-button',
+  ) as HTMLButtonElement;
+
+  const numberLocale = resultEl.dataset.numberLocale ?? 'ja-JP';
+  const emptyValuePlaceholder = resultEl.dataset.emptyValuePlaceholder ?? '-';
+  const clipboardLabels = {
+    ipAddress: resultEl.dataset.clipboardIpAddress ?? '',
+    networkAddress: resultEl.dataset.clipboardNetworkAddress ?? '',
+    broadcastAddress: resultEl.dataset.clipboardBroadcastAddress ?? '',
+    subnetMask: resultEl.dataset.clipboardSubnetMask ?? '',
+    wildcardMask: resultEl.dataset.clipboardWildcardMask ?? '',
+    firstHost: resultEl.dataset.clipboardFirstHost ?? '',
+    lastHost: resultEl.dataset.clipboardLastHost ?? '',
+    usableHostCount: resultEl.dataset.clipboardUsableHostCount ?? '',
+    totalAddressCount: resultEl.dataset.clipboardTotalAddressCount ?? '',
+  };
+
+  type FieldId =
+    | 'network-address'
+    | 'broadcast-address'
+    | 'subnet-mask'
+    | 'wildcard-mask'
+    | 'first-host'
+    | 'last-host'
+    | 'usable-host-count'
+    | 'total-address-count';
+
+  function fieldEl(id: FieldId): HTMLElement {
+    return document.getElementById(`cidr-${id}`)!;
+  }
+
+  function render(result: CidrInfo) {
+    fieldEl('network-address').textContent = result.networkAddress;
+    fieldEl('broadcast-address').textContent = result.broadcastAddress;
+    fieldEl('subnet-mask').textContent = result.subnetMask;
+    fieldEl('wildcard-mask').textContent = result.wildcardMask;
+    fieldEl('first-host').textContent =
+      result.firstUsableHost ?? emptyValuePlaceholder;
+    fieldEl('last-host').textContent =
+      result.lastUsableHost ?? emptyValuePlaceholder;
+    fieldEl('usable-host-count').textContent =
+      result.usableHostCount.toLocaleString(numberLocale);
+    fieldEl('total-address-count').textContent =
+      result.totalAddressCount.toLocaleString(numberLocale);
+    resultEl.classList.remove('hidden');
+  }
+
+  function toClipboardText(result: CidrInfo): string {
+    return [
+      `${clipboardLabels.ipAddress}: ${result.ipAddress}/${result.prefixLength}`,
+      `${clipboardLabels.networkAddress}: ${result.networkAddress}`,
+      `${clipboardLabels.broadcastAddress}: ${result.broadcastAddress}`,
+      `${clipboardLabels.subnetMask}: ${result.subnetMask}`,
+      `${clipboardLabels.wildcardMask}: ${result.wildcardMask}`,
+      `${clipboardLabels.firstHost}: ${result.firstUsableHost ?? emptyValuePlaceholder}`,
+      `${clipboardLabels.lastHost}: ${result.lastUsableHost ?? emptyValuePlaceholder}`,
+      `${clipboardLabels.usableHostCount}: ${result.usableHostCount}`,
+      `${clipboardLabels.totalAddressCount}: ${result.totalAddressCount}`,
+    ].join('\n');
+  }
+
+  let lastResult: CidrInfo | null = null;
+
+  function update() {
+    statusEl.textContent = '';
+    const value = input.value.trim();
+    if (value === '') {
+      errorEl.textContent = '';
+      resultEl.classList.add('hidden');
+      lastResult = null;
+      return;
+    }
+    const result = calculateCidr(value);
+    if (!result) {
+      errorEl.textContent = errorEl.dataset.errorMessage ?? '';
+      resultEl.classList.add('hidden');
+      lastResult = null;
+      return;
+    }
+    errorEl.textContent = '';
+    lastResult = result;
+    render(result);
+  }
+
+  input.addEventListener('input', update);
+
+  copyButton.addEventListener('click', async () => {
+    if (!lastResult) return;
+    try {
+      await navigator.clipboard.writeText(toClipboardText(lastResult));
+      statusEl.textContent = statusEl.dataset.copied ?? '';
+    } catch {
+      statusEl.textContent = statusEl.dataset.copyFailed ?? '';
+    }
+  });
+
+  input.value = '192.168.1.10/24';
+  update();
+</script>

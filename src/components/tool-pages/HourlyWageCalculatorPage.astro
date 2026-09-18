@@ -1,0 +1,446 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { hourlyWageCalculatorContent } from '../../i18n/tools/hourly-wage-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = hourlyWageCalculatorContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-overtime-category-defaults={JSON.stringify(t.overtimeCategoryDefaults)}
+    data-aria-hours-template={t.ariaHoursTemplate}
+    data-aria-rate-template={t.ariaRateTemplate}
+    data-error-conversion={t.errorConversion}
+    data-error-overtime={t.errorOvertime}
+    data-hours-unit={t.hoursUnit}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.section1Heading}</h2>
+
+    <div class="mb-3">
+      <span
+        id="wage-calc-unit-label"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.unitLegend}
+      </span>
+      <div
+        class="flex flex-wrap gap-3"
+        role="radiogroup"
+        aria-labelledby="wage-calc-unit-label"
+      >
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="wage-calc-unit" value="hourly" checked />
+          {t.unitHourly}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="wage-calc-unit" value="daily" />
+          {t.unitDaily}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="wage-calc-unit" value="monthly" />
+          {t.unitMonthly}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="wage-calc-unit" value="annual" />
+          {t.unitAnnual}
+        </label>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label
+          for="wage-calc-amount"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.amountLabel}
+        </label>
+        <input
+          id="wage-calc-amount"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          placeholder={t.amountPlaceholder}
+          class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label
+          for="wage-calc-hours-per-day"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.hoursPerDayLabel}
+        </label>
+        <div class="flex items-center gap-1">
+          <input
+            id="wage-calc-hours-per-day"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="0.5"
+            placeholder={t.hoursPerDayPlaceholder}
+            class="h-11 w-20 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.hoursUnit}
+          </span>
+        </div>
+      </div>
+      <div>
+        <label
+          for="wage-calc-days-per-month"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.daysPerMonthLabel}
+        </label>
+        <div class="flex items-center gap-1">
+          <input
+            id="wage-calc-days-per-month"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="0.5"
+            placeholder={t.daysPerMonthPlaceholder}
+            class="h-11 w-20 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.daysUnit}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p
+      id="wage-calc-conversion-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl
+      id="wage-calc-conversion-results"
+      class="mt-4 hidden grid grid-cols-2 gap-3 sm:grid-cols-4"
+      aria-live="polite"
+    >
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultHourlyLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="wage-calc-result-hourly"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultDailyLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="wage-calc-result-daily"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultMonthlyLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="wage-calc-result-monthly"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultAnnualLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="wage-calc-result-annual"></dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="mt-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <h2 class="mb-3 text-lg font-bold">{t.section2Heading}</h2>
+
+    <div class="mb-4">
+      <label
+        for="wage-calc-base-hourly"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.baseHourlyLabel}
+      </label>
+      <input
+        id="wage-calc-base-hourly"
+        type="number"
+        inputmode="decimal"
+        min="0"
+        placeholder={t.amountPlaceholder}
+        class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      />
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-500">
+        {t.baseHourlyNote}
+      </p>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[560px] text-sm">
+        <thead>
+          <tr class="border-b border-gray-200 text-left text-gray-600 dark:border-gray-700 dark:text-gray-400">
+            <th class="py-2 pr-2 font-medium">{t.columnCategory}</th>
+            <th class="py-2 pr-2 font-medium">{t.columnHours}</th>
+            <th class="py-2 pr-2 font-medium">{t.columnRate}</th>
+            <th class="py-2 pr-2 font-medium">{t.columnPremiumPay}</th>
+          </tr>
+        </thead>
+        <tbody id="wage-calc-overtime-rows"></tbody>
+      </table>
+    </div>
+
+    <p
+      id="wage-calc-overtime-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl
+      id="wage-calc-overtime-results"
+      class="mt-4 hidden space-y-1"
+      aria-live="polite"
+    >
+      <div class="flex justify-between border-t border-gray-200 pt-2 dark:border-gray-700">
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.totalPremiumLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="wage-calc-total-premium"></dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.totalPayLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="wage-calc-total-pay"></dd>
+      </div>
+    </dl>
+  </section>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    calculateOvertimePay,
+    convertWage,
+    type WageUnit,
+  } from '../../lib/tools/hourly-wage-calculator';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
+  const OVERTIME_CATEGORY_DEFAULTS: { label: string; ratePercent: number }[] =
+    JSON.parse(configEl.dataset.overtimeCategoryDefaults ?? '[]');
+  const ariaHoursTemplate = configEl.dataset.ariaHoursTemplate ?? '';
+  const ariaRateTemplate = configEl.dataset.ariaRateTemplate ?? '';
+  const errorConversion = configEl.dataset.errorConversion ?? '';
+  const errorOvertime = configEl.dataset.errorOvertime ?? '';
+  const hoursUnit = configEl.dataset.hoursUnit ?? '';
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+
+  // --- 1. 給与換算 ---
+
+  const amountInput = document.getElementById(
+    'wage-calc-amount',
+  ) as HTMLInputElement;
+  const hoursPerDayInput = document.getElementById(
+    'wage-calc-hours-per-day',
+  ) as HTMLInputElement;
+  const daysPerMonthInput = document.getElementById(
+    'wage-calc-days-per-month',
+  ) as HTMLInputElement;
+  const unitInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="wage-calc-unit"]',
+  );
+
+  const conversionErrorEl = document.getElementById(
+    'wage-calc-conversion-error',
+  )!;
+  const conversionResultsEl = document.getElementById(
+    'wage-calc-conversion-results',
+  )!;
+  const resultHourlyEl = document.getElementById('wage-calc-result-hourly')!;
+  const resultDailyEl = document.getElementById('wage-calc-result-daily')!;
+  const resultMonthlyEl = document.getElementById('wage-calc-result-monthly')!;
+  const resultAnnualEl = document.getElementById('wage-calc-result-annual')!;
+
+  const baseHourlyInput = document.getElementById(
+    'wage-calc-base-hourly',
+  ) as HTMLInputElement;
+  let baseHourlyManuallyEdited = false;
+
+  function selectedUnit(): WageUnit {
+    return (
+      (Array.from(unitInputs).find((el) => el.checked)?.value as WageUnit) ??
+      'hourly'
+    );
+  }
+
+  function renderConversion() {
+    conversionErrorEl.textContent = '';
+    conversionResultsEl.classList.add('hidden');
+
+    if (amountInput.value.trim() === '') return;
+
+    const result = convertWage({
+      amount: Number(amountInput.value),
+      unit: selectedUnit(),
+      hoursPerDay: Number(hoursPerDayInput.value),
+      daysPerMonth: Number(daysPerMonthInput.value),
+    });
+
+    if (result === null) {
+      conversionErrorEl.textContent = errorConversion;
+      return;
+    }
+
+    resultHourlyEl.textContent = yen.format(result.hourly);
+    resultDailyEl.textContent = yen.format(result.daily);
+    resultMonthlyEl.textContent = yen.format(result.monthly);
+    resultAnnualEl.textContent = yen.format(result.annual);
+    conversionResultsEl.classList.remove('hidden');
+
+    if (!baseHourlyManuallyEdited) {
+      baseHourlyInput.value = String(Math.round(result.hourly));
+      renderOvertime();
+    }
+  }
+
+  amountInput.addEventListener('input', renderConversion);
+  hoursPerDayInput.addEventListener('input', renderConversion);
+  daysPerMonthInput.addEventListener('input', renderConversion);
+  unitInputs.forEach((el) => el.addEventListener('change', renderConversion));
+
+  // --- 2. 割増賃金シミュレーター ---
+
+  const overtimeRowsEl = document.getElementById('wage-calc-overtime-rows')!;
+  const overtimeErrorEl = document.getElementById('wage-calc-overtime-error')!;
+  const overtimeResultsEl = document.getElementById(
+    'wage-calc-overtime-results',
+  )!;
+  const totalPremiumEl = document.getElementById('wage-calc-total-premium')!;
+  const totalPayEl = document.getElementById('wage-calc-total-pay')!;
+
+  const hoursInputs: HTMLInputElement[] = [];
+  const rateInputs: HTMLInputElement[] = [];
+
+  OVERTIME_CATEGORY_DEFAULTS.forEach((category, index) => {
+    const row = document.createElement('tr');
+    row.className = 'border-b border-gray-100 dark:border-gray-800';
+    const ariaHours = ariaHoursTemplate.replace('{label}', category.label);
+    const ariaRate = ariaRateTemplate.replace('{label}', category.label);
+    row.innerHTML = `
+      <td class="py-2 pr-2">${category.label}</td>
+      <td class="py-2 pr-2">
+        <div class="flex items-center gap-1">
+          <input
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="0.5"
+            value="0"
+            data-role="hours"
+            aria-label="${ariaHours}"
+            class="h-9 w-20 rounded-lg border border-gray-300 px-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          />
+          <span class="text-xs text-gray-500 dark:text-gray-500">${hoursUnit}</span>
+        </div>
+      </td>
+      <td class="py-2 pr-2">
+        <div class="flex items-center gap-1">
+          <input
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="1"
+            value="${category.ratePercent}"
+            data-role="rate"
+            aria-label="${ariaRate}"
+            class="h-9 w-16 rounded-lg border border-gray-300 px-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          />
+          <span class="text-xs text-gray-500 dark:text-gray-500">%</span>
+        </div>
+      </td>
+      <td class="py-2 pr-2 font-medium" data-role="premium"></td>
+    `;
+    overtimeRowsEl.appendChild(row);
+
+    const hoursInput = row.querySelector(
+      '[data-role="hours"]',
+    ) as HTMLInputElement;
+    const rateInput = row.querySelector(
+      '[data-role="rate"]',
+    ) as HTMLInputElement;
+    hoursInputs[index] = hoursInput;
+    rateInputs[index] = rateInput;
+
+    hoursInput.addEventListener('input', renderOvertime);
+    rateInput.addEventListener('input', renderOvertime);
+  });
+
+  function renderOvertime() {
+    overtimeErrorEl.textContent = '';
+    overtimeResultsEl.classList.add('hidden');
+
+    if (baseHourlyInput.value.trim() === '') return;
+
+    const categories = OVERTIME_CATEGORY_DEFAULTS.map((category, index) => ({
+      label: category.label,
+      hours: Number(hoursInputs[index].value),
+      ratePercent: Number(rateInputs[index].value),
+    }));
+
+    const result = calculateOvertimePay(
+      Number(baseHourlyInput.value),
+      categories,
+    );
+
+    if (result === null) {
+      overtimeErrorEl.textContent = errorOvertime;
+      const cells = overtimeRowsEl.querySelectorAll('[data-role="premium"]');
+      cells.forEach((cell) => (cell.textContent = ''));
+      return;
+    }
+
+    const rows = overtimeRowsEl.querySelectorAll('tr');
+    result.categories.forEach((category, index) => {
+      const cell = rows[index].querySelector('[data-role="premium"]')!;
+      cell.textContent = yen.format(category.premiumPay);
+    });
+
+    totalPremiumEl.textContent = yen.format(result.totalPremiumPay);
+    totalPayEl.textContent = yen.format(result.totalPay);
+    overtimeResultsEl.classList.remove('hidden');
+  }
+
+  baseHourlyInput.addEventListener('input', () => {
+    baseHourlyManuallyEdited = true;
+    renderOvertime();
+  });
+
+  hoursPerDayInput.value = '8';
+  daysPerMonthInput.value = '20';
+  amountInput.value = '1200';
+  renderConversion();
+  renderOvertime();
+</script>

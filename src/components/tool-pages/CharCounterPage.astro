@@ -1,0 +1,95 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { charCounterContent } from '../../i18n/tools/char-counter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = charCounterContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400">{t.intro}</p>
+
+  <textarea
+    id="char-counter-input"
+    class="h-64 w-full max-w-2xl rounded-lg border border-gray-300 p-4 focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+    placeholder={t.inputPlaceholder}
+  ></textarea>
+
+  <dl class="mt-4 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
+    <div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900">
+      <dt class="text-xs text-gray-500 dark:text-gray-400">
+        {t.statCharacters}
+      </dt>
+      <dd id="char-counter-characters" class="text-xl font-semibold">
+        0
+      </dd>
+    </div>
+    <div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900">
+      <dt class="text-xs text-gray-500 dark:text-gray-400">
+        {t.statCharactersNoSpaces}
+      </dt>
+      <dd id="char-counter-characters-no-spaces" class="text-xl font-semibold">
+        0
+      </dd>
+    </div>
+    <div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900">
+      <dt class="text-xs text-gray-500 dark:text-gray-400">{t.statWords}</dt>
+      <dd id="char-counter-words" class="text-xl font-semibold">
+        0
+      </dd>
+    </div>
+    <div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900">
+      <dt class="text-xs text-gray-500 dark:text-gray-400">{t.statLines}</dt>
+      <dd id="char-counter-lines" class="text-xl font-semibold">
+        0
+      </dd>
+    </div>
+  </dl>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.relatedHeading}</h2>
+  <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">{t.relatedIntro}</p>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.relatedLinks.map((link) => (
+      <li>
+        <a
+          href={link.href}
+          class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+        >
+          {link.label}
+        </a>{' '}
+        — {link.description}
+      </li>
+    ))}
+  </ul>
+</Layout>
+
+<script>
+  import { countText } from '../../lib/tools/char-counter';
+
+  const input = document.getElementById(
+    'char-counter-input',
+  ) as HTMLTextAreaElement;
+  const charactersEl = document.getElementById('char-counter-characters')!;
+  const charactersNoSpacesEl = document.getElementById(
+    'char-counter-characters-no-spaces',
+  )!;
+  const wordsEl = document.getElementById('char-counter-words')!;
+  const linesEl = document.getElementById('char-counter-lines')!;
+
+  function update() {
+    const result = countText(input.value);
+    charactersEl.textContent = String(result.characters);
+    charactersNoSpacesEl.textContent = String(result.charactersNoSpaces);
+    wordsEl.textContent = String(result.words);
+    linesEl.textContent = String(result.lines);
+  }
+
+  input.addEventListener('input', update);
+  update();
+</script>

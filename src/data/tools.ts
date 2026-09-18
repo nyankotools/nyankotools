@@ -649,6 +649,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'text-case-converter',
+    translations: {
+      ja: {
+        name: 'テキストケース変換',
+        description:
+          '文字列をcamelCase・PascalCase・snake_case・kebab-caseなど9種類の命名規則に一括変換します。プログラミングの変数名・関数名の書き換えに便利。',
+        category: '変換',
+      },
+      en: {
+        name: 'Text Case Converter',
+        description:
+          'Converts text into 9 naming conventions at once, including camelCase, PascalCase, snake_case, and kebab-case. Handy for renaming variables and functions.',
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

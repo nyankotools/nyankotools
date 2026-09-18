@@ -1,0 +1,329 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { unixTimestampContent } from '../../i18n/tools/unix-timestamp';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = unixTimestampContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <section
+    class="mb-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <h2 class="mb-2 text-lg font-bold">{t.nowHeading}</h2>
+    <div class="flex flex-wrap items-center gap-3">
+      <span
+        id="unix-timestamp-now"
+        class="font-mono text-2xl tabular-nums"
+      ></span>
+      <button
+        type="button"
+        id="unix-timestamp-now-copy"
+        class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        {t.copyButton}
+      </button>
+    </div>
+    <p
+      id="unix-timestamp-now-local"
+      class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+  </section>
+
+  <section class="mb-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <h2 class="mb-3 text-lg font-bold">{t.timestampToDateHeading}</h2>
+    <div class="flex flex-wrap items-end gap-3">
+      <div class="min-w-0 flex-1">
+        <label
+          for="unix-timestamp-input"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.timestampLabel}
+        </label>
+        <input
+          id="unix-timestamp-input"
+          type="text"
+          inputmode="numeric"
+          placeholder={t.timestampPlaceholder}
+          spellcheck="false"
+          class="h-11 w-full rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label
+          for="unix-timestamp-unit"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.unitLabel}
+        </label>
+        <select
+          id="unix-timestamp-unit"
+          class="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        >
+          {t.unitOptions.map(({ value, label }) => (
+            <option value={value}>{label}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+    <p
+      id="unix-timestamp-error"
+      data-error-invalid={t.errorInvalidTimestamp}
+      data-error-cannot-convert={t.errorCannotConvert}
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl class="mt-4 space-y-2 text-sm">
+      <div class="flex flex-wrap items-center gap-2">
+        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">
+          {t.localTimeLabel}
+        </dt>
+        <dd id="unix-timestamp-local" class="font-mono"></dd>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">
+          {t.utcLabel}
+        </dt>
+        <dd id="unix-timestamp-utc" class="font-mono"></dd>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">
+          {t.isoLabel}
+        </dt>
+        <dd id="unix-timestamp-iso" class="font-mono"></dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <h2 class="mb-3 text-lg font-bold">{t.dateToTimestampHeading}</h2>
+    <div class="flex flex-wrap items-end gap-3">
+      <div class="min-w-0 flex-1">
+        <label
+          for="unix-timestamp-datetime"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.datetimeLabel}
+        </label>
+        <input
+          id="unix-timestamp-datetime"
+          type="datetime-local"
+          step="1"
+          class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        />
+      </div>
+      <button
+        type="button"
+        id="unix-timestamp-datetime-now"
+        class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        {t.useCurrentDatetime}
+      </button>
+    </div>
+
+    <dl class="mt-4 space-y-2 text-sm">
+      <div class="flex flex-wrap items-center gap-2">
+        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">
+          {t.secondsLabel}
+        </dt>
+        <dd id="unix-timestamp-result-seconds" class="font-mono"></dd>
+        <button
+          type="button"
+          data-copy-target="unix-timestamp-result-seconds"
+          class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          {t.copyButton}
+        </button>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">
+          {t.millisecondsLabel}
+        </dt>
+        <dd id="unix-timestamp-result-milliseconds" class="font-mono"></dd>
+        <button
+          type="button"
+          data-copy-target="unix-timestamp-result-milliseconds"
+          class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          {t.copyButton}
+        </button>
+      </div>
+    </dl>
+    <span
+      id="unix-timestamp-status"
+      class="mt-2 block text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </section>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    dateToTimestamp,
+    detectTimestampUnit,
+    formatDateTimeLocalValue,
+    parseDateTimeLocalValue,
+    parseTimestampInput,
+    timestampToDate,
+    type TimestampUnit,
+  } from '../../lib/tools/unix-timestamp';
+
+  const nowSection = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = nowSection.dataset.numberLocale ?? 'en-US';
+  const copied = nowSection.dataset.copied ?? '';
+  const copyFailed = nowSection.dataset.copyFailed ?? '';
+
+  const nowEl = document.getElementById('unix-timestamp-now')!;
+  const nowLocalEl = document.getElementById('unix-timestamp-now-local')!;
+  const nowCopyButton = document.getElementById(
+    'unix-timestamp-now-copy',
+  ) as HTMLButtonElement;
+
+  const input = document.getElementById(
+    'unix-timestamp-input',
+  ) as HTMLInputElement;
+  const unitSelect = document.getElementById(
+    'unix-timestamp-unit',
+  ) as HTMLSelectElement;
+  const errorEl = document.getElementById('unix-timestamp-error')!;
+  const errorInvalidTimestamp = errorEl.dataset.errorInvalid ?? '';
+  const errorCannotConvert = errorEl.dataset.errorCannotConvert ?? '';
+  const localEl = document.getElementById('unix-timestamp-local')!;
+  const utcEl = document.getElementById('unix-timestamp-utc')!;
+  const isoEl = document.getElementById('unix-timestamp-iso')!;
+
+  const datetimeInput = document.getElementById(
+    'unix-timestamp-datetime',
+  ) as HTMLInputElement;
+  const datetimeNowButton = document.getElementById(
+    'unix-timestamp-datetime-now',
+  ) as HTMLButtonElement;
+  const resultSecondsEl = document.getElementById(
+    'unix-timestamp-result-seconds',
+  )!;
+  const resultMillisecondsEl = document.getElementById(
+    'unix-timestamp-result-milliseconds',
+  )!;
+  const statusEl = document.getElementById('unix-timestamp-status')!;
+
+  const localFormatter = new Intl.DateTimeFormat(numberLocale, {
+    dateStyle: 'full',
+    timeStyle: 'medium',
+  });
+  const utcFormatter = new Intl.DateTimeFormat(numberLocale, {
+    dateStyle: 'full',
+    timeStyle: 'medium',
+    timeZone: 'UTC',
+  });
+
+  function updateNow() {
+    const now = new Date();
+    nowEl.textContent = String(dateToTimestamp(now).seconds);
+    nowLocalEl.textContent = localFormatter.format(now);
+  }
+  updateNow();
+  setInterval(updateNow, 1000);
+
+  nowCopyButton.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(nowEl.textContent ?? '');
+    } catch {
+      // クリップボードが使えない環境では何もしない
+    }
+  });
+
+  function renderTimestampToDate() {
+    errorEl.textContent = '';
+    localEl.textContent = '';
+    utcEl.textContent = '';
+    isoEl.textContent = '';
+
+    if (input.value.trim() === '') return;
+
+    const value = parseTimestampInput(input.value);
+    if (value === null) {
+      errorEl.textContent = errorInvalidTimestamp;
+      return;
+    }
+
+    const unitOption = unitSelect.value as TimestampUnit | 'auto';
+    const unit: TimestampUnit =
+      unitOption === 'auto' ? detectTimestampUnit(value) : unitOption;
+
+    const date = timestampToDate(value, unit);
+    if (!date) {
+      errorEl.textContent = errorCannotConvert;
+      return;
+    }
+
+    localEl.textContent = localFormatter.format(date);
+    utcEl.textContent = utcFormatter.format(date);
+    isoEl.textContent = date.toISOString();
+  }
+
+  input.addEventListener('input', renderTimestampToDate);
+  unitSelect.addEventListener('change', renderTimestampToDate);
+
+  function renderDateToTimestamp() {
+    statusEl.textContent = '';
+    resultSecondsEl.textContent = '';
+    resultMillisecondsEl.textContent = '';
+
+    const date = parseDateTimeLocalValue(datetimeInput.value);
+    if (!date) return;
+
+    const { seconds, milliseconds } = dateToTimestamp(date);
+    resultSecondsEl.textContent = String(seconds);
+    resultMillisecondsEl.textContent = String(milliseconds);
+  }
+
+  datetimeInput.addEventListener('input', renderDateToTimestamp);
+
+  datetimeNowButton.addEventListener('click', () => {
+    datetimeInput.value = formatDateTimeLocalValue(new Date());
+    renderDateToTimestamp();
+  });
+
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-copy-target]')
+    .forEach((button) => {
+      button.addEventListener('click', async () => {
+        const targetId = button.dataset.copyTarget!;
+        const target = document.getElementById(targetId);
+        if (!target?.textContent) return;
+        try {
+          await navigator.clipboard.writeText(target.textContent);
+          statusEl.textContent = copied;
+        } catch {
+          statusEl.textContent = copyFailed;
+        }
+      });
+    });
+
+  datetimeInput.value = formatDateTimeLocalValue(new Date());
+  renderDateToTimestamp();
+</script>

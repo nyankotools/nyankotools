@@ -47,7 +47,8 @@ tools: Read, Edit, Write, Glob, Grep, Bash
   - `/tools/<slug>/` に直接アクセスして正しく表示される（`<h1>` の文言など）
   - 主要な入力→出力のゴールデンパスが動作する
   - 新規ツールの場合、サイドバーからそのツールへ遷移できる
-- 初回実行でブラウザが無い場合は `pnpm exec playwright install chromium` を実行してから `pnpm run test:e2e` を実行する。
+- 初回実行でブラウザが無い場合は `pnpm exec playwright install chromium` を実行する。
+- 実行は対象ツールの spec ファイルのみに絞る（例: `pnpm exec playwright test e2e/<slug>.spec.ts`）。`pnpm run test:e2e`（全ツール分のフルスイート）はトークン消費が大きいため、呼び出し元から明示的に指示された場合のみ実行する。
 
 ## `adding-a-tool.md` チェックリストの確認（新規ツールの場合）
 

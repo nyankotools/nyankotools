@@ -1,0 +1,142 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { kanaConverterContent } from '../../i18n/tools/kana-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = kanaConverterContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div class="flex flex-wrap items-center gap-3">
+    <div
+      id="kana-converter-mode"
+      class="flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700"
+      role="group"
+      aria-label={t.directionLabel}
+    >
+      <button
+        type="button"
+        data-mode="toKatakana"
+        aria-pressed="true"
+        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      >
+        {t.modeToKatakana}
+      </button>
+      <button
+        type="button"
+        data-mode="toHiragana"
+        aria-pressed="false"
+        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      >
+        {t.modeToHiragana}
+      </button>
+    </div>
+    <button
+      id="kana-converter-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="kana-converter-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label
+        for="kana-converter-input"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="kana-converter-input"
+        class="h-64 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label
+        for="kana-converter-output"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="kana-converter-output"
+        readonly
+        class="h-64 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></textarea>
+    </div>
+  </div>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    convertKana,
+    type KanaDirection,
+  } from '../../lib/tools/kana-converter';
+
+  const input = document.getElementById(
+    'kana-converter-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'kana-converter-output',
+  ) as HTMLTextAreaElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#kana-converter-mode [data-mode]',
+  );
+  const copyButton = document.getElementById(
+    'kana-converter-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('kana-converter-status')!;
+
+  let direction: KanaDirection = 'toKatakana';
+
+  function convert() {
+    statusEl.textContent = '';
+    output.value = convertKana(input.value, direction);
+  }
+
+  input.addEventListener('input', convert);
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      direction = button.dataset.mode as KanaDirection;
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      statusEl.textContent = copyButton.dataset.copied ?? '';
+    } catch {
+      statusEl.textContent = copyButton.dataset.copyFailed ?? '';
+    }
+  });
+
+  convert();
+</script>

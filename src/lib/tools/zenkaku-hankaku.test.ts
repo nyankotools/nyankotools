@@ -44,6 +44,24 @@ describe('convertWidth toHalf', () => {
       'ABC！カナ　',
     );
   });
+
+  it('すべてのオプションを無効にすると何も変換しない', () => {
+    const options: ConversionOptions = {
+      alphanumeric: false,
+      symbol: false,
+      katakana: false,
+      space: false,
+    };
+    expect(convertWidth('ＡＢＣ！カナ　', 'toHalf', options)).toBe(
+      'ＡＢＣ！カナ　',
+    );
+  });
+
+  it('全角句読点・かぎ括弧・中黒はkatakanaオプションで半角に変換される', () => {
+    expect(convertWidth('「こんにちは、世界。」・', 'toHalf', allOn)).toBe(
+      '｢こんにちは､世界｡｣･',
+    );
+  });
 });
 
 describe('convertWidth toFull', () => {
@@ -63,6 +81,15 @@ describe('convertWidth toFull', () => {
 
   it('半角スペースを全角スペースに変換する', () => {
     expect(convertWidth('あ い', 'toFull', allOn)).toBe('あ　い');
+  });
+
+  it('空文字列は空文字列のまま変換される', () => {
+    expect(convertWidth('', 'toFull', allOn)).toBe('');
+    expect(convertWidth('', 'toHalf', allOn)).toBe('');
+  });
+
+  it('絵文字（サロゲートペア）は変換されずそのまま残る', () => {
+    expect(convertWidth('ＡＢＣ🐱', 'toHalf', allOn)).toBe('ABC🐱');
   });
 });
 

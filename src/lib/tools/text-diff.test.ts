@@ -59,6 +59,59 @@ describe('diffLines', () => {
       { type: 'equal', text: '', leftLine: 1, rightLine: 1 },
     ]);
   });
+
+  it('片方が空文字列の場合は全行がaddedまたはremovedになる', () => {
+    const result = diffLines('', 'a\nb');
+    expect(result).toEqual([
+      { type: 'removed', text: '', leftLine: 1, rightLine: null },
+      { type: 'added', text: 'a', leftLine: null, rightLine: 1 },
+      { type: 'added', text: 'b', leftLine: null, rightLine: 2 },
+    ]);
+  });
+
+  it('CRLFの改行コードは行末の\\rを含んだまま比較される（LF区切りのみに対応）', () => {
+    // 実装は split('\n') のみで行分割するため、CRLFの場合は各行末に \r が残る。
+    // そのため同じ内容でも改行コードがLFの側とCRLFの側は別の行として扱われる。
+    const result = diffLines('a\r\nb\r\n', 'a\nb\n');
+    expect(result).toEqual([
+      { type: 'removed', text: 'a\r', leftLine: 1, rightLine: null },
+      { type: 'removed', text: 'b\r', leftLine: 2, rightLine: null },
+      { type: 'added', text: 'a', leftLine: null, rightLine: 1 },
+      { type: 'added', text: 'b', leftLine: null, rightLine: 2 },
+      { type: 'equal', text: '', leftLine: 3, rightLine: 3 },
+    ]);
+  });
+
+  it('ignoreWhitespaceとignoreCaseを同時に指定すると両方の差を無視する', () => {
+    const result = diffLines('  Hello  ', 'hello', {
+      ignoreWhitespace: true,
+      ignoreCase: true,
+    });
+    expect(result).toEqual([
+      { type: 'equal', text: '  Hello  ', leftLine: 1, rightLine: 1 },
+    ]);
+  });
+
+  it('絵文字（サロゲートペア）を含む行も正しく比較する', () => {
+    const result = diffLines('猫🐱\n犬', '猫🐱\n犬🐶');
+    expect(result).toEqual([
+      { type: 'equal', text: '猫🐱', leftLine: 1, rightLine: 1 },
+      { type: 'removed', text: '犬', leftLine: 2, rightLine: null },
+      { type: 'added', text: '犬🐶', leftLine: null, rightLine: 2 },
+    ]);
+  });
+
+  it('大量の行数（1000行）でも正しく比較できる', () => {
+    const a = Array.from({ length: 1000 }, (_, i) => `line${i}`).join('\n');
+    const b = Array.from({ length: 1000 }, (_, i) =>
+      i === 500 ? 'CHANGED' : `line${i}`,
+    ).join('\n');
+    const result = diffLines(a, b);
+    const stats = getDiffStats(result);
+    expect(stats.removed).toBe(1);
+    expect(stats.added).toBe(1);
+    expect(stats.equal).toBe(999);
+  });
 });
 
 describe('getDiffStats', () => {

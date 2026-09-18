@@ -1,0 +1,260 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { jwtDecoderContent } from '../../i18n/tools/jwt-decoder';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = jwtDecoderContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div>
+    <label
+      for="jwt-input"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="jwt-input"
+      class="h-32 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm break-all focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+      autocomplete="off"
+    ></textarea>
+  </div>
+
+  <div
+    id="jwt-error"
+    data-error-invalid-format={t.errorInvalidFormat}
+    class="mt-2 hidden rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
+    role="alert"
+  ></div>
+
+  <div
+    id="jwt-result"
+    class="mt-4 hidden space-y-6"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-error-invalid-base64={t.errorInvalidBase64}
+    data-error-invalid-json={t.errorInvalidJson}
+  >
+    <div>
+      <div class="mb-1 flex items-center justify-between">
+        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t.headerLabel}
+        </p>
+        <div class="flex items-center gap-3">
+          <button
+            id="jwt-header-copy-button"
+            type="button"
+            class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            {t.copyButton}
+          </button>
+          <span
+            id="jwt-header-copy-status"
+            class="text-sm text-green-600 dark:text-green-400"
+            aria-live="polite"
+          ></span>
+        </div>
+      </div>
+      <pre
+        id="jwt-header-output"
+        class="w-full overflow-x-auto rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm whitespace-pre-wrap dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></pre>
+    </div>
+
+    <div>
+      <div class="mb-1 flex items-center justify-between">
+        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t.payloadLabel}
+        </p>
+        <div class="flex items-center gap-3">
+          <button
+            id="jwt-payload-copy-button"
+            type="button"
+            class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            {t.copyButton}
+          </button>
+          <span
+            id="jwt-payload-copy-status"
+            class="text-sm text-green-600 dark:text-green-400"
+            aria-live="polite"
+          ></span>
+        </div>
+      </div>
+      <pre
+        id="jwt-payload-output"
+        class="w-full overflow-x-auto rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm whitespace-pre-wrap dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></pre>
+    </div>
+
+    <div id="jwt-claims-wrapper" class="hidden">
+      <p class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+        {t.claimsHeading}
+      </p>
+      <div class="overflow-x-auto rounded-lg border border-gray-300 dark:border-gray-700">
+        <table class="w-full min-w-[420px] text-left text-sm">
+          <thead class="bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+            <tr>
+              <th class="px-3 py-2 font-medium">{t.claimsColumnClaim}</th>
+              <th class="px-3 py-2 font-medium">{t.claimsColumnUnixSeconds}</th>
+              <th class="px-3 py-2 font-medium">{t.claimsColumnDate}</th>
+            </tr>
+          </thead>
+          <tbody
+            id="jwt-claims-body"
+            class="divide-y divide-gray-200 dark:divide-gray-800"
+          ></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <p class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+        {t.signatureLabel}
+      </p>
+      <div
+        id="jwt-signature-output"
+        class="w-full overflow-x-auto rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm break-all dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></div>
+    </div>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li>{t.noteSignatureNotVerified}</li>
+    <li>{t.noteSensitivePayload}</li>
+    <li>
+      {t.noteTimeClaimsBeforeCode}
+      <code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-gray-800">exp</code>
+      <code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-gray-800">iat</code>
+      <code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-gray-800">nbf</code>
+      {t.noteTimeClaimsAfterCode}
+    </li>
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    decodeJwt,
+    unixSecondsToDate,
+    type JwtPart,
+  } from '../../lib/tools/jwt-decoder';
+
+  const input = document.getElementById('jwt-input') as HTMLTextAreaElement;
+  const errorEl = document.getElementById('jwt-error')!;
+  const resultEl = document.getElementById('jwt-result')!;
+  const headerOutput = document.getElementById('jwt-header-output')!;
+  const payloadOutput = document.getElementById('jwt-payload-output')!;
+  const signatureOutput = document.getElementById('jwt-signature-output')!;
+  const claimsWrapper = document.getElementById('jwt-claims-wrapper')!;
+  const claimsBody = document.getElementById('jwt-claims-body')!;
+  const headerCopyButton = document.getElementById(
+    'jwt-header-copy-button',
+  ) as HTMLButtonElement;
+  const headerCopyStatus = document.getElementById('jwt-header-copy-status')!;
+  const payloadCopyButton = document.getElementById(
+    'jwt-payload-copy-button',
+  ) as HTMLButtonElement;
+  const payloadCopyStatus = document.getElementById('jwt-payload-copy-status')!;
+
+  const errorInvalidFormat = errorEl.dataset.errorInvalidFormat ?? '';
+  const copied = resultEl.dataset.copied ?? '';
+  const copyFailed = resultEl.dataset.copyFailed ?? '';
+  const errorInvalidBase64 = resultEl.dataset.errorInvalidBase64 ?? '';
+  const errorInvalidJson = resultEl.dataset.errorInvalidJson ?? '';
+
+  const TIME_CLAIMS = ['exp', 'iat', 'nbf'] as const;
+
+  function renderPart(part: JwtPart): string {
+    if (part.errorCode === 'invalid-base64') {
+      return errorInvalidBase64;
+    }
+    if (part.errorCode === 'invalid-json') {
+      return errorInvalidJson;
+    }
+    return JSON.stringify(part.json, null, 2);
+  }
+
+  function render() {
+    headerCopyStatus.textContent = '';
+    payloadCopyStatus.textContent = '';
+
+    const token = input.value;
+    if (token.trim() === '') {
+      errorEl.classList.add('hidden');
+      resultEl.classList.add('hidden');
+      return;
+    }
+
+    const result = decodeJwt(token);
+
+    if (!result.isValid) {
+      errorEl.textContent = errorInvalidFormat;
+      errorEl.classList.remove('hidden');
+      resultEl.classList.add('hidden');
+      return;
+    }
+    errorEl.classList.add('hidden');
+    resultEl.classList.remove('hidden');
+
+    headerOutput.textContent = renderPart(result.header!);
+    payloadOutput.textContent = renderPart(result.payload!);
+    signatureOutput.textContent = result.signature;
+
+    const payloadJson = result.payload!.json;
+    const rows: string[] = [];
+    if (payloadJson && typeof payloadJson === 'object') {
+      for (const claim of TIME_CLAIMS) {
+        const value = (payloadJson as Record<string, unknown>)[claim];
+        const date = unixSecondsToDate(value);
+        if (date === null) continue;
+        rows.push(`<tr>
+          <td class="px-3 py-2 font-mono">${claim}</td>
+          <td class="px-3 py-2 font-mono">${String(value)}</td>
+          <td class="px-3 py-2">${date.toLocaleString()}</td>
+        </tr>`);
+      }
+    }
+    if (rows.length === 0) {
+      claimsWrapper.classList.add('hidden');
+    } else {
+      claimsBody.innerHTML = rows.join('');
+      claimsWrapper.classList.remove('hidden');
+    }
+  }
+
+  input.addEventListener('input', render);
+
+  async function copyText(text: string, statusEl: Element) {
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      statusEl.textContent = copied;
+    } catch {
+      statusEl.textContent = copyFailed;
+    }
+  }
+
+  headerCopyButton.addEventListener('click', () => {
+    void copyText(headerOutput.textContent ?? '', headerCopyStatus);
+  });
+  payloadCopyButton.addEventListener('click', () => {
+    void copyText(payloadOutput.textContent ?? '', payloadCopyStatus);
+  });
+
+  render();
+</script>

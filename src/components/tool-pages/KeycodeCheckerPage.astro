@@ -1,0 +1,196 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { keycodeCheckerContent } from '../../i18n/tools/keycode-checker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = keycodeCheckerContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div
+    id="keycode-capture"
+    tabindex="0"
+    role="application"
+    aria-label={t.captureAriaLabel}
+    data-location-standard={t.locationStandard}
+    data-location-left={t.locationLeft}
+    data-location-right={t.locationRight}
+    data-location-numpad={t.locationNumpad}
+    data-location-unknown={t.locationUnknown}
+    data-modifier-none={t.modifierNone}
+    data-space-label={t.spaceLabel}
+    data-repeat-yes={t.repeatYes}
+    data-repeat-no={t.repeatNo}
+    data-location-value-template={t.locationValueTemplate}
+    data-history-item-template={t.historyItemTemplate}
+    class="flex min-h-32 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-6 text-center text-gray-500 focus:border-blue-400 focus:text-blue-600 focus:outline-none dark:border-gray-700 dark:text-gray-400 dark:focus:border-blue-400 dark:focus:text-blue-400"
+  >
+    <p id="keycode-placeholder">{t.placeholder}</p>
+  </div>
+
+  <div id="keycode-result" class="mt-6 hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[420px] border-collapse text-sm">
+        <tbody>
+          {t.fieldRows.map(({ id, label }) => (
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                {label}
+              </td>
+              <td
+                id={`keycode-${id}`}
+                class="py-2 text-right font-mono text-gray-900 dark:text-gray-100"
+              />
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="mb-2 flex items-center justify-between">
+      <h2 class="text-lg font-bold">{t.historyHeading}</h2>
+      <button
+        type="button"
+        id="keycode-clear-button"
+        class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        {t.clearHistory}
+      </button>
+    </div>
+    <ol
+      id="keycode-history"
+      class="flex flex-col-reverse gap-1"
+      aria-live="polite"
+    ></ol>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    buildKeyEventInfo,
+    type KeyEventInfo,
+    type KeyEventLabels,
+    type KeyLocation,
+  } from '../../lib/tools/keycode-checker';
+
+  const capture = document.getElementById('keycode-capture')!;
+  const placeholderEl = document.getElementById('keycode-placeholder')!;
+  const resultEl = document.getElementById('keycode-result')!;
+  const historyEl = document.getElementById(
+    'keycode-history',
+  ) as HTMLOListElement;
+  const clearButton = document.getElementById(
+    'keycode-clear-button',
+  ) as HTMLButtonElement;
+
+  const LABELS: KeyEventLabels = {
+    location: {
+      standard: capture.dataset.locationStandard ?? '',
+      left: capture.dataset.locationLeft ?? '',
+      right: capture.dataset.locationRight ?? '',
+      numpad: capture.dataset.locationNumpad ?? '',
+      unknown: capture.dataset.locationUnknown ?? '',
+    },
+    none: capture.dataset.modifierNone ?? '',
+  };
+  const spaceLabel = capture.dataset.spaceLabel ?? '';
+  const repeatYes = capture.dataset.repeatYes ?? '';
+  const repeatNo = capture.dataset.repeatNo ?? '';
+  const locationValueTemplate =
+    capture.dataset.locationValueTemplate ?? '{location} ({label})';
+  const historyItemTemplate =
+    capture.dataset.historyItemTemplate ?? '{code} ({key})';
+
+  type FieldId =
+    'key' | 'code' | 'keycode' | 'location' | 'modifiers' | 'repeat';
+
+  function fieldEl(id: FieldId): HTMLElement {
+    return document.getElementById(`keycode-${id}`)!;
+  }
+
+  const MAX_HISTORY = 10;
+
+  function displayKey(key: string): string {
+    return key === ' ' ? spaceLabel : key;
+  }
+
+  function render(info: KeyEventInfo) {
+    fieldEl('key').textContent = displayKey(info.key);
+    fieldEl('code').textContent = info.code;
+    fieldEl('keycode').textContent = String(info.keyCode);
+    fieldEl('location').textContent = locationValueTemplate
+      .replace('{location}', String(info.location))
+      .replace('{label}', info.locationLabel);
+    fieldEl('modifiers').textContent = info.modifierLabel;
+    fieldEl('repeat').textContent = info.repeat ? repeatYes : repeatNo;
+    placeholderEl.classList.add('hidden');
+    resultEl.classList.remove('hidden');
+  }
+
+  function addHistory(info: KeyEventInfo) {
+    const li = document.createElement('li');
+    li.className =
+      'rounded border border-gray-200 px-2 py-1 font-mono text-xs text-gray-700 dark:border-gray-700 dark:text-gray-300';
+    li.textContent = historyItemTemplate
+      .replace('{code}', info.code)
+      .replace('{key}', displayKey(info.key));
+    historyEl.append(li);
+    while (historyEl.children.length > MAX_HISTORY) {
+      historyEl.removeChild(historyEl.firstElementChild!);
+    }
+  }
+
+  capture.addEventListener('keydown', (event) => {
+    // Escapeキーだけは既定動作を奪わず、フォーカスを外してTabキーによる離脱経路を確保する
+    if (event.key !== 'Escape') {
+      event.preventDefault();
+    }
+    const info = buildKeyEventInfo(
+      {
+        key: event.key,
+        code: event.code,
+        keyCode: event.keyCode,
+        location: event.location as KeyLocation,
+        shiftKey: event.shiftKey,
+        ctrlKey: event.ctrlKey,
+        altKey: event.altKey,
+        metaKey: event.metaKey,
+        repeat: event.repeat,
+      },
+      LABELS,
+    );
+    render(info);
+    if (!info.repeat) {
+      addHistory(info);
+    }
+    if (event.key === 'Escape') {
+      capture.blur();
+    }
+  });
+
+  capture.addEventListener('click', () => capture.focus());
+
+  clearButton.addEventListener('click', () => {
+    historyEl.replaceChildren();
+  });
+</script>

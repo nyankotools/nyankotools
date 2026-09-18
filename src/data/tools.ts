@@ -123,6 +123,23 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'toml-converter',
+    translations: {
+      ja: {
+        name: 'TOML⇔JSON/YAML変換',
+        description:
+          'TOML・JSON・YAMLを相互に変換します。Cargo.tomlやpyproject.tomlなどのTOML設定ファイル確認に便利。',
+        category: '変換',
+      },
+      en: {
+        name: 'TOML to JSON/YAML Converter',
+        description:
+          'Converts between TOML, JSON, and YAML, handy for checking a TOML config file like Cargo.toml or pyproject.toml.',
+        category: 'Convert',
+      },
+    },
+  },
+  {
     slug: 'markdown-preview',
     translations: {
       ja: {
@@ -510,6 +527,142 @@ export const tools: Tool[] = [
         description:
           'Converts between tax-included and tax-excluded prices, and calculates the discounted price from a discount rate or amount.',
         category: 'Calculate',
+      },
+    },
+  },
+  {
+    slug: 'sql-formatter',
+    translations: {
+      ja: {
+        name: 'SQL整形',
+        description:
+          'SQLクエリを整形・ミニファイします。MySQL・PostgreSQL・SQLite・BigQuery等の方言、インデント幅、キーワードの大文字/小文字に対応。',
+        category: '変換',
+      },
+      en: {
+        name: 'SQL Formatter',
+        description:
+          'Formats and minifies SQL queries, with support for MySQL, PostgreSQL, SQLite, BigQuery and other dialects, indent width, and keyword case.',
+        category: 'Convert',
+      },
+    },
+  },
+  {
+    slug: 'code-minifier',
+    translations: {
+      ja: {
+        name: 'CSS/JS/HTMLミニファイ＆整形',
+        description:
+          'CSS・JavaScript・HTMLのコードを整形・ミニファイします。インデント幅の指定にも対応。',
+        category: '変換',
+      },
+      en: {
+        name: 'CSS/JS/HTML Minifier',
+        description:
+          'Formats and minifies CSS, JavaScript, and HTML code, with a selectable indent width.',
+        category: 'Convert',
+      },
+    },
+  },
+  {
+    slug: 'chmod-calculator',
+    translations: {
+      ja: {
+        name: 'Chmodパーミッション計算機',
+        description:
+          'ファイルパーミッションをチェックボックス・8進数（755等）・シンボル表記（rwxr-xr-x等）で相互変換します。setuid/setgid/スティッキービットにも対応。',
+        category: '開発',
+      },
+      en: {
+        name: 'Chmod Permission Calculator',
+        description:
+          'Converts file permissions between checkboxes, octal notation (e.g. 755), and symbolic notation (e.g. rwxr-xr-x), with setuid/setgid/sticky bit support.',
+        category: 'Development',
+      },
+    },
+  },
+  {
+    slug: 'cidr-calculator',
+    translations: {
+      ja: {
+        name: 'CIDR/サブネット計算機',
+        description:
+          'CIDR表記やIPアドレス+サブネットマスクから、ネットワークアドレス・ブロードキャストアドレス・利用可能ホスト数を計算します。',
+        category: '開発',
+      },
+      en: {
+        name: 'CIDR / Subnet Calculator',
+        description:
+          'Calculates the network address, broadcast address, and usable host count from CIDR notation or an IP address plus subnet mask.',
+        category: 'Development',
+      },
+    },
+  },
+  {
+    slug: 'keycode-checker',
+    translations: {
+      ja: {
+        name: 'キーコード（e.code/e.key）チェッカー',
+        description:
+          '押したキーのevent.key・event.code・keyCode・location・修飾キーの状態をリアルタイムで表示します。JavaScriptのキーボードイベント実装時の値確認に便利。',
+        category: '開発',
+      },
+      en: {
+        name: 'Keycode (e.code / e.key) Checker',
+        description:
+          'Shows the event.key, event.code, keyCode, location, and modifier keys of any key you press, in real time. Handy for checking values while implementing keyboard event handling.',
+        category: 'Development',
+      },
+    },
+  },
+  {
+    slug: 'viewport-checker',
+    translations: {
+      ja: {
+        name: 'スクリーンサイズ・Viewportチェッカー',
+        description:
+          'ビューポートサイズ・ウィンドウサイズ・画面解像度・デバイスピクセル比・Tailwind CSSのブレークポイントをリアルタイムで表示します。レスポンシブデザインの確認に便利。',
+        category: '開発',
+      },
+      en: {
+        name: 'Screen Size & Viewport Checker',
+        description:
+          'Shows the viewport size, window size, screen resolution, device pixel ratio, and current Tailwind CSS breakpoint in real time. Handy for checking responsive designs.',
+        category: 'Development',
+      },
+    },
+  },
+  {
+    slug: 'json-path-tester',
+    translations: {
+      ja: {
+        name: 'JSON Path / JSON Pointerテスター',
+        description:
+          'JSONPathやJSON Pointer（RFC 6901）のクエリを入力すると、マッチした値と絶対パスを一覧表示します。APIレスポンスから値を取り出すクエリの動作確認に便利。',
+        category: '開発',
+      },
+      en: {
+        name: 'JSON Path / JSON Pointer Tester',
+        description:
+          'Tests a JSONPath or JSON Pointer (RFC 6901) query against your JSON data and lists every matched value with its absolute path. Handy for checking a query before pulling a value out of an API response.',
+        category: 'Development',
+      },
+    },
+  },
+  {
+    slug: 'text-case-converter',
+    translations: {
+      ja: {
+        name: 'テキストケース変換',
+        description:
+          '文字列をcamelCase・PascalCase・snake_case・kebab-caseなど9種類の命名規則に一括変換します。プログラミングの変数名・関数名の書き換えに便利。',
+        category: '変換',
+      },
+      en: {
+        name: 'Text Case Converter',
+        description:
+          'Converts text into 9 naming conventions at once, including camelCase, PascalCase, snake_case, and kebab-case. Handy for renaming variables and functions.',
+        category: 'Convert',
       },
     },
   },

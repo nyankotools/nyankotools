@@ -1,0 +1,347 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { jsonPathTesterContent } from '../../i18n/tools/json-path-tester';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = jsonPathTesterContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div>
+    <label
+      for="json-path-tester-input"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.jsonDataLabel}
+    </label>
+    <textarea
+      id="json-path-tester-input"
+      class="h-56 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <p
+    id="json-path-tester-json-error"
+    hidden
+    role="alert"
+    data-error-template={t.errorInvalidJsonTemplate}
+    class="mt-2 max-w-2xl whitespace-pre-line rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+  ></p>
+
+  <div class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+    <span class="font-medium text-gray-700 dark:text-gray-300">
+      {t.queryFormatLabel}
+    </span>
+    <label class="flex min-h-11 items-center gap-2">
+      <input
+        type="radio"
+        name="json-path-tester-mode"
+        id="json-path-tester-mode-jsonpath"
+        value="jsonpath"
+        checked
+        class="h-4 w-4"
+      />
+      <span class="text-gray-700 dark:text-gray-300">
+        {t.modeJsonPathLabel}
+      </span>
+    </label>
+    <label class="flex min-h-11 items-center gap-2">
+      <input
+        type="radio"
+        name="json-path-tester-mode"
+        id="json-path-tester-mode-pointer"
+        value="pointer"
+        class="h-4 w-4"
+      />
+      <span class="text-gray-700 dark:text-gray-300">{t.modePointerLabel}</span>
+    </label>
+  </div>
+
+  <div class="mt-2">
+    <label
+      for="json-path-tester-query"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.queryLabel}
+    </label>
+    <input
+      id="json-path-tester-query"
+      type="text"
+      class="w-full rounded-lg border border-gray-300 p-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      spellcheck="false"
+      autocomplete="off"
+    />
+    <p
+      id="json-path-tester-query-hint"
+      data-jsonpath-hint-html={t.jsonPathHintHtml}
+      data-pointer-hint-html={t.pointerHintHtml}
+      data-jsonpath-placeholder={t.jsonPathPlaceholder}
+      data-pointer-placeholder={t.pointerPlaceholder}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+      set:html={t.jsonPathHintHtml}
+    />
+  </div>
+
+  <div
+    id="json-path-tester-query-error"
+    hidden
+    data-error-jsonpath-template={t.errorInvalidJsonPathTemplate}
+    data-error-invalid-format={t.pointerErrorInvalidFormat}
+    data-error-trailing-dash-template={t.pointerErrorTrailingDashTemplate}
+    data-error-invalid-array-index-template={
+      t.pointerErrorInvalidArrayIndexTemplate
+    }
+    data-error-index-out-of-range-template={
+      t.pointerErrorIndexOutOfRangeTemplate
+    }
+    data-error-key-not-found-template={t.pointerErrorKeyNotFoundTemplate}
+    data-error-not-traversable-template={t.pointerErrorNotTraversableTemplate}
+    class="mt-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+    role="alert"
+  ></div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <span
+      id="json-path-tester-status"
+      data-match-singular-template={t.statusMatchSingularTemplate}
+      data-match-plural-template={t.statusMatchPluralTemplate}
+      data-pointer-match={t.statusPointerMatch}
+      data-root-label={t.rootLabel}
+      data-sample-books={JSON.stringify(t.sampleBooks)}
+      class="text-sm font-medium text-gray-700 dark:text-gray-300"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-2 overflow-x-auto rounded-lg border border-gray-300 dark:border-gray-700">
+    <table class="w-full min-w-[560px] text-left text-sm">
+      <thead class="bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+        <tr>
+          <th class="px-3 py-2 font-medium">{t.resultColumnIndex}</th>
+          <th class="px-3 py-2 font-medium">{t.resultColumnPath}</th>
+          <th class="px-3 py-2 font-medium">{t.resultColumnValue}</th>
+        </tr>
+      </thead>
+      <tbody
+        id="json-path-tester-results"
+        data-pointer-line-template={t.pointerLineTemplate}
+        class="divide-y divide-gray-200 dark:divide-gray-800"
+      ></tbody>
+    </table>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    <li set:html={t.note1Html} />
+    <li>{t.note2}</li>
+    <li set:html={t.note3Html} />
+    <li>{t.noteClientSideOnly}</li>
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    evaluateJsonPath,
+    evaluateJsonPointer,
+    parseJsonInput,
+    type JsonPointerFailure,
+  } from '../../lib/tools/json-path-tester';
+
+  const jsonInput = document.getElementById(
+    'json-path-tester-input',
+  ) as HTMLTextAreaElement;
+  const jsonErrorEl = document.getElementById('json-path-tester-json-error')!;
+  const modeJsonPath = document.getElementById(
+    'json-path-tester-mode-jsonpath',
+  ) as HTMLInputElement;
+  const modePointer = document.getElementById(
+    'json-path-tester-mode-pointer',
+  ) as HTMLInputElement;
+  const queryInput = document.getElementById(
+    'json-path-tester-query',
+  ) as HTMLInputElement;
+  const queryHint = document.getElementById('json-path-tester-query-hint')!;
+  const queryErrorEl = document.getElementById('json-path-tester-query-error')!;
+  const statusEl = document.getElementById('json-path-tester-status')!;
+  const resultsBody = document.getElementById('json-path-tester-results')!;
+
+  const errorInvalidJsonTemplate = jsonErrorEl.dataset.errorTemplate ?? '';
+  const jsonPathHintHtml = queryHint.dataset.jsonpathHintHtml ?? '';
+  const pointerHintHtml = queryHint.dataset.pointerHintHtml ?? '';
+  const jsonPathPlaceholder = queryHint.dataset.jsonpathPlaceholder ?? '';
+  const pointerPlaceholder = queryHint.dataset.pointerPlaceholder ?? '';
+  const errorInvalidJsonPathTemplate =
+    queryErrorEl.dataset.errorJsonpathTemplate ?? '';
+  const pointerErrorInvalidFormat =
+    queryErrorEl.dataset.errorInvalidFormat ?? '';
+  const pointerErrorTrailingDashTemplate =
+    queryErrorEl.dataset.errorTrailingDashTemplate ?? '';
+  const pointerErrorInvalidArrayIndexTemplate =
+    queryErrorEl.dataset.errorInvalidArrayIndexTemplate ?? '';
+  const pointerErrorIndexOutOfRangeTemplate =
+    queryErrorEl.dataset.errorIndexOutOfRangeTemplate ?? '';
+  const pointerErrorKeyNotFoundTemplate =
+    queryErrorEl.dataset.errorKeyNotFoundTemplate ?? '';
+  const pointerErrorNotTraversableTemplate =
+    queryErrorEl.dataset.errorNotTraversableTemplate ?? '';
+  const statusMatchSingularTemplate =
+    statusEl.dataset.matchSingularTemplate ?? '';
+  const statusMatchPluralTemplate = statusEl.dataset.matchPluralTemplate ?? '';
+  const statusPointerMatch = statusEl.dataset.pointerMatch ?? '';
+  const rootLabel = statusEl.dataset.rootLabel ?? '';
+  const sampleBooks: { title: string; price: number }[] = JSON.parse(
+    statusEl.dataset.sampleBooks ?? '[]',
+  );
+  const pointerLineTemplate = resultsBody.dataset.pointerLineTemplate ?? '';
+
+  function formatValue(value: unknown): string {
+    if (value === undefined) return 'undefined';
+    return JSON.stringify(value, null, 2);
+  }
+
+  function describeJsonPointerError(result: JsonPointerFailure): string {
+    switch (result.reason) {
+      case 'invalid-format':
+        return pointerErrorInvalidFormat;
+      case 'trailing-dash':
+        return pointerErrorTrailingDashTemplate.replace('{path}', result.path);
+      case 'invalid-array-index':
+        return pointerErrorInvalidArrayIndexTemplate
+          .replace('{path}', result.path)
+          .replace('{token}', result.token);
+      case 'index-out-of-range':
+        return pointerErrorIndexOutOfRangeTemplate
+          .replace('{path}', result.path)
+          .replace('{length}', String(result.length));
+      case 'key-not-found':
+        return pointerErrorKeyNotFoundTemplate
+          .replace('{path}', result.path)
+          .replace('{key}', result.key);
+      case 'not-traversable':
+        return pointerErrorNotTraversableTemplate.replace(
+          '{path}',
+          result.path,
+        );
+    }
+  }
+
+  function showRow(path: string, pointer: string | null, value: unknown) {
+    const tr = document.createElement('tr');
+    const pathCell = document.createElement('td');
+    pathCell.className = 'px-3 py-2 align-top font-mono text-xs';
+    const pathLine = document.createElement('div');
+    pathLine.textContent = path;
+    pathCell.appendChild(pathLine);
+    if (pointer !== null && pointer !== path) {
+      const pointerLine = document.createElement('div');
+      pointerLine.className = 'mt-1 text-gray-400 dark:text-gray-500';
+      pointerLine.textContent = pointerLineTemplate.replace(
+        '{pointer}',
+        pointer,
+      );
+      pathCell.appendChild(pointerLine);
+    }
+    const valueCell = document.createElement('td');
+    valueCell.className =
+      'px-3 py-2 align-top font-mono text-xs whitespace-pre-wrap break-all';
+    valueCell.textContent = formatValue(value);
+    const indexCell = document.createElement('td');
+    indexCell.className = 'px-3 py-2 align-top';
+    indexCell.textContent = String(resultsBody.children.length + 1);
+    tr.append(indexCell, pathCell, valueCell);
+    resultsBody.appendChild(tr);
+  }
+
+  function render() {
+    resultsBody.innerHTML = '';
+    queryErrorEl.hidden = true;
+    queryErrorEl.textContent = '';
+    statusEl.textContent = '';
+
+    if (jsonInput.value.trim() === '') {
+      jsonErrorEl.hidden = true;
+      return;
+    }
+
+    const parsed = parseJsonInput(jsonInput.value);
+    if (!parsed.success) {
+      jsonErrorEl.hidden = false;
+      jsonErrorEl.textContent = errorInvalidJsonTemplate.replace(
+        '{message}',
+        parsed.error ?? '',
+      );
+      return;
+    }
+    jsonErrorEl.hidden = true;
+
+    const query = queryInput.value;
+    if (query.trim() === '') return;
+
+    if (modeJsonPath.checked) {
+      const result = evaluateJsonPath(parsed.value, query);
+      if (!result.success) {
+        queryErrorEl.hidden = false;
+        queryErrorEl.textContent = errorInvalidJsonPathTemplate.replace(
+          '{message}',
+          result.error ?? '',
+        );
+        return;
+      }
+      const count = result.matches.length;
+      const template =
+        count === 1 ? statusMatchSingularTemplate : statusMatchPluralTemplate;
+      statusEl.textContent = template.replace('{count}', String(count));
+      for (const match of result.matches) {
+        showRow(match.path, match.pointer, match.value);
+      }
+    } else {
+      const result = evaluateJsonPointer(parsed.value, query);
+      if (!result.success) {
+        queryErrorEl.hidden = false;
+        queryErrorEl.textContent = describeJsonPointerError(result);
+        return;
+      }
+      statusEl.textContent = statusPointerMatch;
+      showRow(query === '' ? rootLabel : query, null, result.value);
+    }
+  }
+
+  function updateModeUI() {
+    queryHint.innerHTML = modeJsonPath.checked
+      ? jsonPathHintHtml
+      : pointerHintHtml;
+    queryInput.placeholder = modeJsonPath.checked
+      ? jsonPathPlaceholder
+      : pointerPlaceholder;
+    render();
+  }
+
+  jsonInput.addEventListener('input', render);
+  queryInput.addEventListener('input', render);
+  modeJsonPath.addEventListener('change', updateModeUI);
+  modePointer.addEventListener('change', updateModeUI);
+
+  jsonInput.value = JSON.stringify(
+    {
+      store: {
+        book: sampleBooks,
+      },
+    },
+    null,
+    2,
+  );
+  queryInput.value = jsonPathPlaceholder;
+  updateModeUI();
+</script>

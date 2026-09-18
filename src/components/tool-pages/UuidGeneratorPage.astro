@@ -1,0 +1,151 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { uuidGeneratorContent } from '../../i18n/tools/uuid-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = uuidGeneratorContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div class="flex flex-wrap items-end gap-4">
+    <div>
+      <label
+        for="uuid-generator-count"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.countLabel}
+      </label>
+      <input
+        id="uuid-generator-count"
+        type="number"
+        min="1"
+        max="100"
+        value="5"
+        class="h-11 w-28 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+    </div>
+
+    <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+      <input
+        id="uuid-generator-remove-hyphens"
+        type="checkbox"
+        class="h-4 w-4"
+      />
+      {t.removeHyphens}
+    </label>
+
+    <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+      <input id="uuid-generator-uppercase" type="checkbox" class="h-4 w-4" />
+      {t.uppercase}
+    </label>
+
+    <button
+      id="uuid-generator-generate-button"
+      type="button"
+      class="min-h-11 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+    >
+      {t.generate}
+    </button>
+
+    <button
+      id="uuid-generator-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="uuid-generator-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4">
+    <label
+      for="uuid-generator-output"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="uuid-generator-output"
+      readonly
+      class="h-64 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    ></textarea>
+  </div>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    clampUuidCount,
+    generateUuids,
+  } from '../../lib/tools/uuid-generator';
+
+  const countInput = document.getElementById(
+    'uuid-generator-count',
+  ) as HTMLInputElement;
+  const removeHyphensCheckbox = document.getElementById(
+    'uuid-generator-remove-hyphens',
+  ) as HTMLInputElement;
+  const uppercaseCheckbox = document.getElementById(
+    'uuid-generator-uppercase',
+  ) as HTMLInputElement;
+  const generateButton = document.getElementById(
+    'uuid-generator-generate-button',
+  )!;
+  const copyButton = document.getElementById(
+    'uuid-generator-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('uuid-generator-status')!;
+  const output = document.getElementById(
+    'uuid-generator-output',
+  ) as HTMLTextAreaElement;
+
+  function generate() {
+    statusEl.textContent = '';
+    const uuids = generateUuids({
+      count: Number(countInput.value),
+      removeHyphens: removeHyphensCheckbox.checked,
+      uppercase: uppercaseCheckbox.checked,
+    });
+    output.value = uuids.join('\n');
+  }
+
+  function clampCountInput() {
+    countInput.value = String(clampUuidCount(Number(countInput.value)));
+  }
+
+  generateButton.addEventListener('click', generate);
+  countInput.addEventListener('change', () => {
+    clampCountInput();
+    generate();
+  });
+  removeHyphensCheckbox.addEventListener('change', generate);
+  uppercaseCheckbox.addEventListener('change', generate);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      statusEl.textContent = copyButton.dataset.copied ?? '';
+    } catch {
+      statusEl.textContent = copyButton.dataset.copyFailed ?? '';
+    }
+  });
+
+  generate();
+</script>

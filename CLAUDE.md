@@ -4,11 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-NyankoTools (`nyankotools.com`) is a growing collection of small, browser-only utility tools (text/data converters, calculators, generators, etc.) for developers and creators, in Japanese. Every tool runs entirely client-side — no backend, no API routes, no data ever sent to a server. This is a deliberate product constraint (privacy pitch + zero hosting cost), not just a current limitation: do not introduce server-side logic.
+NyankoTools (`nyankotools.com`) is a growing collection of small, browser-only utility tools (text/data converters, calculators, generators, etc.) for developers and creators, in Japanese and English. Every tool runs entirely client-side — no backend, no API routes, no data ever sent to a server. This is a deliberate product constraint (privacy pitch + zero hosting cost), not just a current limitation: do not introduce server-side logic.
 
-Users navigate via a persistent sidebar; each tool also has its own indexable URL (`/tools/<slug>/`) for SEO (long-tail keyword search traffic is a primary acquisition channel).
-
-NyankoTools aims for future monetization (ads/affiliate). Organic search traffic and user experience are the foundation for that, so SEO, responsive design, and (eventually) i18n are treated as first-class, not optional polish — see [`growth.md`](.claude/docs/growth.md) for the concrete rules to follow when adding or changing pages.
+Each tool has its own indexable URL (`/tools/<slug>/`, `/en/tools/<slug>/`) for SEO, and users also navigate via a persistent sidebar. NyankoTools aims for future monetization, so SEO, responsive design, and i18n are first-class — see [`growth.md`](.claude/docs/growth.md) for the rules to follow when adding or changing pages.
 
 ## 基本原則
 
@@ -24,6 +22,7 @@ NyankoTools aims for future monetization (ads/affiliate). Organic search traffic
 - コード変更を伴う実装（ツールの追加・修正など）が完了したら、まず独立したレビュー専任エージェント（`tool-reviewer`、`.claude/agents/tool-reviewer.md`）にレビューを依頼すること。
 - レビューエージェントから完了報告を受け取ったら、続けて独立したQA専任エージェント（`tool-qa`、`.claude/agents/tool-qa.md`）にテストを依頼すること。順序は 実装 → レビュー → テスト で、並行実行はしない。
 - レビューでバグ・セキュリティ上の懸念など重大な指摘があった場合は、テスト依頼の前に対応（修正）するか、ユーザーに報告して方針を確認する。指摘が軽微な提案のみであれば、そのままテスト依頼に進んでよい。
+- `/tool-review` と `/qa-test` で、これらのエージェントを手動起動することもできる。
 
 ## コミットのルール
 
@@ -38,50 +37,31 @@ NyankoTools aims for future monetization (ads/affiliate). Organic search traffic
 Package manager is **pnpm** (via Corepack).
 
 ```
-pnpm install        # install dependencies
-pnpm dev            # start dev server (http://localhost:4321)
-pnpm build           # production build to dist/ (static output)
-pnpm preview          # preview the production build locally
-pnpm exec astro check # type-check .astro/.ts files
+pnpm dev               # dev server (http://localhost:4321)
+pnpm build             # production build to dist/ (static output)
+pnpm exec astro check  # type-check .astro/.ts files
 pnpm run lint          # ESLint
 pnpm run format        # Prettier --write
-pnpm test             # Vitest (run once)
-pnpm run test:watch    # Vitest (watch mode)
+pnpm test              # Vitest (pure logic in src/lib/tools/*.ts)
+pnpm run test:e2e      # Playwright (e2e/*.spec.ts)
 ```
 
-Tests use **Vitest**. They target the pure logic in `src/lib/tools/*.ts` (e.g. `src/lib/tools/char-counter.test.ts`), not the Astro pages themselves — no config file is needed since there's no DOM/Astro dependency to set up for these unit tests. Browser-level behavior is covered by Playwright E2E specs under `e2e/*.spec.ts` (`pnpm run test:e2e`).
+## Architecture essentials
 
-After implementing or changing a tool, follow the review-then-test flow in "レビュー・テストのルール" above: an independent review-only subagent (`tool-reviewer`, `.claude/agents/tool-reviewer.md`) checks correctness, simplification, convention/architecture compliance, SEO/responsive requirements, and security without editing any code, then an independent QA subagent (`tool-qa`, `.claude/agents/tool-qa.md`) runs lint/typecheck/build/Vitest/Playwright and fills in missing unit/E2E tests itself. `/tool-review` and `/qa-test` also trigger these agents manually on demand — see [`conventions.md`](.claude/docs/conventions.md) and [`adding-a-tool.md`](.claude/docs/adding-a-tool.md) for details.
+Astro (static output, no SSR adapter) + Tailwind CSS v4 (`@tailwindcss/vite`) + TypeScript, deployed to Cloudflare Workers as static assets. Details: [`architecture.md`](.claude/docs/architecture.md).
 
-## Architecture
-
-**Stack:** Astro (static output, no SSR adapter) + Tailwind CSS v4 (via `@tailwindcss/vite`, not the older `@astrojs/tailwind` integration) + TypeScript. Deployed to Cloudflare Workers as static assets (see `wrangler.jsonc`), which runs `pnpm build` and serves `dist/` directly — no Cloudflare adapter is needed since there is no server runtime.
-
-**Adding a new tool** touches two places:
-
-1. `src/pages/tools/<slug>/index.astro` — the page. Wrap it in `<Layout title=... description=...>` and put interactive logic in a `<script>` tag that imports from `src/lib/tools/<slug>.ts`.
-2. `src/data/tools.ts` — register `{ slug, name, description }` here. This single registry drives both the homepage tool grid (`src/pages/index.astro`) and the sidebar nav (`src/layouts/Layout.astro`); a tool page that isn't registered here won't appear in navigation.
-
-**Tool logic stays framework-free.** Each tool's actual behavior (parsing, converting, calculating) lives in `src/lib/tools/<slug>.ts` as plain, testable TypeScript functions, imported by that tool's page-level `<script>`. Do not reach for React/Vue/Svelte islands for a tool's interactivity — Astro ships zero JS by default and this keeps it that way; only introduce a UI framework island if a specific tool's state management genuinely can't be done reasonably in vanilla TS/DOM.
-
-**`src/layouts/Layout.astro`** is the only place that renders `<head>` meta tags (title/description/OGP/Twitter Card/favicon) and the sidebar shell. All pages must go through it so SEO/OGP metadata stays consistent — pass `title`, `description`, and optionally `ogImage` as props rather than duplicating `<head>` markup per page.
-
-Note: `og:image` currently points at `https://nyankotools.com/ogp.png`, which doesn't exist yet in `public/`.
-
-## Conventions
-
-- UI copy, commit messages, and code comments are in Japanese, matching existing history.
-- ESLint (`eslint.config.js`, flat config: `typescript-eslint` + `eslint-plugin-astro` + `eslint-config-prettier`) and Prettier (`.prettierrc.json`, with `prettier-plugin-astro`) enforce style. Run both before committing.
-- `typescript` is pinned to `6.0.3` (not the newer `7.x` line) because `astro check` and `typescript-eslint` do not yet support TypeScript 7's native/Go-based compiler API — don't bump past the 6.x line without checking that both tools have caught up.
-- `.claude/settings.json` currently auto-allows only file read/edit tools; shell commands (git, pnpm, etc.) intentionally still prompt for confirmation each time — this was an explicit choice, not an oversight.
-- Line endings are LF everywhere (enforced via `.gitattributes`: `* text=auto eol=lf`), regardless of the OS used for editing. Windows' `core.autocrlf=true` can still check files out with CRLF locally, but `.gitattributes` normalizes what's actually committed — don't rely on editor/OS defaults.
+- **Tools are registered in `src/data/tools.ts`** — this single registry drives the homepage grid and the sidebar. Adding a tool involves several files (logic, i18n dictionary, shared page component, ja/en page files, registry); follow [`adding-a-tool.md`](.claude/docs/adding-a-tool.md), don't improvise the structure.
+- **Tool logic stays framework-free** in `src/lib/tools/<slug>.ts` (plain, testable TypeScript). No React/Vue/Svelte islands for tool interactivity.
+- **`src/layouts/Layout.astro` is the only place that renders `<head>` meta and the sidebar shell.** All pages go through it; never duplicate `<head>` markup per page.
+- **E2E**: sidebar navigation, 375px overflow, and h1 display are covered for all tools by `e2e/tools-common.spec.ts` (generated from the registry); per-tool specs only test tool-specific behavior.
+- Don't bump `typescript` past 6.x (`astro check` / `typescript-eslint` don't support 7.x yet). Line endings are LF (`.gitattributes`).
 
 ## Detailed docs
 
 More detailed rules and design docs live under `.claude/docs/`:
 
 - [`architecture.md`](.claude/docs/architecture.md) — stack, directory layout, data flow, static-only principle
-- [`conventions.md`](.claude/docs/conventions.md) — coding style, tool-logic structure, commit style
+- [`conventions.md`](.claude/docs/conventions.md) — coding style, tool-logic structure, testing, commit style, `.claude/settings.json` policy
 - [`adding-a-tool.md`](.claude/docs/adding-a-tool.md) — step-by-step checklist for adding a new tool
 - [`deployment.md`](.claude/docs/deployment.md) — Cloudflare Workers static-asset deploy config
-- [`growth.md`](.claude/docs/growth.md) — monetization-driven rules for SEO, responsive design, and future i18n
+- [`growth.md`](.claude/docs/growth.md) — monetization-driven rules for SEO, responsive design, and i18n

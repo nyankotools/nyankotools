@@ -30,4 +30,4 @@ pnpm preview   # ビルド結果をローカルでプレビュー
 
 ## 未対応・既知の課題
 
-- `og:image`（`https://nyankotools.com/ogp.png`）が `public/` に未配置。OGP 画像を追加する場合は `public/ogp.png` を用意する。
+- 現時点で既知の課題はない。

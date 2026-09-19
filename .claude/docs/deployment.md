@@ -1,8 +1,8 @@
-# 設計書: デプロイ
+# Design doc: Deployment
 
-## デプロイ先
+## Deploy target
 
-Cloudflare Workers（静的アセット配信）。`wrangler.jsonc` で以下を設定している。
+Cloudflare Workers (static asset serving). `wrangler.jsonc` is configured as follows.
 
 ```jsonc
 {
@@ -17,17 +17,17 @@ Cloudflare Workers（静的アセット配信）。`wrangler.jsonc` で以下を
 }
 ```
 
-- `build.command` により、デプロイ時に `pnpm build` が自動実行され `dist/` が生成される。
-- サーバーサイドの Worker コードは持たない（`assets` のみ）。SSR アダプター不要な static 出力構成と一致している。
-- `not_found_handling: "404-page"` により `src/pages/404.astro` が 404 時に使われる。
+- `build.command` runs `pnpm build` automatically at deploy time to produce `dist/`.
+- There is no server-side Worker code (`assets` only), consistent with the static output setup that needs no SSR adapter.
+- `not_found_handling: "404-page"` makes `src/pages/404.astro` serve 404s.
 
-## ローカルでの確認コマンド
+## Local check commands
 
 ```
-pnpm build     # dist/ に静的ビルドを生成
-pnpm preview   # ビルド結果をローカルでプレビュー
+pnpm build     # generate the static build in dist/
+pnpm preview   # preview the build locally
 ```
 
-## 未対応・既知の課題
+## Unsupported / known issues
 
-- 現時点で既知の課題はない。
+- No known issues at present.

@@ -31,7 +31,7 @@ NyankoTools aims for future monetization (ads/affiliate). Organic search traffic
 
 ## memo更新のルール
 
-- `memo/実装予定一覧.md` に載っている予定ツールの実装が完了したら、該当行のチェックボックスにチェックを入れ、「実装済み」セクションへ移動すること（`src/data/tools.ts` への登録と合わせて行う）。
+- `memo/実装予定一覧.md` に載っている予定ツールの実装が完了したら、該当行のチェックボックスにチェックを入れ、「実装済み」セクションへ移動すること（`src/data/tools.ts` への登録と合わせて行う）。各行の `No.xxx`（ツール固有の通し番号）は固定IDなので、移動時も変更せず、新規ツールには最大番号の次を付与すること。
 
 ## Commands
 

@@ -5,7 +5,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  reporter: 'html',
+  // ローカルは出力が短い line（成功時は1行進捗、失敗時のみ詳細）。CIはHTMLレポートを残す
+  reporter: process.env.CI ? 'html' : 'line',
   use: {
     baseURL: 'http://localhost:4321',
     trace: 'on-first-retry',

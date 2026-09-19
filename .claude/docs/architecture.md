@@ -54,6 +54,4 @@ Astro はデフォルトで JS をゼロ出力する。この特性を維持す�
 
 ## Layout.astro の役割
 
-`src/layouts/Layout.astro` が `<head>` のメタタグ（title/description/OGP/Twitter Card/favicon）とサイドバーシェルを描画する唯一の場所。すべてのページはこれを経由し、`title` / `description` / 任意で `ogImage` を props として渡す（`<head>` マークアップをページごとに複製しない）。
-
-注意: `og:image` は `https://nyankotools.com/ogp.png` を指しているが、`public/` にまだ実体が存在しない。
+`src/layouts/Layout.astro` が `<head>` のメタタグ（title/description/OGP/Twitter Card/favicon）とサイドバーシェルを描画する唯一の場所。すべてのページはこれを経由し、`title` / `description` / 任意で `ogImage` を props として渡す（`<head>` マークアップをページごとに複製しない）。`og:image` の既定は `https://nyankotools.com/ogp.png`（実体は `public/ogp.png`）。

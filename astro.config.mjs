@@ -59,5 +59,30 @@ export default defineConfig({
   ],
   vite: {
     plugins: [tailwindcss()],
+    // devサーバーはクライアントで使う外部ライブラリを初回アクセス時に遅延発見して再最適化する。
+    // キャッシュのないCI環境では、この再最適化と並行して読み込まれたページで
+    // `504 (Outdated Optimize Dep)` が発生してツールのスクリプトが動かず、E2Eが失敗した。
+    // 起動時に先に最適化させて再最適化自体を起こさないよう、クライアントで import する
+    // ライブラリを列挙する（本番ビルドには影響しない）。新しい外部ライブラリを使うツールを
+    // 追加したらここにも追記すること。
+    optimizeDeps: {
+      include: [
+        'csso',
+        'dompurify',
+        'jsonpath-plus',
+        'marked',
+        'prettier/standalone',
+        'prettier/plugins/babel',
+        'prettier/plugins/estree',
+        'prettier/plugins/html',
+        'prettier/plugins/postcss',
+        'qrcode-generator',
+        'smol-toml',
+        'sql-formatter',
+        'terser',
+        'turndown',
+        'yaml',
+      ],
+    },
   },
 });

@@ -105,27 +105,6 @@ test.describe('URLエンコード/デコードツール（日本語版）', () =
     );
     expect(clipboardText).toBe('hello%20world');
   });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/');
-
-    const link = page.locator('#sidebar a[href="/tools/url-encode/"]');
-    await link.locator('xpath=ancestor::details[1]/summary').click();
-    await link.click();
-
-    await expect(page).toHaveURL(/\/tools\/url-encode\/?$/);
-    await expect(page.locator('main h1')).toHaveText('URLエンコード/デコード');
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/url-encode/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
 });
 
 test.describe('URL Encoder/Decoder (English)', () => {
@@ -172,26 +151,5 @@ test.describe('URL Encoder/Decoder (English)', () => {
       navigator.clipboard.readText(),
     );
     expect(clipboardText).toBe('hello%20world');
-  });
-
-  test('サイドバーからツールページへ遷移できる（英語版）', async ({ page }) => {
-    await page.goto('/en/');
-
-    const link = page.locator('#sidebar a[href="/en/tools/url-encode/"]');
-    await link.locator('xpath=ancestor::details[1]/summary').click();
-    await link.click();
-
-    await expect(page).toHaveURL(/\/en\/tools\/url-encode\/?$/);
-    await expect(page.locator('main h1')).toHaveText('URL Encoder / Decoder');
-  });
-
-  test('375px幅でも横スクロールが発生しない（英語版）', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/en/tools/url-encode/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
   });
 });

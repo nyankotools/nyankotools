@@ -48,7 +48,7 @@
    - `pnpm exec astro check` で型チェック。
    - `pnpm run lint` / `pnpm run format` でスタイルを揃える。
    - `pnpm build` でビルドが通ることを確認する。
-   - 必要に応じて `e2e/<slug>.spec.ts` に Playwright の E2E テストを追加し、`pnpm run test:e2e` で確認する（詳細は [conventions.md](./conventions.md) 参照）。
+   - 必要に応じて `e2e/<slug>.spec.ts` に Playwright の E2E テストを追加し、`pnpm run test:e2e` で確認する（詳細は [conventions.md](./conventions.md) 参照）。サイドバーからの遷移・375px幅の横スクロール・`<h1>` の表示は、`src/data/tools.ts` に登録すれば `e2e/tools-common.spec.ts` が日英とも自動検証する。個別 spec には書かず、ツール固有の入力→出力・エラー表示・コピー等だけを書く。
    - 実装が完了したら、[CLAUDE.md](../../CLAUDE.md) の「レビュー・テストのルール」に従い、独立したレビュー専任エージェント（`tool-reviewer`）にレビューを依頼し、その完了報告を受けてから独立したQA専任エージェント（`tool-qa`）にテスト（lint / 型チェック / ビルド / 単体テスト / E2E・エッジケースの網羅性）を依頼する。`/tool-review` / `/qa-test` コマンドで手動起動することもできる。
 
 補足: この「共有コンポーネント＋辞書＋薄いラッパー」構成は、対応言語を将来さらに増やしていく前提の標準パターン（詳細は [growth.md](./growth.md) の「多言語化」）。既存ツールの一部はまだ ja/en 別ファイルの完全複製のままだが、新規ツールは必ずこの構成で実装する。

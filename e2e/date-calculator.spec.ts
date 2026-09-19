@@ -125,31 +125,6 @@ test.describe('日数計算機（日本語版）', () => {
     );
     await expect(page.locator('#date-calc-add-result')).toBeEmpty();
   });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/');
-
-    await page
-      .locator('#sidebar details[data-category="計算"] summary')
-      .click();
-    await page
-      .locator('#sidebar')
-      .getByRole('link', { name: '日数計算機' })
-      .click();
-
-    await expect(page).toHaveURL(/\/tools\/date-calculator\/?$/);
-    await expect(page.locator('main h1')).toHaveText('日数計算機');
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/date-calculator/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
 });
 
 test.describe('Date Calculator (English)', () => {

@@ -86,29 +86,6 @@ test.describe('テキストケース変換ツール（日本語版）', () => {
     );
     expect(clipboardText).toBe('hello-world');
   });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/');
-
-    const link = page.locator('#sidebar a[href="/tools/text-case-converter/"]');
-    await link.locator('xpath=ancestor::details[1]/summary').click();
-    await link.click();
-
-    await expect(page).toHaveURL(/\/tools\/text-case-converter\/?$/);
-    await expect(page.locator('main h1')).toHaveText(
-      'テキストケース変換（camelCase / snake_case / kebab-case / PascalCase）',
-    );
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/text-case-converter/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
 });
 
 test.describe('Text Case Converter (English)', () => {
@@ -142,27 +119,5 @@ test.describe('Text Case Converter (English)', () => {
       navigator.clipboard.readText(),
     );
     expect(clipboardText).toBe('hello_world');
-  });
-
-  test('サイドバーからツールページへ遷移できる（英語版）', async ({ page }) => {
-    await page.goto('/en/');
-
-    const link = page.locator(
-      '#sidebar a[href="/en/tools/text-case-converter/"]',
-    );
-    await link.locator('xpath=ancestor::details[1]/summary').click();
-    await link.click();
-
-    await expect(page).toHaveURL(/\/en\/tools\/text-case-converter\/?$/);
-  });
-
-  test('375px幅でも横スクロールが発生しない（英語版）', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/en/tools/text-case-converter/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
   });
 });

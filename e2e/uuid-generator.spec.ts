@@ -85,27 +85,6 @@ test.describe('UUID生成ツール（日本語版）', () => {
       output.replace(/\r\n/g, '\n'),
     );
   });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/');
-
-    const link = page.locator('#sidebar a[href="/tools/uuid-generator/"]');
-    await link.locator('xpath=ancestor::details[1]/summary').click();
-    await link.click();
-
-    await expect(page).toHaveURL(/\/tools\/uuid-generator\/?$/);
-    await expect(page.locator('main h1')).toHaveText('UUID生成（v4）');
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/uuid-generator/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
 });
 
 test.describe('UUID Generator (English)', () => {
@@ -129,26 +108,5 @@ test.describe('UUID Generator (English)', () => {
 
     await page.locator('#uuid-generator-copy-button').click();
     await expect(page.locator('#uuid-generator-status')).toHaveText('Copied');
-  });
-
-  test('サイドバーからツールページへ遷移できる（英語版）', async ({ page }) => {
-    await page.goto('/en/');
-
-    const link = page.locator('#sidebar a[href="/en/tools/uuid-generator/"]');
-    await link.locator('xpath=ancestor::details[1]/summary').click();
-    await link.click();
-
-    await expect(page).toHaveURL(/\/en\/tools\/uuid-generator\/?$/);
-    await expect(page.locator('main h1')).toHaveText('UUID Generator (v4)');
-  });
-
-  test('375px幅でも横スクロールが発生しない（英語版）', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/en/tools/uuid-generator/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
   });
 });

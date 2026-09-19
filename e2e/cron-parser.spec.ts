@@ -81,33 +81,6 @@ test.describe('Cron式スケジュールシミュレーター（日本語版）'
     await page.locator('#cron-copy').click();
     await expect(page.locator('#cron-status')).toHaveText('コピーしました');
   });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/');
-
-    await page
-      .locator('#sidebar details[data-category="開発"] summary')
-      .click();
-    await page
-      .locator('#sidebar')
-      .getByRole('link', { name: 'Cron式スケジュールシミュレーター' })
-      .click();
-
-    await expect(page).toHaveURL(/\/tools\/cron-parser\/?$/);
-    await expect(page.locator('main h1')).toHaveText(
-      'Cron式スケジュールシミュレーター',
-    );
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/cron-parser/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
 });
 
 test.describe('Cron Expression Simulator (English)', () => {

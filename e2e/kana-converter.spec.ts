@@ -82,27 +82,6 @@ test.describe('ひらがな/カタカナ変換ツール（日本語版）', () =
     );
     expect(clipboardText).toBe('ネコ');
   });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/');
-
-    const link = page.locator('#sidebar a[href="/tools/kana-converter/"]');
-    await link.locator('xpath=ancestor::details[1]/summary').click();
-    await link.click();
-
-    await expect(page).toHaveURL(/\/tools\/kana-converter\/?$/);
-    await expect(page.locator('main h1')).toHaveText('ひらがな/カタカナ変換');
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/kana-converter/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
 });
 
 test.describe('Hiragana / Katakana Converter (English)', () => {
@@ -130,28 +109,5 @@ test.describe('Hiragana / Katakana Converter (English)', () => {
     await page.locator('#kana-converter-copy-button').click();
 
     await expect(page.locator('#kana-converter-status')).toHaveText('Copied');
-  });
-
-  test('サイドバーからツールページへ遷移できる（英語版）', async ({ page }) => {
-    await page.goto('/en/');
-
-    const link = page.locator('#sidebar a[href="/en/tools/kana-converter/"]');
-    await link.locator('xpath=ancestor::details[1]/summary').click();
-    await link.click();
-
-    await expect(page).toHaveURL(/\/en\/tools\/kana-converter\/?$/);
-    await expect(page.locator('main h1')).toHaveText(
-      'Hiragana / Katakana Converter for Japanese Learners',
-    );
-  });
-
-  test('375px幅でも横スクロールが発生しない（英語版）', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/en/tools/kana-converter/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
   });
 });

@@ -78,29 +78,6 @@ test.describe('テキスト差分比較（diff）ツール（日本語版）', (
       '追加: 0行 / 削除: 0行 / 変更なし: 2行',
     );
   });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/');
-
-    const link = page.locator('#sidebar a[href="/tools/text-diff/"]');
-    await link.locator('xpath=ancestor::details[1]/summary').click();
-    await link.click();
-
-    await expect(page).toHaveURL(/\/tools\/text-diff\/?$/);
-    await expect(page.locator('main h1')).toHaveText(
-      'テキスト差分比較（diff）',
-    );
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/text-diff/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
 });
 
 test.describe('Text Diff Checker (English)', () => {
@@ -120,26 +97,5 @@ test.describe('Text Diff Checker (English)', () => {
     await expect(page.locator('#diff-status')).toHaveText(
       'Added: 1 / Removed: 1 / Unchanged: 1',
     );
-  });
-
-  test('サイドバーからツールページへ遷移できる（英語版）', async ({ page }) => {
-    await page.goto('/en/');
-
-    const link = page.locator('#sidebar a[href="/en/tools/text-diff/"]');
-    await link.locator('xpath=ancestor::details[1]/summary').click();
-    await link.click();
-
-    await expect(page).toHaveURL(/\/en\/tools\/text-diff\/?$/);
-    await expect(page.locator('main h1')).toHaveText('Text Diff Checker');
-  });
-
-  test('375px幅でも横スクロールが発生しない（英語版）', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/en/tools/text-diff/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
   });
 });

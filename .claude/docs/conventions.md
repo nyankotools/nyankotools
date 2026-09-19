@@ -20,7 +20,7 @@
 - 各ツールの実処理（パース、変換、計算など）は `src/lib/tools/<slug>.ts` に「フレームワーク非依存の素の TypeScript 関数」として書く。
 - ページ側の `<script>` タグはこの関数を import して DOM 更新に専念させる。ロジックをページ内に直接書かない。
 - テストは Vitest（`pnpm test` / `pnpm run test:watch`）。Astro ページではなく `src/lib/tools/*.ts` の純粋ロジックを対象にする（例: `src/lib/tools/char-counter.test.ts`）。
-- ブラウザ上の実際の挙動（ページ遷移、DOM 更新など）を確認する E2E テストは Playwright（`pnpm run test:e2e` / `pnpm run test:e2e:ui`）。テストファイルはリポジトリ直下の `e2e/*.spec.ts` に置く。`playwright.config.ts` の `webServer` が自動で `pnpm dev`（`http://localhost:4321`）を起動するため、事前にサーバーを立ち上げておく必要はない。初回実行前にブラウザ本体が必要なら `pnpm exec playwright install chromium` を実行する。
+- ブラウザ上の実際の挙動（ページ遷移、DOM 更新など）を確認する E2E テストは Playwright（`pnpm run test:e2e` / `pnpm run test:e2e:ui`）。テストファイルはリポジトリ直下の `e2e/*.spec.ts` に置く。全ツール共通の定型検証（サイドバー遷移・375px横スクロール・h1表示、日英）は `e2e/tools-common.spec.ts` が `src/data/tools.ts` の登録簿から自動生成するため、ツール別 spec にはツール固有の検証だけを書く。`playwright.config.ts` の `webServer` が自動で `pnpm dev`（`http://localhost:4321`）を起動するため、事前にサーバーを立ち上げておく必要はない。初回実行前にブラウザ本体が必要なら `pnpm exec playwright install chromium` を実行する。
 - 追加・修正したツールを網羅的にテストしたい場合は `/qa-test` コマンドを使う。実装した会話とは別の独立したQA専任サブエージェント（`.claude/agents/tool-qa.md`）が lint / 型チェック / ビルド / Vitest / Playwright を実行し、不足しているテストがあれば自分で追加実装したうえで結果を報告する。
 - コードレビューをしたい場合は `/tool-review` コマンドを使う。独立したレビュー専任サブエージェント（`.claude/agents/tool-reviewer.md`）が正確性・簡潔性・規約準拠・静的サイト制約・SEO/レスポンシブ・セキュリティの観点で指摘のみを行う（コードは変更しない）。
 

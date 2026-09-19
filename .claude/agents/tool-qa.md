@@ -47,7 +47,7 @@ model: haiku
 - 無ければ `e2e/char-counter.spec.ts` を参考に新規作成する。最低限、以下を確認する。
   - `/tools/<slug>/` に直接アクセスして正しく表示される（`<h1>` の文言など）
   - 主要な入力→出力のゴールデンパスが動作する
-  - 新規ツールの場合、サイドバーからそのツールへ遷移できる
+- サイドバーからの遷移・375px幅での横スクロール・`<h1>` の表示（日英）は `e2e/tools-common.spec.ts` が `src/data/tools.ts` の登録簿から全ツール分を自動検証する。ツール個別の spec には**書かない**（重複になる）。新規ツールは `tools.ts` に登録されていれば自動で対象になるので、その登録を確認する。
 - 初回実行でブラウザが無い場合は `pnpm exec playwright install chromium` を実行する。
 - 実行は対象ツールの spec ファイルのみに絞る（例: `pnpm exec playwright test e2e/<slug>.spec.ts`）。`pnpm run test:e2e`（全ツール分のフルスイート）はトークン消費が大きいため、呼び出し元から明示的に指示された場合のみ実行する。
 
@@ -56,7 +56,7 @@ model: haiku
 - サーバーに一切データを送っていないか（`fetch` / `XMLHttpRequest` 等の呼び出しがないか grep で確認）
 - `Layout` でラップされ、ページ専用の `title` / `description` が設計され、`<h1>` が1つだけか
 - `src/data/tools.ts` に `category` を含めて登録されているか
-- 375px 前後の狭い画面幅でもレイアウトが崩れないか（Playwrightでビューポート幅375pxのテストを追加するか、マークアップを読んで判断する）
+- 375px 前後の狭い画面幅でもレイアウトが崩れないか（横スクロールの有無は `e2e/tools-common.spec.ts` が自動検証する。それ以外の崩れはマークアップを読んで判断する）
 
 ## 注意事項
 

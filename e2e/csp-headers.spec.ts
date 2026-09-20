@@ -175,6 +175,40 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
     await context.close();
   });
 
+  test('テーマの切り替え: CSP適用下でもライト/ダークを切り替えられ、選択が保存される', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ baseURL: BASE_URL });
+    const page = await context.newPage();
+    const consoleErrors: string[] = [];
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') consoleErrors.push(msg.text());
+    });
+    page.on('pageerror', (err) => consoleErrors.push(String(err)));
+
+    await page.goto('/tools/char-counter/');
+
+    const html = page.locator('html');
+    const darkButton = page.locator('[data-theme-option="dark"]');
+    const lightButton = page.locator('[data-theme-option="light"]');
+
+    // 切り替えのロジックは src/lib/layout-nav.ts（ビルドが外部ファイル化したもの）が担う
+    await darkButton.click();
+    await expect(html).toHaveClass(/\bdark\b/);
+    await expect(darkButton).toHaveAttribute('aria-pressed', 'true');
+
+    // 再読み込み後の初期表示は public/theme-init.js（外部ファイル）が保存値から復元する
+    await page.reload();
+    await expect(html).toHaveClass(/\bdark\b/);
+
+    await lightButton.click();
+    await expect(html).not.toHaveClass(/\bdark\b/);
+    await expect(lightButton).toHaveAttribute('aria-pressed', 'true');
+
+    expect(consoleErrors).toEqual([]);
+    await context.close();
+  });
+
   test('モバイル幅でハンバーガーメニューからサイドバーを開閉できる', async ({
     browser,
   }) => {

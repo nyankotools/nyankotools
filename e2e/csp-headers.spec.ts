@@ -192,12 +192,16 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
     const darkButton = page.locator('[data-theme-option="dark"]');
     const lightButton = page.locator('[data-theme-option="light"]');
 
-    // 切り替えのロジックは src/lib/layout-nav.ts（ビルドが外部ファイル化したもの）が担う
+    // 切り替えの処理（src/lib/layout-nav.ts の initTheme）は、ビルドがHTMLに埋め込む
+    // インラインscriptで、<meta> のCSPがハッシュで許可している。ヘッダー側に
+    // script-src 'self' が残ると、このscriptがブロックされてクリックが効かなくなる。
     await darkButton.click();
     await expect(html).toHaveClass(/\bdark\b/);
     await expect(darkButton).toHaveAttribute('aria-pressed', 'true');
 
-    // 再読み込み後の初期表示は public/theme-init.js（外部ファイル）が保存値から復元する
+    // 再読み込み後の選択の復元は、外部ファイルの public/theme-init.js（描画前）と、
+    // initTheme()（読み込み時に保存値を適用）のどちらでも行われる。
+    // このテストは、どちらか一方でも復元されれば通る。
     await page.reload();
     await expect(html).toHaveClass(/\bdark\b/);
 

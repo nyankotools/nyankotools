@@ -94,9 +94,8 @@ const t = taxCalculatorContent[locale];
         </label>
         <input
           id="tax-calc-amount"
-          type="number"
+          type="text"
           inputmode="decimal"
-          min="0"
           placeholder={t.amountPlaceholder}
           class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
         />
@@ -184,9 +183,8 @@ const t = taxCalculatorContent[locale];
         </label>
         <input
           id="discount-calc-original"
-          type="number"
+          type="text"
           inputmode="decimal"
-          min="0"
           placeholder={t.originalPricePlaceholder}
           class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
         />
@@ -227,9 +225,8 @@ const t = taxCalculatorContent[locale];
         </label>
         <input
           id="discount-calc-value"
-          type="number"
+          type="text"
           inputmode="decimal"
-          min="0"
           placeholder={t.discountValuePlaceholder}
           class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
         />
@@ -316,6 +313,11 @@ const t = taxCalculatorContent[locale];
     type DiscountType,
     type RoundingMode,
   } from '../../lib/tools/tax-calculator';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
 
   const taxSection = document.querySelector<HTMLElement>(
     'section[data-number-locale]',
@@ -356,6 +358,8 @@ const t = taxCalculatorContent[locale];
   const resultTaxEl = document.getElementById('tax-calc-result-tax')!;
   const resultIncludedEl = document.getElementById('tax-calc-result-included')!;
 
+  attachCommaFormatting(amountInput);
+
   function selectedMode(): boolean {
     return (
       Array.from(modeInputs).find((el) => el.checked)?.value === 'inclusive'
@@ -382,7 +386,7 @@ const t = taxCalculatorContent[locale];
     if (amountInput.value.trim() === '') return;
 
     const result = calculateTax({
-      amount: Number(amountInput.value),
+      amount: Number(stripCommas(amountInput.value)),
       taxRatePercent: selectedTaxRate(),
       priceIncludesTax: selectedMode(),
       rounding: selectedTaxRounding(),
@@ -450,6 +454,9 @@ const t = taxCalculatorContent[locale];
     'discount-calc-result-rate',
   )!;
 
+  attachCommaFormatting(originalInput);
+  attachCommaFormatting(discountValueInput);
+
   function selectedDiscountType(): DiscountType {
     return (
       (Array.from(discountTypeInputs).find((el) => el.checked)
@@ -475,9 +482,9 @@ const t = taxCalculatorContent[locale];
       return;
 
     const result = calculateDiscount({
-      originalPrice: Number(originalInput.value),
+      originalPrice: Number(stripCommas(originalInput.value)),
       discountType: selectedDiscountType(),
-      discountValue: Number(discountValueInput.value),
+      discountValue: Number(stripCommas(discountValueInput.value)),
       rounding: selectedDiscountRounding(),
     });
 
@@ -507,8 +514,8 @@ const t = taxCalculatorContent[locale];
     el.addEventListener('change', renderDiscount),
   );
 
-  amountInput.value = '1000';
-  originalInput.value = '5000';
+  amountInput.value = formatNumberWithCommas('1000');
+  originalInput.value = formatNumberWithCommas('5000');
   discountValueInput.value = '20';
   renderTax();
   renderDiscount();

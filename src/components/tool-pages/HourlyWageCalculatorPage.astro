@@ -69,9 +69,8 @@ const t = hourlyWageCalculatorContent[locale];
         </label>
         <input
           id="wage-calc-amount"
-          type="number"
+          type="text"
           inputmode="decimal"
-          min="0"
           placeholder={t.amountPlaceholder}
           class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
         />
@@ -172,9 +171,8 @@ const t = hourlyWageCalculatorContent[locale];
       </label>
       <input
         id="wage-calc-base-hourly"
-        type="number"
+        type="text"
         inputmode="decimal"
-        min="0"
         placeholder={t.amountPlaceholder}
         class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
       />
@@ -239,6 +237,11 @@ const t = hourlyWageCalculatorContent[locale];
     convertWage,
     type WageUnit,
   } from '../../lib/tools/hourly-wage-calculator';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
 
   const configEl = document.querySelector<HTMLElement>(
     'section[data-number-locale]',
@@ -289,6 +292,9 @@ const t = hourlyWageCalculatorContent[locale];
   ) as HTMLInputElement;
   let baseHourlyManuallyEdited = false;
 
+  attachCommaFormatting(amountInput);
+  attachCommaFormatting(baseHourlyInput);
+
   function selectedUnit(): WageUnit {
     return (
       (Array.from(unitInputs).find((el) => el.checked)?.value as WageUnit) ??
@@ -303,7 +309,7 @@ const t = hourlyWageCalculatorContent[locale];
     if (amountInput.value.trim() === '') return;
 
     const result = convertWage({
-      amount: Number(amountInput.value),
+      amount: Number(stripCommas(amountInput.value)),
       unit: selectedUnit(),
       hoursPerDay: Number(hoursPerDayInput.value),
       daysPerMonth: Number(daysPerMonthInput.value),
@@ -321,7 +327,9 @@ const t = hourlyWageCalculatorContent[locale];
     conversionResultsEl.classList.remove('hidden');
 
     if (!baseHourlyManuallyEdited) {
-      baseHourlyInput.value = String(Math.round(result.hourly));
+      baseHourlyInput.value = formatNumberWithCommas(
+        String(Math.round(result.hourly)),
+      );
       renderOvertime();
     }
   }
@@ -411,7 +419,7 @@ const t = hourlyWageCalculatorContent[locale];
     }));
 
     const result = calculateOvertimePay(
-      Number(baseHourlyInput.value),
+      Number(stripCommas(baseHourlyInput.value)),
       categories,
     );
 
@@ -440,7 +448,7 @@ const t = hourlyWageCalculatorContent[locale];
 
   hoursPerDayInput.value = '8';
   daysPerMonthInput.value = '20';
-  amountInput.value = '1200';
+  amountInput.value = formatNumberWithCommas('1200');
   renderConversion();
   renderOvertime();
 </script>

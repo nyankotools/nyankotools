@@ -531,6 +531,23 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'ratio-calculator',
+    translations: {
+      ja: {
+        name: '割合・比率計算機',
+        description:
+          '比を最も簡単な整数比に約分し、比例式（A:B=C:D）の空欄の値や、部分・全体・割合(%)・増減率を相互に計算します。',
+        category: '計算',
+      },
+      en: {
+        name: 'Ratio & Percentage Calculator',
+        description:
+          'Reduces a ratio to its simplest whole-number form, solves for a missing term in a proportion, and converts between a part, a whole, a percentage, and a rate of change.',
+        category: 'Calculate',
+      },
+    },
+  },
+  {
     slug: 'sql-formatter',
     translations: {
       ja: {

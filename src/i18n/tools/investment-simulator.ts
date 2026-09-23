@@ -44,6 +44,9 @@ export interface InvestmentSimulatorPageContent {
   principalLegendLabel: string;
   gainLegendLabel: string;
 
+  trendChartHeading: string;
+  trendChartAriaLabelTemplate: string;
+
   tableHeading: string;
   tableYearHeader: string;
   tablePrincipalHeader: string;
@@ -57,6 +60,8 @@ export interface InvestmentSimulatorPageContent {
   withdrawalError: string;
   withdrawalMonthlyLabel: string;
   withdrawalTotalLabel: string;
+  withdrawalChartHeading: string;
+  withdrawalChartAriaLabelTemplate: string;
   withdrawalTableHeading: string;
   withdrawalTableYearHeader: string;
   withdrawalTableBalanceHeader: string;
@@ -120,6 +125,10 @@ export const investmentSimulatorContent: Record<
     principalLegendLabel: '元本合計',
     gainLegendLabel: '運用益',
 
+    trendChartHeading: '年別の推移（グラフ）',
+    trendChartAriaLabelTemplate:
+      '元本合計と資産評価額の年別推移グラフ。積立終了時点で元本合計{principal}、資産評価額{balance}。',
+
     tableHeading: '年別の推移',
     tableYearHeader: '経過期間',
     tablePrincipalHeader: '元本合計',
@@ -135,6 +144,9 @@ export const investmentSimulatorContent: Record<
       '計算できませんでした（取り崩し期間は1〜60年の整数で入力してください）',
     withdrawalMonthlyLabel: '毎月の取り崩し可能額',
     withdrawalTotalLabel: '取り崩し総額',
+    withdrawalChartHeading: '残り資産額の推移（グラフ）',
+    withdrawalChartAriaLabelTemplate:
+      '残り資産評価額の年別推移グラフ。{years}年後に残高がおよそ0円になる想定。',
     withdrawalTableHeading: '残り資産額の推移',
     withdrawalTableYearHeader: '経過年数',
     withdrawalTableBalanceHeader: '残り資産評価額',
@@ -226,6 +238,10 @@ export const investmentSimulatorContent: Record<
     principalLegendLabel: 'Total principal',
     gainLegendLabel: 'Investment gain',
 
+    trendChartHeading: 'Year-by-year trend (chart)',
+    trendChartAriaLabelTemplate:
+      'Chart of total principal and future value by year. At the end of the period: total principal {principal}, future value {balance}.',
+
     tableHeading: 'Year-by-year breakdown',
     tableYearHeader: 'Elapsed time',
     tablePrincipalHeader: 'Total principal',
@@ -241,6 +257,9 @@ export const investmentSimulatorContent: Record<
       'Could not calculate (the withdrawal period must be a whole number of years between 1 and 60)',
     withdrawalMonthlyLabel: 'Sustainable monthly withdrawal',
     withdrawalTotalLabel: 'Total withdrawn',
+    withdrawalChartHeading: 'Remaining balance over time (chart)',
+    withdrawalChartAriaLabelTemplate:
+      'Chart of the remaining balance by year. The balance reaches approximately ¥0 after {years} years.',
     withdrawalTableHeading: 'Remaining balance over time',
     withdrawalTableYearHeader: 'Year',
     withdrawalTableBalanceHeader: 'Remaining balance',

@@ -245,3 +245,147 @@ test('資産運用シミュレーション: 用語解説が表示される', asy
   await expect(glossaryHeading).toBeVisible();
   await expect(page.locator('main')).toContainText('取り崩し');
 });
+
+test('資産運用シミュレーション: 年別推移グラフが表示される', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  const trendChartEl = page.locator('#investment-sim-trend-chart');
+  await expect(trendChartEl).toBeVisible();
+  await expect(trendChartEl).toHaveAttribute(
+    'aria-label',
+    /元本合計|資産評価額/,
+  );
+
+  // グラフ要素（パス）が描画されていることを確認
+  const paths = trendChartEl.locator('path');
+  expect(await paths.count()).toBeGreaterThan(0);
+
+  // グラフのセクション内に凡例のテキストが表示される
+  const trendSection = trendChartEl.locator('../..');
+  await expect(trendSection).toContainText('元本合計');
+  await expect(trendSection).toContainText('運用益');
+});
+
+test('資産運用シミュレーション: 年別推移グラフのホバーでツールチップが表示される', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  const chartOverlay = page
+    .locator('#investment-sim-trend-chart')
+    .locator('rect');
+  const tooltipEl = page.locator('#investment-sim-trend-tooltip');
+
+  // チャート上をマウスホバー
+  await chartOverlay.first().hover();
+
+  // ツールチップが表示される
+  await expect(tooltipEl).not.toHaveClass(/hidden/);
+
+  // ツールチップの内容が表示される（年、元本、運用益、残高など）
+  const tooltipContent = await tooltipEl.textContent();
+  expect(tooltipContent).toBeTruthy();
+  expect(tooltipContent).toMatch(/年|yr/);
+});
+
+test('資産運用シミュレーション: 取り崩しシミュレーションの残り資産額推移グラフが表示される', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  const withdrawalChartEl = page.locator('#investment-sim-withdrawal-chart');
+  await expect(withdrawalChartEl).toBeVisible();
+  await expect(withdrawalChartEl).toHaveAttribute('aria-label', /年後/);
+
+  // グラフ要素（パス）が描画されていることを確認
+  const paths = withdrawalChartEl.locator('path');
+  expect(await paths.count()).toBeGreaterThan(0);
+});
+
+test('資産運用シミュレーション: 取り崩しグラフのホバーでツールチップが表示される', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  const chartOverlay = page
+    .locator('#investment-sim-withdrawal-chart')
+    .locator('rect');
+  const tooltipEl = page.locator('#investment-sim-withdrawal-tooltip');
+
+  // チャート上をマウスホバー
+  await chartOverlay.first().hover();
+
+  // ツールチップが表示される
+  await expect(tooltipEl).not.toHaveClass(/hidden/);
+
+  // ツールチップの内容が表示される
+  const tooltipContent = await tooltipEl.textContent();
+  expect(tooltipContent).toBeTruthy();
+});
+
+test('資産運用シミュレーション: 積立期間が短い場合（1年）、グラフのX軸ラベルが重複しない', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  await page.locator('#investment-sim-years').fill('1');
+
+  const trendChartEl = page.locator('#investment-sim-trend-chart');
+  await expect(trendChartEl).toBeVisible();
+
+  // X軸のラベルテキストを取得
+  const textElements = await trendChartEl.locator('text').all();
+  const xAxisLabels: string[] = [];
+
+  for (const el of textElements) {
+    const text = await el.textContent();
+    // X軸ラベルは年またはyrで終わる（最後のtextアンカーがendのもの）
+    if (text && (text.includes('年') || text.includes('yr'))) {
+      xAxisLabels.push(text);
+    }
+  }
+
+  // 複数の同じラベルが表示されないことを確認（重複があるとSet化した際にサイズが減る）
+  const uniqueLabels = new Set(xAxisLabels);
+  expect(xAxisLabels.length).toBeGreaterThan(0);
+  expect(uniqueLabels.size).toBe(xAxisLabels.length);
+});
+
+test('資産運用シミュレーション: 入力が空になるとグラフが消える', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  // 初期状態ではグラフが表示される
+  const trendChartEl = page.locator('#investment-sim-trend-chart');
+  let paths = await trendChartEl.locator('path').count();
+  expect(paths).toBeGreaterThan(0);
+
+  // すべての入力をクリア
+  await page.locator('#investment-sim-initial').clear();
+  await page.locator('#investment-sim-monthly').clear();
+  await page.locator('#investment-sim-years').clear();
+
+  // グラフがクリアされる（パスが0になる）
+  paths = await trendChartEl.locator('path').count();
+  expect(paths).toBe(0);
+  await expect(trendChartEl).not.toHaveAttribute('aria-label', /.+/);
+});
+
+test('資産運用シミュレーション: 英語版でもグラフが表示される', async ({
+  page,
+}) => {
+  await page.goto('/en/tools/investment-simulator/');
+
+  const trendChartEl = page.locator('#investment-sim-trend-chart');
+  const withdrawalChartEl = page.locator('#investment-sim-withdrawal-chart');
+
+  await expect(trendChartEl).toBeVisible();
+  await expect(withdrawalChartEl).toBeVisible();
+
+  // 英語版ではaria-labelが英語で設定される
+  const trendLabel = await trendChartEl.getAttribute('aria-label');
+  expect(trendLabel).toMatch(/principal|value/);
+});

@@ -599,6 +599,23 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'investment-simulator',
+    translations: {
+      ja: {
+        name: '資産運用シミュレーション（積立・複利計算）',
+        description:
+          '初期投資額・毎月の積立額・想定利回り・積立期間のうち3つから残る1つを複利計算で試算します。積立元本と運用益の内訳をグラフと年別の表で確認でき、取り崩し可能額（毎月）もあわせて試算できます。',
+        category: '計算',
+      },
+      en: {
+        name: 'Investment Growth Simulator',
+        description:
+          'Solves for any one of initial investment, monthly contribution, annual return, or time horizon from the other three under compound interest, with a chart and year-by-year table, plus a sustainable monthly withdrawal estimate.',
+        category: 'Calculate',
+      },
+    },
+  },
+  {
     slug: 'sql-formatter',
     translations: {
       ja: {

@@ -1,0 +1,509 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { ratioCalculatorContent } from '../../i18n/tools/ratio-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = ratioCalculatorContent[locale];
+const percentModeEntries = Object.entries(t.percentModes);
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error-ratio={t.errorRatio}
+  >
+    <h2 class="mb-1 text-lg font-bold">{t.section1Heading}</h2>
+    <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+      {t.section1Intro}
+    </p>
+
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label
+          for="ratio-input-a"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.ratioALabel}
+        </label>
+        <input
+          id="ratio-input-a"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          placeholder={t.ratioAPlaceholder}
+          class="h-11 w-28 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <span class="pb-2 text-lg text-gray-500 dark:text-gray-400">:</span>
+      <div>
+        <label
+          for="ratio-input-b"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.ratioBLabel}
+        </label>
+        <input
+          id="ratio-input-b"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          placeholder={t.ratioBPlaceholder}
+          class="h-11 w-28 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+    </div>
+
+    <p
+      id="ratio-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl id="ratio-results" class="mt-4 hidden" aria-live="polite">
+      <dt class="text-sm text-gray-600 dark:text-gray-400">
+        {t.ratioResultLabel}
+      </dt>
+      <dd class="text-lg font-semibold" id="ratio-result"></dd>
+    </dl>
+  </section>
+
+  <section
+    class="mt-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-error-proportion={t.errorProportion}
+  >
+    <h2 class="mb-1 text-lg font-bold">{t.section2Heading}</h2>
+    <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+      {t.section2Intro}
+    </p>
+
+    <div class="mb-3">
+      <span
+        id="proportion-unknown-label"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.proportionUnknownLegend}
+      </span>
+      <div
+        class="flex flex-wrap gap-3"
+        role="radiogroup"
+        aria-labelledby="proportion-unknown-label"
+      >
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="proportion-unknown" value="a" />
+          {t.proportionLabelA}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="proportion-unknown" value="b" />
+          {t.proportionLabelB}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="proportion-unknown" value="c" />
+          {t.proportionLabelC}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="proportion-unknown" value="d" checked />
+          {t.proportionLabelD}
+        </label>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <input
+        id="proportion-input-a"
+        type="number"
+        inputmode="decimal"
+        min="0"
+        aria-label={t.proportionLabelA}
+        class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+      <span class="text-gray-500 dark:text-gray-400">:</span>
+      <input
+        id="proportion-input-b"
+        type="number"
+        inputmode="decimal"
+        min="0"
+        aria-label={t.proportionLabelB}
+        class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+      <span class="px-1 text-gray-500 dark:text-gray-400">=</span>
+      <input
+        id="proportion-input-c"
+        type="number"
+        inputmode="decimal"
+        min="0"
+        aria-label={t.proportionLabelC}
+        class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+      <span class="text-gray-500 dark:text-gray-400">:</span>
+      <input
+        id="proportion-input-d"
+        type="number"
+        inputmode="decimal"
+        min="0"
+        aria-label={t.proportionLabelD}
+        disabled
+        class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+    </div>
+
+    <p
+      id="proportion-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl id="proportion-results" class="mt-4 hidden" aria-live="polite">
+      <dt class="text-sm text-gray-600 dark:text-gray-400">
+        {t.proportionResultLabel}
+      </dt>
+      <dd class="text-lg font-semibold" id="proportion-result"></dd>
+    </dl>
+  </section>
+
+  <section
+    class="mt-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-error-percent={t.errorPercent}
+    data-percent-modes={JSON.stringify(t.percentModes)}
+  >
+    <h2 class="mb-1 text-lg font-bold">{t.section3Heading}</h2>
+    <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+      {t.section3Intro}
+    </p>
+
+    <div class="mb-3">
+      <span
+        id="percent-mode-label"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.percentModeLegend}
+      </span>
+      <div
+        class="flex flex-col gap-2"
+        role="radiogroup"
+        aria-labelledby="percent-mode-label"
+      >
+        {percentModeEntries.map(([mode, labels], index) => (
+          <label class="flex items-center gap-1 text-sm">
+            <input
+              type="radio"
+              name="percent-mode"
+              value={mode}
+              checked={index === 0}
+            />
+            {labels.optionLabel}
+          </label>
+        ))}
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label
+          for="percent-input-value1"
+          id="percent-value1-label"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {percentModeEntries[0][1].value1Label}
+        </label>
+        <input
+          id="percent-input-value1"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          placeholder={percentModeEntries[0][1].value1Placeholder}
+          class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label
+          for="percent-input-value2"
+          id="percent-value2-label"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {percentModeEntries[0][1].value2Label}
+        </label>
+        <input
+          id="percent-input-value2"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          placeholder={percentModeEntries[0][1].value2Placeholder}
+          class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+    </div>
+
+    <p
+      id="percent-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl id="percent-results" class="mt-4 hidden" aria-live="polite">
+      <dt
+        class="text-sm text-gray-600 dark:text-gray-400"
+        id="percent-result-label"
+      >
+        {percentModeEntries[0][1].resultLabel}
+      </dt>
+      <dd class="text-lg font-semibold" id="percent-result"></dd>
+    </dl>
+  </section>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    calculatePercentage,
+    simplifyRatio,
+    solveProportion,
+    type PercentageMode,
+  } from '../../lib/tools/ratio-calculator';
+  import type { PercentageModeLabels } from '../../i18n/tools/ratio-calculator';
+
+  // --- 1. 比の簡略化 ---
+
+  const ratioSection = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = ratioSection.dataset.numberLocale ?? 'en-US';
+  const errorRatio = ratioSection.dataset.errorRatio ?? '';
+
+  const integerFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 0,
+  });
+  const decimalFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 4,
+  });
+
+  const ratioInputA = document.getElementById(
+    'ratio-input-a',
+  ) as HTMLInputElement;
+  const ratioInputB = document.getElementById(
+    'ratio-input-b',
+  ) as HTMLInputElement;
+  const ratioErrorEl = document.getElementById('ratio-error')!;
+  const ratioResultsEl = document.getElementById('ratio-results')!;
+  const ratioResultEl = document.getElementById('ratio-result')!;
+
+  function renderRatio() {
+    ratioErrorEl.textContent = '';
+    ratioResultsEl.classList.add('hidden');
+
+    if (ratioInputA.value.trim() === '' || ratioInputB.value.trim() === '')
+      return;
+
+    const result = simplifyRatio(
+      Number(ratioInputA.value),
+      Number(ratioInputB.value),
+    );
+    if (result === null) {
+      ratioErrorEl.textContent = errorRatio;
+      return;
+    }
+
+    ratioResultEl.textContent = `${integerFormat.format(result.a)} : ${integerFormat.format(result.b)}`;
+    ratioResultsEl.classList.remove('hidden');
+  }
+
+  ratioInputA.addEventListener('input', renderRatio);
+  ratioInputB.addEventListener('input', renderRatio);
+
+  // --- 2. 比例式の計算 ---
+
+  const proportionSection = document.querySelector<HTMLElement>(
+    'section[data-error-proportion]',
+  )!;
+  const errorProportion = proportionSection.dataset.errorProportion ?? '';
+
+  const proportionUnknownInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="proportion-unknown"]',
+  );
+  const proportionFields = {
+    a: document.getElementById('proportion-input-a') as HTMLInputElement,
+    b: document.getElementById('proportion-input-b') as HTMLInputElement,
+    c: document.getElementById('proportion-input-c') as HTMLInputElement,
+    d: document.getElementById('proportion-input-d') as HTMLInputElement,
+  };
+  const proportionErrorEl = document.getElementById('proportion-error')!;
+  const proportionResultsEl = document.getElementById('proportion-results')!;
+  const proportionResultEl = document.getElementById('proportion-result')!;
+
+  function selectedUnknownField(): keyof typeof proportionFields {
+    return (
+      (Array.from(proportionUnknownInputs).find((el) => el.checked)
+        ?.value as keyof typeof proportionFields) ?? 'd'
+    );
+  }
+
+  function renderProportion() {
+    proportionErrorEl.textContent = '';
+    proportionResultsEl.classList.add('hidden');
+
+    const unknown = selectedUnknownField();
+    const values = (
+      Object.keys(proportionFields) as Array<keyof typeof proportionFields>
+    ).reduce(
+      (acc, key) => {
+        acc[key] =
+          key === unknown || proportionFields[key].value.trim() === ''
+            ? null
+            : Number(proportionFields[key].value);
+        return acc;
+      },
+      {} as Record<keyof typeof proportionFields, number | null>,
+    );
+
+    // 未知の項以外がすべて入力されていなければ何もしない
+    const otherKeys = (
+      Object.keys(proportionFields) as Array<keyof typeof proportionFields>
+    ).filter((key) => key !== unknown);
+    if (otherKeys.some((key) => values[key] === null)) return;
+
+    const result = solveProportion(values);
+    if (result === null) {
+      proportionErrorEl.textContent = errorProportion;
+      return;
+    }
+
+    proportionResultEl.textContent = `${proportionUnknownLabel(unknown)} = ${decimalFormat.format(result)}`;
+    proportionResultsEl.classList.remove('hidden');
+  }
+
+  function proportionUnknownLabel(key: keyof typeof proportionFields): string {
+    return key.toUpperCase();
+  }
+
+  function updateProportionDisabledState() {
+    const unknown = selectedUnknownField();
+    (
+      Object.keys(proportionFields) as Array<keyof typeof proportionFields>
+    ).forEach((key) => {
+      const input = proportionFields[key];
+      input.disabled = key === unknown;
+      if (input.disabled) input.value = '';
+    });
+  }
+
+  proportionUnknownInputs.forEach((el) =>
+    el.addEventListener('change', () => {
+      updateProportionDisabledState();
+      renderProportion();
+    }),
+  );
+  Object.values(proportionFields).forEach((input) =>
+    input.addEventListener('input', renderProportion),
+  );
+  updateProportionDisabledState();
+
+  // --- 3. 割合(%)の計算 ---
+
+  const percentSection = document.querySelector<HTMLElement>(
+    'section[data-error-percent]',
+  )!;
+  const errorPercent = percentSection.dataset.errorPercent ?? '';
+  const percentModes: Record<PercentageMode, PercentageModeLabels> = JSON.parse(
+    percentSection.dataset.percentModes ?? '{}',
+  );
+
+  const percentModeInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="percent-mode"]',
+  );
+  const percentValue1Input = document.getElementById(
+    'percent-input-value1',
+  ) as HTMLInputElement;
+  const percentValue2Input = document.getElementById(
+    'percent-input-value2',
+  ) as HTMLInputElement;
+  const percentValue1Label = document.getElementById('percent-value1-label')!;
+  const percentValue2Label = document.getElementById('percent-value2-label')!;
+  const percentErrorEl = document.getElementById('percent-error')!;
+  const percentResultsEl = document.getElementById('percent-results')!;
+  const percentResultLabelEl = document.getElementById('percent-result-label')!;
+  const percentResultEl = document.getElementById('percent-result')!;
+
+  function selectedPercentMode(): PercentageMode {
+    return (
+      (Array.from(percentModeInputs).find((el) => el.checked)
+        ?.value as PercentageMode) ?? 'partToPercent'
+    );
+  }
+
+  function applyPercentModeLabels() {
+    const labels = percentModes[selectedPercentMode()];
+    percentValue1Label.textContent = labels.value1Label;
+    percentValue2Label.textContent = labels.value2Label;
+    percentValue1Input.placeholder = labels.value1Placeholder;
+    percentValue2Input.placeholder = labels.value2Placeholder;
+    percentResultLabelEl.textContent = labels.resultLabel;
+  }
+
+  function renderPercent() {
+    percentErrorEl.textContent = '';
+    percentResultsEl.classList.add('hidden');
+
+    if (
+      percentValue1Input.value.trim() === '' ||
+      percentValue2Input.value.trim() === ''
+    )
+      return;
+
+    const mode = selectedPercentMode();
+    const result = calculatePercentage({
+      mode,
+      value1: Number(percentValue1Input.value),
+      value2: Number(percentValue2Input.value),
+    });
+
+    if (result === null) {
+      percentErrorEl.textContent = errorPercent;
+      return;
+    }
+
+    const unit = percentModes[mode].resultUnit;
+    percentResultEl.textContent = `${decimalFormat.format(result)}${unit}`;
+    percentResultsEl.classList.remove('hidden');
+  }
+
+  percentModeInputs.forEach((el) =>
+    el.addEventListener('change', () => {
+      applyPercentModeLabels();
+      renderPercent();
+    }),
+  );
+  percentValue1Input.addEventListener('input', renderPercent);
+  percentValue2Input.addEventListener('input', renderPercent);
+
+  // --- 初期値 ---
+
+  ratioInputA.value = '4';
+  ratioInputB.value = '6';
+  renderRatio();
+
+  proportionFields.a.value = '3';
+  proportionFields.b.value = '4';
+  proportionFields.c.value = '6';
+  renderProportion();
+
+  percentValue1Input.value = '25';
+  percentValue2Input.value = '200';
+  renderPercent();
+</script>

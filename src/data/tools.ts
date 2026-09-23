@@ -751,6 +751,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'scholarship-repayment-simulator',
+    translations: {
+      ja: {
+        name: '奨学金返済シミュレーション',
+        description:
+          'JASSO第二種奨学金（利子付き）を想定し、貸与総額・利率・返還期間から、利率固定方式・利率見直し方式それぞれの毎月の返済額・総返済額・総利息を簡易試算します。',
+        category: '計算',
+      },
+      en: {
+        name: 'JASSO Student Loan Repayment Simulator',
+        description:
+          'Estimates the monthly payment, total repayment, and total interest for a JASSO Type 2 (interest-bearing) student loan, comparing the fixed-rate and rate-review repayment methods.',
+        category: 'Calculate',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

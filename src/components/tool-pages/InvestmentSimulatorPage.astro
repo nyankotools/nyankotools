@@ -1,0 +1,1521 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { investmentSimulatorContent } from '../../i18n/tools/investment-simulator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = investmentSimulatorContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+    data-chart-aria-label-template={t.chartAriaLabelTemplate}
+    data-trend-chart-aria-label-template={t.trendChartAriaLabelTemplate}
+    data-withdrawal-chart-aria-label-template={
+      t.withdrawalChartAriaLabelTemplate
+    }
+    data-table-year-header={t.tableYearHeader}
+    data-table-principal-header={t.tablePrincipalHeader}
+    data-table-gain-header={t.tableGainHeader}
+    data-table-balance-header={t.tableBalanceHeader}
+    data-withdrawal-table-year-header={t.withdrawalTableYearHeader}
+    data-withdrawal-table-balance-header={t.withdrawalTableBalanceHeader}
+    data-withdrawal-primary-labels={JSON.stringify(t.withdrawalPrimaryLabels)}
+    data-withdrawal-not-depleted-text={t.withdrawalNotDepletedText}
+    data-withdrawal-years-label={t.withdrawalYearsLabel}
+    data-withdrawal-simulation-years-label={t.withdrawalSimulationYearsLabel}
+    data-withdrawal-amount-error={t.withdrawalAmountError}
+    data-withdrawal-rate-error={t.withdrawalRateError}
+    data-primary-label-future-value={t.primaryResultLabels.futureValue}
+    data-primary-label-monthly-contribution={
+      t.primaryResultLabels.monthlyContribution
+    }
+    data-primary-label-months={t.primaryResultLabels.months}
+    data-primary-label-initial-investment={
+      t.primaryResultLabels.initialInvestment
+    }
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-4">
+      <span
+        id="investment-sim-mode-label"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.modeLegend}
+      </span>
+      <div
+        class="flex flex-col gap-2 sm:flex-row sm:flex-wrap"
+        role="radiogroup"
+        aria-labelledby="investment-sim-mode-label"
+      >
+        <label class="flex items-center gap-1 text-sm">
+          <input
+            type="radio"
+            name="investment-sim-mode"
+            value="futureValue"
+            checked
+          />
+          {t.modeLabels.futureValue}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input
+            type="radio"
+            name="investment-sim-mode"
+            value="monthlyContribution"
+          />
+          {t.modeLabels.monthlyContribution}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="investment-sim-mode" value="months" />
+          {t.modeLabels.months}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input
+            type="radio"
+            name="investment-sim-mode"
+            value="initialInvestment"
+          />
+          {t.modeLabels.initialInvestment}
+        </label>
+      </div>
+    </div>
+
+    <div class="mb-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label
+          for="investment-sim-rate"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.rateLabel}
+        </label>
+        <input
+          id="investment-sim-rate"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          max="50"
+          step="0.1"
+          placeholder={t.ratePlaceholder}
+          class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div data-field="initial">
+        <label
+          for="investment-sim-initial"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.initialLabel}
+        </label>
+        <input
+          id="investment-sim-initial"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.initialPlaceholder}
+          class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div data-field="monthly">
+        <label
+          for="investment-sim-monthly"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.monthlyLabel}
+        </label>
+        <input
+          id="investment-sim-monthly"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.monthlyPlaceholder}
+          class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div data-field="years">
+        <label
+          for="investment-sim-years"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.yearsLabel}
+        </label>
+        <input
+          id="investment-sim-years"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          max="60"
+          placeholder={t.yearsPlaceholder}
+          class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div data-field="target">
+        <label
+          for="investment-sim-target"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.targetLabel}
+        </label>
+        <input
+          id="investment-sim-target"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.targetPlaceholder}
+          class="h-11 w-40 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+    </div>
+
+    <p
+      id="investment-sim-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="investment-sim-results" class="mt-4 hidden" aria-live="polite">
+      <div class="mb-4 rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
+        <dt
+          class="text-sm text-gray-600 dark:text-gray-400"
+          id="investment-sim-primary-label"
+        ></dt>
+        <dd
+          class="text-xl font-semibold text-blue-700 dark:text-blue-400"
+          id="investment-sim-primary-value"
+        ></dd>
+      </div>
+
+      <h3 class="mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+        {t.resultHeading}
+      </h3>
+      <dl class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.finalBalanceLabel}
+          </dt>
+          <dd
+            class="text-lg font-semibold"
+            id="investment-sim-final-balance"
+          ></dd>
+        </div>
+        <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.totalPrincipalLabel}
+          </dt>
+          <dd
+            class="text-lg font-semibold"
+            id="investment-sim-total-principal"
+          ></dd>
+        </div>
+        <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.totalGainLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="investment-sim-total-gain"></dd>
+        </div>
+      </dl>
+
+      <h3 class="mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+        {t.chartHeading}
+      </h3>
+      <div
+        id="investment-sim-chart"
+        role="img"
+        class="mb-2 flex h-8 w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800"
+      >
+        <div
+          id="investment-sim-chart-principal"
+          class="investment-sim-swatch-principal h-full"
+        ></div>
+        <div
+          id="investment-sim-chart-gain"
+          class="investment-sim-swatch-gain h-full"
+        ></div>
+      </div>
+      <div class="mb-6 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+        <div class="flex items-center gap-1.5">
+          <span
+            class="investment-sim-swatch-principal h-3 w-3 shrink-0 rounded-sm"
+            aria-hidden="true"
+          ></span>
+          <span>
+            {t.principalLegendLabel}:
+            <span
+              class="font-medium text-gray-900 dark:text-gray-100"
+              id="investment-sim-legend-principal"
+            ></span>
+          </span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span
+            class="investment-sim-swatch-gain h-3 w-3 shrink-0 rounded-sm"
+            aria-hidden="true"
+          ></span>
+          <span>
+            {t.gainLegendLabel}:
+            <span
+              class="font-medium text-gray-900 dark:text-gray-100"
+              id="investment-sim-legend-gain"
+            ></span>
+          </span>
+        </div>
+      </div>
+
+      <h3 class="mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+        {t.trendChartHeading}
+      </h3>
+      <div class="relative mb-2">
+        <svg
+          id="investment-sim-trend-chart"
+          role="img"
+          focusable="false"
+          viewBox="0 0 600 240"
+          preserveAspectRatio="xMidYMid meet"
+          class="w-full"
+        ></svg>
+        <div
+          id="investment-sim-trend-tooltip"
+          class="pointer-events-none absolute hidden rounded-md border border-gray-200 bg-white px-2 py-1 text-xs whitespace-nowrap text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
+        ></div>
+      </div>
+      <div class="mb-6 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+        <div class="flex items-center gap-1.5">
+          <span
+            class="investment-sim-swatch-principal h-3 w-3 shrink-0 rounded-sm"
+            aria-hidden="true"
+          ></span>
+          <span>{t.principalLegendLabel}</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span
+            class="investment-sim-swatch-gain h-3 w-3 shrink-0 rounded-sm"
+            aria-hidden="true"
+          ></span>
+          <span>{t.gainLegendLabel}</span>
+        </div>
+      </div>
+
+      <h3 class="mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+        {t.tableHeading}
+      </h3>
+      <div class="max-h-80 overflow-x-auto overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700">
+        <table class="w-full min-w-full text-left text-sm">
+          <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800">
+            <tr>
+              <th class="p-2 font-medium text-gray-600 dark:text-gray-400">
+                {t.tableYearHeader}
+              </th>
+              <th class="p-2 font-medium text-gray-600 dark:text-gray-400">
+                {t.tablePrincipalHeader}
+              </th>
+              <th class="p-2 font-medium text-gray-600 dark:text-gray-400">
+                {t.tableGainHeader}
+              </th>
+              <th class="p-2 font-medium text-gray-600 dark:text-gray-400">
+                {t.tableBalanceHeader}
+              </th>
+            </tr>
+          </thead>
+          <tbody id="investment-sim-table-body"></tbody>
+        </table>
+      </div>
+
+      <div class="mt-8 border-t border-gray-200 pt-4 dark:border-gray-700">
+        <h3 class="mb-1 text-sm font-bold text-gray-700 dark:text-gray-300">
+          {t.withdrawalHeading}
+        </h3>
+        <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+          {t.withdrawalIntro}
+        </p>
+
+        <div class="mb-4">
+          <span
+            id="investment-sim-withdrawal-mode-label"
+            class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            {t.withdrawalModeLegend}
+          </span>
+          <div
+            class="flex flex-col gap-2 sm:flex-row sm:flex-wrap"
+            role="radiogroup"
+            aria-labelledby="investment-sim-withdrawal-mode-label"
+          >
+            <label class="flex items-center gap-1 text-sm">
+              <input
+                type="radio"
+                name="investment-sim-withdrawal-mode"
+                value="byYears"
+                checked
+              />
+              {t.withdrawalModeLabels.byYears}
+            </label>
+            <label class="flex items-center gap-1 text-sm">
+              <input
+                type="radio"
+                name="investment-sim-withdrawal-mode"
+                value="byAmount"
+              />
+              {t.withdrawalModeLabels.byAmount}
+            </label>
+            <label class="flex items-center gap-1 text-sm">
+              <input
+                type="radio"
+                name="investment-sim-withdrawal-mode"
+                value="byRate"
+              />
+              {t.withdrawalModeLabels.byRate}
+            </label>
+          </div>
+        </div>
+
+        <div class="mb-3 flex flex-wrap items-end gap-3">
+          <div data-withdrawal-field="years">
+            <label
+              for="investment-sim-withdrawal-years"
+              class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              <span id="investment-sim-withdrawal-years-label">
+                {t.withdrawalYearsLabel}
+              </span>
+            </label>
+            <input
+              id="investment-sim-withdrawal-years"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              max="60"
+              placeholder={t.withdrawalYearsPlaceholder}
+              data-error={t.withdrawalError}
+              class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            />
+          </div>
+          <div data-withdrawal-field="amount">
+            <label
+              for="investment-sim-withdrawal-amount"
+              class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              {t.withdrawalAmountLabel}
+            </label>
+            <input
+              id="investment-sim-withdrawal-amount"
+              type="text"
+              inputmode="decimal"
+              placeholder={t.withdrawalAmountPlaceholder}
+              class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            />
+          </div>
+          <div data-withdrawal-field="rate">
+            <label
+              for="investment-sim-withdrawal-rate"
+              class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              {t.withdrawalRateLabel}
+            </label>
+            <input
+              id="investment-sim-withdrawal-rate"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              max="100"
+              step="0.1"
+              placeholder={t.withdrawalRatePlaceholder}
+              class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            />
+          </div>
+        </div>
+
+        <p
+          id="investment-sim-withdrawal-error"
+          class="mt-1 text-sm text-red-600 dark:text-red-400"
+          aria-live="polite"
+        ></p>
+
+        <div
+          id="investment-sim-withdrawal-results"
+          class="mt-3 hidden"
+          aria-live="polite"
+        >
+          <dl class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div class="rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
+              <dt
+                class="text-sm text-gray-600 dark:text-gray-400"
+                id="investment-sim-withdrawal-primary-label"
+              ></dt>
+              <dd
+                class="text-lg font-semibold text-blue-700 dark:text-blue-400"
+                id="investment-sim-withdrawal-primary-value"
+              ></dd>
+            </div>
+            <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+              <dt class="text-sm text-gray-600 dark:text-gray-400">
+                {t.withdrawalTotalLabel}
+              </dt>
+              <dd
+                class="text-lg font-semibold"
+                id="investment-sim-withdrawal-total"
+              ></dd>
+            </div>
+          </dl>
+
+          <h4 class="mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+            {t.withdrawalChartHeading}
+          </h4>
+          <div class="relative mb-4">
+            <svg
+              id="investment-sim-withdrawal-chart"
+              role="img"
+              focusable="false"
+              viewBox="0 0 600 180"
+              preserveAspectRatio="xMidYMid meet"
+              class="w-full"
+            ></svg>
+            <div
+              id="investment-sim-withdrawal-tooltip"
+              class="pointer-events-none absolute hidden rounded-md border border-gray-200 bg-white px-2 py-1 text-xs whitespace-nowrap text-gray-700 shadow-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200"
+            ></div>
+          </div>
+
+          <h4 class="mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+            {t.withdrawalTableHeading}
+          </h4>
+          <div class="max-h-64 overflow-x-auto overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700">
+            <table class="w-full min-w-full text-left text-sm">
+              <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800">
+                <tr>
+                  <th class="p-2 font-medium text-gray-600 dark:text-gray-400">
+                    {t.withdrawalTableYearHeader}
+                  </th>
+                  <th class="p-2 font-medium text-gray-600 dark:text-gray-400">
+                    {t.withdrawalTableBalanceHeader}
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="investment-sim-withdrawal-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<style>
+  :global(:root) {
+    --investment-sim-color-principal: #2a78d6;
+    --investment-sim-color-gain: #eb6834;
+    --investment-sim-color-surface: #f9fafb;
+  }
+  :global(.dark) {
+    --investment-sim-color-principal: #3987e5;
+    --investment-sim-color-gain: #d95926;
+    --investment-sim-color-surface: #030712;
+  }
+  .investment-sim-swatch-principal {
+    background-color: var(--investment-sim-color-principal);
+  }
+  .investment-sim-swatch-gain {
+    background-color: var(--investment-sim-color-gain);
+  }
+</style>
+
+<script>
+  import {
+    simulateAccumulation,
+    solveMonthlyContribution,
+    solveMonthsToReachTarget,
+    solveInitialInvestment,
+    calculateWithdrawal,
+    simulateFixedAmountWithdrawal,
+    simulateFixedRateWithdrawal,
+    type WithdrawalYearlySnapshot,
+  } from '../../lib/tools/investment-simulator';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+
+  type Mode =
+    'futureValue' | 'monthlyContribution' | 'months' | 'initialInvestment';
+  type WithdrawalMode = 'byYears' | 'byAmount' | 'byRate';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
+  const errorMessage = configEl.dataset.error ?? '';
+  const chartAriaLabelTemplate = configEl.dataset.chartAriaLabelTemplate ?? '';
+  const trendChartAriaLabelTemplate =
+    configEl.dataset.trendChartAriaLabelTemplate ?? '';
+  const withdrawalChartAriaLabelTemplate =
+    configEl.dataset.withdrawalChartAriaLabelTemplate ?? '';
+  const tableYearHeader = configEl.dataset.tableYearHeader ?? '';
+  const tablePrincipalHeader = configEl.dataset.tablePrincipalHeader ?? '';
+  const tableGainHeader = configEl.dataset.tableGainHeader ?? '';
+  const tableBalanceHeader = configEl.dataset.tableBalanceHeader ?? '';
+  const withdrawalTableYearHeader =
+    configEl.dataset.withdrawalTableYearHeader ?? '';
+  const withdrawalTableBalanceHeader =
+    configEl.dataset.withdrawalTableBalanceHeader ?? '';
+  const withdrawalPrimaryLabels: Record<WithdrawalMode, string> = JSON.parse(
+    configEl.dataset.withdrawalPrimaryLabels ?? '{}',
+  );
+  const withdrawalNotDepletedText =
+    configEl.dataset.withdrawalNotDepletedText ?? '';
+  const withdrawalYearsLabel = configEl.dataset.withdrawalYearsLabel ?? '';
+  const withdrawalSimulationYearsLabel =
+    configEl.dataset.withdrawalSimulationYearsLabel ?? '';
+  const withdrawalAmountErrorMessage =
+    configEl.dataset.withdrawalAmountError ?? '';
+  const withdrawalRateErrorMessage = configEl.dataset.withdrawalRateError ?? '';
+  const primaryLabels: Record<Mode, string> = {
+    futureValue: configEl.dataset.primaryLabelFutureValue ?? '',
+    monthlyContribution: configEl.dataset.primaryLabelMonthlyContribution ?? '',
+    months: configEl.dataset.primaryLabelMonths ?? '',
+    initialInvestment: configEl.dataset.primaryLabelInitialInvestment ?? '',
+  };
+
+  const HIDDEN_FIELD: Record<Mode, string> = {
+    futureValue: 'target',
+    monthlyContribution: 'monthly',
+    months: 'years',
+    initialInvestment: 'initial',
+  };
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const compactNumber = new Intl.NumberFormat(numberLocale, {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  });
+
+  const modeInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="investment-sim-mode"]',
+  );
+  const fieldWrapperEls =
+    document.querySelectorAll<HTMLElement>('[data-field]');
+
+  const rateInput = document.getElementById(
+    'investment-sim-rate',
+  ) as HTMLInputElement;
+  const initialInput = document.getElementById(
+    'investment-sim-initial',
+  ) as HTMLInputElement;
+  const monthlyInput = document.getElementById(
+    'investment-sim-monthly',
+  ) as HTMLInputElement;
+  const yearsInput = document.getElementById(
+    'investment-sim-years',
+  ) as HTMLInputElement;
+  const targetInput = document.getElementById(
+    'investment-sim-target',
+  ) as HTMLInputElement;
+
+  attachCommaFormatting(initialInput);
+  attachCommaFormatting(monthlyInput);
+  attachCommaFormatting(targetInput);
+
+  const errorEl = document.getElementById('investment-sim-error')!;
+  const resultsEl = document.getElementById('investment-sim-results')!;
+  const primaryLabelEl = document.getElementById(
+    'investment-sim-primary-label',
+  )!;
+  const primaryValueEl = document.getElementById(
+    'investment-sim-primary-value',
+  )!;
+  const finalBalanceEl = document.getElementById(
+    'investment-sim-final-balance',
+  )!;
+  const totalPrincipalEl = document.getElementById(
+    'investment-sim-total-principal',
+  )!;
+  const totalGainEl = document.getElementById('investment-sim-total-gain')!;
+  const chartEl = document.getElementById('investment-sim-chart')!;
+  const chartPrincipalEl = document.getElementById(
+    'investment-sim-chart-principal',
+  )!;
+  const chartGainEl = document.getElementById('investment-sim-chart-gain')!;
+  const legendPrincipalEl = document.getElementById(
+    'investment-sim-legend-principal',
+  )!;
+  const legendGainEl = document.getElementById('investment-sim-legend-gain')!;
+  const tableBodyEl = document.getElementById(
+    'investment-sim-table-body',
+  ) as HTMLTableSectionElement;
+  const trendChartEl = document.querySelector<SVGSVGElement>(
+    '#investment-sim-trend-chart',
+  )!;
+  const trendTooltipEl = document.getElementById(
+    'investment-sim-trend-tooltip',
+  )!;
+
+  const withdrawalModeInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="investment-sim-withdrawal-mode"]',
+  );
+  const withdrawalFieldWrapperEls = document.querySelectorAll<HTMLElement>(
+    '[data-withdrawal-field]',
+  );
+  const withdrawalYearsLabelEl = document.getElementById(
+    'investment-sim-withdrawal-years-label',
+  )!;
+
+  const withdrawalYearsInput = document.getElementById(
+    'investment-sim-withdrawal-years',
+  ) as HTMLInputElement;
+  const withdrawalErrorMessage = withdrawalYearsInput.dataset.error ?? '';
+  const withdrawalAmountInput = document.getElementById(
+    'investment-sim-withdrawal-amount',
+  ) as HTMLInputElement;
+  const withdrawalRateInput = document.getElementById(
+    'investment-sim-withdrawal-rate',
+  ) as HTMLInputElement;
+
+  attachCommaFormatting(withdrawalAmountInput);
+
+  const withdrawalErrorEl = document.getElementById(
+    'investment-sim-withdrawal-error',
+  )!;
+  const withdrawalResultsEl = document.getElementById(
+    'investment-sim-withdrawal-results',
+  )!;
+  const withdrawalPrimaryLabelEl = document.getElementById(
+    'investment-sim-withdrawal-primary-label',
+  )!;
+  const withdrawalPrimaryValueEl = document.getElementById(
+    'investment-sim-withdrawal-primary-value',
+  )!;
+  const withdrawalTotalEl = document.getElementById(
+    'investment-sim-withdrawal-total',
+  )!;
+  const withdrawalTableBodyEl = document.getElementById(
+    'investment-sim-withdrawal-table-body',
+  ) as HTMLTableSectionElement;
+  const withdrawalChartEl = document.querySelector<SVGSVGElement>(
+    '#investment-sim-withdrawal-chart',
+  )!;
+  const withdrawalTooltipEl = document.getElementById(
+    'investment-sim-withdrawal-tooltip',
+  )!;
+
+  const WITHDRAWAL_HIDDEN_FIELDS: Record<WithdrawalMode, string[]> = {
+    byYears: ['amount', 'rate'],
+    byAmount: ['years', 'rate'],
+    byRate: ['amount'],
+  };
+
+  function getWithdrawalMode(): WithdrawalMode {
+    return (
+      (Array.from(withdrawalModeInputs).find((el) => el.checked)
+        ?.value as WithdrawalMode) || 'byYears'
+    );
+  }
+
+  function updateWithdrawalFieldVisibility() {
+    const mode = getWithdrawalMode();
+    const hidden = WITHDRAWAL_HIDDEN_FIELDS[mode];
+    withdrawalFieldWrapperEls.forEach((el) => {
+      el.classList.toggle(
+        'hidden',
+        hidden.includes(el.dataset.withdrawalField ?? ''),
+      );
+    });
+    withdrawalYearsLabelEl.textContent =
+      mode === 'byRate' ? withdrawalSimulationYearsLabel : withdrawalYearsLabel;
+  }
+
+  function formatMonths(months: number): string {
+    const years = Math.floor(months / 12);
+    const remainder = months % 12;
+    return numberLocale === 'ja-JP'
+      ? `${years}年${remainder}ヶ月`
+      : `${years}yr ${remainder}mo`;
+  }
+
+  function getMode(): Mode {
+    return (
+      (Array.from(modeInputs).find((el) => el.checked)?.value as Mode) ||
+      'futureValue'
+    );
+  }
+
+  function updateFieldVisibility() {
+    const hidden = HIDDEN_FIELD[getMode()];
+    fieldWrapperEls.forEach((el) => {
+      el.classList.toggle('hidden', el.dataset.field === hidden);
+    });
+  }
+
+  // ---- 折れ線・面グラフ（SVGを直接生成、チャートライブラリは使用しない） ----
+
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  function svgEl<K extends keyof SVGElementTagNameMap>(
+    tag: K,
+    attrs: Record<string, string> = {},
+  ): SVGElementTagNameMap[K] {
+    const el = document.createElementNS(SVG_NS, tag);
+    for (const [key, value] of Object.entries(attrs))
+      el.setAttribute(key, value);
+    return el;
+  }
+
+  /** グラフのY軸目盛りとして扱いやすい間隔（1・2・5・10のいずれかの桁違い）を返す */
+  function niceStep(maxValue: number, targetTicks = 4): number {
+    if (!(maxValue > 0)) return 1;
+    const rough = maxValue / targetTicks;
+    const magnitude = Math.pow(10, Math.floor(Math.log10(rough)));
+    const residual = rough / magnitude;
+    const niceResidual =
+      residual > 5 ? 10 : residual > 2 ? 5 : residual > 1 ? 2 : 1;
+    return niceResidual * magnitude;
+  }
+
+  function pointsToPath(points: [number, number][]): string {
+    return points
+      .map(
+        ([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`,
+      )
+      .join(' ');
+  }
+
+  function yearAxisLabel(year: number): string {
+    return numberLocale === 'ja-JP'
+      ? `${Math.round(year)}年`
+      : `${Math.round(year)}yr`;
+  }
+
+  interface TrendPoint {
+    months: number;
+    principal: number;
+    gain: number;
+    balance: number;
+  }
+
+  function renderTrendChart(data: TrendPoint[]) {
+    trendChartEl.innerHTML = '';
+    trendChartEl.removeAttribute('aria-label');
+    trendTooltipEl.classList.add('hidden');
+
+    const totalMonths = data.length > 0 ? data[data.length - 1].months : 0;
+    if (data.length < 2 || totalMonths <= 0) return;
+
+    const width = 600;
+    const height = 240;
+    const pad = { top: 12, right: 12, bottom: 24, left: 68 };
+    const plotW = width - pad.left - pad.right;
+    const plotH = height - pad.top - pad.bottom;
+
+    const maxBalance = Math.max(...data.map((d) => d.balance));
+    const step = niceStep(maxBalance, 4);
+    const domainMax = Math.ceil(maxBalance / step) * step || step;
+
+    const xScale = (months: number) =>
+      pad.left + (months / totalMonths) * plotW;
+    const yScale = (value: number) =>
+      pad.top + plotH - (value / domainMax) * plotH;
+
+    trendChartEl.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+    const tickCount = Math.round(domainMax / step);
+    for (let i = 0; i <= tickCount; i++) {
+      const value = i * step;
+      const y = yScale(value);
+      trendChartEl.appendChild(
+        svgEl('line', {
+          x1: String(pad.left),
+          x2: String(width - pad.right),
+          y1: y.toFixed(1),
+          y2: y.toFixed(1),
+          class: 'stroke-gray-200 dark:stroke-gray-700',
+          'stroke-width': '1',
+        }),
+      );
+      const label = svgEl('text', {
+        x: String(pad.left - 6),
+        y: (y + 3).toFixed(1),
+        'text-anchor': 'end',
+        'font-size': '10',
+        class: 'fill-gray-500 dark:fill-gray-400',
+      });
+      label.textContent = compactNumber.format(value);
+      trendChartEl.appendChild(label);
+    }
+
+    const totalYears = totalMonths / 12;
+    const yearStep = Math.max(1, niceStep(totalYears, 5));
+    for (let year = 0; year <= totalYears + 0.001; year += yearStep) {
+      const x = xScale(year * 12);
+      const label = svgEl('text', {
+        x: x.toFixed(1),
+        y: String(height - pad.bottom + 16),
+        'text-anchor': 'middle',
+        'font-size': '10',
+        class: 'fill-gray-500 dark:fill-gray-400',
+      });
+      label.textContent = yearAxisLabel(year);
+      trendChartEl.appendChild(label);
+    }
+
+    const baseline = yScale(0);
+    const firstX = xScale(data[0].months);
+    const lastX = xScale(data[data.length - 1].months);
+    const principalTop: [number, number][] = data.map((d) => [
+      xScale(d.months),
+      yScale(d.principal),
+    ]);
+    const balanceTop: [number, number][] = data.map((d) => [
+      xScale(d.months),
+      yScale(d.balance),
+    ]);
+
+    trendChartEl.appendChild(
+      svgEl('path', {
+        d: `${pointsToPath(principalTop)} L${lastX.toFixed(1)},${baseline.toFixed(1)} L${firstX.toFixed(1)},${baseline.toFixed(1)} Z`,
+        style: 'fill:var(--investment-sim-color-principal);fill-opacity:0.85',
+      }),
+    );
+    trendChartEl.appendChild(
+      svgEl('path', {
+        d: pointsToPath(principalTop),
+        style:
+          'fill:none;stroke:var(--investment-sim-color-principal);stroke-width:2;stroke-linecap:round;stroke-linejoin:round',
+      }),
+    );
+
+    const principalBottomReversed = [...principalTop]
+      .reverse()
+      .map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`)
+      .join(' L');
+    trendChartEl.appendChild(
+      svgEl('path', {
+        d: `${pointsToPath(balanceTop)} L${principalBottomReversed} Z`,
+        style: 'fill:var(--investment-sim-color-gain);fill-opacity:0.85',
+      }),
+    );
+    trendChartEl.appendChild(
+      svgEl('path', {
+        d: pointsToPath(balanceTop),
+        style:
+          'fill:none;stroke:var(--investment-sim-color-gain);stroke-width:2;stroke-linecap:round;stroke-linejoin:round',
+      }),
+    );
+
+    const last = data[data.length - 1];
+    trendChartEl.setAttribute(
+      'aria-label',
+      trendChartAriaLabelTemplate
+        .replace('{principal}', yen.format(last.principal))
+        .replace('{balance}', yen.format(last.balance)),
+    );
+
+    const hoverLine = svgEl('line', {
+      x1: '0',
+      x2: '0',
+      y1: String(pad.top),
+      y2: String(height - pad.bottom),
+      class: 'stroke-gray-400 dark:stroke-gray-500',
+      'stroke-width': '1',
+      'stroke-dasharray': '3,3',
+      visibility: 'hidden',
+    });
+    const hoverRing = svgEl('circle', {
+      r: '6',
+      style: 'fill:var(--investment-sim-color-surface)',
+      visibility: 'hidden',
+    });
+    const hoverDot = svgEl('circle', {
+      r: '4',
+      style: 'fill:var(--investment-sim-color-gain)',
+      visibility: 'hidden',
+    });
+    const overlay = svgEl('rect', {
+      x: String(pad.left),
+      y: String(pad.top),
+      width: String(plotW),
+      height: String(plotH),
+      fill: 'transparent',
+    });
+    trendChartEl.append(hoverLine, hoverRing, hoverDot, overlay);
+
+    function handleMove(clientX: number) {
+      const rect = trendChartEl.getBoundingClientRect();
+      if (rect.width === 0) return;
+      const scale = width / rect.width;
+      const svgX = (clientX - rect.left) * scale;
+      const months = Math.min(
+        totalMonths,
+        Math.max(0, ((svgX - pad.left) / plotW) * totalMonths),
+      );
+      let nearest = data[0];
+      let minDiff = Infinity;
+      for (const point of data) {
+        const diff = Math.abs(point.months - months);
+        if (diff < minDiff) {
+          minDiff = diff;
+          nearest = point;
+        }
+      }
+      const x = xScale(nearest.months);
+      const y = yScale(nearest.balance);
+      hoverLine.setAttribute('x1', x.toFixed(1));
+      hoverLine.setAttribute('x2', x.toFixed(1));
+      hoverLine.setAttribute('visibility', 'visible');
+      hoverRing.setAttribute('cx', x.toFixed(1));
+      hoverRing.setAttribute('cy', y.toFixed(1));
+      hoverRing.setAttribute('visibility', 'visible');
+      hoverDot.setAttribute('cx', x.toFixed(1));
+      hoverDot.setAttribute('cy', y.toFixed(1));
+      hoverDot.setAttribute('visibility', 'visible');
+
+      trendTooltipEl.innerHTML = `
+        <div class="font-medium">${tableYearHeader}: ${formatMonths(nearest.months)}</div>
+        <div>${tablePrincipalHeader}: ${yen.format(nearest.principal)}</div>
+        <div>${tableGainHeader}: ${yen.format(nearest.gain)}</div>
+        <div>${tableBalanceHeader}: ${yen.format(nearest.balance)}</div>
+      `;
+      trendTooltipEl.classList.remove('hidden');
+      const wrapperRect = trendChartEl.parentElement!.getBoundingClientRect();
+      const tooltipX = (x / width) * wrapperRect.width;
+      const tooltipY = (y / height) * wrapperRect.height;
+      trendTooltipEl.style.left = `${Math.min(Math.max(tooltipX, 0), wrapperRect.width)}px`;
+      trendTooltipEl.style.top = `${Math.max(tooltipY, 0)}px`;
+      trendTooltipEl.style.transform =
+        tooltipX > wrapperRect.width / 2
+          ? 'translate(-100%, -100%)'
+          : 'translate(8px, -100%)';
+    }
+
+    function hideHover() {
+      hoverLine.setAttribute('visibility', 'hidden');
+      hoverRing.setAttribute('visibility', 'hidden');
+      hoverDot.setAttribute('visibility', 'hidden');
+      trendTooltipEl.classList.add('hidden');
+    }
+
+    overlay.addEventListener('pointermove', (e) => handleMove(e.clientX));
+    overlay.addEventListener('pointerdown', (e) => handleMove(e.clientX));
+    overlay.addEventListener('pointerleave', hideHover);
+    overlay.addEventListener('pointerup', hideHover);
+    overlay.addEventListener('pointercancel', hideHover);
+  }
+
+  interface WithdrawalTrendPoint {
+    months: number;
+    remainingBalance: number;
+  }
+
+  function renderWithdrawalChart(data: WithdrawalTrendPoint[]) {
+    withdrawalChartEl.innerHTML = '';
+    withdrawalChartEl.removeAttribute('aria-label');
+    withdrawalTooltipEl.classList.add('hidden');
+
+    const totalMonths = data.length > 0 ? data[data.length - 1].months : 0;
+    if (data.length < 2 || totalMonths <= 0) return;
+    const totalYears = totalMonths / 12;
+
+    const width = 600;
+    const height = 180;
+    const pad = { top: 12, right: 12, bottom: 24, left: 68 };
+    const plotW = width - pad.left - pad.right;
+    const plotH = height - pad.top - pad.bottom;
+
+    const maxBalance = Math.max(...data.map((d) => d.remainingBalance));
+    const step = niceStep(maxBalance, 4);
+    const domainMax = Math.ceil(maxBalance / step) * step || step;
+
+    const xScale = (months: number) =>
+      pad.left + (months / totalMonths) * plotW;
+    const yScale = (value: number) =>
+      pad.top + plotH - (value / domainMax) * plotH;
+
+    withdrawalChartEl.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+    const tickCount = Math.round(domainMax / step);
+    for (let i = 0; i <= tickCount; i++) {
+      const value = i * step;
+      const y = yScale(value);
+      withdrawalChartEl.appendChild(
+        svgEl('line', {
+          x1: String(pad.left),
+          x2: String(width - pad.right),
+          y1: y.toFixed(1),
+          y2: y.toFixed(1),
+          class: 'stroke-gray-200 dark:stroke-gray-700',
+          'stroke-width': '1',
+        }),
+      );
+      const label = svgEl('text', {
+        x: String(pad.left - 6),
+        y: (y + 3).toFixed(1),
+        'text-anchor': 'end',
+        'font-size': '10',
+        class: 'fill-gray-500 dark:fill-gray-400',
+      });
+      label.textContent = compactNumber.format(value);
+      withdrawalChartEl.appendChild(label);
+    }
+
+    const yearStep = Math.max(1, niceStep(totalYears, 5));
+    for (let year = 0; year <= totalYears + 0.001; year += yearStep) {
+      const x = xScale(year * 12);
+      const label = svgEl('text', {
+        x: x.toFixed(1),
+        y: String(height - pad.bottom + 16),
+        'text-anchor': 'middle',
+        'font-size': '10',
+        class: 'fill-gray-500 dark:fill-gray-400',
+      });
+      label.textContent = yearAxisLabel(year);
+      withdrawalChartEl.appendChild(label);
+    }
+
+    const baseline = yScale(0);
+    const points: [number, number][] = data.map((d) => [
+      xScale(d.months),
+      yScale(d.remainingBalance),
+    ]);
+
+    withdrawalChartEl.appendChild(
+      svgEl('path', {
+        d: `${pointsToPath(points)} L${points[points.length - 1][0].toFixed(1)},${baseline.toFixed(1)} L${points[0][0].toFixed(1)},${baseline.toFixed(1)} Z`,
+        style: 'fill:var(--investment-sim-color-principal);fill-opacity:0.85',
+      }),
+    );
+    withdrawalChartEl.appendChild(
+      svgEl('path', {
+        d: pointsToPath(points),
+        style:
+          'fill:none;stroke:var(--investment-sim-color-principal);stroke-width:2;stroke-linecap:round;stroke-linejoin:round',
+      }),
+    );
+
+    const lastBalance = data[data.length - 1].remainingBalance;
+    withdrawalChartEl.setAttribute(
+      'aria-label',
+      withdrawalChartAriaLabelTemplate
+        .replace('{years}', String(Math.round(totalYears)))
+        .replace('{balance}', yen.format(lastBalance)),
+    );
+
+    const hoverLine = svgEl('line', {
+      x1: '0',
+      x2: '0',
+      y1: String(pad.top),
+      y2: String(height - pad.bottom),
+      class: 'stroke-gray-400 dark:stroke-gray-500',
+      'stroke-width': '1',
+      'stroke-dasharray': '3,3',
+      visibility: 'hidden',
+    });
+    const hoverRing = svgEl('circle', {
+      r: '6',
+      style: 'fill:var(--investment-sim-color-surface)',
+      visibility: 'hidden',
+    });
+    const hoverDot = svgEl('circle', {
+      r: '4',
+      style: 'fill:var(--investment-sim-color-principal)',
+      visibility: 'hidden',
+    });
+    const overlay = svgEl('rect', {
+      x: String(pad.left),
+      y: String(pad.top),
+      width: String(plotW),
+      height: String(plotH),
+      fill: 'transparent',
+    });
+    withdrawalChartEl.append(hoverLine, hoverRing, hoverDot, overlay);
+
+    function handleMove(clientX: number) {
+      const rect = withdrawalChartEl.getBoundingClientRect();
+      if (rect.width === 0) return;
+      const scale = width / rect.width;
+      const svgX = (clientX - rect.left) * scale;
+      const months = Math.min(
+        totalMonths,
+        Math.max(0, ((svgX - pad.left) / plotW) * totalMonths),
+      );
+      let nearest = data[0];
+      let minDiff = Infinity;
+      for (const point of data) {
+        const diff = Math.abs(point.months - months);
+        if (diff < minDiff) {
+          minDiff = diff;
+          nearest = point;
+        }
+      }
+      const x = xScale(nearest.months);
+      const y = yScale(nearest.remainingBalance);
+      hoverLine.setAttribute('x1', x.toFixed(1));
+      hoverLine.setAttribute('x2', x.toFixed(1));
+      hoverLine.setAttribute('visibility', 'visible');
+      hoverRing.setAttribute('cx', x.toFixed(1));
+      hoverRing.setAttribute('cy', y.toFixed(1));
+      hoverRing.setAttribute('visibility', 'visible');
+      hoverDot.setAttribute('cx', x.toFixed(1));
+      hoverDot.setAttribute('cy', y.toFixed(1));
+      hoverDot.setAttribute('visibility', 'visible');
+
+      withdrawalTooltipEl.innerHTML = `
+        <div class="font-medium">${withdrawalTableYearHeader}: ${formatMonths(nearest.months)}</div>
+        <div>${withdrawalTableBalanceHeader}: ${yen.format(nearest.remainingBalance)}</div>
+      `;
+      withdrawalTooltipEl.classList.remove('hidden');
+      const wrapperRect =
+        withdrawalChartEl.parentElement!.getBoundingClientRect();
+      const tooltipX = (x / width) * wrapperRect.width;
+      const tooltipY = (y / height) * wrapperRect.height;
+      withdrawalTooltipEl.style.left = `${Math.min(Math.max(tooltipX, 0), wrapperRect.width)}px`;
+      withdrawalTooltipEl.style.top = `${Math.max(tooltipY, 0)}px`;
+      withdrawalTooltipEl.style.transform =
+        tooltipX > wrapperRect.width / 2
+          ? 'translate(-100%, -100%)'
+          : 'translate(8px, -100%)';
+    }
+
+    function hideHover() {
+      hoverLine.setAttribute('visibility', 'hidden');
+      hoverRing.setAttribute('visibility', 'hidden');
+      hoverDot.setAttribute('visibility', 'hidden');
+      withdrawalTooltipEl.classList.add('hidden');
+    }
+
+    overlay.addEventListener('pointermove', (e) => handleMove(e.clientX));
+    overlay.addEventListener('pointerdown', (e) => handleMove(e.clientX));
+    overlay.addEventListener('pointerleave', hideHover);
+    overlay.addEventListener('pointerup', hideHover);
+    overlay.addEventListener('pointercancel', hideHover);
+  }
+
+  let currentFinalBalance: number | null = null;
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+    currentFinalBalance = null;
+    renderTrendChart([]);
+    renderWithdrawal();
+
+    if (rateInput.value.trim() === '') return;
+    const annualRate = Number(rateInput.value);
+    const mode = getMode();
+
+    let result: ReturnType<typeof simulateAccumulation> = null;
+    let primaryText = '';
+    let initialInvestmentUsed = 0;
+
+    if (mode === 'futureValue') {
+      if (
+        initialInput.value.trim() === '' ||
+        monthlyInput.value.trim() === '' ||
+        yearsInput.value.trim() === ''
+      )
+        return;
+      const initialInvestment = Number(stripCommas(initialInput.value));
+      const monthlyContribution = Number(stripCommas(monthlyInput.value));
+      const totalMonths = Number(yearsInput.value) * 12;
+      initialInvestmentUsed = initialInvestment;
+      result = simulateAccumulation({
+        initialInvestment,
+        monthlyContribution,
+        annualRate,
+        totalMonths,
+      });
+      if (result) primaryText = yen.format(result.finalBalance);
+    } else if (mode === 'monthlyContribution') {
+      if (
+        initialInput.value.trim() === '' ||
+        targetInput.value.trim() === '' ||
+        yearsInput.value.trim() === ''
+      )
+        return;
+      const initialInvestment = Number(stripCommas(initialInput.value));
+      const targetFutureValue = Number(stripCommas(targetInput.value));
+      const totalMonths = Number(yearsInput.value) * 12;
+      const monthlyContribution = solveMonthlyContribution({
+        initialInvestment,
+        targetFutureValue,
+        annualRate,
+        totalMonths,
+      });
+      if (monthlyContribution !== null) {
+        initialInvestmentUsed = initialInvestment;
+        result = simulateAccumulation({
+          initialInvestment,
+          monthlyContribution,
+          annualRate,
+          totalMonths,
+        });
+        if (result) primaryText = yen.format(monthlyContribution);
+      }
+    } else if (mode === 'months') {
+      if (
+        initialInput.value.trim() === '' ||
+        monthlyInput.value.trim() === '' ||
+        targetInput.value.trim() === ''
+      )
+        return;
+      const initialInvestment = Number(stripCommas(initialInput.value));
+      const monthlyContribution = Number(stripCommas(monthlyInput.value));
+      const targetFutureValue = Number(stripCommas(targetInput.value));
+      const totalMonths = solveMonthsToReachTarget({
+        initialInvestment,
+        monthlyContribution,
+        targetFutureValue,
+        annualRate,
+      });
+      if (totalMonths !== null) {
+        initialInvestmentUsed = initialInvestment;
+        result = simulateAccumulation({
+          initialInvestment,
+          monthlyContribution,
+          annualRate,
+          totalMonths,
+        });
+        if (result) primaryText = formatMonths(totalMonths);
+      }
+    } else {
+      if (
+        monthlyInput.value.trim() === '' ||
+        targetInput.value.trim() === '' ||
+        yearsInput.value.trim() === ''
+      )
+        return;
+      const monthlyContribution = Number(stripCommas(monthlyInput.value));
+      const targetFutureValue = Number(stripCommas(targetInput.value));
+      const totalMonths = Number(yearsInput.value) * 12;
+      const initialInvestment = solveInitialInvestment({
+        monthlyContribution,
+        targetFutureValue,
+        annualRate,
+        totalMonths,
+      });
+      if (initialInvestment !== null) {
+        initialInvestmentUsed = initialInvestment;
+        result = simulateAccumulation({
+          initialInvestment,
+          monthlyContribution,
+          annualRate,
+          totalMonths,
+        });
+        if (result) primaryText = yen.format(initialInvestment);
+      }
+    }
+
+    if (!result) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    primaryLabelEl.textContent = primaryLabels[mode];
+    primaryValueEl.textContent = primaryText;
+
+    finalBalanceEl.textContent = yen.format(result.finalBalance);
+    totalPrincipalEl.textContent = yen.format(result.totalPrincipal);
+    totalGainEl.textContent = yen.format(result.totalGain);
+
+    const principalPct = (result.totalPrincipal / result.finalBalance) * 100;
+    const gainPct = 100 - principalPct;
+    chartPrincipalEl.style.width = `${principalPct}%`;
+    chartGainEl.style.width = `${gainPct}%`;
+    chartEl.setAttribute(
+      'aria-label',
+      chartAriaLabelTemplate
+        .replace('{principal}', yen.format(result.totalPrincipal))
+        .replace('{gain}', yen.format(result.totalGain)),
+    );
+    legendPrincipalEl.textContent = `${yen.format(result.totalPrincipal)} (${principalPct.toFixed(1)}%)`;
+    legendGainEl.textContent = `${yen.format(result.totalGain)} (${gainPct.toFixed(1)}%)`;
+
+    tableBodyEl.replaceChildren(
+      ...result.yearly.map((snapshot) => {
+        const row = document.createElement('tr');
+        row.className = 'border-t border-gray-200 dark:border-gray-700';
+        const cells = [
+          formatMonths(snapshot.months),
+          yen.format(snapshot.principal),
+          yen.format(snapshot.gain),
+          yen.format(snapshot.balance),
+        ];
+        for (const text of cells) {
+          const cell = document.createElement('td');
+          cell.className = 'p-2';
+          cell.textContent = text;
+          row.appendChild(cell);
+        }
+        return row;
+      }),
+    );
+
+    renderTrendChart([
+      {
+        months: 0,
+        principal: initialInvestmentUsed,
+        gain: 0,
+        balance: initialInvestmentUsed,
+      },
+      ...result.yearly.map((snapshot) => ({
+        months: snapshot.months,
+        principal: snapshot.principal,
+        gain: snapshot.gain,
+        balance: snapshot.balance,
+      })),
+    ]);
+
+    resultsEl.classList.remove('hidden');
+    currentFinalBalance = result.finalBalance;
+    renderWithdrawal();
+  }
+
+  function renderWithdrawal() {
+    withdrawalErrorEl.textContent = '';
+    withdrawalResultsEl.classList.add('hidden');
+    renderWithdrawalChart([]);
+
+    if (currentFinalBalance === null) return;
+
+    const mode = getWithdrawalMode();
+    const annualRate = Number(rateInput.value);
+    let yearly: WithdrawalYearlySnapshot[];
+    let primaryText: string;
+    let totalWithdrawn: number;
+
+    if (mode === 'byYears') {
+      if (withdrawalYearsInput.value.trim() === '') return;
+      const result = calculateWithdrawal({
+        principal: currentFinalBalance,
+        annualRate,
+        withdrawalYears: Number(withdrawalYearsInput.value),
+      });
+      if (!result) {
+        withdrawalErrorEl.textContent = withdrawalErrorMessage;
+        return;
+      }
+      primaryText = yen.format(result.monthlyWithdrawal);
+      totalWithdrawn = result.totalWithdrawn;
+      yearly = result.yearly;
+    } else if (mode === 'byAmount') {
+      if (withdrawalAmountInput.value.trim() === '') return;
+      const result = simulateFixedAmountWithdrawal({
+        principal: currentFinalBalance,
+        annualRate,
+        monthlyWithdrawal: Number(stripCommas(withdrawalAmountInput.value)),
+      });
+      if (!result) {
+        withdrawalErrorEl.textContent = withdrawalAmountErrorMessage;
+        return;
+      }
+      primaryText =
+        result.depletionMonths !== null
+          ? formatMonths(result.depletionMonths)
+          : withdrawalNotDepletedText;
+      totalWithdrawn = result.totalWithdrawn;
+      yearly = result.yearly;
+    } else {
+      if (
+        withdrawalRateInput.value.trim() === '' ||
+        withdrawalYearsInput.value.trim() === ''
+      )
+        return;
+      const result = simulateFixedRateWithdrawal({
+        principal: currentFinalBalance,
+        annualRate,
+        withdrawalRate: Number(withdrawalRateInput.value),
+        withdrawalYears: Number(withdrawalYearsInput.value),
+      });
+      if (!result) {
+        withdrawalErrorEl.textContent = withdrawalRateErrorMessage;
+        return;
+      }
+      primaryText = yen.format(result.firstMonthWithdrawal);
+      totalWithdrawn = result.totalWithdrawn;
+      yearly = result.yearly;
+    }
+
+    withdrawalPrimaryLabelEl.textContent = withdrawalPrimaryLabels[mode];
+    withdrawalPrimaryValueEl.textContent = primaryText;
+    withdrawalTotalEl.textContent = yen.format(totalWithdrawn);
+
+    withdrawalTableBodyEl.replaceChildren(
+      ...yearly.map((snapshot) => {
+        const row = document.createElement('tr');
+        row.className = 'border-t border-gray-200 dark:border-gray-700';
+        const cells = [
+          formatMonths(snapshot.months),
+          yen.format(snapshot.remainingBalance),
+        ];
+        for (const text of cells) {
+          const cell = document.createElement('td');
+          cell.className = 'p-2';
+          cell.textContent = text;
+          row.appendChild(cell);
+        }
+        return row;
+      }),
+    );
+
+    renderWithdrawalChart([
+      { months: 0, remainingBalance: currentFinalBalance },
+      ...yearly.map((snapshot) => ({
+        months: snapshot.months,
+        remainingBalance: snapshot.remainingBalance,
+      })),
+    ]);
+
+    withdrawalResultsEl.classList.remove('hidden');
+  }
+
+  modeInputs.forEach((el) =>
+    el.addEventListener('change', () => {
+      updateFieldVisibility();
+      render();
+    }),
+  );
+  rateInput.addEventListener('input', render);
+  initialInput.addEventListener('input', render);
+  monthlyInput.addEventListener('input', render);
+  yearsInput.addEventListener('input', render);
+  targetInput.addEventListener('input', render);
+  withdrawalModeInputs.forEach((el) =>
+    el.addEventListener('change', () => {
+      updateWithdrawalFieldVisibility();
+      renderWithdrawal();
+    }),
+  );
+  withdrawalYearsInput.addEventListener('input', renderWithdrawal);
+  withdrawalAmountInput.addEventListener('input', renderWithdrawal);
+  withdrawalRateInput.addEventListener('input', renderWithdrawal);
+
+  rateInput.value = '5';
+  initialInput.value = formatNumberWithCommas('1000000');
+  monthlyInput.value = formatNumberWithCommas('30000');
+  yearsInput.value = '20';
+  targetInput.value = formatNumberWithCommas('20000000');
+  withdrawalYearsInput.value = '30';
+  withdrawalAmountInput.value = formatNumberWithCommas('100000');
+  withdrawalRateInput.value = '4';
+
+  updateFieldVisibility();
+  updateWithdrawalFieldVisibility();
+  render();
+</script>

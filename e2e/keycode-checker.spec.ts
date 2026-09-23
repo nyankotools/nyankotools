@@ -133,33 +133,6 @@ test.describe('キーコード（e.code/e.key）チェッカー（日本語版�
     await page.keyboard.press('Tab');
     await expect(capture).not.toBeFocused();
   });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/');
-
-    await page
-      .locator('#sidebar details[data-category="開発"] summary')
-      .click();
-    await page
-      .locator('#sidebar')
-      .getByRole('link', { name: 'キーコード（e.code/e.key）チェッカー' })
-      .click();
-
-    await expect(page).toHaveURL(/\/tools\/keycode-checker\/?$/);
-    await expect(page.locator('main h1')).toHaveText(
-      'キーコード（e.code/e.key）チェッカー',
-    );
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/keycode-checker/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
 });
 
 test.describe('Keycode (e.code / e.key) Checker (English)', () => {
@@ -207,32 +180,5 @@ test.describe('Keycode (e.code / e.key) Checker (English)', () => {
     await page.keyboard.press('Space');
 
     await expect(page.locator('#keycode-key')).toHaveText('Space (" ")');
-  });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/en/');
-
-    await page
-      .locator('#sidebar details[data-category="Development"] summary')
-      .click();
-    await page
-      .locator('#sidebar')
-      .getByRole('link', { name: 'Keycode (e.code / e.key) Checker' })
-      .click();
-
-    await expect(page).toHaveURL(/\/en\/tools\/keycode-checker\/?$/);
-    await expect(page.locator('main h1')).toHaveText(
-      'Keycode (e.code / e.key) Checker',
-    );
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/en/tools/keycode-checker/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
   });
 });

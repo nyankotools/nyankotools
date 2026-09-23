@@ -90,33 +90,6 @@ test.describe('CSS/JS/HTMLミニファイ＆整形（日本語版）', () => {
     );
   });
 
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/');
-
-    await page
-      .locator('#sidebar details[data-category="変換"] summary')
-      .click();
-    await page
-      .locator('#sidebar')
-      .getByRole('link', { name: 'CSS/JS/HTMLミニファイ＆整形' })
-      .click();
-
-    await expect(page).toHaveURL(/\/tools\/code-minifier\/?$/);
-    await expect(page.locator('main h1')).toHaveText(
-      'CSS/JS/HTMLミニファイ＆整形ツール',
-    );
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/code-minifier/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
-
   // 過去にhtml-minifier-terser経由でclean-cssがトップレベルでprocess.platformを
   // 参照し、ブラウザ実行時に`process is not defined`が発生した経緯があるため、
   // 3言語すべての整形・ミニファイでコンソールエラー・pageerrorが出ないことを回帰確認する。

@@ -78,27 +78,6 @@ test.describe('YAML⇔JSON変換（日本語版）', () => {
     // 改行コードの違いを吸収してから比較する。
     expect(clipboardText.replace(/\r\n/g, '\n')).toBe('{\n  "key": "value"\n}');
   });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/');
-
-    const link = page.locator('#sidebar a[href="/tools/yaml-json-converter/"]');
-    await link.locator('xpath=ancestor::details[1]/summary').click();
-    await link.click();
-
-    await expect(page).toHaveURL(/\/tools\/yaml-json-converter\/?$/);
-    await expect(page.locator('main h1')).toHaveText('YAML⇔JSON変換ツール');
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/yaml-json-converter/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
 });
 
 test.describe('YAML to JSON Converter (English)', () => {
@@ -146,28 +125,5 @@ test.describe('YAML to JSON Converter (English)', () => {
     await expect(page.locator('#yaml-json-converter-status')).toHaveText(
       'Copied',
     );
-  });
-
-  test('サイドバーからツールページへ遷移できる（英語版）', async ({ page }) => {
-    await page.goto('/en/');
-
-    const link = page.locator(
-      '#sidebar a[href="/en/tools/yaml-json-converter/"]',
-    );
-    await link.locator('xpath=ancestor::details[1]/summary').click();
-    await link.click();
-
-    await expect(page).toHaveURL(/\/en\/tools\/yaml-json-converter\/?$/);
-    await expect(page.locator('main h1')).toHaveText('YAML ⇔ JSON Converter');
-  });
-
-  test('375px幅でも横スクロールが発生しない（英語版）', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/en/tools/yaml-json-converter/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
   });
 });

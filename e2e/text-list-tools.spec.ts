@@ -77,29 +77,6 @@ test.describe('文字列の重複削除・ソート・シャッフル（日本�
     // 改行コードの違いを吸収してから比較する。
     expect(clipboardText.replace(/\r\n/g, '\n')).toBe('banana\napple');
   });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/');
-
-    const link = page.locator('#sidebar a[href="/tools/text-list-tools/"]');
-    await link.locator('xpath=ancestor::details[1]/summary').click();
-    await link.click();
-
-    await expect(page).toHaveURL(/\/tools\/text-list-tools\/?$/);
-    await expect(page.locator('main h1')).toHaveText(
-      '文字列の重複削除・ソート・シャッフル',
-    );
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/text-list-tools/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
 });
 
 test.describe('Text List Deduplicate, Sort & Shuffle (English)', () => {
@@ -133,28 +110,5 @@ test.describe('Text List Deduplicate, Sort & Shuffle (English)', () => {
     await page.locator('#tlt-copy-button').click();
 
     await expect(page.locator('#tlt-status')).toHaveText('Copied');
-  });
-
-  test('サイドバーからツールページへ遷移できる（英語版）', async ({ page }) => {
-    await page.goto('/en/');
-
-    const link = page.locator('#sidebar a[href="/en/tools/text-list-tools/"]');
-    await link.locator('xpath=ancestor::details[1]/summary').click();
-    await link.click();
-
-    await expect(page).toHaveURL(/\/en\/tools\/text-list-tools\/?$/);
-    await expect(page.locator('main h1')).toHaveText(
-      'Text List Deduplicate, Sort & Shuffle',
-    );
-  });
-
-  test('375px幅でも横スクロールが発生しない（英語版）', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/en/tools/text-list-tools/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
   });
 });

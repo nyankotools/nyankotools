@@ -1,59 +1,64 @@
-# 設計書: アーキテクチャ
+# Design doc: Architecture
 
-NyankoTools の技術構成とディレクトリ構造について。概要は [CLAUDE.md](../../CLAUDE.md) を参照。
+NyankoTools' tech stack and directory structure. See [CLAUDE.md](../../CLAUDE.md) for the overview.
 
-## スタック
+## Stack
 
-| レイヤー       | 技術                                          |
-| -------------- | --------------------------------------------- |
-| フレームワーク | Astro（`output: static`、SSR アダプターなし） |
-| スタイリング   | Tailwind CSS v4（`@tailwindcss/vite`）        |
-| 言語           | TypeScript                                    |
-| デプロイ先     | Cloudflare Workers 静的アセット配信           |
-| パッケージ管理 | pnpm（Corepack 経由）                         |
+| Layer           | Technology                               |
+| --------------- | ---------------------------------------- |
+| Framework       | Astro (`output: static`, no SSR adapter) |
+| Styling         | Tailwind CSS v4 (`@tailwindcss/vite`)    |
+| Language        | TypeScript                               |
+| Deploy target   | Cloudflare Workers static asset serving  |
+| Package manager | pnpm (via Corepack)                      |
 
-Cloudflare 側は `wrangler.jsonc` で `pnpm build` を `build.command` に指定し、`dist/` を静的アセットとして配信する構成。サーバーランタイムを使わないため Cloudflare アダプターは不要。
+On the Cloudflare side, `wrangler.jsonc` sets `pnpm build` as `build.command` and serves `dist/` as static assets. No server runtime is used, so no Cloudflare adapter is needed.
 
-## ディレクトリ構成
+## Directory layout
 
 ```
 src/
   data/
-    tools.ts          # ツール一覧のレジストリ（{ slug, name, description }）
+    tools.ts          # Tool registry ({ slug, translations: { ja, en } })
+  i18n/
+    ui.ts             # Site-wide UI copy (ui.ja / ui.en)
+    tools/<slug>.ts   # Per-tool page copy (Record<Locale, XxxContent>)
   layouts/
-    Layout.astro       # 全ページ共通の <head> とサイドバー
+    Layout.astro       # <head> and sidebar shared by all pages
+  components/
+    tool-pages/
+      <Slug>Page.astro  # Shared per-tool page (markup + <script>), takes a locale prop
   lib/
     tools/
-      <slug>.ts         # 各ツールのロジック（フレームワーク非依存の純粋関数）
+      <slug>.ts         # Per-tool logic (framework-free pure functions)
   pages/
-    index.astro         # トップページ（ツール一覧グリッド）
+    index.astro         # Homepage (tool grid)
     404.astro
     tools/
       <slug>/
-        index.astro     # 各ツールのページ本体
+        index.astro     # ja page: thin wrapper around the shared component
+    en/                 # en counterparts of the above (same structure)
   styles/
     global.css
 ```
 
-## データフロー
+## Data flow
 
-1. `src/data/tools.ts` の `tools` 配列が唯一のツールレジストリ。
-2. `src/layouts/Layout.astro` がこの配列を読んでサイドバーナビゲーションを生成。
-3. `src/pages/index.astro` が同じ配列からトップページのツール一覧グリッドを生成。
-4. 各ツールページ（`src/pages/tools/<slug>/index.astro`）は `Layout` でラップし、`<script>` タグ内で `src/lib/tools/<slug>.ts` の純粋関数を呼び出して DOM を更新する。
+1. The `tools` array in `src/data/tools.ts` is the single tool registry.
+2. `src/layouts/Layout.astro` reads it to build the sidebar navigation.
+3. `src/pages/index.astro` builds the homepage tool grid from the same array.
+4. Each locale's page (`src/pages/tools/<slug>/index.astro`, `src/pages/en/tools/<slug>/index.astro`) calls the shared component `src/components/tool-pages/<Slug>Page.astro`. The component wraps everything in `Layout` and, in its `<script>` tag, calls the pure functions in `src/lib/tools/<slug>.ts` to update the DOM.
 
-`tools.ts` に登録していないツールページはナビゲーションに出現しない（ページ自体は URL 直打ちで到達可能）。新規ツール追加の手順は [adding-a-tool.md](./adding-a-tool.md) を参照。
+A tool page not registered in `tools.ts` does not appear in navigation (the page itself is still reachable by direct URL). See [adding-a-tool.md](./adding-a-tool.md) for the procedure.
 
-## クライアントサイド完結の原則
+## Client-side-only principle
 
-すべてのツールはブラウザ内で完結し、サーバーには一切データを送信しない。これはプロダクトの前提条件（プライバシー訴求 + ホスティングコストゼロ）であり、一時的な制約ではない。API ルートやサーバーサイド処理を追加しないこと。
+Every tool runs entirely in the browser and sends no data to a server. This is a product prerequisite (privacy pitch + zero hosting cost), not a temporary limitation. Do not add API routes or server-side processing.
 
-## UI フレームワーク方針
+## UI framework policy
 
-Astro はデフォルトで JS をゼロ出力する。この特性を維持するため、ツールのインタラクティブ性に React/Vue/Svelte などの UI フレームワークアイランドを使わない。素の TypeScript / DOM 操作で状態管理が現実的に不可能な場合のみ、個別ツール単位でアイランド導入を検討する。
+Astro emits zero JS by default. To preserve that, do not use React/Vue/Svelte islands for tool interactivity. Consider an island for a specific tool only when plain TypeScript / DOM manipulation makes state management practically impossible.
 
-## Layout.astro の役割
+## Role of Layout.astro
 
-`src/layouts/Layout.astro` が `<head>` のメタタグ（title/description/OGP/Twitter Card/favicon）とサイドバーシェルを描画する唯一の場所。すべてのページはこれを経由し、`title` / `description` / 任意で `ogImage` を props として渡す（`<head>` マークアップをページごとに複製しない）。
-
-注意: `og:image` は `https://nyankotools.com/ogp.png` を指しているが、`public/` にまだ実体が存在しない。
+`src/layouts/Layout.astro` is the only place that renders the `<head>` meta tags (title/description/OGP/Twitter Card/favicon) and the sidebar shell. Every page goes through it, passing `title` / `description` / optionally `ogImage` as props (never duplicate `<head>` markup per page). The default `og:image` is `https://nyankotools.com/ogp.png` (the file is `public/ogp.png`).

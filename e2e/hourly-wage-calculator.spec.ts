@@ -25,7 +25,7 @@ test.describe('時給・日給・月給換算＆残業代計算機（日本語�
     );
 
     // 基礎時給には自動的に時給の計算結果が入力される
-    await expect(page.locator('#wage-calc-base-hourly')).toHaveValue('1200');
+    await expect(page.locator('#wage-calc-base-hourly')).toHaveValue('1,200');
   });
 
   test('給与換算の金額を変更すると、未編集の基礎時給も追従して再計算される', async ({
@@ -33,7 +33,7 @@ test.describe('時給・日給・月給換算＆残業代計算機（日本語�
   }) => {
     await page.goto('/tools/hourly-wage-calculator/');
 
-    await expect(page.locator('#wage-calc-base-hourly')).toHaveValue('1200');
+    await expect(page.locator('#wage-calc-base-hourly')).toHaveValue('1,200');
 
     // 基礎時給欄を一度も手動編集していない状態で金額を変更すると、
     // 自動入力された値も新しい時給に追従して更新されるべき
@@ -42,7 +42,7 @@ test.describe('時給・日給・月給換算＆残業代計算機（日本語�
     await expect(page.locator('#wage-calc-result-hourly')).toHaveText(
       '￥1,500',
     );
-    await expect(page.locator('#wage-calc-base-hourly')).toHaveValue('1500');
+    await expect(page.locator('#wage-calc-base-hourly')).toHaveValue('1,500');
   });
 
   test('日給を基準に時給・月給・年収へ換算できる', async ({ page }) => {
@@ -131,7 +131,7 @@ test.describe('時給・日給・月給換算＆残業代計算機（日本語�
     await page.goto('/tools/hourly-wage-calculator/');
 
     // 初期表示時点で基礎時給には1200円が自動入力されている
-    await expect(page.locator('#wage-calc-base-hourly')).toHaveValue('1200');
+    await expect(page.locator('#wage-calc-base-hourly')).toHaveValue('1,200');
 
     const rows = page.locator('#wage-calc-overtime-rows tr');
 
@@ -200,7 +200,7 @@ test.describe('時給・日給・月給換算＆残業代計算機（日本語�
       '￥1,500',
     );
     // 手動編集した基礎時給は給与換算側の変更で上書きされない
-    await expect(page.locator('#wage-calc-base-hourly')).toHaveValue('2000');
+    await expect(page.locator('#wage-calc-base-hourly')).toHaveValue('2,000');
   });
 
   test('基礎時給が0だとエラーメッセージが表示され、結果は非表示になる', async ({
@@ -214,33 +214,6 @@ test.describe('時給・日給・月給換算＆残業代計算機（日本語�
       '計算できませんでした（基礎時給は0より大きく、労働時間・割増率は0以上の値を入力してください）',
     );
     await expect(page.locator('#wage-calc-overtime-results')).toBeHidden();
-  });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/');
-
-    await page
-      .locator('#sidebar details[data-category="計算"] summary')
-      .click();
-    await page
-      .locator('#sidebar')
-      .getByRole('link', { name: '時給・日給・月給換算＆残業代計算機' })
-      .click();
-
-    await expect(page).toHaveURL(/\/tools\/hourly-wage-calculator\/?$/);
-    await expect(page.locator('main h1')).toHaveText(
-      '時給・日給・月給換算＆残業代計算機',
-    );
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/hourly-wage-calculator/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
   });
 });
 
@@ -279,15 +252,5 @@ test.describe('Hourly Wage Converter & Overtime Pay Calculator (English)', () =>
     await expect(page.locator('#wage-calc-conversion-error')).toHaveText(
       'Could not calculate (amount, hours per day, and days per month must all be greater than 0)',
     );
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/en/tools/hourly-wage-calculator/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
   });
 });

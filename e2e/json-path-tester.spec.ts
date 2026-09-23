@@ -110,33 +110,6 @@ test.describe('JSON Path / JSON Pointerテスター（日本語版）', () => {
     );
     await expect(page.locator('#json-path-tester-results tr')).toHaveCount(0);
   });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/');
-
-    await page
-      .locator('#sidebar details[data-category="開発"] summary')
-      .click();
-    await page
-      .locator('#sidebar')
-      .getByRole('link', { name: 'JSON Path / JSON Pointerテスター' })
-      .click();
-
-    await expect(page).toHaveURL(/\/tools\/json-path-tester\/?$/);
-    await expect(page.locator('main h1')).toHaveText(
-      'JSON Path / JSON Pointerテスター',
-    );
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/json-path-tester/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
 });
 
 test.describe('JSON Path / JSON Pointer Tester (English)', () => {

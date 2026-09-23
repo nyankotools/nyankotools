@@ -1,0 +1,376 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { freelanceIncomeCalculatorContent } from '../../i18n/tools/freelance-income-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = freelanceIncomeCalculatorContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label
+          for="freelance-calc-revenue"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.revenueLabel}
+        </label>
+        <input
+          id="freelance-calc-revenue"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.revenuePlaceholder}
+          class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label
+          for="freelance-calc-expenses"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.expensesLabel}
+        </label>
+        <input
+          id="freelance-calc-expenses"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.expensesPlaceholder}
+          class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <span
+        id="freelance-calc-blue-return-label"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.blueReturnLegend}
+      </span>
+      <div
+        class="flex flex-wrap gap-3"
+        role="radiogroup"
+        aria-labelledby="freelance-calc-blue-return-label"
+      >
+        <label class="flex items-center gap-1 text-sm">
+          <input
+            type="radio"
+            name="freelance-calc-blue-return"
+            value="0"
+            checked
+          />
+          {t.blueReturnNone}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input
+            type="radio"
+            name="freelance-calc-blue-return"
+            value="100000"
+          />
+          {t.blueReturn10}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input
+            type="radio"
+            name="freelance-calc-blue-return"
+            value="550000"
+          />
+          {t.blueReturn55}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input
+            type="radio"
+            name="freelance-calc-blue-return"
+            value="650000"
+          />
+          {t.blueReturn65}
+        </label>
+      </div>
+    </div>
+
+    <div class="mb-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label
+          for="freelance-calc-social-insurance"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.socialInsuranceLabel}
+        </label>
+        <input
+          id="freelance-calc-social-insurance"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.socialInsurancePlaceholder}
+          class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label
+          for="freelance-calc-other-deductions"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.otherDeductionsLabel}
+        </label>
+        <input
+          id="freelance-calc-other-deductions"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.otherDeductionsPlaceholder}
+          class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+    </div>
+
+    <p
+      id="freelance-calc-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl
+      id="freelance-calc-results"
+      class="mt-4 hidden grid grid-cols-2 gap-3 sm:grid-cols-3"
+      aria-live="polite"
+    >
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultNetIncomeLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="freelance-calc-result-net"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultTotalTaxLabel}
+        </dt>
+        <dd
+          class="text-lg font-semibold"
+          id="freelance-calc-result-total-tax"
+        ></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultEffectiveTaxRateLabel}
+        </dt>
+        <dd
+          class="text-lg font-semibold"
+          id="freelance-calc-result-effective-rate"
+        ></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultBusinessIncomeLabel}
+        </dt>
+        <dd
+          class="text-lg font-semibold"
+          id="freelance-calc-result-business-income"
+        ></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultTaxableIncomeTaxLabel}
+        </dt>
+        <dd
+          class="text-lg font-semibold"
+          id="freelance-calc-result-taxable-income-tax"
+        ></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultIncomeTaxLabel}
+        </dt>
+        <dd
+          class="text-lg font-semibold"
+          id="freelance-calc-result-income-tax"
+        ></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultReconstructionTaxLabel}
+        </dt>
+        <dd
+          class="text-lg font-semibold"
+          id="freelance-calc-result-reconstruction-tax"
+        ></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultTaxableResidentTaxLabel}
+        </dt>
+        <dd
+          class="text-lg font-semibold"
+          id="freelance-calc-result-taxable-resident-tax"
+        ></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultResidentTaxLabel}
+        </dt>
+        <dd
+          class="text-lg font-semibold"
+          id="freelance-calc-result-resident-tax"
+        ></dd>
+      </div>
+    </dl>
+  </section>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    calculateFreelanceIncome,
+    type BlueReturnDeduction,
+  } from '../../lib/tools/freelance-income-calculator';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
+  const errorMessage = configEl.dataset.error ?? '';
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const percent = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 2,
+  });
+
+  const revenueInput = document.getElementById(
+    'freelance-calc-revenue',
+  ) as HTMLInputElement;
+  const expensesInput = document.getElementById(
+    'freelance-calc-expenses',
+  ) as HTMLInputElement;
+  const blueReturnInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="freelance-calc-blue-return"]',
+  );
+  const socialInsuranceInput = document.getElementById(
+    'freelance-calc-social-insurance',
+  ) as HTMLInputElement;
+  const otherDeductionsInput = document.getElementById(
+    'freelance-calc-other-deductions',
+  ) as HTMLInputElement;
+
+  const errorEl = document.getElementById('freelance-calc-error')!;
+  const resultsEl = document.getElementById('freelance-calc-results')!;
+  const resultNetEl = document.getElementById('freelance-calc-result-net')!;
+  const resultTotalTaxEl = document.getElementById(
+    'freelance-calc-result-total-tax',
+  )!;
+  const resultEffectiveRateEl = document.getElementById(
+    'freelance-calc-result-effective-rate',
+  )!;
+  const resultBusinessIncomeEl = document.getElementById(
+    'freelance-calc-result-business-income',
+  )!;
+  const resultTaxableIncomeTaxEl = document.getElementById(
+    'freelance-calc-result-taxable-income-tax',
+  )!;
+  const resultIncomeTaxEl = document.getElementById(
+    'freelance-calc-result-income-tax',
+  )!;
+  const resultReconstructionTaxEl = document.getElementById(
+    'freelance-calc-result-reconstruction-tax',
+  )!;
+  const resultTaxableResidentTaxEl = document.getElementById(
+    'freelance-calc-result-taxable-resident-tax',
+  )!;
+  const resultResidentTaxEl = document.getElementById(
+    'freelance-calc-result-resident-tax',
+  )!;
+
+  attachCommaFormatting(revenueInput);
+  attachCommaFormatting(expensesInput);
+  attachCommaFormatting(socialInsuranceInput);
+  attachCommaFormatting(otherDeductionsInput);
+
+  function selectedBlueReturnDeduction(): BlueReturnDeduction {
+    return (
+      (Number(
+        Array.from(blueReturnInputs).find((el) => el.checked)?.value,
+      ) as BlueReturnDeduction) || 0
+    );
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    if (revenueInput.value.trim() === '' || expensesInput.value.trim() === '')
+      return;
+
+    const result = calculateFreelanceIncome({
+      annualRevenue: Number(stripCommas(revenueInput.value)),
+      annualExpenses: Number(stripCommas(expensesInput.value)),
+      blueReturnDeduction: selectedBlueReturnDeduction(),
+      socialInsurancePayments: Number(
+        stripCommas(socialInsuranceInput.value) || '0',
+      ),
+      otherDeductions: Number(stripCommas(otherDeductionsInput.value) || '0'),
+    });
+
+    if (result === null) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    resultNetEl.textContent = yen.format(result.netIncome);
+    resultTotalTaxEl.textContent = yen.format(result.totalTax);
+    resultEffectiveRateEl.textContent = `${percent.format(result.effectiveTaxRate)}%`;
+    resultBusinessIncomeEl.textContent = yen.format(result.businessIncome);
+    resultTaxableIncomeTaxEl.textContent = yen.format(
+      result.taxableIncomeForIncomeTax,
+    );
+    resultIncomeTaxEl.textContent = yen.format(result.incomeTax);
+    resultReconstructionTaxEl.textContent = yen.format(
+      result.reconstructionTax,
+    );
+    resultTaxableResidentTaxEl.textContent = yen.format(
+      result.taxableIncomeForResidentTax,
+    );
+    resultResidentTaxEl.textContent = yen.format(result.residentTax);
+    resultsEl.classList.remove('hidden');
+  }
+
+  revenueInput.addEventListener('input', render);
+  expensesInput.addEventListener('input', render);
+  socialInsuranceInput.addEventListener('input', render);
+  otherDeductionsInput.addEventListener('input', render);
+  blueReturnInputs.forEach((el) => el.addEventListener('change', render));
+
+  revenueInput.value = formatNumberWithCommas('6000000');
+  expensesInput.value = formatNumberWithCommas('1000000');
+  socialInsuranceInput.value = formatNumberWithCommas('500000');
+  otherDeductionsInput.value = '0';
+  render();
+</script>

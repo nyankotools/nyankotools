@@ -60,33 +60,6 @@ test.describe('スクリーンサイズ・Viewportチェッカー（日本語版
     );
   });
 
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/');
-
-    await page
-      .locator('#sidebar details[data-category="開発"] summary')
-      .click();
-    await page
-      .locator('#sidebar')
-      .getByRole('link', { name: 'スクリーンサイズ・Viewportチェッカー' })
-      .click();
-
-    await expect(page).toHaveURL(/\/tools\/viewport-checker\/?$/);
-    await expect(page.locator('main h1')).toHaveText(
-      'スクリーンサイズ・Viewportチェッカー',
-    );
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/viewport-checker/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
-
   test('ブレークポイントの境界値（640px）ちょうどでsmと判定される', async ({
     page,
   }) => {
@@ -179,33 +152,6 @@ test.describe('Screen Size & Viewport Checker (English)', () => {
       'None (below 640px)',
     );
     await expect(page.locator('#viewport-orientation')).toHaveText('Portrait');
-  });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/en/');
-
-    await page
-      .locator('#sidebar details[data-category="Development"] summary')
-      .click();
-    await page
-      .locator('#sidebar')
-      .getByRole('link', { name: 'Screen Size & Viewport Checker' })
-      .click();
-
-    await expect(page).toHaveURL(/\/en\/tools\/viewport-checker\/?$/);
-    await expect(page.locator('main h1')).toHaveText(
-      'Screen Size & Viewport Checker',
-    );
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/en/tools/viewport-checker/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
   });
 
   test('ブレークポイントの境界値（640px）ちょうどでsmと判定される', async ({

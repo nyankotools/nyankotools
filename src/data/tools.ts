@@ -531,6 +531,91 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'ratio-calculator',
+    translations: {
+      ja: {
+        name: '割合・比率計算機',
+        description:
+          '比を最も簡単な整数比に約分し、比例式（A:B=C:D）の空欄の値や、部分・全体・割合(%)・増減率を相互に計算します。',
+        category: '計算',
+      },
+      en: {
+        name: 'Ratio & Percentage Calculator',
+        description:
+          'Reduces a ratio to its simplest whole-number form, solves for a missing term in a proportion, and converts between a part, a whole, a percentage, and a rate of change.',
+        category: 'Calculate',
+      },
+    },
+  },
+  {
+    slug: 'bmi-calculator',
+    translations: {
+      ja: {
+        name: 'BMI計算機',
+        description:
+          '身長・体重からBMI（体格指数）を計算し、日本肥満学会の基準に基づく肥満度判定と普通体重の範囲を表示します。',
+        category: '計算',
+      },
+      en: {
+        name: 'BMI Calculator',
+        description:
+          'Calculates your Body Mass Index from height and weight, shows the WHO weight category, and gives the healthy weight range for your height.',
+        category: 'Calculate',
+      },
+    },
+  },
+  {
+    slug: 'freelance-income-calculator',
+    translations: {
+      ja: {
+        name: 'フリーランス手取り計算機',
+        description:
+          '年間の売上・必要経費・青色申告特別控除・社会保険料から、所得税・復興特別所得税・住民税と手取り額を簡易試算します。',
+        category: '計算',
+      },
+      en: {
+        name: 'Freelancer Take-Home Pay Calculator',
+        description:
+          "Estimates a Japanese freelancer's income tax, reconstruction surtax, and resident tax from annual revenue, expenses, and deductions, with a rough take-home pay figure.",
+        category: 'Calculate',
+      },
+    },
+  },
+  {
+    slug: 'mortgage-calculator',
+    translations: {
+      ja: {
+        name: '住宅ローン繰り上げ返済比較シミュレーション',
+        description:
+          '借入残高・金利・残りの返済期間と繰り上げ返済額から、「期間短縮型」「返済額軽減型」それぞれの利息軽減額・返済期間短縮・返済額軽減効果を比較します。',
+        category: '計算',
+      },
+      en: {
+        name: 'Mortgage Prepayment Comparison Calculator',
+        description:
+          'Compares the interest saved, term shortened, or monthly payment reduced by a lump-sum mortgage prepayment, for both the "shorten term" and "reduce payment" strategies.',
+        category: 'Calculate',
+      },
+    },
+  },
+  {
+    slug: 'investment-simulator',
+    translations: {
+      ja: {
+        name: '資産運用シミュレーション',
+        description:
+          '初期投資額・毎月の積立額・想定利回り・積立期間のうち3つから残る1つを複利計算で試算します。積立元本と運用益の内訳をグラフと年別の表で確認でき、取り崩し可能額（毎月）もあわせて試算できます。',
+        category: '計算',
+      },
+      en: {
+        name: 'Investment Growth Simulator',
+        description:
+          'Solves for any one of initial investment, monthly contribution, annual return, or time horizon from the other three under compound interest, with a chart and year-by-year table, plus a sustainable monthly withdrawal estimate.',
+        category: 'Calculate',
+      },
+    },
+  },
+  {
     slug: 'sql-formatter',
     translations: {
       ja: {
@@ -663,6 +748,23 @@ export const tools: Tool[] = [
         description:
           'Converts text into 9 naming conventions at once, including camelCase, PascalCase, snake_case, and kebab-case. Handy for renaming variables and functions.',
         category: 'Convert',
+      },
+    },
+  },
+  {
+    slug: 'scholarship-repayment-simulator',
+    translations: {
+      ja: {
+        name: '奨学金返済シミュレーション',
+        description:
+          'JASSO第二種奨学金（利子付き）を想定し、貸与総額・利率・返還期間から、利率固定方式・利率見直し方式それぞれの毎月の返済額・総返済額・総利息を簡易試算します。',
+        category: '計算',
+      },
+      en: {
+        name: 'JASSO Student Loan Repayment Simulator',
+        description:
+          'Estimates the monthly payment, total repayment, and total interest for a JASSO Type 2 (interest-bearing) student loan, comparing the fixed-rate and rate-review repayment methods.',
+        category: 'Calculate',
       },
     },
   },

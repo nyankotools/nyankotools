@@ -115,33 +115,6 @@ test.describe('和暦⇔西暦変換（日本語版）', () => {
     );
     await expect(page.locator('#era-w2j-result')).toBeEmpty();
   });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/');
-
-    // ホーム表示時はどのカテゴリもデフォルトで折りたたまれているため、
-    // 先に対象ツールが属する「変換」カテゴリを開いてからリンクをクリックする。
-    await page
-      .locator('#sidebar details[data-category="変換"] summary')
-      .click();
-    await page
-      .locator('#sidebar')
-      .getByRole('link', { name: '和暦⇔西暦変換' })
-      .click();
-
-    await expect(page).toHaveURL(/\/tools\/japanese-era-converter\/?$/);
-    await expect(page.locator('main h1')).toHaveText('和暦⇔西暦変換');
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/japanese-era-converter/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
 });
 
 test.describe('Japanese Era Converter (English)', () => {

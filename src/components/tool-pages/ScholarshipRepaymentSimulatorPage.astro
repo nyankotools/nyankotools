@@ -1,0 +1,414 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { scholarshipRepaymentSimulatorContent } from '../../i18n/tools/scholarship-repayment-simulator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = scholarshipRepaymentSimulatorContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-4 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <p
+    class="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200"
+    set:html={t.noticeHtml}
+  />
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+    data-periods-initial-label={t.periodsInitialRowLabel}
+    data-periods-review-label-template={t.periodsReviewRowLabelTemplate}
+    data-year-from-suffix={t.yearFromSuffix}
+    data-installments-unit={t.installmentsUnit}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label
+          for="scholarship-calc-amount"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.amountLabel}
+        </label>
+        <input
+          id="scholarship-calc-amount"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.amountPlaceholder}
+          class="h-11 w-40 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label
+          for="scholarship-calc-rate"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.rateLabel}
+        </label>
+        <input
+          id="scholarship-calc-rate"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="0.01"
+          placeholder={t.ratePlaceholder}
+          class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label
+          for="scholarship-calc-years"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.yearsLabel}
+        </label>
+        <div class="flex items-center gap-1">
+          <input
+            id="scholarship-calc-years"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="20"
+            step="1"
+            placeholder={t.yearsPlaceholder}
+            class="h-11 w-20 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.yearsUnit}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <span
+        id="scholarship-calc-method-label"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.methodLegend}
+      </span>
+      <div
+        class="flex flex-col gap-2"
+        role="radiogroup"
+        aria-labelledby="scholarship-calc-method-label"
+      >
+        <label class="flex items-center gap-1 text-sm">
+          <input
+            type="radio"
+            name="scholarship-calc-method"
+            value="fixed"
+            checked
+          />
+          {t.methodFixedLabel}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="scholarship-calc-method" value="reviewed" />
+          {t.methodReviewedLabel}
+        </label>
+      </div>
+    </div>
+
+    <div id="scholarship-calc-rate-change-row" class="mb-3 hidden">
+      <label
+        for="scholarship-calc-rate-change"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.rateChangeLabel}
+      </label>
+      <input
+        id="scholarship-calc-rate-change"
+        type="number"
+        inputmode="decimal"
+        step="0.01"
+        placeholder={t.rateChangePlaceholder}
+        class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      />
+      <p class="mt-1 max-w-xl text-xs text-gray-500 dark:text-gray-400">
+        {t.rateChangeHelp}
+      </p>
+    </div>
+
+    <p
+      id="scholarship-calc-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="scholarship-calc-results" class="mt-4 hidden" aria-live="polite">
+      <h3 class="mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+        {t.resultHeading}
+      </h3>
+      <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultInitialMonthlyLabel}
+          </dt>
+          <dd
+            class="text-lg font-semibold"
+            id="scholarship-calc-initial-monthly"
+          ></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultFinalMonthlyLabel}
+          </dt>
+          <dd
+            class="text-lg font-semibold"
+            id="scholarship-calc-final-monthly"
+          ></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultRepaymentPeriodLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="scholarship-calc-period"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultTotalPaymentLabel}
+          </dt>
+          <dd
+            class="text-lg font-semibold"
+            id="scholarship-calc-total-payment"
+          ></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultTotalInterestLabel}
+          </dt>
+          <dd
+            class="text-lg font-semibold"
+            id="scholarship-calc-total-interest"
+          ></dd>
+        </div>
+      </dl>
+
+      <div id="scholarship-calc-periods-section" class="mt-4 hidden">
+        <h3 class="mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+          {t.periodsHeading}
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-max text-left text-sm">
+            <thead>
+              <tr class="border-b border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-400">
+                <th class="py-1 pr-4 font-medium">
+                  {t.periodsTableReviewHeader}
+                </th>
+                <th class="py-1 pr-4 font-medium">
+                  {t.periodsTableYearHeader}
+                </th>
+                <th class="py-1 pr-4 font-medium">
+                  {t.periodsTableRateHeader}
+                </th>
+                <th class="py-1 font-medium">{t.periodsTableMonthlyHeader}</th>
+              </tr>
+            </thead>
+            <tbody id="scholarship-calc-periods-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    simulateScholarshipRepayment,
+    type RepaymentMethod,
+  } from '../../lib/tools/scholarship-repayment-simulator';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
+  const errorMessage = configEl.dataset.error ?? '';
+  const periodsInitialLabel = configEl.dataset.periodsInitialLabel ?? '';
+  const periodsReviewLabelTemplate =
+    configEl.dataset.periodsReviewLabelTemplate ?? '#{n}';
+  const yearFromSuffix = configEl.dataset.yearFromSuffix ?? '';
+  const installmentsUnit = configEl.dataset.installmentsUnit ?? '';
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const percent = new Intl.NumberFormat(numberLocale, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  });
+
+  const amountInput = document.getElementById(
+    'scholarship-calc-amount',
+  ) as HTMLInputElement;
+  const rateInput = document.getElementById(
+    'scholarship-calc-rate',
+  ) as HTMLInputElement;
+  const yearsInput = document.getElementById(
+    'scholarship-calc-years',
+  ) as HTMLInputElement;
+  const methodInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="scholarship-calc-method"]',
+  );
+  const rateChangeRowEl = document.getElementById(
+    'scholarship-calc-rate-change-row',
+  )!;
+  const rateChangeInput = document.getElementById(
+    'scholarship-calc-rate-change',
+  ) as HTMLInputElement;
+
+  const errorEl = document.getElementById('scholarship-calc-error')!;
+  const resultsEl = document.getElementById('scholarship-calc-results')!;
+  const initialMonthlyEl = document.getElementById(
+    'scholarship-calc-initial-monthly',
+  )!;
+  const finalMonthlyEl = document.getElementById(
+    'scholarship-calc-final-monthly',
+  )!;
+  const periodEl = document.getElementById('scholarship-calc-period')!;
+  const totalPaymentEl = document.getElementById(
+    'scholarship-calc-total-payment',
+  )!;
+  const totalInterestEl = document.getElementById(
+    'scholarship-calc-total-interest',
+  )!;
+  const periodsSectionEl = document.getElementById(
+    'scholarship-calc-periods-section',
+  )!;
+  const periodsBodyEl = document.getElementById(
+    'scholarship-calc-periods-body',
+  )!;
+
+  attachCommaFormatting(amountInput);
+
+  function selectedMethod(): RepaymentMethod {
+    return (
+      (Array.from(methodInputs).find((el) => el.checked)
+        ?.value as RepaymentMethod) || 'fixed'
+    );
+  }
+
+  function updateRateChangeVisibility() {
+    rateChangeRowEl.classList.toggle('hidden', selectedMethod() !== 'reviewed');
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    if (
+      amountInput.value.trim() === '' ||
+      rateInput.value.trim() === '' ||
+      yearsInput.value.trim() === '' ||
+      (selectedMethod() === 'reviewed' && rateChangeInput.value.trim() === '')
+    )
+      return;
+
+    const method = selectedMethod();
+
+    const result = simulateScholarshipRepayment({
+      totalLoanAmount: Number(stripCommas(amountInput.value)),
+      initialAnnualRate: Number(rateInput.value),
+      repaymentYears: Number(yearsInput.value),
+      method,
+      rateChangePerReview:
+        method === 'reviewed' ? Number(rateChangeInput.value) : 0,
+    });
+
+    if (result === null) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    initialMonthlyEl.textContent = yen.format(result.initialMonthlyPayment);
+    finalMonthlyEl.textContent = yen.format(result.finalMonthlyPayment);
+    periodEl.textContent = `${Math.round(result.repaymentMonths / 12)}${
+      numberLocale === 'ja-JP' ? '年' : 'yr'
+    }（${result.repaymentMonths}${installmentsUnit}）`;
+    totalPaymentEl.textContent = yen.format(result.totalPayment);
+    totalInterestEl.textContent = yen.format(result.totalInterest);
+
+    periodsBodyEl.innerHTML = '';
+    if (result.periods.length > 1) {
+      for (const period of result.periods) {
+        const row = document.createElement('tr');
+        row.className = 'border-b border-gray-100 dark:border-gray-800';
+
+        const reviewCell = document.createElement('td');
+        reviewCell.className = 'py-1 pr-4';
+        reviewCell.textContent =
+          period.reviewNumber === 0
+            ? periodsInitialLabel
+            : periodsReviewLabelTemplate.replace(
+                '{n}',
+                String(period.reviewNumber),
+              );
+        row.appendChild(reviewCell);
+
+        const yearCell = document.createElement('td');
+        yearCell.className = 'py-1 pr-4';
+        yearCell.textContent = `${period.fromYear}${yearFromSuffix}`;
+        row.appendChild(yearCell);
+
+        const rateCell = document.createElement('td');
+        rateCell.className = 'py-1 pr-4';
+        rateCell.textContent = `${percent.format(period.annualRate)}%`;
+        row.appendChild(rateCell);
+
+        const monthlyCell = document.createElement('td');
+        monthlyCell.className = 'py-1';
+        monthlyCell.textContent = yen.format(period.monthlyPayment);
+        row.appendChild(monthlyCell);
+
+        periodsBodyEl.appendChild(row);
+      }
+      periodsSectionEl.classList.remove('hidden');
+    } else {
+      periodsSectionEl.classList.add('hidden');
+    }
+
+    resultsEl.classList.remove('hidden');
+  }
+
+  amountInput.addEventListener('input', render);
+  rateInput.addEventListener('input', render);
+  yearsInput.addEventListener('input', render);
+  rateChangeInput.addEventListener('input', render);
+  methodInputs.forEach((el) =>
+    el.addEventListener('change', () => {
+      updateRateChangeVisibility();
+      render();
+    }),
+  );
+
+  amountInput.value = formatNumberWithCommas('2400000');
+  rateInput.value = '0.5';
+  yearsInput.value = '15';
+  rateChangeInput.value = '0.1';
+  updateRateChangeVisibility();
+  render();
+</script>

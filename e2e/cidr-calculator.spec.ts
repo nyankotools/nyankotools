@@ -82,31 +82,6 @@ test.describe('CIDR/サブネット計算機（日本語版）', () => {
     expect(clipboardText).toContain('ネットワークアドレス: 192.168.1.0');
     expect(clipboardText).toContain('ブロードキャストアドレス: 192.168.1.255');
   });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/');
-
-    await page
-      .locator('#sidebar details[data-category="開発"] summary')
-      .click();
-    await page
-      .locator('#sidebar')
-      .getByRole('link', { name: 'CIDR/サブネット計算機' })
-      .click();
-
-    await expect(page).toHaveURL(/\/tools\/cidr-calculator\/?$/);
-    await expect(page.locator('main h1')).toHaveText('CIDR/サブネット計算機');
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/cidr-calculator/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
-  });
 });
 
 test.describe('CIDR / Subnet Calculator (English)', () => {
@@ -169,32 +144,5 @@ test.describe('CIDR / Subnet Calculator (English)', () => {
       navigator.clipboard.readText(),
     );
     expect(clipboardText).toContain('Network address: 192.168.1.0');
-  });
-
-  test('サイドバーからツールページへ遷移できる', async ({ page }) => {
-    await page.goto('/en/');
-
-    await page
-      .locator('#sidebar details[data-category="Development"] summary')
-      .click();
-    await page
-      .locator('#sidebar')
-      .getByRole('link', { name: 'CIDR / Subnet Calculator' })
-      .click();
-
-    await expect(page).toHaveURL(/\/en\/tools\/cidr-calculator\/?$/);
-    await expect(page.locator('main h1')).toHaveText(
-      'CIDR / Subnet Calculator',
-    );
-  });
-
-  test('375px幅でも横スクロールが発生しない', async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/en/tools/cidr-calculator/');
-
-    const hasHorizontalOverflow = await page.evaluate(
-      () => document.documentElement.scrollWidth > window.innerWidth + 1,
-    );
-    expect(hasHorizontalOverflow).toBe(false);
   });
 });

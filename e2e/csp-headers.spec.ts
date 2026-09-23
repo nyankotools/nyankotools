@@ -175,6 +175,44 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
     await context.close();
   });
 
+  test('テーマの切り替え: CSP適用下でもライト/ダークを切り替えられ、選択が保存される', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ baseURL: BASE_URL });
+    const page = await context.newPage();
+    const consoleErrors: string[] = [];
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') consoleErrors.push(msg.text());
+    });
+    page.on('pageerror', (err) => consoleErrors.push(String(err)));
+
+    await page.goto('/tools/char-counter/');
+
+    const html = page.locator('html');
+    const darkButton = page.locator('[data-theme-option="dark"]');
+    const lightButton = page.locator('[data-theme-option="light"]');
+
+    // 切り替えの処理（src/lib/layout-nav.ts の initTheme）は、ビルドがHTMLに埋め込む
+    // インラインscriptで、<meta> のCSPがハッシュで許可している。ヘッダー側に
+    // script-src 'self' が残ると、このscriptがブロックされてクリックが効かなくなる。
+    await darkButton.click();
+    await expect(html).toHaveClass(/\bdark\b/);
+    await expect(darkButton).toHaveAttribute('aria-pressed', 'true');
+
+    // 再読み込み後の選択の復元は、外部ファイルの public/theme-init.js（描画前）と、
+    // initTheme()（読み込み時に保存値を適用）のどちらでも行われる。
+    // このテストは、どちらか一方でも復元されれば通る。
+    await page.reload();
+    await expect(html).toHaveClass(/\bdark\b/);
+
+    await lightButton.click();
+    await expect(html).not.toHaveClass(/\bdark\b/);
+    await expect(lightButton).toHaveAttribute('aria-pressed', 'true');
+
+    expect(consoleErrors).toEqual([]);
+    await context.close();
+  });
+
   test('モバイル幅でハンバーガーメニューからサイドバーを開閉できる', async ({
     browser,
   }) => {

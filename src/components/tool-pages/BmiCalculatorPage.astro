@@ -1,0 +1,349 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { bmiCalculatorContent } from '../../i18n/tools/bmi-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = bmiCalculatorContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-default-unit={t.defaultUnit}
+    data-error={t.error}
+    data-bmi-result-label={t.bmiResultLabel}
+    data-healthy-weight-result-label={t.healthyWeightResultLabel}
+    data-category-labels={JSON.stringify(t.categoryLabels)}
+  >
+    <div class="mb-4">
+      <span
+        id="unit-legend"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.unitLegend}
+      </span>
+      <div
+        class="flex flex-wrap gap-3"
+        role="radiogroup"
+        aria-labelledby="unit-legend"
+      >
+        <label class="flex items-center gap-1 text-sm">
+          <input
+            type="radio"
+            name="unit-system"
+            value="metric"
+            checked={t.defaultUnit === 'metric'}
+          />
+          {t.unitMetric}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input
+            type="radio"
+            name="unit-system"
+            value="imperial"
+            checked={t.defaultUnit === 'imperial'}
+          />
+          {t.unitImperial}
+        </label>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <span
+          id="height-legend"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.heightLabel}
+        </span>
+        <div
+          id="height-metric-fields"
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="height-legend"
+        >
+          <input
+            id="height-cm-input"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            placeholder={t.heightCmPlaceholder}
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-500 dark:text-gray-400">cm</span>
+        </div>
+        <div
+          id="height-imperial-fields"
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="height-legend"
+        >
+          <input
+            id="height-ft-input"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            placeholder={t.heightFtPlaceholder}
+            class="h-11 w-20 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-500 dark:text-gray-400">ft</span>
+          <input
+            id="height-in-input"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            placeholder={t.heightInPlaceholder}
+            class="h-11 w-20 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-500 dark:text-gray-400">in</span>
+        </div>
+      </div>
+
+      <div>
+        <span
+          id="weight-legend"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.weightLabel}
+        </span>
+        <div
+          id="weight-metric-fields"
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="weight-legend"
+        >
+          <input
+            id="weight-kg-input"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            placeholder={t.weightKgPlaceholder}
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-500 dark:text-gray-400">kg</span>
+        </div>
+        <div
+          id="weight-imperial-fields"
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="weight-legend"
+        >
+          <input
+            id="weight-lb-input"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            placeholder={t.weightLbPlaceholder}
+            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-500 dark:text-gray-400">lb</span>
+        </div>
+      </div>
+    </div>
+
+    <p
+      id="bmi-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl id="bmi-results" class="mt-4 hidden space-y-2" aria-live="polite">
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.bmiResultLabel}
+        </dt>
+        <dd class="text-lg font-semibold">
+          <span id="bmi-result"></span>
+          <span id="bmi-category-result" class="ml-2 text-base"></span>
+        </dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.healthyWeightResultLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="healthy-weight-result"></dd>
+      </div>
+    </dl>
+  </section>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    calculateBmi,
+    calculateHealthyWeightRange,
+    feetInchesToCm,
+    getBmiCategory,
+    kgToLb,
+    lbToKg,
+    type BmiCategory,
+  } from '../../lib/tools/bmi-calculator';
+
+  const section = document.querySelector<HTMLElement>(
+    'section[data-default-unit]',
+  )!;
+  const numberLocale = section.dataset.numberLocale ?? 'en-US';
+  const errorMessage = section.dataset.error ?? '';
+  const categoryLabels: Record<BmiCategory, string> = JSON.parse(
+    section.dataset.categoryLabels ?? '{}',
+  );
+
+  const decimalFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 1,
+  });
+
+  const categoryColorClass: Record<BmiCategory, string> = {
+    underweight: 'text-blue-600 dark:text-blue-400',
+    normal: 'text-green-600 dark:text-green-400',
+    overweight: 'text-yellow-600 dark:text-yellow-400',
+    obeseClass1: 'text-orange-600 dark:text-orange-400',
+    obeseClass2: 'text-orange-700 dark:text-orange-500',
+    obeseClass3: 'text-red-600 dark:text-red-400',
+  };
+
+  const unitInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="unit-system"]',
+  );
+  const heightMetricFields = document.getElementById('height-metric-fields')!;
+  const heightImperialFields = document.getElementById(
+    'height-imperial-fields',
+  )!;
+  const weightMetricFields = document.getElementById('weight-metric-fields')!;
+  const weightImperialFields = document.getElementById(
+    'weight-imperial-fields',
+  )!;
+
+  const heightCmInput = document.getElementById(
+    'height-cm-input',
+  ) as HTMLInputElement;
+  const heightFtInput = document.getElementById(
+    'height-ft-input',
+  ) as HTMLInputElement;
+  const heightInInput = document.getElementById(
+    'height-in-input',
+  ) as HTMLInputElement;
+  const weightKgInput = document.getElementById(
+    'weight-kg-input',
+  ) as HTMLInputElement;
+  const weightLbInput = document.getElementById(
+    'weight-lb-input',
+  ) as HTMLInputElement;
+
+  const errorEl = document.getElementById('bmi-error')!;
+  const resultsEl = document.getElementById('bmi-results')!;
+  const bmiResultEl = document.getElementById('bmi-result')!;
+  const categoryResultEl = document.getElementById('bmi-category-result')!;
+  const healthyWeightResultEl = document.getElementById(
+    'healthy-weight-result',
+  )!;
+
+  function selectedUnit(): 'metric' | 'imperial' {
+    return (
+      (Array.from(unitInputs).find((el) => el.checked)?.value as
+        'metric' | 'imperial') ?? 'metric'
+    );
+  }
+
+  function updateUnitVisibility() {
+    const unit = selectedUnit();
+    const isMetric = unit === 'metric';
+    heightMetricFields.classList.toggle('hidden', !isMetric);
+    heightImperialFields.classList.toggle('hidden', isMetric);
+    weightMetricFields.classList.toggle('hidden', !isMetric);
+    weightImperialFields.classList.toggle('hidden', isMetric);
+  }
+
+  function heightCm(): number | null {
+    if (selectedUnit() === 'metric') {
+      if (heightCmInput.value.trim() === '') return null;
+      return Number(heightCmInput.value);
+    }
+    if (heightFtInput.value.trim() === '' && heightInInput.value.trim() === '')
+      return null;
+    const ft =
+      heightFtInput.value.trim() === '' ? 0 : Number(heightFtInput.value);
+    const inch =
+      heightInInput.value.trim() === '' ? 0 : Number(heightInInput.value);
+    return feetInchesToCm(ft, inch);
+  }
+
+  function weightKg(): number | null {
+    if (selectedUnit() === 'metric') {
+      if (weightKgInput.value.trim() === '') return null;
+      return Number(weightKgInput.value);
+    }
+    if (weightLbInput.value.trim() === '') return null;
+    return lbToKg(Number(weightLbInput.value));
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    const hCm = heightCm();
+    const wKg = weightKg();
+    if (hCm === null || wKg === null) return;
+
+    const bmi = calculateBmi(hCm, wKg);
+    const range = calculateHealthyWeightRange(hCm);
+    if (bmi === null || range === null) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    const category = getBmiCategory(bmi);
+    bmiResultEl.textContent = decimalFormat.format(bmi);
+    categoryResultEl.textContent = categoryLabels[category];
+    categoryResultEl.className = `ml-2 text-base ${categoryColorClass[category]}`;
+
+    const unit = selectedUnit();
+    healthyWeightResultEl.textContent =
+      unit === 'metric'
+        ? `${decimalFormat.format(range.minKg)} – ${decimalFormat.format(range.maxKg)} kg`
+        : `${decimalFormat.format(kgToLb(range.minKg))} – ${decimalFormat.format(kgToLb(range.maxKg))} lb`;
+
+    resultsEl.classList.remove('hidden');
+  }
+
+  unitInputs.forEach((el) =>
+    el.addEventListener('change', () => {
+      updateUnitVisibility();
+      render();
+    }),
+  );
+  [
+    heightCmInput,
+    heightFtInput,
+    heightInInput,
+    weightKgInput,
+    weightLbInput,
+  ].forEach((input) => input.addEventListener('input', render));
+
+  updateUnitVisibility();
+
+  // 初期値
+  heightCmInput.value = '170';
+  weightKgInput.value = '65';
+  heightFtInput.value = '5';
+  heightInInput.value = '7';
+  weightLbInput.value = '143';
+  render();
+</script>

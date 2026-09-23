@@ -548,6 +548,23 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'bmi-calculator',
+    translations: {
+      ja: {
+        name: 'BMI計算機',
+        description:
+          '身長・体重からBMI（体格指数）を計算し、日本肥満学会の基準に基づく肥満度判定と普通体重の範囲を表示します。',
+        category: '計算',
+      },
+      en: {
+        name: 'BMI Calculator',
+        description:
+          'Calculates your Body Mass Index from height and weight, shows the WHO weight category, and gives the healthy weight range for your height.',
+        category: 'Calculate',
+      },
+    },
+  },
+  {
     slug: 'sql-formatter',
     translations: {
       ja: {

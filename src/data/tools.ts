@@ -582,6 +582,23 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'mortgage-calculator',
+    translations: {
+      ja: {
+        name: '住宅ローン繰り上げ返済比較シミュレーション',
+        description:
+          '借入残高・金利・残りの返済期間と繰り上げ返済額から、「期間短縮型」「返済額軽減型」それぞれの利息軽減額・返済期間短縮・返済額軽減効果を比較します。',
+        category: '計算',
+      },
+      en: {
+        name: 'Mortgage Prepayment Comparison Calculator',
+        description:
+          'Compares the interest saved, term shortened, or monthly payment reduced by a lump-sum mortgage prepayment, for both the "shorten term" and "reduce payment" strategies.',
+        category: 'Calculate',
+      },
+    },
+  },
+  {
     slug: 'sql-formatter',
     translations: {
       ja: {

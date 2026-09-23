@@ -16,17 +16,17 @@ describe('calculateBmi', () => {
   it('様々な身長・体重の組み合わせでBMIを計算する', () => {
     // BMI 18.5
     const height185 = 160;
-    const weight185 = height185 * height185 / 10000 * 18.5;
+    const weight185 = ((height185 * height185) / 10000) * 18.5;
     expect(calculateBmi(height185, weight185)).toBeCloseTo(18.5, 1);
 
     // BMI 25
     const height25 = 170;
-    const weight25 = height25 * height25 / 10000 * 25;
+    const weight25 = ((height25 * height25) / 10000) * 25;
     expect(calculateBmi(height25, weight25)).toBeCloseTo(25, 1);
 
     // BMI 30
     const height30 = 180;
-    const weight30 = height30 * height30 / 10000 * 30;
+    const weight30 = ((height30 * height30) / 10000) * 30;
     expect(calculateBmi(height30, weight30)).toBeCloseTo(30, 1);
   });
 

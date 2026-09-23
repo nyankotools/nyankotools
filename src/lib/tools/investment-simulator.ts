@@ -284,8 +284,8 @@ export interface WithdrawalInput {
 }
 
 export interface WithdrawalYearlySnapshot {
-  /** 経過年数 */
-  year: number;
+  /** 経過月数 */
+  months: number;
   /** その時点の残り資産評価額（円） */
   remainingBalance: number;
 }
@@ -342,7 +342,7 @@ export function calculateWithdrawal(
 
     if (month % 12 === 0) {
       yearly.push({
-        year: month / 12,
+        months: month,
         remainingBalance: Math.max(0, balance),
       });
     }
@@ -351,6 +351,166 @@ export function calculateWithdrawal(
   return {
     monthlyWithdrawal,
     totalWithdrawn: monthlyWithdrawal * totalMonths,
+    yearly,
+  };
+}
+
+// ---- 取り崩しシミュレーション（定額取り崩し：毎月の取り崩し額を指定する） ----
+
+export interface FixedAmountWithdrawalInput {
+  /** 取り崩しを開始する時点の資産評価額（円） */
+  principal: number;
+  /** 取り崩し期間中も運用を続けると仮定した場合の想定利回り（年率、%） */
+  annualRate: number;
+  /** 毎月の取り崩し額（円） */
+  monthlyWithdrawal: number;
+}
+
+export interface FixedAmountWithdrawalResult {
+  /**
+   * 資産が尽きるまでの月数。MAX_MONTHS（720ヶ月＝60年）以内に尽きない場合はnull
+   * （その期間内は資産が枯渇しないことを意味する）。
+   */
+  depletionMonths: number | null;
+  /** 取り崩し総額（円）。資産が尽きる月は、残っている額だけを取り崩す。 */
+  totalWithdrawn: number;
+  /**
+   * 1年ごとの残り資産額の推移。資産が尽きた場合は、尽きた月のスナップショットを
+   * 最後に追加したうえで打ち切る。MAX_MONTHS以内に尽きない場合はMAX_MONTHS分まで続く。
+   */
+  yearly: WithdrawalYearlySnapshot[];
+}
+
+/**
+ * 運用を続けながら毎月一定額を取り崩す場合に、資産が何ヶ月で尽きるかを試算する。
+ * calculateWithdrawalとは逆に、取り崩し額（毎月）を指定して結果（枯渇までの期間）を求める。
+ * 毎月末に運用益を加えたうえで取り崩す（期末払い）。資産が尽きる月は、
+ * 残っている額だけを取り崩し、残高は0で打ち切る。
+ * 資産評価額・毎月の取り崩し額は0より大きく、想定利回りは0以上MAX_ANNUAL_RATE(%)以下
+ * である必要がある。これらを満たさない、または計算結果が有限でない場合はnull。
+ */
+export function simulateFixedAmountWithdrawal(
+  input: FixedAmountWithdrawalInput,
+): FixedAmountWithdrawalResult | null {
+  const { principal, annualRate, monthlyWithdrawal } = input;
+
+  if (
+    !(principal > 0) ||
+    !isValidAnnualRate(annualRate) ||
+    !(monthlyWithdrawal > 0)
+  )
+    return null;
+
+  const monthlyRate = annualRate / 100 / 12;
+
+  let balance = principal;
+  let totalWithdrawn = 0;
+  let depletionMonths: number | null = null;
+  const yearly: WithdrawalYearlySnapshot[] = [];
+
+  for (let month = 1; month <= MAX_MONTHS; month++) {
+    balance *= 1 + monthlyRate;
+    const withdrawal = Math.min(monthlyWithdrawal, balance);
+    balance -= withdrawal;
+    totalWithdrawn += withdrawal;
+
+    const depleted = balance <= 0;
+    if (depleted) balance = 0;
+
+    if (month % 12 === 0 || depleted) {
+      yearly.push({ months: month, remainingBalance: balance });
+    }
+
+    if (!Number.isFinite(balance) || !Number.isFinite(totalWithdrawn))
+      return null;
+
+    if (depleted) {
+      depletionMonths = month;
+      break;
+    }
+  }
+
+  return { depletionMonths, totalWithdrawn, yearly };
+}
+
+// ---- 取り崩しシミュレーション（定率取り崩し：残高に対する割合を指定する） ----
+
+export interface FixedRateWithdrawalInput {
+  /** 取り崩しを開始する時点の資産評価額（円） */
+  principal: number;
+  /** 取り崩し期間中も運用を続けると仮定した場合の想定利回り（年率、%） */
+  annualRate: number;
+  /** 毎月の取り崩し率（その時点の残高に対する割合、年率換算、%） */
+  withdrawalRate: number;
+  /** シミュレーションする期間（年） */
+  withdrawalYears: number;
+}
+
+export interface FixedRateWithdrawalResult {
+  /** 1ヶ月目の取り崩し額（円）。定率のため、残高が減るにつれて取り崩し額も減っていく */
+  firstMonthWithdrawal: number;
+  /** シミュレーション期間終了時点の残り資産評価額（円） */
+  finalBalance: number;
+  /** 取り崩し総額（円） */
+  totalWithdrawn: number;
+  /** 1年ごとの残り資産額の推移 */
+  yearly: WithdrawalYearlySnapshot[];
+}
+
+/**
+ * 運用を続けながら、毎月その時点の残高に対して一定の割合を取り崩す場合の資産推移を試算する。
+ * 毎月末に運用益を加えたうえで、残高に取り崩し率（年率を12で割った月率）を掛けた額を取り崩す。
+ * 取り崩し額は残高に比例して減っていくため、理論上は残高が0になることはない
+ * （0に近づき続ける）。
+ * 資産評価額は0より大きく、想定利回りは0以上MAX_ANNUAL_RATE(%)以下、
+ * 取り崩し率は0より大きく100以下、シミュレーション期間は1以上60以下の整数年である必要がある。
+ * これらを満たさない、または計算結果が有限でない場合はnull。
+ */
+export function simulateFixedRateWithdrawal(
+  input: FixedRateWithdrawalInput,
+): FixedRateWithdrawalResult | null {
+  const { principal, annualRate, withdrawalRate, withdrawalYears } = input;
+
+  if (
+    !(principal > 0) ||
+    !isValidAnnualRate(annualRate) ||
+    !(withdrawalRate > 0) ||
+    !(withdrawalRate <= 100) ||
+    !Number.isInteger(withdrawalYears) ||
+    withdrawalYears < 1 ||
+    withdrawalYears > MAX_MONTHS / 12
+  )
+    return null;
+
+  const monthlyRate = annualRate / 100 / 12;
+  const monthlyWithdrawalRate = withdrawalRate / 100 / 12;
+  const totalMonths = withdrawalYears * 12;
+
+  let balance = principal;
+  let totalWithdrawn = 0;
+  let firstMonthWithdrawal = 0;
+  const yearly: WithdrawalYearlySnapshot[] = [];
+
+  for (let month = 1; month <= totalMonths; month++) {
+    balance *= 1 + monthlyRate;
+    const withdrawal = balance * monthlyWithdrawalRate;
+    balance -= withdrawal;
+    totalWithdrawn += withdrawal;
+
+    if (month === 1) firstMonthWithdrawal = withdrawal;
+
+    if (month % 12 === 0) {
+      yearly.push({ months: month, remainingBalance: balance });
+    }
+  }
+
+  if (!Number.isFinite(balance) || !Number.isFinite(totalWithdrawn))
+    return null;
+
+  return {
+    firstMonthWithdrawal,
+    finalBalance: balance,
+    totalWithdrawn,
     yearly,
   };
 }

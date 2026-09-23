@@ -8,6 +8,8 @@ interface GlossaryTerm {
 export type SimulationMode =
   'futureValue' | 'monthlyContribution' | 'months' | 'initialInvestment';
 
+export type WithdrawalMode = 'byYears' | 'byAmount' | 'byRate';
+
 export interface InvestmentSimulatorPageContent {
   title: string;
   description: string;
@@ -55,11 +57,26 @@ export interface InvestmentSimulatorPageContent {
 
   withdrawalHeading: string;
   withdrawalIntro: string;
+  withdrawalModeLegend: string;
+  withdrawalModeLabels: Record<WithdrawalMode, string>;
+
   withdrawalYearsLabel: string;
+  withdrawalSimulationYearsLabel: string;
   withdrawalYearsPlaceholder: string;
   withdrawalError: string;
-  withdrawalMonthlyLabel: string;
+
+  withdrawalAmountLabel: string;
+  withdrawalAmountPlaceholder: string;
+  withdrawalAmountError: string;
+
+  withdrawalRateLabel: string;
+  withdrawalRatePlaceholder: string;
+  withdrawalRateError: string;
+
+  withdrawalPrimaryLabels: Record<WithdrawalMode, string>;
+  withdrawalNotDepletedText: string;
   withdrawalTotalLabel: string;
+
   withdrawalChartHeading: string;
   withdrawalChartAriaLabelTemplate: string;
   withdrawalTableHeading: string;
@@ -137,18 +154,44 @@ export const investmentSimulatorContent: Record<
 
     withdrawalHeading: '取り崩しシミュレーション',
     withdrawalIntro:
-      '上記で試算した「将来の資産額」を運用しながら毎月一定額を取り崩す場合の、毎月の取り崩し可能額を試算します。想定利回りは上記の値をそのまま使用し、指定した利用年数でちょうど残高が0になるように毎月均等額を取り崩す前提です。',
+      '上記で試算した「将来の資産額」を運用しながら取り崩す場合のシミュレーションです。想定利回りは上記の値をそのまま使用します。取り崩し方式を選んで、それぞれの条件を入力してください。',
+    withdrawalModeLegend: '取り崩し方式',
+    withdrawalModeLabels: {
+      byYears: '利用年数から毎月の取り崩し額を計算する',
+      byAmount: '毎月の取り崩し額を指定する（定額取り崩し）',
+      byRate: '取り崩し率を指定する（定率取り崩し）',
+    },
+
     withdrawalYearsLabel: '取り崩し期間（利用年数）',
+    withdrawalSimulationYearsLabel: 'シミュレーション期間（年）',
     withdrawalYearsPlaceholder: '30',
     withdrawalError:
       '計算できませんでした（取り崩し期間は1〜60年の整数で入力してください）',
-    withdrawalMonthlyLabel: '毎月の取り崩し可能額',
+
+    withdrawalAmountLabel: '毎月の取り崩し額（円）',
+    withdrawalAmountPlaceholder: '100000',
+    withdrawalAmountError:
+      '計算できませんでした（毎月の取り崩し額は0より大きい値で入力してください）',
+
+    withdrawalRateLabel: '取り崩し率（年率、%）',
+    withdrawalRatePlaceholder: '4',
+    withdrawalRateError:
+      '計算できませんでした（取り崩し率は0より大きく100%以下、シミュレーション期間は1〜60年の整数で入力してください）',
+
+    withdrawalPrimaryLabels: {
+      byYears: '毎月の取り崩し可能額（定額）',
+      byAmount: '資産が尽きるまでの期間',
+      byRate: '1ヶ月目の取り崩し額',
+    },
+    withdrawalNotDepletedText:
+      '60年以内に資産は尽きません（運用益が取り崩し額を上回っています）',
     withdrawalTotalLabel: '取り崩し総額',
+
     withdrawalChartHeading: '残り資産額の推移（グラフ）',
     withdrawalChartAriaLabelTemplate:
-      '残り資産評価額の年別推移グラフ。{years}年後に残高がおよそ0円になる想定。',
+      '残り資産評価額の推移グラフ。{years}年後の残高は{balance}。',
     withdrawalTableHeading: '残り資産額の推移',
-    withdrawalTableYearHeader: '経過年数',
+    withdrawalTableYearHeader: '経過期間',
     withdrawalTableBalanceHeader: '残り資産評価額',
 
     notesHeading: '注意事項',
@@ -156,7 +199,7 @@ export const investmentSimulatorContent: Record<
       '想定利回りは、積立期間・取り崩し期間を通じて入力した利率が一定であることを前提とした簡易試算です。将来の運用成果を保証するものではなく、実際の投資では市場変動により元本割れすることもあります。',
       '複利計算は「毎月の積立額を月初に投入し、その月の運用益をその積立額にも加える」方式（年金終価、期首払い）を前提としています。初期投資額は積立開始時点から運用されるものとして計算します。',
       '「積立期間を計算する」では、目標の資産額にちょうど届く月数を切り上げて求めています。そのため試算結果の資産額は目標の資産額と完全には一致せず、わずかに上回ります。',
-      '取り崩しシミュレーションは、毎月末に運用益を加えたうえで一定額を取り崩し、指定した利用年数でちょうど残高が0になるように計算しています（元利均等返済と同じ計算方式）。実際の取り崩しでは、取り崩しのタイミングや手数料、市場変動によって結果が異なります。',
+      '取り崩しシミュレーションは、毎月末に運用益を加えたうえで取り崩す前提です。「利用年数から計算」は指定した年数でちょうど残高が0になる毎月均等額を（元利均等返済と同じ計算方式で）算出し、「定額取り崩し」は指定した毎月の取り崩し額で残高が0になるまでの期間を算出し、「定率取り崩し」は毎月の残高に取り崩し率を掛けた額を取り崩すため理論上は残高が0にはならず徐々に減っていきます。実際の取り崩しでは、取り崩しのタイミングや手数料、市場変動によって結果が異なります。',
       '運用益にかかる税金（通常20.315%）や、投資信託の信託報酬などの利回り以外のコストは考慮していません。NISA（少額投資非課税制度）など非課税制度を利用する場合は、本ツールの試算結果がそのまま手取りの目安になります。',
     ],
     glossaryHeading: '用語解説',
@@ -179,7 +222,12 @@ export const investmentSimulatorContent: Record<
       {
         term: '取り崩し（定額取り崩し）',
         description:
-          '運用を続けながら、資産の一部を定期的に売却・引き出して生活費などに充てることです。取り崩す金額が運用益を上回るペースだと資産は徐々に減っていくため、想定利回りと取り崩し期間から「資産がちょうどなくなる」毎月の取り崩し額を計算するのが本ツールの取り崩しシミュレーションです。',
+          '運用を続けながら、資産の一部を定期的に売却・引き出して生活費などに充てることです。毎月の取り崩し額を一定に保つ方式を定額取り崩しといいます。取り崩す金額が運用益を上回るペースだと資産は徐々に減っていき、いずれ尽きます。',
+      },
+      {
+        term: '定率取り崩し',
+        description:
+          '取り崩し額を一定にするのではなく、その時点の残高に対して一定の割合（取り崩し率）を毎月・毎年取り崩す方式です。残高が減れば取り崩し額も自動的に減るため、定額取り崩しに比べて資産が尽きにくい一方、生活費として使える金額が徐々に減っていく点に注意が必要です。',
       },
       {
         term: 'NISA（少額投資非課税制度）',
@@ -250,18 +298,44 @@ export const investmentSimulatorContent: Record<
 
     withdrawalHeading: 'Withdrawal simulation',
     withdrawalIntro:
-      'Estimates a sustainable monthly withdrawal from the future value calculated above, assuming you keep investing while withdrawing a fixed amount every month. It reuses the annual return entered above and assumes the balance reaches exactly zero at the end of the withdrawal period you choose.',
+      'Simulates withdrawing from the future value calculated above while you keep investing the rest. It reuses the annual return entered above. Choose a withdrawal method and enter its inputs below.',
+    withdrawalModeLegend: 'Withdrawal method',
+    withdrawalModeLabels: {
+      byYears: 'Solve for a fixed monthly amount from a withdrawal period',
+      byAmount: 'Enter a fixed monthly amount (fixed-amount withdrawal)',
+      byRate: 'Enter a withdrawal rate (fixed-percentage withdrawal)',
+    },
+
     withdrawalYearsLabel: 'Withdrawal period (years)',
+    withdrawalSimulationYearsLabel: 'Simulation period (years)',
     withdrawalYearsPlaceholder: '30',
     withdrawalError:
       'Could not calculate (the withdrawal period must be a whole number of years between 1 and 60)',
-    withdrawalMonthlyLabel: 'Sustainable monthly withdrawal',
+
+    withdrawalAmountLabel: 'Fixed monthly withdrawal (JPY)',
+    withdrawalAmountPlaceholder: '100000',
+    withdrawalAmountError:
+      'Could not calculate (the monthly withdrawal amount must be greater than 0)',
+
+    withdrawalRateLabel: 'Withdrawal rate (annual, %)',
+    withdrawalRatePlaceholder: '4',
+    withdrawalRateError:
+      'Could not calculate (the withdrawal rate must be greater than 0 and at most 100%, and the simulation period must be a whole number of years between 1 and 60)',
+
+    withdrawalPrimaryLabels: {
+      byYears: 'Sustainable monthly withdrawal (fixed amount)',
+      byAmount: 'Time until the balance is depleted',
+      byRate: 'Withdrawal amount in month 1',
+    },
+    withdrawalNotDepletedText:
+      "The balance won't be depleted within 60 years (investment gains outpace the withdrawal amount)",
     withdrawalTotalLabel: 'Total withdrawn',
+
     withdrawalChartHeading: 'Remaining balance over time (chart)',
     withdrawalChartAriaLabelTemplate:
-      'Chart of the remaining balance by year. The balance reaches approximately ¥0 after {years} years.',
+      'Chart of the remaining balance over time. After {years} years, the balance is {balance}.',
     withdrawalTableHeading: 'Remaining balance over time',
-    withdrawalTableYearHeader: 'Year',
+    withdrawalTableYearHeader: 'Elapsed time',
     withdrawalTableBalanceHeader: 'Remaining balance',
 
     notesHeading: 'Notes',
@@ -269,7 +343,7 @@ export const investmentSimulatorContent: Record<
       'This is a simplified estimate that assumes the entered rate of return stays constant for the whole accumulation and withdrawal period. It does not guarantee future results, and real investments can lose value due to market fluctuations.',
       "The compound interest calculation assumes each monthly contribution is made at the start of the month and earns that month's return as well (an annuity-due). The initial investment is assumed to start earning returns from the very beginning of the period.",
       'For "time horizon," the required number of months is rounded up to the nearest whole month, so the resulting future value is slightly above (never below) your target.',
-      "The withdrawal simulation assumes a fixed amount is withdrawn at the end of each month, after that month's return is added, so that the balance reaches exactly zero at the end of the withdrawal period (the same math as a fully amortizing loan payment). Actual withdrawal timing, fees, and market fluctuations will change the real result.",
+      'The withdrawal simulation assumes withdrawals happen at the end of each month, after that month\'s return is added. "Solve from a withdrawal period" computes the fixed monthly amount that brings the balance to exactly zero at the end of the chosen period (the same math as a fully amortizing loan payment); "fixed-amount withdrawal" computes how long a chosen fixed monthly amount lasts; "fixed-percentage withdrawal" withdraws a percentage of the balance each month, so the balance shrinks gradually but never mathematically reaches zero. Actual withdrawal timing, fees, and market fluctuations will change the real result.',
       "Taxes on investment gains (typically about 20.315% in Japan) and costs other than the rate of return, such as fund management fees, are not included. If you're using a tax-advantaged account such as NISA, this estimate is close to your actual take-home amount.",
     ],
     glossaryHeading: 'Glossary',
@@ -292,7 +366,12 @@ export const investmentSimulatorContent: Record<
       {
         term: 'Withdrawal (systematic withdrawal)',
         description:
-          "Periodically selling or withdrawing part of an invested balance, typically to cover living expenses, while the rest stays invested. If withdrawals outpace investment gains, the balance gradually shrinks — this tool's withdrawal simulation solves for the monthly amount that makes the balance reach exactly zero over your chosen withdrawal period.",
+          'Periodically selling or withdrawing part of an invested balance, typically to cover living expenses, while the rest stays invested. Withdrawing the same amount every month is called a fixed-amount withdrawal. If withdrawals outpace investment gains, the balance gradually shrinks and is eventually depleted.',
+      },
+      {
+        term: 'Fixed-percentage withdrawal',
+        description:
+          'Instead of withdrawing a fixed amount, this withdraws a fixed percentage of the current balance each month or year. Because the withdrawal amount automatically shrinks along with the balance, the balance is less likely to be fully depleted than with a fixed-amount withdrawal — but the usable income gradually decreases over time.',
       },
       {
         term: "NISA (Japan's tax-free investment account)",

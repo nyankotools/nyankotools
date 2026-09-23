@@ -131,7 +131,7 @@ test('資産運用シミュレーション: 取り崩しシミュレーション
   await expect(withdrawalResultsEl).not.toHaveClass(/hidden/);
 
   await expect(
-    page.locator('#investment-sim-withdrawal-monthly'),
+    page.locator('#investment-sim-withdrawal-primary-value'),
   ).toContainText(/¥|￥/);
   await expect(page.locator('#investment-sim-withdrawal-total')).toContainText(
     /¥|￥/,
@@ -217,7 +217,7 @@ test('資産運用シミュレーション: 英語版で試算結果と取り崩
     /¥|￥/,
   );
   await expect(
-    page.locator('#investment-sim-withdrawal-monthly'),
+    page.locator('#investment-sim-withdrawal-primary-value'),
   ).toContainText(/¥|￥/);
 });
 
@@ -388,4 +388,372 @@ test('資産運用シミュレーション: 英語版でもグラフが表示さ
   // 英語版ではaria-labelが英語で設定される
   const trendLabel = await trendChartEl.getAttribute('aria-label');
   expect(trendLabel).toMatch(/principal|value/);
+});
+
+test('資産運用シミュレーション: 「定額取り崩し」モードに切り替え、入力欄が正しく表示される', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  // 定額取り崩しモードに切り替え
+  await page
+    .locator('input[name="investment-sim-withdrawal-mode"][value="byAmount"]')
+    .click();
+
+  // 定額取り崩しモードでは「定額取り崩し」入力欄が表示される
+  const amountFieldEl = page.locator('[data-withdrawal-field="amount"]');
+  await expect(amountFieldEl).not.toHaveClass(/hidden/);
+
+  // 他の入力欄は隠れる
+  const yearsFieldEl = page.locator('[data-withdrawal-field="years"]');
+  const rateFieldEl = page.locator('[data-withdrawal-field="rate"]');
+  await expect(yearsFieldEl).toHaveClass(/hidden/);
+  await expect(rateFieldEl).toHaveClass(/hidden/);
+});
+
+test('資産運用シミュレーション: 定額取り崩しで結果が表示される', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  // 定額取り崩しモードに切り替え
+  await page
+    .locator('input[name="investment-sim-withdrawal-mode"][value="byAmount"]')
+    .click();
+
+  // 毎月の取り崩し額を入力
+  await page.locator('#investment-sim-withdrawal-amount').fill('150000');
+
+  const withdrawalResultsEl = page.locator(
+    '#investment-sim-withdrawal-results',
+  );
+  await expect(withdrawalResultsEl).not.toHaveClass(/hidden/);
+
+  // 「資産が尽きるまでの期間」が表示される
+  const primaryLabelEl = page.locator(
+    '#investment-sim-withdrawal-primary-label',
+  );
+  const primaryValueEl = page.locator(
+    '#investment-sim-withdrawal-primary-value',
+  );
+  await expect(primaryLabelEl).toContainText(/尽きる/);
+  await expect(primaryValueEl).toContainText(/年|ヶ月/);
+
+  // 取り崩し総額が表示される
+  await expect(page.locator('#investment-sim-withdrawal-total')).toContainText(
+    /¥|￥/,
+  );
+
+  // グラフと表が表示される
+  const withdrawalChartEl = page.locator('#investment-sim-withdrawal-chart');
+  const withdrawalTableBodyEl = page.locator(
+    '#investment-sim-withdrawal-table-body',
+  );
+  await expect(withdrawalChartEl).toBeVisible();
+  const tableRows = withdrawalTableBodyEl.locator('tr');
+  expect(await tableRows.count()).toBeGreaterThan(0);
+});
+
+test('資産運用シミュレーション: 定額取り崩しで資産が尽きないケース（60年以内に尽きない）', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  // 定額取り崩しモードに切り替え
+  await page
+    .locator('input[name="investment-sim-withdrawal-mode"][value="byAmount"]')
+    .click();
+
+  // 低い取り崩し額を入力（運用益で補われる）
+  await page.locator('#investment-sim-withdrawal-amount').fill('10000');
+
+  const withdrawalResultsEl = page.locator(
+    '#investment-sim-withdrawal-results',
+  );
+  await expect(withdrawalResultsEl).not.toHaveClass(/hidden/);
+
+  // 「60年以内に資産は尽きません」といった趣旨のメッセージが表示される
+  const primaryValueEl = page.locator(
+    '#investment-sim-withdrawal-primary-value',
+  );
+  await expect(primaryValueEl).toContainText(/尽きません|60年以内/);
+});
+
+test('資産運用シミュレーション: 「定率取り崩し」モードに切り替え、入力欄が正しく表示される', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  // 定率取り崩しモードに切り替え
+  await page
+    .locator('input[name="investment-sim-withdrawal-mode"][value="byRate"]')
+    .click();
+
+  // 定率取り崩しモードでは「取り崩し率」入力欄が表示される
+  const rateFieldEl = page.locator('[data-withdrawal-field="rate"]');
+  await expect(rateFieldEl).not.toHaveClass(/hidden/);
+
+  // 年数入力欄も表示される（シミュレーション期間のため）
+  const yearsFieldEl = page.locator('[data-withdrawal-field="years"]');
+  await expect(yearsFieldEl).not.toHaveClass(/hidden/);
+
+  // 定額取り崩し入力欄は隠れる
+  const amountFieldEl = page.locator('[data-withdrawal-field="amount"]');
+  await expect(amountFieldEl).toHaveClass(/hidden/);
+
+  // 年数フィールドのラベルがシミュレーション期間を意味するテキストに変わっていることを確認
+  const yearsLabelEl = page.locator(
+    '#investment-sim-withdrawal-years-label',
+  );
+  const labelText = await yearsLabelEl.textContent();
+  expect(labelText).toMatch(/シミュレーション|期間/);
+});
+
+test('資産運用シミュレーション: 定率取り崩しで結果が表示される', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  // 定率取り崩しモードに切り替え
+  await page
+    .locator('input[name="investment-sim-withdrawal-mode"][value="byRate"]')
+    .click();
+
+  // 取り崩し率を入力
+  await page.locator('#investment-sim-withdrawal-rate').fill('4');
+
+  const withdrawalResultsEl = page.locator(
+    '#investment-sim-withdrawal-results',
+  );
+  await expect(withdrawalResultsEl).not.toHaveClass(/hidden/);
+
+  // 「1ヶ月目の取り崩し額」が表示される
+  const primaryLabelEl = page.locator(
+    '#investment-sim-withdrawal-primary-label',
+  );
+  const primaryValueEl = page.locator(
+    '#investment-sim-withdrawal-primary-value',
+  );
+  await expect(primaryLabelEl).toContainText(/1ヶ月目|初月/);
+  await expect(primaryValueEl).toContainText(/¥|￥/);
+
+  // 取り崩し総額が表示される
+  await expect(page.locator('#investment-sim-withdrawal-total')).toContainText(
+    /¥|￥/,
+  );
+
+  // グラフと表が表示される
+  const withdrawalChartEl = page.locator('#investment-sim-withdrawal-chart');
+  const withdrawalTableBodyEl = page.locator(
+    '#investment-sim-withdrawal-table-body',
+  );
+  await expect(withdrawalChartEl).toBeVisible();
+  const tableRows = withdrawalTableBodyEl.locator('tr');
+  expect(await tableRows.count()).toBeGreaterThan(0);
+});
+
+test('資産運用シミュレーション: 定額取り崩しで無効な入力（0以下）ではエラー', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  // 定額取り崩しモードに切り替え
+  await page
+    .locator('input[name="investment-sim-withdrawal-mode"][value="byAmount"]')
+    .click();
+
+  // 無効な取り崩し額（0）を入力
+  await page.locator('#investment-sim-withdrawal-amount').fill('0');
+
+  const withdrawalErrorEl = page.locator(
+    '#investment-sim-withdrawal-error',
+  );
+  const withdrawalResultsEl = page.locator(
+    '#investment-sim-withdrawal-results',
+  );
+
+  await expect(withdrawalErrorEl).toContainText(/計算できませんでした|無効/);
+  await expect(withdrawalResultsEl).toHaveClass(/hidden/);
+});
+
+test('資産運用シミュレーション: 定率取り崩しで無効な入力（0%以下または100%超）ではエラー', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  // 定率取り崩しモードに切り替え
+  await page
+    .locator('input[name="investment-sim-withdrawal-mode"][value="byRate"]')
+    .click();
+
+  // 無効な取り崩し率（0%）を入力
+  await page.locator('#investment-sim-withdrawal-rate').fill('0');
+
+  const withdrawalErrorEl = page.locator(
+    '#investment-sim-withdrawal-error',
+  );
+  const withdrawalResultsEl = page.locator(
+    '#investment-sim-withdrawal-results',
+  );
+
+  await expect(withdrawalErrorEl).toContainText(/計算できませんでした|無効/);
+  await expect(withdrawalResultsEl).toHaveClass(/hidden/);
+
+  // 100%超の取り崩し率を入力
+  await page.locator('#investment-sim-withdrawal-rate').fill('100.1');
+
+  await expect(withdrawalErrorEl).toContainText(/計算できませんでした|無効/);
+  await expect(withdrawalResultsEl).toHaveClass(/hidden/);
+});
+
+test('資産運用シミュレーション: 定率取り崩しモード切り替え時、年数フィールドラベルが正しく更新される', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  const yearsLabelEl = page.locator(
+    '#investment-sim-withdrawal-years-label',
+  );
+
+  // デフォルトは「利用年数」
+  let labelText = await yearsLabelEl.textContent();
+  expect(labelText).toMatch(/利用年数/);
+
+  // 定率取り崩しに切り替え
+  await page
+    .locator('input[name="investment-sim-withdrawal-mode"][value="byRate"]')
+    .click();
+
+  // ラベルが「シミュレーション期間」に変わる
+  labelText = await yearsLabelEl.textContent();
+  expect(labelText).toMatch(/シミュレーション|期間/);
+  expect(labelText).not.toMatch(/利用年数/);
+
+  // 定額取り崩しに切り替え
+  await page
+    .locator('input[name="investment-sim-withdrawal-mode"][value="byAmount"]')
+    .click();
+
+  // ラベルはそのモードでは隠れるので表示されない
+  const yearsFieldEl = page.locator('[data-withdrawal-field="years"]');
+  await expect(yearsFieldEl).toHaveClass(/hidden/);
+});
+
+test('資産運用シミュレーション: 375pxモバイルレイアウトでも機能する', async ({
+  page,
+}) => {
+  // モバイルビューポートを設定
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto('/tools/investment-simulator/');
+
+  // h1が表示される
+  const h1 = page.locator('main h1');
+  await expect(h1).toBeVisible();
+
+  // ラジオボタングループが表示される
+  const modeGroups = page.locator('[role="radiogroup"]');
+  expect(await modeGroups.count()).toBeGreaterThan(0);
+
+  // 入力欄が表示される
+  const rateInput = page.locator('#investment-sim-rate');
+  const initialInput = page.locator('#investment-sim-initial');
+  await expect(rateInput).toBeVisible();
+  await expect(initialInput).toBeVisible();
+
+  // 結果セクションが表示される
+  const resultsEl = page.locator('#investment-sim-results');
+  await expect(resultsEl).not.toHaveClass(/hidden/);
+
+  // 取り崩しセクションも表示される
+  const withdrawalResultsEl = page.locator(
+    '#investment-sim-withdrawal-results',
+  );
+  await expect(withdrawalResultsEl).not.toHaveClass(/hidden/);
+
+  // モード切り替えが機能する
+  await page
+    .locator('input[name="investment-sim-withdrawal-mode"][value="byAmount"]')
+    .click();
+  const amountFieldEl = page.locator('[data-withdrawal-field="amount"]');
+  await expect(amountFieldEl).not.toHaveClass(/hidden/);
+});
+
+test('資産運用シミュレーション: 利回り0%での定額取り崩し', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  // 利回りを0%に設定
+  await page.locator('#investment-sim-rate').fill('0');
+  await page.locator('#investment-sim-initial').fill('1000000');
+  await page.locator('#investment-sim-monthly').fill('10000');
+  await page.locator('#investment-sim-years').fill('5');
+
+  // 定額取り崩しモードに切り替え
+  await page
+    .locator('input[name="investment-sim-withdrawal-mode"][value="byAmount"]')
+    .click();
+  await page.locator('#investment-sim-withdrawal-amount').fill('30000');
+
+  const withdrawalResultsEl = page.locator(
+    '#investment-sim-withdrawal-results',
+  );
+  await expect(withdrawalResultsEl).not.toHaveClass(/hidden/);
+
+  // 結果が表示される
+  await expect(
+    page.locator('#investment-sim-withdrawal-primary-value'),
+  ).toContainText(/年|ヶ月/);
+});
+
+test('資産運用シミュレーション: 利回り0%での定率取り崩し', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  // 利回りを0%に設定
+  await page.locator('#investment-sim-rate').fill('0');
+  await page.locator('#investment-sim-initial').fill('1000000');
+  await page.locator('#investment-sim-monthly').fill('10000');
+  await page.locator('#investment-sim-years').fill('5');
+
+  // 定率取り崩しモードに切り替え
+  await page
+    .locator('input[name="investment-sim-withdrawal-mode"][value="byRate"]')
+    .click();
+  await page.locator('#investment-sim-withdrawal-rate').fill('1');
+
+  const withdrawalResultsEl = page.locator(
+    '#investment-sim-withdrawal-results',
+  );
+  await expect(withdrawalResultsEl).not.toHaveClass(/hidden/);
+
+  // 1ヶ月目の取り崩し額が表示される
+  await expect(
+    page.locator('#investment-sim-withdrawal-primary-value'),
+  ).toContainText(/¥|￥/);
+});
+
+test('資産運用シミュレーション: 非常に小さい取り崩し額（1円）では資産は尽きない', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  // 定額取り崩しモードに切り替え
+  await page
+    .locator('input[name="investment-sim-withdrawal-mode"][value="byAmount"]')
+    .click();
+
+  // 1円の取り崩し額を入力
+  await page.locator('#investment-sim-withdrawal-amount').fill('1');
+
+  const withdrawalResultsEl = page.locator(
+    '#investment-sim-withdrawal-results',
+  );
+  await expect(withdrawalResultsEl).not.toHaveClass(/hidden/);
+
+  // 資産は尽きないメッセージが表示される
+  await expect(
+    page.locator('#investment-sim-withdrawal-primary-value'),
+  ).toContainText(/尽きません|60年以内/);
 });

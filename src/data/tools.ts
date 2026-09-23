@@ -602,7 +602,7 @@ export const tools: Tool[] = [
     slug: 'investment-simulator',
     translations: {
       ja: {
-        name: '資産運用シミュレーション（積立・複利計算）',
+        name: '資産運用シミュレーション',
         description:
           '初期投資額・毎月の積立額・想定利回り・積立期間のうち3つから残る1つを複利計算で試算します。積立元本と運用益の内訳をグラフと年別の表で確認でき、取り崩し可能額（毎月）もあわせて試算できます。',
         category: '計算',

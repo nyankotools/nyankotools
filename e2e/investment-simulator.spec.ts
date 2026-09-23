@@ -3,9 +3,7 @@ import { test, expect } from '@playwright/test';
 test('資産運用シミュレーション: 日本語版が表示される', async ({ page }) => {
   await page.goto('/tools/investment-simulator/');
 
-  await expect(page.locator('main h1')).toHaveText(
-    '積立投資シミュレーション（複利計算・取り崩し試算）',
-  );
+  await expect(page.locator('main h1')).toHaveText('資産運用シミュレーション');
 });
 
 test('資産運用シミュレーション: 初期値（将来の資産額を計算する）で試算結果が表示される', async ({
@@ -502,9 +500,7 @@ test('資産運用シミュレーション: 「定率取り崩し」モードに
   await expect(amountFieldEl).toHaveClass(/hidden/);
 
   // 年数フィールドのラベルがシミュレーション期間を意味するテキストに変わっていることを確認
-  const yearsLabelEl = page.locator(
-    '#investment-sim-withdrawal-years-label',
-  );
+  const yearsLabelEl = page.locator('#investment-sim-withdrawal-years-label');
   const labelText = await yearsLabelEl.textContent();
   expect(labelText).toMatch(/シミュレーション|期間/);
 });
@@ -565,9 +561,7 @@ test('資産運用シミュレーション: 定額取り崩しで無効な入力
   // 無効な取り崩し額（0）を入力
   await page.locator('#investment-sim-withdrawal-amount').fill('0');
 
-  const withdrawalErrorEl = page.locator(
-    '#investment-sim-withdrawal-error',
-  );
+  const withdrawalErrorEl = page.locator('#investment-sim-withdrawal-error');
   const withdrawalResultsEl = page.locator(
     '#investment-sim-withdrawal-results',
   );
@@ -589,9 +583,7 @@ test('資産運用シミュレーション: 定率取り崩しで無効な入力
   // 無効な取り崩し率（0%）を入力
   await page.locator('#investment-sim-withdrawal-rate').fill('0');
 
-  const withdrawalErrorEl = page.locator(
-    '#investment-sim-withdrawal-error',
-  );
+  const withdrawalErrorEl = page.locator('#investment-sim-withdrawal-error');
   const withdrawalResultsEl = page.locator(
     '#investment-sim-withdrawal-results',
   );
@@ -611,9 +603,7 @@ test('資産運用シミュレーション: 定率取り崩しモード切り替
 }) => {
   await page.goto('/tools/investment-simulator/');
 
-  const yearsLabelEl = page.locator(
-    '#investment-sim-withdrawal-years-label',
-  );
+  const yearsLabelEl = page.locator('#investment-sim-withdrawal-years-label');
 
   // デフォルトは「利用年数」
   let labelText = await yearsLabelEl.textContent();
@@ -678,9 +668,7 @@ test('資産運用シミュレーション: 375pxモバイルレイアウトで�
   await expect(amountFieldEl).not.toHaveClass(/hidden/);
 });
 
-test('資産運用シミュレーション: 利回り0%での定額取り崩し', async ({
-  page,
-}) => {
+test('資産運用シミュレーション: 利回り0%での定額取り崩し', async ({ page }) => {
   await page.goto('/tools/investment-simulator/');
 
   // 利回りを0%に設定
@@ -706,9 +694,7 @@ test('資産運用シミュレーション: 利回り0%での定額取り崩し'
   ).toContainText(/年|ヶ月/);
 });
 
-test('資産運用シミュレーション: 利回り0%での定率取り崩し', async ({
-  page,
-}) => {
+test('資産運用シミュレーション: 利回り0%での定率取り崩し', async ({ page }) => {
   await page.goto('/tools/investment-simulator/');
 
   // 利回りを0%に設定

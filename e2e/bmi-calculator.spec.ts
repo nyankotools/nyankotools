@@ -45,7 +45,9 @@ test('BMI計算機: 単位をヤード・ポンド法に切り替えると、入
   await expect(heightImperialFields).toHaveClass(/hidden/);
 
   // ヤード・ポンド法に切り替え
-  const imperialRadio = page.locator('input[name="unit-system"][value="imperial"]');
+  const imperialRadio = page.locator(
+    'input[name="unit-system"][value="imperial"]',
+  );
   await imperialRadio.click();
 
   // ヤード・ポンド法フィールドが表示される
@@ -55,18 +57,20 @@ test('BMI計算機: 単位をヤード・ポンド法に切り替えると、入
   await expect(weightImperialFields).not.toHaveClass(/hidden/);
 });
 
-test('BMI計算機: 単位切り替え後も計算が正しく実行される', async ({
-  page,
-}) => {
+test('BMI計算機: 単位切り替え後も計算が正しく実行される', async ({ page }) => {
   await page.goto('/tools/bmi-calculator/');
 
-  const imperialRadio = page.locator('input[name="unit-system"][value="imperial"]');
+  const imperialRadio = page.locator(
+    'input[name="unit-system"][value="imperial"]',
+  );
 
   // メートル法で入力
   await page.locator('#height-cm-input').fill('170');
   await page.locator('#weight-kg-input').fill('65');
 
-  const categoryResult1 = await page.locator('#bmi-category-result').textContent();
+  const categoryResult1 = await page
+    .locator('#bmi-category-result')
+    .textContent();
 
   // ヤード・ポンド法に切り替え
   await imperialRadio.click();
@@ -76,7 +80,9 @@ test('BMI計算機: 単位切り替え後も計算が正しく実行される', 
   await page.locator('#height-in-input').fill('7');
   await page.locator('#weight-lb-input').fill('143');
 
-  const categoryResult2 = await page.locator('#bmi-category-result').textContent();
+  const categoryResult2 = await page
+    .locator('#bmi-category-result')
+    .textContent();
 
   // ほぼ同じBMIと体格区分が表示される（体格区分が同じ）
   expect(categoryResult1).toBe(categoryResult2);
@@ -235,7 +241,9 @@ test('BMI計算機: 英語版が表示される', async ({ page }) => {
   await expect(page.locator('main h1')).toHaveText('BMI Calculator');
 
   // 英語版の単位ラベルを確認
-  await expect(page.locator('input[name="unit-system"][value="metric"]')).toBeVisible();
+  await expect(
+    page.locator('input[name="unit-system"][value="metric"]'),
+  ).toBeVisible();
   const metricLabel = page.locator('label').filter({ hasText: 'Metric' });
   await expect(metricLabel).toBeVisible();
 });
@@ -243,7 +251,9 @@ test('BMI計算機: 英語版が表示される', async ({ page }) => {
 test('BMI計算機: 英語版でインペリアル単位がデフォルト', async ({ page }) => {
   await page.goto('/en/tools/bmi-calculator/');
 
-  const imperialRadio = page.locator('input[name="unit-system"][value="imperial"]');
+  const imperialRadio = page.locator(
+    'input[name="unit-system"][value="imperial"]',
+  );
   const isChecked = await imperialRadio.isChecked();
 
   expect(isChecked).toBe(true);
@@ -268,9 +278,7 @@ test('BMI計算機: 英語版でメートル法に切り替え可能', async ({ 
   await expect(categoryResult).toHaveText('Normal weight');
 });
 
-test('BMI計算機: 英語版でWHO基準のカテゴリ名が表示される', async ({
-  page,
-}) => {
+test('BMI計算機: 英語版でWHO基準のカテゴリ名が表示される', async ({ page }) => {
   await page.goto('/en/tools/bmi-calculator/');
 
   // インペリアル単位でデフォルト入力
@@ -282,9 +290,7 @@ test('BMI計算機: 英語版でWHO基準のカテゴリ名が表示される', 
   await expect(categoryResult).toHaveText('Normal weight');
 });
 
-test('BMI計算機: 英語版で肥満クラスのラベルが表示される', async ({
-  page,
-}) => {
+test('BMI計算機: 英語版で肥満クラスのラベルが表示される', async ({ page }) => {
   await page.goto('/en/tools/bmi-calculator/');
 
   const metricRadio = page.locator('input[name="unit-system"][value="metric"]');

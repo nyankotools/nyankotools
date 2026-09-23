@@ -261,8 +261,7 @@ describe('calculateFreelanceIncome', () => {
     });
 
     expect(result).not.toBeNull();
-    const expectedNetIncome =
-      3_000_000 - 800_000 - 400_000 - result!.totalTax;
+    const expectedNetIncome = 3_000_000 - 800_000 - 400_000 - result!.totalTax;
     expect(result!.netIncome).toBe(expectedNetIncome);
   });
 });

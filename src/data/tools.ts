@@ -565,6 +565,23 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'freelance-income-calculator',
+    translations: {
+      ja: {
+        name: 'フリーランス手取り計算機',
+        description:
+          '年間の売上・必要経費・青色申告特別控除・社会保険料から、所得税・復興特別所得税・住民税と手取り額を簡易試算します。',
+        category: '計算',
+      },
+      en: {
+        name: 'Freelancer Take-Home Pay Calculator',
+        description:
+          "Estimates a Japanese freelancer's income tax, reconstruction surtax, and resident tax from annual revenue, expenses, and deductions, with a rough take-home pay figure.",
+        category: 'Calculate',
+      },
+    },
+  },
+  {
     slug: 'sql-formatter',
     translations: {
       ja: {

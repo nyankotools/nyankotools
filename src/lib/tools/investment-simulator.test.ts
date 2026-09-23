@@ -5,6 +5,8 @@ import {
   solveMonthsToReachTarget,
   solveInitialInvestment,
   calculateWithdrawal,
+  simulateFixedAmountWithdrawal,
+  simulateFixedRateWithdrawal,
 } from './investment-simulator';
 
 describe('simulateAccumulation', () => {
@@ -442,6 +444,140 @@ describe('calculateWithdrawal', () => {
       calculateWithdrawal({
         principal: 20_000_000,
         annualRate: 3,
+        withdrawalYears: 61,
+      }),
+    ).toBeNull();
+  });
+});
+
+describe('simulateFixedAmountWithdrawal', () => {
+  it('取り崩し額をcalculateWithdrawalの結果と同じ額にすると、ほぼ同じ月数で資産が尽きる', () => {
+    const withdrawalResult = calculateWithdrawal({
+      principal: 20_000_000,
+      annualRate: 3,
+      withdrawalYears: 20,
+    });
+    expect(withdrawalResult).not.toBeNull();
+
+    const result = simulateFixedAmountWithdrawal({
+      principal: 20_000_000,
+      annualRate: 3,
+      monthlyWithdrawal: withdrawalResult!.monthlyWithdrawal,
+    });
+
+    expect(result).not.toBeNull();
+    expect(result!.depletionMonths).not.toBeNull();
+    expect(result!.depletionMonths!).toBeGreaterThanOrEqual(239);
+    expect(result!.depletionMonths!).toBeLessThanOrEqual(240);
+  });
+
+  it('運用益が取り崩し額を上回る場合、60年以内に資産は尽きない（depletionMonthsはnull）', () => {
+    const result = simulateFixedAmountWithdrawal({
+      principal: 20_000_000,
+      annualRate: 5,
+      monthlyWithdrawal: 10_000,
+    });
+
+    expect(result).not.toBeNull();
+    expect(result!.depletionMonths).toBeNull();
+    expect(result!.yearly.length).toBe(60);
+    expect(
+      result!.yearly[result!.yearly.length - 1].remainingBalance,
+    ).toBeGreaterThan(20_000_000);
+  });
+
+  it('残高は年を追うごとに減少する（資産が尽きるケース）', () => {
+    const result = simulateFixedAmountWithdrawal({
+      principal: 20_000_000,
+      annualRate: 3,
+      monthlyWithdrawal: 150_000,
+    });
+
+    expect(result).not.toBeNull();
+    for (let i = 1; i < result!.yearly.length; i++) {
+      expect(result!.yearly[i].remainingBalance).toBeLessThanOrEqual(
+        result!.yearly[i - 1].remainingBalance,
+      );
+    }
+    expect(
+      result!.yearly[result!.yearly.length - 1].remainingBalance,
+    ).toBeCloseTo(0, 4);
+  });
+
+  it('資産評価額・取り崩し額が0以下の場合はnull', () => {
+    expect(
+      simulateFixedAmountWithdrawal({
+        principal: 0,
+        annualRate: 3,
+        monthlyWithdrawal: 100_000,
+      }),
+    ).toBeNull();
+    expect(
+      simulateFixedAmountWithdrawal({
+        principal: 20_000_000,
+        annualRate: 3,
+        monthlyWithdrawal: 0,
+      }),
+    ).toBeNull();
+  });
+});
+
+describe('simulateFixedRateWithdrawal', () => {
+  it('毎月の取り崩し額は残高に比例して減っていく', () => {
+    const result = simulateFixedRateWithdrawal({
+      principal: 20_000_000,
+      annualRate: 3,
+      withdrawalRate: 4,
+      withdrawalYears: 20,
+    });
+
+    expect(result).not.toBeNull();
+    for (let i = 1; i < result!.yearly.length; i++) {
+      expect(result!.yearly[i].remainingBalance).toBeLessThan(
+        result!.yearly[i - 1].remainingBalance,
+      );
+    }
+    expect(result!.finalBalance).toBeGreaterThan(0);
+    expect(result!.finalBalance).toBeLessThan(20_000_000);
+  });
+
+  it('年利0%の場合、1ヶ月目の取り崩し額は残高に月率を掛けた額になる', () => {
+    const result = simulateFixedRateWithdrawal({
+      principal: 12_000_000,
+      annualRate: 0,
+      withdrawalRate: 4,
+      withdrawalYears: 10,
+    });
+
+    expect(result).not.toBeNull();
+    expect(result!.firstMonthWithdrawal).toBeCloseTo(
+      12_000_000 * (0.04 / 12),
+      6,
+    );
+  });
+
+  it('資産評価額が0以下、取り崩し率・シミュレーション期間が不正な場合はnull', () => {
+    expect(
+      simulateFixedRateWithdrawal({
+        principal: 0,
+        annualRate: 3,
+        withdrawalRate: 4,
+        withdrawalYears: 20,
+      }),
+    ).toBeNull();
+    expect(
+      simulateFixedRateWithdrawal({
+        principal: 20_000_000,
+        annualRate: 3,
+        withdrawalRate: 0,
+        withdrawalYears: 20,
+      }),
+    ).toBeNull();
+    expect(
+      simulateFixedRateWithdrawal({
+        principal: 20_000_000,
+        annualRate: 3,
+        withdrawalRate: 4,
         withdrawalYears: 61,
       }),
     ).toBeNull();

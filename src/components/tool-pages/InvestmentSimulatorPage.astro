@@ -31,6 +31,12 @@ const t = investmentSimulatorContent[locale];
     data-table-balance-header={t.tableBalanceHeader}
     data-withdrawal-table-year-header={t.withdrawalTableYearHeader}
     data-withdrawal-table-balance-header={t.withdrawalTableBalanceHeader}
+    data-withdrawal-primary-labels={JSON.stringify(t.withdrawalPrimaryLabels)}
+    data-withdrawal-not-depleted-text={t.withdrawalNotDepletedText}
+    data-withdrawal-years-label={t.withdrawalYearsLabel}
+    data-withdrawal-simulation-years-label={t.withdrawalSimulationYearsLabel}
+    data-withdrawal-amount-error={t.withdrawalAmountError}
+    data-withdrawal-rate-error={t.withdrawalRateError}
     data-primary-label-future-value={t.primaryResultLabels.futureValue}
     data-primary-label-monthly-contribution={
       t.primaryResultLabels.monthlyContribution
@@ -333,23 +339,101 @@ const t = investmentSimulatorContent[locale];
           {t.withdrawalIntro}
         </p>
 
-        <div class="mb-3">
-          <label
-            for="investment-sim-withdrawal-years"
+        <div class="mb-4">
+          <span
+            id="investment-sim-withdrawal-mode-label"
             class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
-            {t.withdrawalYearsLabel}
-          </label>
-          <input
-            id="investment-sim-withdrawal-years"
-            type="number"
-            inputmode="numeric"
-            min="1"
-            max="60"
-            placeholder={t.withdrawalYearsPlaceholder}
-            data-error={t.withdrawalError}
-            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
-          />
+            {t.withdrawalModeLegend}
+          </span>
+          <div
+            class="flex flex-col gap-2 sm:flex-row sm:flex-wrap"
+            role="radiogroup"
+            aria-labelledby="investment-sim-withdrawal-mode-label"
+          >
+            <label class="flex items-center gap-1 text-sm">
+              <input
+                type="radio"
+                name="investment-sim-withdrawal-mode"
+                value="byYears"
+                checked
+              />
+              {t.withdrawalModeLabels.byYears}
+            </label>
+            <label class="flex items-center gap-1 text-sm">
+              <input
+                type="radio"
+                name="investment-sim-withdrawal-mode"
+                value="byAmount"
+              />
+              {t.withdrawalModeLabels.byAmount}
+            </label>
+            <label class="flex items-center gap-1 text-sm">
+              <input
+                type="radio"
+                name="investment-sim-withdrawal-mode"
+                value="byRate"
+              />
+              {t.withdrawalModeLabels.byRate}
+            </label>
+          </div>
+        </div>
+
+        <div class="mb-3 flex flex-wrap items-end gap-3">
+          <div data-withdrawal-field="years">
+            <label
+              for="investment-sim-withdrawal-years"
+              class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              <span id="investment-sim-withdrawal-years-label">
+                {t.withdrawalYearsLabel}
+              </span>
+            </label>
+            <input
+              id="investment-sim-withdrawal-years"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              max="60"
+              placeholder={t.withdrawalYearsPlaceholder}
+              data-error={t.withdrawalError}
+              class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            />
+          </div>
+          <div data-withdrawal-field="amount">
+            <label
+              for="investment-sim-withdrawal-amount"
+              class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              {t.withdrawalAmountLabel}
+            </label>
+            <input
+              id="investment-sim-withdrawal-amount"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              placeholder={t.withdrawalAmountPlaceholder}
+              class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            />
+          </div>
+          <div data-withdrawal-field="rate">
+            <label
+              for="investment-sim-withdrawal-rate"
+              class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              {t.withdrawalRateLabel}
+            </label>
+            <input
+              id="investment-sim-withdrawal-rate"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              max="100"
+              step="0.1"
+              placeholder={t.withdrawalRatePlaceholder}
+              class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            />
+          </div>
         </div>
 
         <p
@@ -365,12 +449,13 @@ const t = investmentSimulatorContent[locale];
         >
           <dl class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div class="rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
-              <dt class="text-sm text-gray-600 dark:text-gray-400">
-                {t.withdrawalMonthlyLabel}
-              </dt>
+              <dt
+                class="text-sm text-gray-600 dark:text-gray-400"
+                id="investment-sim-withdrawal-primary-label"
+              ></dt>
               <dd
                 class="text-lg font-semibold text-blue-700 dark:text-blue-400"
-                id="investment-sim-withdrawal-monthly"
+                id="investment-sim-withdrawal-primary-value"
               ></dd>
             </div>
             <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
@@ -461,10 +546,14 @@ const t = investmentSimulatorContent[locale];
     solveMonthsToReachTarget,
     solveInitialInvestment,
     calculateWithdrawal,
+    simulateFixedAmountWithdrawal,
+    simulateFixedRateWithdrawal,
+    type WithdrawalYearlySnapshot,
   } from '../../lib/tools/investment-simulator';
 
   type Mode =
     'futureValue' | 'monthlyContribution' | 'months' | 'initialInvestment';
+  type WithdrawalMode = 'byYears' | 'byAmount' | 'byRate';
 
   const configEl = document.querySelector<HTMLElement>(
     'section[data-number-locale]',
@@ -484,6 +573,17 @@ const t = investmentSimulatorContent[locale];
     configEl.dataset.withdrawalTableYearHeader ?? '';
   const withdrawalTableBalanceHeader =
     configEl.dataset.withdrawalTableBalanceHeader ?? '';
+  const withdrawalPrimaryLabels: Record<WithdrawalMode, string> = JSON.parse(
+    configEl.dataset.withdrawalPrimaryLabels ?? '{}',
+  );
+  const withdrawalNotDepletedText =
+    configEl.dataset.withdrawalNotDepletedText ?? '';
+  const withdrawalYearsLabel = configEl.dataset.withdrawalYearsLabel ?? '';
+  const withdrawalSimulationYearsLabel =
+    configEl.dataset.withdrawalSimulationYearsLabel ?? '';
+  const withdrawalAmountErrorMessage =
+    configEl.dataset.withdrawalAmountError ?? '';
+  const withdrawalRateErrorMessage = configEl.dataset.withdrawalRateError ?? '';
   const primaryLabels: Record<Mode, string> = {
     futureValue: configEl.dataset.primaryLabelFutureValue ?? '',
     monthlyContribution: configEl.dataset.primaryLabelMonthlyContribution ?? '',
@@ -503,9 +603,7 @@ const t = investmentSimulatorContent[locale];
     currency: 'JPY',
     maximumFractionDigits: 0,
   });
-  const yenCompact = new Intl.NumberFormat(numberLocale, {
-    style: 'currency',
-    currency: 'JPY',
+  const compactNumber = new Intl.NumberFormat(numberLocale, {
     notation: 'compact',
     maximumFractionDigits: 1,
   });
@@ -566,18 +664,37 @@ const t = investmentSimulatorContent[locale];
     'investment-sim-trend-tooltip',
   )!;
 
+  const withdrawalModeInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="investment-sim-withdrawal-mode"]',
+  );
+  const withdrawalFieldWrapperEls = document.querySelectorAll<HTMLElement>(
+    '[data-withdrawal-field]',
+  );
+  const withdrawalYearsLabelEl = document.getElementById(
+    'investment-sim-withdrawal-years-label',
+  )!;
+
   const withdrawalYearsInput = document.getElementById(
     'investment-sim-withdrawal-years',
   ) as HTMLInputElement;
   const withdrawalErrorMessage = withdrawalYearsInput.dataset.error ?? '';
+  const withdrawalAmountInput = document.getElementById(
+    'investment-sim-withdrawal-amount',
+  ) as HTMLInputElement;
+  const withdrawalRateInput = document.getElementById(
+    'investment-sim-withdrawal-rate',
+  ) as HTMLInputElement;
   const withdrawalErrorEl = document.getElementById(
     'investment-sim-withdrawal-error',
   )!;
   const withdrawalResultsEl = document.getElementById(
     'investment-sim-withdrawal-results',
   )!;
-  const withdrawalMonthlyEl = document.getElementById(
-    'investment-sim-withdrawal-monthly',
+  const withdrawalPrimaryLabelEl = document.getElementById(
+    'investment-sim-withdrawal-primary-label',
+  )!;
+  const withdrawalPrimaryValueEl = document.getElementById(
+    'investment-sim-withdrawal-primary-value',
   )!;
   const withdrawalTotalEl = document.getElementById(
     'investment-sim-withdrawal-total',
@@ -591,6 +708,32 @@ const t = investmentSimulatorContent[locale];
   const withdrawalTooltipEl = document.getElementById(
     'investment-sim-withdrawal-tooltip',
   )!;
+
+  const WITHDRAWAL_HIDDEN_FIELDS: Record<WithdrawalMode, string[]> = {
+    byYears: ['amount', 'rate'],
+    byAmount: ['years', 'rate'],
+    byRate: ['amount'],
+  };
+
+  function getWithdrawalMode(): WithdrawalMode {
+    return (
+      (Array.from(withdrawalModeInputs).find((el) => el.checked)
+        ?.value as WithdrawalMode) || 'byYears'
+    );
+  }
+
+  function updateWithdrawalFieldVisibility() {
+    const mode = getWithdrawalMode();
+    const hidden = WITHDRAWAL_HIDDEN_FIELDS[mode];
+    withdrawalFieldWrapperEls.forEach((el) => {
+      el.classList.toggle(
+        'hidden',
+        hidden.includes(el.dataset.withdrawalField ?? ''),
+      );
+    });
+    withdrawalYearsLabelEl.textContent =
+      mode === 'byRate' ? withdrawalSimulationYearsLabel : withdrawalYearsLabel;
+  }
 
   function formatMonths(months: number): string {
     const years = Math.floor(months / 12);
@@ -706,7 +849,7 @@ const t = investmentSimulatorContent[locale];
         'font-size': '10',
         class: 'fill-gray-500 dark:fill-gray-400',
       });
-      label.textContent = yenCompact.format(value);
+      label.textContent = compactNumber.format(value);
       trendChartEl.appendChild(label);
     }
 
@@ -869,7 +1012,7 @@ const t = investmentSimulatorContent[locale];
   }
 
   interface WithdrawalTrendPoint {
-    year: number;
+    months: number;
     remainingBalance: number;
   }
 
@@ -878,8 +1021,9 @@ const t = investmentSimulatorContent[locale];
     withdrawalChartEl.removeAttribute('aria-label');
     withdrawalTooltipEl.classList.add('hidden');
 
-    const totalYears = data.length > 0 ? data[data.length - 1].year : 0;
-    if (data.length < 2 || totalYears <= 0) return;
+    const totalMonths = data.length > 0 ? data[data.length - 1].months : 0;
+    if (data.length < 2 || totalMonths <= 0) return;
+    const totalYears = totalMonths / 12;
 
     const width = 600;
     const height = 180;
@@ -891,7 +1035,8 @@ const t = investmentSimulatorContent[locale];
     const step = niceStep(maxBalance, 4);
     const domainMax = Math.ceil(maxBalance / step) * step || step;
 
-    const xScale = (year: number) => pad.left + (year / totalYears) * plotW;
+    const xScale = (months: number) =>
+      pad.left + (months / totalMonths) * plotW;
     const yScale = (value: number) =>
       pad.top + plotH - (value / domainMax) * plotH;
 
@@ -918,13 +1063,13 @@ const t = investmentSimulatorContent[locale];
         'font-size': '10',
         class: 'fill-gray-500 dark:fill-gray-400',
       });
-      label.textContent = yenCompact.format(value);
+      label.textContent = compactNumber.format(value);
       withdrawalChartEl.appendChild(label);
     }
 
     const yearStep = Math.max(1, niceStep(totalYears, 5));
     for (let year = 0; year <= totalYears + 0.001; year += yearStep) {
-      const x = xScale(year);
+      const x = xScale(year * 12);
       const label = svgEl('text', {
         x: x.toFixed(1),
         y: String(height - pad.bottom + 16),
@@ -938,7 +1083,7 @@ const t = investmentSimulatorContent[locale];
 
     const baseline = yScale(0);
     const points: [number, number][] = data.map((d) => [
-      xScale(d.year),
+      xScale(d.months),
       yScale(d.remainingBalance),
     ]);
 
@@ -956,12 +1101,12 @@ const t = investmentSimulatorContent[locale];
       }),
     );
 
+    const lastBalance = data[data.length - 1].remainingBalance;
     withdrawalChartEl.setAttribute(
       'aria-label',
-      withdrawalChartAriaLabelTemplate.replace(
-        '{years}',
-        String(Math.round(totalYears)),
-      ),
+      withdrawalChartAriaLabelTemplate
+        .replace('{years}', String(Math.round(totalYears)))
+        .replace('{balance}', yen.format(lastBalance)),
     );
 
     const hoverLine = svgEl('line', {
@@ -998,20 +1143,20 @@ const t = investmentSimulatorContent[locale];
       if (rect.width === 0) return;
       const scale = width / rect.width;
       const svgX = (clientX - rect.left) * scale;
-      const year = Math.min(
-        totalYears,
-        Math.max(0, ((svgX - pad.left) / plotW) * totalYears),
+      const months = Math.min(
+        totalMonths,
+        Math.max(0, ((svgX - pad.left) / plotW) * totalMonths),
       );
       let nearest = data[0];
       let minDiff = Infinity;
       for (const point of data) {
-        const diff = Math.abs(point.year - year);
+        const diff = Math.abs(point.months - months);
         if (diff < minDiff) {
           minDiff = diff;
           nearest = point;
         }
       }
-      const x = xScale(nearest.year);
+      const x = xScale(nearest.months);
       const y = yScale(nearest.remainingBalance);
       hoverLine.setAttribute('x1', x.toFixed(1));
       hoverLine.setAttribute('x2', x.toFixed(1));
@@ -1024,7 +1169,7 @@ const t = investmentSimulatorContent[locale];
       hoverDot.setAttribute('visibility', 'visible');
 
       withdrawalTooltipEl.innerHTML = `
-        <div class="font-medium">${withdrawalTableYearHeader}: ${yearAxisLabel(nearest.year)}</div>
+        <div class="font-medium">${withdrawalTableYearHeader}: ${formatMonths(nearest.months)}</div>
         <div>${withdrawalTableBalanceHeader}: ${yen.format(nearest.remainingBalance)}</div>
       `;
       withdrawalTooltipEl.classList.remove('hidden');
@@ -1240,30 +1385,75 @@ const t = investmentSimulatorContent[locale];
     renderWithdrawalChart([]);
 
     if (currentFinalBalance === null) return;
-    if (withdrawalYearsInput.value.trim() === '') return;
 
-    const withdrawalResult = calculateWithdrawal({
-      principal: currentFinalBalance,
-      annualRate: Number(rateInput.value),
-      withdrawalYears: Number(withdrawalYearsInput.value),
-    });
+    const mode = getWithdrawalMode();
+    const annualRate = Number(rateInput.value);
+    let yearly: WithdrawalYearlySnapshot[];
+    let primaryText: string;
+    let totalWithdrawn: number;
 
-    if (!withdrawalResult) {
-      withdrawalErrorEl.textContent = withdrawalErrorMessage;
-      return;
+    if (mode === 'byYears') {
+      if (withdrawalYearsInput.value.trim() === '') return;
+      const result = calculateWithdrawal({
+        principal: currentFinalBalance,
+        annualRate,
+        withdrawalYears: Number(withdrawalYearsInput.value),
+      });
+      if (!result) {
+        withdrawalErrorEl.textContent = withdrawalErrorMessage;
+        return;
+      }
+      primaryText = yen.format(result.monthlyWithdrawal);
+      totalWithdrawn = result.totalWithdrawn;
+      yearly = result.yearly;
+    } else if (mode === 'byAmount') {
+      if (withdrawalAmountInput.value.trim() === '') return;
+      const result = simulateFixedAmountWithdrawal({
+        principal: currentFinalBalance,
+        annualRate,
+        monthlyWithdrawal: Number(withdrawalAmountInput.value),
+      });
+      if (!result) {
+        withdrawalErrorEl.textContent = withdrawalAmountErrorMessage;
+        return;
+      }
+      primaryText =
+        result.depletionMonths !== null
+          ? formatMonths(result.depletionMonths)
+          : withdrawalNotDepletedText;
+      totalWithdrawn = result.totalWithdrawn;
+      yearly = result.yearly;
+    } else {
+      if (
+        withdrawalRateInput.value.trim() === '' ||
+        withdrawalYearsInput.value.trim() === ''
+      )
+        return;
+      const result = simulateFixedRateWithdrawal({
+        principal: currentFinalBalance,
+        annualRate,
+        withdrawalRate: Number(withdrawalRateInput.value),
+        withdrawalYears: Number(withdrawalYearsInput.value),
+      });
+      if (!result) {
+        withdrawalErrorEl.textContent = withdrawalRateErrorMessage;
+        return;
+      }
+      primaryText = yen.format(result.firstMonthWithdrawal);
+      totalWithdrawn = result.totalWithdrawn;
+      yearly = result.yearly;
     }
 
-    withdrawalMonthlyEl.textContent = yen.format(
-      withdrawalResult.monthlyWithdrawal,
-    );
-    withdrawalTotalEl.textContent = yen.format(withdrawalResult.totalWithdrawn);
+    withdrawalPrimaryLabelEl.textContent = withdrawalPrimaryLabels[mode];
+    withdrawalPrimaryValueEl.textContent = primaryText;
+    withdrawalTotalEl.textContent = yen.format(totalWithdrawn);
 
     withdrawalTableBodyEl.replaceChildren(
-      ...withdrawalResult.yearly.map((snapshot) => {
+      ...yearly.map((snapshot) => {
         const row = document.createElement('tr');
         row.className = 'border-t border-gray-200 dark:border-gray-700';
         const cells = [
-          String(snapshot.year),
+          formatMonths(snapshot.months),
           yen.format(snapshot.remainingBalance),
         ];
         for (const text of cells) {
@@ -1277,9 +1467,9 @@ const t = investmentSimulatorContent[locale];
     );
 
     renderWithdrawalChart([
-      { year: 0, remainingBalance: currentFinalBalance },
-      ...withdrawalResult.yearly.map((snapshot) => ({
-        year: snapshot.year,
+      { months: 0, remainingBalance: currentFinalBalance },
+      ...yearly.map((snapshot) => ({
+        months: snapshot.months,
         remainingBalance: snapshot.remainingBalance,
       })),
     ]);
@@ -1298,7 +1488,15 @@ const t = investmentSimulatorContent[locale];
   monthlyInput.addEventListener('input', render);
   yearsInput.addEventListener('input', render);
   targetInput.addEventListener('input', render);
+  withdrawalModeInputs.forEach((el) =>
+    el.addEventListener('change', () => {
+      updateWithdrawalFieldVisibility();
+      renderWithdrawal();
+    }),
+  );
   withdrawalYearsInput.addEventListener('input', renderWithdrawal);
+  withdrawalAmountInput.addEventListener('input', renderWithdrawal);
+  withdrawalRateInput.addEventListener('input', renderWithdrawal);
 
   rateInput.value = '5';
   initialInput.value = '1000000';
@@ -1306,7 +1504,10 @@ const t = investmentSimulatorContent[locale];
   yearsInput.value = '20';
   targetInput.value = '20000000';
   withdrawalYearsInput.value = '30';
+  withdrawalAmountInput.value = '100000';
+  withdrawalRateInput.value = '4';
 
   updateFieldVisibility();
+  updateWithdrawalFieldVisibility();
   render();
 </script>

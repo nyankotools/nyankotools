@@ -120,9 +120,8 @@ const t = investmentSimulatorContent[locale];
         </label>
         <input
           id="investment-sim-initial"
-          type="number"
+          type="text"
           inputmode="decimal"
-          min="0"
           placeholder={t.initialPlaceholder}
           class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
         />
@@ -136,9 +135,8 @@ const t = investmentSimulatorContent[locale];
         </label>
         <input
           id="investment-sim-monthly"
-          type="number"
+          type="text"
           inputmode="decimal"
-          min="0"
           placeholder={t.monthlyPlaceholder}
           class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
         />
@@ -169,9 +167,8 @@ const t = investmentSimulatorContent[locale];
         </label>
         <input
           id="investment-sim-target"
-          type="number"
+          type="text"
           inputmode="decimal"
-          min="0"
           placeholder={t.targetPlaceholder}
           class="h-11 w-40 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
         />
@@ -409,9 +406,8 @@ const t = investmentSimulatorContent[locale];
             </label>
             <input
               id="investment-sim-withdrawal-amount"
-              type="number"
+              type="text"
               inputmode="decimal"
-              min="0"
               placeholder={t.withdrawalAmountPlaceholder}
               class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
             />
@@ -550,6 +546,11 @@ const t = investmentSimulatorContent[locale];
     simulateFixedRateWithdrawal,
     type WithdrawalYearlySnapshot,
   } from '../../lib/tools/investment-simulator';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
 
   type Mode =
     'futureValue' | 'monthlyContribution' | 'months' | 'initialInvestment';
@@ -630,6 +631,10 @@ const t = investmentSimulatorContent[locale];
     'investment-sim-target',
   ) as HTMLInputElement;
 
+  attachCommaFormatting(initialInput);
+  attachCommaFormatting(monthlyInput);
+  attachCommaFormatting(targetInput);
+
   const errorEl = document.getElementById('investment-sim-error')!;
   const resultsEl = document.getElementById('investment-sim-results')!;
   const primaryLabelEl = document.getElementById(
@@ -684,6 +689,9 @@ const t = investmentSimulatorContent[locale];
   const withdrawalRateInput = document.getElementById(
     'investment-sim-withdrawal-rate',
   ) as HTMLInputElement;
+
+  attachCommaFormatting(withdrawalAmountInput);
+
   const withdrawalErrorEl = document.getElementById(
     'investment-sim-withdrawal-error',
   )!;
@@ -1223,8 +1231,8 @@ const t = investmentSimulatorContent[locale];
         yearsInput.value.trim() === ''
       )
         return;
-      const initialInvestment = Number(initialInput.value);
-      const monthlyContribution = Number(monthlyInput.value);
+      const initialInvestment = Number(stripCommas(initialInput.value));
+      const monthlyContribution = Number(stripCommas(monthlyInput.value));
       const totalMonths = Number(yearsInput.value) * 12;
       initialInvestmentUsed = initialInvestment;
       result = simulateAccumulation({
@@ -1241,8 +1249,8 @@ const t = investmentSimulatorContent[locale];
         yearsInput.value.trim() === ''
       )
         return;
-      const initialInvestment = Number(initialInput.value);
-      const targetFutureValue = Number(targetInput.value);
+      const initialInvestment = Number(stripCommas(initialInput.value));
+      const targetFutureValue = Number(stripCommas(targetInput.value));
       const totalMonths = Number(yearsInput.value) * 12;
       const monthlyContribution = solveMonthlyContribution({
         initialInvestment,
@@ -1267,9 +1275,9 @@ const t = investmentSimulatorContent[locale];
         targetInput.value.trim() === ''
       )
         return;
-      const initialInvestment = Number(initialInput.value);
-      const monthlyContribution = Number(monthlyInput.value);
-      const targetFutureValue = Number(targetInput.value);
+      const initialInvestment = Number(stripCommas(initialInput.value));
+      const monthlyContribution = Number(stripCommas(monthlyInput.value));
+      const targetFutureValue = Number(stripCommas(targetInput.value));
       const totalMonths = solveMonthsToReachTarget({
         initialInvestment,
         monthlyContribution,
@@ -1293,8 +1301,8 @@ const t = investmentSimulatorContent[locale];
         yearsInput.value.trim() === ''
       )
         return;
-      const monthlyContribution = Number(monthlyInput.value);
-      const targetFutureValue = Number(targetInput.value);
+      const monthlyContribution = Number(stripCommas(monthlyInput.value));
+      const targetFutureValue = Number(stripCommas(targetInput.value));
       const totalMonths = Number(yearsInput.value) * 12;
       const initialInvestment = solveInitialInvestment({
         monthlyContribution,
@@ -1411,7 +1419,7 @@ const t = investmentSimulatorContent[locale];
       const result = simulateFixedAmountWithdrawal({
         principal: currentFinalBalance,
         annualRate,
-        monthlyWithdrawal: Number(withdrawalAmountInput.value),
+        monthlyWithdrawal: Number(stripCommas(withdrawalAmountInput.value)),
       });
       if (!result) {
         withdrawalErrorEl.textContent = withdrawalAmountErrorMessage;
@@ -1499,12 +1507,12 @@ const t = investmentSimulatorContent[locale];
   withdrawalRateInput.addEventListener('input', renderWithdrawal);
 
   rateInput.value = '5';
-  initialInput.value = '1000000';
-  monthlyInput.value = '30000';
+  initialInput.value = formatNumberWithCommas('1000000');
+  monthlyInput.value = formatNumberWithCommas('30000');
   yearsInput.value = '20';
-  targetInput.value = '20000000';
+  targetInput.value = formatNumberWithCommas('20000000');
   withdrawalYearsInput.value = '30';
-  withdrawalAmountInput.value = '100000';
+  withdrawalAmountInput.value = formatNumberWithCommas('100000');
   withdrawalRateInput.value = '4';
 
   updateFieldVisibility();

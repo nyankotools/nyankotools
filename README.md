@@ -16,14 +16,14 @@
 
 ## スタック
 
-| レイヤー       | 技術                                          |
-| -------------- | --------------------------------------------- |
+| レイヤー       | 技術                                                                 |
+| -------------- | -------------------------------------------------------------------- |
 | フレームワーク | [Astro](https://astro.build/)（`output: static`、SSRアダプターなし） |
-| スタイリング   | Tailwind CSS v4（`@tailwindcss/vite`）        |
-| 言語           | TypeScript                                    |
-| テスト         | Vitest（ユニット） / Playwright（E2E）        |
-| デプロイ先     | Cloudflare Workers（静的アセット配信）        |
-| パッケージ管理 | pnpm（Corepack 経由）                         |
+| スタイリング   | Tailwind CSS v4（`@tailwindcss/vite`）                               |
+| 言語           | TypeScript                                                           |
+| テスト         | Vitest（ユニット） / Playwright（E2E）                               |
+| デプロイ先     | Cloudflare Workers（静的アセット配信）                               |
+| パッケージ管理 | pnpm（Corepack 経由）                                                |
 
 詳細は [`.claude/docs/architecture.md`](./.claude/docs/architecture.md) を参照。
 

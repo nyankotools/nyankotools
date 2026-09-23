@@ -28,7 +28,7 @@ test.describe('割合・比率計算機', () => {
     await page.locator('#ratio-input-a').fill('0');
 
     await expect(page.locator('#ratio-error')).toHaveText(
-      '計算できませんでした（A・Bは0より大きい値を入力してください）'
+      '計算できませんでした（A・Bは0より大きい値を入力してください）',
     );
     await expect(page.locator('#ratio-results')).toBeHidden();
   });
@@ -39,7 +39,7 @@ test.describe('割合・比率計算機', () => {
     await page.locator('#ratio-input-b').fill('0');
 
     await expect(page.locator('#ratio-error')).toHaveText(
-      '計算できませんでした（A・Bは0より大きい値を入力してください）'
+      '計算できませんでした（A・Bは0より大きい値を入力してください）',
     );
     await expect(page.locator('#ratio-results')).toBeHidden();
   });
@@ -50,7 +50,7 @@ test.describe('割合・比率計算機', () => {
     await page.locator('#ratio-input-a').fill('-4');
 
     await expect(page.locator('#ratio-error')).toHaveText(
-      '計算できませんでした（A・Bは0より大きい値を入力してください）'
+      '計算できませんでした（A・Bは0より大きい値を入力してください）',
     );
     await expect(page.locator('#ratio-results')).toBeHidden();
   });
@@ -66,9 +66,7 @@ test.describe('割合・比率計算機', () => {
     await expect(page.locator('#ratio-results')).toBeHidden();
   });
 
-  test('初期表示時点で比例式は3:4=6:dでd=8に計算される', async ({
-    page,
-  }) => {
+  test('初期表示時点で比例式は3:4=6:dでd=8に計算される', async ({ page }) => {
     await page.goto('/tools/ratio-calculator/');
 
     await expect(page.locator('#proportion-result')).toHaveText('D = 8');
@@ -149,7 +147,7 @@ test.describe('割合・比率計算機', () => {
     await page.locator('#proportion-input-d').fill('0');
 
     await expect(page.locator('#proportion-error')).toHaveText(
-      '計算できませんでした（空欄以外の3項に0より大きい値を入力してください）'
+      '計算できませんでした（空欄以外の3項に0より大きい値を入力してください）',
     );
     await expect(page.locator('#proportion-results')).toBeHidden();
   });
@@ -232,7 +230,7 @@ test.describe('割合・比率計算機', () => {
     await page.locator('#percent-input-value2').fill('0');
 
     await expect(page.locator('#percent-error')).toHaveText(
-      '計算できませんでした（入力値を確認してください。割合(%)を求める場合は全体の値、増減率を求める場合は元の値を0より大きい値にしてください）'
+      '計算できませんでした（入力値を確認してください。割合(%)を求める場合は全体の値、増減率を求める場合は元の値を0より大きい値にしてください）',
     );
     await expect(page.locator('#percent-results')).toBeHidden();
   });
@@ -246,7 +244,7 @@ test.describe('割合・比率計算機', () => {
     await page.locator('#percent-input-value2').fill('200');
 
     await expect(page.locator('#percent-error')).toHaveText(
-      '計算できませんでした（入力値を確認してください。割合(%)を求める場合は全体の値、増減率を求める場合は元の値を0より大きい値にしてください）'
+      '計算できませんでした（入力値を確認してください。割合(%)を求める場合は全体の値、増減率を求める場合は元の値を0より大きい値にしてください）',
     );
     await expect(page.locator('#percent-results')).toBeHidden();
   });
@@ -261,7 +259,7 @@ test.describe('割合・比率計算機', () => {
     await page.locator('#percent-input-value2').fill('150');
 
     await expect(page.locator('#percent-error')).toHaveText(
-      '計算できませんでした（入力値を確認してください。割合(%)を求める場合は全体の値、増減率を求める場合は元の値を0より大きい値にしてください）'
+      '計算できませんでした（入力値を確認してください。割合(%)を求める場合は全体の値、増減率を求める場合は元の値を0より大きい値にしてください）',
     );
     await expect(page.locator('#percent-results')).toBeHidden();
   });
@@ -279,7 +277,9 @@ test.describe('割合・比率計算機', () => {
 
   test('英語ページにアクセスできる', async ({ page }) => {
     await page.goto('/en/tools/ratio-calculator/');
-    await expect(page.locator('main h1')).toHaveText('Ratio & Percentage Calculator');
+    await expect(page.locator('main h1')).toHaveText(
+      'Ratio & Percentage Calculator',
+    );
   });
 
   test('英語ページで初期値が計算される', async ({ page }) => {

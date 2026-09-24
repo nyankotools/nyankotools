@@ -836,6 +836,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'exif-viewer',
+    translations: {
+      ja: {
+        name: 'EXIF情報表示・削除',
+        description:
+          'JPEG画像のExif（撮影日時・カメラ機種・レンズ・露出・GPS位置情報など）を一覧表示し、Exif情報だけを削除した画像（画質そのまま）をダウンロードできます。',
+        category: '変換',
+      },
+      en: {
+        name: 'EXIF Viewer & Remover',
+        description:
+          "Reads a JPEG photo's Exif metadata (date taken, camera, lens, exposure, GPS location, and more), and lets you download a copy with only the Exif data removed, at full quality.",
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -64,3 +64,4 @@ Note: this "shared component + dictionary + thin wrapper" structure is the stand
 - [ ] Designed page-specific `title` / `description` for ja and en, and exactly one `<h1>` (see [growth.md](./growth.md))
 - [ ] Confirmed the layout holds at narrow widths (~375px)
 - [ ] `astro check` / `lint` / `format` / `build` pass
+- [ ] `pnpm test` passes, including `scripts/check-optimize-deps.test.ts` — if the tool imports a new external npm package (not already used by another tool) into `<script>` or `src/lib`, that test fails until the package is added to `vite.optimizeDeps.include` in `astro.config.mjs`; do that rather than ignoring the failure (see the comment above that list for why — a missing entry causes an E2E-only "504 (Outdated Optimize Dep)" failure in CI)

@@ -69,6 +69,7 @@ export default defineConfig({
       include: [
         'csso',
         'dompurify',
+        'exifr',
         'jsonpath-plus',
         'marked',
         'prettier/standalone',

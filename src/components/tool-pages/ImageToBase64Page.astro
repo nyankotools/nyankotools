@@ -1,0 +1,474 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { imageToBase64Content } from '../../i18n/tools/image-to-base64';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageToBase64Content[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div
+    id="itb-mode"
+    class="mb-6 flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700"
+    role="group"
+    aria-label={t.modeLabel}
+  >
+    <button
+      type="button"
+      data-mode="encode"
+      aria-pressed="true"
+      class="min-h-9 flex-1 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+    >
+      {t.modeEncode}
+    </button>
+    <button
+      type="button"
+      data-mode="decode"
+      aria-pressed="false"
+      class="min-h-9 flex-1 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+    >
+      {t.modeDecode}
+    </button>
+  </div>
+
+  <section id="itb-encode-section">
+    <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.encodeDropLabel}
+    </span>
+    <div
+      id="itb-dropzone"
+      class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
+    >
+      <input
+        id="itb-file-input"
+        type="file"
+        accept="image/*"
+        class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+        {t.encodeDropHint}
+      </p>
+    </div>
+    <p
+      id="itb-encode-error"
+      role="alert"
+      hidden
+      data-message={t.errorUnsupportedFile}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-read-failed={t.errorReadFailed}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+
+    <div
+      id="itb-encode-result"
+      hidden
+      class="mt-4"
+      data-file-info-template={t.encodeFileInfoTemplate}
+    >
+      <div class="flex flex-wrap items-center gap-3">
+        <img
+          id="itb-encode-preview"
+          alt=""
+          class="h-16 w-16 flex-shrink-0 rounded border border-gray-300 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800"
+        />
+        <p
+          id="itb-encode-file-info"
+          class="text-sm text-gray-600 dark:text-gray-400"
+        ></p>
+      </div>
+
+      <div class="mt-4 flex flex-wrap items-center gap-3">
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t.encodeOutputStyleLabel}
+        </span>
+        <div
+          id="itb-output-style"
+          class="flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700"
+          role="group"
+          aria-label={t.encodeOutputStyleLabel}
+        >
+          <button
+            type="button"
+            data-style="data-url"
+            aria-pressed="true"
+            class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+          >
+            {t.encodeOutputStyleDataUrl}
+          </button>
+          <button
+            type="button"
+            data-style="base64-only"
+            aria-pressed="false"
+            class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+          >
+            {t.encodeOutputStyleBase64Only}
+          </button>
+        </div>
+      </div>
+
+      <label
+        for="itb-output"
+        class="mt-4 mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.encodeOutputLabel}
+      </label>
+      <textarea
+        id="itb-output"
+        readonly
+        class="h-48 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm break-all focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></textarea>
+
+      <div class="mt-3 flex flex-wrap items-center gap-3">
+        <button
+          id="itb-copy-button"
+          type="button"
+          data-copied={t.copiedMessage}
+          data-copy-failed={t.copyFailedMessage}
+          class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          {t.copyButton}
+        </button>
+        <a
+          id="itb-download-link"
+          download
+          class="inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          {t.downloadButton}
+        </a>
+        <button
+          id="itb-clear-button"
+          type="button"
+          class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          {t.clearButton}
+        </button>
+        <span
+          id="itb-copy-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </section>
+
+  <section id="itb-decode-section" hidden>
+    <label
+      for="itb-decode-input"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.decodeInputLabel}
+    </label>
+    <textarea
+      id="itb-decode-input"
+      class="h-48 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm break-all focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      placeholder={t.decodeInputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+
+    <p
+      id="itb-decode-error"
+      role="alert"
+      hidden
+      data-message={t.decodeErrorMessage}
+      class="mt-2 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+    ></p>
+
+    <div
+      id="itb-decode-result"
+      hidden
+      class="mt-4"
+      data-info-template={t.decodeInfoTemplate}
+    >
+      <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+        {t.decodePreviewLabel}
+      </span>
+      <div class="flex flex-wrap items-center gap-3">
+        <img
+          id="itb-decode-preview"
+          alt=""
+          class="h-24 w-24 flex-shrink-0 rounded border border-gray-300 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800"
+        />
+        <div>
+          <p
+            id="itb-decode-info"
+            class="mb-2 text-sm text-gray-600 dark:text-gray-400"
+          ></p>
+          <a
+            id="itb-decode-download-link"
+            download
+            class="inline-flex min-h-11 items-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            {t.decodeDownloadButton}
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    decodeBase64Image,
+    formatEncodedOutput,
+    formatFileSize,
+    getExtensionForMimeType,
+    isImageFile,
+    MAX_FILE_SIZE,
+    type OutputStyle,
+  } from '../../lib/tools/image-to-base64';
+
+  type Mode = 'encode' | 'decode';
+
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#itb-mode [data-mode]',
+  );
+  const encodeSection = document.getElementById('itb-encode-section')!;
+  const decodeSection = document.getElementById('itb-decode-section')!;
+
+  let mode: Mode = 'encode';
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as Mode;
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      encodeSection.hidden = mode !== 'encode';
+      decodeSection.hidden = mode !== 'decode';
+    });
+  });
+
+  // --- 画像→Base64 ---
+
+  const dropzone = document.getElementById('itb-dropzone')!;
+  const fileInput = document.getElementById(
+    'itb-file-input',
+  ) as HTMLInputElement;
+  const encodeErrorEl = document.getElementById('itb-encode-error')!;
+  const encodeResultEl = document.getElementById('itb-encode-result')!;
+  const encodePreview = document.getElementById(
+    'itb-encode-preview',
+  ) as HTMLImageElement;
+  const encodeFileInfoEl = document.getElementById('itb-encode-file-info')!;
+  const outputStyleButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#itb-output-style [data-style]',
+  );
+  const output = document.getElementById('itb-output') as HTMLTextAreaElement;
+  const copyButton = document.getElementById(
+    'itb-copy-button',
+  ) as HTMLButtonElement;
+  const copyStatusEl = document.getElementById('itb-copy-status')!;
+  const downloadLink = document.getElementById(
+    'itb-download-link',
+  ) as HTMLAnchorElement;
+  const clearButton = document.getElementById(
+    'itb-clear-button',
+  ) as HTMLButtonElement;
+
+  const fileInfoTemplate = encodeResultEl.dataset.fileInfoTemplate ?? '';
+
+  let currentDataUrl: string | null = null;
+  let currentFile: File | null = null;
+  let outputStyle: OutputStyle = 'data-url';
+  let downloadObjectUrl: string | null = null;
+
+  function showEncodeError(message: string) {
+    encodeErrorEl.textContent = message;
+    encodeErrorEl.hidden = false;
+  }
+
+  function clearEncodeError() {
+    encodeErrorEl.hidden = true;
+    encodeErrorEl.textContent = '';
+  }
+
+  function revokeDownloadObjectUrl() {
+    if (downloadObjectUrl) {
+      URL.revokeObjectURL(downloadObjectUrl);
+      downloadObjectUrl = null;
+    }
+  }
+
+  function updateOutput() {
+    if (!currentDataUrl || !currentFile) return;
+    const text = formatEncodedOutput(currentDataUrl, outputStyle);
+    output.value = text;
+
+    revokeDownloadObjectUrl();
+    const blob = new Blob([text], { type: 'text/plain' });
+    downloadObjectUrl = URL.createObjectURL(blob);
+    downloadLink.href = downloadObjectUrl;
+    downloadLink.download = `${currentFile.name}-base64.txt`;
+  }
+
+  function resetEncodeState() {
+    currentDataUrl = null;
+    currentFile = null;
+    revokeDownloadObjectUrl();
+    output.value = '';
+    encodeResultEl.hidden = true;
+    encodePreview.removeAttribute('src');
+    copyStatusEl.textContent = '';
+  }
+
+  async function handleFile(file: File) {
+    clearEncodeError();
+    if (!isImageFile(file)) {
+      showEncodeError(encodeErrorEl.dataset.message ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showEncodeError(
+        (encodeErrorEl.dataset.tooLargeTemplate ?? '').replace(
+          '{max}',
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+
+    const dataUrl = await new Promise<string | null>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+
+    if (!dataUrl) {
+      showEncodeError(encodeErrorEl.dataset.readFailed ?? '');
+      return;
+    }
+
+    currentDataUrl = dataUrl;
+    currentFile = file;
+    encodePreview.src = dataUrl;
+    encodeFileInfoEl.textContent = fileInfoTemplate
+      .replace('{name}', file.name)
+      .replace('{type}', file.type || '?')
+      .replace('{size}', formatFileSize(file.size));
+    encodeResultEl.hidden = false;
+    copyStatusEl.textContent = '';
+    updateOutput();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void handleFile(file);
+  });
+
+  const dropzoneActiveClasses = ['border-blue-400', 'bg-blue-50'];
+
+  dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add(...dropzoneActiveClasses);
+  });
+
+  dropzone.addEventListener('dragleave', () => {
+    dropzone.classList.remove(...dropzoneActiveClasses);
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove(...dropzoneActiveClasses);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) void handleFile(file);
+  });
+
+  outputStyleButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      outputStyle = button.dataset.style as OutputStyle;
+      outputStyleButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      updateOutput();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      copyStatusEl.textContent = copyButton.dataset.copied ?? '';
+    } catch {
+      copyStatusEl.textContent = copyButton.dataset.copyFailed ?? '';
+    }
+  });
+
+  clearButton.addEventListener('click', () => {
+    resetEncodeState();
+    clearEncodeError();
+  });
+
+  // --- Base64→画像 ---
+
+  const decodeInput = document.getElementById(
+    'itb-decode-input',
+  ) as HTMLTextAreaElement;
+  const decodeErrorEl = document.getElementById('itb-decode-error')!;
+  const decodeResultEl = document.getElementById('itb-decode-result')!;
+  const decodePreview = document.getElementById(
+    'itb-decode-preview',
+  ) as HTMLImageElement;
+  const decodeInfoEl = document.getElementById('itb-decode-info')!;
+  const decodeDownloadLink = document.getElementById(
+    'itb-decode-download-link',
+  ) as HTMLAnchorElement;
+
+  const decodeInfoTemplate = decodeResultEl.dataset.infoTemplate ?? '';
+
+  function resetDecodeResult() {
+    decodeResultEl.hidden = true;
+    decodeErrorEl.hidden = true;
+    decodePreview.removeAttribute('src');
+  }
+
+  function runDecode() {
+    const value = decodeInput.value;
+    if (value.trim() === '') {
+      resetDecodeResult();
+      return;
+    }
+
+    const result = decodeBase64Image(value);
+    if (!result.success) {
+      decodeResultEl.hidden = true;
+      decodeErrorEl.textContent = decodeErrorEl.dataset.message ?? '';
+      decodeErrorEl.hidden = false;
+      return;
+    }
+
+    decodeErrorEl.hidden = true;
+    decodePreview.src = result.dataUrl;
+    decodeInfoEl.textContent = decodeInfoTemplate
+      .replace('{type}', result.mimeType)
+      .replace('{size}', formatFileSize(result.byteLength));
+    decodeDownloadLink.href = result.dataUrl;
+    decodeDownloadLink.download = `image.${getExtensionForMimeType(result.mimeType)}`;
+    decodeResultEl.hidden = false;
+  }
+
+  let decodeDebounce: ReturnType<typeof setTimeout> | undefined;
+  decodeInput.addEventListener('input', () => {
+    clearTimeout(decodeDebounce);
+    decodeDebounce = setTimeout(runDecode, 200);
+  });
+</script>

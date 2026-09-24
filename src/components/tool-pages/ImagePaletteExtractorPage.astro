@@ -1,0 +1,410 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { imagePaletteExtractorContent } from '../../i18n/tools/image-palette-extractor';
+import {
+  MIN_PALETTE_SIZE,
+  MAX_PALETTE_SIZE,
+  DEFAULT_PALETTE_SIZE,
+} from '../../lib/tools/image-palette-extractor';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imagePaletteExtractorContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div>
+    <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.dropLabel}
+    </span>
+    <div
+      id="pe-dropzone"
+      class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
+    >
+      <input
+        id="pe-file-input"
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+        class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="pe-source-info"
+      data-template={t.sourceInfoTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="pe-error"
+      role="alert"
+      hidden
+      data-message={t.errorUnsupportedFile}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-conversion-failed={t.errorConversionFailed}
+      data-no-opaque-pixels={t.errorNoOpaquePixels}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-6">
+    <div class="min-w-56 flex-1">
+      <label
+        for="pe-palette-size"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.paletteSizeLabel}
+        <span
+          id="pe-palette-size-value"
+          data-value-template={t.paletteSizeValueTemplate}
+        ></span>
+      </label>
+      <input
+        id="pe-palette-size"
+        type="range"
+        min={MIN_PALETTE_SIZE}
+        max={MAX_PALETTE_SIZE}
+        value={DEFAULT_PALETTE_SIZE}
+        class="h-11 w-full"
+      />
+    </div>
+
+    <button
+      id="pe-clear-button"
+      type="button"
+      disabled
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      {t.clearButton}
+    </button>
+  </div>
+
+  <div
+    id="pe-results-section"
+    hidden
+    class="mt-6"
+    data-copy-button-label={t.copyButton}
+    data-percent-template={t.percentTemplate}
+  >
+    <div class="flex flex-wrap gap-6">
+      <div class="min-w-40 flex-1 sm:max-w-52">
+        <p class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t.originalPreviewLabel}
+        </p>
+        <img
+          id="pe-original-preview"
+          alt=""
+          class="w-full rounded-lg border border-gray-300 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800"
+        />
+      </div>
+      <div class="min-w-56 flex-[2]">
+        <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-lg font-bold">{t.resultsHeading}</h2>
+          <button
+            id="pe-copy-all-button"
+            type="button"
+            disabled
+            class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            {t.copyAllButton}
+          </button>
+        </div>
+        <ul id="pe-palette-list" class="space-y-2"></ul>
+        <p
+          id="pe-copy-status"
+          role="status"
+          data-copied-message={t.copiedMessage}
+          data-copy-failed-message={t.copyFailedMessage}
+          class="mt-2 text-xs text-gray-500 dark:text-gray-400"
+        ></p>
+      </div>
+    </div>
+  </div>
+
+  <template id="pe-swatch-template">
+    <li class="flex items-center gap-3 rounded-lg border border-gray-300 p-3 dark:border-gray-700">
+      <span
+        data-swatch
+        class="h-12 w-12 flex-shrink-0 rounded border border-gray-300 dark:border-gray-700"
+      ></span>
+      <div class="min-w-0 flex-1">
+        <p
+          data-hex
+          class="font-mono text-sm font-medium text-gray-800 dark:text-gray-200"
+        ></p>
+        <p data-rgb class="text-xs text-gray-500 dark:text-gray-400"></p>
+        <p data-percent class="text-xs text-gray-500 dark:text-gray-400"></p>
+      </div>
+      <button
+        data-copy
+        type="button"
+        class="min-h-11 flex-shrink-0 rounded-lg border border-gray-300 px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      ></button>
+    </li>
+  </template>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    aggregatePixelsIntoBuckets,
+    buildPalette,
+    clampPaletteSize,
+    computeSampleDimensions,
+    formatFileSize,
+    formatPaletteAsText,
+    isAcceptedImageFile,
+    MAX_FILE_SIZE,
+    type ColorBucket,
+    type Dimensions,
+  } from '../../lib/tools/image-palette-extractor';
+
+  const dropzone = document.getElementById('pe-dropzone')!;
+  const fileInput = document.getElementById(
+    'pe-file-input',
+  ) as HTMLInputElement;
+  const sourceInfoEl = document.getElementById('pe-source-info')!;
+  const errorEl = document.getElementById('pe-error')!;
+
+  const paletteSizeInput = document.getElementById(
+    'pe-palette-size',
+  ) as HTMLInputElement;
+  const paletteSizeValueEl = document.getElementById('pe-palette-size-value')!;
+  const clearButton = document.getElementById(
+    'pe-clear-button',
+  ) as HTMLButtonElement;
+
+  const resultsSection = document.getElementById('pe-results-section')!;
+  const originalPreview = document.getElementById(
+    'pe-original-preview',
+  ) as HTMLImageElement;
+  const paletteList = document.getElementById('pe-palette-list')!;
+  const swatchTemplate = document.getElementById(
+    'pe-swatch-template',
+  ) as HTMLTemplateElement;
+  const copyAllButton = document.getElementById(
+    'pe-copy-all-button',
+  ) as HTMLButtonElement;
+  const copyStatusEl = document.getElementById('pe-copy-status')!;
+
+  const sourceInfoTemplate = sourceInfoEl.dataset.template ?? '';
+  const paletteSizeValueTemplate =
+    paletteSizeValueEl.dataset.valueTemplate ?? '';
+  const errorUnsupportedFile = errorEl.dataset.message ?? '';
+  const errorTooLargeTemplate = errorEl.dataset.tooLargeTemplate ?? '';
+  const errorConversionFailed = errorEl.dataset.conversionFailed ?? '';
+  const errorNoOpaquePixels = errorEl.dataset.noOpaquePixels ?? '';
+  const copyButtonLabel = resultsSection.dataset.copyButtonLabel ?? '';
+  const percentTemplate = resultsSection.dataset.percentTemplate ?? '';
+  const copiedMessage = copyStatusEl.dataset.copiedMessage ?? '';
+  const copyFailedMessage = copyStatusEl.dataset.copyFailedMessage ?? '';
+
+  let previewObjectUrl: string | null = null;
+  let currentBuckets: ColorBucket[] = [];
+  let hasImage = false;
+
+  function updatePaletteSizeUi() {
+    paletteSizeValueEl.textContent = paletteSizeValueTemplate.replace(
+      '{value}',
+      paletteSizeInput.value,
+    );
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearErrorBanner() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function revokePreviewObjectUrl() {
+    if (previewObjectUrl) {
+      URL.revokeObjectURL(previewObjectUrl);
+      previewObjectUrl = null;
+    }
+  }
+
+  function resetAll() {
+    revokePreviewObjectUrl();
+    currentBuckets = [];
+    hasImage = false;
+    sourceInfoEl.textContent = '';
+    resultsSection.hidden = true;
+    paletteList.innerHTML = '';
+    originalPreview.removeAttribute('src');
+    clearButton.disabled = true;
+    copyAllButton.disabled = true;
+    copyStatusEl.textContent = '';
+  }
+
+  async function copyText(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      copyStatusEl.textContent = copiedMessage;
+    } catch {
+      copyStatusEl.textContent = copyFailedMessage;
+    }
+  }
+
+  function renderPalette() {
+    const size = clampPaletteSize(Number(paletteSizeInput.value));
+    const palette = buildPalette(currentBuckets, size);
+
+    paletteList.innerHTML = '';
+
+    if (palette.length === 0) {
+      showError(errorNoOpaquePixels);
+      resultsSection.hidden = true;
+      copyAllButton.disabled = true;
+      return;
+    }
+
+    clearErrorBanner();
+
+    palette.forEach((color) => {
+      const li = swatchTemplate.content.firstElementChild!.cloneNode(
+        true,
+      ) as HTMLElement;
+      const swatchEl = li.querySelector('[data-swatch]') as HTMLElement;
+      const hexEl = li.querySelector('[data-hex]')!;
+      const rgbEl = li.querySelector('[data-rgb]')!;
+      const percentEl = li.querySelector('[data-percent]')!;
+      const copyBtn = li.querySelector('[data-copy]') as HTMLButtonElement;
+
+      swatchEl.style.backgroundColor = color.hex;
+      hexEl.textContent = color.hex.toUpperCase();
+      rgbEl.textContent = `RGB(${color.r}, ${color.g}, ${color.b})`;
+      percentEl.textContent = percentTemplate.replace(
+        '{percent}',
+        String(color.percent),
+      );
+      copyBtn.textContent = copyButtonLabel;
+      copyBtn.addEventListener('click', () => {
+        void copyText(color.hex);
+      });
+
+      paletteList.appendChild(li);
+    });
+
+    copyAllButton.disabled = false;
+    resultsSection.hidden = false;
+  }
+
+  async function loadFile(file: File) {
+    clearErrorBanner();
+    resetAll();
+
+    if (!isAcceptedImageFile(file)) {
+      showError(errorUnsupportedFile);
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        errorTooLargeTemplate.replace('{max}', formatFileSize(MAX_FILE_SIZE)),
+      );
+      return;
+    }
+
+    let bitmap: ImageBitmap;
+    try {
+      bitmap = await createImageBitmap(file);
+    } catch {
+      showError(errorConversionFailed);
+      return;
+    }
+
+    const originalDims: Dimensions = {
+      width: bitmap.width,
+      height: bitmap.height,
+    };
+
+    sourceInfoEl.textContent = sourceInfoTemplate
+      .replace('{width}', String(originalDims.width))
+      .replace('{height}', String(originalDims.height))
+      .replace('{size}', formatFileSize(file.size));
+
+    previewObjectUrl = URL.createObjectURL(file);
+    originalPreview.src = previewObjectUrl;
+
+    const sampleDims = computeSampleDimensions(originalDims);
+    const canvas = document.createElement('canvas');
+    canvas.width = sampleDims.width;
+    canvas.height = sampleDims.height;
+    const ctx = canvas.getContext('2d')!;
+
+    let imageData: ImageData;
+    try {
+      ctx.drawImage(bitmap, 0, 0, sampleDims.width, sampleDims.height);
+      imageData = ctx.getImageData(0, 0, sampleDims.width, sampleDims.height);
+    } catch {
+      showError(errorConversionFailed);
+      return;
+    }
+
+    currentBuckets = aggregatePixelsIntoBuckets(imageData.data);
+    hasImage = true;
+    clearButton.disabled = false;
+
+    renderPalette();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+
+  const dropzoneActiveClasses = ['border-blue-400', 'bg-blue-50'];
+
+  dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add(...dropzoneActiveClasses);
+  });
+
+  dropzone.addEventListener('dragleave', () => {
+    dropzone.classList.remove(...dropzoneActiveClasses);
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove(...dropzoneActiveClasses);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) void loadFile(file);
+  });
+
+  paletteSizeInput.addEventListener('input', () => {
+    updatePaletteSizeUi();
+    if (hasImage) renderPalette();
+  });
+
+  copyAllButton.addEventListener('click', () => {
+    const size = clampPaletteSize(Number(paletteSizeInput.value));
+    const palette = buildPalette(currentBuckets, size);
+    void copyText(formatPaletteAsText(palette));
+  });
+
+  clearButton.addEventListener('click', () => {
+    resetAll();
+    clearErrorBanner();
+  });
+
+  updatePaletteSizeUi();
+</script>

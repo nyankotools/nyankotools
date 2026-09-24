@@ -1,0 +1,545 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { faviconGeneratorContent } from '../../i18n/tools/favicon-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = faviconGeneratorContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div>
+    <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.dropLabel}
+    </span>
+    <div
+      id="fg-dropzone"
+      class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
+    >
+      <input
+        id="fg-file-input"
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+        class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="fg-source-info"
+      data-template={t.sourceInfoTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="fg-error"
+      role="alert"
+      hidden
+      data-message={t.errorUnsupportedFile}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-load-failed={t.errorLoadFailed}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+    <p
+      id="fg-warning"
+      hidden
+      class="mt-1 text-xs text-amber-600 dark:text-amber-400"
+    >
+      {t.warningSmallSource}
+    </p>
+  </div>
+
+  <div id="fg-preview-section" hidden class="mt-4">
+    <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.previewHeading}
+    </span>
+    <div
+      id="fg-preview-wrapper"
+      class="relative w-full max-w-sm touch-none select-none"
+    >
+      <img
+        id="fg-preview-image"
+        alt=""
+        draggable="false"
+        class="block h-auto w-full rounded-lg border border-gray-300 dark:border-gray-700"
+      />
+      <div
+        id="fg-crop-box"
+        class="absolute cursor-move touch-none border-2 border-blue-500 bg-blue-500/20"
+      ></div>
+    </div>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.previewHint}</p>
+  </div>
+
+  <div
+    id="fg-results-section"
+    hidden
+    class="mt-6"
+    data-download-label={t.downloadButton}
+    data-dimensions-template={t.dimensionsTemplate}
+    data-ico-dimensions-label={t.icoDimensionsLabel}
+  >
+    <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+      <h2 class="text-lg font-bold">{t.resultsHeading}</h2>
+      <button
+        id="fg-clear-button"
+        type="button"
+        class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        {t.clearButton}
+      </button>
+    </div>
+    <ul id="fg-results-list" class="space-y-3"></ul>
+  </div>
+
+  <template id="fg-result-template">
+    <li class="flex flex-wrap items-center gap-3 rounded-lg border border-gray-300 p-3 dark:border-gray-700">
+      <img
+        data-thumb
+        alt=""
+        class="h-14 w-14 flex-shrink-0 rounded bg-gray-100 object-contain dark:bg-gray-800"
+      />
+      <div class="min-w-0 flex-1">
+        <p
+          data-filename
+          class="truncate text-sm font-medium text-gray-800 dark:text-gray-200"
+        ></p>
+        <p data-size class="text-xs text-gray-500 dark:text-gray-400"></p>
+      </div>
+      <a
+        data-download
+        download
+        class="inline-flex min-h-11 items-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+      ></a>
+    </li>
+  </template>
+
+  <div id="fg-snippet-section" hidden class="mt-6">
+    <h2 class="mb-1 text-lg font-bold">{t.snippetHeading}</h2>
+    <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+      {t.snippetIntro}
+    </p>
+    <textarea
+      id="fg-snippet-output"
+      readonly
+      rows="6"
+      class="h-40 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm break-all focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    ></textarea>
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button
+        id="fg-copy-button"
+        type="button"
+        data-copied={t.copiedMessage}
+        data-copy-failed={t.copyFailedMessage}
+        class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        {t.copyButton}
+      </button>
+      <span
+        id="fg-copy-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    buildHtmlSnippet,
+    buildIcoFile,
+    clampCropPosition,
+    computeSquareCrop,
+    formatFileSize,
+    ICO_FILENAME,
+    ICO_SIZES,
+    isAcceptedImageFile,
+    isSourceTooSmall,
+    MAX_FILE_SIZE,
+    PNG_SIZES,
+    type Dimensions,
+    type SquareCrop,
+  } from '../../lib/tools/favicon-generator';
+
+  const dropzone = document.getElementById('fg-dropzone')!;
+  const fileInput = document.getElementById(
+    'fg-file-input',
+  ) as HTMLInputElement;
+  const sourceInfoEl = document.getElementById('fg-source-info')!;
+  const errorEl = document.getElementById('fg-error')!;
+  const warningEl = document.getElementById('fg-warning')!;
+  const previewSection = document.getElementById('fg-preview-section')!;
+  const previewImage = document.getElementById(
+    'fg-preview-image',
+  ) as HTMLImageElement;
+  const cropBox = document.getElementById('fg-crop-box')!;
+  const resultsSection = document.getElementById('fg-results-section')!;
+  const resultsList = document.getElementById('fg-results-list')!;
+  const resultTemplate = document.getElementById(
+    'fg-result-template',
+  ) as HTMLTemplateElement;
+  const clearButton = document.getElementById(
+    'fg-clear-button',
+  ) as HTMLButtonElement;
+  const snippetSection = document.getElementById('fg-snippet-section')!;
+  const snippetOutput = document.getElementById(
+    'fg-snippet-output',
+  ) as HTMLTextAreaElement;
+  const copyButton = document.getElementById(
+    'fg-copy-button',
+  ) as HTMLButtonElement;
+  const copyStatusEl = document.getElementById('fg-copy-status')!;
+
+  const sourceInfoTemplate = sourceInfoEl.dataset.template ?? '';
+  const errorUnsupportedFile = errorEl.dataset.message ?? '';
+
+  let outputObjectUrls: string[] = [];
+  let previewObjectUrl: string | null = null;
+  // 処理中に別の画像が選択された場合や、切り抜き位置の移動中に古い処理を反映させないための世代番号
+  let processGeneration = 0;
+
+  let currentBitmap: ImageBitmap | null = null;
+  let currentDims: Dimensions | null = null;
+  let currentCrop: SquareCrop | null = null;
+
+  interface DragState {
+    pointerId: number;
+    startClientX: number;
+    startClientY: number;
+    startSx: number;
+    startSy: number;
+  }
+  let dragState: DragState | null = null;
+
+  function trackObjectUrl(url: string): string {
+    outputObjectUrls.push(url);
+    return url;
+  }
+
+  function revokeOutputObjectUrls() {
+    outputObjectUrls.forEach((url) => URL.revokeObjectURL(url));
+    outputObjectUrls = [];
+  }
+
+  function revokePreviewObjectUrl() {
+    if (previewObjectUrl) {
+      URL.revokeObjectURL(previewObjectUrl);
+      previewObjectUrl = null;
+    }
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearErrorBanner() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  /** 新しい画像の読み込み・クリアボタン押下時に、状態をすべて初期状態へ戻す */
+  function resetAll() {
+    processGeneration++;
+    revokeOutputObjectUrls();
+    revokePreviewObjectUrl();
+    currentBitmap = null;
+    currentDims = null;
+    currentCrop = null;
+    dragState = null;
+    resultsList.innerHTML = '';
+    resultsSection.hidden = true;
+    snippetSection.hidden = true;
+    snippetOutput.value = '';
+    sourceInfoEl.textContent = '';
+    warningEl.hidden = true;
+    copyStatusEl.textContent = '';
+    previewSection.hidden = true;
+    previewImage.removeAttribute('src');
+  }
+
+  /** 切り抜き範囲（currentCrop）に合わせて、プレビュー上の枠の表示位置・サイズを更新する */
+  function updateCropBoxPosition() {
+    if (!currentDims || !currentCrop || previewImage.clientWidth === 0) return;
+    const scale = previewImage.clientWidth / currentDims.width;
+    cropBox.style.left = `${currentCrop.sx * scale}px`;
+    cropBox.style.top = `${currentCrop.sy * scale}px`;
+    cropBox.style.width = `${currentCrop.size * scale}px`;
+    cropBox.style.height = `${currentCrop.size * scale}px`;
+  }
+
+  function canvasToPngBlob(
+    bitmap: ImageBitmap,
+    crop: { sx: number; sy: number; size: number },
+    size: number,
+  ): Promise<Blob | null> {
+    return new Promise((resolve) => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(null);
+          return;
+        }
+        ctx.drawImage(
+          bitmap,
+          crop.sx,
+          crop.sy,
+          crop.size,
+          crop.size,
+          0,
+          0,
+          size,
+          size,
+        );
+        canvas.toBlob((blob) => resolve(blob), 'image/png');
+      } catch {
+        resolve(null);
+      }
+    });
+  }
+
+  function appendResultRow(options: {
+    thumbUrl: string;
+    filename: string;
+    dimensionsLabel: string;
+    fileSize: number;
+    downloadUrl: string;
+  }) {
+    const li = resultTemplate.content.firstElementChild!.cloneNode(
+      true,
+    ) as HTMLElement;
+    const thumb = li.querySelector('[data-thumb]') as HTMLImageElement;
+    const filenameEl = li.querySelector('[data-filename]')!;
+    const sizeEl = li.querySelector('[data-size]')!;
+    const downloadEl = li.querySelector('[data-download]') as HTMLAnchorElement;
+
+    thumb.src = options.thumbUrl;
+    filenameEl.textContent = options.filename;
+    sizeEl.textContent = `${options.dimensionsLabel}（${formatFileSize(options.fileSize)}）`;
+    downloadEl.href = options.downloadUrl;
+    downloadEl.download = options.filename;
+    downloadEl.textContent = resultsSection.dataset.downloadLabel ?? 'Download';
+
+    resultsList.appendChild(li);
+  }
+
+  /** 現在の状態（currentBitmap・currentCrop）からPNG各種・favicon.ico・HTMLスニペットを生成する */
+  async function generateOutputs() {
+    if (!currentBitmap || !currentCrop) return;
+    // ループの途中でドラッグにより currentCrop が変化しても、この呼び出し内では
+    // 開始時点の値のまま一貫して使うためにスナップショットする
+    const bitmap = currentBitmap;
+    const crop = currentCrop;
+    const generation = ++processGeneration;
+    revokeOutputObjectUrls();
+    resultsList.innerHTML = '';
+
+    const pngResults: { size: number; filename: string; blob: Blob }[] = [];
+    for (const spec of PNG_SIZES) {
+      const blob = await canvasToPngBlob(bitmap, crop, spec.size);
+      if (generation !== processGeneration) return;
+      if (!blob) {
+        showError(errorEl.dataset.loadFailed ?? '');
+        return;
+      }
+      pngResults.push({ size: spec.size, filename: spec.filename, blob });
+    }
+
+    const icoImages = await Promise.all(
+      ICO_SIZES.map(async (size) => {
+        const match = pngResults.find((r) => r.size === size)!;
+        const buffer = await match.blob.arrayBuffer();
+        return { size, pngData: new Uint8Array(buffer) };
+      }),
+    );
+    if (generation !== processGeneration) return;
+    const icoBytes = buildIcoFile(icoImages);
+    const icoBlob = new Blob([icoBytes], { type: 'image/x-icon' });
+
+    const icoThumbSource =
+      pngResults.find((r) => r.size === 32) ?? pngResults[0];
+
+    appendResultRow({
+      thumbUrl: trackObjectUrl(URL.createObjectURL(icoThumbSource.blob)),
+      filename: ICO_FILENAME,
+      dimensionsLabel:
+        resultsSection.dataset.icoDimensionsLabel ?? ICO_FILENAME,
+      fileSize: icoBlob.size,
+      downloadUrl: trackObjectUrl(URL.createObjectURL(icoBlob)),
+    });
+
+    const dimensionsTemplate = resultsSection.dataset.dimensionsTemplate ?? '';
+    for (const result of pngResults) {
+      appendResultRow({
+        thumbUrl: trackObjectUrl(URL.createObjectURL(result.blob)),
+        filename: result.filename,
+        dimensionsLabel: dimensionsTemplate
+          .replace('{width}', String(result.size))
+          .replace('{height}', String(result.size)),
+        fileSize: result.blob.size,
+        downloadUrl: trackObjectUrl(URL.createObjectURL(result.blob)),
+      });
+    }
+
+    snippetOutput.value = buildHtmlSnippet();
+    resultsSection.hidden = false;
+    snippetSection.hidden = false;
+  }
+
+  async function loadFile(file: File) {
+    clearErrorBanner();
+    resetAll();
+    const generation = processGeneration;
+
+    if (!isAcceptedImageFile(file)) {
+      showError(errorUnsupportedFile);
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace(
+          '{max}',
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+
+    let bitmap: ImageBitmap;
+    try {
+      // EXIFの回転情報を反映させ、<img>によるプレビュー表示と切り抜き結果の向きを一致させる
+      bitmap = await createImageBitmap(file, {
+        imageOrientation: 'from-image',
+      });
+    } catch {
+      showError(errorEl.dataset.loadFailed ?? '');
+      return;
+    }
+    if (generation !== processGeneration) return;
+
+    const dims: Dimensions = { width: bitmap.width, height: bitmap.height };
+    currentBitmap = bitmap;
+    currentDims = dims;
+    currentCrop = computeSquareCrop(dims);
+
+    sourceInfoEl.textContent = sourceInfoTemplate
+      .replace('{width}', String(dims.width))
+      .replace('{height}', String(dims.height));
+    warningEl.hidden = !isSourceTooSmall(dims);
+
+    previewObjectUrl = URL.createObjectURL(file);
+    previewImage.src = previewObjectUrl;
+    previewSection.hidden = false;
+
+    await new Promise<void>((resolve) => {
+      if (previewImage.complete) {
+        resolve();
+        return;
+      }
+      previewImage.addEventListener('load', () => resolve(), { once: true });
+    });
+    if (generation !== processGeneration) return;
+
+    updateCropBoxPosition();
+    await generateOutputs();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+
+  const dropzoneActiveClasses = ['border-blue-400', 'bg-blue-50'];
+
+  dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add(...dropzoneActiveClasses);
+  });
+
+  dropzone.addEventListener('dragleave', () => {
+    dropzone.classList.remove(...dropzoneActiveClasses);
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove(...dropzoneActiveClasses);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) void loadFile(file);
+  });
+
+  cropBox.addEventListener('pointerdown', (e) => {
+    if (!currentCrop) return;
+    dragState = {
+      pointerId: e.pointerId,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      startSx: currentCrop.sx,
+      startSy: currentCrop.sy,
+    };
+    cropBox.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+
+  cropBox.addEventListener('pointermove', (e) => {
+    if (!dragState || !currentDims || !currentCrop) return;
+    if (e.pointerId !== dragState.pointerId) return;
+    const scale = previewImage.clientWidth / currentDims.width;
+    if (scale <= 0) return;
+    const dx = (e.clientX - dragState.startClientX) / scale;
+    const dy = (e.clientY - dragState.startClientY) / scale;
+    currentCrop = clampCropPosition(
+      currentDims,
+      currentCrop.size,
+      dragState.startSx + dx,
+      dragState.startSy + dy,
+    );
+    updateCropBoxPosition();
+  });
+
+  function endCropDrag(e: PointerEvent) {
+    if (!dragState || e.pointerId !== dragState.pointerId) return;
+    dragState = null;
+    void generateOutputs();
+  }
+
+  cropBox.addEventListener('pointerup', endCropDrag);
+  cropBox.addEventListener('pointercancel', endCropDrag);
+
+  window.addEventListener('resize', () => {
+    updateCropBoxPosition();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!snippetOutput.value) return;
+    try {
+      await navigator.clipboard.writeText(snippetOutput.value);
+      copyStatusEl.textContent = copyButton.dataset.copied ?? '';
+    } catch {
+      copyStatusEl.textContent = copyButton.dataset.copyFailed ?? '';
+    }
+  });
+
+  clearButton.addEventListener('click', () => {
+    resetAll();
+    clearErrorBanner();
+  });
+</script>

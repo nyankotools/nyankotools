@@ -768,6 +768,125 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'image-converter',
+    translations: {
+      ja: {
+        name: '画像フォーマット変換',
+        description:
+          'PNG・JPEG・GIF・BMP画像をWebP・JPEG・PNGに変換し、品質を指定して圧縮できます。複数画像の一括変換に対応。',
+        category: '変換',
+      },
+      en: {
+        name: 'Image Format Converter',
+        description:
+          'Converts PNG, JPEG, GIF, and BMP images to WebP, JPEG, or PNG with adjustable quality, and supports converting several files at once.',
+        category: 'Convert',
+      },
+    },
+  },
+  {
+    slug: 'image-resizer',
+    translations: {
+      ja: {
+        name: '画像リサイズ・圧縮',
+        description:
+          '画像の幅・高さをpxまたは%指定でリサイズし、WebP・JPEG・PNGで圧縮できます。複数画像の一括処理に対応。',
+        category: '変換',
+      },
+      en: {
+        name: 'Image Resizer & Compressor',
+        description:
+          'Resizes images by pixel size or percentage and compresses them to WebP, JPEG, or PNG, with support for processing several files at once.',
+        category: 'Convert',
+      },
+    },
+  },
+  {
+    slug: 'image-to-base64',
+    translations: {
+      ja: {
+        name: '画像のBase64（Data URL）変換',
+        description:
+          '画像ファイルをBase64文字列・Data URLに変換したり、Base64文字列やData URLを画像に戻して保存できます。',
+        category: '変換',
+      },
+      en: {
+        name: 'Image to Base64 Converter',
+        description:
+          'Converts an image file to a Base64 string or Data URL, and converts a Base64 string or Data URL back into a downloadable image.',
+        category: 'Convert',
+      },
+    },
+  },
+  {
+    slug: 'favicon-generator',
+    translations: {
+      ja: {
+        name: 'favicon一括生成',
+        description:
+          '1枚の画像からfavicon.ico（16/32/48px同梱）と複数サイズのPNG（apple-touch-icon等）を一括生成し、HTML貼り付け用のlinkタグも出力します。',
+        category: '生成',
+      },
+      en: {
+        name: 'Favicon Generator',
+        description:
+          'Generates favicon.ico (bundling 16/32/48px) and multiple PNG sizes (apple-touch-icon, etc.) from a single image, plus the HTML link tags to reference them.',
+        category: 'Generate',
+      },
+    },
+  },
+  {
+    slug: 'exif-viewer',
+    translations: {
+      ja: {
+        name: 'EXIF情報表示・削除',
+        description:
+          'JPEG画像のExif（撮影日時・カメラ機種・レンズ・露出・GPS位置情報など）を一覧表示し、Exif情報だけを削除した画像（画質そのまま）をダウンロードできます。',
+        category: '変換',
+      },
+      en: {
+        name: 'EXIF Viewer & Remover',
+        description:
+          "Reads a JPEG photo's Exif metadata (date taken, camera, lens, exposure, GPS location, and more), and lets you download a copy with only the Exif data removed, at full quality.",
+        category: 'Convert',
+      },
+    },
+  },
+  {
+    slug: 'image-pixelart-converter',
+    translations: {
+      ja: {
+        name: '画像ドット絵化・モザイク・減色',
+        description:
+          '画像をブロックサイズ指定でモザイク・ドット絵風に、色数指定で減色できます。WebP・JPEG・PNGで書き出し可能。',
+        category: '変換',
+      },
+      en: {
+        name: 'Pixelate, Mosaic & Color Reduction',
+        description:
+          'Pixelates or mosaics an image by block size and reduces its color palette, then exports it as WebP, JPEG, or PNG.',
+        category: 'Convert',
+      },
+    },
+  },
+  {
+    slug: 'image-palette-extractor',
+    translations: {
+      ja: {
+        name: '画像カラーパレット抽出',
+        description:
+          '画像から主要な色を自動検出し、HEX・RGBコードと使用割合の一覧として表示・コピーできます。',
+        category: '変換',
+      },
+      en: {
+        name: 'Image Color Palette Extractor',
+        description:
+          'Detects the dominant colors in an image and lists each as a HEX/RGB code with its usage percentage, ready to copy.',
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -1,0 +1,485 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { imageConverterContent } from '../../i18n/tools/image-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageConverterContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div>
+    <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.dropLabel}
+    </span>
+    <div
+      id="ic-dropzone"
+      class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
+    >
+      <input
+        id="ic-file-input"
+        type="file"
+        multiple
+        accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+        class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200 dark:text-gray-300 dark:file:bg-gray-800 dark:file:text-gray-200 dark:hover:file:bg-gray-700"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="ic-file-count"
+      data-selected-template={t.filesSelectedTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="ic-error"
+      role="alert"
+      hidden
+      data-message={t.errorUnsupportedFile}
+      data-too-many-template={t.errorTooManyFilesTemplate}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-6">
+    <div>
+      <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+        {t.formatLabel}
+      </span>
+      <div
+        id="ic-format"
+        class="flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700"
+        role="group"
+        aria-label={t.formatLabel}
+      >
+        <button
+          type="button"
+          data-format="webp"
+          aria-pressed="true"
+          class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+        >
+          {t.formatWebp}
+        </button>
+        <button
+          type="button"
+          data-format="jpeg"
+          aria-pressed="false"
+          class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+        >
+          {t.formatJpeg}
+        </button>
+        <button
+          type="button"
+          data-format="png"
+          aria-pressed="false"
+          class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+        >
+          {t.formatPng}
+        </button>
+      </div>
+    </div>
+
+    <div class="min-w-48 flex-1">
+      <label
+        for="ic-quality"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.qualityLabel}
+        <span
+          id="ic-quality-value"
+          data-value-template={t.qualityValueTemplate}
+        ></span>
+      </label>
+      <input
+        id="ic-quality"
+        type="range"
+        min="1"
+        max="100"
+        value="80"
+        class="h-11 w-full"
+      />
+      <p
+        id="ic-quality-note"
+        hidden
+        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+      >
+        {t.qualityPngNote}
+      </p>
+    </div>
+
+    <button
+      id="ic-clear-button"
+      type="button"
+      disabled
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      {t.clearButton}
+    </button>
+  </div>
+
+  <div
+    id="ic-results-section"
+    hidden
+    class="mt-6"
+    data-original-label={t.originalSizeLabel}
+    data-converted-label={t.convertedSizeLabel}
+    data-reduction-increased-template={t.reductionIncreasedTemplate}
+    data-reduction-decreased-template={t.reductionDecreasedTemplate}
+    data-download-label={t.downloadButton}
+    data-remove-label={t.removeButton}
+    data-error-conversion-failed={t.errorConversionFailed}
+  >
+    <h2 class="mb-2 text-lg font-bold">{t.resultsHeading}</h2>
+    <ul id="ic-results-list" class="space-y-3"></ul>
+  </div>
+
+  <template id="ic-result-template">
+    <li class="flex flex-wrap items-center gap-3 rounded-lg border border-gray-300 p-3 dark:border-gray-700">
+      <img
+        data-thumb
+        alt=""
+        class="h-14 w-14 flex-shrink-0 rounded bg-gray-100 object-cover dark:bg-gray-800"
+      />
+      <div class="min-w-0 flex-1">
+        <p
+          data-filename
+          class="truncate text-sm font-medium text-gray-800 dark:text-gray-200"
+        ></p>
+        <p data-size class="text-xs text-gray-500 dark:text-gray-400"></p>
+        <p data-error hidden class="text-xs text-red-600 dark:text-red-400"></p>
+      </div>
+      <a
+        data-download
+        download
+        class="inline-flex min-h-11 items-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 aria-disabled:pointer-events-none aria-disabled:bg-gray-300 aria-disabled:text-gray-500 dark:aria-disabled:bg-gray-700 dark:aria-disabled:text-gray-400"
+      ></a>
+      <button
+        data-remove
+        type="button"
+        class="min-h-11 rounded-lg border border-gray-300 px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      ></button>
+    </li>
+  </template>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    buildOutputFileName,
+    calculateReductionPercent,
+    formatFileSize,
+    getOutputFormatOption,
+    isAcceptedImageFile,
+    type OutputFormat,
+  } from '../../lib/tools/image-converter';
+
+  const MAX_FILES = 30;
+  const MAX_FILE_SIZE = 25 * 1024 * 1024;
+
+  interface ImageItem {
+    id: number;
+    file: File;
+    bitmap: ImageBitmap;
+    convertedUrl: string | null;
+    error: boolean;
+  }
+
+  const dropzone = document.getElementById('ic-dropzone')!;
+  const fileInput = document.getElementById(
+    'ic-file-input',
+  ) as HTMLInputElement;
+  const fileCountEl = document.getElementById('ic-file-count')!;
+  const errorEl = document.getElementById('ic-error')!;
+  const formatButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#ic-format [data-format]',
+  );
+  const qualityInput = document.getElementById(
+    'ic-quality',
+  ) as HTMLInputElement;
+  const qualityValueEl = document.getElementById('ic-quality-value')!;
+  const qualityNoteEl = document.getElementById('ic-quality-note')!;
+  const clearButton = document.getElementById(
+    'ic-clear-button',
+  ) as HTMLButtonElement;
+  const resultsSection = document.getElementById('ic-results-section')!;
+  const resultsList = document.getElementById('ic-results-list')!;
+  const resultTemplate = document.getElementById(
+    'ic-result-template',
+  ) as HTMLTemplateElement;
+
+  const selectedTemplate = fileCountEl.dataset.selectedTemplate ?? '';
+  const qualityValueTemplate = qualityValueEl.dataset.valueTemplate ?? '';
+  const originalLabel = resultsSection.dataset.originalLabel ?? '';
+  const convertedLabel = resultsSection.dataset.convertedLabel ?? '';
+  const reductionIncreasedTemplate =
+    resultsSection.dataset.reductionIncreasedTemplate ?? '';
+  const reductionDecreasedTemplate =
+    resultsSection.dataset.reductionDecreasedTemplate ?? '';
+  const downloadLabel = resultsSection.dataset.downloadLabel ?? '';
+  const removeLabel = resultsSection.dataset.removeLabel ?? '';
+  const errorConversionFailed =
+    resultsSection.dataset.errorConversionFailed ?? '';
+  const errorUnsupportedFile = errorEl.dataset.message ?? '';
+
+  let items: ImageItem[] = [];
+  let nextId = 0;
+  let format: OutputFormat = 'webp';
+
+  function updateQualityUi() {
+    qualityValueEl.textContent = qualityValueTemplate.replace(
+      '{value}',
+      qualityInput.value,
+    );
+    const supportsQuality = getOutputFormatOption(format).supportsQuality;
+    qualityInput.disabled = !supportsQuality;
+    qualityNoteEl.hidden = supportsQuality;
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearErrorBanner() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  async function addFiles(fileList: FileList) {
+    clearErrorBanner();
+    const incoming = Array.from(fileList);
+
+    if (items.length + incoming.length > MAX_FILES) {
+      showError(
+        (errorEl.dataset.tooManyTemplate ?? '').replace(
+          '{max}',
+          String(MAX_FILES),
+        ),
+      );
+      return;
+    }
+
+    for (const file of incoming) {
+      if (!isAcceptedImageFile(file)) {
+        showError(errorUnsupportedFile);
+        continue;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        showError(
+          (errorEl.dataset.tooLargeTemplate ?? '').replace(
+            '{max}',
+            formatFileSize(MAX_FILE_SIZE),
+          ),
+        );
+        continue;
+      }
+      try {
+        const bitmap = await createImageBitmap(file);
+        items.push({
+          id: nextId++,
+          file,
+          bitmap,
+          convertedUrl: null,
+          error: false,
+        });
+      } catch {
+        showError(errorConversionFailed);
+      }
+    }
+
+    fileCountEl.textContent =
+      items.length === 0
+        ? ''
+        : selectedTemplate.replace('{count}', String(items.length));
+    clearButton.disabled = items.length === 0;
+    resultsSection.hidden = items.length === 0;
+
+    await renderResults();
+  }
+
+  function convertItem(item: ImageItem, quality: number): Promise<Blob | null> {
+    return new Promise((resolve) => {
+      try {
+        const option = getOutputFormatOption(format);
+        const canvas = document.createElement('canvas');
+        canvas.width = item.bitmap.width;
+        canvas.height = item.bitmap.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(null);
+          return;
+        }
+        if (format === 'jpeg') {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.drawImage(item.bitmap, 0, 0);
+        const qualityArg = option.supportsQuality ? quality / 100 : undefined;
+        canvas.toBlob(
+          (blob) => {
+            if (blob && blob.type === option.mimeType) {
+              resolve(blob);
+            } else {
+              resolve(null);
+            }
+          },
+          option.mimeType,
+          qualityArg,
+        );
+      } catch {
+        resolve(null);
+      }
+    });
+  }
+
+  // 複数の呼び出しが並行して走った場合に、後から来た呼び出しの結果だけを反映させるための世代番号
+  let renderGeneration = 0;
+
+  async function renderResults() {
+    const generation = ++renderGeneration;
+    const quality = Number(qualityInput.value);
+    resultsList.innerHTML = '';
+
+    for (const item of items) {
+      if (item.convertedUrl) {
+        URL.revokeObjectURL(item.convertedUrl);
+        item.convertedUrl = null;
+      }
+
+      const blob = await convertItem(item, quality);
+      if (generation !== renderGeneration) return;
+
+      const li = resultTemplate.content.firstElementChild!.cloneNode(
+        true,
+      ) as HTMLElement;
+      const thumb = li.querySelector('[data-thumb]') as HTMLImageElement;
+      const filenameEl = li.querySelector('[data-filename]')!;
+      const sizeEl = li.querySelector('[data-size]')!;
+      const errorLineEl = li.querySelector('[data-error]') as HTMLElement;
+      const downloadEl = li.querySelector(
+        '[data-download]',
+      ) as HTMLAnchorElement;
+      const removeEl = li.querySelector('[data-remove]') as HTMLButtonElement;
+
+      filenameEl.textContent = item.file.name;
+      downloadEl.textContent = downloadLabel;
+      removeEl.textContent = removeLabel;
+      removeEl.addEventListener('click', () => {
+        if (item.convertedUrl) URL.revokeObjectURL(item.convertedUrl);
+        items = items.filter((i) => i.id !== item.id);
+        fileCountEl.textContent =
+          items.length === 0
+            ? ''
+            : selectedTemplate.replace('{count}', String(items.length));
+        clearButton.disabled = items.length === 0;
+        resultsSection.hidden = items.length === 0;
+        void renderResults();
+      });
+
+      if (!blob) {
+        item.error = true;
+        errorLineEl.textContent = errorConversionFailed;
+        errorLineEl.hidden = false;
+        sizeEl.textContent = '';
+        downloadEl.setAttribute('aria-disabled', 'true');
+        downloadEl.removeAttribute('href');
+        thumb.remove();
+        resultsList.appendChild(li);
+        continue;
+      }
+
+      item.error = false;
+      const url = URL.createObjectURL(blob);
+      item.convertedUrl = url;
+      thumb.src = url;
+      downloadEl.href = url;
+      downloadEl.download = buildOutputFileName(item.file.name, format);
+      downloadEl.removeAttribute('aria-disabled');
+
+      const reduction = calculateReductionPercent(item.file.size, blob.size);
+      const reductionText =
+        reduction >= 0
+          ? reductionDecreasedTemplate.replace('{percent}', String(reduction))
+          : reductionIncreasedTemplate.replace(
+              '{percent}',
+              String(Math.abs(reduction)),
+            );
+      sizeEl.textContent = `${originalLabel}: ${formatFileSize(item.file.size)} → ${convertedLabel}: ${formatFileSize(blob.size)}（${reductionText}）`;
+
+      resultsList.appendChild(li);
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    if (!fileInput.files || fileInput.files.length === 0) return;
+    void addFiles(fileInput.files);
+    fileInput.value = '';
+  });
+
+  const dropzoneActiveClasses = ['border-blue-400', 'bg-blue-50'];
+
+  dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add(...dropzoneActiveClasses);
+  });
+
+  dropzone.addEventListener('dragleave', () => {
+    dropzone.classList.remove(...dropzoneActiveClasses);
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove(...dropzoneActiveClasses);
+    if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
+      void addFiles(e.dataTransfer.files);
+    }
+  });
+
+  formatButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      format = button.dataset.format as OutputFormat;
+      formatButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      updateQualityUi();
+      void renderResults();
+    });
+  });
+
+  let qualityDebounce: ReturnType<typeof setTimeout> | undefined;
+  qualityInput.addEventListener('input', () => {
+    updateQualityUi();
+    clearTimeout(qualityDebounce);
+    qualityDebounce = setTimeout(() => void renderResults(), 200);
+  });
+
+  clearButton.addEventListener('click', () => {
+    items.forEach((item) => {
+      if (item.convertedUrl) URL.revokeObjectURL(item.convertedUrl);
+    });
+    items = [];
+    fileCountEl.textContent = '';
+    clearButton.disabled = true;
+    resultsSection.hidden = true;
+    resultsList.innerHTML = '';
+    clearErrorBanner();
+  });
+
+  updateQualityUi();
+</script>

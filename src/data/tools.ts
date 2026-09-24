@@ -768,6 +768,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'image-converter',
+    translations: {
+      ja: {
+        name: '画像フォーマット変換',
+        description:
+          'PNG・JPEG・GIF・BMP画像をWebP・JPEG・PNGに変換し、品質を指定して圧縮できます。複数画像の一括変換に対応。',
+        category: '変換',
+      },
+      en: {
+        name: 'Image Format Converter',
+        description:
+          'Converts PNG, JPEG, GIF, and BMP images to WebP, JPEG, or PNG with adjustable quality, and supports converting several files at once.',
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

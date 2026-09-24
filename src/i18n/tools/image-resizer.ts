@@ -63,7 +63,7 @@ export const imageResizerContent: Record<Locale, ImageResizerPageContent> = {
       '画像の幅・高さをピクセルまたは％指定でリサイズし、WebP・JPEG・PNGで圧縮して書き出せる無料ツールです。複数画像の一括処理に対応し、変換前後のサイズ・ファイル容量・削減率を確認できます。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: '画像リサイズ・圧縮',
     introHtml:
-      '画像を選択し、幅・高さ（px）または拡大縮小率（%）を指定してリサイズしたうえで、WebP・JPEG・PNGとして圧縮・書き出しします。SNSやブログへのアップロード用に画像サイズを小さくしたいときに便利です。複数ファイルをまとめて処理することもできます。フォーマット変換のみでよい場合は<a class="underline" href="/tools/image-converter/">画像フォーマット変換</a>もご利用ください。',
+      '画像を選択し、幅・高さ（px）または拡大縮小率（%）を指定してリサイズしたうえで、WebP・JPEG・PNGとして圧縮・書き出しします。SNSやブログへのアップロード用に画像サイズを小さくしたいときに便利です。複数ファイルをまとめて処理することもできます。フォーマット変換のみでよい場合は<a href="/tools/image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像フォーマット変換</a>もご利用ください。',
     dropLabel: '画像ファイルを選択',
     dropHint:
       'ここに画像ファイルをドラッグ＆ドロップすることもできます（複数選択可）',
@@ -134,7 +134,7 @@ export const imageResizerContent: Record<Locale, ImageResizerPageContent> = {
       'Free tool that resizes images by pixel dimensions or percentage, then compresses them to WebP, JPEG, or PNG. Process multiple images at once and compare dimensions, file size, and reduction before and after. Your images are processed in the browser and never sent to a server.',
     h1: 'Image Resizer & Compressor',
     introHtml:
-      'Select images, choose a target width/height in pixels or a scale percentage, and resize them in your browser before compressing to WebP, JPEG, or PNG. Handy for shrinking images before uploading to social media or a blog. You can process several files at once. If you only need format conversion, try the <a class="underline" href="/en/tools/image-converter/">image format converter</a> instead.',
+      'Select images, choose a target width/height in pixels or a scale percentage, and resize them in your browser before compressing to WebP, JPEG, or PNG. Handy for shrinking images before uploading to social media or a blog. You can process several files at once. If you only need format conversion, try the <a href="/en/tools/image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Format Converter</a> instead.',
     dropLabel: 'Choose image files',
     dropHint: 'You can also drag and drop image files here (multiple allowed)',
     filesSelectedTemplate: 'Loaded {count} file(s)',

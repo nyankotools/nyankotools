@@ -53,7 +53,7 @@ export const imageConverterContent: Record<Locale, ImageConverterPageContent> =
         'PNG・JPEG・GIF・BMP画像をWebP・JPEG・PNGに変換し、品質を指定して圧縮できる無料ツールです。複数画像の一括変換に対応し、変換前後のファイルサイズと削減率も確認できます。データはブラウザ内で処理され、サーバーには送信されません。',
       h1: '画像フォーマット変換（→ WebP / JPEG / PNG）',
       introHtml:
-        'PNG・JPEG・GIF・BMP画像を選択すると、指定した形式・品質でブラウザ内で変換します。WebPへの変換は同程度の画質でファイルサイズを大きく削減できるため、Webサイトの表示速度改善に便利です。複数ファイルをまとめて変換することもできます。',
+        'PNG・JPEG・GIF・BMP画像を選択すると、指定した形式・品質でブラウザ内で変換します。WebPへの変換は同程度の画質でファイルサイズを大きく削減できるため、Webサイトの表示速度改善に便利です。複数ファイルをまとめて変換することもできます。サイズ変更もあわせて行いたい場合は<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ・圧縮</a>もご利用ください。',
       dropLabel: '画像ファイルを選択',
       dropHint:
         'ここに画像ファイルをドラッグ＆ドロップすることもできます（複数選択可）',
@@ -113,7 +113,7 @@ export const imageConverterContent: Record<Locale, ImageConverterPageContent> =
         'Free tool that converts PNG, JPEG, GIF, and BMP images to WebP, JPEG, or PNG with an adjustable quality/compression level. Convert multiple images at once and compare file size before and after. Your images are processed in the browser and never sent to a server.',
       h1: 'Image Format Converter (to WebP / JPEG / PNG)',
       introHtml:
-        'Select PNG, JPEG, GIF, or BMP images to convert them in your browser to the format and quality you choose. Converting to WebP usually cuts file size significantly at a similar visual quality, which helps page load speed. You can convert several files at once.',
+        'Select PNG, JPEG, GIF, or BMP images to convert them in your browser to the format and quality you choose. Converting to WebP usually cuts file size significantly at a similar visual quality, which helps page load speed. You can convert several files at once. Need to resize as well? Try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer & Compressor</a>.',
       dropLabel: 'Choose image files',
       dropHint:
         'You can also drag and drop image files here (multiple allowed)',

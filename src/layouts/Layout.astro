@@ -9,6 +9,7 @@ import {
   getAlternatePath,
 } from '../i18n/ui';
 import ShareButtons from '../components/ShareButtons.astro';
+import FavoriteToggle from '../components/FavoriteToggle.astro';
 
 interface Props {
   title: string;
@@ -279,7 +280,34 @@ const jsonLd: Record<string, unknown> | null = noindex
             </div>
           </div>
         </div>
+
         <nav>
+          <details
+            id="sidebar-favorites"
+            hidden
+            open
+            class="group mb-2 border-b border-gray-200 pb-2 dark:border-gray-800"
+          >
+            <summary class="flex cursor-pointer items-center justify-between rounded px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
+              {t('nav.favorites')}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 shrink-0 text-gray-400 transition-transform group-open:rotate-90 dark:text-gray-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                />
+              </svg>
+            </summary>
+            <ul id="sidebar-favorites-list" class="space-y-1 pb-1"></ul>
+          </details>
           {toolsByCategory.map(([category, categoryTools]) => {
             const hasActiveTool = categoryTools.some((tool) => {
               const href =
@@ -319,14 +347,19 @@ const jsonLd: Record<string, unknown> | null = noindex
                         ? `/en/tools/${tool.slug}/`
                         : `/tools/${tool.slug}/`;
                     return (
-                      <li>
+                      <li class="flex items-center gap-0.5">
                         <a
                           href={href}
-                          class="block rounded px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 aria-[current=page]:bg-blue-50 aria-[current=page]:font-semibold aria-[current=page]:text-blue-700 dark:text-gray-300 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=page]:bg-blue-950/40 dark:aria-[current=page]:text-blue-400"
+                          class="block flex-1 rounded px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 aria-[current=page]:bg-blue-50 aria-[current=page]:font-semibold aria-[current=page]:text-blue-700 dark:text-gray-300 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=page]:bg-blue-950/40 dark:aria-[current=page]:text-blue-400"
                           aria-current={pathname === href ? 'page' : undefined}
                         >
                           {tool.name}
                         </a>
+                        <FavoriteToggle
+                          slug={tool.slug}
+                          locale={lang}
+                          class="shrink-0 rounded p-3 text-gray-300 hover:text-yellow-500 dark:text-gray-600 dark:hover:text-yellow-400"
+                        />
                       </li>
                     );
                   })}
@@ -357,6 +390,14 @@ const jsonLd: Record<string, unknown> | null = noindex
       </style>
       <main class="flex min-w-0 flex-1 flex-col p-4 sm:p-6 md:p-10">
         <div class="flex-1">
+          {toolMatch && (
+            <FavoriteToggle
+              slug={toolMatch[1]}
+              locale={lang}
+              variant="labeled"
+              class="group mb-4 inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-gray-200 px-3 text-sm font-medium text-gray-600 hover:border-yellow-300 hover:text-yellow-600 dark:border-gray-700 dark:text-gray-300 dark:hover:border-yellow-600 dark:hover:text-yellow-400"
+            />
+          )}
           <slot />
           {!noindex && (
             <ShareButtons url={canonicalURL} title={fullTitle} lang={lang} />
@@ -413,10 +454,12 @@ const jsonLd: Record<string, unknown> | null = noindex
         initTheme,
         initCategoryPersistence,
       } from '../lib/layout-nav';
+      import { initFavorites } from '../lib/favorites-ui';
 
       initSidebar();
       initTheme();
       initCategoryPersistence();
+      initFavorites();
     </script>
   </body>
 </html>

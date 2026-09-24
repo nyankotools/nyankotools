@@ -1,0 +1,603 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { imagePixelartConverterContent } from '../../i18n/tools/image-pixelart-converter';
+import {
+  MIN_BLOCK_SIZE,
+  MAX_BLOCK_SIZE,
+  MIN_COLOR_LEVELS,
+  MAX_COLOR_LEVELS,
+} from '../../lib/tools/image-pixelart-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imagePixelartConverterContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div>
+    <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.dropLabel}
+    </span>
+    <div
+      id="pa-dropzone"
+      class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
+    >
+      <input
+        id="pa-file-input"
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+        class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200 dark:text-gray-300 dark:file:bg-gray-800 dark:file:text-gray-200 dark:hover:file:bg-gray-700"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="pa-source-info"
+      data-template={t.sourceInfoTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="pa-error"
+      role="alert"
+      hidden
+      data-message={t.errorUnsupportedFile}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-conversion-failed={t.errorConversionFailed}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-6">
+    <div class="min-w-56 flex-1">
+      <label
+        for="pa-block-size"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.blockSizeLabel}
+        <span
+          id="pa-block-size-value"
+          data-value-template={t.blockSizeValueTemplate}
+        ></span>
+      </label>
+      <input
+        id="pa-block-size"
+        type="range"
+        min={MIN_BLOCK_SIZE}
+        max={MAX_BLOCK_SIZE}
+        value="8"
+        class="h-11 w-full"
+      />
+    </div>
+
+    <div class="min-w-56 flex-1">
+      <label
+        for="pa-color-levels"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.colorLevelsLabel}
+        <span
+          id="pa-color-levels-value"
+          data-value-template={t.colorLevelsValueTemplate}
+          data-off-label={t.colorLevelsOffLabel}
+        ></span>
+      </label>
+      <input
+        id="pa-color-levels"
+        type="range"
+        min={MIN_COLOR_LEVELS}
+        max={MAX_COLOR_LEVELS}
+        value={MAX_COLOR_LEVELS}
+        class="h-11 w-full"
+      />
+    </div>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-6">
+    <div>
+      <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+        {t.formatLabel}
+      </span>
+      <div
+        id="pa-format"
+        class="flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700"
+        role="group"
+        aria-label={t.formatLabel}
+      >
+        <button
+          type="button"
+          data-format="png"
+          aria-pressed="true"
+          class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+        >
+          {t.formatPng}
+        </button>
+        <button
+          type="button"
+          data-format="webp"
+          aria-pressed="false"
+          class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+        >
+          {t.formatWebp}
+        </button>
+        <button
+          type="button"
+          data-format="jpeg"
+          aria-pressed="false"
+          class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+        >
+          {t.formatJpeg}
+        </button>
+      </div>
+    </div>
+
+    <div class="min-w-48 flex-1">
+      <label
+        for="pa-quality"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.qualityLabel}
+        <span
+          id="pa-quality-value"
+          data-value-template={t.qualityValueTemplate}
+        ></span>
+      </label>
+      <input
+        id="pa-quality"
+        type="range"
+        min="1"
+        max="100"
+        value="80"
+        disabled
+        class="h-11 w-full"
+      />
+      <p
+        id="pa-quality-note"
+        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+      >
+        {t.qualityPngNote}
+      </p>
+    </div>
+
+    <button
+      id="pa-clear-button"
+      type="button"
+      disabled
+      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      {t.clearButton}
+    </button>
+  </div>
+
+  <div
+    id="pa-results-section"
+    hidden
+    class="mt-6"
+    data-original-label={t.originalSizeLabel}
+    data-converted-label={t.convertedSizeLabel}
+    data-dimensions-size-template={t.dimensionsSizeTemplate}
+    data-reduction-increased-template={t.reductionIncreasedTemplate}
+    data-reduction-decreased-template={t.reductionDecreasedTemplate}
+  >
+    <h2 class="mb-2 text-lg font-bold">{t.resultsHeading}</h2>
+    <div class="flex flex-wrap gap-4">
+      <div class="min-w-40 flex-1">
+        <p class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t.originalPreviewLabel}
+        </p>
+        <img
+          id="pa-original-preview"
+          alt=""
+          class="w-full rounded-lg border border-gray-300 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800"
+        />
+      </div>
+      <div class="min-w-40 flex-1">
+        <p class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t.resultPreviewLabel}
+        </p>
+        <canvas
+          id="pa-result-canvas"
+          class="w-full rounded-lg border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
+          style="image-rendering: pixelated;"
+        ></canvas>
+      </div>
+    </div>
+    <p
+      id="pa-result-size"
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+    <a
+      id="pa-download-button"
+      download
+      class="mt-3 inline-flex min-h-11 items-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 aria-disabled:pointer-events-none aria-disabled:bg-gray-300 aria-disabled:text-gray-500 dark:aria-disabled:bg-gray-700 dark:aria-disabled:text-gray-400"
+      aria-disabled="true"
+    >
+      {t.downloadButton}
+    </a>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    buildOutputFileName,
+    calculateReductionPercent,
+    clampBlockSize,
+    clampColorLevels,
+    computeMosaicDimensions,
+    estimateMaxColorCount,
+    formatFileSize,
+    getOutputFormatOption,
+    isAcceptedImageFile,
+    isColorReductionEnabled,
+    MAX_FILE_SIZE,
+    quantizeChannelValue,
+    type Dimensions,
+    type OutputFormat,
+  } from '../../lib/tools/image-pixelart-converter';
+
+  const dropzone = document.getElementById('pa-dropzone')!;
+  const fileInput = document.getElementById(
+    'pa-file-input',
+  ) as HTMLInputElement;
+  const sourceInfoEl = document.getElementById('pa-source-info')!;
+  const errorEl = document.getElementById('pa-error')!;
+
+  const blockSizeInput = document.getElementById(
+    'pa-block-size',
+  ) as HTMLInputElement;
+  const blockSizeValueEl = document.getElementById('pa-block-size-value')!;
+  const colorLevelsInput = document.getElementById(
+    'pa-color-levels',
+  ) as HTMLInputElement;
+  const colorLevelsValueEl = document.getElementById('pa-color-levels-value')!;
+
+  const formatButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#pa-format [data-format]',
+  );
+  const qualityInput = document.getElementById(
+    'pa-quality',
+  ) as HTMLInputElement;
+  const qualityValueEl = document.getElementById('pa-quality-value')!;
+  const qualityNoteEl = document.getElementById('pa-quality-note')!;
+  const clearButton = document.getElementById(
+    'pa-clear-button',
+  ) as HTMLButtonElement;
+
+  const resultsSection = document.getElementById('pa-results-section')!;
+  const originalPreview = document.getElementById(
+    'pa-original-preview',
+  ) as HTMLImageElement;
+  const resultCanvas = document.getElementById(
+    'pa-result-canvas',
+  ) as HTMLCanvasElement;
+  const resultSizeEl = document.getElementById('pa-result-size')!;
+  const downloadButton = document.getElementById(
+    'pa-download-button',
+  ) as HTMLAnchorElement;
+
+  const sourceInfoTemplate = sourceInfoEl.dataset.template ?? '';
+  const blockSizeValueTemplate = blockSizeValueEl.dataset.valueTemplate ?? '';
+  const colorLevelsValueTemplate =
+    colorLevelsValueEl.dataset.valueTemplate ?? '';
+  const colorLevelsOffLabel = colorLevelsValueEl.dataset.offLabel ?? '';
+  const qualityValueTemplate = qualityValueEl.dataset.valueTemplate ?? '';
+  const originalLabel = resultsSection.dataset.originalLabel ?? '';
+  const convertedLabel = resultsSection.dataset.convertedLabel ?? '';
+  const dimensionsSizeTemplate =
+    resultsSection.dataset.dimensionsSizeTemplate ?? '';
+  const reductionIncreasedTemplate =
+    resultsSection.dataset.reductionIncreasedTemplate ?? '';
+  const reductionDecreasedTemplate =
+    resultsSection.dataset.reductionDecreasedTemplate ?? '';
+  const errorUnsupportedFile = errorEl.dataset.message ?? '';
+  const errorConversionFailed = errorEl.dataset.conversionFailed ?? '';
+
+  let currentFile: File | null = null;
+  let currentBitmap: ImageBitmap | null = null;
+  let currentDims: Dimensions | null = null;
+  let format: OutputFormat = 'png';
+  let previewObjectUrl: string | null = null;
+  let downloadObjectUrl: string | null = null;
+  // 複数の呼び出しが並行して走った場合に、後から来た呼び出しの結果だけを反映させるための世代番号
+  let renderGeneration = 0;
+
+  function formatDimensionsSize(dims: Dimensions, sizeText: string): string {
+    return dimensionsSizeTemplate
+      .replace('{width}', String(dims.width))
+      .replace('{height}', String(dims.height))
+      .replace('{size}', sizeText);
+  }
+
+  function updateBlockSizeUi() {
+    blockSizeValueEl.textContent = blockSizeValueTemplate.replace(
+      '{value}',
+      blockSizeInput.value,
+    );
+  }
+
+  function updateColorLevelsUi() {
+    const levels = clampColorLevels(Number(colorLevelsInput.value));
+    colorLevelsValueEl.textContent = isColorReductionEnabled(levels)
+      ? colorLevelsValueTemplate
+          .replace('{value}', String(levels))
+          .replace('{max}', String(estimateMaxColorCount(levels)))
+      : colorLevelsOffLabel;
+  }
+
+  function updateQualityUi() {
+    qualityValueEl.textContent = qualityValueTemplate.replace(
+      '{value}',
+      qualityInput.value,
+    );
+    const supportsQuality = getOutputFormatOption(format).supportsQuality;
+    qualityInput.disabled = !supportsQuality;
+    qualityNoteEl.hidden = supportsQuality;
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearErrorBanner() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function revokePreviewObjectUrl() {
+    if (previewObjectUrl) {
+      URL.revokeObjectURL(previewObjectUrl);
+      previewObjectUrl = null;
+    }
+  }
+
+  function revokeDownloadObjectUrl() {
+    if (downloadObjectUrl) {
+      URL.revokeObjectURL(downloadObjectUrl);
+      downloadObjectUrl = null;
+    }
+  }
+
+  function resetAll() {
+    renderGeneration++;
+    revokePreviewObjectUrl();
+    revokeDownloadObjectUrl();
+    currentFile = null;
+    currentBitmap = null;
+    currentDims = null;
+    sourceInfoEl.textContent = '';
+    resultsSection.hidden = true;
+    resultSizeEl.textContent = '';
+    downloadButton.setAttribute('aria-disabled', 'true');
+    downloadButton.removeAttribute('href');
+    originalPreview.removeAttribute('src');
+    clearButton.disabled = true;
+  }
+
+  function renderPixelArt(
+    bitmap: ImageBitmap,
+    dims: Dimensions,
+    blockSize: number,
+    colorLevels: number,
+  ): void {
+    const mosaicDims = computeMosaicDimensions(dims, blockSize);
+
+    const smallCanvas = document.createElement('canvas');
+    smallCanvas.width = mosaicDims.width;
+    smallCanvas.height = mosaicDims.height;
+    const smallCtx = smallCanvas.getContext('2d')!;
+    smallCtx.imageSmoothingEnabled = true;
+    smallCtx.drawImage(bitmap, 0, 0, mosaicDims.width, mosaicDims.height);
+
+    if (isColorReductionEnabled(colorLevels)) {
+      const imageData = smallCtx.getImageData(
+        0,
+        0,
+        mosaicDims.width,
+        mosaicDims.height,
+      );
+      const data = imageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        data[i] = quantizeChannelValue(data[i], colorLevels);
+        data[i + 1] = quantizeChannelValue(data[i + 1], colorLevels);
+        data[i + 2] = quantizeChannelValue(data[i + 2], colorLevels);
+      }
+      smallCtx.putImageData(imageData, 0, 0);
+    }
+
+    resultCanvas.width = dims.width;
+    resultCanvas.height = dims.height;
+    const outCtx = resultCanvas.getContext('2d')!;
+    outCtx.imageSmoothingEnabled = false;
+    outCtx.clearRect(0, 0, dims.width, dims.height);
+    if (format === 'jpeg') {
+      outCtx.fillStyle = '#ffffff';
+      outCtx.fillRect(0, 0, dims.width, dims.height);
+    }
+    outCtx.drawImage(smallCanvas, 0, 0, dims.width, dims.height);
+  }
+
+  async function renderPreview() {
+    if (!currentBitmap || !currentDims || !currentFile) return;
+    const generation = ++renderGeneration;
+    const blockSize = clampBlockSize(Number(blockSizeInput.value));
+    const colorLevels = clampColorLevels(Number(colorLevelsInput.value));
+
+    try {
+      renderPixelArt(currentBitmap, currentDims, blockSize, colorLevels);
+    } catch {
+      showError(errorConversionFailed);
+      return;
+    }
+    if (generation !== renderGeneration) return;
+
+    const option = getOutputFormatOption(format);
+    const quality = Number(qualityInput.value);
+    const qualityArg = option.supportsQuality ? quality / 100 : undefined;
+
+    resultCanvas.toBlob(
+      (blob) => {
+        if (generation !== renderGeneration) return;
+        if (!blob || blob.type !== option.mimeType) {
+          showError(errorConversionFailed);
+          return;
+        }
+        revokeDownloadObjectUrl();
+        downloadObjectUrl = URL.createObjectURL(blob);
+        downloadButton.href = downloadObjectUrl;
+        downloadButton.download = buildOutputFileName(
+          currentFile!.name,
+          format,
+        );
+        downloadButton.removeAttribute('aria-disabled');
+
+        const reduction = calculateReductionPercent(
+          currentFile!.size,
+          blob.size,
+        );
+        const reductionText =
+          reduction >= 0
+            ? reductionDecreasedTemplate.replace('{percent}', String(reduction))
+            : reductionIncreasedTemplate.replace(
+                '{percent}',
+                String(Math.abs(reduction)),
+              );
+        const originalText = formatDimensionsSize(
+          currentDims!,
+          formatFileSize(currentFile!.size),
+        );
+        const convertedText = formatDimensionsSize(
+          currentDims!,
+          formatFileSize(blob.size),
+        );
+        resultSizeEl.textContent = `${originalLabel}: ${originalText} → ${convertedLabel}: ${convertedText}（${reductionText}）`;
+      },
+      option.mimeType,
+      qualityArg,
+    );
+  }
+
+  async function loadFile(file: File) {
+    clearErrorBanner();
+    resetAll();
+
+    if (!isAcceptedImageFile(file)) {
+      showError(errorUnsupportedFile);
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace(
+          '{max}',
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+
+    let bitmap: ImageBitmap;
+    try {
+      bitmap = await createImageBitmap(file);
+    } catch {
+      showError(errorConversionFailed);
+      return;
+    }
+
+    currentFile = file;
+    currentBitmap = bitmap;
+    currentDims = { width: bitmap.width, height: bitmap.height };
+
+    sourceInfoEl.textContent = sourceInfoTemplate
+      .replace('{width}', String(currentDims.width))
+      .replace('{height}', String(currentDims.height))
+      .replace('{size}', formatFileSize(file.size));
+
+    previewObjectUrl = URL.createObjectURL(file);
+    originalPreview.src = previewObjectUrl;
+
+    resultsSection.hidden = false;
+    clearButton.disabled = false;
+
+    await renderPreview();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+
+  const dropzoneActiveClasses = ['border-blue-400', 'bg-blue-50'];
+
+  dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add(...dropzoneActiveClasses);
+  });
+
+  dropzone.addEventListener('dragleave', () => {
+    dropzone.classList.remove(...dropzoneActiveClasses);
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove(...dropzoneActiveClasses);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) void loadFile(file);
+  });
+
+  let blockSizeDebounce: ReturnType<typeof setTimeout> | undefined;
+  blockSizeInput.addEventListener('input', () => {
+    updateBlockSizeUi();
+    clearTimeout(blockSizeDebounce);
+    blockSizeDebounce = setTimeout(() => void renderPreview(), 150);
+  });
+
+  let colorLevelsDebounce: ReturnType<typeof setTimeout> | undefined;
+  colorLevelsInput.addEventListener('input', () => {
+    updateColorLevelsUi();
+    clearTimeout(colorLevelsDebounce);
+    colorLevelsDebounce = setTimeout(() => void renderPreview(), 150);
+  });
+
+  formatButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      format = button.dataset.format as OutputFormat;
+      formatButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      updateQualityUi();
+      void renderPreview();
+    });
+  });
+
+  let qualityDebounce: ReturnType<typeof setTimeout> | undefined;
+  qualityInput.addEventListener('input', () => {
+    updateQualityUi();
+    clearTimeout(qualityDebounce);
+    qualityDebounce = setTimeout(() => void renderPreview(), 150);
+  });
+
+  clearButton.addEventListener('click', () => {
+    resetAll();
+    clearErrorBanner();
+  });
+
+  updateBlockSizeUi();
+  updateColorLevelsUi();
+  updateQualityUi();
+</script>

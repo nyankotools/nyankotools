@@ -18,7 +18,12 @@ export default defineConfig({
     csp: {
       directives: [
         "default-src 'self'",
-        "img-src 'self'",
+        // 'self' は blob: URLを許可しないため明示的に追加する。画像プレビュー系の
+        // 複数ツール（favicon-generator, image-resizer, exif-viewer等）が
+        // URL.createObjectURL()で生成したblob: URLを<img>に設定しており、
+        // 'self'のみだと本番相当のCSP配信（astro build/preview, wrangler dev）
+        // でのみ画像読み込みがブロックされる（astro devではCSP自体検証されず気づけない）。
+        "img-src 'self' blob:",
         "font-src 'self'",
         // 完全ローカル処理を保証するため 'none' を維持する。prefetch機能は
         // <link rel="prefetch"> 非対応ブラウザ（旧Safari等）では fetch()

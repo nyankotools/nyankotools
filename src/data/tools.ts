@@ -802,6 +802,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'image-to-base64',
+    translations: {
+      ja: {
+        name: '画像のBase64（Data URL）変換',
+        description:
+          '画像ファイルをBase64文字列・Data URLに変換したり、Base64文字列やData URLを画像に戻して保存できます。',
+        category: '変換',
+      },
+      en: {
+        name: 'Image to Base64 Converter',
+        description:
+          'Converts an image file to a Base64 string or Data URL, and converts a Base64 string or Data URL back into a downloadable image.',
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

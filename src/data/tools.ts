@@ -819,6 +819,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'favicon-generator',
+    translations: {
+      ja: {
+        name: 'favicon一括生成',
+        description:
+          '1枚の画像からfavicon.ico（16/32/48px同梱）と複数サイズのPNG（apple-touch-icon等）を一括生成し、HTML貼り付け用のlinkタグも出力します。',
+        category: '生成',
+      },
+      en: {
+        name: 'Favicon Generator',
+        description:
+          'Generates favicon.ico (bundling 16/32/48px) and multiple PNG sizes (apple-touch-icon, etc.) from a single image, plus the HTML link tags to reference them.',
+        category: 'Generate',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

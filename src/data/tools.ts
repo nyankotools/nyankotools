@@ -853,6 +853,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'image-pixelart-converter',
+    translations: {
+      ja: {
+        name: '画像ドット絵化・モザイク・減色',
+        description:
+          '画像をブロックサイズ指定でモザイク・ドット絵風に、色数指定で減色できます。WebP・JPEG・PNGで書き出し可能。',
+        category: '変換',
+      },
+      en: {
+        name: 'Pixelate, Mosaic & Color Reduction',
+        description:
+          'Pixelates or mosaics an image by block size and reduces its color palette, then exports it as WebP, JPEG, or PNG.',
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -325,12 +325,10 @@ test('ドラッグ終了後に再生成された結果が、最終的な切り�
   await page.mouse.move(before!.x + 100, before!.y + 100, { steps: 5 });
   await page.mouse.up();
 
-  // generateOutputs が完了するまで待機（PNG エンコード完了）
-  await page.waitForTimeout(800);
-
-  // ドラッグ後も結果が一貫している（7ファイルが揃っている）
-  const fileItems = await page.locator('#fg-results-list li').count();
-  expect(fileItems).toBe(7);
+  // ドラッグ後も結果が一貫している（7ファイルが揃っている）。
+  // generateOutputs（PNGエンコード）の完了タイミングは実行環境で変動するため、
+  // 固定waitではなく自動リトライするexpectで待つ。
+  await expect(page.locator('#fg-results-list li')).toHaveCount(7);
 
   // 結果セクションが表示されている
   await expect(page.locator('#fg-results-section')).not.toHaveAttribute(

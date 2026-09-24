@@ -870,6 +870,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'image-palette-extractor',
+    translations: {
+      ja: {
+        name: '画像カラーパレット抽出',
+        description:
+          '画像から主要な色を自動検出し、HEX・RGBコードと使用割合の一覧として表示・コピーできます。',
+        category: '変換',
+      },
+      en: {
+        name: 'Image Color Palette Extractor',
+        description:
+          'Detects the dominant colors in an image and lists each as a HEX/RGB code with its usage percentage, ready to copy.',
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

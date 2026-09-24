@@ -1,0 +1,525 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { exifViewerContent } from '../../i18n/tools/exif-viewer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = exifViewerContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div>
+    <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.dropLabel}
+    </span>
+    <div
+      id="ev-dropzone"
+      class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
+    >
+      <input
+        id="ev-file-input"
+        type="file"
+        accept="image/jpeg"
+        class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-gray-100 file:px-4 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200 dark:text-gray-300 dark:file:bg-gray-800 dark:file:text-gray-200 dark:hover:file:bg-gray-700"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="ev-error"
+      role="alert"
+      hidden
+      data-message={t.errorUnsupportedFile}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-read-failed={t.errorReadFailed}
+      data-parse-failed={t.errorParseFailed}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+  </div>
+
+  <div
+    id="ev-result"
+    hidden
+    class="mt-6"
+    data-file-info-template={t.fileInfoTemplate}
+    data-dimensions-template={t.dimensionsTemplate}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <img
+        id="ev-preview"
+        alt=""
+        class="h-20 w-20 flex-shrink-0 rounded border border-gray-300 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800"
+      />
+      <div>
+        <p
+          id="ev-file-info"
+          class="text-sm text-gray-600 dark:text-gray-400"
+        ></p>
+        <p
+          id="ev-dimensions"
+          class="text-sm text-gray-600 dark:text-gray-400"
+        ></p>
+      </div>
+    </div>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.summaryHeading}</h2>
+    <p
+      id="ev-no-exif-message"
+      hidden
+      class="text-sm text-gray-600 dark:text-gray-400"
+    >
+      {t.noExifMessage}
+    </p>
+    <dl
+      id="ev-summary-list"
+      class="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2"
+      data-labels={JSON.stringify({
+        make: t.labelMake,
+        model: t.labelModel,
+        lensModel: t.labelLensModel,
+        software: t.labelSoftware,
+        dateTimeOriginal: t.labelDateTimeOriginal,
+        exposureTime: t.labelExposureTime,
+        fNumber: t.labelFNumber,
+        iso: t.labelIso,
+        focalLength: t.labelFocalLength,
+        flash: t.labelFlash,
+        flashFired: t.flashFired,
+        flashNotFired: t.flashNotFired,
+        whiteBalance: t.labelWhiteBalance,
+        whiteBalanceAuto: t.whiteBalanceAuto,
+        whiteBalanceManual: t.whiteBalanceManual,
+        orientation: t.labelOrientation,
+        orientationLabels: t.orientationLabels,
+        gpsCoordinates: t.labelGpsCoordinates,
+      })}
+    ></dl>
+    <p
+      id="ev-gps-privacy-note"
+      hidden
+      class="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300"
+    >
+      {t.gpsPrivacyNote}
+    </p>
+
+    <template id="ev-summary-row-template">
+      <div>
+        <dt class="text-xs text-gray-500 dark:text-gray-400"></dt>
+        <dd class="text-sm font-medium break-all text-gray-800 dark:text-gray-200"></dd>
+      </div>
+    </template>
+
+    <div class="mt-4">
+      <button
+        id="ev-show-all-button"
+        type="button"
+        aria-expanded="false"
+        data-show-label={t.showAllButton}
+        data-hide-label={t.hideAllButton}
+        class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        {t.showAllButton}
+      </button>
+    </div>
+
+    <div id="ev-raw-section" hidden class="mt-3 overflow-x-auto">
+      <table class="w-full min-w-[24rem] border-collapse text-sm">
+        <thead>
+          <tr class="border-b border-gray-300 text-left dark:border-gray-700">
+            <th class="py-1 pr-4 font-medium text-gray-700 dark:text-gray-300">
+              {t.rawTableKeyHeading}
+            </th>
+            <th class="py-1 font-medium text-gray-700 dark:text-gray-300">
+              {t.rawTableValueHeading}
+            </th>
+          </tr>
+        </thead>
+        <tbody id="ev-raw-table-body"></tbody>
+      </table>
+    </div>
+
+    <template id="ev-raw-row-template">
+      <tr class="border-b border-gray-100 dark:border-gray-800">
+        <td class="py-1 pr-4 align-top text-gray-500 dark:text-gray-400"></td>
+        <td class="py-1 align-top break-all text-gray-800 dark:text-gray-200"></td>
+      </tr>
+    </template>
+
+    <div class="mt-6 flex flex-wrap items-center gap-3">
+      <button
+        id="ev-remove-button"
+        type="button"
+        data-idle-label={t.removeButton}
+        data-busy-label={t.removingButton}
+        class="min-h-11 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {t.removeButton}
+      </button>
+      <button
+        id="ev-clear-button"
+        type="button"
+        class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        {t.clearButton}
+      </button>
+      <span
+        id="ev-remove-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+        data-success-message={t.removeSuccessMessage}
+        data-no-exif-message={t.removeNoExifMessage}
+      ></span>
+    </div>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import { parse as parseExif } from 'exifr';
+  import {
+    buildExifSummary,
+    buildNoExifFileName,
+    buildRawExifEntries,
+    formatFileSize,
+    hasAnyExifField,
+    isJpegFile,
+    MAX_FILE_SIZE,
+    removeExifFromJpeg,
+    type ExifSummary,
+  } from '../../lib/tools/exif-viewer';
+  import type { OrientationKey } from '../../lib/tools/exif-viewer';
+
+  interface SummaryLabels {
+    make: string;
+    model: string;
+    lensModel: string;
+    software: string;
+    dateTimeOriginal: string;
+    exposureTime: string;
+    fNumber: string;
+    iso: string;
+    focalLength: string;
+    flash: string;
+    flashFired: string;
+    flashNotFired: string;
+    whiteBalance: string;
+    whiteBalanceAuto: string;
+    whiteBalanceManual: string;
+    orientation: string;
+    orientationLabels: Record<OrientationKey, string>;
+    gpsCoordinates: string;
+  }
+
+  const dropzone = document.getElementById('ev-dropzone')!;
+  const fileInput = document.getElementById(
+    'ev-file-input',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('ev-error')!;
+  const resultEl = document.getElementById('ev-result')!;
+  const preview = document.getElementById('ev-preview') as HTMLImageElement;
+  const fileInfoEl = document.getElementById('ev-file-info')!;
+  const dimensionsEl = document.getElementById('ev-dimensions')!;
+  const noExifMessageEl = document.getElementById('ev-no-exif-message')!;
+  const summaryList = document.getElementById('ev-summary-list')!;
+  const summaryRowTemplate = document.getElementById(
+    'ev-summary-row-template',
+  ) as HTMLTemplateElement;
+  const gpsPrivacyNoteEl = document.getElementById('ev-gps-privacy-note')!;
+  const showAllButton = document.getElementById(
+    'ev-show-all-button',
+  ) as HTMLButtonElement;
+  const rawSection = document.getElementById('ev-raw-section')!;
+  const rawTableBody = document.getElementById('ev-raw-table-body')!;
+  const rawRowTemplate = document.getElementById(
+    'ev-raw-row-template',
+  ) as HTMLTemplateElement;
+  const removeButton = document.getElementById(
+    'ev-remove-button',
+  ) as HTMLButtonElement;
+  const clearButton = document.getElementById(
+    'ev-clear-button',
+  ) as HTMLButtonElement;
+  const removeStatusEl = document.getElementById('ev-remove-status')!;
+
+  const fileInfoTemplate = resultEl.dataset.fileInfoTemplate ?? '';
+  const dimensionsTemplate = resultEl.dataset.dimensionsTemplate ?? '';
+  const labels: SummaryLabels = JSON.parse(summaryList.dataset.labels ?? '{}');
+
+  let previewObjectUrl: string | null = null;
+  let downloadObjectUrl: string | null = null;
+  let currentFile: File | null = null;
+  let currentBytes: Uint8Array<ArrayBuffer> | null = null;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function revokePreviewObjectUrl() {
+    if (previewObjectUrl) {
+      URL.revokeObjectURL(previewObjectUrl);
+      previewObjectUrl = null;
+    }
+  }
+
+  function revokeDownloadObjectUrl() {
+    if (downloadObjectUrl) {
+      URL.revokeObjectURL(downloadObjectUrl);
+      downloadObjectUrl = null;
+    }
+  }
+
+  function resetState() {
+    revokePreviewObjectUrl();
+    revokeDownloadObjectUrl();
+    currentFile = null;
+    currentBytes = null;
+    resultEl.hidden = true;
+    preview.removeAttribute('src');
+    summaryList.innerHTML = '';
+    rawTableBody.innerHTML = '';
+    rawSection.hidden = true;
+    showAllButton.setAttribute('aria-expanded', 'false');
+    showAllButton.textContent = showAllButton.dataset.showLabel ?? '';
+    noExifMessageEl.hidden = true;
+    gpsPrivacyNoteEl.hidden = true;
+    removeStatusEl.textContent = '';
+    removeButton.disabled = false;
+    removeButton.textContent = removeButton.dataset.idleLabel ?? '';
+  }
+
+  function appendSummaryRow(label: string, value: string) {
+    const row = summaryRowTemplate.content.firstElementChild!.cloneNode(
+      true,
+    ) as HTMLElement;
+    row.querySelector('dt')!.textContent = label;
+    row.querySelector('dd')!.textContent = value;
+    summaryList.appendChild(row);
+  }
+
+  function renderSummary(summary: ExifSummary) {
+    summaryList.innerHTML = '';
+
+    if (summary.make) appendSummaryRow(labels.make, summary.make);
+    if (summary.model) appendSummaryRow(labels.model, summary.model);
+    if (summary.lensModel) {
+      appendSummaryRow(labels.lensModel, summary.lensModel);
+    }
+    if (summary.dateTimeOriginal) {
+      appendSummaryRow(labels.dateTimeOriginal, summary.dateTimeOriginal);
+    }
+    if (summary.exposureTime) {
+      appendSummaryRow(labels.exposureTime, summary.exposureTime);
+    }
+    if (summary.fNumber) appendSummaryRow(labels.fNumber, summary.fNumber);
+    if (summary.iso !== undefined) {
+      appendSummaryRow(labels.iso, String(summary.iso));
+    }
+    if (summary.focalLength) {
+      appendSummaryRow(labels.focalLength, summary.focalLength);
+    }
+    if (summary.flash !== undefined) {
+      appendSummaryRow(
+        labels.flash,
+        summary.flash ? labels.flashFired : labels.flashNotFired,
+      );
+    }
+    if (summary.whiteBalance) {
+      appendSummaryRow(
+        labels.whiteBalance,
+        summary.whiteBalance === 'auto'
+          ? labels.whiteBalanceAuto
+          : labels.whiteBalanceManual,
+      );
+    }
+    if (summary.orientation) {
+      appendSummaryRow(
+        labels.orientation,
+        labels.orientationLabels[summary.orientation],
+      );
+    }
+    if (summary.software) {
+      appendSummaryRow(labels.software, summary.software);
+    }
+    if (summary.gpsCoordinates) {
+      appendSummaryRow(labels.gpsCoordinates, summary.gpsCoordinates);
+    }
+
+    const hasAny = hasAnyExifField(summary);
+    noExifMessageEl.hidden = hasAny;
+    gpsPrivacyNoteEl.hidden = !summary.gpsCoordinates;
+  }
+
+  function renderRawEntries(tags: Record<string, unknown> | undefined) {
+    rawTableBody.innerHTML = '';
+    const entries = buildRawExifEntries(tags);
+    for (const entry of entries) {
+      const row = rawRowTemplate.content.firstElementChild!.cloneNode(
+        true,
+      ) as HTMLElement;
+      const cells = row.querySelectorAll('td');
+      cells[0].textContent = entry.key;
+      cells[1].textContent = entry.value;
+      rawTableBody.appendChild(row);
+    }
+  }
+
+  async function handleFile(file: File) {
+    clearError();
+    resetState();
+
+    if (!isJpegFile(file)) {
+      showError(errorEl.dataset.message ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace(
+          '{max}',
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+
+    let buffer: ArrayBuffer;
+    try {
+      buffer = await file.arrayBuffer();
+    } catch {
+      showError(errorEl.dataset.readFailed ?? '');
+      return;
+    }
+
+    let tags: Record<string, unknown> | undefined;
+    try {
+      tags = await parseExif(buffer, {
+        tiff: true,
+        exif: true,
+        gps: true,
+        translateKeys: true,
+        translateValues: false,
+        reviveValues: true,
+        xmp: false,
+        icc: false,
+        iptc: false,
+        jfif: false,
+      });
+    } catch {
+      showError(errorEl.dataset.parseFailed ?? '');
+      return;
+    }
+
+    currentFile = file;
+    currentBytes = new Uint8Array(buffer);
+
+    previewObjectUrl = URL.createObjectURL(file);
+    preview.src = previewObjectUrl;
+
+    fileInfoEl.textContent = fileInfoTemplate
+      .replace('{name}', file.name)
+      .replace('{size}', formatFileSize(file.size));
+
+    await new Promise<void>((resolve) => {
+      if (preview.complete) {
+        resolve();
+        return;
+      }
+      preview.addEventListener('load', () => resolve(), { once: true });
+      preview.addEventListener('error', () => resolve(), { once: true });
+    });
+    dimensionsEl.textContent =
+      preview.naturalWidth > 0
+        ? dimensionsTemplate
+            .replace('{width}', String(preview.naturalWidth))
+            .replace('{height}', String(preview.naturalHeight))
+        : '';
+
+    renderSummary(buildExifSummary(tags));
+    renderRawEntries(tags);
+
+    resultEl.hidden = false;
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void handleFile(file);
+  });
+
+  const dropzoneActiveClasses = ['border-blue-400', 'bg-blue-50'];
+
+  dropzone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add(...dropzoneActiveClasses);
+  });
+
+  dropzone.addEventListener('dragleave', () => {
+    dropzone.classList.remove(...dropzoneActiveClasses);
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove(...dropzoneActiveClasses);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) void handleFile(file);
+  });
+
+  showAllButton.addEventListener('click', () => {
+    const expanded = showAllButton.getAttribute('aria-expanded') === 'true';
+    showAllButton.setAttribute('aria-expanded', String(!expanded));
+    rawSection.hidden = expanded;
+    showAllButton.textContent = expanded
+      ? (showAllButton.dataset.showLabel ?? '')
+      : (showAllButton.dataset.hideLabel ?? '');
+  });
+
+  removeButton.addEventListener('click', () => {
+    if (!currentFile || !currentBytes) return;
+    removeButton.disabled = true;
+    removeButton.textContent = removeButton.dataset.busyLabel ?? '';
+    removeStatusEl.textContent = '';
+
+    const { bytes, hadExif } = removeExifFromJpeg(currentBytes);
+
+    if (hadExif) {
+      revokeDownloadObjectUrl();
+      const blob = new Blob([bytes], { type: 'image/jpeg' });
+      downloadObjectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadObjectUrl;
+      link.download = buildNoExifFileName(currentFile.name);
+      link.click();
+      removeStatusEl.textContent = removeStatusEl.dataset.successMessage ?? '';
+    } else {
+      removeStatusEl.textContent = removeStatusEl.dataset.noExifMessage ?? '';
+    }
+
+    removeButton.disabled = false;
+    removeButton.textContent = removeButton.dataset.idleLabel ?? '';
+  });
+
+  clearButton.addEventListener('click', () => {
+    resetState();
+    clearError();
+  });
+</script>

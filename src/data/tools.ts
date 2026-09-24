@@ -785,6 +785,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'image-resizer',
+    translations: {
+      ja: {
+        name: '画像リサイズ・圧縮',
+        description:
+          '画像の幅・高さをpxまたは%指定でリサイズし、WebP・JPEG・PNGで圧縮できます。複数画像の一括処理に対応。',
+        category: '変換',
+      },
+      en: {
+        name: 'Image Resizer & Compressor',
+        description:
+          'Resizes images by pixel size or percentage and compresses them to WebP, JPEG, or PNG, with support for processing several files at once.',
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

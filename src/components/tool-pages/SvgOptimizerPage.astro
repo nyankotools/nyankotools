@@ -22,13 +22,19 @@ const t = svgOptimizerContent[locale];
   >
     {t.fileLabel}
   </label>
-  <input
-    id="svgo-file"
-    type="file"
-    accept=".svg,image/svg+xml"
-    class="block w-full max-w-xl text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
-  />
-  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
+  <div
+    id="svgo-drop"
+    class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
+  >
+    <input
+      id="svgo-file"
+      type="file"
+      accept=".svg,image/svg+xml"
+      class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+    />
+    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
+  </div>
 
   <fieldset class="mt-4 rounded-lg border border-gray-300 p-3 dark:border-gray-700">
     <legend class="px-1 text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -151,6 +157,7 @@ const t = svgOptimizerContent[locale];
 
 <script>
   import { optimizeSvg } from '../../lib/tools/svg-optimizer';
+  import { enableFileDrop } from '../../lib/file-drop';
 
   const fileInput = document.getElementById('svgo-file') as HTMLInputElement;
   const input = document.getElementById('svgo-input') as HTMLTextAreaElement;
@@ -177,6 +184,8 @@ const t = svgOptimizerContent[locale];
     'svgo-clear',
   ) as HTMLButtonElement;
   const statusEl = document.getElementById('svgo-status')!;
+
+  enableFileDrop(document.getElementById('svgo-drop')!, fileInput);
 
   let blobUrl: string | null = null;
 

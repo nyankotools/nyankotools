@@ -8,6 +8,7 @@ export interface SvgOptimizerPageContent {
   introHtml: string;
   fileLabel: string;
   fileHint: string;
+  dropHint: string;
   inputLabel: string;
   inputPlaceholder: string;
   optionsHeading: string;
@@ -40,6 +41,7 @@ export const svgOptimizerContent: Record<Locale, SvgOptimizerPageContent> = {
     introHtml:
       'SVGファイルを選択するかSVGコードを貼り付けると、SVGOで不要な情報を取り除いて軽量化します。ビットマップ画像のサイズ変更・圧縮は<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ・圧縮</a>、SVGをCSSなどに埋め込みたい場合は<a href="/tools/image-to-base64/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像のBase64（Data URL）変換</a>もご利用ください。',
     fileLabel: 'SVGファイルを選択',
+    dropHint: 'ここにSVGファイルをドラッグ＆ドロップすることもできます',
     fileHint:
       '.svgファイルを選ぶか、下の入力欄にSVGコードを貼り付けてください。',
     inputLabel: 'SVGコード（入力）',
@@ -88,6 +90,7 @@ export const svgOptimizerContent: Record<Locale, SvgOptimizerPageContent> = {
     introHtml:
       'Choose an SVG file or paste SVG code to remove unnecessary data and make it smaller with SVGO. To resize or compress raster images, try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer</a>. To embed an SVG in CSS or HTML, use the <a href="/en/tools/image-to-base64/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image to Base64 Converter</a>.',
     fileLabel: 'Choose an SVG file',
+    dropHint: 'You can also drag and drop an SVG file here',
     fileHint: 'Pick an .svg file, or paste SVG code into the box below.',
     inputLabel: 'SVG code (input)',
     inputPlaceholder: '<svg xmlns="http://www.w3.org/2000/svg" ...>',

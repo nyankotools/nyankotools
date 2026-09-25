@@ -11,8 +11,10 @@ export interface PdfImageConverterPageContent {
   modeToPdf: string;
   pdfFileLabel: string;
   pdfFileHint: string;
+  pdfDropHint: string;
   imageFileLabel: string;
   imageFileHint: string;
+  imageDropHint: string;
   /** {pages} を置換 */
   pagesTemplate: string;
   formatLabel: string;
@@ -66,6 +68,9 @@ export const pdfImageConverterContent: Record<
     modeToImage: 'PDF → 画像',
     modeToPdf: '画像 → PDF',
     pdfFileLabel: 'PDFファイルを選択',
+    pdfDropHint: 'ここにPDFファイルをドラッグ＆ドロップすることもできます',
+    imageDropHint:
+      'ここに画像ファイルをドラッグ＆ドロップすることもできます（複数可）',
     pdfFileHint: '.pdfファイルを1つ選んでください。',
     imageFileLabel: '画像ファイルを選択（複数可）',
     imageFileHint:
@@ -136,6 +141,9 @@ export const pdfImageConverterContent: Record<
     modeToImage: 'PDF → Images',
     modeToPdf: 'Images → PDF',
     pdfFileLabel: 'Choose a PDF file',
+    pdfDropHint: 'You can also drag and drop a PDF file here',
+    imageDropHint:
+      'You can also drag and drop image files here (multiple allowed)',
     pdfFileHint: 'Pick a single .pdf file.',
     imageFileLabel: 'Choose image files (multiple allowed)',
     imageFileHint:

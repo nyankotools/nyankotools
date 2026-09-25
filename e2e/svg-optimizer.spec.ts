@@ -94,9 +94,7 @@ test.describe('SVG最適化ツール（日本語版）', () => {
     await page.goto('/tools/svg-optimizer/');
 
     const input = page.locator('#svgo-input');
-    const removeDimensionsCheckbox = page.locator(
-      '#svgo-remove-dimensions',
-    );
+    const removeDimensionsCheckbox = page.locator('#svgo-remove-dimensions');
     const output = page.locator('#svgo-output');
 
     await input.fill(validSvg);
@@ -302,5 +300,108 @@ test.describe('SVG Optimizer (English)', () => {
     await expect(
       page.getByRole('heading', { level: 2, name: 'Glossary' }),
     ).toBeVisible();
+  });
+});
+
+test.describe('SVG最適化ツール - ドラッグ&ドロップ', () => {
+  test('SVGファイルをドロップすると処理される', async ({ page }) => {
+    await page.goto('/tools/svg-optimizer/');
+
+    const validSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100">
+      <rect width="100" height="100" fill="red"/>
+    </svg>`;
+
+    // DataTransfer を使ってドロップイベントをシミュレート
+    await page.evaluate(
+      ({ svgContent }) => {
+        const dropZone = document.getElementById('svgo-drop')!;
+
+        const dataTransfer = new DataTransfer();
+        const file = new File([svgContent], 'test.svg', {
+          type: 'image/svg+xml',
+        });
+        dataTransfer.items.add(file);
+
+        const dropEvent = new DragEvent('drop', {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer,
+        });
+
+        dropZone.dispatchEvent(dropEvent);
+      },
+      { svgContent: validSvg },
+    );
+
+    await page.waitForTimeout(300);
+
+    // ファイルがドロップ処理されたことを確認（入力欄が空でなくなる）
+    // または結果表示エリアが表示されることを確認
+    const resultEl = page.locator('#svgo-result');
+    await expect(resultEl).toBeVisible();
+  });
+
+  test('SVG以外のファイルをドロップするとエラーが表示される', async ({
+    page,
+  }) => {
+    await page.goto('/tools/svg-optimizer/');
+
+    // SVG以外の DataTransfer（例：テキストファイル）
+    await page.evaluate(() => {
+      const dropZone = document.getElementById('svgo-drop')!;
+
+      const dataTransfer = new DataTransfer();
+      const file = new File(['Not an SVG'], 'test.txt', {
+        type: 'text/plain',
+      });
+      dataTransfer.items.add(file);
+
+      const dropEvent = new DragEvent('drop', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer,
+      });
+
+      dropZone.dispatchEvent(dropEvent);
+    });
+
+    await page.waitForTimeout(300);
+
+    await expect(page.locator('#svgo-error')).toBeVisible();
+    await expect(page.locator('#svgo-input')).toHaveValue('');
+  });
+
+  test('ドロップ領域がドラッグ時にスタイル変更される', async ({ page }) => {
+    await page.goto('/tools/svg-optimizer/');
+
+    // dragover イベントを発火
+    await page.evaluate(() => {
+      const dropZone = document.getElementById('svgo-drop')!;
+      const dataTransfer = new DataTransfer();
+      // DataTransfer.types は read-only で push できないので、
+      // Files オブジェクトを直接設定することで hasFiles チェックをバイパス
+      Object.defineProperty(dataTransfer, 'types', {
+        value: ['Files'],
+        writable: false,
+      });
+
+      const dragoverEvent = new DragEvent('dragover', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer,
+      });
+
+      dropZone.dispatchEvent(dragoverEvent);
+    });
+
+    await page.waitForTimeout(100);
+
+    // ドロップ領域に active クラスが追加される（border-blue-400 など）
+    const hasActiveClass = await page.evaluate(() => {
+      const dropZone = document.getElementById('svgo-drop')!;
+      return dropZone.classList.contains('border-blue-400!');
+    });
+
+    expect(hasActiveClass).toBe(true);
   });
 });

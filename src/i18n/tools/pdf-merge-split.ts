@@ -13,6 +13,7 @@ export interface PdfMergeSplitPageContent {
   fileLabelMerge: string;
   fileLabelSingle: string;
   fileHint: string;
+  dropHint: string;
   /** {pages} を置換 */
   pagesTemplate: string;
   moveUp: string;
@@ -58,6 +59,7 @@ export const pdfMergeSplitContent: Record<Locale, PdfMergeSplitPageContent> = {
     modeSplit: '分割',
     fileLabelMerge: 'PDFファイルを選択（複数可）',
     fileLabelSingle: 'PDFファイルを選択',
+    dropHint: 'ここにPDFファイルをドラッグ＆ドロップすることもできます',
     fileHint:
       '.pdfファイルを選んでください。結合では複数ファイルを選べ、追加選択もできます。',
     pagesTemplate: '{pages}ページ',
@@ -120,6 +122,7 @@ export const pdfMergeSplitContent: Record<Locale, PdfMergeSplitPageContent> = {
     modeSplit: 'Split',
     fileLabelMerge: 'Choose PDF files (multiple allowed)',
     fileLabelSingle: 'Choose a PDF file',
+    dropHint: 'You can also drag and drop PDF files here',
     fileHint:
       'Pick .pdf files. For merging you can select several at once and add more later.',
     pagesTemplate: '{pages} pages',

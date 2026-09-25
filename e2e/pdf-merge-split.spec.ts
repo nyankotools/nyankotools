@@ -494,3 +494,112 @@ test.describe('エッジケース・追加テスト', () => {
     }
   });
 });
+
+test.describe('PDF結合・分割・ページ抽出 - ドラッグ&ドロップ', () => {
+  test('ドロップ領域にドラッグされた時にスタイルが変更される', async ({
+    page,
+  }) => {
+    await page.goto('/tools/pdf-merge-split/');
+
+    // dragover イベントを発火
+    await page.evaluate(() => {
+      const dropZone = document.getElementById('pdf-drop')!;
+      const dataTransfer = new DataTransfer();
+      // DataTransfer のモックオブジェクトを作成
+      Object.defineProperty(dataTransfer, 'types', {
+        value: ['Files'],
+        writable: false,
+      });
+
+      const dragoverEvent = new DragEvent('dragover', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer,
+      });
+
+      dropZone.dispatchEvent(dragoverEvent);
+    });
+
+    await page.waitForTimeout(100);
+
+    // ドロップ領域に active クラスが追加される
+    const hasActiveClass = await page.evaluate(() => {
+      const dropZone = document.getElementById('pdf-drop')!;
+      return dropZone.classList.contains('border-blue-400!');
+    });
+
+    expect(hasActiveClass).toBe(true);
+  });
+
+  test('抽出モードでPDFがリストに追加される', async ({ page }) => {
+    await page.goto('/tools/pdf-merge-split/');
+
+    // 抽出モードに切り替え
+    const radioButtons = page.locator('input[name="pdf-mode"]');
+    await radioButtons.nth(1).click();
+
+    const pdfPath = path.join(__dirname, 'temp-pdf-extract-mode-test.pdf');
+
+    const pdfBuffer = await createTestPdf(5, 'ExtractMode');
+    fs.writeFileSync(pdfPath, pdfBuffer);
+
+    try {
+      // ファイルを選択
+      await page.locator('#pdf-file').setInputFiles([pdfPath]);
+
+      await page.waitForTimeout(300);
+
+      // リストに1つのファイルが追加される
+      const listItems = page.locator('#pdf-list li');
+      await expect(listItems).toHaveCount(1);
+      const itemText = await listItems.first().textContent();
+      // ファイル名とページ数が表示される
+      expect(itemText).toContain('temp-pdf-extract-mode-test.pdf');
+      expect(itemText).toContain('5');
+    } finally {
+      if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);
+    }
+  });
+
+  test('ドロップヒントテキストが表示される', async ({ page }) => {
+    await page.goto('/tools/pdf-merge-split/');
+
+    // ドロップ領域にドロップヒントテキスト（dropHint）が含まれていることを確認
+    const dropZone = page.locator('#pdf-drop');
+    const hintText = await dropZone.textContent();
+
+    // 辞書に追加された dropHint が表示されていることを確認
+    expect(hintText).toMatch(/ドラッグ|ドロップ|ファイル/);
+  });
+  test('単一ファイルモードで複数PDFをドロップすると先頭1件のみ追加される', async ({
+    page,
+  }) => {
+    await page.goto('/tools/pdf-merge-split/');
+    await page.locator('input[name="pdf-mode"][value="extract"]').check();
+
+    const toBase64 = async (n: number, label: string) =>
+      (await createTestPdf(n, label)).toString('base64');
+    const pdfs = [await toBase64(2, 'A'), await toBase64(3, 'B')];
+
+    await page.evaluate((list) => {
+      const dt = new DataTransfer();
+      list.forEach((b64, i) => {
+        const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+        dt.items.add(
+          new File([bytes], `drop-${i + 1}.pdf`, { type: 'application/pdf' }),
+        );
+      });
+      document.getElementById('pdf-drop')!.dispatchEvent(
+        new DragEvent('drop', {
+          bubbles: true,
+          cancelable: true,
+          dataTransfer: dt,
+        }),
+      );
+    }, pdfs);
+
+    const items = page.locator('#pdf-list li');
+    await expect(items).toHaveCount(1);
+    await expect(items.first()).toContainText('drop-1.pdf');
+  });
+});

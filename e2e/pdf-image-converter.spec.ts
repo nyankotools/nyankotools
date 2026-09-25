@@ -175,3 +175,107 @@ for (const [locale, base] of [
     });
   });
 }
+
+test.describe('PDF⇔画像変換 - ドラッグ&ドロップ', () => {
+  test('PDFドロップ領域にドラッグされた時にスタイルが変更される', async ({
+    page,
+  }) => {
+    await page.goto('/tools/pdf-image-converter/');
+
+    // dragover イベントを発火
+    await page.evaluate(() => {
+      const dropZone = document.getElementById('conv-pdf-drop')!;
+      const dataTransfer = new DataTransfer();
+      // DataTransfer のモックオブジェクトを作成
+      Object.defineProperty(dataTransfer, 'types', {
+        value: ['Files'],
+        writable: false,
+      });
+
+      const dragoverEvent = new DragEvent('dragover', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer,
+      });
+
+      dropZone.dispatchEvent(dragoverEvent);
+    });
+
+    await page.waitForTimeout(100);
+
+    // ドロップ領域に active クラスが追加される
+    const hasActiveClass = await page.evaluate(() => {
+      const dropZone = document.getElementById('conv-pdf-drop')!;
+      return dropZone.classList.contains('border-blue-400!');
+    });
+
+    expect(hasActiveClass).toBe(true);
+  });
+
+  test('画像ドロップ領域にドラッグされた時にスタイルが変更される', async ({
+    page,
+  }) => {
+    await page.goto('/tools/pdf-image-converter/');
+
+    // 画像→PDF モードに切り替え
+    await page.locator('input[name="conv-mode"][value="toPdf"]').check();
+    await expect(page.locator('#conv-image-input')).toBeVisible();
+
+    // dragover イベントを発火
+    await page.evaluate(() => {
+      const dropZone = document.getElementById('conv-image-drop')!;
+      const dataTransfer = new DataTransfer();
+      // DataTransfer のモックオブジェクトを作成
+      Object.defineProperty(dataTransfer, 'types', {
+        value: ['Files'],
+        writable: false,
+      });
+
+      const dragoverEvent = new DragEvent('dragover', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer,
+      });
+
+      dropZone.dispatchEvent(dragoverEvent);
+    });
+
+    await page.waitForTimeout(100);
+
+    // ドロップ領域に active クラスが追加される
+    const hasActiveClass = await page.evaluate(() => {
+      const dropZone = document.getElementById('conv-image-drop')!;
+      return dropZone.classList.contains('border-blue-400!');
+    });
+
+    expect(hasActiveClass).toBe(true);
+  });
+
+  test('PDFドロップヒントテキストが表示される', async ({ page }) => {
+    await page.goto('/tools/pdf-image-converter/');
+
+    // PDF ドロップ領域にドロップヒントテキストが含まれていることを確認
+    const dropZone = page.locator('#conv-pdf-drop');
+    const hintText = await dropZone.textContent();
+
+    // 辞書に追加された pdfDropHint が表示されていることを確認
+    expect(hintText).toMatch(/ドラッグ|ドロップ|ファイル/);
+  });
+
+  test('画像ドロップヒントテキストが表示される（画像→PDFモード）', async ({
+    page,
+  }) => {
+    await page.goto('/tools/pdf-image-converter/');
+
+    // 画像→PDF モードに切り替え
+    await page.locator('input[name="conv-mode"][value="toPdf"]').check();
+    await expect(page.locator('#conv-image-input')).toBeVisible();
+
+    // 画像 ドロップ領域にドロップヒントテキストが含まれていることを確認
+    const dropZone = page.locator('#conv-image-drop');
+    const hintText = await dropZone.textContent();
+
+    // 辞書に追加された imageDropHint が表示されていることを確認
+    expect(hintText).toMatch(/ドラッグ|ドロップ|ファイル/);
+  });
+});

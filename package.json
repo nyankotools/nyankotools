@@ -31,6 +31,7 @@
     "qrcode-generator": "^2.0.4",
     "smol-toml": "^1.8.0",
     "sql-formatter": "^15.8.2",
+    "svgo": "^4.1.0",
     "tailwindcss": "^4.3.3",
     "terser": "^5.51.2",
     "turndown": "^7.2.4",

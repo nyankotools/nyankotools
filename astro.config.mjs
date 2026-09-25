@@ -85,6 +85,7 @@ export default defineConfig({
         'qrcode-generator',
         'smol-toml',
         'sql-formatter',
+        'svgo/browser',
         'terser',
         'turndown',
         'yaml',

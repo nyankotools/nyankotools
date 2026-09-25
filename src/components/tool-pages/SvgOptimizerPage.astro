@@ -1,0 +1,291 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { svgOptimizerContent } from '../../i18n/tools/svg-optimizer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = svgOptimizerContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <label
+    for="svgo-file"
+    class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+  >
+    {t.fileLabel}
+  </label>
+  <input
+    id="svgo-file"
+    type="file"
+    accept=".svg,image/svg+xml"
+    class="block w-full max-w-xl text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+  />
+  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
+
+  <fieldset class="mt-4 rounded-lg border border-gray-300 p-3 dark:border-gray-700">
+    <legend class="px-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.optionsHeading}
+    </legend>
+    <div class="flex flex-col gap-2 text-sm text-gray-700 dark:text-gray-300">
+      <label class="flex items-center gap-2">
+        <input id="svgo-multipass" type="checkbox" checked class="h-4 w-4" />
+        {t.optionMultipass}
+      </label>
+      <label class="flex items-center gap-2">
+        <input id="svgo-pretty" type="checkbox" class="h-4 w-4" />
+        {t.optionPretty}
+      </label>
+      <label class="flex items-center gap-2">
+        <input id="svgo-remove-dimensions" type="checkbox" class="h-4 w-4" />
+        {t.optionRemoveDimensions}
+      </label>
+      <label class="flex items-center gap-2">
+        {t.optionPrecision}
+        <input
+          id="svgo-precision"
+          type="number"
+          min="0"
+          max="8"
+          value="3"
+          class="min-h-9 w-20 rounded-lg border border-gray-300 px-2 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        />
+      </label>
+    </div>
+  </fieldset>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label
+        for="svgo-input"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="svgo-input"
+        class="h-64 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm break-all focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label
+        for="svgo-output"
+        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="svgo-output"
+        readonly
+        class="h-64 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm break-all focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="svgo-error"
+    role="alert"
+    hidden
+    data-invalid={t.errorInvalid}
+    data-not-svg={t.errorNotSvg}
+    data-read-failed={t.errorReadFailed}
+    class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+  ></p>
+
+  <div id="svgo-result" hidden class="mt-4" data-size-template={t.sizeTemplate}>
+    <p
+      id="svgo-size"
+      class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300"
+    ></p>
+    <div class="flex flex-wrap items-center gap-3">
+      <button
+        id="svgo-copy"
+        type="button"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        {t.copy}
+      </button>
+      <a
+        id="svgo-download"
+        download="optimized.svg"
+        class="inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        {t.download}
+      </a>
+      <button
+        id="svgo-clear"
+        type="button"
+        class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        {t.clear}
+      </button>
+      <span
+        id="svgo-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+    <span class="mt-4 mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.previewLabel}
+    </span>
+    <img
+      id="svgo-preview"
+      alt=""
+      class="max-h-64 max-w-full rounded border border-gray-300 bg-white object-contain p-2 dark:border-gray-700"
+    />
+  </div>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import { optimizeSvg } from '../../lib/tools/svg-optimizer';
+
+  const fileInput = document.getElementById('svgo-file') as HTMLInputElement;
+  const input = document.getElementById('svgo-input') as HTMLTextAreaElement;
+  const output = document.getElementById('svgo-output') as HTMLTextAreaElement;
+  const multipass = document.getElementById(
+    'svgo-multipass',
+  ) as HTMLInputElement;
+  const pretty = document.getElementById('svgo-pretty') as HTMLInputElement;
+  const removeDimensions = document.getElementById(
+    'svgo-remove-dimensions',
+  ) as HTMLInputElement;
+  const precision = document.getElementById(
+    'svgo-precision',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('svgo-error')!;
+  const resultEl = document.getElementById('svgo-result')!;
+  const sizeEl = document.getElementById('svgo-size')!;
+  const preview = document.getElementById('svgo-preview') as HTMLImageElement;
+  const copyButton = document.getElementById('svgo-copy') as HTMLButtonElement;
+  const downloadLink = document.getElementById(
+    'svgo-download',
+  ) as HTMLAnchorElement;
+  const clearButton = document.getElementById(
+    'svgo-clear',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('svgo-status')!;
+
+  let blobUrl: string | null = null;
+
+  function revokeUrl() {
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
+    blobUrl = null;
+  }
+
+  function formatBytes(bytes: number): string {
+    return bytes < 1024
+      ? `${bytes} B`
+      : `${(bytes / 1024).toFixed(bytes < 10240 ? 2 : 1)} KB`;
+  }
+
+  function showError(key: 'invalid' | 'notSvg' | 'readFailed') {
+    output.value = '';
+    revokeUrl();
+    resultEl.hidden = true;
+    errorEl.textContent = errorEl.dataset[key] ?? '';
+    errorEl.hidden = false;
+  }
+
+  function reset() {
+    output.value = '';
+    revokeUrl();
+    resultEl.hidden = true;
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function run() {
+    statusEl.textContent = '';
+    if (input.value.trim() === '') {
+      reset();
+      return;
+    }
+    const result = optimizeSvg(input.value, {
+      multipass: multipass.checked,
+      pretty: pretty.checked,
+      removeDimensions: removeDimensions.checked,
+      precision: precision.value === '' ? 3 : Number(precision.value),
+    });
+    if (!result.success) {
+      showError('invalid');
+      return;
+    }
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    output.value = result.output;
+    const sign =
+      result.savedPercent > 0 ? '-' : result.savedPercent < 0 ? '+' : '';
+    const percent = `${sign}${Math.abs(result.savedPercent).toFixed(1)}%`;
+    sizeEl.textContent = (resultEl.dataset.sizeTemplate ?? '')
+      .replace('{original}', formatBytes(result.originalBytes))
+      .replace('{optimized}', formatBytes(result.optimizedBytes))
+      .replace('{percent}', percent);
+    revokeUrl();
+    blobUrl = URL.createObjectURL(
+      new Blob([result.output], { type: 'image/svg+xml' }),
+    );
+    preview.src = blobUrl;
+    downloadLink.href = blobUrl;
+    resultEl.hidden = false;
+  }
+
+  let timer: number | undefined;
+  function scheduleRun() {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(run, 200);
+  }
+
+  input.addEventListener('input', scheduleRun);
+  [multipass, pretty, removeDimensions, precision].forEach((el) =>
+    el.addEventListener('input', scheduleRun),
+  );
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    if (!/\.svg$/i.test(file.name) && file.type !== 'image/svg+xml') {
+      fileInput.value = '';
+      showError('notSvg');
+      return;
+    }
+    try {
+      input.value = await file.text();
+    } catch {
+      showError('readFailed');
+      return;
+    }
+    downloadLink.download = `${file.name.replace(/\.svg$/i, '')}.min.svg`;
+    run();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      statusEl.textContent = copyButton.dataset.copied ?? '';
+    } catch {
+      statusEl.textContent = copyButton.dataset.copyFailed ?? '';
+    }
+  });
+
+  clearButton.addEventListener('click', () => {
+    input.value = '';
+    fileInput.value = '';
+    downloadLink.download = 'optimized.svg';
+    statusEl.textContent = '';
+    reset();
+  });
+</script>

@@ -199,6 +199,9 @@ importers:
       sql-formatter:
         specifier: ^15.8.2
         version: 15.8.2
+      svgo:
+        specifier: ^4.1.0
+        version: 4.1.0
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3

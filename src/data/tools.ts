@@ -887,6 +887,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'svg-optimizer',
+    translations: {
+      ja: {
+        name: 'SVG最適化（SVGO）',
+        description:
+          'SVGファイルやコードをSVGOで最適化し、不要なメタデータを削除してファイルサイズを削減します。',
+        category: '変換',
+      },
+      en: {
+        name: 'SVG Optimizer (SVGO)',
+        description:
+          'Optimizes SVG files or code with SVGO, stripping unnecessary metadata to reduce file size.',
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

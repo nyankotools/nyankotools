@@ -168,3 +168,24 @@ test('クリアボタンで状態がリセットされる', async ({ page }) => 
   await expect(page.locator('#pa-source-info')).toHaveText('');
   await expect(page.locator('#pa-clear-button')).toBeDisabled();
 });
+
+test('canvas要素が [image-rendering:pixelated] クラスでピクセル化されている', async ({
+  page,
+}) => {
+  await page.goto('/tools/image-pixelart-converter/');
+  const buffer = await createTestPng(page, 100, 100);
+  await page
+    .locator('#pa-file-input')
+    .setInputFiles({ name: 'test.png', mimeType: 'image/png', buffer });
+
+  // 結果セクションが表示されるまで待つ
+  await expect(page.locator('#pa-results-section')).not.toHaveAttribute(
+    'hidden',
+  );
+
+  // canvas要素のcomputed style image-rendering がpixelatedになっていることを検証
+  const computedImageRendering = await page
+    .locator('#pa-result-canvas')
+    .evaluate((el) => window.getComputedStyle(el).imageRendering);
+  expect(computedImageRendering).toBe('pixelated');
+});

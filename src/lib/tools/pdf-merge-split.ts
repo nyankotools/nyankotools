@@ -19,7 +19,10 @@ export class PdfToolError extends Error {
 /** PDFを読み込む。暗号化・破損は PdfToolError にする */
 async function load(bytes: Uint8Array): Promise<PDFDocument> {
   try {
-    return await PDFDocument.load(bytes);
+    const doc = await PDFDocument.load(bytes);
+    // 破損PDFは load が成功しても、カタログが読めず getPageCount で TypeError になることがある
+    doc.getPageCount();
+    return doc;
   } catch (e) {
     // pdf-lib の EncryptedPDFError は ES5 の継承で instanceof / クラス名が使えない（minifyでも壊れる）ためメッセージで判定する
     const encrypted = e instanceof Error && /is encrypted/.test(e.message);

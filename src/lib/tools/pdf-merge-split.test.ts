@@ -87,4 +87,9 @@ describe('PDF操作', () => {
       getPageCount(new TextEncoder().encode('hello')),
     ).rejects.toMatchObject({ code: 'invalid' });
   });
+  it('ヘッダだけあって中身が壊れたPDFもinvalid', async () => {
+    await expect(
+      getPageCount(new TextEncoder().encode('%PDF-1.4\nthis is broken')),
+    ).rejects.toMatchObject({ code: 'invalid' });
+  });
 });

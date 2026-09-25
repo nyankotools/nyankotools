@@ -972,6 +972,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'pdf-page-editor',
+    translations: {
+      ja: {
+        name: 'PDFページ回転・削除・並び替え',
+        description:
+          'PDFのページを回転・削除・並び替え。パスワードを知っているPDFの保護解除にも対応。',
+        category: '変換',
+      },
+      en: {
+        name: 'PDF Page Editor',
+        description:
+          'Rotate, delete and reorder PDF pages, or remove the password from a PDF you know the password for.',
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

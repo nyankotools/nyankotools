@@ -990,6 +990,23 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'pdf-password-protector',
+    translations: {
+      ja: {
+        name: 'PDFパスワード設定',
+        description:
+          'PDFに開くためのパスワードを設定しAES-256で暗号化。印刷・コピー・編集の制限も指定できます。',
+        category: '変換',
+      },
+      en: {
+        name: 'PDF Password Protector',
+        description:
+          'Add a password to a PDF and encrypt it with AES-256, with optional print/copy/edit restrictions.',
+        category: 'Convert',
+      },
+    },
+  },
+  {
     slug: 'cat-logo-text-generator',
     translations: {
       ja: {

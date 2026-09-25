@@ -72,6 +72,7 @@ export default defineConfig({
     // 追加したらここにも追記すること。
     optimizeDeps: {
       include: [
+        '@neslinesli93/qpdf-wasm',
         'csso',
         'dompurify',
         'exifr',

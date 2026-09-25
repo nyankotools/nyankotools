@@ -938,6 +938,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'pdf-image-converter',
+    translations: {
+      ja: {
+        name: 'PDF⇔画像変換（PNG/JPEG）',
+        description:
+          'PDFの各ページをPNG・JPEG画像に変換、または複数の画像を1つのPDFにまとめます。',
+        category: '変換',
+      },
+      en: {
+        name: 'PDF ⇔ Image Converter',
+        description:
+          'Convert PDF pages to PNG or JPEG images, or combine several images into one PDF.',
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

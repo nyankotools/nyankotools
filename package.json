@@ -28,6 +28,7 @@
     "jsonpath-plus": "^10.4.0",
     "marked": "^18.0.13",
     "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.3.289",
     "prettier": "^3.9.8",
     "qrcode-generator": "^2.0.4",
     "smol-toml": "^1.8.0",

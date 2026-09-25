@@ -5,15 +5,13 @@ import { useTranslations } from '../i18n/ui';
 interface Props {
   slug: string;
   locale: Locale;
-  /** icon: アイコンのみ（サイドバー項目・トップページのカード用）。labeled: アイコン+ラベル文字（ツールページ用） */
-  variant?: 'icon' | 'labeled';
   class?: string;
 }
 
-const { slug, locale, variant = 'icon', class: className = '' } = Astro.props;
+const { slug, locale, class: className = '' } = Astro.props;
 const t = useTranslations(locale);
 
-const iconClass = variant === 'labeled' ? 'h-4 w-4' : 'h-5 w-5';
+const iconClass = 'h-5 w-5';
 ---
 
 <button
@@ -21,6 +19,7 @@ const iconClass = variant === 'labeled' ? 'h-4 w-4' : 'h-5 w-5';
   data-favorite-toggle={slug}
   aria-pressed="false"
   aria-label={t('favorite.add')}
+  title={t('favorite.add')}
   data-label-add={t('favorite.add')}
   data-label-remove={t('favorite.remove')}
   class={className}
@@ -53,7 +52,4 @@ const iconClass = variant === 'labeled' ? 'h-4 w-4' : 'h-5 w-5';
       clip-rule="evenodd"
     ></path>
   </svg>
-  {variant === 'labeled' && (
-    <span data-favorite-label>{t('favorite.add')}</span>
-  )}
 </button>

@@ -23,10 +23,7 @@ function updateToggleButtons(slug: string, active: boolean): void {
         : button.dataset.labelAdd;
       if (label) {
         button.setAttribute('aria-label', label);
-        const labelEl = button.querySelector<HTMLElement>(
-          '[data-favorite-label]',
-        );
-        if (labelEl) labelEl.textContent = label;
+        button.setAttribute('title', label);
       }
       button
         .querySelector<HTMLElement>('[data-star-outline]')

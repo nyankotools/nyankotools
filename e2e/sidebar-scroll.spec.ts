@@ -81,8 +81,10 @@ test.describe('サイドバーのスクロール位置の保存・復元（デ�
         }
       }, targetScroll);
 
-      // Navigate to another page in the same session
-      await page.goto('/tools/password-generator/');
+      // Navigate to another page in the same session. Use a tool in the same
+      // category so the destination sidebar is just as tall (other categories
+      // collapse and leave nothing to scroll).
+      await page.goto('/tools/zenkaku-hankaku/');
 
       // Check that the scroll position was restored
       const restoredScroll = await sidebar.evaluate(() => {

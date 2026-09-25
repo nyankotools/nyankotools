@@ -16,6 +16,8 @@ export default defineConfig({
     // 実際にハッシュ化して <meta> タグで自動的に許可する。
     // frame-ancestors 等は <meta> では効かないため public/_headers 側で別途設定する。
     csp: {
+      // WebAssemblyのコンパイル・実行に必要（JSのeval等は許可しない）
+      scriptDirective: { resources: ["'self'", "'wasm-unsafe-eval'"] },
       directives: [
         "default-src 'self'",
         // 'self' は blob: URLを許可しないため明示的に追加する。画像プレビュー系の
@@ -25,11 +27,13 @@ export default defineConfig({
         // でのみ画像読み込みがブロックされる（astro devではCSP自体検証されず気づけない）。
         "img-src 'self' blob:",
         "font-src 'self'",
-        // 完全ローカル処理を保証するため 'none' を維持する。prefetch機能は
+        // 完全ローカル処理を保証するため外部への通信は許可しない。prefetch機能は
         // <link rel="prefetch"> 非対応ブラウザ（旧Safari等）では fetch()
         // フォールバックがCSPでブロックされ、コンソールに違反警告が出るが、
         // prefetchが効かなくなるだけでサイト機能への実害はないため許容する。
-        "connect-src 'none'",
+        // wasmをfetchで読み込むツール（pdf-password-protectorのqpdf-wasm等）のため
+        // 同一オリジンのみ許可する。外部サーバーへの通信は引き続きブロックされる。
+        "connect-src 'self'",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",

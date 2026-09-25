@@ -28,6 +28,11 @@ Each tool has its own indexable URL (`/tools/<slug>/`, `/en/tools/<slug>/`) for 
 
 - ユーザーから明示的に指示されるまで `git commit` を実行しないこと。実装が完了しても、コミットはせずユーザーの確認・指示を待つこと。
 
+## mainへのpush後のルール
+
+- `main` を push したら、続けて `develop` に切り替え、`git merge --ff-only main` で `main` に追いつかせ、`develop` も push すること（確認は不要）。最終的に `develop` ブランチにいる状態で終える。
+- ただし `main` へのマージ・push 自体は、これまで通りユーザーの明示的な指示があるときだけ行う。
+
 ## memo更新のルール
 
 - `memo/実装予定一覧.md` に載っている予定ツールの実装が完了したら、該当行のチェックボックスにチェックを入れ、「実装済み」セクションへ移動すること（`src/data/tools.ts` への登録と合わせて行う）。各行の `No.xxx`（ツール固有の通し番号）は固定IDなので、移動時も変更せず、新規ツールには最大番号の次を付与すること。

@@ -48,7 +48,7 @@ jobs:
 
       - run: pnpm exec playwright install --with-deps chromium
 
-      # webServer（pnpm dev）と、CSP/サイドバー永続化specのwrangler devは
+      # webServer（pnpm build && pnpm preview --port 4322）と、CSP/サイドバー永続化specのwrangler devは
       # playwright.config.ts / 各specが自動で起動する。
       - run: pnpm run test:e2e
 

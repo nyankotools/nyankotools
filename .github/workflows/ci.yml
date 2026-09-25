@@ -1,9 +1,10 @@
 name: CI
 
+# developのpushではCIを動かさない。ローカルでmainにマージしてpushしたときだけ
+# CI（test / e2e）を実行し、両方成功したらdeployジョブで本番へデプロイする。
 on:
   push:
-    branches: [main, develop]
-  pull_request:
+    branches: [main]
 
 jobs:
   test:
@@ -59,3 +60,28 @@ jobs:
             playwright-report/
             test-results/
           retention-days: 7
+
+  # test / e2e がともに成功したときだけ、Cloudflare Workers（静的アセット）へデプロイする。
+  # wrangler.jsonc の build.command により、デプロイ時に pnpm build が実行される。
+  deploy:
+    needs: [test, e2e]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy

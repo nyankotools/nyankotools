@@ -1,0 +1,171 @@
+import type { Locale } from '../../data/tools';
+
+export interface PdfMergeSplitPageContent {
+  title: string;
+  description: string;
+  h1: string;
+  /** set:html で描画するため、開発者管理の固定リテラルのみを入れること（ユーザー入力を混ぜない） */
+  introHtml: string;
+  modeLabel: string;
+  modeMerge: string;
+  modeExtract: string;
+  modeSplit: string;
+  fileLabelMerge: string;
+  fileLabelSingle: string;
+  fileHint: string;
+  /** {pages} を置換 */
+  pagesTemplate: string;
+  moveUp: string;
+  moveDown: string;
+  remove: string;
+  rangeLabel: string;
+  rangePlaceholder: string;
+  rangeHint: string;
+  splitLabel: string;
+  splitSuffix: string;
+  run: string;
+  processing: string;
+  clear: string;
+  resultHeading: string;
+  /** {name} を置換 */
+  downloadTemplate: string;
+  errorNoFile: string;
+  errorNeedTwo: string;
+  errorNotPdf: string;
+  errorInvalid: string;
+  errorEncrypted: string;
+  errorEmptyRange: string;
+  errorBadRange: string;
+  /** {pages} を置換 */
+  errorOutOfRange: string;
+  errorBadCount: string;
+  errorFailed: string;
+  glossaryHeading: string;
+  glossaryTerms: { term: string; description: string }[];
+}
+
+export const pdfMergeSplitContent: Record<Locale, PdfMergeSplitPageContent> = {
+  ja: {
+    title: 'PDF結合・分割・ページ抽出｜ブラウザで完結する無料ツール',
+    description:
+      '複数のPDFを1つに結合、PDFをページ数ごとに分割、「1-3,5」のようなページ指定で必要なページだけを抽出できる無料ツールです。PDFはブラウザ内で処理され、サーバーには送信されません。',
+    h1: 'PDF結合・分割・ページ抽出',
+    introHtml:
+      'PDFを結合したり、ページ単位で分割・抽出したりできます。ファイルは端末の外に出ません。PDFに載せる画像を軽くしたいときは<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ・圧縮</a>もご利用ください。',
+    modeLabel: '操作',
+    modeMerge: '結合',
+    modeExtract: 'ページ抽出',
+    modeSplit: '分割',
+    fileLabelMerge: 'PDFファイルを選択（複数可）',
+    fileLabelSingle: 'PDFファイルを選択',
+    fileHint:
+      '.pdfファイルを選んでください。結合では複数ファイルを選べ、追加選択もできます。',
+    pagesTemplate: '{pages}ページ',
+    moveUp: '上へ',
+    moveDown: '下へ',
+    remove: '削除',
+    rangeLabel: '抽出するページ',
+    rangePlaceholder: '例: 1-3, 5, 8-',
+    rangeHint:
+      'カンマ区切りでページ番号を指定します。「1-3」は範囲、「8-」は8ページ目から最後まで。指定した順に並びます。',
+    splitLabel: '分割する単位',
+    splitSuffix: 'ページごと',
+    run: '実行',
+    processing: '処理中…',
+    clear: 'クリア',
+    resultHeading: '結果',
+    downloadTemplate: '{name} をダウンロード',
+    errorNoFile: 'PDFファイルを選択してください。',
+    errorNeedTwo: '結合には2つ以上のPDFファイルが必要です。',
+    errorNotPdf: 'PDFファイル（.pdf）を選択してください。',
+    errorInvalid:
+      'PDFとして読み込めませんでした。ファイルが破損している可能性があります。',
+    errorEncrypted:
+      'パスワードで保護されたPDFは処理できません。保護を解除してからお試しください。',
+    errorEmptyRange: 'ページ範囲を入力してください。',
+    errorBadRange:
+      'ページ範囲の形式が正しくありません。「1-3, 5, 8-」のように入力してください。',
+    errorOutOfRange: '指定したページがPDFの範囲外です（全{pages}ページ）。',
+    errorBadCount: '分割するページ数は1以上の整数で指定してください。',
+    errorFailed: '処理に失敗しました。',
+    glossaryHeading: '用語解説',
+    glossaryTerms: [
+      {
+        term: 'PDF',
+        description:
+          'レイアウトを保ったまま文書を共有できるファイル形式です。1つのファイルが複数のページで構成されており、ページ単位で取り出したり並べ替えたりできます。',
+      },
+      {
+        term: 'ページ抽出',
+        description:
+          'PDFから必要なページだけを取り出して、新しいPDFとして保存する操作です。不要なページを除いた資料を作りたいときに使います。',
+      },
+      {
+        term: '暗号化（パスワード保護）PDF',
+        description:
+          '開くためにパスワードが必要なPDFです。このツールではパスワード保護されたPDFは扱えません。',
+      },
+    ],
+  },
+  en: {
+    title: 'PDF Merge, Split & Extract Pages – Free Online, No Upload',
+    description:
+      'A free online tool to merge multiple PDFs into one, split a PDF every N pages, or extract specific pages such as "1-3,5". Your PDFs are processed in the browser and never uploaded to a server.',
+    h1: 'PDF Merge, Split & Extract Pages',
+    introHtml:
+      'Combine PDFs, or split a PDF and pull out just the pages you need. Your files never leave your device. To shrink images before adding them to a document, try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer</a>.',
+    modeLabel: 'Action',
+    modeMerge: 'Merge',
+    modeExtract: 'Extract pages',
+    modeSplit: 'Split',
+    fileLabelMerge: 'Choose PDF files (multiple allowed)',
+    fileLabelSingle: 'Choose a PDF file',
+    fileHint:
+      'Pick .pdf files. For merging you can select several at once and add more later.',
+    pagesTemplate: '{pages} pages',
+    moveUp: 'Move up',
+    moveDown: 'Move down',
+    remove: 'Remove',
+    rangeLabel: 'Pages to extract',
+    rangePlaceholder: 'e.g. 1-3, 5, 8-',
+    rangeHint:
+      'Separate page numbers with commas. "1-3" is a range and "8-" means page 8 to the end. Pages appear in the order you list them.',
+    splitLabel: 'Split every',
+    splitSuffix: 'pages',
+    run: 'Run',
+    processing: 'Processing…',
+    clear: 'Clear',
+    resultHeading: 'Result',
+    downloadTemplate: 'Download {name}',
+    errorNoFile: 'Please choose a PDF file.',
+    errorNeedTwo: 'Merging needs at least two PDF files.',
+    errorNotPdf: 'Please choose a PDF (.pdf) file.',
+    errorInvalid: 'Could not read this as a PDF. The file may be corrupted.',
+    errorEncrypted:
+      'Password-protected PDFs cannot be processed. Remove the protection first and try again.',
+    errorEmptyRange: 'Please enter a page range.',
+    errorBadRange: 'Invalid page range. Use a format like "1-3, 5, 8-".',
+    errorOutOfRange:
+      'The specified pages are outside the PDF (it has {pages} pages).',
+    errorBadCount: 'Enter a whole number of pages, 1 or more.',
+    errorFailed: 'Processing failed.',
+    glossaryHeading: 'Glossary',
+    glossaryTerms: [
+      {
+        term: 'PDF',
+        description:
+          'A file format for sharing documents with their layout intact. A PDF is made of pages, which can be pulled out or reordered individually.',
+      },
+      {
+        term: 'Page extraction',
+        description:
+          'Copying only the pages you need from a PDF into a new PDF. Handy for producing a document without the pages you do not want to share.',
+      },
+      {
+        term: 'Encrypted (password-protected) PDF',
+        description:
+          'A PDF that requires a password to open. This tool cannot process password-protected PDFs.',
+      },
+    ],
+  },
+};

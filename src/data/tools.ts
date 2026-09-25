@@ -921,6 +921,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'pdf-merge-split',
+    translations: {
+      ja: {
+        name: 'PDF結合・分割・ページ抽出',
+        description:
+          '複数のPDFを1つに結合、PDFをページ数ごとに分割、必要なページだけを抽出します。',
+        category: '変換',
+      },
+      en: {
+        name: 'PDF Merge, Split & Extract',
+        description:
+          'Merge several PDFs into one, split a PDF by page count, or extract just the pages you need.',
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

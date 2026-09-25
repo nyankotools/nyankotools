@@ -77,6 +77,7 @@ export default defineConfig({
         'exifr',
         'jsonpath-plus',
         'marked',
+        'pdf-lib',
         'prettier/standalone',
         'prettier/plugins/babel',
         'prettier/plugins/estree',

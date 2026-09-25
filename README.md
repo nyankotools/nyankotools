@@ -93,4 +93,9 @@ Cloudflare Workers（静的アセット配信）に `pnpm build` の成果物（
 
 ## ライセンス
 
-未定（このリポジトリは現時点でオープンソースライセンスを付与していません）。
+**All rights reserved.** このリポジトリは閲覧・参照のみを目的として公開しており、オープンソースではありません。権利者の許諾なく、無断転載・複製・改変・再配布・商用利用を行うことはできません。詳細は [`LICENSE`](./LICENSE) を参照してください。
+
+## 運営方針
+
+- このリポジトリは個人運営です。**Issue・Pull Request・Discussion は受け付けていません。**
+- 不具合やご要望は、[nyankotools.com](https://nyankotools.com) のサイト内の案内からご連絡ください。

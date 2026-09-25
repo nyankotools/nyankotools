@@ -1,0 +1,47 @@
+NyankoTools Source-Available License (All Rights Reserved)
+
+Copyright (c) 2026 NyankoTools. All rights reserved.
+
+This repository is published for viewing and reference only. It is NOT open-source software.
+
+Except as expressly permitted below, you may NOT, without prior written permission from the copyright holder:
+
+  1. copy, reproduce, or republish the source code, assets, text, or any part of this repository;
+  2. modify, adapt, translate, or create derivative works from it;
+  3. distribute, sublicense, sell, or otherwise make it available to third parties, in source or built form;
+  4. use it, in whole or in part, for any commercial purpose, including operating a competing or similar website or service;
+  5. use it to train machine learning models or to build datasets.
+
+Permitted:
+
+  - Viewing and reading the source code for personal, non-commercial study.
+  - The rights that GitHub's Terms of Service grant to users of the GitHub platform (for example, viewing and forking this repository within GitHub).
+  - Quoting short excerpts for review, criticism, or commentary, with attribution and a link to this repository, to the extent permitted by applicable law.
+
+Third-party dependencies are licensed under their own respective licenses, which are not modified by this license.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
+
+---
+
+NyankoTools ソース公開ライセンス(全権利留保)
+
+Copyright (c) 2026 NyankoTools. All rights reserved.
+
+このリポジトリは閲覧・参照のみを目的として公開しています。オープンソースソフトウェアではありません。
+
+権利者の事前の書面による許諾なく、以下の行為を禁止します。
+
+  1. ソースコード、アセット、文章その他このリポジトリの全部または一部の複製・転載
+  2. 改変、翻案、翻訳、二次的著作物の作成
+  3. 第三者への配布、再許諾、販売、その他提供(ソース・ビルド成果物を問わない)
+  4. 商用利用(競合または類似のサイト・サービスの運営を含む)
+  5. 機械学習モデルの学習やデータセット作成への利用
+
+許可される行為:
+
+  - 個人的・非商用の学習目的でのソースコードの閲覧
+  - GitHub利用規約により、GitHub上のユーザーに認められる権利(GitHub内での閲覧・フォークなど)
+  - 出典とこのリポジトリへのリンクを明記した、批評・解説のための短い引用(法令で認められる範囲)
+
+依存パッケージには、それぞれのライセンスが適用されます。本ライセンスはそれらを変更しません。

@@ -12,6 +12,7 @@ Rules to follow in day-to-day development. See [CLAUDE.md](../../CLAUDE.md) for 
 - Lint: ESLint (`eslint.config.js`, flat config), combining `typescript-eslint` + `eslint-plugin-astro` + `eslint-config-prettier`.
 - Format: Prettier (`.prettierrc.json`, with `prettier-plugin-astro`). `singleQuote: true`.
 - Run `pnpm run lint` and `pnpm run format` before committing.
+- Before `git commit`, run `pnpm exec prettier --check` on the staged files too (files written by subagents such as `tool-qa` have slipped through unformatted).
 - `typescript` is pinned to `6.0.3` (`^6.0.3`) because `astro check` and `typescript-eslint` don't yet support the TypeScript 7 native (Go) compiler API. Don't bump to 7.x until both tools support it.
 - Line endings are LF (the global standard). The root `.gitattributes` (`* text=auto eol=lf`) enforces this, so committed content is always LF even if Windows has `core.autocrlf=true`. Don't leave it to editor or OS defaults.
 

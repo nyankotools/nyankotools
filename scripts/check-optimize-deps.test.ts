@@ -42,6 +42,7 @@ function isBareExternalSpecifier(specifier: string): boolean {
   if (specifier.startsWith('/')) return false; // 絶対パス
   if (specifier.startsWith('astro:')) return false; // Astroの仮想モジュール
   if (specifier.startsWith('node:')) return false; // Node組み込み
+  if (specifier.includes('?url')) return false; // アセットURLの取得（依存の事前バンドル対象ではない）
   return true;
 }
 

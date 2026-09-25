@@ -1,0 +1,398 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { pdfMergeSplitContent } from '../../i18n/tools/pdf-merge-split';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = pdfMergeSplitContent[locale];
+const modes = [
+  { value: 'merge', label: t.modeMerge },
+  { value: 'extract', label: t.modeExtract },
+  { value: 'split', label: t.modeSplit },
+];
+const buttonClass =
+  'min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800';
+const smallButtonClass =
+  'min-h-9 rounded-lg border border-gray-300 px-2 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800';
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <fieldset class="mb-4">
+    <legend class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.modeLabel}
+    </legend>
+    <div class="flex flex-wrap gap-4 text-sm text-gray-700 dark:text-gray-300">
+      {modes.map((m) => (
+        <label class="flex min-h-11 items-center gap-2">
+          <input
+            type="radio"
+            name="pdf-mode"
+            value={m.value}
+            checked={m.value === 'merge'}
+            class="h-4 w-4"
+          />
+          {m.label}
+        </label>
+      ))}
+    </div>
+  </fieldset>
+
+  <label
+    id="pdf-file-label"
+    for="pdf-file"
+    data-merge={t.fileLabelMerge}
+    data-single={t.fileLabelSingle}
+    class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+  >
+    {t.fileLabelMerge}
+  </label>
+  <div
+    id="pdf-drop"
+    class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
+  >
+    <input
+      id="pdf-file"
+      type="file"
+      accept=".pdf,application/pdf"
+      multiple
+      class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+    />
+    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
+  </div>
+
+  <ul
+    id="pdf-list"
+    class="mt-4 flex max-w-2xl flex-col gap-2"
+    data-pages-template={t.pagesTemplate}
+    data-up={t.moveUp}
+    data-down={t.moveDown}
+    data-remove={t.remove}
+    data-button-class={smallButtonClass}
+  ></ul>
+
+  <div id="pdf-opt-extract" hidden class="mt-4 max-w-xl">
+    <label
+      for="pdf-range"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.rangeLabel}
+    </label>
+    <input
+      id="pdf-range"
+      type="text"
+      autocomplete="off"
+      spellcheck="false"
+      placeholder={t.rangePlaceholder}
+      class="min-h-11 w-full rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+    />
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.rangeHint}</p>
+  </div>
+
+  <div id="pdf-opt-split" hidden class="mt-4">
+    <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+      {t.splitLabel}
+      <input
+        id="pdf-split-n"
+        type="number"
+        min="1"
+        step="1"
+        value="1"
+        class="min-h-11 w-20 rounded-lg border border-gray-300 px-2 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+      {t.splitSuffix}
+    </label>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="pdf-run"
+      type="button"
+      data-run={t.run}
+      data-processing={t.processing}
+      class="min-h-11 rounded-lg bg-blue-600 px-6 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+    >
+      {t.run}
+    </button>
+    <button id="pdf-clear" type="button" class={buttonClass}>
+      {t.clear}
+    </button>
+  </div>
+
+  <p
+    id="pdf-error"
+    role="alert"
+    hidden
+    data-no-file={t.errorNoFile}
+    data-need-two={t.errorNeedTwo}
+    data-not-pdf={t.errorNotPdf}
+    data-invalid={t.errorInvalid}
+    data-encrypted={t.errorEncrypted}
+    data-empty-range={t.errorEmptyRange}
+    data-bad-range={t.errorBadRange}
+    data-out-of-range={t.errorOutOfRange}
+    data-bad-count={t.errorBadCount}
+    data-failed={t.errorFailed}
+    class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+  ></p>
+
+  <section
+    id="pdf-result"
+    hidden
+    class="mt-6"
+    data-download={t.downloadTemplate}
+  >
+    <h2 class="mb-2 text-lg font-semibold">{t.resultHeading}</h2>
+    <ul id="pdf-result-list" class="flex flex-col gap-2"></ul>
+  </section>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    extractPages,
+    getPageCount,
+    mergePdfs,
+    parsePageRange,
+    PdfToolError,
+    splitEveryN,
+  } from '../../lib/tools/pdf-merge-split';
+
+  import { enableFileDrop } from '../../lib/file-drop';
+
+  interface Item {
+    name: string;
+    bytes: Uint8Array;
+    pages: number;
+  }
+
+  const modeRadios = Array.from(
+    document.querySelectorAll<HTMLInputElement>('input[name="pdf-mode"]'),
+  );
+  const fileInput = document.getElementById('pdf-file') as HTMLInputElement;
+  const fileLabel = document.getElementById('pdf-file-label')!;
+  const listEl = document.getElementById('pdf-list')!;
+  const optExtract = document.getElementById('pdf-opt-extract')!;
+  const optSplit = document.getElementById('pdf-opt-split')!;
+  const rangeInput = document.getElementById('pdf-range') as HTMLInputElement;
+  const splitInput = document.getElementById('pdf-split-n') as HTMLInputElement;
+  const runButton = document.getElementById('pdf-run') as HTMLButtonElement;
+  const clearButton = document.getElementById('pdf-clear') as HTMLButtonElement;
+  const errorEl = document.getElementById('pdf-error')!;
+  const resultEl = document.getElementById('pdf-result')!;
+  const resultList = document.getElementById('pdf-result-list')!;
+
+  enableFileDrop(document.getElementById('pdf-drop')!, fileInput);
+
+  let items: Item[] = [];
+  let urls: string[] = [];
+
+  const mode = () =>
+    (modeRadios.find((r) => r.checked)?.value ?? 'merge') as
+      'merge' | 'extract' | 'split';
+  const baseName = (name: string) => name.replace(/\.pdf$/i, '');
+
+  function showError(key: string, pages?: number) {
+    hideResult();
+    errorEl.textContent = (errorEl.dataset[key] ?? '').replace(
+      '{pages}',
+      String(pages ?? ''),
+    );
+    errorEl.hidden = false;
+  }
+
+  function hideError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function hideResult() {
+    urls.forEach((u) => URL.revokeObjectURL(u));
+    urls = [];
+    resultList.replaceChildren();
+    resultEl.hidden = true;
+  }
+
+  function formatBytes(bytes: number): string {
+    return bytes < 1024
+      ? `${bytes} B`
+      : bytes < 1048576
+        ? `${(bytes / 1024).toFixed(1)} KB`
+        : `${(bytes / 1048576).toFixed(2)} MB`;
+  }
+
+  function renderList() {
+    listEl.replaceChildren();
+    const buttonClass = listEl.dataset.buttonClass ?? '';
+    items.forEach((item, i) => {
+      const li = document.createElement('li');
+      li.className =
+        'flex flex-wrap items-center gap-2 rounded-lg border border-gray-300 p-2 text-sm dark:border-gray-700';
+      const label = document.createElement('span');
+      label.className = 'min-w-0 flex-1 break-all';
+      label.textContent = `${item.name}（${(listEl.dataset.pagesTemplate ?? '').replace('{pages}', String(item.pages))}）`;
+      li.append(label);
+      const addButton = (
+        text: string,
+        onClick: () => void,
+        disabled = false,
+      ) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = buttonClass;
+        b.textContent = text;
+        b.disabled = disabled;
+        b.addEventListener('click', onClick);
+        li.append(b);
+      };
+      if (mode() === 'merge') {
+        addButton(listEl.dataset.up ?? '', () => move(i, -1), i === 0);
+        addButton(
+          listEl.dataset.down ?? '',
+          () => move(i, 1),
+          i === items.length - 1,
+        );
+      }
+      addButton(listEl.dataset.remove ?? '', () => {
+        items.splice(i, 1);
+        hideResult();
+        renderList();
+      });
+      listEl.append(li);
+    });
+  }
+
+  function move(i: number, delta: number) {
+    const j = i + delta;
+    if (j < 0 || j >= items.length) return;
+    [items[i], items[j]] = [items[j], items[i]];
+    hideResult();
+    renderList();
+  }
+
+  function applyMode() {
+    const m = mode();
+    fileInput.multiple = m === 'merge';
+    fileLabel.textContent =
+      (m === 'merge' ? fileLabel.dataset.merge : fileLabel.dataset.single) ??
+      '';
+    optExtract.hidden = m !== 'extract';
+    optSplit.hidden = m !== 'split';
+    if (m !== 'merge' && items.length > 1) items = items.slice(0, 1);
+    hideResult();
+    hideError();
+    renderList();
+  }
+
+  modeRadios.forEach((r) => r.addEventListener('change', applyMode));
+
+  fileInput.addEventListener('change', async () => {
+    const files = Array.from(fileInput.files ?? []);
+    fileInput.value = '';
+    if (files.length === 0) return;
+    hideResult();
+    hideError();
+    if (
+      files.some((f) => !/\.pdf$/i.test(f.name) && f.type !== 'application/pdf')
+    ) {
+      showError('notPdf');
+      return;
+    }
+    const added: Item[] = [];
+    try {
+      for (const file of files) {
+        const bytes = new Uint8Array(await file.arrayBuffer());
+        added.push({
+          name: file.name,
+          bytes,
+          pages: await getPageCount(bytes),
+        });
+      }
+    } catch (e) {
+      showError(e instanceof PdfToolError ? e.code : 'failed');
+      return;
+    }
+    items = mode() === 'merge' ? [...items, ...added] : added.slice(0, 1);
+    renderList();
+  });
+
+  function addResult(name: string, bytes: Uint8Array) {
+    const url = URL.createObjectURL(
+      new Blob([bytes as BlobPart], { type: 'application/pdf' }),
+    );
+    urls.push(url);
+    const li = document.createElement('li');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.className =
+      'inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-blue-700 hover:bg-gray-100 dark:border-gray-700 dark:text-blue-400 dark:hover:bg-gray-800';
+    a.textContent = `${(resultEl.dataset.download ?? '').replace('{name}', name)}（${formatBytes(bytes.byteLength)}）`;
+    li.append(a);
+    resultList.append(li);
+  }
+
+  runButton.addEventListener('click', async () => {
+    hideError();
+    hideResult();
+    const m = mode();
+    if (items.length === 0) return showError('noFile');
+    if (m === 'merge' && items.length < 2) return showError('needTwo');
+    runButton.disabled = true;
+    runButton.textContent = runButton.dataset.processing ?? '';
+    try {
+      if (m === 'merge') {
+        addResult('merged.pdf', await mergePdfs(items.map((i) => i.bytes)));
+      } else if (m === 'extract') {
+        const item = items[0];
+        const indices = parsePageRange(rangeInput.value, item.pages);
+        addResult(
+          `${baseName(item.name)}_extracted.pdf`,
+          await extractPages(item.bytes, indices),
+        );
+      } else {
+        const item = items[0];
+        const n = Number(splitInput.value);
+        const parts = await splitEveryN(item.bytes, n);
+        const width = String(parts.length).length;
+        parts.forEach((bytes, i) =>
+          addResult(
+            `${baseName(item.name)}_${String(i + 1).padStart(width, '0')}.pdf`,
+            bytes,
+          ),
+        );
+      }
+      resultEl.hidden = false;
+    } catch (e) {
+      if (e instanceof PdfToolError) {
+        showError(e.code, items[0]?.pages);
+      } else {
+        showError('failed');
+      }
+    } finally {
+      runButton.disabled = false;
+      runButton.textContent = runButton.dataset.run ?? '';
+    }
+  });
+
+  clearButton.addEventListener('click', () => {
+    items = [];
+    fileInput.value = '';
+    rangeInput.value = '';
+    splitInput.value = '1';
+    hideError();
+    hideResult();
+    renderList();
+  });
+
+  applyMode();
+</script>

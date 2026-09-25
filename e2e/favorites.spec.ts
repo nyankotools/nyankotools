@@ -339,4 +339,122 @@ test.describe('お気に入り機能', () => {
       'password-generator',
     );
   });
+
+  test('ツールページ上部のお気に入りボタンがh1の右端に表示される', async ({
+    page,
+  }) => {
+    await page.goto('/tools/json-formatter/');
+
+    const h1 = page.locator('main h1');
+    const button = page.locator('main [data-favorite-toggle="json-formatter"]');
+
+    // ボタンが表示されている
+    await expect(button).toBeVisible();
+
+    // ボタンが絶対配置されている
+    const position = await button.evaluate(
+      (el) => window.getComputedStyle(el).position,
+    );
+    expect(position).toBe('absolute');
+
+    // ボタンが右側に配置されている
+    const right = await button.evaluate(
+      (el) => window.getComputedStyle(el).right,
+    );
+    expect(right).not.toBe('auto');
+
+    // ボタンがmainの直下のdivにあることを確認
+    const buttonParentIsRelativeDiv = await button.evaluate((el) => {
+      const parent = el.parentElement;
+      if (!parent) return false;
+      const style = window.getComputedStyle(parent);
+      return (
+        style.position === 'relative' &&
+        parent.tagName === 'DIV' &&
+        parent.parentElement?.tagName === 'MAIN'
+      );
+    });
+    expect(buttonParentIsRelativeDiv).toBe(true);
+
+    // h1もmainの直下のdivにあることを確認
+    const h1IsInMainDiv = await h1.evaluate((el) => {
+      const parent = el.parentElement;
+      if (!parent) return false;
+      return (
+        parent.tagName === 'DIV' && parent.parentElement?.tagName === 'MAIN'
+      );
+    });
+    expect(h1IsInMainDiv).toBe(true);
+  });
+
+  test('ツールページのお気に入りボタンをクリックするとaria-label、title、aria-pressedが全て切り替わる', async ({
+    page,
+  }) => {
+    await page.goto('/tools/char-counter/');
+
+    const button = page.locator('main [data-favorite-toggle="char-counter"]');
+
+    // 初期状態（未追加）
+    await expect(button).toHaveAttribute('aria-pressed', 'false');
+    const initialLabel = await button.getAttribute('aria-label');
+    const initialTitle = await button.getAttribute('title');
+
+    // 両方のテキストが同じ（どちらも「お気に入りに追加」）
+    expect(initialLabel).toBe(initialTitle);
+
+    // クリックしてお気に入りに追加
+    await button.click();
+
+    // 全ての属性が切り替わる
+    await expect(button).toHaveAttribute('aria-pressed', 'true');
+    const addedLabel = await button.getAttribute('aria-label');
+    const addedTitle = await button.getAttribute('title');
+
+    // ラベルとタイトルが同じ（どちらも「お気に入りから削除」）
+    expect(addedLabel).toBe(addedTitle);
+    // 初期状態と異なる
+    expect(addedLabel).not.toBe(initialLabel);
+
+    // クリックして削除
+    await button.click();
+
+    // 初期状態に戻る
+    await expect(button).toHaveAttribute('aria-pressed', 'false');
+    const removedLabel = await button.getAttribute('aria-label');
+    const removedTitle = await button.getAttribute('title');
+
+    expect(removedLabel).toBe(initialLabel);
+    expect(removedTitle).toBe(initialTitle);
+  });
+
+  test('長いh1のツールページでもお気に入りボタンがh1と重ならない（複数行の場合も）', async ({
+    page,
+  }) => {
+    await page.goto('/tools/html-escape/');
+
+    const parentDiv = page.locator('main > div');
+    const h1 = page.locator('main h1');
+    const button = page.locator('main [data-favorite-toggle="html-escape"]');
+
+    // 親divが相対配置
+    const parentPosition = await parentDiv.evaluate(
+      (el) => window.getComputedStyle(el).position,
+    );
+    expect(parentPosition).toBe('relative');
+
+    // h1が右側にパディングを持つ（pr-12 = padding-right: 3rem）
+    const h1PaddingRight = await h1.evaluate(
+      (el) => window.getComputedStyle(el).paddingRight,
+    );
+    expect(h1PaddingRight).toBe('48px'); // 3rem = 48px
+
+    // ボタンが見える
+    await expect(button).toBeVisible();
+
+    // ボタンの右端がスクロールを引き起こさない
+    const hasHorizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth + 1,
+    );
+    expect(hasHorizontalOverflow).toBe(false);
+  });
 });

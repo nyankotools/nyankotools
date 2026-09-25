@@ -1,0 +1,441 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { pdfPageEditorContent } from '../../i18n/tools/pdf-page-editor';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = pdfPageEditorContent[locale];
+const buttonClass =
+  'min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800';
+const smallButtonClass =
+  'min-h-9 rounded-lg border border-gray-300 px-2 text-xs text-gray-700 hover:bg-gray-100 disabled:opacity-40 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800';
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <label
+    for="pe-file"
+    class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+  >
+    {t.fileLabel}
+  </label>
+  <div
+    id="pe-drop"
+    class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
+  >
+    <input
+      id="pe-file"
+      type="file"
+      accept=".pdf,application/pdf"
+      class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+    />
+    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
+  </div>
+  <p
+    id="pe-info"
+    hidden
+    data-template={t.infoTemplate}
+    class="mt-2 text-sm text-gray-700 dark:text-gray-300"
+  ></p>
+
+  <section id="pe-password-section" hidden class="mt-4 max-w-2xl">
+    <h2 class="mb-2 text-lg font-semibold">{t.passwordHeading}</h2>
+    <p class="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+      {t.passwordNote}
+    </p>
+    <label
+      for="pe-password"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.passwordLabel}
+    </label>
+    <div class="flex flex-wrap items-center gap-3">
+      <input
+        id="pe-password"
+        type="password"
+        autocomplete="off"
+        class="min-h-11 w-full max-w-xs rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+      <button
+        id="pe-unlock"
+        type="button"
+        data-label={t.unlock}
+        data-busy={t.unlocking}
+        data-progress={t.unlockProgress}
+        class="min-h-11 rounded-lg bg-blue-600 px-6 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+      >
+        {t.unlock}
+      </button>
+    </div>
+  </section>
+
+  <section id="pe-editor" hidden class="mt-4 max-w-2xl">
+    <h2 class="mb-1 text-lg font-semibold">{t.listHeading}</h2>
+    <p class="mb-2 text-xs text-gray-500 dark:text-gray-400">{t.listHint}</p>
+    <p id="pe-unlocked" hidden class="mb-2 text-sm">
+      <span class="text-green-700 dark:text-green-400">
+        {t.unlockedMessage}
+      </span>
+      <span class="font-medium text-amber-700 dark:text-amber-400">
+        {t.unlockedNote}
+      </span>
+    </p>
+    <ul
+      id="pe-list"
+      class="flex flex-col gap-2"
+      data-page-template={t.pageTemplate}
+      data-rotation-template={t.rotationTemplate}
+      data-rotate-left={t.rotateLeft}
+      data-rotate-right={t.rotateRight}
+      data-up={t.moveUp}
+      data-down={t.moveDown}
+      data-remove={t.remove}
+      data-button-class={smallButtonClass}
+    ></ul>
+  </section>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="pe-run"
+      type="button"
+      data-run={t.run}
+      data-processing={t.processing}
+      class="min-h-11 rounded-lg bg-blue-600 px-6 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+    >
+      {t.run}
+    </button>
+    <button id="pe-clear" type="button" class={buttonClass}>
+      {t.clear}
+    </button>
+  </div>
+
+  <p
+    id="pe-error"
+    role="alert"
+    hidden
+    data-no-file={t.errorNoFile}
+    data-not-pdf={t.errorNotPdf}
+    data-invalid={t.errorInvalid}
+    data-encrypted={t.errorEncrypted}
+    data-empty-range={t.errorEmptyRange}
+    data-out-of-range={t.errorOutOfRange}
+    data-wrong-password={t.errorWrongPassword}
+    data-failed={t.errorFailed}
+    class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+  ></p>
+
+  <section
+    id="pe-result"
+    hidden
+    class="mt-6"
+    data-download={t.downloadTemplate}
+  >
+    <h2 class="mb-2 text-lg font-semibold">{t.resultHeading}</h2>
+    <ul id="pe-result-list" class="flex flex-col gap-2"></ul>
+  </section>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import * as pdfjs from 'pdfjs-dist';
+  import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+  import { getPageCount, PdfToolError } from '../../lib/tools/pdf-merge-split';
+  import { clampScale } from '../../lib/tools/pdf-image-converter';
+  import {
+    rasterPagesToPdf,
+    type RasterPage,
+  } from '../../lib/tools/pdf-compressor';
+  import {
+    addRotation,
+    buildEditedPdf,
+    editedFileName,
+    initialPages,
+    moveItem,
+    type EditPage,
+  } from '../../lib/tools/pdf-page-editor';
+  import { enableFileDrop } from '../../lib/file-drop';
+
+  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const fileInput = $<HTMLInputElement>('pe-file');
+  const info = $('pe-info');
+  const passwordSection = $('pe-password-section');
+  const passwordInput = $<HTMLInputElement>('pe-password');
+  const unlockButton = $<HTMLButtonElement>('pe-unlock');
+  const editor = $('pe-editor');
+  const unlockedMsg = $('pe-unlocked');
+  const listEl = $('pe-list');
+  const runButton = $<HTMLButtonElement>('pe-run');
+  const clearButton = $<HTMLButtonElement>('pe-clear');
+  const errorEl = $('pe-error');
+  const resultEl = $('pe-result');
+  const resultList = $('pe-result-list');
+
+  enableFileDrop($('pe-drop'), fileInput);
+
+  let pdfBytes: Uint8Array | null = null;
+  let pdfName = '';
+  let pages: EditPage[] = [];
+  /** パスワード解除待ちの暗号化PDF */
+  let lockedBytes: Uint8Array | null = null;
+  let urls: string[] = [];
+
+  function showError(key: string) {
+    hideResult();
+    errorEl.textContent = errorEl.dataset[key] ?? '';
+    errorEl.hidden = false;
+  }
+
+  function hideError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function hideResult() {
+    urls.forEach((u) => URL.revokeObjectURL(u));
+    urls = [];
+    resultList.replaceChildren();
+    resultEl.hidden = true;
+  }
+
+  function formatBytes(bytes: number): string {
+    return bytes < 1024
+      ? `${bytes} B`
+      : bytes < 1048576
+        ? `${(bytes / 1024).toFixed(1)} KB`
+        : `${(bytes / 1048576).toFixed(2)} MB`;
+  }
+
+  function resetDocument() {
+    pdfBytes = null;
+    lockedBytes = null;
+    pages = [];
+    info.hidden = true;
+    passwordSection.hidden = true;
+    passwordInput.value = '';
+    editor.hidden = true;
+    unlockedMsg.hidden = true;
+    listEl.replaceChildren();
+  }
+
+  function renderList() {
+    listEl.replaceChildren();
+    const buttonClass = listEl.dataset.buttonClass ?? '';
+    pages.forEach((p, i) => {
+      const li = document.createElement('li');
+      li.className =
+        'flex flex-wrap items-center gap-2 rounded-lg border border-gray-300 p-2 text-sm dark:border-gray-700';
+      const label = document.createElement('span');
+      label.className = 'min-w-0 flex-1';
+      const title = (listEl.dataset.pageTemplate ?? '')
+        .replace('{n}', String(i + 1))
+        .replace('{orig}', String(p.index + 1));
+      label.textContent =
+        p.rotation === 0
+          ? title
+          : `${title} / ${(listEl.dataset.rotationTemplate ?? '').replace('{angle}', String(p.rotation))}`;
+      li.append(label);
+      const addButton = (
+        text: string,
+        onClick: () => void,
+        disabled = false,
+      ) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = buttonClass;
+        b.textContent = text;
+        b.disabled = disabled;
+        b.addEventListener('click', () => {
+          onClick();
+          hideResult();
+          hideError();
+          renderList();
+        });
+        li.append(b);
+      };
+      addButton(listEl.dataset.rotateLeft ?? '', () => {
+        p.rotation = addRotation(p.rotation, -90);
+      });
+      addButton(listEl.dataset.rotateRight ?? '', () => {
+        p.rotation = addRotation(p.rotation, 90);
+      });
+      addButton(
+        listEl.dataset.up ?? '',
+        () => (pages = moveItem(pages, i, -1)),
+        i === 0,
+      );
+      addButton(
+        listEl.dataset.down ?? '',
+        () => (pages = moveItem(pages, i, 1)),
+        i === pages.length - 1,
+      );
+      addButton(listEl.dataset.remove ?? '', () => pages.splice(i, 1));
+      listEl.append(li);
+    });
+  }
+
+  function showInfo(name: string, count: number, size: number) {
+    info.textContent = `${name} (${(info.dataset.template ?? '').replace('{pages}', String(count))}, ${formatBytes(size)})`;
+    info.hidden = false;
+  }
+
+  function loadEditor(bytes: Uint8Array, name: string, count: number) {
+    pdfBytes = bytes;
+    lockedBytes = null;
+    pdfName = name;
+    pages = initialPages(count);
+    showInfo(name, count, bytes.length);
+    passwordSection.hidden = true;
+    editor.hidden = false;
+    renderList();
+  }
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (!file) return;
+    resetDocument();
+    hideResult();
+    hideError();
+    if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+      showError('notPdf');
+      return;
+    }
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    pdfName = file.name;
+    try {
+      loadEditor(bytes, file.name, await getPageCount(bytes));
+    } catch (e) {
+      if (e instanceof PdfToolError && e.code === 'encrypted') {
+        lockedBytes = bytes;
+        passwordSection.hidden = false;
+        showError('encrypted');
+      } else {
+        showError(e instanceof PdfToolError ? e.code : 'failed');
+      }
+    }
+  });
+
+  /** パスワードでPDFを開き、各ページを画像化して暗号化のないPDFに作り直す */
+  async function unlock(bytes: Uint8Array, password: string) {
+    // pdf.js は渡したバッファを worker に転送（detach）するためコピーを渡す
+    const task = pdfjs.getDocument({ data: bytes.slice(), password });
+    const rasters: RasterPage[] = [];
+    try {
+      const doc = await task.promise;
+      for (let n = 1; n <= doc.numPages; n++) {
+        unlockButton.textContent = (unlockButton.dataset.progress ?? '')
+          .replace('{done}', String(n))
+          .replace('{total}', String(doc.numPages));
+        const page = await doc.getPage(n);
+        try {
+          const base = page.getViewport({ scale: 1 });
+          const viewport = page.getViewport({
+            scale: clampScale(base.width, base.height, 2),
+          });
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(viewport.width));
+          canvas.height = Math.max(1, Math.round(viewport.height));
+          const ctx = canvas.getContext('2d')!;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          await page.render({ canvas, canvasContext: ctx, viewport }).promise;
+          const blob = await new Promise<Blob | null>((resolve) =>
+            canvas.toBlob(resolve, 'image/jpeg', 0.85),
+          );
+          canvas.width = canvas.height = 0;
+          if (!blob) throw new Error('toBlob failed');
+          rasters.push({
+            bytes: new Uint8Array(await blob.arrayBuffer()),
+            widthPt: base.width,
+            heightPt: base.height,
+          });
+        } finally {
+          page.cleanup();
+        }
+      }
+    } finally {
+      void task.destroy();
+    }
+    return rasterPagesToPdf(rasters);
+  }
+
+  unlockButton.addEventListener('click', async () => {
+    hideError();
+    if (!lockedBytes) return showError('noFile');
+    unlockButton.disabled = true;
+    clearButton.disabled = true;
+    fileInput.disabled = true;
+    unlockButton.textContent = unlockButton.dataset.busy ?? '';
+    try {
+      const out = await unlock(lockedBytes, passwordInput.value);
+      passwordInput.value = '';
+      loadEditor(out, pdfName, await getPageCount(out));
+      unlockedMsg.hidden = false;
+    } catch (e) {
+      const name = (e as { name?: string } | null)?.name ?? '';
+      if (name === 'PasswordException') showError('wrongPassword');
+      else if (name === 'InvalidPDFException' || name === 'FormatError')
+        showError('invalid');
+      else {
+        console.error(e);
+        showError('failed');
+      }
+    } finally {
+      unlockButton.disabled = false;
+      clearButton.disabled = false;
+      fileInput.disabled = false;
+      unlockButton.textContent = unlockButton.dataset.label ?? '';
+    }
+  });
+
+  runButton.addEventListener('click', async () => {
+    hideError();
+    hideResult();
+    if (lockedBytes) return showError('encrypted');
+    if (!pdfBytes) return showError('noFile');
+    runButton.disabled = true;
+    runButton.textContent = runButton.dataset.processing ?? '';
+    try {
+      const out = await buildEditedPdf(pdfBytes, pages);
+      const url = URL.createObjectURL(
+        new Blob([out as BlobPart], { type: 'application/pdf' }),
+      );
+      urls.push(url);
+      const name = editedFileName(pdfName);
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      a.className =
+        'inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-blue-700 hover:bg-gray-100 dark:border-gray-700 dark:text-blue-400 dark:hover:bg-gray-800';
+      a.textContent = `${(resultEl.dataset.download ?? '').replace('{name}', name)} (${formatBytes(out.byteLength)})`;
+      li.append(a);
+      resultList.append(li);
+      resultEl.hidden = false;
+    } catch (e) {
+      showError(e instanceof PdfToolError ? e.code : 'failed');
+    } finally {
+      runButton.disabled = false;
+      runButton.textContent = runButton.dataset.run ?? '';
+    }
+  });
+
+  clearButton.addEventListener('click', () => {
+    resetDocument();
+    fileInput.value = '';
+    hideError();
+    hideResult();
+  });
+</script>

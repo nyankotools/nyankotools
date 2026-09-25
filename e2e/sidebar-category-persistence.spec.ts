@@ -88,7 +88,7 @@ test.describe('サイドバーのカテゴリ開閉状態の復元（wrangler de
     page.on('pageerror', (err) => consoleErrors.push(String(err)));
 
     // char-counter（category: テキスト）はアクティブツールとして初期状態で
-    // 「テキスト」カテゴリが開いている。追加で「変換」「エンコード/デコード」を
+    // 「テキスト」カテゴリが開いている。追加で「データ変換」「エンコード/デコード」を
     // クリックで開く。
     await page.goto('/tools/char-counter/');
 
@@ -96,7 +96,7 @@ test.describe('サイドバーのカテゴリ開閉状態の復元（wrangler de
       '#sidebar nav details[data-category="テキスト"]',
     );
     const convertCategory = page.locator(
-      '#sidebar nav details[data-category="変換"]',
+      '#sidebar nav details[data-category="データ変換"]',
     );
     const encodeCategory = page.locator(
       '#sidebar nav details[data-category="エンコード/デコード"]',
@@ -122,22 +122,22 @@ test.describe('サイドバーのカテゴリ開閉状態の復元（wrangler de
         );
         return new Set(JSON.parse(stored ?? '[]'));
       })
-      .toEqual(new Set(['テキスト', '変換', 'エンコード/デコード']));
+      .toEqual(new Set(['テキスト', 'データ変換', 'エンコード/デコード']));
 
-    // 別カテゴリ（計算）に属するツールへ、フルページ遷移する。
+    // 別カテゴリ（日付・時間）に属するツールへ、フルページ遷移する。
     await page.goto('/tools/date-calculator/');
 
     const dateCalculatorTextCategory = page.locator(
       '#sidebar nav details[data-category="テキスト"]',
     );
     const dateCalculatorConvertCategory = page.locator(
-      '#sidebar nav details[data-category="変換"]',
+      '#sidebar nav details[data-category="データ変換"]',
     );
     const dateCalculatorEncodeCategory = page.locator(
       '#sidebar nav details[data-category="エンコード/デコード"]',
     );
-    const dateCalculatorCalcCategory = page.locator(
-      '#sidebar nav details[data-category="計算"]',
+    const dateCalculatorDateCategory = page.locator(
+      '#sidebar nav details[data-category="日付・時間"]',
     );
     const dateCalculatorGenerateCategory = page.locator(
       '#sidebar nav details[data-category="生成"]',
@@ -148,7 +148,7 @@ test.describe('サイドバーのカテゴリ開閉状態の復元（wrangler de
     await expect(dateCalculatorConvertCategory).toHaveJSProperty('open', true);
     await expect(dateCalculatorEncodeCategory).toHaveJSProperty('open', true);
     // 現在のアクティブツールが属するカテゴリも開いている。
-    await expect(dateCalculatorCalcCategory).toHaveJSProperty('open', true);
+    await expect(dateCalculatorDateCategory).toHaveJSProperty('open', true);
     // 一度も開いていないカテゴリは開かない。
     await expect(dateCalculatorGenerateCategory).toHaveJSProperty(
       'open',
@@ -171,7 +171,7 @@ test.describe('サイドバーのカテゴリ開閉状態の復元（wrangler de
 
     await page.goto('/tools/char-counter/');
     await page
-      .locator('#sidebar nav details[data-category="変換"] summary')
+      .locator('#sidebar nav details[data-category="データ変換"] summary')
       .click();
     await page
       .locator(
@@ -187,7 +187,7 @@ test.describe('サイドバーのカテゴリ開閉状態の復元（wrangler de
         );
         return new Set(JSON.parse(stored ?? '[]'));
       })
-      .toEqual(new Set(['テキスト', '変換', 'エンコード/デコード']));
+      .toEqual(new Set(['テキスト', 'データ変換', 'エンコード/デコード']));
 
     // domcontentloaded まで待機した直後に評価することで、初回ペイント前後の
     // 復元状態をできるだけ早いタイミングで確認する。
@@ -202,7 +202,7 @@ test.describe('サイドバーのカテゴリ開閉状態の復元（wrangler de
     );
 
     expect(new Set(openCategories)).toEqual(
-      new Set(['テキスト', '変換', 'エンコード/デコード', '計算']),
+      new Set(['テキスト', 'データ変換', 'エンコード/デコード', '日付・時間']),
     );
 
     await context.close();

@@ -78,13 +78,13 @@ export const tools: Tool[] = [
         name: 'JSON整形',
         description:
           'JSONデータを整形・圧縮し、構文エラーがあれば分かりやすく表示します。',
-        category: '変換',
+        category: 'データ変換',
       },
       en: {
         name: 'JSON Formatter',
         description:
           'Formats and minifies JSON data, with clear syntax error messages.',
-        category: 'Convert',
+        category: 'Data Formats',
       },
     },
   },
@@ -95,13 +95,13 @@ export const tools: Tool[] = [
         name: 'YAML⇔JSON変換',
         description:
           'YAMLとJSONを相互に変換します。Docker ComposeやGitHub Actionsなどの設定ファイル確認に便利。',
-        category: '変換',
+        category: 'データ変換',
       },
       en: {
         name: 'YAML to JSON Converter',
         description:
           'Converts between YAML and JSON, handy for checking Docker Compose or GitHub Actions config files.',
-        category: 'Convert',
+        category: 'Data Formats',
       },
     },
   },
@@ -112,13 +112,13 @@ export const tools: Tool[] = [
         name: 'CSV⇔JSON変換',
         description:
           'CSVとJSONを相互に変換します。ヘッダー行をキーとして使用し、カンマ・タブ区切りや引用符付きフィールドにも対応。',
-        category: '変換',
+        category: 'データ変換',
       },
       en: {
         name: 'CSV to JSON Converter',
         description:
           'Converts between CSV and JSON using the header row as keys, with support for comma/tab delimiters and quoted fields.',
-        category: 'Convert',
+        category: 'Data Formats',
       },
     },
   },
@@ -129,13 +129,13 @@ export const tools: Tool[] = [
         name: 'TOML⇔JSON/YAML変換',
         description:
           'TOML・JSON・YAMLを相互に変換します。Cargo.tomlやpyproject.tomlなどのTOML設定ファイル確認に便利。',
-        category: '変換',
+        category: 'データ変換',
       },
       en: {
         name: 'TOML to JSON/YAML Converter',
         description:
           'Converts between TOML, JSON, and YAML, handy for checking a TOML config file like Cargo.toml or pyproject.toml.',
-        category: 'Convert',
+        category: 'Data Formats',
       },
     },
   },
@@ -146,13 +146,13 @@ export const tools: Tool[] = [
         name: 'Markdown⇔HTML変換',
         description:
           'Markdownをリアルタイムプレビューしながら、HTMLと相互変換します。README や記事の下書き確認に便利。',
-        category: '変換',
+        category: 'データ変換',
       },
       en: {
         name: 'Markdown to HTML Converter',
         description:
           'Converts Markdown to HTML with a live preview, and HTML back to Markdown. Handy for checking a README or article draft.',
-        category: 'Convert',
+        category: 'Data Formats',
       },
     },
   },
@@ -163,13 +163,13 @@ export const tools: Tool[] = [
         name: 'Unixタイムスタンプ変換',
         description:
           'Unixタイムスタンプ（エポック秒・ミリ秒）と日時を相互に変換します。現在時刻の取得にも対応。',
-        category: '変換',
+        category: '日付・時間',
       },
       en: {
         name: 'Unix Timestamp Converter',
         description:
           'Converts between a Unix timestamp (epoch seconds or milliseconds) and a date/time, and shows the current timestamp.',
-        category: 'Convert',
+        category: 'Date & Time',
       },
     },
   },
@@ -180,13 +180,13 @@ export const tools: Tool[] = [
         name: 'カラーコード変換',
         description:
           'HEX・RGB・HSLのカラーコードを相互に変換します。カラーピッカーで色を選ぶこともできます。',
-        category: '変換',
+        category: '画像・デザイン',
       },
       en: {
         name: 'Color Converter',
         description:
           'Converts color codes between HEX, RGB, and HSL, with a color picker for choosing colors visually.',
-        category: 'Convert',
+        category: 'Image & Design',
       },
     },
   },
@@ -333,13 +333,13 @@ export const tools: Tool[] = [
         name: 'テキスト差分比較（diff）',
         description:
           '2つのテキストを行単位で比較し、追加・削除された箇所をハイライト表示します。空白や大文字小文字の違いを無視する比較にも対応。',
-        category: '開発',
+        category: 'テキスト',
       },
       en: {
         name: 'Text Diff Checker',
         description:
           'Compares two texts line by line and highlights added and removed lines, with options to ignore whitespace or case differences.',
-        category: 'Development',
+        category: 'Text',
       },
     },
   },
@@ -350,13 +350,13 @@ export const tools: Tool[] = [
         name: 'JWTデコーダー',
         description:
           'JWT（JSON Web Token）のヘッダーとペイロードをデコードして整形表示します。exp/iat等の日時クレームも人が読める形式に変換。署名の検証は行いません。',
-        category: '開発',
+        category: 'エンコード/デコード',
       },
       en: {
         name: 'JWT Decoder',
         description:
           'Decodes a JWT (JSON Web Token) and displays its header and payload as formatted JSON, with time-based claims like exp/iat shown as human-readable dates. The signature is not verified.',
-        category: 'Development',
+        category: 'Encode/Decode',
       },
     },
   },
@@ -367,13 +367,13 @@ export const tools: Tool[] = [
         name: 'ダミーテキスト生成',
         description:
           'Lorem ipsum（欧文）または日本語のダミーテキストを、段落・文・単語単位で指定した個数だけ生成します。',
-        category: '生成',
+        category: 'テキスト',
       },
       en: {
         name: 'Dummy Text Generator',
         description:
           'Generates Lorem ipsum (Latin) or Japanese placeholder text by paragraphs, sentences, or words, in any count you choose.',
-        category: 'Generate',
+        category: 'Text',
       },
     },
   },
@@ -435,13 +435,13 @@ export const tools: Tool[] = [
         name: 'Cron式スケジュールシミュレーター',
         description:
           'cron式の意味を日本語で解説し、次回の実行予定日時を一覧表示します。crontabやGitHub Actionsの動作確認に便利。',
-        category: '開発',
+        category: '日付・時間',
       },
       en: {
         name: 'Cron Expression Simulator',
         description:
           'Explains a cron expression in plain English and lists its upcoming run times. Handy for checking crontab or GitHub Actions schedules.',
-        category: 'Development',
+        category: 'Date & Time',
       },
     },
   },
@@ -452,13 +452,13 @@ export const tools: Tool[] = [
         name: '和暦⇔西暦変換',
         description:
           '明治・大正・昭和・平成・令和の和暦と西暦を相互に変換します。改元日をまたぐ日付にも対応した元号早見表付き。',
-        category: '変換',
+        category: '日付・時間',
       },
       en: {
         name: 'Japanese Era Converter',
         description:
           'Converts between the Japanese era calendar (Meiji, Taisho, Showa, Heisei, Reiwa) and the Western year, with an era reference table covering transition dates.',
-        category: 'Convert',
+        category: 'Date & Time',
       },
     },
   },
@@ -469,13 +469,13 @@ export const tools: Tool[] = [
         name: '日数計算機',
         description:
           '二つの日付の差（日数）や、指定した日から○日後・○日前の日付を計算します。初日を含めて数えるかどうかも選択可能。',
-        category: '計算',
+        category: '日付・時間',
       },
       en: {
         name: 'Date Calculator',
         description:
           'Calculates the difference in days between two dates, or the date a set number of days before or after a given date, with an option to count both endpoints.',
-        category: 'Calculate',
+        category: 'Date & Time',
       },
     },
   },
@@ -486,13 +486,13 @@ export const tools: Tool[] = [
         name: '年齢計算機',
         description:
           '生年月日から満年齢・数え年・生まれてから経過した日数・次の誕生日までの日数を計算します。基準日を指定して未来・過去時点の年齢も確認可能。',
-        category: '計算',
+        category: '日付・時間',
       },
       en: {
         name: 'Age Calculator',
         description:
           'Calculates the exact age, traditional East Asian age, days lived, and days until the next birthday from a date of birth, with a customizable reference date.',
-        category: 'Calculate',
+        category: 'Date & Time',
       },
     },
   },
@@ -622,13 +622,13 @@ export const tools: Tool[] = [
         name: 'SQL整形',
         description:
           'SQLクエリを整形・ミニファイします。MySQL・PostgreSQL・SQLite・BigQuery等の方言、インデント幅、キーワードの大文字/小文字に対応。',
-        category: '変換',
+        category: 'データ変換',
       },
       en: {
         name: 'SQL Formatter',
         description:
           'Formats and minifies SQL queries, with support for MySQL, PostgreSQL, SQLite, BigQuery and other dialects, indent width, and keyword case.',
-        category: 'Convert',
+        category: 'Data Formats',
       },
     },
   },
@@ -639,13 +639,13 @@ export const tools: Tool[] = [
         name: 'CSS/JS/HTMLミニファイ＆整形',
         description:
           'CSS・JavaScript・HTMLのコードを整形・ミニファイします。インデント幅の指定にも対応。',
-        category: '変換',
+        category: 'データ変換',
       },
       en: {
         name: 'CSS/JS/HTML Minifier',
         description:
           'Formats and minifies CSS, JavaScript, and HTML code, with a selectable indent width.',
-        category: 'Convert',
+        category: 'Data Formats',
       },
     },
   },
@@ -741,13 +741,13 @@ export const tools: Tool[] = [
         name: 'テキストケース変換',
         description:
           '文字列をcamelCase・PascalCase・snake_case・kebab-caseなど9種類の命名規則に一括変換します。プログラミングの変数名・関数名の書き換えに便利。',
-        category: '変換',
+        category: 'テキスト',
       },
       en: {
         name: 'Text Case Converter',
         description:
           'Converts text into 9 naming conventions at once, including camelCase, PascalCase, snake_case, and kebab-case. Handy for renaming variables and functions.',
-        category: 'Convert',
+        category: 'Text',
       },
     },
   },
@@ -775,13 +775,13 @@ export const tools: Tool[] = [
         name: '画像フォーマット変換',
         description:
           'PNG・JPEG・GIF・BMP画像をWebP・JPEG・PNGに変換し、品質を指定して圧縮できます。複数画像の一括変換に対応。',
-        category: '変換',
+        category: '画像・デザイン',
       },
       en: {
         name: 'Image Format Converter',
         description:
           'Converts PNG, JPEG, GIF, and BMP images to WebP, JPEG, or PNG with adjustable quality, and supports converting several files at once.',
-        category: 'Convert',
+        category: 'Image & Design',
       },
     },
   },
@@ -792,13 +792,13 @@ export const tools: Tool[] = [
         name: '画像リサイズ・圧縮',
         description:
           '画像の幅・高さをpxまたは%指定でリサイズし、WebP・JPEG・PNGで圧縮できます。複数画像の一括処理に対応。',
-        category: '変換',
+        category: '画像・デザイン',
       },
       en: {
         name: 'Image Resizer & Compressor',
         description:
           'Resizes images by pixel size or percentage and compresses them to WebP, JPEG, or PNG, with support for processing several files at once.',
-        category: 'Convert',
+        category: 'Image & Design',
       },
     },
   },
@@ -809,13 +809,13 @@ export const tools: Tool[] = [
         name: '画像のBase64（Data URL）変換',
         description:
           '画像ファイルをBase64文字列・Data URLに変換したり、Base64文字列やData URLを画像に戻して保存できます。',
-        category: '変換',
+        category: '画像・デザイン',
       },
       en: {
         name: 'Image to Base64 Converter',
         description:
           'Converts an image file to a Base64 string or Data URL, and converts a Base64 string or Data URL back into a downloadable image.',
-        category: 'Convert',
+        category: 'Image & Design',
       },
     },
   },
@@ -826,13 +826,13 @@ export const tools: Tool[] = [
         name: 'favicon一括生成',
         description:
           '1枚の画像からfavicon.ico（16/32/48px同梱）と複数サイズのPNG（apple-touch-icon等）を一括生成し、HTML貼り付け用のlinkタグも出力します。',
-        category: '生成',
+        category: '画像・デザイン',
       },
       en: {
         name: 'Favicon Generator',
         description:
           'Generates favicon.ico (bundling 16/32/48px) and multiple PNG sizes (apple-touch-icon, etc.) from a single image, plus the HTML link tags to reference them.',
-        category: 'Generate',
+        category: 'Image & Design',
       },
     },
   },
@@ -843,13 +843,13 @@ export const tools: Tool[] = [
         name: 'EXIF情報表示・削除',
         description:
           'JPEG画像のExif（撮影日時・カメラ機種・レンズ・露出・GPS位置情報など）を一覧表示し、Exif情報だけを削除した画像（画質そのまま）をダウンロードできます。',
-        category: '変換',
+        category: '画像・デザイン',
       },
       en: {
         name: 'EXIF Viewer & Remover',
         description:
           "Reads a JPEG photo's Exif metadata (date taken, camera, lens, exposure, GPS location, and more), and lets you download a copy with only the Exif data removed, at full quality.",
-        category: 'Convert',
+        category: 'Image & Design',
       },
     },
   },
@@ -860,13 +860,13 @@ export const tools: Tool[] = [
         name: '画像ドット絵化・モザイク・減色',
         description:
           '画像をブロックサイズ指定でモザイク・ドット絵風に、色数指定で減色できます。WebP・JPEG・PNGで書き出し可能。',
-        category: '変換',
+        category: '画像・デザイン',
       },
       en: {
         name: 'Pixelate, Mosaic & Color Reduction',
         description:
           'Pixelates or mosaics an image by block size and reduces its color palette, then exports it as WebP, JPEG, or PNG.',
-        category: 'Convert',
+        category: 'Image & Design',
       },
     },
   },
@@ -877,13 +877,166 @@ export const tools: Tool[] = [
         name: '画像カラーパレット抽出',
         description:
           '画像から主要な色を自動検出し、HEX・RGBコードと使用割合の一覧として表示・コピーできます。',
-        category: '変換',
+        category: '画像・デザイン',
       },
       en: {
         name: 'Image Color Palette Extractor',
         description:
           'Detects the dominant colors in an image and lists each as a HEX/RGB code with its usage percentage, ready to copy.',
-        category: 'Convert',
+        category: 'Image & Design',
+      },
+    },
+  },
+  {
+    slug: 'svg-optimizer',
+    translations: {
+      ja: {
+        name: 'SVG最適化（SVGO）',
+        description:
+          'SVGファイルやコードをSVGOで最適化し、不要なメタデータを削除してファイルサイズを削減します。',
+        category: '画像・デザイン',
+      },
+      en: {
+        name: 'SVG Optimizer (SVGO)',
+        description:
+          'Optimizes SVG files or code with SVGO, stripping unnecessary metadata to reduce file size.',
+        category: 'Image & Design',
+      },
+    },
+  },
+  {
+    slug: 'placeholder-image-generator',
+    translations: {
+      ja: {
+        name: 'ダミー画像生成',
+        description:
+          '幅・高さ・背景色・文字を指定して、プレースホルダー用のダミー画像を生成しPNG・JPEG・WebPで保存できます。',
+        category: '画像・デザイン',
+      },
+      en: {
+        name: 'Placeholder Image Generator',
+        description:
+          'Generates dummy placeholder images from a width, height, colors, and text, and saves them as PNG, JPEG, or WebP.',
+        category: 'Image & Design',
+      },
+    },
+  },
+  {
+    slug: 'pdf-merge-split',
+    translations: {
+      ja: {
+        name: 'PDF結合・分割・ページ抽出',
+        description:
+          '複数のPDFを1つに結合、PDFをページ数ごとに分割、必要なページだけを抽出します。',
+        category: 'PDF',
+      },
+      en: {
+        name: 'PDF Merge, Split & Extract',
+        description:
+          'Merge several PDFs into one, split a PDF by page count, or extract just the pages you need.',
+        category: 'PDF',
+      },
+    },
+  },
+  {
+    slug: 'pdf-image-converter',
+    translations: {
+      ja: {
+        name: 'PDF⇔画像変換（PNG/JPEG）',
+        description:
+          'PDFの各ページをPNG・JPEG画像に変換、または複数の画像を1つのPDFにまとめます。',
+        category: 'PDF',
+      },
+      en: {
+        name: 'PDF ⇔ Image Converter',
+        description:
+          'Convert PDF pages to PNG or JPEG images, or combine several images into one PDF.',
+        category: 'PDF',
+      },
+    },
+  },
+  {
+    slug: 'pdf-compressor',
+    translations: {
+      ja: {
+        name: 'PDF圧縮',
+        description:
+          'PDFの各ページを画像として再圧縮し、ファイルサイズを小さくします。',
+        category: 'PDF',
+      },
+      en: {
+        name: 'PDF Compressor',
+        description:
+          'Reduce PDF file size by recompressing each page as an image.',
+        category: 'PDF',
+      },
+    },
+  },
+  {
+    slug: 'pdf-page-editor',
+    translations: {
+      ja: {
+        name: 'PDFページ回転・削除・並び替え',
+        description:
+          'PDFのページを回転・削除・並び替え。パスワードを知っているPDFの保護解除にも対応。',
+        category: 'PDF',
+      },
+      en: {
+        name: 'PDF Page Editor',
+        description:
+          'Rotate, delete and reorder PDF pages, or remove the password from a PDF you know the password for.',
+        category: 'PDF',
+      },
+    },
+  },
+  {
+    slug: 'pdf-password-protector',
+    translations: {
+      ja: {
+        name: 'PDFパスワード設定',
+        description:
+          'PDFに開くためのパスワードを設定しAES-256で暗号化。印刷・コピー・編集の制限も指定できます。',
+        category: 'PDF',
+      },
+      en: {
+        name: 'PDF Password Protector',
+        description:
+          'Add a password to a PDF and encrypt it with AES-256, with optional print/copy/edit restrictions.',
+        category: 'PDF',
+      },
+    },
+  },
+  {
+    slug: 'cat-logo-text-generator',
+    translations: {
+      ja: {
+        name: '猫ロゴ文字ジェネレーター',
+        description:
+          '丸ゴシックのロゴ文字に猫耳・ひげ・肉球・ハート・星・月を好きな位置へ配置し、背景透過PNGで保存できます。',
+        category: '画像・デザイン',
+      },
+      en: {
+        name: 'Cat Logo Text Generator',
+        description:
+          'Creates cat-style logo text and lets you place ears, whiskers, paws, hearts, stars and moons freely, then saves it as a transparent PNG.',
+        category: 'Image & Design',
+      },
+    },
+  },
+  {
+    slug: 'encoding-converter',
+    translations: {
+      ja: {
+        name: '文字コード変換・文字化け診断',
+        description:
+          'テキストファイルの文字コードを自動判定し、Shift_JIS・EUC-JP・UTF-8などへ変換。文字化けの原因診断と復元も。',
+        category: 'テキスト',
+      },
+      en: {
+        name: 'Encoding Converter & Mojibake Fixer',
+        description:
+          "Detects a text file's encoding and converts between Shift_JIS, EUC-JP and UTF-8. Diagnoses and repairs garbled text.",
+        category: 'Text',
       },
     },
   },

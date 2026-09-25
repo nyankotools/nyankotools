@@ -72,11 +72,14 @@ export default defineConfig({
     // 追加したらここにも追記すること。
     optimizeDeps: {
       include: [
+        '@neslinesli93/qpdf-wasm',
         'csso',
         'dompurify',
         'exifr',
         'jsonpath-plus',
         'marked',
+        'pdf-lib',
+        'pdfjs-dist',
         'prettier/standalone',
         'prettier/plugins/babel',
         'prettier/plugins/estree',
@@ -85,6 +88,7 @@ export default defineConfig({
         'qrcode-generator',
         'smol-toml',
         'sql-formatter',
+        'svgo/browser',
         'terser',
         'turndown',
         'yaml',

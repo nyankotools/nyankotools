@@ -1,3 +1,31 @@
 @import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * ページ遷移時のちらつき対策（クロスドキュメント View Transitions）。
+ * サイドバーを別レイヤーに分けて固定し、遷移中は本文だけをクロスフェードさせる。
+ * 非対応ブラウザでは従来どおりの通常遷移になる。
+ */
+@view-transition {
+  navigation: auto;
+}
+
+#sidebar {
+  view-transition-name: sidebar;
+}
+
+::view-transition-group(sidebar),
+::view-transition-old(sidebar),
+::view-transition-new(sidebar) {
+  animation: none;
+}
+
+::view-transition-old(sidebar) {
+  display: none;
+}
+
+::view-transition-new(sidebar) {
+  animation: none;
+  opacity: 1;
+}

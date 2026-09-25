@@ -115,6 +115,28 @@ export function initTheme(): void {
 
 const SIDEBAR_OPEN_CATEGORIES_KEY = 'sidebar-open-categories';
 
+const SIDEBAR_SCROLL_KEY = 'sidebar-scroll-top';
+
+/** ページ遷移でサイドバーのスクロール位置が先頭に戻らないよう、離脱時に保存し再描画後に復元する */
+export function initSidebarScroll(): void {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+  try {
+    // お気に入りリスト描画などで高さが変わった後に、位置を再適用する
+    const top = Number(sessionStorage.getItem(SIDEBAR_SCROLL_KEY));
+    if (top > 0) sidebar.scrollTop = top;
+  } catch {
+    // sessionStorageが使えない場合は無視する
+  }
+  window.addEventListener('pagehide', () => {
+    try {
+      sessionStorage.setItem(SIDEBAR_SCROLL_KEY, String(sidebar.scrollTop));
+    } catch {
+      // 保存できない場合は無視する
+    }
+  });
+}
+
 export function initCategoryPersistence(): void {
   // 開閉状態の初回復元は、展開チラつきを防ぐため Layout.astro 内の
   // 同期インラインスクリプトが初回ペイント前に行う。ここではトグル時の保存のみ担う。

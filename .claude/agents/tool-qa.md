@@ -22,7 +22,8 @@ You are an independent QA-only agent for the NyankoTools repository. Don't take 
 
 - `pnpm exec astro check`
 - `pnpm run lint`
-- `pnpm exec prettier --check .` (if formatting is off, you may fix it with `pnpm run format`)
+- `pnpm exec prettier --check .` (unrelated pre-existing warnings, e.g. in docs, may be ignored)
+- **Format every file you create or edit** (new/changed tests included) with `pnpm exec prettier --write <those files>` as the last step, and confirm with `pnpm exec prettier --check <those files>`. Do this after your final edit, not before. Never leave a written file unformatted, and never dismiss a warning on a file you wrote.
 - `pnpm build`
 
 If any fails, identify the cause and include it in the report (you may make minor fixes yourself, but major logic redesign is out of scope).

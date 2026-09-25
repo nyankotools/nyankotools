@@ -904,6 +904,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'placeholder-image-generator',
+    translations: {
+      ja: {
+        name: 'ダミー画像生成',
+        description:
+          '幅・高さ・背景色・文字を指定して、プレースホルダー用のダミー画像を生成しPNG・JPEG・WebPで保存できます。',
+        category: '生成',
+      },
+      en: {
+        name: 'Placeholder Image Generator',
+        description:
+          'Generates dummy placeholder images from a width, height, colors, and text, and saves them as PNG, JPEG, or WebP.',
+        category: 'Generate',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

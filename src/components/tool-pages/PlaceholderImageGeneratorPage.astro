@@ -1,0 +1,349 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { placeholderImageGeneratorContent } from '../../i18n/tools/placeholder-image-generator';
+import {
+  MIN_SIZE,
+  MAX_SIZE,
+} from '../../lib/tools/placeholder-image-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = placeholderImageGeneratorContent[locale];
+const presets = [
+  [150, 150],
+  [300, 200],
+  [600, 400],
+  [800, 600],
+  [1200, 630],
+  [1920, 1080],
+];
+const inputClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 px-3 focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+const labelClass =
+  'mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300';
+const buttonClass =
+  'inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800';
+const pickerClass =
+  'h-11 w-14 shrink-0 cursor-pointer rounded-lg border border-gray-300 dark:border-gray-700';
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div class="grid max-w-2xl gap-4 sm:grid-cols-2">
+    <div>
+      <label for="ph-width" class={labelClass}>
+        {t.widthLabel}
+      </label>
+      <input
+        id="ph-width"
+        type="number"
+        min={MIN_SIZE}
+        max={MAX_SIZE}
+        value="600"
+        class={inputClass}
+      />
+    </div>
+    <div>
+      <label for="ph-height" class={labelClass}>
+        {t.heightLabel}
+      </label>
+      <input
+        id="ph-height"
+        type="number"
+        min={MIN_SIZE}
+        max={MAX_SIZE}
+        value="400"
+        class={inputClass}
+      />
+    </div>
+    <div>
+      <label for="ph-bg" class={labelClass}>
+        {t.bgColorLabel}
+      </label>
+      <div class="flex gap-2">
+        <input
+          id="ph-bg-picker"
+          type="color"
+          value="#cccccc"
+          aria-label={t.bgColorLabel}
+          class={pickerClass}
+        />
+        <input
+          id="ph-bg"
+          type="text"
+          value="#cccccc"
+          spellcheck="false"
+          class={`${inputClass} font-mono`}
+        />
+      </div>
+    </div>
+    <div>
+      <label for="ph-fg" class={labelClass}>
+        {t.textColorLabel}
+      </label>
+      <div class="flex gap-2">
+        <input
+          id="ph-fg-picker"
+          type="color"
+          value="#333333"
+          aria-label={t.textColorLabel}
+          class={pickerClass}
+        />
+        <input
+          id="ph-fg"
+          type="text"
+          value="#333333"
+          spellcheck="false"
+          class={`${inputClass} font-mono`}
+        />
+      </div>
+    </div>
+    <div>
+      <label for="ph-text" class={labelClass}>
+        {t.textLabel}
+      </label>
+      <input
+        id="ph-text"
+        type="text"
+        placeholder={t.textPlaceholder}
+        class={inputClass}
+      />
+    </div>
+    <div>
+      <label for="ph-format" class={labelClass}>
+        {t.formatLabel}
+      </label>
+      <select id="ph-format" class={inputClass}>
+        <option value="png">PNG</option>
+        <option value="jpeg">JPEG</option>
+        <option value="webp">WebP</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <span class={labelClass}>{t.presetsLabel}</span>
+    <div class="flex flex-wrap gap-2">
+      {presets.map(([w, h]) => (
+        <button
+          type="button"
+          data-preset-w={w}
+          data-preset-h={h}
+          class="ph-preset min-h-11 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          {w}×{h}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <p
+    id="ph-error"
+    role="alert"
+    hidden
+    data-size-template={t.errorSizeTemplate}
+    data-min={MIN_SIZE}
+    data-max={MAX_SIZE}
+    data-color={t.errorColor}
+    data-encode={t.errorEncode}
+    class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+  ></p>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <a id="ph-download" aria-disabled="true" class={buttonClass}>
+      {t.download}
+    </a>
+    <button
+      id="ph-copy"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class={buttonClass}
+    >
+      {t.copy}
+    </button>
+    <span
+      id="ph-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <span class="mt-4 mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+    {t.previewLabel}
+  </span>
+  <div class="max-w-full overflow-auto rounded border border-gray-300 p-2 dark:border-gray-700">
+    <canvas
+      id="ph-canvas"
+      class="block h-auto max-w-full"
+      role="img"
+      aria-label={t.previewLabel}
+    ></canvas>
+  </div>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    FORMAT_INFO,
+    buildFilename,
+    contrastTextColor,
+    defaultLabel,
+    fitFontSize,
+    isValidSize,
+    normalizeHexColor,
+    type PlaceholderFormat,
+  } from '../../lib/tools/placeholder-image-generator';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const widthEl = $<HTMLInputElement>('ph-width');
+  const heightEl = $<HTMLInputElement>('ph-height');
+  const bgEl = $<HTMLInputElement>('ph-bg');
+  const bgPicker = $<HTMLInputElement>('ph-bg-picker');
+  const fgEl = $<HTMLInputElement>('ph-fg');
+  const fgPicker = $<HTMLInputElement>('ph-fg-picker');
+  const textEl = $<HTMLInputElement>('ph-text');
+  const formatEl = $<HTMLSelectElement>('ph-format');
+  const errorEl = $<HTMLElement>('ph-error');
+  const canvas = $<HTMLCanvasElement>('ph-canvas');
+  const downloadEl = $<HTMLAnchorElement>('ph-download');
+  const copyBtn = $<HTMLButtonElement>('ph-copy');
+  const statusEl = $<HTMLElement>('ph-status');
+  const ctx = canvas.getContext('2d')!;
+
+  let blobUrl: string | null = null;
+  let renderId = 0;
+  let fgTouched = false;
+
+  // 出力が有効な間だけダウンロード・コピーを許可する
+  function setOutputEnabled(enabled: boolean) {
+    copyBtn.disabled = !enabled;
+    downloadEl.setAttribute('aria-disabled', String(!enabled));
+    if (!enabled) {
+      renderId++;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+      blobUrl = null;
+      downloadEl.removeAttribute('href');
+    }
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+    if (message !== '') setOutputEnabled(false);
+  }
+
+  function render() {
+    statusEl.textContent = '';
+    const width = Number(widthEl.value);
+    const height = Number(heightEl.value);
+    if (!isValidSize(width) || !isValidSize(height)) {
+      showError(
+        (errorEl.dataset.sizeTemplate ?? '')
+          .replace('{min}', errorEl.dataset.min ?? '')
+          .replace('{max}', errorEl.dataset.max ?? ''),
+      );
+      return;
+    }
+    const bg = normalizeHexColor(bgEl.value);
+    const fg = normalizeHexColor(fgEl.value);
+    if (!bg || !fg) {
+      showError(errorEl.dataset.color ?? '');
+      return;
+    }
+    showError('');
+    bgPicker.value = bg;
+    fgPicker.value = fg;
+
+    canvas.width = width;
+    canvas.height = height;
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, width, height);
+
+    const label = textEl.value.trim() || defaultLabel(width, height);
+    const family = 'system-ui, -apple-system, "Segoe UI", sans-serif';
+    ctx.font = `bold 100px ${family}`;
+    const size = fitFontSize(width, height, ctx.measureText(label).width / 100);
+    ctx.font = `bold ${size}px ${family}`;
+    ctx.fillStyle = fg;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(label, width / 2, height / 2);
+
+    const format = formatEl.value as PlaceholderFormat;
+    downloadEl.download = buildFilename(width, height, format);
+    setOutputEnabled(false);
+    const id = renderId;
+    canvas.toBlob(
+      (blob) => {
+        if (id !== renderId) return;
+        if (!blob) {
+          showError(errorEl.dataset.encode ?? '');
+          return;
+        }
+        if (blobUrl) URL.revokeObjectURL(blobUrl);
+        blobUrl = URL.createObjectURL(blob);
+        downloadEl.href = blobUrl;
+        downloadEl.setAttribute('aria-disabled', 'false');
+        copyBtn.disabled = false;
+      },
+      FORMAT_INFO[format].mime,
+      0.92,
+    );
+  }
+
+  [widthEl, heightEl, bgEl, fgEl, textEl, formatEl].forEach((el) =>
+    el.addEventListener('input', render),
+  );
+  function autoContrast(bgHex: string | null) {
+    if (bgHex && !fgTouched) fgEl.value = contrastTextColor(bgHex);
+  }
+  bgPicker.addEventListener('input', () => {
+    bgEl.value = bgPicker.value;
+    autoContrast(bgPicker.value);
+    render();
+  });
+  bgEl.addEventListener('input', () =>
+    autoContrast(normalizeHexColor(bgEl.value)),
+  );
+  fgPicker.addEventListener('input', () => {
+    fgTouched = true;
+    fgEl.value = fgPicker.value;
+    render();
+  });
+  fgEl.addEventListener('input', () => {
+    fgTouched = true;
+  });
+  document.querySelectorAll<HTMLButtonElement>('.ph-preset').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      widthEl.value = btn.dataset.presetW ?? '';
+      heightEl.value = btn.dataset.presetH ?? '';
+      render();
+    }),
+  );
+
+  copyBtn.addEventListener('click', () => {
+    canvas.toBlob(async (blob) => {
+      try {
+        if (!blob) throw new Error('no blob');
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob }),
+        ]);
+        statusEl.textContent = copyBtn.dataset.copied ?? '';
+      } catch {
+        statusEl.textContent = copyBtn.dataset.copyFailed ?? '';
+      }
+    }, 'image/png');
+  });
+
+  render();
+</script>

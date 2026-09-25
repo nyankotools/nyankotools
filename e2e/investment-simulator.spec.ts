@@ -743,3 +743,81 @@ test('資産運用シミュレーション: 非常に小さい取り崩し額（
     page.locator('#investment-sim-withdrawal-primary-value'),
   ).toContainText(/尽きません|60年以内/);
 });
+
+test('資産運用シミュレーション: グラフのSVG要素のfill色がCSP準拠で正しく適用される（ライトモード）', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  // トレンドチャートのパス要素を取得
+  const trendChartEl = page.locator('#investment-sim-trend-chart');
+  const paths = trendChartEl.locator('path');
+  const pathCount = await paths.count();
+  expect(pathCount).toBeGreaterThan(0);
+
+  // 最初のパス（積立元本を示す面積グラフ）のfill色を確認
+  const firstPath = paths.first();
+  const fillColor = await firstPath.evaluate(
+    (el: SVGPathElement) => window.getComputedStyle(el).fill,
+  );
+
+  // fill色が黒（rgb(0,0,0)）でなく、CSSで定義された色であることを確認
+  // ライトモードでの積立元本の色は #2a78d6 (rgb(42,120,214))
+  expect(fillColor).not.toBe('rgb(0, 0, 0)');
+  expect(fillColor).toMatch(/rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)|rgba/);
+
+  // 円形要素（ドット）のfill色も確認
+  const circles = trendChartEl.locator('circle');
+  const circleCount = await circles.count();
+  if (circleCount > 0) {
+    const firstCircle = circles.first();
+    const circleFill = await firstCircle.evaluate(
+      (el: SVGCircleElement) => window.getComputedStyle(el).fill,
+    );
+    // 円形要素も黒以外の色を持つことを確認
+    expect(circleFill).not.toBe('rgb(0, 0, 0)');
+  }
+});
+
+test('資産運用シミュレーション: グラフのSVG要素のfill色がCSP準拠で正しく適用される（ダークモード）', async ({
+  page,
+}) => {
+  await page.goto('/tools/investment-simulator/');
+
+  // ダークモードを有効化
+  await page.evaluate(() => {
+    document.documentElement.classList.add('dark');
+  });
+
+  // フォーマッターがレンダリングされるまで待機
+  await page.waitForTimeout(100);
+
+  // トレンドチャートのパス要素を取得
+  const trendChartEl = page.locator('#investment-sim-trend-chart');
+  const paths = trendChartEl.locator('path');
+  const pathCount = await paths.count();
+  expect(pathCount).toBeGreaterThan(0);
+
+  // 最初のパス（積立元本を示す面積グラフ）のfill色を確認
+  const firstPath = paths.first();
+  const fillColor = await firstPath.evaluate(
+    (el: SVGPathElement) => window.getComputedStyle(el).fill,
+  );
+
+  // fill色が黒（rgb(0,0,0)）でなく、CSSで定義された色であることを確認
+  // ダークモードでの積立元本の色は #3987e5 (rgb(57,135,229))
+  expect(fillColor).not.toBe('rgb(0, 0, 0)');
+  expect(fillColor).toMatch(/rgb\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*\)|rgba/);
+
+  // 円形要素（ドット）のfill色も確認
+  const circles = trendChartEl.locator('circle');
+  const circleCount = await circles.count();
+  if (circleCount > 0) {
+    const firstCircle = circles.first();
+    const circleFill = await firstCircle.evaluate(
+      (el: SVGCircleElement) => window.getComputedStyle(el).fill,
+    );
+    // 円形要素も黒以外の色を持つことを確認
+    expect(circleFill).not.toBe('rgb(0, 0, 0)');
+  }
+});

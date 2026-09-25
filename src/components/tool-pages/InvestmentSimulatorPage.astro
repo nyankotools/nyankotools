@@ -527,6 +527,36 @@ const t = investmentSimulatorContent[locale];
     --investment-sim-color-gain: #d95926;
     --investment-sim-color-surface: #030712;
   }
+  :global(.investment-sim-area-principal) {
+    fill: var(--investment-sim-color-principal);
+    fill-opacity: 0.85;
+  }
+  :global(.investment-sim-area-gain) {
+    fill: var(--investment-sim-color-gain);
+    fill-opacity: 0.85;
+  }
+  :global(.investment-sim-line-principal),
+  :global(.investment-sim-line-gain) {
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  :global(.investment-sim-line-principal) {
+    stroke: var(--investment-sim-color-principal);
+  }
+  :global(.investment-sim-line-gain) {
+    stroke: var(--investment-sim-color-gain);
+  }
+  :global(.investment-sim-ring) {
+    fill: var(--investment-sim-color-surface);
+  }
+  :global(.investment-sim-dot-principal) {
+    fill: var(--investment-sim-color-principal);
+  }
+  :global(.investment-sim-dot-gain) {
+    fill: var(--investment-sim-color-gain);
+  }
   .investment-sim-swatch-principal {
     background-color: var(--investment-sim-color-principal);
   }
@@ -891,14 +921,13 @@ const t = investmentSimulatorContent[locale];
     trendChartEl.appendChild(
       svgEl('path', {
         d: `${pointsToPath(principalTop)} L${lastX.toFixed(1)},${baseline.toFixed(1)} L${firstX.toFixed(1)},${baseline.toFixed(1)} Z`,
-        style: 'fill:var(--investment-sim-color-principal);fill-opacity:0.85',
+        class: 'investment-sim-area-principal',
       }),
     );
     trendChartEl.appendChild(
       svgEl('path', {
         d: pointsToPath(principalTop),
-        style:
-          'fill:none;stroke:var(--investment-sim-color-principal);stroke-width:2;stroke-linecap:round;stroke-linejoin:round',
+        class: 'investment-sim-line-principal',
       }),
     );
 
@@ -909,14 +938,13 @@ const t = investmentSimulatorContent[locale];
     trendChartEl.appendChild(
       svgEl('path', {
         d: `${pointsToPath(balanceTop)} L${principalBottomReversed} Z`,
-        style: 'fill:var(--investment-sim-color-gain);fill-opacity:0.85',
+        class: 'investment-sim-area-gain',
       }),
     );
     trendChartEl.appendChild(
       svgEl('path', {
         d: pointsToPath(balanceTop),
-        style:
-          'fill:none;stroke:var(--investment-sim-color-gain);stroke-width:2;stroke-linecap:round;stroke-linejoin:round',
+        class: 'investment-sim-line-gain',
       }),
     );
 
@@ -940,12 +968,12 @@ const t = investmentSimulatorContent[locale];
     });
     const hoverRing = svgEl('circle', {
       r: '6',
-      style: 'fill:var(--investment-sim-color-surface)',
+      class: 'investment-sim-ring',
       visibility: 'hidden',
     });
     const hoverDot = svgEl('circle', {
       r: '4',
-      style: 'fill:var(--investment-sim-color-gain)',
+      class: 'investment-sim-dot-gain',
       visibility: 'hidden',
     });
     const overlay = svgEl('rect', {
@@ -1098,14 +1126,13 @@ const t = investmentSimulatorContent[locale];
     withdrawalChartEl.appendChild(
       svgEl('path', {
         d: `${pointsToPath(points)} L${points[points.length - 1][0].toFixed(1)},${baseline.toFixed(1)} L${points[0][0].toFixed(1)},${baseline.toFixed(1)} Z`,
-        style: 'fill:var(--investment-sim-color-principal);fill-opacity:0.85',
+        class: 'investment-sim-area-principal',
       }),
     );
     withdrawalChartEl.appendChild(
       svgEl('path', {
         d: pointsToPath(points),
-        style:
-          'fill:none;stroke:var(--investment-sim-color-principal);stroke-width:2;stroke-linecap:round;stroke-linejoin:round',
+        class: 'investment-sim-line-principal',
       }),
     );
 
@@ -1129,12 +1156,12 @@ const t = investmentSimulatorContent[locale];
     });
     const hoverRing = svgEl('circle', {
       r: '6',
-      style: 'fill:var(--investment-sim-color-surface)',
+      class: 'investment-sim-ring',
       visibility: 'hidden',
     });
     const hoverDot = svgEl('circle', {
       r: '4',
-      style: 'fill:var(--investment-sim-color-principal)',
+      class: 'investment-sim-dot-principal',
       visibility: 'hidden',
     });
     const overlay = svgEl('rect', {

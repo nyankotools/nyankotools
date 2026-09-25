@@ -955,6 +955,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'pdf-compressor',
+    translations: {
+      ja: {
+        name: 'PDF圧縮',
+        description:
+          'PDFの各ページを画像として再圧縮し、ファイルサイズを小さくします。',
+        category: '変換',
+      },
+      en: {
+        name: 'PDF Compressor',
+        description:
+          'Reduce PDF file size by recompressing each page as an image.',
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

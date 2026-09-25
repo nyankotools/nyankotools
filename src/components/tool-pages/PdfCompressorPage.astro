@@ -1,0 +1,341 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { pdfCompressorContent } from '../../i18n/tools/pdf-compressor';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = pdfCompressorContent[locale];
+const buttonClass =
+  'min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800';
+const selectClass =
+  'min-h-11 rounded-lg border border-gray-300 px-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div>
+    <label
+      for="cmp-file"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.fileLabel}
+    </label>
+    <div
+      id="cmp-drop"
+      class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
+    >
+      <input
+        id="cmp-file"
+        type="file"
+        accept=".pdf,application/pdf"
+        class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
+    </div>
+    <p
+      id="cmp-info"
+      hidden
+      data-template={t.pagesTemplate}
+      class="mt-2 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+  </div>
+
+  <div class="mt-4">
+    <label class="flex max-w-xs flex-col gap-1 text-sm text-gray-700 dark:text-gray-300">
+      {t.levelLabel}
+      <select id="cmp-level" class={selectClass}>
+        <option value="high">{t.levelHigh}</option>
+        <option value="medium" selected>
+          {t.levelMedium}
+        </option>
+        <option value="low">{t.levelLow}</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="mt-4 max-w-2xl rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+    <p class="mb-1 font-medium">{t.noteHeading}</p>
+    <ul class="list-disc pl-5">
+      {t.notes.map((n) => (
+        <li>{n}</li>
+      ))}
+    </ul>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="cmp-run"
+      type="button"
+      data-run={t.run}
+      data-processing={t.processing}
+      data-progress={t.progressTemplate}
+      class="min-h-11 rounded-lg bg-blue-600 px-6 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+    >
+      {t.run}
+    </button>
+    <button id="cmp-clear" type="button" class={buttonClass}>
+      {t.clear}
+    </button>
+  </div>
+
+  <p
+    id="cmp-error"
+    role="alert"
+    hidden
+    data-no-file={t.errorNoFile}
+    data-not-pdf={t.errorNotPdf}
+    data-invalid={t.errorInvalid}
+    data-encrypted={t.errorEncrypted}
+    data-failed={t.errorFailed}
+    class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+  ></p>
+
+  <section
+    id="cmp-result"
+    hidden
+    class="mt-6"
+    data-reduced={t.reducedTemplate}
+    data-larger={t.largerTemplate}
+    data-download={t.downloadTemplate}
+  >
+    <h2 class="mb-2 text-lg font-semibold">{t.resultHeading}</h2>
+    <p
+      id="cmp-summary"
+      class="mb-3 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+    <ul id="cmp-result-list" class="flex flex-col gap-3"></ul>
+  </section>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import * as pdfjs from 'pdfjs-dist';
+  import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+  import { getPageCount, PdfToolError } from '../../lib/tools/pdf-merge-split';
+  import {
+    clampScale,
+    ImageToPdfError,
+  } from '../../lib/tools/pdf-image-converter';
+  import {
+    COMPRESS_PRESETS,
+    compressedFileName,
+    rasterPagesToPdf,
+    reductionPercent,
+    type CompressPreset,
+    type RasterPage,
+  } from '../../lib/tools/pdf-compressor';
+  import { enableFileDrop } from '../../lib/file-drop';
+
+  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const fileInput = $<HTMLInputElement>('cmp-file');
+  const info = $('cmp-info');
+  const levelSelect = $<HTMLSelectElement>('cmp-level');
+  const runButton = $<HTMLButtonElement>('cmp-run');
+  const clearButton = $<HTMLButtonElement>('cmp-clear');
+  const errorEl = $('cmp-error');
+  const resultEl = $('cmp-result');
+  const summary = $('cmp-summary');
+  const resultList = $('cmp-result-list');
+
+  enableFileDrop($('cmp-drop'), fileInput);
+
+  let pdfBytes: Uint8Array | null = null;
+  let pdfName = '';
+  let pdfPages = 0;
+  let urls: string[] = [];
+
+  function showError(key: string) {
+    hideResult();
+    errorEl.textContent = errorEl.dataset[key] ?? '';
+    errorEl.hidden = false;
+  }
+
+  function hideError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function hideResult() {
+    urls.forEach((u) => URL.revokeObjectURL(u));
+    urls = [];
+    resultList.replaceChildren();
+    summary.textContent = '';
+    resultEl.hidden = true;
+  }
+
+  function formatBytes(bytes: number): string {
+    return bytes < 1024
+      ? `${bytes} B`
+      : bytes < 1048576
+        ? `${(bytes / 1024).toFixed(1)} KB`
+        : `${(bytes / 1048576).toFixed(2)} MB`;
+  }
+
+  /** pdf.js の例外を tool のエラーキーに変換する */
+  function pdfErrorKey(e: unknown): string {
+    const name = (e as { name?: string } | null)?.name ?? '';
+    const message = (e as { message?: string } | null)?.message ?? '';
+    if (name === 'PasswordException' || /password/i.test(message))
+      return 'encrypted';
+    if (name === 'InvalidPDFException' || name === 'FormatError')
+      return 'invalid';
+    console.error(e);
+    return 'failed';
+  }
+
+  async function openPdf(bytes: Uint8Array) {
+    // pdf.js は渡したバッファを worker に転送（detach）するためコピーを渡す
+    const task = pdfjs.getDocument({ data: bytes.slice() });
+    try {
+      return { doc: await task.promise, task };
+    } catch (e) {
+      void task.destroy();
+      if (pdfErrorKey(e) !== 'failed') throw e;
+      // 一部の暗号化PDFは pdf.js が UnknownErrorException で失敗するため、pdf-lib の判定で原因を補う
+      try {
+        await getPageCount(bytes);
+      } catch (fallback) {
+        if (fallback instanceof PdfToolError) throw fallback;
+      }
+      throw e;
+    }
+  }
+
+  levelSelect.addEventListener('change', hideResult);
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (!file) return;
+    pdfBytes = null;
+    info.hidden = true;
+    hideResult();
+    hideError();
+    if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+      showError('notPdf');
+      return;
+    }
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const { doc, task } = await openPdf(bytes);
+      pdfPages = doc.numPages;
+      void task.destroy();
+      pdfBytes = bytes;
+      pdfName = file.name;
+      info.textContent = `${file.name}（${(info.dataset.template ?? '').replace('{pages}', String(pdfPages))}、${formatBytes(bytes.length)}）`;
+      info.hidden = false;
+    } catch (e) {
+      pdfBytes = null;
+      info.hidden = true;
+      showError(e instanceof PdfToolError ? e.code : pdfErrorKey(e));
+    }
+  });
+
+  async function compress(bytes: Uint8Array): Promise<Uint8Array> {
+    const preset = COMPRESS_PRESETS[levelSelect.value as CompressPreset];
+    const { doc, task } = await openPdf(bytes);
+    const pages: RasterPage[] = [];
+    try {
+      for (let n = 1; n <= doc.numPages; n++) {
+        runButton.textContent = (runButton.dataset.progress ?? '')
+          .replace('{done}', String(n))
+          .replace('{total}', String(doc.numPages));
+        const page = await doc.getPage(n);
+        try {
+          const base = page.getViewport({ scale: 1 });
+          const viewport = page.getViewport({
+            scale: clampScale(base.width, base.height, preset.scale),
+          });
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(viewport.width));
+          canvas.height = Math.max(1, Math.round(viewport.height));
+          const ctx = canvas.getContext('2d')!;
+          // JPEG は透過を持てず黒くなるため白で下地を塗る
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          await page.render({ canvas, canvasContext: ctx, viewport }).promise;
+          const blob = await new Promise<Blob | null>((resolve) =>
+            canvas.toBlob(resolve, 'image/jpeg', preset.quality),
+          );
+          canvas.width = canvas.height = 0;
+          if (!blob) throw new Error('toBlob failed');
+          pages.push({
+            bytes: new Uint8Array(await blob.arrayBuffer()),
+            widthPt: base.width,
+            heightPt: base.height,
+          });
+        } finally {
+          page.cleanup();
+        }
+      }
+    } finally {
+      void task.destroy();
+    }
+    return rasterPagesToPdf(pages);
+  }
+
+  runButton.addEventListener('click', async () => {
+    hideError();
+    hideResult();
+    if (!pdfBytes) return showError('noFile');
+    runButton.disabled = true;
+    clearButton.disabled = true;
+    fileInput.disabled = true;
+    runButton.textContent = runButton.dataset.processing ?? '';
+    try {
+      const out = await compress(pdfBytes);
+      const blob = new Blob([out as BlobPart], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      urls.push(url);
+      const name = compressedFileName(pdfName);
+      const percent = reductionPercent(pdfBytes.length, blob.size);
+      const template =
+        (blob.size < pdfBytes.length
+          ? resultEl.dataset.reduced
+          : resultEl.dataset.larger) ?? '';
+      summary.textContent = template
+        .replace('{original}', formatBytes(pdfBytes.length))
+        .replace('{output}', formatBytes(blob.size))
+        .replace('{percent}', String(percent));
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      a.className =
+        'inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-blue-700 hover:bg-gray-100 dark:border-gray-700 dark:text-blue-400 dark:hover:bg-gray-800';
+      a.textContent = (resultEl.dataset.download ?? '').replace('{name}', name);
+      li.append(a);
+      resultList.append(li);
+      resultEl.hidden = false;
+    } catch (e) {
+      if (e instanceof PdfToolError) showError(e.code);
+      else if (e instanceof ImageToPdfError) showError('failed');
+      else showError(pdfErrorKey(e));
+    } finally {
+      runButton.disabled = false;
+      clearButton.disabled = false;
+      fileInput.disabled = false;
+      runButton.textContent = runButton.dataset.run ?? '';
+    }
+  });
+
+  clearButton.addEventListener('click', () => {
+    pdfBytes = null;
+    pdfPages = 0;
+    info.hidden = true;
+    hideError();
+    hideResult();
+  });
+</script>

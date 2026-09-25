@@ -1,0 +1,1039 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { catLogoTextGeneratorContent } from '../../i18n/tools/cat-logo-text-generator';
+import {
+  DECOR_KINDS,
+  MAX_FONT_SIZE,
+  MAX_OUTLINE,
+  MAX_SCALE,
+  MAX_TEXT_LENGTH,
+  MIN_FONT_SIZE,
+  MIN_SCALE,
+} from '../../lib/tools/cat-logo-text-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = catLogoTextGeneratorContent[locale];
+const inputClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 px-3 focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+const labelClass =
+  'mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300';
+const buttonClass =
+  'inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 disabled:opacity-50 aria-disabled:opacity-50';
+const smallButtonClass =
+  'inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-3 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800';
+const pickerClass =
+  'h-11 w-14 shrink-0 cursor-pointer rounded-lg border border-gray-300 dark:border-gray-700';
+const checkClass = 'h-5 w-5 rounded border-gray-300';
+const colorFields = [
+  { id: 'cl-fg', label: t.textColorLabel, value: '#ffe6c0' },
+  { id: 'cl-outline-color', label: t.outlineColorLabel, value: '#6b4226' },
+  { id: 'cl-inner', label: t.earInnerColorLabel, value: '#ffb3c1' },
+  { id: 'cl-decor', label: t.decorColorLabel, value: '#ffe6c0' },
+];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div class="grid max-w-3xl gap-4 sm:grid-cols-2">
+    <div class="sm:col-span-2">
+      <label for="cl-text" class={labelClass}>
+        {t.textLabel}
+      </label>
+      <input
+        id="cl-text"
+        type="text"
+        value={t.defaultText}
+        placeholder={t.textPlaceholder}
+        class={inputClass}
+      />
+    </div>
+    <div>
+      <label for="cl-size" class={labelClass}>
+        {t.fontSizeLabel}
+      </label>
+      <input
+        id="cl-size"
+        type="number"
+        min={MIN_FONT_SIZE}
+        max={MAX_FONT_SIZE}
+        value="120"
+        class={inputClass}
+      />
+    </div>
+    <div>
+      <label for="cl-spacing" class={labelClass}>
+        {t.letterSpacingLabel}
+      </label>
+      <input
+        id="cl-spacing"
+        type="number"
+        min="-20"
+        max="100"
+        value="0"
+        class={inputClass}
+      />
+    </div>
+    <div>
+      <label for="cl-outline" class={labelClass}>
+        {t.outlineWidthLabel}
+      </label>
+      <input
+        id="cl-outline"
+        type="number"
+        min="0"
+        max={MAX_OUTLINE}
+        value="4"
+        class={inputClass}
+      />
+    </div>
+    {colorFields.map((f) => (
+      <div>
+        <label for={f.id} class={labelClass}>
+          {f.label}
+        </label>
+        <div class="flex gap-2">
+          <input
+            id={`${f.id}-picker`}
+            type="color"
+            value={f.value}
+            aria-label={f.label}
+            class={pickerClass}
+          />
+          <input
+            id={f.id}
+            type="text"
+            value={f.value}
+            spellcheck="false"
+            class={`${inputClass} font-mono`}
+          />
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <label class="mt-4 flex min-h-11 max-w-3xl items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+    <input id="cl-shadow" type="checkbox" class={checkClass} />
+    {t.shadowLabel}
+  </label>
+
+  <section class="mt-6 max-w-3xl" aria-labelledby="cl-edit-heading">
+    <h2 id="cl-edit-heading" class="mb-1 text-lg font-bold">
+      {t.decorEdit.heading}
+    </h2>
+    <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+      {t.decorEdit.help}
+    </p>
+    <div class="mb-2 flex flex-wrap items-center gap-2">
+      <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+        {t.decorEdit.addLabel}
+      </span>
+      {DECOR_KINDS.map((k) => (
+        <button
+          type="button"
+          data-kind={k}
+          class={`cl-add ${smallButtonClass}`}
+        >
+          + {t.decorEdit.kinds[k]}
+        </button>
+      ))}
+    </div>
+    <div class="mb-3 flex flex-wrap items-center gap-2">
+      <button type="button" id="cl-clear" class={smallButtonClass}>
+        {t.decorEdit.clearAll}
+      </button>
+    </div>
+    {/* 選択の有無でレイアウトが動かないよう、パネルは常に表示し未選択時は無効化する */}
+    <fieldset
+      id="cl-panel"
+      disabled
+      data-names={JSON.stringify(t.decorEdit.kinds)}
+      class="min-w-0 rounded-lg border border-gray-300 p-3 disabled:opacity-60 dark:border-gray-700"
+    >
+      <p class="mb-2 min-h-10 text-sm font-medium text-gray-700 dark:text-gray-300">
+        <span id="cl-no-selection" class="font-normal">
+          {t.decorEdit.noSelection}
+        </span>
+        <span id="cl-selected-line" hidden>
+          {t.decorEdit.selectedLabel}：<span id="cl-panel-title"></span>
+        </span>
+      </p>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <label class="block text-sm text-gray-700 dark:text-gray-300">
+          {t.decorEdit.scaleLabel}
+          <output id="cl-scale-out" class="ml-1 font-mono"></output>
+          <input
+            id="cl-item-scale"
+            type="range"
+            min={MIN_SCALE}
+            max={MAX_SCALE}
+            step="0.05"
+            class="mt-1 block h-11 w-full"
+          />
+        </label>
+        <label class="block text-sm text-gray-700 dark:text-gray-300">
+          {t.decorEdit.rotationLabel}
+          <output id="cl-rot-out" class="ml-1 font-mono"></output>
+          <input
+            id="cl-item-rot"
+            type="range"
+            min="-180"
+            max="180"
+            step="1"
+            class="mt-1 block h-11 w-full"
+          />
+        </label>
+      </div>
+      <div class="mt-2 flex flex-wrap items-center gap-2">
+        <label
+          id="cl-item-color-wrap"
+          class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
+        >
+          {t.decorEdit.colorLabel}
+          <input id="cl-item-color" type="color" class={pickerClass} />
+        </label>
+        <button type="button" id="cl-flip" class={smallButtonClass}>
+          {t.decorEdit.flip}
+        </button>
+        <button type="button" id="cl-dup" class={smallButtonClass}>
+          {t.decorEdit.duplicate}
+        </button>
+        <button type="button" id="cl-del" class={smallButtonClass}>
+          {t.decorEdit.remove}
+        </button>
+      </div>
+    </fieldset>
+  </section>
+
+  <p
+    id="cl-error"
+    role="alert"
+    hidden
+    data-text-template={t.errorTextTemplate}
+    data-size-template={t.errorSizeTemplate}
+    data-outline-template={t.errorOutlineTemplate}
+    data-max-text={MAX_TEXT_LENGTH}
+    data-min-size={MIN_FONT_SIZE}
+    data-max-size={MAX_FONT_SIZE}
+    data-max-outline={MAX_OUTLINE}
+    data-color={t.errorColor}
+    data-encode={t.errorEncode}
+    class="mt-4 max-w-3xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+  ></p>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <a id="cl-download" aria-disabled="true" class={buttonClass}>
+      {t.download}
+    </a>
+    <button
+      id="cl-copy"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class={buttonClass}
+    >
+      {t.copy}
+    </button>
+    <span
+      id="cl-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end justify-between gap-3">
+    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.previewLabel}
+    </span>
+    <div class="flex items-center gap-2">
+      <label for="cl-bg" class="text-sm text-gray-700 dark:text-gray-300">
+        {t.previewBgLabel}
+      </label>
+      <select
+        id="cl-bg"
+        class="min-h-11 rounded-lg border border-gray-300 px-2 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      >
+        <option value="checker">{t.previewBgs.checker}</option>
+        <option value="light">{t.previewBgs.light}</option>
+        <option value="dark">{t.previewBgs.dark}</option>
+      </select>
+    </div>
+  </div>
+  <div
+    id="cl-stage"
+    data-bg="checker"
+    class="mt-1 max-w-full overflow-auto rounded border border-gray-300 p-2 dark:border-gray-700"
+  >
+    <div class="relative mx-auto w-fit max-w-full">
+      <canvas
+        id="cl-canvas"
+        class="block h-auto max-w-full"
+        role="img"
+        aria-label={t.previewLabel}
+      ></canvas>
+      <canvas
+        id="cl-overlay"
+        tabindex="0"
+        role="application"
+        aria-label={t.decorEdit.overlayLabel}
+        class="absolute top-0 left-0 h-full w-full touch-none"
+      ></canvas>
+    </div>
+  </div>
+  <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+    {t.transparentNote}
+  </p>
+
+  <h2 class="mt-8 mb-2 text-lg font-bold">{t.noteHeading}</h2>
+  <ul class="list-disc space-y-1 pl-5 text-sm text-gray-700 dark:text-gray-300">
+    {t.notes.map((n) => (
+      <li>{n}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<style>
+  #cl-stage[data-bg='checker'] {
+    background-color: #ffffff;
+    background-image:
+      linear-gradient(45deg, #d4d4d8 25%, transparent 25%),
+      linear-gradient(-45deg, #d4d4d8 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #d4d4d8 75%),
+      linear-gradient(-45deg, transparent 75%, #d4d4d8 75%);
+    background-size: 20px 20px;
+    background-position:
+      0 0,
+      0 10px,
+      10px -10px,
+      -10px 0;
+  }
+  #cl-stage[data-bg='light'] {
+    background-color: #ffffff;
+  }
+  #cl-stage[data-bg='dark'] {
+    background-color: #111111;
+  }
+</style>
+
+<script>
+  import '@fontsource/m-plus-rounded-1c/900.css';
+  import {
+    DECOR_INFO,
+    EAR_TRIANGLE,
+    MAX_FONT_SIZE,
+    MAX_OUTLINE,
+    MAX_TEXT_LENGTH,
+    MIN_FONT_SIZE,
+    buildFilename,
+    canvasLayout,
+    clamp,
+    clampPosition,
+    clampScale,
+    decorRadius,
+    handleHit,
+    hitTest,
+    isValidFontSize,
+    isValidOutline,
+    newDecorAt,
+    normalizeRotation,
+    rotateHandlePos,
+    rotationFromPointer,
+    scaleFromPointer,
+    scaleHandlePos,
+    shrinkTriangle,
+    splitGlyphs,
+    type Decor,
+    type DecorKind,
+    type Point,
+    type NewDecor,
+  } from '../../lib/tools/cat-logo-text-generator';
+  import { normalizeHexColor } from '../../lib/tools/placeholder-image-generator';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const textEl = $<HTMLInputElement>('cl-text');
+  const sizeEl = $<HTMLInputElement>('cl-size');
+  const spacingEl = $<HTMLInputElement>('cl-spacing');
+  const outlineEl = $<HTMLInputElement>('cl-outline');
+  const shadowEl = $<HTMLInputElement>('cl-shadow');
+  const bgEl = $<HTMLSelectElement>('cl-bg');
+  const stage = $<HTMLElement>('cl-stage');
+  const errorEl = $<HTMLElement>('cl-error');
+  const canvas = $<HTMLCanvasElement>('cl-canvas');
+  const overlay = $<HTMLCanvasElement>('cl-overlay');
+  const downloadEl = $<HTMLAnchorElement>('cl-download');
+  const copyBtn = $<HTMLButtonElement>('cl-copy');
+  const statusEl = $<HTMLElement>('cl-status');
+  const noSelectionEl = $<HTMLElement>('cl-no-selection');
+  const selectedLineEl = $<HTMLElement>('cl-selected-line');
+  const panelEl = $<HTMLFieldSetElement>('cl-panel');
+  const panelTitleEl = $<HTMLElement>('cl-panel-title');
+  const scaleEl = $<HTMLInputElement>('cl-item-scale');
+  const scaleOutEl = $<HTMLOutputElement>('cl-scale-out');
+  const rotEl = $<HTMLInputElement>('cl-item-rot');
+  const rotOutEl = $<HTMLOutputElement>('cl-rot-out');
+  const itemColorEl = $<HTMLInputElement>('cl-item-color');
+  const itemColorWrap = $<HTMLElement>('cl-item-color-wrap');
+  const ctx = canvas.getContext('2d')!;
+  const octx = overlay.getContext('2d')!;
+  const colorIds = ['cl-fg', 'cl-outline-color', 'cl-inner', 'cl-decor'];
+  const colorText = (id: string) => $<HTMLInputElement>(id);
+  const colorPicker = (id: string) => $<HTMLInputElement>(`${id}-picker`);
+  const kindNames = JSON.parse(panelEl.dataset.names ?? '{}') as Record<
+    string,
+    string
+  >;
+
+  /** 猫耳の頂点の丸み（単位円に対する半径） */
+  const EAR_CORNER_RADIUS = 0.2;
+  const FONT = '"M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", sans-serif';
+
+  interface Settings {
+    glyphs: string[];
+    size: number;
+    outline: number;
+    spacing: number;
+    fg: string;
+    outlineColor: string;
+    innerColor: string;
+    decorColor: string;
+  }
+  interface View {
+    size: number;
+    originX: number;
+    originY: number;
+  }
+
+  let blobUrl: string | null = null;
+  let renderId = 0; // render() の世代（古い描画結果を捨てる）
+  let blobId = 0; // 書き出しPNGの世代
+  let items: Decor[] = [];
+  let nextId = 1;
+  let selectedId: number | null = null;
+  let settings: Settings | null = null;
+  let glyphXs: number[] = [];
+  let textWidthEm = 0;
+  let view: View | null = null;
+
+  function setOutputEnabled(enabled: boolean) {
+    copyBtn.disabled = !enabled;
+    downloadEl.setAttribute('aria-disabled', String(!enabled));
+    if (!enabled) {
+      blobId++;
+      if (blobUrl) URL.revokeObjectURL(blobUrl);
+      blobUrl = null;
+      downloadEl.removeAttribute('href');
+    }
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+    if (message !== '') setOutputEnabled(false);
+  }
+
+  const fill = (
+    template: string | undefined,
+    values: Record<string, string | undefined>,
+  ) =>
+    Object.entries(values).reduce(
+      (s, [k, v]) => s.replace(`{${k}}`, v ?? ''),
+      template ?? '',
+    );
+
+  function readSettings(): Settings | null {
+    const glyphs = splitGlyphs(textEl.value);
+    const size = Number(sizeEl.value);
+    const outline = Number(outlineEl.value);
+    const spacing = clamp(Number(spacingEl.value) || 0, -20, 100);
+    const colors = colorIds.map((id) => normalizeHexColor(colorText(id).value));
+    if (glyphs.length < 1 || glyphs.length > MAX_TEXT_LENGTH) {
+      showError(
+        fill(errorEl.dataset.textTemplate, { max: String(MAX_TEXT_LENGTH) }),
+      );
+      return null;
+    }
+    if (!isValidFontSize(size)) {
+      showError(
+        fill(errorEl.dataset.sizeTemplate, {
+          min: String(MIN_FONT_SIZE),
+          max: String(MAX_FONT_SIZE),
+        }),
+      );
+      return null;
+    }
+    if (!isValidOutline(outline)) {
+      showError(
+        fill(errorEl.dataset.outlineTemplate, { max: String(MAX_OUTLINE) }),
+      );
+      return null;
+    }
+    if (colors.some((c) => !c)) {
+      showError(errorEl.dataset.color ?? '');
+      return null;
+    }
+    colorIds.forEach((id, i) => (colorPicker(id).value = colors[i] as string));
+    showError('');
+    const [fg, outlineColor, innerColor, decorColor] = colors as string[];
+    return {
+      glyphs,
+      size,
+      outline,
+      spacing,
+      fg,
+      outlineColor,
+      innerColor,
+      decorColor,
+    };
+  }
+
+  // ---- 部品の管理 -------------------------------------------------------
+
+  const selected = () => items.find((d) => d.id === selectedId) ?? null;
+
+  function addItem(d: NewDecor): Decor {
+    const item = { ...d, id: nextId++ };
+    items.push(item);
+    return item;
+  }
+
+  function syncPanel() {
+    const d = selected();
+    panelEl.disabled = !d || !settings;
+    noSelectionEl.hidden = !!d;
+    selectedLineEl.hidden = !d;
+    if (!d) return;
+    panelTitleEl.textContent = kindNames[d.kind] ?? d.kind;
+    scaleEl.value = String(d.scale);
+    scaleOutEl.textContent = `×${d.scale.toFixed(2)}`;
+    rotEl.value = String(d.rotation);
+    rotOutEl.textContent = `${d.rotation}°`;
+    // 高さ・幅が変わらないよう、耳では非表示ではなく無効表示にする
+    itemColorEl.disabled = d.kind === 'ear';
+    itemColorWrap.classList.toggle('opacity-40', d.kind === 'ear');
+    itemColorEl.value = d.color ?? settings?.decorColor ?? '#ffffff';
+  }
+
+  function select(id: number | null) {
+    selectedId = id;
+    syncPanel();
+    drawOverlay();
+  }
+
+  // ---- 描画 --------------------------------------------------------------
+
+  /** 頂点を丸めた三角形のパス（arcTo の半径は現在の変換の単位） */
+  function roundedTrianglePath(pts: Point[], r: number) {
+    const [a, b, c] = pts;
+    ctx.moveTo((a.x + b.x) / 2, (a.y + b.y) / 2);
+    ctx.arcTo(b.x, b.y, c.x, c.y, r);
+    ctx.arcTo(c.x, c.y, a.x, a.y, r);
+    ctx.arcTo(a.x, a.y, b.x, b.y, r);
+    ctx.closePath();
+  }
+
+  /** 単位円に収まる図形のパスを、現在の変換で組み立てる */
+  function shapePath(kind: DecorKind) {
+    ctx.beginPath();
+    if (kind === 'ear') {
+      roundedTrianglePath(EAR_TRIANGLE, EAR_CORNER_RADIUS);
+    } else if (kind === 'heart') {
+      ctx.moveTo(0, 0.85);
+      ctx.bezierCurveTo(-1.25, 0.05, -0.95, -0.85, 0, -0.3);
+      ctx.bezierCurveTo(0.95, -0.85, 1.25, 0.05, 0, 0.85);
+      ctx.closePath();
+    } else if (kind === 'star') {
+      for (let i = 0; i < 10; i++) {
+        const r = i % 2 === 0 ? 1 : 0.45;
+        const a = -Math.PI / 2 + (i * Math.PI) / 5;
+        const x = Math.cos(a) * r;
+        const y = Math.sin(a) * r;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+    } else if (kind === 'moon') {
+      // 右側が欠けた三日月。外円と内円の交点(0.525, ±0.7806)を結ぶ
+      // 図形の中心が原点、全体が単位円に収まるよう平行移動・縮小する
+      ctx.scale(0.85, 0.85);
+      ctx.translate(0.2875, 0);
+      ctx.arc(-0.1, 0, 1, -0.8957, 0.8957, true);
+      ctx.arc(0.35, 0, 0.8, 1.3486, -1.3486, false);
+      ctx.closePath();
+    }
+  }
+
+  function applyTransform(d: Decor, o: View) {
+    const r = decorRadius(d) * o.size;
+    ctx.translate(o.originX + d.x * o.size, o.originY + d.y * o.size);
+    ctx.rotate((d.rotation * Math.PI) / 180);
+    ctx.scale(d.flip ? -r : r, r);
+  }
+
+  /** 縁取り・影付きの図形のパスを、デバイス座標として作る（線幅を変形させないため） */
+  function buildSolidPath(d: Decor, o: View) {
+    ctx.save();
+    applyTransform(d, o);
+    shapePath(d.kind);
+    ctx.restore();
+  }
+
+  function drawSparkle() {
+    ctx.beginPath();
+    ctx.moveTo(0, -1);
+    ctx.quadraticCurveTo(0, 0, 1, 0);
+    ctx.quadraticCurveTo(0, 0, 0, 1);
+    ctx.quadraticCurveTo(0, 0, -1, 0);
+    ctx.quadraticCurveTo(0, 0, 0, -1);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawPaw() {
+    ctx.beginPath();
+    ctx.ellipse(0, 0.25, 0.5, 0.4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    for (const [dx, dy] of [
+      [-0.62, -0.25],
+      [-0.22, -0.7],
+      [0.22, -0.7],
+      [0.62, -0.25],
+    ]) {
+      ctx.beginPath();
+      ctx.ellipse(dx, dy, 0.19, 0.25, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  function drawWhisker() {
+    ctx.lineWidth = 0.1;
+    ctx.lineCap = 'round';
+    for (const k of [-1, 0, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(-0.7, k * 0.2);
+      ctx.lineTo(0.7, k * 0.7);
+      ctx.stroke();
+    }
+  }
+
+  function draw(s: Settings) {
+    const { size, outline } = s;
+    const margin = Math.round(
+      size * 0.55 + outline + (shadowEl.checked ? size * 0.05 : 0),
+    );
+    const textWidth = textWidthEm * size;
+    const layout = canvasLayout(
+      {
+        width: Math.ceil(textWidth + margin * 2),
+        height: Math.ceil(size + margin * 2),
+      },
+      { x: margin, y: margin + size * 0.88 },
+      items,
+      size,
+      outline + size * 0.03,
+    );
+    canvas.width = layout.width;
+    canvas.height = layout.height;
+    overlay.width = layout.width;
+    overlay.height = layout.height;
+    const o: View = {
+      size,
+      originX: layout.originX,
+      originY: layout.originY,
+    };
+    view = o;
+
+    ctx.clearRect(0, 0, layout.width, layout.height);
+    ctx.font = `900 ${size}px ${FONT}`;
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+
+    const solids = items.filter((d) => DECOR_INFO[d.kind].outlined);
+    const decorColorOf = (d: Decor) => d.color ?? s.decorColor;
+    const drawText = (mode: 'stroke' | 'fill') => {
+      s.glyphs.forEach((g, i) => {
+        const x = o.originX + glyphXs[i] * size;
+        if (mode === 'stroke') ctx.strokeText(g, x, o.originY);
+        else ctx.fillText(g, x, o.originY);
+      });
+    };
+
+    // 縁取り。影は最背面のこの1層にだけ付ける
+    ctx.lineWidth = outline * 2;
+    ctx.strokeStyle = s.outlineColor;
+    if (shadowEl.checked) {
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.35)';
+      ctx.shadowBlur = size * 0.06;
+      ctx.shadowOffsetX = size * 0.03;
+      ctx.shadowOffsetY = size * 0.04;
+    }
+    if (outline > 0) {
+      drawText('stroke');
+      for (const d of solids) {
+        buildSolidPath(d, o);
+        ctx.stroke();
+      }
+      ctx.shadowColor = 'transparent';
+    }
+
+    // 本体と装飾（部品の並び順＝重なり順。当たり判定の優先順位と一致させる）
+    // 縁取りがない場合だけ、影は文字と縁取り付きの図形の塗りに付ける
+    const shadowOnFill = outline === 0 && shadowEl.checked;
+    const setShadow = (on: boolean) => {
+      ctx.shadowColor = on ? 'rgba(0, 0, 0, 0.35)' : 'transparent';
+    };
+    const inner = shrinkTriangle(EAR_TRIANGLE, 0.5);
+    setShadow(shadowOnFill);
+    ctx.fillStyle = s.fg;
+    drawText('fill');
+    for (const d of items) {
+      if (DECOR_INFO[d.kind].outlined) {
+        setShadow(shadowOnFill);
+        ctx.fillStyle = d.kind === 'ear' ? s.fg : decorColorOf(d);
+        buildSolidPath(d, o);
+        ctx.fill();
+        if (d.kind === 'ear') {
+          setShadow(false);
+          ctx.fillStyle = s.innerColor;
+          ctx.save();
+          applyTransform(d, o);
+          ctx.beginPath();
+          roundedTrianglePath(inner, EAR_CORNER_RADIUS * 0.5);
+          ctx.restore();
+          ctx.fill();
+        }
+      } else {
+        setShadow(false);
+        ctx.save();
+        applyTransform(d, o);
+        ctx.fillStyle = decorColorOf(d);
+        ctx.strokeStyle = decorColorOf(d);
+        if (d.kind === 'sparkle') drawSparkle();
+        else if (d.kind === 'paw') drawPaw();
+        else drawWhisker();
+        ctx.restore();
+      }
+    }
+    setShadow(false);
+
+    drawOverlay();
+  }
+
+  /** 選択中の部品の枠とハンドル。書き出す画像には含めないため別のキャンバスに描く */
+  function drawOverlay() {
+    octx.clearRect(0, 0, overlay.width, overlay.height);
+    const d = selected();
+    if (!d || !view) return;
+    const ratio = canvasRatio();
+    const { size, originX, originY } = view;
+    const cx = originX + d.x * size;
+    const cy = originY + d.y * size;
+    const rot = rotateHandlePos(d);
+    const sc = scaleHandlePos(d);
+    const rx = originX + rot.x * size;
+    const ry = originY + rot.y * size;
+    const sx = originX + sc.x * size;
+    const sy = originY + sc.y * size;
+    octx.lineWidth = 2 * ratio;
+    octx.strokeStyle = '#3b82f6';
+    octx.setLineDash([6 * ratio, 4 * ratio]);
+    octx.beginPath();
+    octx.arc(cx, cy, decorRadius(d) * size, 0, Math.PI * 2);
+    octx.stroke();
+    octx.setLineDash([]);
+    octx.beginPath();
+    octx.moveTo(cx, cy);
+    octx.lineTo(rx, ry);
+    octx.stroke();
+    octx.fillStyle = '#ffffff';
+    for (const [hx, hy] of [
+      [rx, ry],
+      [sx, sy],
+    ]) {
+      octx.beginPath();
+      octx.arc(hx, hy, 7 * ratio, 0, Math.PI * 2);
+      octx.fill();
+      octx.stroke();
+    }
+  }
+
+  /** キャンバスのピクセル数 ÷ 画面上の表示幅（縮小表示のとき1より大きい） */
+  function canvasRatio() {
+    const rect = canvas.getBoundingClientRect();
+    return rect.width > 0 ? canvas.width / rect.width : 1;
+  }
+
+  function toEm(e: PointerEvent) {
+    const rect = canvas.getBoundingClientRect();
+    const ratio = canvasRatio();
+    const v = view!;
+    return {
+      x: ((e.clientX - rect.left) * ratio - v.originX) / v.size,
+      y: ((e.clientY - rect.top) * ratio - v.originY) / v.size,
+    };
+  }
+
+  /** 画面上の指定px分の長さを em に換算する（掴みやすさの確保用） */
+  const cssPxToEm = (px: number) => (px * canvasRatio()) / (view?.size ?? 100);
+
+  function finalize() {
+    downloadEl.download = buildFilename(textEl.value);
+    setOutputEnabled(false);
+    const current = blobId;
+    canvas.toBlob((blob) => {
+      if (current !== blobId) return;
+      if (!blob) {
+        showError(errorEl.dataset.encode ?? '');
+        return;
+      }
+      blobUrl = URL.createObjectURL(blob);
+      downloadEl.href = blobUrl;
+      downloadEl.setAttribute('aria-disabled', 'false');
+      copyBtn.disabled = false;
+    }, 'image/png');
+  }
+
+  async function render() {
+    statusEl.textContent = '';
+    const s = readSettings();
+    if (!s) {
+      // 入力エラー中は、古い設定のまま部品操作で画像が確定されないようにする
+      settings = null;
+      syncPanel();
+      return;
+    }
+
+    // フォントの読み込みを待つ（未読み込みだとフォールバック字体で測定してしまう）
+    const fontSpec = `900 ${s.size}px ${FONT}`;
+    const id = ++renderId;
+    try {
+      await document.fonts.load(fontSpec, s.glyphs.join(''));
+    } catch {
+      // 読み込み失敗時はフォールバックフォントで描画する
+    }
+    if (id !== renderId) return;
+
+    // 文字ごとの位置を測定する（以降の配置は文字サイズ基準のemで扱う）
+    ctx.font = fontSpec;
+    ctx.textBaseline = 'alphabetic';
+    let x = 0;
+    glyphXs = s.glyphs.map((g) => {
+      const start = x / s.size;
+      x += ctx.measureText(g).width + s.spacing;
+      return start;
+    });
+    textWidthEm = (x - s.spacing) / s.size;
+    settings = s;
+
+    syncPanel();
+    draw(s);
+    finalize();
+  }
+
+  /** 部品を変更した後の再描画（文字の測定は済んでいるので同期で行う） */
+  function redraw(commit: boolean) {
+    if (!settings) return;
+    draw(settings);
+    if (commit) finalize();
+  }
+
+  // ---- 入力イベント ------------------------------------------------------
+
+  // 文字・色などの変更は再測定して描画し直す
+  const renderInputs: HTMLElement[] = [
+    textEl,
+    sizeEl,
+    spacingEl,
+    outlineEl,
+    shadowEl,
+    ...colorIds.map(colorText),
+  ];
+  renderInputs.forEach((el) =>
+    el.addEventListener('input', () => void render()),
+  );
+  colorIds.forEach((id) =>
+    colorPicker(id).addEventListener('input', () => {
+      colorText(id).value = colorPicker(id).value;
+      void render();
+    }),
+  );
+  bgEl.addEventListener('change', () => {
+    stage.dataset.bg = bgEl.value;
+  });
+
+  // ---- 部品の操作UI ------------------------------------------------------
+
+  document.querySelectorAll<HTMLButtonElement>('.cl-add').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      if (!settings) return;
+      const kind = btn.dataset.kind as DecorKind;
+      const item = addItem(newDecorAt(kind, textWidthEm, items.length));
+      selectedId = item.id;
+      syncPanel();
+      redraw(true);
+    }),
+  );
+  $<HTMLButtonElement>('cl-clear').addEventListener('click', () => {
+    items = [];
+    selectedId = null;
+    syncPanel();
+    redraw(true);
+  });
+
+  function editSelected(apply: (d: Decor) => void) {
+    const d = selected();
+    if (!d || !settings) return;
+    apply(d);
+    syncPanel();
+    redraw(true);
+  }
+  scaleEl.addEventListener('input', () =>
+    editSelected((d) => (d.scale = clampScale(Number(scaleEl.value)))),
+  );
+  rotEl.addEventListener('input', () =>
+    editSelected((d) => (d.rotation = normalizeRotation(Number(rotEl.value)))),
+  );
+  itemColorEl.addEventListener('input', () =>
+    editSelected((d) => (d.color = itemColorEl.value)),
+  );
+  $<HTMLButtonElement>('cl-flip').addEventListener('click', () =>
+    editSelected((d) => (d.flip = !d.flip)),
+  );
+  $<HTMLButtonElement>('cl-dup').addEventListener('click', () => {
+    const d = selected();
+    if (!d) return;
+    const copy = addItem({
+      kind: d.kind,
+      ...clampPosition(d.x + 0.15, d.y + 0.1, textWidthEm),
+      scale: d.scale,
+      rotation: d.rotation,
+      flip: d.flip,
+      color: d.color,
+    });
+    selectedId = copy.id;
+    syncPanel();
+    redraw(true);
+  });
+  function removeSelected() {
+    const d = selected();
+    if (!d) return;
+    items = items.filter((x) => x.id !== d.id);
+    selectedId = null;
+    syncPanel();
+    redraw(true);
+  }
+  $<HTMLButtonElement>('cl-del').addEventListener('click', removeSelected);
+
+  // ---- ドラッグ操作 ------------------------------------------------------
+
+  type Drag =
+    | { mode: 'move'; dx: number; dy: number; moved: boolean }
+    | { mode: 'rotate' | 'scale'; moved: boolean };
+  let drag: Drag | null = null;
+
+  overlay.addEventListener('pointerdown', (e) => {
+    if (!view || !settings || e.button !== 0 || !e.isPrimary) return;
+    const p = toEm(e);
+    const cur = selected();
+    // 小さい部品ではハンドルが本体中心に近づくため、許容範囲を部品サイズに応じて絞る
+    const handleTol = cur
+      ? Math.min(cssPxToEm(14), Math.max(cssPxToEm(6), decorRadius(cur) * 0.5))
+      : 0;
+    const handle = cur ? handleHit(cur, p.x, p.y, handleTol) : null;
+    if (cur && handle) {
+      drag = { mode: handle, moved: false };
+    } else {
+      const id = hitTest(items, p.x, p.y, cssPxToEm(14));
+      select(id);
+      const d = selected();
+      if (!d) return;
+      drag = { mode: 'move', dx: d.x - p.x, dy: d.y - p.y, moved: false };
+    }
+    overlay.setPointerCapture(e.pointerId);
+    e.preventDefault();
+    overlay.focus({ preventScroll: true });
+  });
+
+  overlay.addEventListener('pointermove', (e) => {
+    const d = selected();
+    if (!drag || !d || !view) return;
+    const p = toEm(e);
+    drag.moved = true;
+    if (drag.mode === 'move') {
+      const pos = clampPosition(p.x + drag.dx, p.y + drag.dy, textWidthEm);
+      d.x = pos.x;
+      d.y = pos.y;
+    } else if (drag.mode === 'scale') {
+      d.scale = Math.round(scaleFromPointer(d, p.x, p.y) * 100) / 100;
+    } else {
+      d.rotation = rotationFromPointer(d, p.x, p.y, e.shiftKey ? 15 : 0);
+    }
+    syncPanel();
+    redraw(false);
+  });
+
+  const endDrag = () => {
+    if (drag?.moved) redraw(true);
+    drag = null;
+  };
+  overlay.addEventListener('pointerup', endDrag);
+  overlay.addEventListener('pointercancel', endDrag);
+
+  overlay.addEventListener('keydown', (e) => {
+    const d = selected();
+    if (!d) return;
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      removeSelected();
+      e.preventDefault();
+      return;
+    }
+    if (e.key === 'Escape') {
+      select(null);
+      return;
+    }
+    const step = e.shiftKey ? 0.05 : 0.01;
+    const move: Record<string, [number, number]> = {
+      ArrowLeft: [-step, 0],
+      ArrowRight: [step, 0],
+      ArrowUp: [0, -step],
+      ArrowDown: [0, step],
+    };
+    const delta = move[e.key];
+    if (!delta) return;
+    e.preventDefault();
+    editSelected((it) => {
+      const pos = clampPosition(it.x + delta[0], it.y + delta[1], textWidthEm);
+      it.x = pos.x;
+      it.y = pos.y;
+    });
+  });
+
+  window.addEventListener('resize', drawOverlay);
+
+  copyBtn.addEventListener('click', () => {
+    canvas.toBlob(async (blob) => {
+      try {
+        if (!blob) throw new Error('no blob');
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob }),
+        ]);
+        statusEl.textContent = copyBtn.dataset.copied ?? '';
+      } catch {
+        statusEl.textContent = copyBtn.dataset.copyFailed ?? '';
+      }
+    }, 'image/png');
+  });
+
+  void render();
+</script>

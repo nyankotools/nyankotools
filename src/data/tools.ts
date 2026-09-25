@@ -989,6 +989,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'cat-logo-text-generator',
+    translations: {
+      ja: {
+        name: '猫ロゴ文字ジェネレーター',
+        description:
+          '丸ゴシックのロゴ文字に猫耳・ひげ・肉球・ハート・星・月を好きな位置へ配置し、背景透過PNGで保存できます。',
+        category: '生成',
+      },
+      en: {
+        name: 'Cat Logo Text Generator',
+        description:
+          'Creates cat-style logo text and lets you place ears, whiskers, paws, hearts, stars and moons freely, then saves it as a transparent PNG.',
+        category: 'Generate',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -180,6 +180,20 @@ export function initFavorites(): void {
     );
 
     favoritesSection.hidden = favoriteTools.length === 0;
+
+    // 次のページの初回描画前に同じHTMLを復元できるよう保存する（復元側は sidebar-category-init.js）。
+    // 表示するツールの絞り込み前のお気に入り一覧をキーにして、内容の一致を判定する。
+    try {
+      localStorage.setItem(
+        `sidebar-favorites-html:${locale}`,
+        JSON.stringify({
+          key: getFavoriteSlugs().join(','),
+          html: favoritesList.innerHTML,
+        }),
+      );
+    } catch {
+      // localStorageが使えない環境では保存せず、プレースホルダー表示になる
+    }
   }
 
   document
@@ -194,6 +208,20 @@ export function initFavorites(): void {
         applyOrderChange();
       });
     });
+
+  // 開閉状態を保存する（復元は sidebar-category-init.js が初回ペイント前に行う）
+  if (favoritesSection instanceof HTMLDetailsElement) {
+    favoritesSection.addEventListener('toggle', () => {
+      try {
+        localStorage.setItem(
+          'sidebar-favorites-open',
+          favoritesSection.open ? '1' : '0',
+        );
+      } catch {
+        // localStorageが使えない環境では保存せず今回の表示だけ反映する
+      }
+    });
+  }
 
   renderFavoritesList();
   reorderHomepageGrid(tools);

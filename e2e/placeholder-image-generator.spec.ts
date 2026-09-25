@@ -195,9 +195,7 @@ test('ダミー画像生成ツール（英語版）：ページが正しく表�
 
   // 各ラベルが英語で表示されていることを確認
   await expect(page.locator('label', { hasText: 'Width (px)' })).toBeVisible();
-  await expect(
-    page.locator('label', { hasText: 'Height (px)' }),
-  ).toBeVisible();
+  await expect(page.locator('label', { hasText: 'Height (px)' })).toBeVisible();
   await expect(
     page.locator('label', { hasText: 'Background color' }),
   ).toBeVisible();

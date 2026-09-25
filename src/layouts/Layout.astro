@@ -79,6 +79,12 @@ const jsonLd: Record<string, unknown> | null = noindex
 <html lang={lang}>
   <head>
     <script src="/theme-init.js" is:inline></script>
+    <!--
+      サイドバー内のインラインスクリプト（スクロール位置の復元）が走るまで初回描画を止める。
+      止めないと、パース途中の描画で一瞬スクロールが先頭のまま表示されてちらつく。
+      非対応ブラウザでは無視され、従来どおりの描画になる。
+    -->
+    <link rel="expect" href="#sidebar-ready" blocking="render" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
@@ -378,6 +384,7 @@ const jsonLd: Record<string, unknown> | null = noindex
           AstroのCSP自動ハッシュ化の対象外でブロックされるため（theme-init.jsと同じ理由）。
         -->
         <script src="/sidebar-category-init.js" is:inline></script>
+        <span id="sidebar-ready" hidden></span>
       </aside>
 
       <style>
@@ -453,6 +460,7 @@ const jsonLd: Record<string, unknown> | null = noindex
         initSidebar,
         initTheme,
         initCategoryPersistence,
+        initSidebarScroll,
       } from '../lib/layout-nav';
       import { initFavorites } from '../lib/favorites-ui';
 
@@ -460,6 +468,7 @@ const jsonLd: Record<string, unknown> | null = noindex
       initTheme();
       initCategoryPersistence();
       initFavorites();
+      initSidebarScroll();
     </script>
   </body>
 </html>

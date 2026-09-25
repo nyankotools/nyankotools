@@ -7,12 +7,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // 1x1の透過PNG（テスト用）
 const PNG_BUFFER = Buffer.from([
-  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
-  0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-  0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00, 0x00, 0x00,
-  0x0a, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00,
-  0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49,
-  0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49,
+  0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06,
+  0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00, 0x00, 0x00, 0x0a, 0x49, 0x44,
+  0x41, 0x54, 0x78, 0x9c, 0x63, 0x00, 0x01, 0x00, 0x00, 0x05, 0x00, 0x01, 0x0d,
+  0x0a, 0x2d, 0xb4, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42,
+  0x60, 0x82,
 ]);
 
 test.describe('画像のBase64変換ツール（日本語版）', () => {
@@ -83,7 +83,9 @@ test.describe('画像のBase64変換ツール（日本語版）', () => {
       ).toHaveAttribute('aria-pressed', 'true');
 
       // Base64のみに切り替え
-      const base64Button = page.locator('#itb-output-style [data-style="base64-only"]');
+      const base64Button = page.locator(
+        '#itb-output-style [data-style="base64-only"]',
+      );
       await base64Button.click();
 
       await expect(base64Button).toHaveAttribute('aria-pressed', 'true');
@@ -152,7 +154,8 @@ test.describe('画像のBase64変換ツール（日本語版）', () => {
 
     // PNG のBase64文字列（Data URL形式）をペースト
     const decodeInput = page.locator('#itb-decode-input');
-    const pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+    const pngBase64 =
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
     const dataUrl = `data:image/png;base64,${pngBase64}`;
     await decodeInput.fill(dataUrl);
 
@@ -187,7 +190,8 @@ test.describe('画像のBase64変換ツール（日本語版）', () => {
 
     // PNGのBase64文字列（プレフィックスなし）をペースト
     const decodeInput = page.locator('#itb-decode-input');
-    const pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+    const pngBase64 =
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
     await decodeInput.fill(pngBase64);
 
     // デバウンス時間を待機
@@ -203,9 +207,7 @@ test.describe('画像のBase64変換ツール（日本語版）', () => {
     await expect(decodeResult).not.toHaveAttribute('hidden');
   });
 
-  test('Base64→画像モードで不正な入力はエラーを表示する', async ({
-    page,
-  }) => {
+  test('Base64→画像モードで不正な入力はエラーを表示する', async ({ page }) => {
     await page.goto('/tools/image-to-base64/');
 
     // デコードモードに切り替え
@@ -305,7 +307,8 @@ test.describe('Image to Base64 (Data URL) Converter (English)', () => {
     await decodeButton.click();
 
     const decodeInput = page.locator('#itb-decode-input');
-    const pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+    const pngBase64 =
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
     await decodeInput.fill(`data:image/png;base64,${pngBase64}`);
 
     await page.waitForTimeout(300);

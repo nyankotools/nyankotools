@@ -33,7 +33,7 @@
 pnpm install
 ```
 
-Node.js `>=22.12.0` が必要です（`package.json` の `engines` 参照）。
+Node.js `>=22.13.0` が必要です（`package.json` の `engines` 参照）。
 
 ## コマンド
 

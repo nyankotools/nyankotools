@@ -352,14 +352,14 @@ test.describe('お気に入り機能', () => {
     await expect(button).toBeVisible();
 
     // ボタンが絶対配置されている
-    const position = await button.evaluate((el) =>
-      window.getComputedStyle(el).position,
+    const position = await button.evaluate(
+      (el) => window.getComputedStyle(el).position,
     );
     expect(position).toBe('absolute');
 
     // ボタンが右側に配置されている
-    const right = await button.evaluate((el) =>
-      window.getComputedStyle(el).right,
+    const right = await button.evaluate(
+      (el) => window.getComputedStyle(el).right,
     );
     expect(right).not.toBe('auto');
 
@@ -381,8 +381,7 @@ test.describe('お気に入り機能', () => {
       const parent = el.parentElement;
       if (!parent) return false;
       return (
-        parent.tagName === 'DIV' &&
-        parent.parentElement?.tagName === 'MAIN'
+        parent.tagName === 'DIV' && parent.parentElement?.tagName === 'MAIN'
       );
     });
     expect(h1IsInMainDiv).toBe(true);
@@ -438,14 +437,14 @@ test.describe('お気に入り機能', () => {
     const button = page.locator('main [data-favorite-toggle="html-escape"]');
 
     // 親divが相対配置
-    const parentPosition = await parentDiv.evaluate((el) =>
-      window.getComputedStyle(el).position,
+    const parentPosition = await parentDiv.evaluate(
+      (el) => window.getComputedStyle(el).position,
     );
     expect(parentPosition).toBe('relative');
 
     // h1が右側にパディングを持つ（pr-12 = padding-right: 3rem）
-    const h1PaddingRight = await h1.evaluate((el) =>
-      window.getComputedStyle(el).paddingRight,
+    const h1PaddingRight = await h1.evaluate(
+      (el) => window.getComputedStyle(el).paddingRight,
     );
     expect(h1PaddingRight).toBe('48px'); // 3rem = 48px
 

@@ -170,7 +170,9 @@ test.describe('サイドバーのスクロール位置の保存・復元（デ�
     // The y-coordinate should not change (layout shift prevented by placeholder)
     // Allow for small rounding differences (1px tolerance)
     if (categoryYBeforeModuleJS !== null && categoryYAfterModuleJS !== null) {
-      expect(Math.abs(categoryYBeforeModuleJS - categoryYAfterModuleJS)).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(categoryYBeforeModuleJS - categoryYAfterModuleJS),
+      ).toBeLessThanOrEqual(1);
     }
   });
 
@@ -218,7 +220,9 @@ test.describe('サイドバーのスクロール位置の保存・復元（デ�
 
     // Heights should match (or be very close)
     if (placeholderHeight !== null && renderedHeight !== null) {
-      expect(Math.abs(placeholderHeight - renderedHeight)).toBeLessThanOrEqual(2);
+      expect(Math.abs(placeholderHeight - renderedHeight)).toBeLessThanOrEqual(
+        2,
+      );
     }
   });
 

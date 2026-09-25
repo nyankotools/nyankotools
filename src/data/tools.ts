@@ -1023,6 +1023,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'encoding-converter',
+    translations: {
+      ja: {
+        name: '文字コード変換・文字化け診断',
+        description:
+          'テキストファイルの文字コードを自動判定し、Shift_JIS・EUC-JP・UTF-8などへ変換。文字化けの原因診断と復元も。',
+        category: '変換',
+      },
+      en: {
+        name: 'Encoding Converter & Mojibake Fixer',
+        description:
+          "Detects a text file's encoding and converts between Shift_JIS, EUC-JP and UTF-8. Diagnoses and repairs garbled text.",
+        category: 'Convert',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

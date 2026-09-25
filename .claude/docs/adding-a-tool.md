@@ -30,6 +30,7 @@ Where to touch and in what order when adding one tool. See [architecture.md](./a
    - Wrap everything in `Layout` and pass the dictionary's `title` / `description`.
    - Exactly one `<h1>`, specific enough to convey the tool name and the problem it solves. Where possible, put internal links to related existing tools in the body.
    - Write static markup (forms, result display) in the Astro template part. Keep it intact at narrow widths (~375px).
+   - **File selection UI**: for any tool that takes a file, wrap the `<input type="file">` and its hint text in a dashed-border dropzone (`rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700`) that also accepts drag & drop. Handle `dragover` / `dragleave` / `drop` on the dropzone (highlight with `border-blue-400 bg-blue-50` while dragging, `preventDefault()` on `dragover` and `drop`), and route both the `change` event and the `drop` event through one shared `handleFile(file)` function. Mention drag & drop in the hint text in both ja and en. References: `ImageToBase64Page.astro`, `EncodingConverterPage.astro`.
    - In the `<script>` tag, import the step 1 functions and update the DOM on `input` events etc. No React/Vue/Svelte islands. `<script>` cannot read frontmatter variables directly, so embed locale-dependent copy (copy-success message, error messages, etc.) in the DOM via `data-*` attributes and read it with `element.dataset.xxx` (see `data-message` on `base64-error`). Keep copy out of the logic layer (`src/lib/tools/<slug>.ts`).
 
 4. **Create the per-locale page files (both ja and en)**: `src/pages/tools/<slug>/index.astro` (ja) and `src/pages/en/tools/<slug>/index.astro` (en). Each is a thin wrapper that calls the step 3 component with only `locale` changed (no markup).
@@ -60,6 +61,7 @@ Note: this "shared component + dictionary + thin wrapper" structure is the stand
 - [ ] Implemented `src/components/tool-pages/<Slug>Page.astro` wrapped in `Layout`, resolving copy from the dictionary
 - [ ] Made `src/pages/tools/<slug>/index.astro` (ja) and `src/pages/en/tools/<slug>/index.astro` (en) thin wrappers that only call the shared component
 - [ ] Registered `translations.ja` / `translations.en` (including `category`) in `src/data/tools.ts`
+- [ ] If the tool takes a file: it uses the dashed-border dropzone and works by both file picker and drag & drop (see step 3)
 - [ ] Runs entirely client-side; sends no data to any server
 - [ ] Designed page-specific `title` / `description` for ja and en, and exactly one `<h1>` (see [growth.md](./growth.md))
 - [ ] Confirmed the layout holds at narrow widths (~375px)

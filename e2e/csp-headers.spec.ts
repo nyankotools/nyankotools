@@ -4,7 +4,7 @@ import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 // public/_headers に定義した Content-Security-Policy は Cloudflare Workers Static
 // Assets（本番配信）でのみ適用され、`pnpm dev`（Astro dev server）では送出されない。
 // そのため、このスペックだけは `pnpm build` 済みの dist を `wrangler dev` で実配信し、
-// 実際にCSPヘッダーが送出されること、および connect-src 'none' 化によって
+// 実際にCSPヘッダーが送出されること、および connect-src を同一オリジンのみに絞ったCSPによって
 // 既存機能（QRコード生成・ダウンロード、Markdownプレビュー、共有ボタンのコピー等）が
 // 壊れていないことを確認する。
 
@@ -97,10 +97,12 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
       .getAttribute('content');
 
     expect(metaCsp).toBeTruthy();
-    expect(metaCsp).toContain("connect-src 'none'");
+    expect(metaCsp).toContain("connect-src 'self'");
     expect(metaCsp).toContain("default-src 'self'");
     expect(metaCsp).toContain("object-src 'none'");
-    expect(metaCsp).toMatch(/script-src 'self'(?: 'sha256-[^']+')+/);
+    expect(metaCsp).toMatch(
+      /script-src 'self' 'wasm-unsafe-eval'(?: 'sha256-[^']+')+/,
+    );
     expect(metaCsp).toMatch(/style-src 'self'(?: 'sha256-[^']+')+/);
 
     await context.close();

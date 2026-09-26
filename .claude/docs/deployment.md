@@ -26,7 +26,9 @@ Cloudflare Workers (static asset serving). `wrangler.jsonc` is configured as fol
 Deploys are done by the `deploy` job in `.github/workflows/ci.yml`, not by Cloudflare Workers Builds (Git integration must be disconnected in the Cloudflare dashboard, otherwise it deploys without waiting for CI).
 
 - Pushing `develop` runs no CI and no deploy.
-- Merge `develop` into `main` locally and push `main`: `test` and `e2e` run, and only if both pass does `deploy` run `wrangler deploy`.
+- `main` is branch-protected (applies to admins too): direct pushes are rejected, and changes reach `main` only through a pull request from `develop` whose `check` job (`.github/workflows/pr.yml`: lint, type check, unit tests, build; no E2E) has passed. Force pushes and branch deletion are disabled.
+- Only the "Create a merge commit" merge method is enabled (squash and rebase are disabled), so `develop` stays an ancestor of `main` and can be re-synced with `git merge --ff-only main`. "Automatically delete head branches" must stay off, or `develop` would be deleted on merge.
+- Merging the PR pushes to `main`: `test` and `e2e` run in `ci.yml`, and only if both pass does `deploy` run `wrangler deploy`.
 - Required GitHub repository secrets: `CLOUDFLARE_API_TOKEN` (Workers edit permission) and `CLOUDFLARE_ACCOUNT_ID`.
 
 ## Local check commands

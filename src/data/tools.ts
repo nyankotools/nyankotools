@@ -1064,13 +1064,13 @@ export const tools: Tool[] = [
         name: 'Webカメラ動作確認',
         description:
           'Webカメラの映像・解像度・フレームレート（FPS）とマイクの入力レベルをブラウザ上で確認。購入直後やWeb会議・配信前のチェックに。',
-        category: '開発',
+        category: 'カメラ',
       },
       en: {
         name: 'Webcam & Microphone Test',
         description:
           'Check your webcam video, actual resolution, frame rate (FPS) and microphone level in the browser. Ideal before a call or stream.',
-        category: 'Development',
+        category: 'Camera',
       },
     },
   },

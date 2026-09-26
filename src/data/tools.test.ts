@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { tools } from './tools';
 
 describe('tools registry - category consistency', () => {
-  // Define the expected 9 categories for ja and en
+  // Define the expected 10 categories for ja and en
   const VALID_JA_CATEGORIES = [
     'テキスト',
     'データ変換',
@@ -13,6 +13,7 @@ describe('tools registry - category consistency', () => {
     '計算',
     '開発',
     '生成',
+    'カメラ',
   ];
 
   const VALID_EN_CATEGORIES = [
@@ -25,9 +26,10 @@ describe('tools registry - category consistency', () => {
     'Calculate',
     'Development',
     'Generate',
+    'Camera',
   ];
 
-  it('all tools should have valid ja category from the 9 categories', () => {
+  it('all tools should have valid ja category from the 10 categories', () => {
     const invalidTools: string[] = [];
     for (const tool of tools) {
       const jaCategory = tool.translations.ja.category;
@@ -40,7 +42,7 @@ describe('tools registry - category consistency', () => {
     expect(invalidTools).toHaveLength(0);
   });
 
-  it('all tools should have valid en category from the 9 categories', () => {
+  it('all tools should have valid en category from the 10 categories', () => {
     const invalidTools: string[] = [];
     for (const tool of tools) {
       const enCategory = tool.translations.en.category;
@@ -144,6 +146,7 @@ describe('tools registry - category consistency', () => {
       計算: 'Calculate',
       開発: 'Development',
       生成: 'Generate',
+      カメラ: 'Camera',
     };
 
     const inconsistentMappings: string[] = [];

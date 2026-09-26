@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
 // 375px幅での横はみ出しがないことを確認する。
 
 test.describe('ホームページのカテゴリフィルタ', () => {
-  test('ja: 9つのカテゴリフィルタボタンがすべて表示される', async ({
+  test('ja: 10個のカテゴリフィルタボタンがすべて表示される', async ({
     page,
   }) => {
     await page.goto('/');
@@ -19,6 +19,7 @@ test.describe('ホームページのカテゴリフィルタ', () => {
       'PDF',
       '開発',
       '生成',
+      'カメラ',
     ];
 
     for (const category of expectedCategories) {
@@ -27,7 +28,7 @@ test.describe('ホームページのカテゴリフィルタ', () => {
     }
   });
 
-  test('en: 9つのカテゴリフィルタボタンがすべて表示される', async ({
+  test('en: 10個のカテゴリフィルタボタンがすべて表示される', async ({
     page,
   }) => {
     await page.goto('/en/');
@@ -42,6 +43,7 @@ test.describe('ホームページのカテゴリフィルタ', () => {
       'PDF',
       'Development',
       'Generate',
+      'Camera',
     ];
 
     for (const category of expectedCategories) {

@@ -1,0 +1,607 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { webcamTesterContent } from '../../i18n/tools/webcam-tester';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = webcamTesterContent[locale];
+
+const RESOLUTIONS = [
+  { value: '', label: t.resolutionAuto },
+  { value: '640x480', label: '640 × 480 (VGA)' },
+  { value: '1280x720', label: '1280 × 720 (HD)' },
+  { value: '1920x1080', label: '1920 × 1080 (Full HD)' },
+  { value: '3840x2160', label: '3840 × 2160 (4K)' },
+];
+
+const selectClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+const labelClass =
+  'mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300';
+// ON（aria-pressed=true）は暗いグレー、OFFは赤で、会議アプリのコントロールバーと同じ見え方にする
+const roundButtonClass =
+  'pointer-events-auto flex size-11 items-center justify-center rounded-full bg-red-600 text-white hover:bg-red-700 aria-pressed:bg-gray-700 aria-pressed:hover:bg-gray-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white';
+const ICONS = {
+  camera:
+    'M15 8v8H5V8h10m1-2H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4V7a1 1 0 0 0-1-1z',
+  mic: 'M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-2z',
+  mirror:
+    'M15 21h2v-2h-2v2zm4-12h2V7h-2v2zM3 5v14c0 1.1.9 2 2 2h4v-2H5V5h4V3H5c-1.1 0-2 .9-2 2zm16-2v2h2c0-1.1-.9-2-2-2zm-8 20h2V1h-2v22zm8-6h2v-2h-2v2zM15 5h2V3h-2v2zm4 8h2v-2h-2v2zm0 8c1.1 0 2-.9 2-2h-2v2z',
+  fullscreen:
+    'M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z',
+};
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div
+    id="webcam-root"
+    data-default-device={t.defaultDevice}
+    data-camera-label={t.cameraLabel}
+    data-fullscreen={t.fullscreen}
+    data-exit-fullscreen={t.exitFullscreen}
+    data-mic-label={t.micLabel}
+    data-none={t.none}
+    data-mic-off={t.micOff}
+    data-fps-unit={t.fpsUnit}
+    data-facing-user={t.facingUser}
+    data-facing-environment={t.facingEnvironment}
+    data-error-permission-denied={t.errors['permission-denied']}
+    data-error-not-found={t.errors['not-found']}
+    data-error-in-use={t.errors['in-use']}
+    data-error-constraints={t.errors.constraints}
+    data-error-insecure={t.errors.insecure}
+    data-error-unsupported={t.errors.unsupported}
+    data-error-unknown={t.errors.unknown}
+  >
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div>
+        <label for="webcam-camera" class={labelClass}>
+          {t.cameraLabel}
+        </label>
+        <select id="webcam-camera" class={selectClass}>
+          <option value="">{t.defaultDevice}</option>
+        </select>
+      </div>
+      <div>
+        <label for="webcam-mic" class={labelClass}>
+          {t.micLabel}
+        </label>
+        <select id="webcam-mic" class={selectClass}>
+          <option value="">{t.defaultDevice}</option>
+        </select>
+      </div>
+      <div>
+        <label for="webcam-resolution" class={labelClass}>
+          {t.resolutionLabel}
+        </label>
+        <select id="webcam-resolution" class={selectClass}>
+          {RESOLUTIONS.map((r) => (
+            <option value={r.value}>{r.label}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <p
+      id="webcam-error"
+      hidden
+      role="alert"
+      class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+    ></p>
+
+    <div
+      id="webcam-stage"
+      class="relative mt-4 aspect-video w-full max-w-2xl overflow-hidden rounded-xl bg-black [&:fullscreen]:mt-0 [&:fullscreen]:aspect-auto [&:fullscreen]:max-w-none"
+    >
+      <video
+        id="webcam-video"
+        autoplay
+        muted
+        playsinline
+        aria-label={t.videoAriaLabel}
+        class="size-full object-contain"
+      ></video>
+      <div
+        id="webcam-placeholder"
+        class="absolute inset-0 flex flex-col items-center justify-center gap-3 px-4 pt-4 pb-16 text-center text-xs text-gray-300 sm:text-sm"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          class="size-10 text-gray-500 sm:size-16"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d={ICONS.camera} />
+          <path
+            d="M4 4l16 16"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          ></path>
+        </svg>
+        <p>{t.placeholder}</p>
+      </div>
+
+      <div
+        id="webcam-level-wrap"
+        hidden
+        class="absolute bottom-16 left-3 flex items-center gap-2 rounded-full bg-black/60 px-3 py-2 text-white"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          class="size-4"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d={ICONS.mic} />
+        </svg>
+        <div
+          id="webcam-level"
+          role="meter"
+          aria-label={t.micLevelLabel}
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+          class="h-1.5 w-16 overflow-hidden rounded-full bg-white/30"
+        >
+          <div
+            id="webcam-level-bar"
+            class="h-full w-0 bg-green-400 transition-[width] duration-75"
+          ></div>
+        </div>
+      </div>
+
+      <div class="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center gap-3 bg-linear-to-t from-black/60 to-transparent p-3">
+        <button
+          id="webcam-camera-toggle"
+          type="button"
+          aria-pressed="false"
+          aria-label={t.cameraLabel}
+          title={t.cameraLabel}
+          class={`group ${roundButtonClass}`}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            class="size-5"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d={ICONS.camera} />
+            <path
+              class="group-aria-pressed:hidden"
+              d="M4 4l16 16"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            ></path>
+          </svg>
+        </button>
+        <button
+          id="webcam-mic-toggle"
+          type="button"
+          aria-pressed="false"
+          aria-label={t.micLabel}
+          title={t.micLabel}
+          class={`group ${roundButtonClass}`}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            class="size-5"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d={ICONS.mic} />
+            <path
+              class="group-aria-pressed:hidden"
+              d="M4 4l16 16"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            ></path>
+          </svg>
+        </button>
+        <button
+          id="webcam-mirror"
+          type="button"
+          aria-pressed="false"
+          aria-label={t.mirror}
+          title={t.mirror}
+          class="pointer-events-auto flex size-11 items-center justify-center rounded-full bg-gray-700 text-white hover:bg-gray-600 aria-pressed:bg-blue-600 aria-pressed:hover:bg-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            class="size-5"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path d={ICONS.mirror} />
+          </svg>
+        </button>
+      </div>
+      <button
+        id="webcam-fullscreen"
+        type="button"
+        hidden
+        aria-label={t.fullscreen}
+        title={t.fullscreen}
+        class="absolute right-3 bottom-3 z-10 flex size-11 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          class="size-5"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path d={ICONS.fullscreen} />
+        </svg>
+      </button>
+    </div>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.infoHeading}</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[320px] border-collapse text-sm">
+        <tbody>
+          {[
+            ['device', t.rowDevice],
+            ['resolution', t.rowResolution],
+            ['fps', t.rowFps],
+            ['facing', t.rowFacing],
+            ['mic', t.rowMic],
+          ].map(([id, label]) => (
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                {label}
+              </td>
+              <td
+                id={`webcam-info-${id}`}
+                class="py-2 text-right break-all text-gray-900 dark:text-gray-100"
+              >
+                -
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    calculateAudioLevel,
+    calculateFps,
+    classifyMediaError,
+    formatResolution,
+    trimTimestamps,
+    type MediaErrorKind,
+  } from '../../lib/tools/webcam-tester';
+
+  const root = document.getElementById('webcam-root')!;
+  const cameraToggle = document.getElementById(
+    'webcam-camera-toggle',
+  ) as HTMLButtonElement;
+  const micToggle = document.getElementById(
+    'webcam-mic-toggle',
+  ) as HTMLButtonElement;
+  const mirrorToggle = document.getElementById(
+    'webcam-mirror',
+  ) as HTMLButtonElement;
+  const cameraSelect = document.getElementById(
+    'webcam-camera',
+  ) as HTMLSelectElement;
+  const micSelect = document.getElementById('webcam-mic') as HTMLSelectElement;
+  const resolutionSelect = document.getElementById(
+    'webcam-resolution',
+  ) as HTMLSelectElement;
+  const errorEl = document.getElementById('webcam-error')!;
+  const video = document.getElementById('webcam-video') as HTMLVideoElement;
+  const placeholder = document.getElementById('webcam-placeholder')!;
+  const stage = document.getElementById('webcam-stage')!;
+  const fullscreenButton = document.getElementById(
+    'webcam-fullscreen',
+  ) as HTMLButtonElement;
+  const levelWrap = document.getElementById('webcam-level-wrap')!;
+  const levelEl = document.getElementById('webcam-level')!;
+  const levelBar = document.getElementById('webcam-level-bar')!;
+
+  const d = root.dataset;
+  const ERROR_TEXT: Record<MediaErrorKind, string> = {
+    'permission-denied': d.errorPermissionDenied ?? '',
+    'not-found': d.errorNotFound ?? '',
+    'in-use': d.errorInUse ?? '',
+    constraints: d.errorConstraints ?? '',
+    insecure: d.errorInsecure ?? '',
+    unsupported: d.errorUnsupported ?? '',
+    unknown: d.errorUnknown ?? '',
+  };
+  const NONE = d.none ?? '';
+
+  function info(id: string): HTMLElement {
+    return document.getElementById(`webcam-info-${id}`)!;
+  }
+
+  let stream: MediaStream | null = null;
+  // カメラ取得中・動作中はtrue（取得待ちの間の設定変更も取りこぼさないため、streamとは別に持つ）
+  let active = false;
+  let micEnabled = false;
+  let audioContext: AudioContext | null = null;
+  let frameTimestamps: number[] = [];
+  let sessionId = 0;
+  let meterFrame = 0;
+  let fpsTimer = 0;
+
+  function showError(kind: MediaErrorKind) {
+    errorEl.textContent = ERROR_TEXT[kind];
+    errorEl.hidden = false;
+  }
+
+  function resetInfo() {
+    info('device').textContent = '-';
+    info('resolution').textContent = '-';
+    info('fps').textContent = '-';
+    info('facing').textContent = '-';
+    info('mic').textContent = '-';
+    levelBar.style.width = '0%';
+    levelEl.setAttribute('aria-valuenow', '0');
+  }
+
+  function stopAll() {
+    sessionId++;
+    cancelAnimationFrame(meterFrame);
+    clearInterval(fpsTimer);
+    stream?.getTracks().forEach((track) => track.stop());
+    stream = null;
+    void audioContext?.close();
+    audioContext = null;
+    frameTimestamps = [];
+    video.srcObject = null;
+    placeholder.hidden = false;
+    active = false;
+    cameraToggle.setAttribute('aria-pressed', 'false');
+    levelWrap.hidden = true;
+    resetInfo();
+  }
+
+  function updateResolution() {
+    if (video.videoWidth > 0) {
+      info('resolution').textContent = formatResolution(
+        video.videoWidth,
+        video.videoHeight,
+      );
+    }
+  }
+
+  function startFpsMeasurement(track: MediaStreamTrack, id: number) {
+    frameTimestamps = [];
+    const settingsFps = track.getSettings().frameRate;
+    if ('requestVideoFrameCallback' in video) {
+      const onFrame = (now: number) => {
+        if (id !== sessionId) return;
+        frameTimestamps.push(now);
+        video.requestVideoFrameCallback(onFrame);
+      };
+      video.requestVideoFrameCallback(onFrame);
+      fpsTimer = window.setInterval(() => {
+        frameTimestamps = trimTimestamps(
+          frameTimestamps,
+          performance.now(),
+          2000,
+        );
+        const fps = calculateFps(frameTimestamps);
+        info('fps').textContent =
+          fps === null ? '-' : `${fps.toFixed(1)} ${d.fpsUnit ?? ''}`;
+      }, 500);
+    } else {
+      // 実測できない環境では、カメラが報告する設定値を表示する
+      info('fps').textContent =
+        settingsFps === undefined
+          ? NONE
+          : `${Math.round(settingsFps)} ${d.fpsUnit ?? ''}`;
+    }
+  }
+
+  function startMeter(audioStream: MediaStream, id: number) {
+    levelWrap.hidden = false;
+    const ctx = new AudioContext();
+    void ctx.resume();
+    audioContext = ctx;
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 1024;
+    ctx.createMediaStreamSource(audioStream).connect(analyser);
+    const samples = new Uint8Array(analyser.fftSize);
+    const tick = () => {
+      if (id !== sessionId) return;
+      analyser.getByteTimeDomainData(samples);
+      const level = calculateAudioLevel(samples);
+      levelBar.style.width = `${level}%`;
+      levelEl.setAttribute('aria-valuenow', String(level));
+      meterFrame = requestAnimationFrame(tick);
+    };
+    tick();
+  }
+
+  function populateDevices(
+    select: HTMLSelectElement,
+    devices: MediaDeviceInfo[],
+    kind: MediaDeviceKind,
+    fallbackLabel: string,
+    selectedId: string | undefined,
+  ) {
+    const previous = select.value;
+    select.replaceChildren(new Option(d.defaultDevice ?? '', ''));
+    devices
+      .filter((device) => device.kind === kind && device.deviceId)
+      .forEach((device, index) => {
+        select.append(
+          new Option(
+            device.label || `${fallbackLabel} ${index + 1}`,
+            device.deviceId,
+          ),
+        );
+      });
+    const wanted = selectedId ?? previous;
+    if ([...select.options].some((o) => o.value === wanted)) {
+      select.value = wanted;
+    }
+  }
+
+  async function start() {
+    stopAll();
+    errorEl.hidden = true;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showError(window.isSecureContext ? 'unsupported' : 'insecure');
+      return;
+    }
+    const id = sessionId;
+    const videoConstraints: MediaTrackConstraints = {};
+    if (cameraSelect.value)
+      videoConstraints.deviceId = { exact: cameraSelect.value };
+    // 「自動」は制約なしだとブラウザ既定のVGAになるため、最大フルHDで取得するよう指定して
+    // カメラが対応する最大に近い解像度を得る（非対応なら近い値に落ちる）
+    const [w, h] = (resolutionSelect.value || '1920x1080')
+      .split('x')
+      .map(Number);
+    videoConstraints.width = { ideal: w };
+    videoConstraints.height = { ideal: h };
+    const wantMic = micEnabled;
+    active = true;
+    cameraToggle.setAttribute('aria-pressed', 'true');
+    try {
+      const media = await navigator.mediaDevices.getUserMedia({
+        video: videoConstraints,
+        audio: wantMic
+          ? micSelect.value
+            ? { deviceId: { exact: micSelect.value } }
+            : true
+          : false,
+      });
+      if (id !== sessionId) {
+        media.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      stream = media;
+      video.srcObject = media;
+      placeholder.hidden = true;
+      void video.play().catch(() => {});
+
+      const track = media.getVideoTracks()[0];
+      const settings = track.getSettings();
+      info('device').textContent = track.label || NONE;
+      info('facing').textContent =
+        settings.facingMode === 'user'
+          ? (d.facingUser ?? NONE)
+          : settings.facingMode === 'environment'
+            ? (d.facingEnvironment ?? NONE)
+            : NONE;
+      if (settings.width && settings.height) {
+        info('resolution').textContent = formatResolution(
+          settings.width,
+          settings.height,
+        );
+      }
+      startFpsMeasurement(track, id);
+
+      const audioTrack = media.getAudioTracks()[0];
+      info('mic').textContent = audioTrack
+        ? audioTrack.label || '✓'
+        : (d.micOff ?? '');
+      if (audioTrack) startMeter(media, id);
+
+      // ラベルは権限付与後にしか取得できないため、開始後にデバイス一覧を更新する
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        if (id !== sessionId) return;
+        populateDevices(
+          cameraSelect,
+          devices,
+          'videoinput',
+          d.cameraLabel ?? '',
+          settings.deviceId,
+        );
+        populateDevices(
+          micSelect,
+          devices,
+          'audioinput',
+          d.micLabel ?? '',
+          audioTrack?.getSettings().deviceId,
+        );
+      } catch {
+        // デバイス一覧の取得失敗はプレビュー自体には影響しないため無視する
+      }
+    } catch (error) {
+      if (id !== sessionId) return;
+      stopAll();
+      // マイクが原因で失敗した場合にボタンがONのまま残らないよう、マイクはOFFに戻す
+      if (micEnabled) {
+        micEnabled = false;
+        micToggle.setAttribute('aria-pressed', 'false');
+      }
+      showError(classifyMediaError((error as DOMException | undefined)?.name));
+    }
+  }
+
+  cameraToggle.addEventListener('click', () => {
+    if (active) {
+      stopAll();
+    } else {
+      void start();
+    }
+  });
+  micToggle.addEventListener('click', () => {
+    micEnabled = !micEnabled;
+    micToggle.setAttribute('aria-pressed', String(micEnabled));
+    if (active) void start();
+  });
+  video.addEventListener('loadedmetadata', updateResolution);
+  video.addEventListener('resize', updateResolution);
+
+  mirrorToggle.addEventListener('click', () => {
+    const mirrored = mirrorToggle.getAttribute('aria-pressed') !== 'true';
+    mirrorToggle.setAttribute('aria-pressed', String(mirrored));
+    video.style.transform = mirrored ? 'scaleX(-1)' : '';
+  });
+
+  // 実行中に設定を変えたら、その設定で取り直す
+  [cameraSelect, micSelect, resolutionSelect].forEach((el) => {
+    el.addEventListener('change', () => {
+      if (active) void start();
+    });
+  });
+
+  // 映像エリア（ステージ）を全画面にする。iPhone Safari等の非対応環境ではボタンを出さない
+  if (document.fullscreenEnabled) {
+    fullscreenButton.hidden = false;
+    fullscreenButton.addEventListener('click', () => {
+      if (document.fullscreenElement) {
+        void document.exitFullscreen();
+      } else {
+        void stage.requestFullscreen().catch(() => {});
+      }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      const label =
+        (document.fullscreenElement ? d.exitFullscreen : d.fullscreen) ?? '';
+      fullscreenButton.setAttribute('aria-label', label);
+      fullscreenButton.title = label;
+    });
+  }
+
+  window.addEventListener('pagehide', stopAll);
+</script>

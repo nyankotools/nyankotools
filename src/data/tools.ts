@@ -1057,6 +1057,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'webcam-tester',
+    translations: {
+      ja: {
+        name: 'Webカメラ動作確認',
+        description:
+          'Webカメラの映像・解像度・フレームレート（FPS）とマイクの入力レベルをブラウザ上で確認。購入直後やWeb会議・配信前のチェックに。',
+        category: '開発',
+      },
+      en: {
+        name: 'Webcam & Microphone Test',
+        description:
+          'Check your webcam video, actual resolution, frame rate (FPS) and microphone level in the browser. Ideal before a call or stream.',
+        category: 'Development',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

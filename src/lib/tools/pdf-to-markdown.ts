@@ -90,7 +90,7 @@ const SEGMENT_GAP_EM = 1;
 /** これ以上空くとスペースを挟む間隔（em） */
 const SPACE_GAP_EM = 0.15;
 /** 本文より何倍大きければ見出しとみなすか */
-const HEADING_RATIO = 1.15;
+const HEADING_RATIO = 1.1;
 /** ヘッダー・フッターとみなすページ上下端の割合 */
 const MARGIN_ZONE = 0.12;
 const MAX_HEADING_LEVEL = 4;
@@ -100,6 +100,10 @@ const SENTENCE_END = /[。．.!?！？」』）)]$/;
 const BULLET_ONLY = /^([・•●○◦▪■□▶▸‣]|[-–—*]|\d{1,3}[.)．）])$/;
 const PAGE_NUMBER =
   /^([-–—\s]*\d{1,3}[-–—\s]*|(page|p\.?)\s*\d+(\s*(\/|of)\s*\d+)?|\d+\s*\/\s*\d+|第?\s*\d+\s*(ページ|頁))$/i;
+
+/** 番号付き見出し（第1章 / 1.2 概要 / 1. はじめに）。値は見出しレベルの手がかり */
+const NUMBERED_HEADING =
+  /^(?:第\s*[0-9０-９一二三四五六七八九十]+\s*[章部編]|(\d{1,2}(?:\.\d{1,2}){1,3})(?=\s|[^\d.])|\d{1,2}[.．]\s*(?=\S))/;
 
 const isCjk = (ch: string | undefined) => !!ch && CJK.test(ch);
 
@@ -561,6 +565,14 @@ function continues(
   if (prev.bold !== cur.bold) return false;
   const metrics = ctx.regions.get(cur.region);
   const text = linePlain(prev);
+  // 番号付きの短い1行（第1章・1.2 概要）は見出しなので、次の行とは続けない
+  if (
+    isShortHeadingLine(prev) &&
+    NUMBERED_HEADING.test(text) &&
+    !parseMarker(text)
+  ) {
+    return false;
+  }
   const gap = prev.y - cur.y;
   if (gap < 0) {
     // 段が変わって上に戻った場合: 文が終わっていなければ続きとみなす
@@ -591,27 +603,40 @@ interface Accumulator {
   level?: number;
 }
 
+/** 太字だけ、または番号付きで文が終わらない短い1行は見出し候補 */
+function isShortHeadingLine(line: Line): boolean {
+  const text = linePlain(line);
+  return text.length <= 40 && !SENTENCE_END.test(text) && !/[:：]$/.test(text);
+}
+
+function numberedHeadingLevel(text: string, ctx: Context): number {
+  const m = text.match(NUMBERED_HEADING);
+  const base = Math.max(ctx.headingSizes.length, 1) + 1;
+  // 「第1章」「1.」は上位、「1.2」「1.2.3」は番号の深さぶん下げる
+  const depth = m?.[1] ? m[1].split('.').length : 1;
+  return Math.min(base + depth - 1, MAX_HEADING_LEVEL);
+}
+
 function flushAccumulator(acc: Accumulator, ctx: Context, blocks: Block[]) {
   if (acc.type === 'p') {
     const first = acc.lines[0];
     const text = linePlain(first);
-    if (
-      acc.lines.length === 1 &&
-      first.bold &&
-      text.length <= 40 &&
-      !SENTENCE_END.test(text) &&
-      !/[:：]$/.test(text)
-    ) {
-      // 太字だけの短い1行は小見出しとみなす
-      const level = Math.min(
-        Math.max(ctx.headingSizes.length, 1) + 1,
-        MAX_HEADING_LEVEL,
-      );
-      blocks.push({
-        type: 'heading',
-        text: `${'#'.repeat(level)} ${renderRuns(lineRuns(first), false)}`,
-      });
-      return;
+    if (acc.lines.length === 1 && isShortHeadingLine(first)) {
+      // 太字だけの短い1行は小見出し、番号付きの短い1行は番号の深さで見出しとみなす
+      const numbered = NUMBERED_HEADING.test(text);
+      if (first.bold || numbered) {
+        const level = numbered
+          ? numberedHeadingLevel(text, ctx)
+          : Math.min(
+              Math.max(ctx.headingSizes.length, 1) + 1,
+              MAX_HEADING_LEVEL,
+            );
+        blocks.push({
+          type: 'heading',
+          text: `${'#'.repeat(level)} ${renderRuns(lineRuns(first), false)}`,
+        });
+        return;
+      }
     }
     blocks.push({ type: 'p', text: renderParagraph(acc.lines) });
     return;
@@ -776,7 +801,11 @@ function buildBlocks(
     }
     lastHeading = null;
 
-    const marker = parseMarker(linePlain(line));
+    const plainText = linePlain(line);
+    const marker =
+      line.bold && isShortHeadingLine(line) && NUMBERED_HEADING.test(plainText)
+        ? null
+        : parseMarker(plainText);
     const prev = acc?.lines[acc.lines.length - 1];
     if (marker) {
       flush();

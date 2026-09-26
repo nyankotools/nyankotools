@@ -82,6 +82,37 @@ describe('見出し', () => {
     expect(r.markdown).toMatch(/^## Overview$/m);
   });
 
+  it('本文より1割ほど大きい見出しも見出しにする', () => {
+    const r = convert([
+      page([text('Section', 72, 750, 13.5), ...bodyLines(725, 4)]),
+    ]);
+    expect(r.markdown).toMatch(/^# Section$/m);
+  });
+
+  it('太字の「1. 見出し」は箇条書きではなく見出しにする', () => {
+    const r = convert([
+      page([
+        text('1. Introduction', 72, 750, 12, { bold: true }),
+        ...bodyLines(730, 4),
+      ]),
+    ]);
+    expect(r.markdown).toMatch(/^## 1\. Introduction$/m);
+    expect(r.markdown).not.toMatch(/^- /m);
+  });
+
+  it('番号付きの短い1行（第1章・1.2 概要）は番号の深さで見出しにする', () => {
+    const r = convert([
+      page([
+        text('第1章 はじめに', 72, 750),
+        ...bodyLines(730, 3),
+        text('1.2 概要', 72, 660),
+        ...bodyLines(640, 3),
+      ]),
+    ]);
+    expect(r.markdown).toMatch(/^## 第1章 はじめに$/m);
+    expect(r.markdown).toMatch(/^### 1\.2 概要$/m);
+  });
+
   it('折り返された同サイズの見出しは1つにまとめる', () => {
     const r = convert([
       page([

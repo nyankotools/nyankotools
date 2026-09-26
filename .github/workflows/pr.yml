@@ -1,0 +1,33 @@
+name: PR Check
+
+# mainへのPull Requestで、lint / 型チェック / 単体テスト / ビルドだけを実行する軽量CI。
+# E2E（Playwright）は重いため含めない。mainへのマージ（push）時に ci.yml の e2e が実行され、
+# test / e2e がともに成功したときだけ deploy される。
+# ブランチ保護（main）では、このワークフローの check ジョブを必須チェックにする。
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run lint
+
+      - run: pnpm exec astro check
+
+      - run: pnpm test
+
+      - run: pnpm build

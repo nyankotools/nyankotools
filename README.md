@@ -1,18 +1,50 @@
-# NyankoTools
+# NyankoTools（にゃんこツール）
 
-[nyankotools.com](https://nyankotools.com) — ブラウザだけで完結する、開発者・クリエイター向けの小さなツール集です。テキスト変換、データフォーマット、計算機、ジェネレーターなど41個以上のツールを日本語・英語で提供しています。
+[![CI](https://github.com/nyankotools/nyankotools/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nyankotools/nyankotools/actions/workflows/ci.yml)
+
+**🐾 デモ / 公開サイト: [nyankotools.com](https://nyankotools.com)**（[English](https://nyankotools.com/en/)）
+
+ブラウザだけで完結する、開発者・クリエイター向けの無料Webツール集です。JSON整形、Base64、QRコード生成、PDF→Markdown変換など、テキスト変換・データフォーマット・計算機・ジェネレーターといったツールを、日本語・英語で提供しています。ツールは順次追加しています。
 
 **すべての処理はブラウザ内（クライアントサイド）で完結し、入力データが外部サーバーに送信されることは一切ありません。** バックエンドを持たない静的サイトです。
 
-詳しい仕様は [`docs/spec.md`](./docs/spec.md) を、開発ガイドラインは [`CLAUDE.md`](./CLAUDE.md) および [`.claude/docs/`](./.claude/docs/) 配下を参照してください。
+|              トップページ               |                 ツールの画面（JSON整形）                 |
+| :-------------------------------------: | :------------------------------------------------------: |
+| ![トップページ](./docs/images/home.png) | ![JSON整形ツール](./docs/images/tool-json-formatter.png) |
+
+> A collection of browser-only developer & creator tools (JSON, Base64, QR code, PDF→Markdown, and more), available in Japanese and English. Everything runs client-side — no data ever leaves your browser.
+
+---
+
+以下は、このリポジトリ（サイトのソースコード）の開発者向け情報です。
 
 ## 特徴
 
 - **完全クライアントサイド**: API・バックエンドなし。プライバシー保護とゼロホスティングコストを両立。
-- **41以上のツール**: テキスト処理・データ変換・エンコード/デコード・生成系・開発support・計算機など。
+- **多数のツール**: テキスト処理・データ変換・エンコード/デコード・生成系・開発支援・計算機・PDFなど。
 - **日本語 / 英語対応**: 全ページが `ja`（`/tools/...`）・`en`（`/en/tools/...`）の両ロケールを提供。
 - **SEO志向**: ツールごとに個別の title/description、内部リンク、構造化データ、サイトマップを整備。
 - **レスポンシブ**: モバイル（375px前後）でも崩れないレイアウト。
+
+## 技術的なこだわり
+
+- **静的サイトのまま、重い処理もブラウザ内で**: PDFの処理など、サーバーが必要に見える機能もクライアントだけで実装しています（PDFパスワード保護では wasm を利用）。
+- **CSP（Content-Security-Policy）を設定し、本番ビルドでE2E検証**: 開発サーバー（`astro dev`）はCSPヘッダーを返さないため、E2Eは `pnpm build && pnpm preview` のビルド結果に対して実行します。CSPで壊れる処理（wasm や `fetch` など）も、実際に動かして確認しています。
+- **ロジックとUIの分離**: ツールのロジックは `src/lib/tools/<slug>.ts` のフレームワーク非依存の純粋関数に切り出し、Vitest でテストします。UI フレームワークのアイランドは使いません。
+- **レジストリ駆動**: `src/data/tools.ts` の1ファイルが、トップページ・サイドバー・共通E2E（サイドバー遷移、375px幅でのはみ出し、h1表示）を駆動します。ツールを増やしても、共通の品質チェックが自動で広がります。
+- **i18n は辞書 + 共有コンポーネント**: 日英のページが同じコンポーネントを共有し、文言だけを辞書（`src/i18n/`）で切り替えます。
+
+## ドキュメントの読み順
+
+1. [`docs/spec.md`](./docs/spec.md) — サイトの仕様書。
+2. [`.claude/docs/architecture.md`](./.claude/docs/architecture.md) — 技術スタック、ディレクトリ構成、データの流れ。
+3. [`.claude/docs/conventions.md`](./.claude/docs/conventions.md) — コーディング規約、ツールロジックの構成、テスト方針。
+4. [`.claude/docs/adding-a-tool.md`](./.claude/docs/adding-a-tool.md) — ツールを1つ追加するときのチェックリスト。
+5. [`.claude/docs/deployment.md`](./.claude/docs/deployment.md) / [`.claude/docs/growth.md`](./.claude/docs/growth.md) — デプロイ設定、SEO・レスポンシブ・i18n の方針。
+
+## AIを活用した開発
+
+このリポジトリは [Claude Code](https://claude.com/claude-code) を使って開発しています。プロジェクトのルールは [`CLAUDE.md`](./CLAUDE.md) と [`.claude/`](./.claude/)（ドキュメント、レビュー/QA専用エージェント、スラッシュコマンド）にまとめています。
 
 ## スタック
 

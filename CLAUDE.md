@@ -28,10 +28,11 @@ Each tool has its own indexable URL (`/tools/<slug>/`, `/en/tools/<slug>/`) for 
 
 - ユーザーから明示的に指示されるまで `git commit` を実行しないこと。実装が完了しても、コミットはせずユーザーの確認・指示を待つこと。
 
-## mainへのpush後のルール
+## mainへの反映ルール
 
-- `main` を push したら、続けて `develop` に切り替え、`git merge --ff-only main` で `main` に追いつかせ、`develop` も push すること（確認は不要）。最終的に `develop` ブランチにいる状態で終える。
-- ただし `main` へのマージ・push 自体は、これまで通りユーザーの明示的な指示があるときだけ行う。
+- `main` はブランチ保護されており、直接 push できない。`develop` を push して、`develop` → `main` のPRを作り、PRのCI（`check`）が成功したらマージコミット方式（Create a merge commit）でマージする。squash / rebase は無効。
+- PRがマージされたら、続けて `develop` に切り替え、`git fetch` のうえ `git merge --ff-only origin/main` で `main` に追いつかせ、`develop` も push すること（確認は不要）。最終的に `develop` ブランチにいる状態で終える。
+- ただし PRの作成・マージ（`main` への反映）自体は、これまで通りユーザーの明示的な指示があるときだけ行う。
 
 ## memo更新のルール
 

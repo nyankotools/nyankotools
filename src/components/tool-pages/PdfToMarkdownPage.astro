@@ -1,0 +1,424 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { pdfToMarkdownContent } from '../../i18n/tools/pdf-to-markdown';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = pdfToMarkdownContent[locale];
+const buttonClass =
+  'min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800';
+const options = [
+  { id: 'md-opt-header-footer', label: t.optHeaderFooter, checked: true },
+  { id: 'md-opt-tables', label: t.optTables, checked: true },
+  { id: 'md-opt-separator', label: t.optPageSeparator, checked: false },
+];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <label
+    for="md-file"
+    class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+  >
+    {t.fileLabel}
+  </label>
+  <div
+    id="md-drop"
+    class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
+  >
+    <input
+      id="md-file"
+      type="file"
+      accept=".pdf,application/pdf"
+      class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+    />
+    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
+  </div>
+  <p
+    id="md-info"
+    hidden
+    data-template={t.pagesTemplate}
+    class="mt-2 text-sm break-all text-gray-700 dark:text-gray-300"
+  ></p>
+
+  <fieldset class="mt-4">
+    <legend class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.optionsLabel}
+    </legend>
+    <div class="flex flex-col gap-1 text-sm text-gray-700 dark:text-gray-300">
+      {options.map((o) => (
+        <label class="flex min-h-11 items-center gap-2">
+          <input
+            id={o.id}
+            type="checkbox"
+            checked={o.checked}
+            class="h-4 w-4"
+          />
+          {o.label}
+        </label>
+      ))}
+    </div>
+  </fieldset>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="md-run"
+      type="button"
+      data-run={t.run}
+      data-processing={t.processing}
+      class="min-h-11 rounded-lg bg-blue-600 px-6 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+    >
+      {t.run}
+    </button>
+    <button id="md-clear" type="button" class={buttonClass}>
+      {t.clear}
+    </button>
+  </div>
+
+  <p
+    id="md-error"
+    role="alert"
+    hidden
+    data-not-pdf={t.errorNotPdf}
+    data-invalid={t.errorInvalid}
+    data-encrypted={t.errorEncrypted}
+    data-failed={t.errorFailed}
+    class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+  ></p>
+
+  <section id="md-result" hidden class="mt-6">
+    <h2 class="mb-2 text-lg font-semibold">{t.resultHeading}</h2>
+    <p
+      id="md-stats"
+      data-template={t.statsTemplate}
+      class="mb-2 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+    <p
+      id="md-warning"
+      hidden
+      data-empty-pages={t.warnEmptyPages}
+      data-no-text={t.warnNoText}
+      class="mb-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300"
+    ></p>
+    <label
+      for="md-output"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.markdownLabel}
+    </label>
+    <textarea
+      id="md-output"
+      readonly
+      rows="16"
+      spellcheck="false"
+      class="w-full rounded-lg border border-gray-300 p-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    ></textarea>
+    <div class="mt-2 flex flex-wrap items-center gap-3">
+      <button
+        id="md-copy"
+        type="button"
+        data-copied={t.copied}
+        class={buttonClass}
+      >
+        {t.copy}
+      </button>
+      <button id="md-download" type="button" class={buttonClass}>
+        {t.download}
+      </button>
+      <span
+        id="md-copy-status"
+        role="status"
+        class="text-sm text-gray-600 dark:text-gray-400"
+      ></span>
+    </div>
+  </section>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-disc space-y-1 pl-5 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((n) => (
+      <li>{n}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import * as pdfjs from 'pdfjs-dist';
+  import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+  import type { PDFPageProxy } from 'pdfjs-dist';
+  import {
+    convertPagesToMarkdown,
+    type PdfPageInput,
+    type PdfTextItem,
+  } from '../../lib/tools/pdf-to-markdown';
+  import { enableFileDrop } from '../../lib/file-drop';
+
+  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const fileInput = $<HTMLInputElement>('md-file');
+  const info = $('md-info');
+  const optHeaderFooter = $<HTMLInputElement>('md-opt-header-footer');
+  const optTables = $<HTMLInputElement>('md-opt-tables');
+  const optSeparator = $<HTMLInputElement>('md-opt-separator');
+  const runButton = $<HTMLButtonElement>('md-run');
+  const clearButton = $<HTMLButtonElement>('md-clear');
+  const errorEl = $('md-error');
+  const resultEl = $('md-result');
+  const stats = $('md-stats');
+  const warning = $('md-warning');
+  const output = $<HTMLTextAreaElement>('md-output');
+  const copyButton = $<HTMLButtonElement>('md-copy');
+  const downloadButton = $<HTMLButtonElement>('md-download');
+  const copyStatus = $('md-copy-status');
+
+  enableFileDrop($('md-drop'), fileInput);
+
+  let pdfBytes: Uint8Array | null = null;
+  let pdfName = '';
+  /** 抽出済みのテキスト片。オプション変更時に PDF を再解析しないよう保持する */
+  let extracted: PdfPageInput[] | null = null;
+  let running = false;
+  /** 新しいファイル選択が始まったら、古い抽出結果を捨てるための連番 */
+  let loadId = 0;
+
+  function showError(key: string) {
+    hideResult();
+    errorEl.textContent = errorEl.dataset[key] ?? '';
+    errorEl.hidden = false;
+  }
+
+  function hideError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function hideResult() {
+    resultEl.hidden = true;
+    output.value = '';
+    copyStatus.textContent = '';
+  }
+
+  /** pdf.js の例外を tool のエラーキーに変換する */
+  function pdfErrorKey(e: unknown): string {
+    const name = (e as { name?: string } | null)?.name ?? '';
+    const message = (e as { message?: string } | null)?.message ?? '';
+    if (name === 'PasswordException' || /password/i.test(message))
+      return 'encrypted';
+    if (name === 'InvalidPDFException' || name === 'FormatError')
+      return 'invalid';
+    console.error(e);
+    return 'failed';
+  }
+
+  /** フォント名・フラグから太字・斜体を判定する（getOperatorList 後に commonObjs で取れる） */
+  function fontStyle(page: PDFPageProxy, fontName: string) {
+    let name = '';
+    let bold = false;
+    let italic = false;
+    try {
+      if (page.commonObjs.has(fontName)) {
+        const font = page.commonObjs.get(fontName) as {
+          name?: string;
+          bold?: boolean;
+          italic?: boolean;
+        };
+        name = font?.name ?? '';
+        bold = !!font?.bold;
+        italic = !!font?.italic;
+      }
+    } catch {
+      // フォント情報が取れなくても変換自体は続ける
+    }
+    return {
+      bold: bold || /bold|black|heavy|semibold|demi/i.test(name),
+      italic: italic || /italic|oblique/i.test(name),
+    };
+  }
+
+  async function extractPages(bytes: Uint8Array): Promise<PdfPageInput[]> {
+    // pdf.js は渡したバッファを worker に転送（detach）するためコピーを渡す
+    const task = pdfjs.getDocument({ data: bytes.slice() });
+    try {
+      const doc = await task.promise;
+      const pages: PdfPageInput[] = [];
+      for (let i = 1; i <= doc.numPages; i++) {
+        const page = await doc.getPage(i);
+        try {
+          const viewport = page.getViewport({ scale: 1 });
+          const content = await page.getTextContent();
+          // フォントを読み込ませて commonObjs に登録させる
+          await page.getOperatorList().catch(() => undefined);
+          const styles = new Map<string, { bold: boolean; italic: boolean }>();
+          const items: PdfTextItem[] = [];
+          for (const item of content.items) {
+            if (!('str' in item)) continue;
+            // 回転ページでも見た目どおりの向きになるよう、ビューポート座標へ変換する
+            const m = pdfjs.Util.transform(viewport.transform, item.transform);
+            let style = styles.get(item.fontName);
+            if (!style) {
+              style = fontStyle(page, item.fontName);
+              styles.set(item.fontName, style);
+            }
+            const fontSize = Math.hypot(m[0], m[1]) || item.height;
+            items.push({
+              str: item.str,
+              x: m[4],
+              y: viewport.height - m[5],
+              // 回転ページでは文字の進行方向が斜めになるため、横方向の成分だけを幅とする
+              width: fontSize
+                ? (item.width * Math.abs(m[0])) / fontSize
+                : item.width,
+              fontSize,
+              ...style,
+            });
+          }
+          pages.push({
+            width: viewport.width,
+            height: viewport.height,
+            items,
+          });
+        } finally {
+          page.cleanup();
+        }
+      }
+      return pages;
+    } finally {
+      void task.destroy();
+    }
+  }
+
+  function render() {
+    if (!extracted) return;
+    const result = convertPagesToMarkdown(extracted, {
+      removeHeaderFooter: optHeaderFooter.checked,
+      detectTables: optTables.checked,
+      pageSeparator: optSeparator.checked,
+    });
+    output.value = result.markdown;
+    stats.textContent = (stats.dataset.template ?? '')
+      .replace('{pages}', String(result.pageCount))
+      .replace('{chars}', result.charCount.toLocaleString())
+      .replace('{tables}', String(result.tableCount));
+    if (result.charCount === 0) {
+      warning.textContent = warning.dataset.noText ?? '';
+      warning.hidden = false;
+    } else if (result.emptyPages.length > 0) {
+      warning.textContent = (warning.dataset.emptyPages ?? '').replace(
+        '{pages}',
+        result.emptyPages.join(', '),
+      );
+      warning.hidden = false;
+    } else {
+      warning.hidden = true;
+    }
+    copyStatus.textContent = '';
+    resultEl.hidden = false;
+  }
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (!file) return;
+    const id = ++loadId;
+    hideResult();
+    hideError();
+    extracted = null;
+    pdfBytes = null;
+    if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+      showError('notPdf');
+      return;
+    }
+    runButton.disabled = true;
+    runButton.textContent = runButton.dataset.processing ?? '';
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      // 読み込み確認を兼ねて全ページを抽出する
+      const pages = await extractPages(bytes);
+      if (id !== loadId) return;
+      extracted = pages;
+      pdfBytes = bytes;
+      pdfName = file.name;
+      info.textContent = `${file.name}（${(info.dataset.template ?? '').replace('{pages}', String(extracted.length))}）`;
+      info.hidden = false;
+      render();
+    } catch (e) {
+      if (id !== loadId) return;
+      pdfBytes = null;
+      extracted = null;
+      info.hidden = true;
+      showError(pdfErrorKey(e));
+    } finally {
+      if (id === loadId) {
+        runButton.disabled = false;
+        runButton.textContent = runButton.dataset.run ?? '';
+      }
+    }
+  });
+
+  runButton.addEventListener('click', async () => {
+    if (running || !pdfBytes) return;
+    running = true;
+    runButton.disabled = true;
+    runButton.textContent = runButton.dataset.processing ?? '';
+    hideError();
+    try {
+      extracted ??= await extractPages(pdfBytes);
+      render();
+    } catch (e) {
+      showError(pdfErrorKey(e));
+    } finally {
+      running = false;
+      runButton.disabled = false;
+      runButton.textContent = runButton.dataset.run ?? '';
+    }
+  });
+
+  for (const opt of [optHeaderFooter, optTables, optSeparator]) {
+    opt.addEventListener('change', render);
+  }
+
+  clearButton.addEventListener('click', () => {
+    loadId++;
+    runButton.disabled = false;
+    runButton.textContent = runButton.dataset.run ?? '';
+    pdfBytes = null;
+    pdfName = '';
+    extracted = null;
+    info.hidden = true;
+    hideError();
+    hideResult();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      copyStatus.textContent = copyButton.dataset.copied ?? '';
+    } catch {
+      output.select();
+    }
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (!output.value) return;
+    const url = URL.createObjectURL(
+      new Blob([output.value], { type: 'text/markdown;charset=utf-8' }),
+    );
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${pdfName.replace(/\.[^.]+$/, '') || 'document'}.md`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+</script>

@@ -1040,6 +1040,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'pdf-to-markdown',
+    translations: {
+      ja: {
+        name: 'PDFをMarkdownに変換',
+        description:
+          'PDFのテキストを見出し・段落・箇条書き・表を推定してMarkdownに変換。AIに読ませる前処理にも。',
+        category: 'PDF',
+      },
+      en: {
+        name: 'PDF to Markdown Converter',
+        description:
+          'Convert PDF text to Markdown with headings, lists and tables detected. Handy for preparing documents for AI tools.',
+        category: 'PDF',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -1108,6 +1108,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'css-box-shadow-generator',
+    translations: {
+      ja: {
+        name: 'CSS box-shadowジェネレーター',
+        description:
+          'オフセット・ぼかし・広がり・色・insetを調整して、複数レイヤーのCSS box-shadowをプレビューしながら生成します。',
+        category: '開発',
+      },
+      en: {
+        name: 'CSS Box-Shadow Generator',
+        description:
+          'Builds multi-layer CSS box-shadow declarations with a live preview from offset, blur, spread, color, and inset.',
+        category: 'Development',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

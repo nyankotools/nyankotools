@@ -1159,6 +1159,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'contrast-checker',
+    translations: {
+      ja: {
+        name: '色のコントラスト比チェッカー（WCAG）',
+        description:
+          '文字色と背景色のコントラスト比を計算し、WCAGのAA/AAA基準（通常テキスト・大きな文字）に適合するか判定します。',
+        category: '画像・デザイン',
+      },
+      en: {
+        name: 'Color Contrast Checker (WCAG)',
+        description:
+          'Calculates the contrast ratio between text and background colors and checks it against WCAG AA/AAA levels for normal and large text.',
+        category: 'Image & Design',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

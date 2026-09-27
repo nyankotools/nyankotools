@@ -1,0 +1,265 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { metaTagGeneratorContent } from '../../i18n/tools/meta-tag-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = metaTagGeneratorContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <h2 class="mb-2 text-lg font-bold">{t.formHeading}</h2>
+  <div class="mb-6 grid gap-4 sm:grid-cols-2">
+    <label class="text-sm text-gray-700 sm:col-span-2 dark:text-gray-300">
+      <span class="mb-1 block">{t.titleLabel}</span>
+      <input
+        id="mtg-title"
+        type="text"
+        placeholder={t.titlePlaceholder}
+        class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+    </label>
+    <label class="text-sm text-gray-700 sm:col-span-2 dark:text-gray-300">
+      <span class="mb-1 block">{t.descriptionLabel}</span>
+      <textarea
+        id="mtg-description"
+        rows="3"
+        placeholder={t.descriptionPlaceholder}
+        class="w-full resize-none rounded-lg border border-gray-300 p-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></textarea>
+    </label>
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.urlLabel}</span>
+      <input
+        id="mtg-url"
+        type="text"
+        placeholder={t.urlPlaceholder}
+        class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+    </label>
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.imageUrlLabel}</span>
+      <input
+        id="mtg-image-url"
+        type="text"
+        placeholder={t.imageUrlPlaceholder}
+        class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+    </label>
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.siteNameLabel}</span>
+      <input
+        id="mtg-site-name"
+        type="text"
+        placeholder={t.siteNamePlaceholder}
+        class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+    </label>
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.localeLabel}</span>
+      <input
+        id="mtg-locale"
+        type="text"
+        placeholder={t.localePlaceholder}
+        class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+    </label>
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.twitterCardLabel}</span>
+      <select
+        id="mtg-twitter-card"
+        class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      >
+        <option value="summary_large_image">
+          {t.twitterCardSummaryLargeImage}
+        </option>
+        <option value="summary">{t.twitterCardSummary}</option>
+      </select>
+    </label>
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.twitterSiteLabel}</span>
+      <input
+        id="mtg-twitter-site"
+        type="text"
+        placeholder={t.twitterSitePlaceholder}
+        class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+    </label>
+  </div>
+
+  <h2 class="mb-2 text-lg font-bold">{t.previewHeading}</h2>
+  <div class="mb-6 w-full max-w-md overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700">
+    <div class="flex aspect-[1.91/1] flex-col items-center justify-center gap-1 bg-gray-100 p-3 text-center text-sm text-gray-400 dark:bg-gray-800 dark:text-gray-500">
+      <svg
+        class="h-8 w-8"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.5"
+        aria-hidden="true"
+      >
+        <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+        <path d="M21 15l-5-5L5 21"></path>
+      </svg>
+      <span id="mtg-preview-image-label" class="line-clamp-2 break-all">
+        {t.previewEmptyImage}
+      </span>
+    </div>
+    <div class="space-y-1 border-t border-gray-300 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900">
+      <p
+        id="mtg-preview-domain"
+        class="truncate text-xs text-gray-500 uppercase dark:text-gray-400"
+      ></p>
+      <p
+        id="mtg-preview-title"
+        class="truncate text-sm font-bold text-gray-900 dark:text-gray-100"
+      ></p>
+      <p
+        id="mtg-preview-description"
+        class="line-clamp-2 text-xs text-gray-600 dark:text-gray-400"
+      ></p>
+    </div>
+  </div>
+
+  <div data-copied={t.copied} data-copy-failed={t.copyFailed}>
+    <label
+      for="mtg-output"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.outputHeading}
+    </label>
+    <div class="flex gap-2">
+      <textarea
+        id="mtg-output"
+        readonly
+        rows="8"
+        placeholder={t.outputEmpty}
+        class="h-56 w-full min-w-0 resize-none rounded-lg border border-gray-300 bg-gray-50 p-3 font-mono text-xs focus:border-blue-400 focus:outline-none sm:text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></textarea>
+      <button
+        id="mtg-copy-button"
+        type="button"
+        class="min-h-11 shrink-0 self-start rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        {t.copyButton}
+      </button>
+    </div>
+    <span
+      id="mtg-status"
+      class="mt-2 block text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    buildMetaTags,
+    extractDomain,
+    type MetaTagInput,
+    type TwitterCardType,
+  } from '../../lib/tools/meta-tag-generator';
+
+  const titleInput = document.getElementById('mtg-title') as HTMLInputElement;
+  const descriptionInput = document.getElementById(
+    'mtg-description',
+  ) as HTMLTextAreaElement;
+  const urlInput = document.getElementById('mtg-url') as HTMLInputElement;
+  const imageUrlInput = document.getElementById(
+    'mtg-image-url',
+  ) as HTMLInputElement;
+  const siteNameInput = document.getElementById(
+    'mtg-site-name',
+  ) as HTMLInputElement;
+  const localeInput = document.getElementById('mtg-locale') as HTMLInputElement;
+  const twitterCardSelect = document.getElementById(
+    'mtg-twitter-card',
+  ) as HTMLSelectElement;
+  const twitterSiteInput = document.getElementById(
+    'mtg-twitter-site',
+  ) as HTMLInputElement;
+
+  const previewImageLabel = document.getElementById('mtg-preview-image-label')!;
+  const previewImageEmptyText = previewImageLabel.textContent ?? '';
+  const previewDomain = document.getElementById('mtg-preview-domain')!;
+  const previewTitle = document.getElementById('mtg-preview-title')!;
+  const previewDescription = document.getElementById(
+    'mtg-preview-description',
+  )!;
+
+  const output = document.getElementById('mtg-output') as HTMLTextAreaElement;
+  const copyButton = document.getElementById('mtg-copy-button')!;
+  const statusEl = document.getElementById('mtg-status')!;
+
+  const copyContainer = output.closest('[data-copied]') as HTMLElement;
+  const copied = copyContainer.dataset.copied ?? '';
+  const copyFailed = copyContainer.dataset.copyFailed ?? '';
+
+  function readInput(): MetaTagInput {
+    return {
+      title: titleInput.value,
+      description: descriptionInput.value,
+      url: urlInput.value,
+      imageUrl: imageUrlInput.value,
+      siteName: siteNameInput.value,
+      twitterCard: twitterCardSelect.value as TwitterCardType,
+      twitterSite: twitterSiteInput.value,
+      locale: localeInput.value,
+    };
+  }
+
+  function update() {
+    const input = readInput();
+    output.value = buildMetaTags(input);
+
+    previewDomain.textContent =
+      extractDomain(input.url) || input.siteName.trim();
+    previewTitle.textContent = input.title.trim();
+    previewDescription.textContent = input.description.trim();
+    previewImageLabel.textContent =
+      input.imageUrl.trim() || previewImageEmptyText;
+  }
+
+  [
+    titleInput,
+    descriptionInput,
+    urlInput,
+    imageUrlInput,
+    siteNameInput,
+    localeInput,
+    twitterSiteInput,
+  ].forEach((input) => {
+    input.addEventListener('input', update);
+  });
+  twitterCardSelect.addEventListener('change', update);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    try {
+      await navigator.clipboard.writeText(output.value);
+      statusEl.textContent = copied;
+    } catch {
+      statusEl.textContent = copyFailed;
+    }
+  });
+
+  update();
+</script>

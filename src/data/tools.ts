@@ -1176,6 +1176,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'meta-tag-generator',
+    translations: {
+      ja: {
+        name: 'metaタグ・OGPタグ生成',
+        description:
+          'タイトル・説明文・URL・画像から、基本metaタグ・OGP・Twitter Cardのタグをまとめて生成します。SNSシェア時のプレビュー確認付き。',
+        category: '開発',
+      },
+      en: {
+        name: 'Meta Tag & OGP Generator',
+        description:
+          'Generates basic meta tags, Open Graph (OGP), and Twitter Card tags from a page title, description, URL, and image, with a social share preview.',
+        category: 'Development',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -1,0 +1,280 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { baseConverterContent } from '../../i18n/tools/base-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = baseConverterContent[locale];
+
+const fields = [
+  {
+    id: 'binary',
+    label: t.binaryLabel,
+    placeholder: t.binaryPlaceholder,
+  },
+  {
+    id: 'octal',
+    label: t.octalLabel,
+    placeholder: t.octalPlaceholder,
+  },
+  {
+    id: 'decimal',
+    label: t.decimalLabel,
+    placeholder: t.decimalPlaceholder,
+  },
+  {
+    id: 'hex',
+    label: t.hexLabel,
+    placeholder: t.hexPlaceholder,
+  },
+] as const;
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div class="mb-4">
+    <label
+      for="base-bitwidth-select"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.bitWidthLabel}
+    </label>
+    <select
+      id="base-bitwidth-select"
+      class="h-11 w-full max-w-40 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    >
+      {t.bitWidthOptions.map((option) => (
+        <option value={option.value}>{option.label}</option>
+      ))}
+    </select>
+  </div>
+
+  <div
+    class="grid grid-cols-1 gap-4 sm:grid-cols-2"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    {fields.map((field) => (
+      <div>
+        <label
+          for={`base-${field.id}-input`}
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {field.label}
+        </label>
+        <div class="flex gap-2">
+          <input
+            id={`base-${field.id}-input`}
+            type="text"
+            inputmode="text"
+            placeholder={field.placeholder}
+            spellcheck="false"
+            class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          />
+          <button
+            type="button"
+            data-copy-target={`base-${field.id}-input`}
+            class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            {t.copyButton}
+          </button>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <p
+    id="base-error"
+    data-error-invalid-binary={t.errorInvalidBinary}
+    data-error-invalid-octal={t.errorInvalidOctal}
+    data-error-invalid-decimal={t.errorInvalidDecimal}
+    data-error-invalid-hex={t.errorInvalidHex}
+    data-error-out-of-range-unsigned-template={
+      t.errorOutOfRangeUnsignedTemplate
+    }
+    data-error-out-of-range-signed-template={t.errorOutOfRangeSignedTemplate}
+    class="mt-2 text-sm text-red-600 dark:text-red-400"
+    aria-live="polite"
+  ></p>
+  <span
+    id="base-status"
+    class="mt-2 block text-sm text-green-600 dark:text-green-400"
+    aria-live="polite"
+  ></span>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    type BitWidth,
+    type UnsignedBase,
+    convertToAllBases,
+    parseSignedDecimal,
+    parseSignedDigits,
+    parseUnsignedDigits,
+    parseUnsignedInBase,
+    rawBitsToSigned,
+    signedRange,
+    unsignedMax,
+  } from '../../lib/tools/base-converter';
+
+  const UNSIGNED_BASES = {
+    binary: 2,
+    octal: 8,
+    hex: 16,
+  } as const satisfies Record<string, UnsignedBase>;
+
+  type UnsignedFieldId = keyof typeof UNSIGNED_BASES;
+  type FieldId = UnsignedFieldId | 'decimal';
+
+  function input(id: FieldId): HTMLInputElement {
+    return document.getElementById(`base-${id}-input`) as HTMLInputElement;
+  }
+
+  const inputs: Record<FieldId, HTMLInputElement> = {
+    binary: input('binary'),
+    octal: input('octal'),
+    decimal: input('decimal'),
+    hex: input('hex'),
+  };
+
+  const bitWidthSelect = document.getElementById(
+    'base-bitwidth-select',
+  ) as HTMLSelectElement;
+
+  const errorEl = document.getElementById('base-error')!;
+  const statusEl = document.getElementById('base-status')!;
+  const copyContainer = inputs.binary.closest('[data-copied]') as HTMLElement;
+
+  const copied = copyContainer.dataset.copied ?? '';
+  const copyFailed = copyContainer.dataset.copyFailed ?? '';
+  const invalidMessages: Record<FieldId, string> = {
+    binary: errorEl.dataset.errorInvalidBinary ?? '',
+    octal: errorEl.dataset.errorInvalidOctal ?? '',
+    decimal: errorEl.dataset.errorInvalidDecimal ?? '',
+    hex: errorEl.dataset.errorInvalidHex ?? '',
+  };
+  const errorOutOfRangeUnsignedTemplate =
+    errorEl.dataset.errorOutOfRangeUnsignedTemplate ?? '';
+  const errorOutOfRangeSignedTemplate =
+    errorEl.dataset.errorOutOfRangeSignedTemplate ?? '';
+
+  function bitWidth(): BitWidth {
+    return Number(bitWidthSelect.value) as BitWidth;
+  }
+
+  function outOfRangeUnsignedMessage(width: BitWidth): string {
+    return errorOutOfRangeUnsignedTemplate
+      .replace('{bits}', String(width))
+      .replace('{max}', unsignedMax(width).toString());
+  }
+
+  function outOfRangeSignedMessage(width: BitWidth): string {
+    const { min, max } = signedRange(width);
+    return errorOutOfRangeSignedTemplate
+      .replace('{bits}', String(width))
+      .replace('{min}', min.toString())
+      .replace('{max}', max.toString());
+  }
+
+  function render(value: bigint, source: FieldId | 'init') {
+    errorEl.textContent = '';
+    const result = convertToAllBases(value, bitWidth());
+    if (source !== 'binary') inputs.binary.value = result.binary;
+    if (source !== 'octal') inputs.octal.value = result.octal;
+    if (source !== 'decimal') inputs.decimal.value = result.decimal;
+    if (source !== 'hex') inputs.hex.value = result.hex;
+  }
+
+  (Object.keys(UNSIGNED_BASES) as UnsignedFieldId[]).forEach((id) => {
+    inputs[id].addEventListener('input', () => {
+      statusEl.textContent = '';
+      const raw = inputs[id].value;
+      if (raw.trim() === '') {
+        errorEl.textContent = '';
+        return;
+      }
+      if (parseUnsignedDigits(raw, UNSIGNED_BASES[id]) === null) {
+        errorEl.textContent = invalidMessages[id];
+        return;
+      }
+      const rawBits = parseUnsignedInBase(raw, UNSIGNED_BASES[id], bitWidth());
+      if (rawBits === null) {
+        errorEl.textContent = outOfRangeUnsignedMessage(bitWidth());
+        return;
+      }
+      render(rawBitsToSigned(rawBits, bitWidth()), id);
+    });
+  });
+
+  inputs.decimal.addEventListener('input', () => {
+    statusEl.textContent = '';
+    const raw = inputs.decimal.value;
+    if (raw.trim() === '') {
+      errorEl.textContent = '';
+      return;
+    }
+    if (parseSignedDigits(raw) === null) {
+      errorEl.textContent = invalidMessages.decimal;
+      return;
+    }
+    const value = parseSignedDecimal(raw, bitWidth());
+    if (value === null) {
+      errorEl.textContent = outOfRangeSignedMessage(bitWidth());
+      return;
+    }
+    render(value, 'decimal');
+  });
+
+  bitWidthSelect.addEventListener('change', () => {
+    statusEl.textContent = '';
+    const raw = inputs.decimal.value;
+    if (raw.trim() === '') {
+      errorEl.textContent = '';
+      return;
+    }
+    if (parseSignedDigits(raw) === null) {
+      errorEl.textContent = invalidMessages.decimal;
+      return;
+    }
+    const value = parseSignedDecimal(raw, bitWidth());
+    if (value === null) {
+      errorEl.textContent = outOfRangeSignedMessage(bitWidth());
+      return;
+    }
+    render(value, 'init');
+  });
+
+  const copyButtons =
+    document.querySelectorAll<HTMLButtonElement>('[data-copy-target]');
+  copyButtons.forEach((button) => {
+    button.addEventListener('click', async () => {
+      const targetId = button.dataset.copyTarget!;
+      const target = document.getElementById(targetId) as HTMLInputElement;
+      if (!target.value) return;
+      try {
+        await navigator.clipboard.writeText(target.value);
+        statusEl.textContent = copied;
+      } catch {
+        statusEl.textContent = copyFailed;
+      }
+    });
+  });
+
+  render(-1n, 'init');
+</script>

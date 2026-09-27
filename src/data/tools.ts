@@ -1074,6 +1074,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'base-converter',
+    translations: {
+      ja: {
+        name: '進数変換（2/8/10/16進）',
+        description:
+          '2進数・8進数・10進数・16進数の数値をリアルタイムに相互変換します。0x/0b/0oプレフィックスや負数にも対応。',
+        category: '開発',
+      },
+      en: {
+        name: 'Base Converter (Binary/Octal/Decimal/Hex)',
+        description:
+          'Converts numbers between binary, octal, decimal, and hexadecimal in real time. Supports 0x/0b/0o prefixes and negative numbers.',
+        category: 'Development',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

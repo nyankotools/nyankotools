@@ -1,0 +1,337 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { cssGradientGeneratorContent } from '../../i18n/tools/css-gradient-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cssGradientGeneratorContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div class="mb-4">
+    <label
+      for="cg-type-select"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.typeLabel}
+    </label>
+    <select
+      id="cg-type-select"
+      class="h-11 w-full max-w-64 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    >
+      <option value="linear">{t.typeLinear}</option>
+      <option value="radial">{t.typeRadial}</option>
+    </select>
+  </div>
+
+  <div id="cg-linear-controls" class="mb-4 max-w-sm">
+    <label
+      for="cg-angle-range"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.angleLabel}{' '}
+      <span id="cg-angle-value" data-template={t.angleValueTemplate}></span>
+    </label>
+    <input
+      id="cg-angle-range"
+      type="range"
+      min="0"
+      max="359"
+      value="90"
+      class="h-11 w-full"
+    />
+  </div>
+
+  <div id="cg-radial-controls" hidden class="mb-4 max-w-sm">
+    <label
+      for="cg-shape-select"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.shapeLabel}
+    </label>
+    <select
+      id="cg-shape-select"
+      class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    >
+      {t.shapeOptions.map((option) => (
+        <option value={option.value}>{option.label}</option>
+      ))}
+    </select>
+  </div>
+
+  <div class="mb-6">
+    <h2 class="mb-2 text-lg font-bold">{t.stopsHeading}</h2>
+    <ul id="cg-stops-list" class="space-y-2"></ul>
+    <button
+      id="cg-add-stop-button"
+      type="button"
+      class="mt-3 min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      {t.addStopButton}
+    </button>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+      {t.maxStopsHint}
+    </p>
+  </div>
+
+  <template id="cg-stop-template">
+    <li
+      data-stop-row
+      class="flex flex-wrap items-center gap-2 rounded-lg border border-gray-300 p-2 dark:border-gray-700"
+    >
+      <input
+        data-color
+        type="color"
+        aria-label={t.colorLabel}
+        class="h-11 w-14 shrink-0 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+      />
+      <input
+        data-position
+        type="number"
+        min="0"
+        max="100"
+        aria-label={t.positionLabel}
+        class="h-11 w-20 rounded-lg border border-gray-300 px-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+      <span class="text-sm text-gray-500 dark:text-gray-400">%</span>
+      <button
+        data-remove
+        type="button"
+        class="ml-auto min-h-11 shrink-0 rounded-lg border border-gray-300 px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        {t.removeStopButton}
+      </button>
+    </li>
+  </template>
+
+  <h2 class="mb-2 text-lg font-bold">{t.previewHeading}</h2>
+  <div
+    id="cg-preview"
+    class="mb-6 h-40 w-full rounded-lg border border-gray-300 sm:h-56 dark:border-gray-700"
+  ></div>
+
+  <div data-copied={t.copied} data-copy-failed={t.copyFailed}>
+    <label
+      for="cg-css-output"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.cssHeading}
+    </label>
+    <div class="flex gap-2">
+      <textarea
+        id="cg-css-output"
+        readonly
+        rows="2"
+        class="h-20 w-full min-w-0 resize-none rounded-lg border border-gray-300 bg-gray-50 p-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></textarea>
+      <button
+        id="cg-copy-button"
+        type="button"
+        class="min-h-11 shrink-0 self-start rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        {t.copyButton}
+      </button>
+    </div>
+    <span
+      id="cg-status"
+      class="mt-2 block text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    buildCssDeclaration,
+    buildGradientValue,
+    clampPosition,
+    DEFAULT_STOP_COLORS,
+    MAX_STOPS,
+    MIN_STOPS,
+    suggestNewStopPosition,
+    type ColorStop,
+    type GradientOptions,
+    type GradientType,
+    type RadialShape,
+  } from '../../lib/tools/css-gradient-generator';
+
+  const typeSelect = document.getElementById(
+    'cg-type-select',
+  ) as HTMLSelectElement;
+  const linearControls = document.getElementById('cg-linear-controls')!;
+  const radialControls = document.getElementById('cg-radial-controls')!;
+  const angleRange = document.getElementById(
+    'cg-angle-range',
+  ) as HTMLInputElement;
+  const angleValueEl = document.getElementById('cg-angle-value')!;
+  const shapeSelect = document.getElementById(
+    'cg-shape-select',
+  ) as HTMLSelectElement;
+
+  const stopsList = document.getElementById('cg-stops-list')!;
+  const stopTemplate = document.getElementById(
+    'cg-stop-template',
+  ) as HTMLTemplateElement;
+  const addStopButton = document.getElementById(
+    'cg-add-stop-button',
+  ) as HTMLButtonElement;
+
+  const preview = document.getElementById('cg-preview')!;
+  const cssOutput = document.getElementById(
+    'cg-css-output',
+  ) as HTMLTextAreaElement;
+  const copyButton = document.getElementById('cg-copy-button')!;
+  const statusEl = document.getElementById('cg-status')!;
+
+  const angleValueTemplate = angleValueEl.dataset.template ?? '';
+  const copyContainer = cssOutput.closest('[data-copied]') as HTMLElement;
+  const copied = copyContainer.dataset.copied ?? '';
+  const copyFailed = copyContainer.dataset.copyFailed ?? '';
+
+  function currentType(): GradientType {
+    return typeSelect.value as GradientType;
+  }
+
+  function readStopsFromDom(): ColorStop[] {
+    return Array.from(
+      stopsList.querySelectorAll<HTMLLIElement>('[data-stop-row]'),
+    ).map((row) => {
+      const color = (row.querySelector('[data-color]') as HTMLInputElement)
+        .value;
+      const position = Number(
+        (row.querySelector('[data-position]') as HTMLInputElement).value,
+      );
+      return { color, position: Number.isFinite(position) ? position : 0 };
+    });
+  }
+
+  function currentOptions(): GradientOptions {
+    return {
+      type: currentType(),
+      angle: Number(angleRange.value),
+      shape: shapeSelect.value as RadialShape,
+      stops: readStopsFromDom(),
+    };
+  }
+
+  function updateOutputs() {
+    const options = currentOptions();
+    preview.style.backgroundImage = buildGradientValue(options);
+    cssOutput.value = buildCssDeclaration(options);
+  }
+
+  function updateRemoveButtonsState() {
+    const rows = stopsList.querySelectorAll<HTMLLIElement>('[data-stop-row]');
+    const disable = rows.length <= MIN_STOPS;
+    rows.forEach((row) => {
+      (row.querySelector('[data-remove]') as HTMLButtonElement).disabled =
+        disable;
+    });
+  }
+
+  function updateAddButtonState() {
+    addStopButton.disabled =
+      stopsList.querySelectorAll('[data-stop-row]').length >= MAX_STOPS;
+  }
+
+  function addStopRow(stop: ColorStop) {
+    const row = stopTemplate.content.firstElementChild!.cloneNode(
+      true,
+    ) as HTMLElement;
+    const colorInput = row.querySelector('[data-color]') as HTMLInputElement;
+    const positionInput = row.querySelector(
+      '[data-position]',
+    ) as HTMLInputElement;
+    const removeButton = row.querySelector(
+      '[data-remove]',
+    ) as HTMLButtonElement;
+
+    colorInput.value = stop.color;
+    positionInput.value = String(stop.position);
+
+    colorInput.addEventListener('input', updateOutputs);
+    positionInput.addEventListener('input', updateOutputs);
+    positionInput.addEventListener('change', () => {
+      positionInput.value = String(clampPosition(Number(positionInput.value)));
+      updateOutputs();
+    });
+    removeButton.addEventListener('click', () => {
+      if (stopsList.querySelectorAll('[data-stop-row]').length <= MIN_STOPS) {
+        return;
+      }
+      row.remove();
+      updateRemoveButtonsState();
+      updateAddButtonState();
+      updateOutputs();
+    });
+
+    stopsList.appendChild(row);
+  }
+
+  function updateAngleUi() {
+    angleValueEl.textContent = angleValueTemplate.replace(
+      '{value}',
+      angleRange.value,
+    );
+  }
+
+  typeSelect.addEventListener('change', () => {
+    const isLinear = currentType() === 'linear';
+    linearControls.hidden = !isLinear;
+    radialControls.hidden = isLinear;
+    updateOutputs();
+  });
+
+  angleRange.addEventListener('input', () => {
+    updateAngleUi();
+    updateOutputs();
+  });
+
+  shapeSelect.addEventListener('change', updateOutputs);
+
+  addStopButton.addEventListener('click', () => {
+    const stops = readStopsFromDom();
+    if (stops.length >= MAX_STOPS) return;
+    const position = suggestNewStopPosition(stops);
+    const color =
+      DEFAULT_STOP_COLORS[stops.length % DEFAULT_STOP_COLORS.length];
+    addStopRow({ color, position });
+    updateRemoveButtonsState();
+    updateAddButtonState();
+    updateOutputs();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!cssOutput.value) return;
+    try {
+      await navigator.clipboard.writeText(cssOutput.value);
+      statusEl.textContent = copied;
+    } catch {
+      statusEl.textContent = copyFailed;
+    }
+  });
+
+  addStopRow({ color: DEFAULT_STOP_COLORS[0], position: 0 });
+  addStopRow({ color: DEFAULT_STOP_COLORS[1], position: 100 });
+  updateRemoveButtonsState();
+  updateAddButtonState();
+  updateAngleUi();
+  updateOutputs();
+</script>

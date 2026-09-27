@@ -1091,6 +1091,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'css-gradient-generator',
+    translations: {
+      ja: {
+        name: 'CSSグラデーションジェネレーター',
+        description:
+          'カラーストップと角度・形状を指定して、線形/円形のCSSグラデーションをプレビューしながら生成します。',
+        category: '開発',
+      },
+      en: {
+        name: 'CSS Gradient Generator',
+        description:
+          'Builds linear/radial CSS gradients with a live preview from color stops, angle, and shape.',
+        category: 'Development',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

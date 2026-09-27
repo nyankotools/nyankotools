@@ -1142,6 +1142,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'px-rem-converter',
+    translations: {
+      ja: {
+        name: 'px⇔rem変換',
+        description:
+          'pxとremの値をリアルタイムに相互変換します。ベースフォントサイズを自由に指定可能。',
+        category: '開発',
+      },
+      en: {
+        name: 'px to rem Converter',
+        description:
+          'Converts between px and rem in real time with a customizable base font size.',
+        category: 'Development',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -1125,6 +1125,23 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'css-border-radius-generator',
+    translations: {
+      ja: {
+        name: 'CSS border-radiusジェネレーター',
+        description:
+          '4つの角の丸みをそれぞれ調整して、CSSのborder-radiusをプレビューしながら生成します。px/%の単位切り替えにも対応。',
+        category: '開発',
+      },
+      en: {
+        name: 'CSS Border-Radius Generator',
+        description:
+          'Builds a CSS border-radius with a live preview from four independent (or linked) corner values, with px/% unit switching.',
+        category: 'Development',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

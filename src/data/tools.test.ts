@@ -130,9 +130,9 @@ describe('tools registry - category consistency', () => {
     expect(emptyOrInvalidCategories).toHaveLength(0);
   });
 
-  it('all tools count should be 65', () => {
+  it('all tools count should be 66', () => {
     // Verify total tool count
-    expect(tools.length).toBe(65);
+    expect(tools.length).toBe(66);
   });
 
   it('category mapping should be consistent (ja -> en)', () => {

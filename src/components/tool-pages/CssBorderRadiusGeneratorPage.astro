@@ -1,0 +1,267 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { cssBorderRadiusGeneratorContent } from '../../i18n/tools/css-border-radius-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cssBorderRadiusGeneratorContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div class="mb-6 flex flex-wrap items-end gap-4">
+    <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+      <input id="br-link-corners" type="checkbox" class="h-4 w-4" checked />
+      {t.linkCornersLabel}
+    </label>
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.unitLabel}</span>
+      <select
+        id="br-unit-select"
+        class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      >
+        <option value="px">px</option>
+        <option value="%">%</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="mb-6">
+    <h2 class="mb-2 text-lg font-bold">{t.cornersHeading}</h2>
+    <div class="flex flex-wrap gap-3">
+      <label class="text-sm text-gray-700 dark:text-gray-300">
+        <span class="mb-1 block">{t.topLeftLabel}</span>
+        <input
+          id="br-top-left"
+          data-corner
+          type="number"
+          min="0"
+          max="500"
+          value="8"
+          class="h-11 w-24 rounded-lg border border-gray-300 px-2 text-sm focus:border-blue-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        />
+      </label>
+      <label class="text-sm text-gray-700 dark:text-gray-300">
+        <span class="mb-1 block">{t.topRightLabel}</span>
+        <input
+          id="br-top-right"
+          data-corner
+          type="number"
+          min="0"
+          max="500"
+          value="8"
+          class="h-11 w-24 rounded-lg border border-gray-300 px-2 text-sm focus:border-blue-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        />
+      </label>
+      <label class="text-sm text-gray-700 dark:text-gray-300">
+        <span class="mb-1 block">{t.bottomRightLabel}</span>
+        <input
+          id="br-bottom-right"
+          data-corner
+          type="number"
+          min="0"
+          max="500"
+          value="8"
+          class="h-11 w-24 rounded-lg border border-gray-300 px-2 text-sm focus:border-blue-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        />
+      </label>
+      <label class="text-sm text-gray-700 dark:text-gray-300">
+        <span class="mb-1 block">{t.bottomLeftLabel}</span>
+        <input
+          id="br-bottom-left"
+          data-corner
+          type="number"
+          min="0"
+          max="500"
+          value="8"
+          class="h-11 w-24 rounded-lg border border-gray-300 px-2 text-sm focus:border-blue-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        />
+      </label>
+    </div>
+  </div>
+
+  <h2 class="mb-2 text-lg font-bold">{t.previewHeading}</h2>
+  <div class="mb-6 flex h-48 w-full items-center justify-center overflow-auto rounded-lg border border-gray-300 bg-gray-100 p-10 sm:h-64 dark:border-gray-700 dark:bg-gray-950">
+    <div id="br-preview" class="h-24 w-40 shrink-0 bg-blue-500"></div>
+  </div>
+
+  <div data-copied={t.copied} data-copy-failed={t.copyFailed}>
+    <label
+      for="br-css-output"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.cssHeading}
+    </label>
+    <div class="flex gap-2">
+      <textarea
+        id="br-css-output"
+        readonly
+        rows="2"
+        class="h-16 w-full min-w-0 resize-none rounded-lg border border-gray-300 bg-gray-50 p-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></textarea>
+      <button
+        id="br-copy-button"
+        type="button"
+        class="min-h-11 shrink-0 self-start rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        {t.copyButton}
+      </button>
+    </div>
+    <span
+      id="br-status"
+      class="mt-2 block text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    buildBorderRadiusValue,
+    buildCssDeclaration,
+    clampRadius,
+    MAX_RADIUS,
+    type BorderRadiusCorners,
+    type BorderRadiusUnit,
+  } from '../../lib/tools/css-border-radius-generator';
+
+  const linkCheckbox = document.getElementById(
+    'br-link-corners',
+  ) as HTMLInputElement;
+  const unitSelect = document.getElementById(
+    'br-unit-select',
+  ) as HTMLSelectElement;
+  const topLeftInput = document.getElementById(
+    'br-top-left',
+  ) as HTMLInputElement;
+  const topRightInput = document.getElementById(
+    'br-top-right',
+  ) as HTMLInputElement;
+  const bottomRightInput = document.getElementById(
+    'br-bottom-right',
+  ) as HTMLInputElement;
+  const bottomLeftInput = document.getElementById(
+    'br-bottom-left',
+  ) as HTMLInputElement;
+  const cornerInputs = [
+    topLeftInput,
+    topRightInput,
+    bottomRightInput,
+    bottomLeftInput,
+  ];
+
+  const preview = document.getElementById('br-preview')!;
+  const cssOutput = document.getElementById(
+    'br-css-output',
+  ) as HTMLTextAreaElement;
+  const copyButton = document.getElementById('br-copy-button')!;
+  const statusEl = document.getElementById('br-status')!;
+
+  const copyContainer = cssOutput.closest('[data-copied]') as HTMLElement;
+  const copied = copyContainer.dataset.copied ?? '';
+  const copyFailed = copyContainer.dataset.copyFailed ?? '';
+
+  function currentUnit(): BorderRadiusUnit {
+    return unitSelect.value === '%' ? '%' : 'px';
+  }
+
+  function readCorners(): BorderRadiusCorners {
+    return {
+      topLeft: Number(topLeftInput.value) || 0,
+      topRight: Number(topRightInput.value) || 0,
+      bottomRight: Number(bottomRightInput.value) || 0,
+      bottomLeft: Number(bottomLeftInput.value) || 0,
+    };
+  }
+
+  function updateOutputs() {
+    const unit = currentUnit();
+    const corners = readCorners();
+    preview.style.borderRadius = buildBorderRadiusValue(corners, unit);
+    cssOutput.value = buildCssDeclaration(corners, unit);
+  }
+
+  function updateLinkedState() {
+    const linked = linkCheckbox.checked;
+    [topRightInput, bottomRightInput, bottomLeftInput].forEach((input) => {
+      input.disabled = linked;
+    });
+    if (linked) {
+      const value = topLeftInput.value;
+      topRightInput.value = value;
+      bottomRightInput.value = value;
+      bottomLeftInput.value = value;
+    }
+  }
+
+  function applyUnitToInputs() {
+    const unit = currentUnit();
+    const max = MAX_RADIUS[unit];
+    cornerInputs.forEach((input) => {
+      input.max = String(max);
+      input.value = String(clampRadius(Number(input.value) || 0, unit));
+    });
+  }
+
+  cornerInputs.forEach((input, index) => {
+    input.addEventListener('input', () => {
+      if (linkCheckbox.checked && index === 0) {
+        const value = topLeftInput.value;
+        topRightInput.value = value;
+        bottomRightInput.value = value;
+        bottomLeftInput.value = value;
+      }
+      updateOutputs();
+    });
+    input.addEventListener('change', () => {
+      const unit = currentUnit();
+      input.value = String(clampRadius(Number(input.value) || 0, unit));
+      if (linkCheckbox.checked && index === 0) {
+        const value = topLeftInput.value;
+        topRightInput.value = value;
+        bottomRightInput.value = value;
+        bottomLeftInput.value = value;
+      }
+      updateOutputs();
+    });
+  });
+
+  linkCheckbox.addEventListener('change', () => {
+    updateLinkedState();
+    updateOutputs();
+  });
+
+  unitSelect.addEventListener('change', () => {
+    applyUnitToInputs();
+    updateOutputs();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!cssOutput.value) return;
+    try {
+      await navigator.clipboard.writeText(cssOutput.value);
+      statusEl.textContent = copied;
+    } catch {
+      statusEl.textContent = copyFailed;
+    }
+  });
+
+  updateLinkedState();
+  updateOutputs();
+</script>

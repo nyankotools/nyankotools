@@ -1057,6 +1057,57 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'webcam-tester',
+    translations: {
+      ja: {
+        name: 'Webカメラ動作確認',
+        description:
+          'Webカメラの映像・解像度・フレームレート（FPS）とマイクの入力レベルをブラウザ上で確認。購入直後やWeb会議・配信前のチェックに。',
+        category: 'カメラ',
+      },
+      en: {
+        name: 'Webcam & Microphone Test',
+        description:
+          'Check your webcam video, actual resolution, frame rate (FPS) and microphone level in the browser. Ideal before a call or stream.',
+        category: 'Camera',
+      },
+    },
+  },
+  {
+    slug: 'base-converter',
+    translations: {
+      ja: {
+        name: '進数変換（2/8/10/16進）',
+        description:
+          '2進数・8進数・10進数・16進数の数値をリアルタイムに相互変換します。0x/0b/0oプレフィックスや負数にも対応。',
+        category: '開発',
+      },
+      en: {
+        name: 'Base Converter (Binary/Octal/Decimal/Hex)',
+        description:
+          'Converts numbers between binary, octal, decimal, and hexadecimal in real time. Supports 0x/0b/0o prefixes and negative numbers.',
+        category: 'Development',
+      },
+    },
+  },
+  {
+    slug: 'css-gradient-generator',
+    translations: {
+      ja: {
+        name: 'CSSグラデーションジェネレーター',
+        description:
+          'カラーストップと角度・形状を指定して、線形/円形のCSSグラデーションをプレビューしながら生成します。',
+        category: '開発',
+      },
+      en: {
+        name: 'CSS Gradient Generator',
+        description:
+          'Builds linear/radial CSS gradients with a live preview from color stops, angle, and shape.',
+        category: 'Development',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

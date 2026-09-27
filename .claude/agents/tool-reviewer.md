@@ -11,8 +11,8 @@ Project-wide premises are in `CLAUDE.md`, the add-a-tool procedure in `.claude/d
 
 ## Identify the scope
 
-1. Check `git status` and `git diff` (uncommitted changes). If the caller specifies a commit range (e.g. `develop...HEAD`) or a tool slug, follow it.
-2. Actually read the changed/added files (`src/lib/tools/<slug>.ts`, `src/pages/tools/<slug>/index.astro`, `src/data/tools.ts`, `e2e/*.spec.ts`, etc.). Beyond the diff, also read the surrounding existing code the changes call into, as needed.
+1. If the caller's prompt already lists the changed/added files (e.g. a `git diff --stat` summary or explicit file paths), use that list directly instead of re-deriving it. Otherwise, check `git status` and `git diff` (uncommitted changes) yourself. If the caller specifies a commit range (e.g. `develop...HEAD`) or a tool slug, follow it.
+2. Actually read the changed/added files (`src/lib/tools/<slug>.ts`, `src/pages/tools/<slug>/index.astro`, `src/data/tools.ts`, `e2e/*.spec.ts`, etc.). Beyond the diff, also read the surrounding existing code the changes call into, as needed — but avoid broad, undirected Glob/Grep sweeps of the repo when the diff already tells you what to look at.
 
 ## Review angles
 
@@ -31,7 +31,7 @@ Project-wide premises are in `CLAUDE.md`, the add-a-tool procedure in `.claude/d
 ### Convention compliance ([conventions.md](.claude/docs/conventions.md))
 
 - Are commit messages and code comments in Japanese, and identifiers in English? Is site copy provided for both ja and en in the i18n dictionaries?
-- Does it follow the ESLint / Prettier style (you may run `pnpm run lint` and `pnpm exec prettier --check .`)?
+- Does it follow the ESLint / Prettier style? Scope the check to the changed files rather than the whole repo, e.g. `pnpm exec eslint <changed files>` and `pnpm exec prettier --check <changed files>`, to avoid dragging in unrelated pre-existing findings and to keep command output small.
 - Is the tool logic separated into `src/lib/tools/<slug>.ts` as framework-free functions (no logic written directly in the page's `<script>`)?
 - Are React/Vue/Svelte islands introduced unnecessarily?
 
@@ -64,3 +64,4 @@ Finish with a concise report **in Japanese**. Order findings by severity (bugs/s
 - Do not run `git commit`.
 - Don't step outside the scope (proposing large architecture changes, running/adding tests).
 - **Don't rewrite files via Bash either.** Accidents where Bash was used to rewrite files in lieu of Edit/Write (e.g. running `--write` when meaning `prettier --check`, `sed -i`, overwriting via `>` redirection) have happened before. Run only non-mutating check commands (`pnpm exec astro check`, `pnpm run lint`, `pnpm exec prettier --check .`, etc.); never run commands containing `--write`, `--fix`, or `-i` (in-place edit), or overwrite via output redirection. Report formatting breakage only as a finding.
+- **Keep command output small.** `astro check` / `pnpm build` type-check the whole project and can't be scoped to just the changed files, but their success output is usually noise — redirect to a log file (e.g. `pnpm exec astro check > /tmp/astro-check.log 2>&1; echo exit=$?`) and only read the log when the exit code is non-zero or you need to confirm an error. Don't paste full green output into your reasoning.

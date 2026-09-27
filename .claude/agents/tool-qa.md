@@ -9,7 +9,7 @@ You are an independent QA-only agent for the NyankoTools repository. Don't take 
 
 ## Identify the scope
 
-1. Check `git status` and `git diff` (uncommitted changes). If the caller specifies a commit range (e.g. `develop...HEAD`) or a tool slug, follow it.
+1. If the caller's prompt already lists the changed/added files (e.g. a `git diff --stat` summary or explicit file paths), use that list directly instead of re-deriving it. Otherwise, check `git status` and `git diff` (uncommitted changes) yourself. If the caller specifies a commit range (e.g. `develop...HEAD`) or a tool slug, follow it.
 2. Identify the target tool's slug from the changed/added files. Pay particular attention to:
    - `src/lib/tools/<slug>.ts` (the logic)
    - `src/lib/tools/<slug>.test.ts` (existing unit tests)
@@ -21,12 +21,12 @@ You are an independent QA-only agent for the NyankoTools repository. Don't take 
 ## Static checks
 
 - `pnpm exec astro check`
-- `pnpm run lint`
-- `pnpm exec prettier --check .` (unrelated pre-existing warnings, e.g. in docs, may be ignored)
+- `pnpm run lint` — scope to the changed files where practical (e.g. `pnpm exec eslint <changed files>`) instead of the whole repo
+- `pnpm exec prettier --check <changed files>` rather than `.` (unrelated pre-existing warnings, e.g. in docs, may be ignored anyway, so there's no need to surface them)
 - **Format every file you create or edit** (new/changed tests included) with `pnpm exec prettier --write <those files>` as the last step, and confirm with `pnpm exec prettier --check <those files>`. Do this after your final edit, not before. Never leave a written file unformatted, and never dismiss a warning on a file you wrote.
 - `pnpm build`
 
-If any fails, identify the cause and include it in the report (you may make minor fixes yourself, but major logic redesign is out of scope).
+`astro check` and `pnpm build` type-check/build the whole project and can't be scoped to just the changed files, but their success output is mostly noise — redirect to a log file (e.g. `pnpm build > /tmp/build.log 2>&1; echo exit=$?`) and only read the log when the exit code is non-zero. If any check fails, identify the cause and include it in the report (you may make minor fixes yourself, but major logic redesign is out of scope).
 
 ## Unit tests (Vitest)
 
@@ -52,6 +52,7 @@ If any fails, identify the cause and include it in the report (you may make mino
 - The per-tool spec must exercise the tool's real processing (not just check that elements exist). E2E runs against the production build (`pnpm preview`, port 4322) which enforces the CSP; a tool that loads wasm or fetches files will fail there if the CSP in `astro.config.mjs` blocks it. If the change touches the CSP, also run `e2e/csp-headers.spec.ts`.
 - If the browser is missing on first run, run `pnpm exec playwright install chromium`.
 - Limit runs to the target tool's spec file only (e.g. `pnpm exec playwright test e2e/<slug>.spec.ts`). `pnpm run test:e2e` (the full suite over all tools) burns a lot of tokens, so run it only when the caller explicitly instructs.
+- Playwright's default reporter output is verbose even on success; prefer `pnpm exec playwright test e2e/<slug>.spec.ts --reporter=line` (or redirect to a log and only read it on failure) to keep passing runs from flooding your context.
 
 ## Check the `adding-a-tool.md` checklist (for new tools)
 

@@ -29,6 +29,7 @@ export interface MetaTagGeneratorPageContent {
   localeLabel: string;
   localePlaceholder: string;
   previewHeading: string;
+  previewImageNotShown: string;
   previewEmptyImage: string;
   outputHeading: string;
   outputEmpty: string;
@@ -72,6 +73,7 @@ export const metaTagGeneratorContent: Record<
     localeLabel: 'og:locale（任意）',
     localePlaceholder: '例: ja_JP',
     previewHeading: 'シェアプレビュー',
+    previewImageNotShown: '画像は表示されません',
     previewEmptyImage: '画像なし',
     outputHeading: '生成されたHTML',
     outputEmpty: 'ページタイトルなどを入力すると、ここにタグが生成されます。',
@@ -131,6 +133,7 @@ export const metaTagGeneratorContent: Record<
     localeLabel: 'og:locale (optional)',
     localePlaceholder: 'e.g. en_US',
     previewHeading: 'Share preview',
+    previewImageNotShown: 'Image not shown',
     previewEmptyImage: 'No image',
     outputHeading: 'Generated HTML',
     outputEmpty: 'Enter a page title and other fields to generate tags here.',

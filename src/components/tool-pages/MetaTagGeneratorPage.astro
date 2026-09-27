@@ -110,7 +110,10 @@ const t = metaTagGeneratorContent[locale];
         <circle cx="8.5" cy="8.5" r="1.5"></circle>
         <path d="M21 15l-5-5L5 21"></path>
       </svg>
-      <span id="mtg-preview-image-label" class="line-clamp-2 break-all">
+      <span class="font-medium text-gray-500 dark:text-gray-400">
+        {t.previewImageNotShown}
+      </span>
+      <span id="mtg-preview-image-label" class="line-clamp-2 text-xs break-all">
         {t.previewEmptyImage}
       </span>
     </div>

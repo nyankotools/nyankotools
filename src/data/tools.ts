@@ -1108,6 +1108,91 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'css-box-shadow-generator',
+    translations: {
+      ja: {
+        name: 'CSS box-shadowジェネレーター',
+        description:
+          'オフセット・ぼかし・広がり・色・insetを調整して、複数レイヤーのCSS box-shadowをプレビューしながら生成します。',
+        category: '開発',
+      },
+      en: {
+        name: 'CSS Box-Shadow Generator',
+        description:
+          'Builds multi-layer CSS box-shadow declarations with a live preview from offset, blur, spread, color, and inset.',
+        category: 'Development',
+      },
+    },
+  },
+  {
+    slug: 'css-border-radius-generator',
+    translations: {
+      ja: {
+        name: 'CSS border-radiusジェネレーター',
+        description:
+          '4つの角の丸みをそれぞれ調整して、CSSのborder-radiusをプレビューしながら生成します。px/%の単位切り替えにも対応。',
+        category: '開発',
+      },
+      en: {
+        name: 'CSS Border-Radius Generator',
+        description:
+          'Builds a CSS border-radius with a live preview from four independent (or linked) corner values, with px/% unit switching.',
+        category: 'Development',
+      },
+    },
+  },
+  {
+    slug: 'px-rem-converter',
+    translations: {
+      ja: {
+        name: 'px⇔rem変換',
+        description:
+          'pxとremの値をリアルタイムに相互変換します。ベースフォントサイズを自由に指定可能。',
+        category: '開発',
+      },
+      en: {
+        name: 'px to rem Converter',
+        description:
+          'Converts between px and rem in real time with a customizable base font size.',
+        category: 'Development',
+      },
+    },
+  },
+  {
+    slug: 'contrast-checker',
+    translations: {
+      ja: {
+        name: '色のコントラスト比チェッカー（WCAG）',
+        description:
+          '文字色と背景色のコントラスト比を計算し、WCAGのAA/AAA基準（通常テキスト・大きな文字）に適合するか判定します。',
+        category: '画像・デザイン',
+      },
+      en: {
+        name: 'Color Contrast Checker (WCAG)',
+        description:
+          'Calculates the contrast ratio between text and background colors and checks it against WCAG AA/AAA levels for normal and large text.',
+        category: 'Image & Design',
+      },
+    },
+  },
+  {
+    slug: 'meta-tag-generator',
+    translations: {
+      ja: {
+        name: 'metaタグ・OGPタグ生成',
+        description:
+          'タイトル・説明文・URL・画像から、基本metaタグ・OGP・Twitter Cardのタグをまとめて生成します。SNSシェア時のプレビュー確認付き。',
+        category: '開発',
+      },
+      en: {
+        name: 'Meta Tag & OGP Generator',
+        description:
+          'Generates basic meta tags, Open Graph (OGP), and Twitter Card tags from a page title, description, URL, and image, with a social share preview.',
+        category: 'Development',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

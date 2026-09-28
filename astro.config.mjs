@@ -16,8 +16,15 @@ export default defineConfig({
     // 実際にハッシュ化して <meta> タグで自動的に許可する。
     // frame-ancestors 等は <meta> では効かないため public/_headers 側で別途設定する。
     csp: {
-      // WebAssemblyのコンパイル・実行に必要（JSのeval等は許可しない）
-      scriptDirective: { resources: ["'self'", "'wasm-unsafe-eval'"] },
+      // WebAssemblyのコンパイル・実行に必要（JSのeval等は許可しない）。
+      // GA4計測タグ（gtag.js）の読み込みのため googletagmanager.com も許可する。
+      scriptDirective: {
+        resources: [
+          "'self'",
+          "'wasm-unsafe-eval'",
+          'https://www.googletagmanager.com',
+        ],
+      },
       directives: [
         "default-src 'self'",
         // 'self' は blob: URLを許可しないため明示的に追加する。画像プレビュー系の
@@ -25,15 +32,19 @@ export default defineConfig({
         // URL.createObjectURL()で生成したblob: URLを<img>に設定しており、
         // 'self'のみだと本番相当のCSP配信（astro build/preview, wrangler dev）
         // でのみ画像読み込みがブロックされる（astro devではCSP自体検証されず気づけない）。
-        "img-src 'self' blob:",
+        // GA4がトラッキングピクセルをgoogletagmanager.comに送信するため許可する。
+        "img-src 'self' blob: https://www.googletagmanager.com",
         "font-src 'self'",
-        // 完全ローカル処理を保証するため外部への通信は許可しない。prefetch機能は
-        // <link rel="prefetch"> 非対応ブラウザ（旧Safari等）では fetch()
+        // ツール本体はサーバーに一切データを送らない完全ローカル処理を維持しているが、
+        // プライバシーポリシーで開示済みのGA4（アクセス解析）向けの通信のみ例外として許可する。
+        // prefetch機能は <link rel="prefetch"> 非対応ブラウザ（旧Safari等）では fetch()
         // フォールバックがCSPでブロックされ、コンソールに違反警告が出るが、
         // prefetchが効かなくなるだけでサイト機能への実害はないため許容する。
         // wasmをfetchで読み込むツール（pdf-password-protectorのqpdf-wasm等）のため
-        // 同一オリジンのみ許可する。外部サーバーへの通信は引き続きブロックされる。
-        "connect-src 'self'",
+        // 同一オリジンのみ許可する。GA4以外の外部サーバーへの通信は引き続きブロックされる。
+        // gtag.jsは初期化時にリモート設定をgoogletagmanager.comへfetchで取得するため、
+        // これも合わせて許可しないと初回のCSP違反が発生しうる。
+        "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",

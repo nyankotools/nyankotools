@@ -1,0 +1,333 @@
+---
+import Glossary from '../Glossary.astro';
+import Layout from '../../layouts/Layout.astro';
+import { cssBoxShadowGeneratorContent } from '../../i18n/tools/css-box-shadow-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cssBoxShadowGeneratorContent[locale];
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <div class="mb-6">
+    <h2 class="mb-2 text-lg font-bold">{t.shadowsHeading}</h2>
+    <ul id="bs-shadows-list" class="space-y-3"></ul>
+    <button
+      id="bs-add-shadow-button"
+      type="button"
+      class="mt-3 min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+    >
+      {t.addShadowButton}
+    </button>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+      {t.maxShadowsHint}
+    </p>
+  </div>
+
+  <template id="bs-shadow-template">
+    <li
+      data-shadow-row
+      class="rounded-lg border border-gray-300 p-3 dark:border-gray-700"
+    >
+      <div class="flex flex-wrap items-end gap-3">
+        <label class="text-sm text-gray-700 dark:text-gray-300">
+          <span class="mb-1 block">{t.offsetXLabel}</span>
+          <input
+            data-offset-x
+            type="number"
+            min="-200"
+            max="200"
+            class="h-11 w-20 rounded-lg border border-gray-300 px-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          />
+        </label>
+        <label class="text-sm text-gray-700 dark:text-gray-300">
+          <span class="mb-1 block">{t.offsetYLabel}</span>
+          <input
+            data-offset-y
+            type="number"
+            min="-200"
+            max="200"
+            class="h-11 w-20 rounded-lg border border-gray-300 px-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          />
+        </label>
+        <label class="text-sm text-gray-700 dark:text-gray-300">
+          <span class="mb-1 block">{t.blurLabel}</span>
+          <input
+            data-blur
+            type="number"
+            min="0"
+            max="200"
+            class="h-11 w-20 rounded-lg border border-gray-300 px-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          />
+        </label>
+        <label class="text-sm text-gray-700 dark:text-gray-300">
+          <span class="mb-1 block">{t.spreadLabel}</span>
+          <input
+            data-spread
+            type="number"
+            min="-200"
+            max="200"
+            class="h-11 w-20 rounded-lg border border-gray-300 px-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          />
+        </label>
+        <label class="text-sm text-gray-700 dark:text-gray-300">
+          <span class="mb-1 block">{t.colorLabel}</span>
+          <input
+            data-color
+            type="color"
+            aria-label={t.colorLabel}
+            class="h-11 w-14 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+          />
+        </label>
+        <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input data-inset type="checkbox" class="h-4 w-4" />
+          {t.insetLabel}
+        </label>
+        <button
+          data-remove
+          type="button"
+          class="ml-auto min-h-11 shrink-0 rounded-lg border border-gray-300 px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          {t.removeShadowButton}
+        </button>
+      </div>
+    </li>
+  </template>
+
+  <h2 class="mb-2 text-lg font-bold">{t.previewHeading}</h2>
+  <div
+    id="bs-preview-container"
+    class="mb-6 flex h-48 w-full items-center justify-center overflow-auto rounded-lg border border-gray-300 bg-gray-100 p-10 sm:h-64 dark:border-gray-700 dark:bg-gray-950"
+  >
+    <div
+      id="bs-preview"
+      class="h-24 w-24 shrink-0 rounded-lg bg-white sm:h-32 sm:w-32 dark:bg-gray-800"
+    ></div>
+  </div>
+
+  <div data-copied={t.copied} data-copy-failed={t.copyFailed}>
+    <label
+      for="bs-css-output"
+      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.cssHeading}
+    </label>
+    <div class="flex gap-2">
+      <textarea
+        id="bs-css-output"
+        readonly
+        rows="3"
+        class="h-24 w-full min-w-0 resize-none rounded-lg border border-gray-300 bg-gray-50 p-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></textarea>
+      <button
+        id="bs-copy-button"
+        type="button"
+        class="min-h-11 shrink-0 self-start rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      >
+        {t.copyButton}
+      </button>
+    </div>
+    <span
+      id="bs-status"
+      class="mt-2 block text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
+  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+    {t.notes.map((note) => (
+      <li>{note}</li>
+    ))}
+  </ul>
+
+  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+</Layout>
+
+<script>
+  import {
+    buildBoxShadowValue,
+    buildCssDeclaration,
+    clampBlur,
+    clampOffset,
+    clampSpread,
+    DEFAULT_SHADOW_COLORS,
+    MAX_SHADOWS,
+    MIN_SHADOWS,
+    suggestNewShadow,
+    type BoxShadowLayer,
+  } from '../../lib/tools/css-box-shadow-generator';
+
+  const shadowsList = document.getElementById('bs-shadows-list')!;
+  const shadowTemplate = document.getElementById(
+    'bs-shadow-template',
+  ) as HTMLTemplateElement;
+  const addShadowButton = document.getElementById(
+    'bs-add-shadow-button',
+  ) as HTMLButtonElement;
+
+  const preview = document.getElementById('bs-preview')!;
+  const cssOutput = document.getElementById(
+    'bs-css-output',
+  ) as HTMLTextAreaElement;
+  const copyButton = document.getElementById('bs-copy-button')!;
+  const statusEl = document.getElementById('bs-status')!;
+
+  const copyContainer = cssOutput.closest('[data-copied]') as HTMLElement;
+  const copied = copyContainer.dataset.copied ?? '';
+  const copyFailed = copyContainer.dataset.copyFailed ?? '';
+
+  function readLayersFromDom(): BoxShadowLayer[] {
+    return Array.from(
+      shadowsList.querySelectorAll<HTMLLIElement>('[data-shadow-row]'),
+    ).map((row) => {
+      const offsetX = Number(
+        (row.querySelector('[data-offset-x]') as HTMLInputElement).value,
+      );
+      const offsetY = Number(
+        (row.querySelector('[data-offset-y]') as HTMLInputElement).value,
+      );
+      const blur = Number(
+        (row.querySelector('[data-blur]') as HTMLInputElement).value,
+      );
+      const spread = Number(
+        (row.querySelector('[data-spread]') as HTMLInputElement).value,
+      );
+      const color = (row.querySelector('[data-color]') as HTMLInputElement)
+        .value;
+      const inset = (row.querySelector('[data-inset]') as HTMLInputElement)
+        .checked;
+      return {
+        offsetX: Number.isFinite(offsetX) ? offsetX : 0,
+        offsetY: Number.isFinite(offsetY) ? offsetY : 0,
+        blur: Number.isFinite(blur) ? blur : 0,
+        spread: Number.isFinite(spread) ? spread : 0,
+        color,
+        inset,
+      };
+    });
+  }
+
+  function updateOutputs() {
+    const layers = readLayersFromDom();
+    preview.style.boxShadow = buildBoxShadowValue(layers);
+    cssOutput.value = buildCssDeclaration(layers);
+  }
+
+  function updateRemoveButtonsState() {
+    const rows =
+      shadowsList.querySelectorAll<HTMLLIElement>('[data-shadow-row]');
+    const disable = rows.length <= MIN_SHADOWS;
+    rows.forEach((row) => {
+      (row.querySelector('[data-remove]') as HTMLButtonElement).disabled =
+        disable;
+    });
+  }
+
+  function updateAddButtonState() {
+    addShadowButton.disabled =
+      shadowsList.querySelectorAll('[data-shadow-row]').length >= MAX_SHADOWS;
+  }
+
+  function addShadowRow(layer: BoxShadowLayer) {
+    const row = shadowTemplate.content.firstElementChild!.cloneNode(
+      true,
+    ) as HTMLElement;
+    const offsetXInput = row.querySelector(
+      '[data-offset-x]',
+    ) as HTMLInputElement;
+    const offsetYInput = row.querySelector(
+      '[data-offset-y]',
+    ) as HTMLInputElement;
+    const blurInput = row.querySelector('[data-blur]') as HTMLInputElement;
+    const spreadInput = row.querySelector('[data-spread]') as HTMLInputElement;
+    const colorInput = row.querySelector('[data-color]') as HTMLInputElement;
+    const insetInput = row.querySelector('[data-inset]') as HTMLInputElement;
+    const removeButton = row.querySelector(
+      '[data-remove]',
+    ) as HTMLButtonElement;
+
+    offsetXInput.value = String(layer.offsetX);
+    offsetYInput.value = String(layer.offsetY);
+    blurInput.value = String(layer.blur);
+    spreadInput.value = String(layer.spread);
+    colorInput.value = layer.color;
+    insetInput.checked = layer.inset;
+
+    offsetXInput.addEventListener('input', updateOutputs);
+    offsetYInput.addEventListener('input', updateOutputs);
+    blurInput.addEventListener('input', updateOutputs);
+    spreadInput.addEventListener('input', updateOutputs);
+    colorInput.addEventListener('input', updateOutputs);
+    insetInput.addEventListener('change', updateOutputs);
+
+    offsetXInput.addEventListener('change', () => {
+      offsetXInput.value = String(clampOffset(Number(offsetXInput.value)));
+      updateOutputs();
+    });
+    offsetYInput.addEventListener('change', () => {
+      offsetYInput.value = String(clampOffset(Number(offsetYInput.value)));
+      updateOutputs();
+    });
+    blurInput.addEventListener('change', () => {
+      blurInput.value = String(clampBlur(Number(blurInput.value)));
+      updateOutputs();
+    });
+    spreadInput.addEventListener('change', () => {
+      spreadInput.value = String(clampSpread(Number(spreadInput.value)));
+      updateOutputs();
+    });
+
+    removeButton.addEventListener('click', () => {
+      if (
+        shadowsList.querySelectorAll('[data-shadow-row]').length <= MIN_SHADOWS
+      ) {
+        return;
+      }
+      row.remove();
+      updateRemoveButtonsState();
+      updateAddButtonState();
+      updateOutputs();
+    });
+
+    shadowsList.appendChild(row);
+  }
+
+  addShadowButton.addEventListener('click', () => {
+    const count = shadowsList.querySelectorAll('[data-shadow-row]').length;
+    if (count >= MAX_SHADOWS) return;
+    addShadowRow(suggestNewShadow(count));
+    updateRemoveButtonsState();
+    updateAddButtonState();
+    updateOutputs();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!cssOutput.value) return;
+    try {
+      await navigator.clipboard.writeText(cssOutput.value);
+      statusEl.textContent = copied;
+    } catch {
+      statusEl.textContent = copyFailed;
+    }
+  });
+
+  addShadowRow({
+    offsetX: 0,
+    offsetY: 4,
+    blur: 8,
+    spread: 0,
+    color: DEFAULT_SHADOW_COLORS[0],
+    inset: false,
+  });
+  updateRemoveButtonsState();
+  updateAddButtonState();
+  updateOutputs();
+</script>

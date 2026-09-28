@@ -101,7 +101,7 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
     expect(metaCsp).toContain("default-src 'self'");
     expect(metaCsp).toContain("object-src 'none'");
     expect(metaCsp).toMatch(
-      /script-src 'self' 'wasm-unsafe-eval'(?: https:\/\/www\.googletagmanager\.com)?(?: 'sha256-[^']+')+/,
+      /script-src 'self' 'wasm-unsafe-eval'(?: https:\/\/www\.googletagmanager\.com)?(?: https:\/\/static\.cloudflareinsights\.com)?(?: 'sha256-[^']+')+/,
     );
     expect(metaCsp).toMatch(/style-src 'self'(?: 'sha256-[^']+')+/);
 

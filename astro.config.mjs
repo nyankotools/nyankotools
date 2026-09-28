@@ -18,11 +18,15 @@ export default defineConfig({
     csp: {
       // WebAssemblyのコンパイル・実行に必要（JSのeval等は許可しない）。
       // GA4計測タグ（gtag.js）の読み込みのため googletagmanager.com も許可する。
+      // Cloudflare Web Analytics（Cloudflareダッシュボード側の設定で有効化されており、
+      // コード側では制御できない）が自動挿入する beacon.min.js の読み込みのため
+      // static.cloudflareinsights.com も許可する。
       scriptDirective: {
         resources: [
           "'self'",
           "'wasm-unsafe-eval'",
           'https://www.googletagmanager.com',
+          'https://static.cloudflareinsights.com',
         ],
       },
       directives: [
@@ -36,7 +40,7 @@ export default defineConfig({
         "img-src 'self' blob: https://www.googletagmanager.com",
         "font-src 'self'",
         // ツール本体はサーバーに一切データを送らない完全ローカル処理を維持しているが、
-        // プライバシーポリシーで開示済みのGA4（アクセス解析）向けの通信のみ例外として許可する。
+        // アクセス解析向けの通信（GA4、およびCloudflare Web Analytics）のみ例外として許可する。
         // prefetch機能は <link rel="prefetch"> 非対応ブラウザ（旧Safari等）では fetch()
         // フォールバックがCSPでブロックされ、コンソールに違反警告が出るが、
         // prefetchが効かなくなるだけでサイト機能への実害はないため許容する。
@@ -44,7 +48,9 @@ export default defineConfig({
         // 同一オリジンのみ許可する。GA4以外の外部サーバーへの通信は引き続きブロックされる。
         // gtag.jsは初期化時にリモート設定をgoogletagmanager.comへfetchで取得するため、
         // これも合わせて許可しないと初回のCSP違反が発生しうる。
-        "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com",
+        // Cloudflare Web Analyticsの計測ビーコン（beacon.min.jsがcloudflareinsights.comへ送信）
+        // のため cloudflareinsights.com も許可する。
+        "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://cloudflareinsights.com",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",

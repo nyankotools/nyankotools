@@ -36,7 +36,7 @@ export const pxRemConverterContent: Record<Locale, PxRemConverterPageContent> =
         'pxとremの値をリアルタイムに相互変換する無料ツールです。ベースフォントサイズ（デフォルト16px）を自由に指定でき、CSSのフォントサイズ・余白などの単位換算に使えます。データはブラウザ内で処理され、サーバーには送信されません。',
       h1: 'px⇔rem変換ツール',
       introHtml:
-        'ベースフォントサイズ（通常はhtml要素のfont-size、デフォルト16px）を指定したうえで、pxまたはremのどちらかの欄に数値を入力すると、もう一方の欄にリアルタイムに変換結果を表示します。CSSのfont-size・margin・paddingなどをpx指定からrem指定に置き換える際の換算に便利です。CSSの単位そのものについては <a href="/tools/css-gradient-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">CSSグラデーションジェネレーター</a> など他のCSS系ツールもあわせてご利用ください。',
+        'ベースフォントサイズ（通常はhtml要素のfont-size、デフォルト16px）を指定したうえで、pxまたはremのどちらかの欄に数値を入力すると、もう一方の欄にリアルタイムに変換結果を表示します。CSSのfont-size・margin・paddingなどをpx指定からrem指定に置き換える際の換算に便利です。他のCSS系ツール（<a href="/tools/css-gradient-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">CSSグラデーションジェネレーター</a>など）もあわせてご利用ください。',
       baseFontSizeLabel: 'ベースフォントサイズ（px）',
       baseFontSizeHint:
         '通常はhtml要素に設定されているfont-size（多くのブラウザの初期値は16px）を指定します。',

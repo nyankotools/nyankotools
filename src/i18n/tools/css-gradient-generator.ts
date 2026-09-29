@@ -49,7 +49,7 @@ export const cssGradientGeneratorContent: Record<
       '色とポジションを指定するだけで、線形（linear-gradient）・円形（radial-gradient）のCSSグラデーションをリアルタイムプレビューしながら生成できる無料ツールです。カラーストップは自由に追加・削除・調整でき、生成したCSSはワンクリックでコピーできます。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'CSSグラデーションジェネレーター',
     introHtml:
-      'グラデーションの種類（線形/円形）を選び、角度や形状、カラーストップ（色と位置%）を調整すると、プレビューと生成されるCSSがリアルタイムに更新されます。カラーストップは2〜6個まで追加・削除でき、「カラーストップを追加」ボタンを押すと既存のカラーストップの間で最も広い隙間の中央に新しいカラーストップが挿入されます。生成された<code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">background</code>宣言はコピーボタンでそのままクリップボードにコピーできます。配色のアイデア探しには <a href="/tools/color-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">カラーコード変換ツール</a> もあわせてご利用ください。',
+      'グラデーションの種類（線形/円形）を選び、角度や形状、カラーストップ（色と位置%）を調整すると、プレビューと生成されるCSSがリアルタイムに更新されます。カラーストップは2〜6個まで追加・削除でき、「カラーストップを追加」ボタンを押すと既存のカラーストップの間で最も広い隙間の中央に新しいカラーストップが挿入されます。生成された<code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">background</code>宣言はコピーボタンでそのままクリップボードにコピーできます。カラーコードの形式変換には <a href="/tools/color-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">カラーコード変換</a> もあわせてご利用ください。',
     typeLabel: 'グラデーションの種類',
     typeLinear: '線形（linear-gradient）',
     typeRadial: '円形（radial-gradient）',
@@ -108,7 +108,7 @@ export const cssGradientGeneratorContent: Record<
       'Build CSS linear-gradient and radial-gradient backgrounds with a live preview — pick colors and stop positions and copy the generated CSS instantly. Add, remove, and fine-tune color stops freely. Your data is processed in the browser and never sent to a server.',
     h1: 'CSS Gradient Generator',
     introHtml:
-      'Choose a gradient type (linear or radial), then adjust the angle or shape and each color stop (color and position %) — the preview and the generated CSS update instantly. You can add or remove between 2 and 6 color stops; clicking "Add color stop" inserts a new stop in the middle of the largest gap between existing stops. The generated <code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">background</code> declaration can be copied to the clipboard with one click. For color ideas, also try the <a href="/en/tools/color-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Color Code Converter</a>.',
+      'Choose a gradient type (linear or radial), then adjust the angle or shape and each color stop (color and position %) — the preview and the generated CSS update instantly. You can add or remove between 2 and 6 color stops; clicking "Add color stop" inserts a new stop in the middle of the largest gap between existing stops. The generated <code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">background</code> declaration can be copied to the clipboard with one click. To convert color code formats, also try the <a href="/en/tools/color-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Color Converter</a>.',
     typeLabel: 'Gradient type',
     typeLinear: 'Linear (linear-gradient)',
     typeRadial: 'Radial (radial-gradient)',

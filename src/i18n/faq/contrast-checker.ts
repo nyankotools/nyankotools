@@ -15,7 +15,7 @@ export const faq: FaqContent = {
     {
       question: '画像内の文字やロゴにも適用されますか？',
       answer:
-        'ロゴや装飾的な要素はWCAGのコントラスト基準の対象外ですが、ボタンやアイコンなど機能を持つUI要素には3:1以上が求められます。画像内の文字（ロゴを除く）も通常の文字と同じ基準が適用されます。このツールは文字色と背景色の2色間の比を計算します。',
+        'ロゴや装飾的な要素はWCAGのコントラスト基準の対象外ですが、ボタンやアイコンなど機能を持つUI要素には3:1以上が求められます。文字を画像化したもの（文字の画像）も、ロゴや写真に写り込んだ文字を除き、HTMLの文字と同じ基準（文字サイズに応じて4.5:1または3:1）が適用されます。このツールは文字色と背景色の2色間の比を計算します。',
     },
   ],
   en: [
@@ -32,7 +32,7 @@ export const faq: FaqContent = {
     {
       question: 'Does it apply to logos and text in images?',
       answer:
-        'Logos and purely decorative elements are exempt, but functional UI components such as buttons and icons need at least 3:1. Text inside images (other than logos) is held to the same standard as regular text. This tool calculates the ratio between two colors.',
+        'Logos and purely decorative elements are exempt, but functional UI components such as buttons and icons need at least 3:1. Images of text (other than logos, or text that is incidental to a photo) must meet the same ratios as live text: 4.5:1, or 3:1 for large text. This tool calculates the ratio between two colors.',
     },
   ],
 };

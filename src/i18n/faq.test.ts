@@ -5,12 +5,13 @@ import { getFaqItems } from './faq';
 describe('FAQ dictionary', () => {
   for (const tool of tools) {
     for (const locale of ['ja', 'en'] as const) {
-      it(`${tool.slug} (${locale}) has 3-5 non-empty, unique FAQ items`, () => {
+      it(`${tool.slug} (${locale}) has 3-5 non-empty, trimmed, unique FAQ items`, () => {
         const items = getFaqItems(tool.slug, locale);
         expect(items.length).toBeGreaterThanOrEqual(3);
         expect(items.length).toBeLessThanOrEqual(5);
         for (const item of items) {
           expect(item.question.trim()).not.toBe('');
+          expect(item.question).toBe(item.question.trim());
           expect(item.answer.trim()).not.toBe('');
           expect(item.answer).toBe(item.answer.trim());
         }

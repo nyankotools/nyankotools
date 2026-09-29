@@ -39,7 +39,7 @@ export const colorConverterContent: Record<Locale, ColorConverterPageContent> =
         'HEX・RGB・HSLのカラーコードを相互に変換できる無料ツールです。カラーピッカーで直感的に色を選ぶこともできます。データはブラウザ内で処理され、サーバーには送信されません。',
       h1: 'カラーコード変換（HEX/RGB/HSL）',
       introHtml:
-        'HEX・RGB・HSL形式のカラーコードをリアルタイムで相互変換します。いずれかの欄に値を入力するか、カラーピッカーで色を選ぶと他の形式に自動で反映されます。ブラウザ内で処理され、入力内容がサーバーに送信されることはありません。QRコードの色指定などにお困りの場合は <a href="/tools/qr-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">QRコード生成</a> もあわせてご利用ください。',
+        'HEX・RGB・HSL形式のカラーコードをリアルタイムで相互変換します。いずれかの欄に値を入力するか、カラーピッカーで色を選ぶと他の形式に自動で反映されます。ブラウザ内で処理され、入力内容がサーバーに送信されることはありません。色の組み合わせの見やすさを確かめたい場合は <a href="/tools/contrast-checker/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">色のコントラスト比チェッカー（WCAG）</a> もあわせてご利用ください。',
       pickerAriaLabel: 'カラーピッカー',
       fields: [
         { id: 'hex', label: 'HEX', placeholder: '#3b82f6' },
@@ -83,7 +83,7 @@ export const colorConverterContent: Record<Locale, ColorConverterPageContent> =
         'A free tool to convert color codes between HEX, RGB, and HSL. You can also pick a color intuitively with the color picker. Your data is processed in the browser and never sent to a server.',
       h1: 'Color Converter (HEX/RGB/HSL)',
       introHtml:
-        'Converts HEX, RGB, and HSL color codes to each other in real time. Enter a value in any field, or pick a color with the color picker, and the other formats update automatically. Everything happens in your browser, and nothing you type is ever sent to a server. Need a color for a QR code? Check out the <a href="/en/tools/qr-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">QR Code Generator</a> as well.',
+        'Converts HEX, RGB, and HSL color codes to each other in real time. Enter a value in any field, or pick a color with the color picker, and the other formats update automatically. Everything happens in your browser, and nothing you type is ever sent to a server. Want to check whether two colors are easy to read together? Try the <a href="/en/tools/contrast-checker/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Color Contrast Checker (WCAG)</a> as well.',
       pickerAriaLabel: 'Color picker',
       fields: [
         { id: 'hex', label: 'HEX', placeholder: '#3b82f6' },

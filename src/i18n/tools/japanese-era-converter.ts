@@ -136,7 +136,7 @@ export const japaneseEraConverterContent: Record<
     notes: [
       'Supported range starts at Meiji 1 (January 25, 1868). Dates before that cannot be converted.',
       'Dates right around an era transition (e.g. Showa 64 / January 7 vs. Heisei 1 / January 8) are especially easy to get wrong, so conversion is determined at the day level.',
-      'The first year of an era is displayed as "gannen" on the Japanese version of this tool (e.g. Reiwa gannen = Reiwa 1).',
+      'The first year of an era is shown as "1 (gannen)" (e.g. Reiwa gannen = Reiwa 1).',
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

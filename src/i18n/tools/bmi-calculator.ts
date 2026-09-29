@@ -108,7 +108,7 @@ export const bmiCalculatorContent: Record<Locale, BmiCalculatorPageContent> = {
       'Calculate your Body Mass Index from height and weight, see which WHO weight category it falls into, and get the healthy weight range for your height. Your data is processed in the browser and never sent to a server.',
     h1: 'BMI Calculator',
     introHtml:
-      'Enter your height and weight to calculate your BMI (Body Mass Index), see which WHO weight category (underweight, normal weight, overweight, or obese class I–III) it falls into, and get the healthy weight range (BMI 18.5–25) for your height. Everything happens in your browser, and nothing you type is ever sent to a server. If you want to work out an age or a date difference, try the <a href="/en/tools/age-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Age Calculator</a> as well.',
+      'Enter your height and weight to calculate your BMI (Body Mass Index), see which WHO weight category (underweight, normal weight, overweight, or obese class I–III) it falls into, and get the healthy weight range (BMI 18.5–25) for your height. Everything happens in your browser, and nothing you type is ever sent to a server. If you want to work out an age or the number of days since birth, try the <a href="/en/tools/age-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Age Calculator</a> as well.',
     numberLocale: 'en-US',
     defaultUnit: 'imperial',
 

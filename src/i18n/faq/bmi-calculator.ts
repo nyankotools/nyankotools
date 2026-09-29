@@ -27,7 +27,7 @@ export const faq: FaqContent = {
     {
       question: 'Do the categories differ between Japan and WHO?',
       answer:
-        'This tool uses the WHO classification: under 18.5 is underweight, 18.5 to 24.9 is normal, 25 to 29.9 is overweight, and 30 or above is obese (Class I to III). Japan uses the same cutoffs for underweight and normal, but labels 25 or above as obesity grades 1 to 4.',
+        'This tool uses the WHO classification: under 18.5 is underweight, 18.5 to 24.9 is normal, 25 to 29.9 is overweight, and 30 or above is obese (Class I to III). Japan uses the same cutoffs, but labels 25 or above as obesity grades 1 to 4.',
     },
     {
       question: 'Can BMI alone tell me if I am healthy?',

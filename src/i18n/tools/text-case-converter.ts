@@ -90,7 +90,7 @@ export const textCaseConverterContent: Record<
       'A free tool that converts text into 9 naming conventions at once — camelCase, PascalCase, snake_case, kebab-case, CONSTANT_CASE and more. Handy for renaming variables and functions. Your data is processed in the browser and never sent to a server.',
     h1: 'Text Case Converter (camelCase / snake_case / kebab-case / PascalCase)',
     introHtml:
-      'Type or paste text below to automatically convert it into 9 naming conventions, including camelCase, PascalCase, snake_case, and kebab-case. Word boundaries (spaces, hyphens, underscores) and existing camelCase text are detected automatically. Need to dedupe or sort a list instead? Try <a href="/en/tools/text-list-tools/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Text List Deduplicate, Sort & Shuffle</a>.',
+      'Type or paste text below to automatically convert it into 9 naming conventions, including camelCase, PascalCase, snake_case, and kebab-case. Word boundaries (spaces, hyphens, underscores) and existing camelCase text are detected automatically. Need to dedupe or sort a list instead? Try <a href="/en/tools/text-list-tools/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Text List Deduplicate, Sort & Shuffle</a>. To unify full-width and half-width characters, use the <a href="/en/tools/zenkaku-hankaku/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Full-width / Half-width Converter</a>.',
     inputLabel: 'Input',
     inputPlaceholder: 'Enter text to convert (e.g. hello world / hello_world)',
     copy: 'Copy',

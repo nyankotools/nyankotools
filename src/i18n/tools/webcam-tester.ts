@@ -50,7 +50,7 @@ export const webcamTesterContent: Record<Locale, WebcamTesterPageContent> = {
       'Webカメラとマイクの動作確認をブラウザ上で行える無料ツールです。映像のプレビュー、解像度・フレームレート（FPS）の実測、マイクの入力レベル確認に対応。映像・音声はブラウザ内で処理され、サーバーには送信・保存されません。',
     h1: 'Webカメラ動作確認ツール',
     introHtml:
-      'Webカメラの購入直後や、Web会議・配信の前に、映像が映るか・解像度やFPSはどのくらいか・マイクが音を拾っているかを確認できます。映像も音声もこのページの外には出ません。撮影した画像の縮小には<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ</a>もご利用ください。',
+      'Webカメラの購入直後や、Web会議・配信の前に、映像が映るか・解像度やFPSはどのくらいか・マイクが音を拾っているかを確認できます。映像も音声もこのページの外には出ません。別のアプリで撮影した画像の縮小には<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ</a>もご利用ください。',
     fullscreen: '全画面表示',
     exitFullscreen: '全画面を終了',
     mirror: '左右反転して表示',
@@ -114,7 +114,7 @@ export const webcamTesterContent: Record<Locale, WebcamTesterPageContent> = {
       'A free online webcam test. Preview your camera, measure the actual resolution and frame rate (FPS), and check your microphone input level right in the browser. Video and audio stay in your browser and are never uploaded or stored.',
     h1: 'Webcam & Microphone Test',
     introHtml:
-      'Check that your new webcam works, see its real resolution and FPS, and confirm your microphone is picking up sound before a video call or stream. Nothing leaves this page. Need to shrink a captured image? Try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer</a>.',
+      'Check that your new webcam works, see its real resolution and FPS, and confirm your microphone is picking up sound before a video call or stream. Nothing leaves this page. Need to shrink an image taken with another app? Try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer</a>.',
     fullscreen: 'Fullscreen',
     exitFullscreen: 'Exit fullscreen',
     mirror: 'Mirror preview',

@@ -43,7 +43,7 @@ export const sqlFormatterContent: Record<Locale, SqlFormatterPageContent> = {
       'SQLクエリをブラウザ上で整形・ミニファイ（圧縮）できる無料ツールです。MySQL・PostgreSQL・SQLite・BigQuery等の方言、インデント幅、キーワードの大文字/小文字に対応。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'SQL整形・ミニファイツール',
     introHtml:
-      'SQLクエリを入力すると自動で読みやすく整形して表示します。方言・インデント幅・キーワードの大文字/小文字を指定可能。1行に圧縮したい場合は「ミニファイ」ボタンを使ってください。整形結果をさらにJSONとして確認したい場合は <a href="/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON整形</a> もあわせてご利用ください。',
+      'SQLクエリを入力すると自動で読みやすく整形して表示します。方言・インデント幅・キーワードの大文字/小文字を指定可能。1行に圧縮したい場合は「ミニファイ」ボタンを使ってください。クエリ結果のJSONを整形したい場合は <a href="/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON整形</a> もあわせてご利用ください。',
     dialectLabel: 'SQL方言',
     dialectOptions: [
       { value: 'sql', label: '標準SQL' },
@@ -107,7 +107,7 @@ export const sqlFormatterContent: Record<Locale, SqlFormatterPageContent> = {
       'Free online tool to format and minify SQL queries right in your browser. Supports MySQL, PostgreSQL, SQLite, BigQuery and other dialects, plus indent width and keyword case options. Your data is processed in the browser and never sent to a server.',
     h1: 'SQL Formatter & Minifier',
     introHtml:
-      'Paste a SQL query to have it automatically formatted for readability. Choose the dialect, indent width, and keyword case. Click "Minify" to collapse it back to a single line. To further inspect the result as JSON, try the <a href="/en/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON Formatter</a> as well.',
+      'Paste a SQL query to have it automatically formatted for readability. Choose the dialect, indent width, and keyword case. Click "Minify" to collapse it back to a single line. To format JSON query results, try the <a href="/en/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON Formatter</a> as well.',
     dialectLabel: 'Dialect',
     dialectOptions: [
       { value: 'sql', label: 'Standard SQL' },

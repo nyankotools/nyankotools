@@ -91,7 +91,7 @@ export const webcamTesterContent: Record<Locale, WebcamTesterPageContent> = {
     notes: [
       '初回は、ブラウザからカメラ（マイクを確認する場合はマイクも）の使用許可を求められます。「許可」を選んでください。',
       '解像度は指定した値が必ず得られるとは限らず、カメラが対応する最も近い値になります。「自動」は最大フルHDで取得します。実際の値は「取得できた情報」で確認できます。',
-      'フレームレートは映像の描画間隔から算出した実測値です。暗い場所ではカメラが自動で下げることがあります。',
+      'フレームレートは、対応ブラウザでは映像の描画間隔から算出した実測値です。暗い場所ではカメラが自動で下げることがあります。',
       '映像・音声は録画も保存もされず、ページを閉じる・停止すると破棄されます。',
     ],
     glossaryHeading: '用語解説',
@@ -157,7 +157,7 @@ export const webcamTesterContent: Record<Locale, WebcamTesterPageContent> = {
     notes: [
       'The first time, your browser asks for permission to use the camera (and the microphone, if you test it). Choose "Allow".',
       'A requested resolution is not guaranteed ("Auto" uses up to Full HD); you get the closest one the camera supports. The actual value appears under "Detected information".',
-      'The frame rate is measured from how often frames are drawn. Cameras often lower it automatically in dim light.',
+      'Where supported, the frame rate is measured from how often frames are drawn. Cameras often lower it automatically in dim light.',
       'Video and audio are neither recorded nor stored, and are discarded when you stop or close the page.',
     ],
     glossaryHeading: 'Glossary',

@@ -200,7 +200,7 @@ export const investmentSimulatorContent: Record<
       '複利計算は「毎月の積立額を月初に投入し、その月の運用益をその積立額にも加える」方式（年金終価、期首払い）を前提としています。初期投資額は積立開始時点から運用されるものとして計算します。',
       '「積立期間を計算する」では、目標の資産額にちょうど届く月数を切り上げて求めています。そのため試算結果の資産額は目標の資産額と完全には一致せず、わずかに上回ります。',
       '取り崩しシミュレーションは、毎月末に運用益を加えたうえで取り崩す前提です。「利用年数から計算」は指定した年数でちょうど残高が0になる毎月均等額を（元利均等返済と同じ計算方式で）算出し、「定額取り崩し」は指定した毎月の取り崩し額で残高が0になるまでの期間を算出し、「定率取り崩し」は毎月の残高に取り崩し率を掛けた額を取り崩すため理論上は残高が0にはならず徐々に減っていきます。実際の取り崩しでは、取り崩しのタイミングや手数料、市場変動によって結果が異なります。',
-      '運用益にかかる税金（通常20.315%）や、投資信託の信託報酬などの利回り以外のコストは考慮していません。NISA（少額投資非課税制度）など非課税制度を利用する場合は、本ツールの試算結果がそのまま手取りの目安になります。',
+      '運用益にかかる税金（通常20.315%）や、投資信託の信託報酬などの利回り以外のコストは考慮していません。NISA（少額投資非課税制度）など非課税制度を利用する場合、税金の面では本ツールの試算結果が手取りの目安になります（信託報酬などのコストは別途差し引いて考えてください）。',
     ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
@@ -344,7 +344,7 @@ export const investmentSimulatorContent: Record<
       "The compound interest calculation assumes each monthly contribution is made at the start of the month and earns that month's return as well (an annuity-due). The initial investment is assumed to start earning returns from the very beginning of the period.",
       'For "time horizon," the required number of months is rounded up to the nearest whole month, so the resulting future value is slightly above (never below) your target.',
       'The withdrawal simulation assumes withdrawals happen at the end of each month, after that month\'s return is added. "Solve from a withdrawal period" computes the fixed monthly amount that brings the balance to exactly zero at the end of the chosen period (the same math as a fully amortizing loan payment); "fixed-amount withdrawal" computes how long a chosen fixed monthly amount lasts; "fixed-percentage withdrawal" withdraws a percentage of the balance each month, so the balance shrinks gradually but never mathematically reaches zero. Actual withdrawal timing, fees, and market fluctuations will change the real result.',
-      "Taxes on investment gains (typically about 20.315% in Japan) and costs other than the rate of return, such as fund management fees, are not included. If you're using a tax-advantaged account such as NISA, this estimate is close to your actual take-home amount.",
+      "Taxes on investment gains (typically about 20.315% in Japan) and costs other than the rate of return, such as fund management fees, are not included. If you're using a tax-advantaged account such as NISA, this estimate is close to your take-home amount as far as taxes go (fees such as fund management costs still need to be deducted separately).",
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

@@ -44,7 +44,7 @@ export const faviconGeneratorContent: Record<
   ja: {
     title: 'favicon（ファビコン）一括生成ツール｜ICO/PNGを複数サイズで書き出し',
     description:
-      '1枚の画像から、favicon.ico（16/32/48px同梱）とfavicon-16x16.png・apple-touch-icon.png・android-chrome-192x192.png等の複数サイズPNGを一括生成できる無料ツールです。HTMLに貼り付ける&lt;link&gt;タグも自動生成。データはブラウザ内で処理され、サーバーには送信されません。',
+      '1枚の画像から、favicon.ico（16/32/48px同梱）とfavicon-16x16.png・apple-touch-icon.png・android-chrome-192x192.png等の複数サイズPNGを一括生成できる無料ツールです。HTMLに貼り付ける<link>タグも自動生成。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'favicon（ファビコン）一括生成',
     introHtml:
       '画像を1枚選択するだけで、favicon.ico（16px・32px・48pxを1ファイルに格納）と、favicon-16x16.png・favicon-32x32.png・favicon-48x48.png・apple-touch-icon.png（180px）・android-chrome-192x192.png・android-chrome-512x512.pngをまとめて生成します。長方形の画像は中央を基準に正方形へ自動的に切り抜かれますが、プレビュー上の枠をドラッグして切り抜く位置を調整することもできます。生成したファイルをHTMLで読み込むための&lt;link&gt;タグも合わせて出力します。フォーマット変換のみでよい場合は<a href="/tools/image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像フォーマット変換</a>もご利用ください。',
@@ -108,7 +108,7 @@ export const faviconGeneratorContent: Record<
   en: {
     title: 'Favicon Generator – Create ICO & PNG Icons in Every Size',
     description:
-      'Free tool that generates favicon.ico (bundling 16/32/48px) plus favicon-16x16.png, apple-touch-icon.png, android-chrome-192x192.png, and other standard sizes from a single image, along with ready-to-paste HTML &lt;link&gt; tags. Your image is processed in the browser and never sent to a server.',
+      'Free tool that generates favicon.ico (bundling 16/32/48px) plus favicon-16x16.png, apple-touch-icon.png, android-chrome-192x192.png, and other standard sizes from a single image, along with ready-to-paste HTML <link> tags. Your image is processed in the browser and never sent to a server.',
     h1: 'Favicon Generator',
     introHtml:
       'Choose one image and this tool generates favicon.ico (bundling 16px, 32px, and 48px into one file) along with favicon-16x16.png, favicon-32x32.png, favicon-48x48.png, apple-touch-icon.png (180px), android-chrome-192x192.png, and android-chrome-512x512.png. A non-square image is automatically cropped to a centered square, and you can drag the box on the preview to adjust the crop position. It also outputs the &lt;link&gt; tags you need to reference the generated files from your HTML. If you only need format conversion, try the <a href="/en/tools/image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Format Converter</a> instead.',

@@ -94,7 +94,7 @@ export const taxCalculatorContent: Record<Locale, TaxCalculatorPageContent> = {
     notesHeading: '注意事項',
     notes: [
       '消費税額に小数点以下の端数が出る場合の処理方法（切り捨て・四捨五入・切り上げ）は、実際のレシートや請求書の表示と異なる場合があります。事業者ごとに採用している方式が異なるためです。',
-      '割引後の価格計算では、割引率・割引額それぞれ単独での計算結果を表示しています。割引後にさらに消費税を加算する場合は、割引後の価格を「1. 税込/税抜金額の計算」の税抜金額として入力してください。',
+      '割引の計算は消費税の計算とは連動せず、割引率・割引額それぞれ単独の結果を表示します。割引後にさらに消費税を加算する場合は、割引後の価格を「1. 税込/税抜金額の計算」の税抜金額として入力してください。',
       '本ツールは概算のシミュレーションであり、実際の税務処理・価格表示の根拠資料としては利用できません。',
     ],
     glossaryHeading: '用語解説',
@@ -160,7 +160,7 @@ export const taxCalculatorContent: Record<Locale, TaxCalculatorPageContent> = {
     notesHeading: 'Notes',
     notes: [
       'The rounding method for fractional tax amounts (round down / round to nearest / round up) may not match an actual receipt or invoice, since businesses can each choose their own method.',
-      'The discounted price calculation shows the result of the discount rate or discount amount alone. If you want to add consumption tax on top of the discounted price, enter the discounted price as the tax-excluded amount in section 1 above.',
+      'The discounted price calculation is independent of the consumption tax calculation and shows the result of the discount rate or discount amount alone. If you want to add consumption tax on top of the discounted price, enter the discounted price as the tax-excluded amount in section 1 above.',
       'This tool provides a rough simulation only and cannot be used as a basis for actual tax procedures or price displays.',
     ],
     glossaryHeading: 'Glossary',

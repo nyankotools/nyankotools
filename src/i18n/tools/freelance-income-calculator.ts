@@ -85,7 +85,7 @@ export const freelanceIncomeCalculatorContent: Record<
     notes: [
       '本ツールは、給与所得など事業所得以外の収入がないフリーランス（個人事業主）を前提とした簡易シミュレーションです。複数の所得がある場合の正確な税額は税理士や税務署にご確認ください。',
       '令和6年分の所得税・住民税の税率区分と基礎控除額（所得税48万円・住民税43万円）をもとに計算しています。税制改正により、翌年以降は数値が変更される場合があります。なお、令和6年分に実施された定額減税（本人分で所得税3万円・住民税1万円等）は考慮していないため、令和6年分の実際の税額は本ツールの計算結果より少なくなる場合があります。',
-      '実際の確定申告では課税所得金額を1,000円未満切り捨てで計算するなど細かい端数処理ルールがあり、本ツールの結果と数百円程度の差が生じることがあります。',
+      '住民税の調整控除は考慮しておらず、課税所得金額の1,000円未満切り捨てなどの端数処理も簡略化しているため、実際の税額と数千円程度ずれることがあります。',
       '個人事業税、消費税（インボイス制度を含む）、ふるさと納税、iDeCo・小規模企業共済等掛金控除は考慮していません。必要に応じて「その他の所得控除」欄にまとめて入力してください。',
       '社会保険料（国民年金・国民健康保険等）は世帯構成や自治体によって金額が大きく異なるため、年間の実際の支払額（見込み額）をご自身で入力してください。',
       '住民税の均等割は自治体により金額がやや異なりますが、本ツールでは目安として5,000円で計算しています。所得が一定の非課税限度額（自治体・扶養人数により異なり、単身者でおおむね38万〜45万円程度）を下回る場合は均等割・所得割ともに非課税となりますが、本ツールはこの非課税判定を考慮していないため、低所得の場合は実際より税額を高く見積もることがあります。',
@@ -159,7 +159,7 @@ export const freelanceIncomeCalculatorContent: Record<
     notes: [
       'This tool assumes a freelancer (sole proprietor) whose only income is business income, with no salary or other income sources. If you have multiple income sources, consult a tax accountant or your local tax office for an accurate figure.',
       "Calculated using Japan's income tax brackets and basic deductions for the 2024 tax year (¥480,000 for income tax, ¥430,000 for resident tax). These figures can change in later tax years due to tax reform. Note that this tool does not account for the one-time 2024 fixed-amount tax reduction (定額減税: roughly ¥30,000 off income tax and ¥10,000 off resident tax per person), so actual 2024 tax amounts may be lower than this tool's result.",
-      'An actual tax return rounds taxable income down to the nearest ¥1,000 and applies other small rounding rules, so real results may differ from this tool by a few hundred yen.',
+      'The resident tax adjustment credit is not taken into account, and rounding rules such as rounding taxable income down to the nearest ¥1,000 are simplified, so real amounts can differ from this tool by a few thousand yen.',
       'The local business tax (個人事業税), consumption tax (including the invoice system), the furusato nozei hometown tax donation program, and the iDeCo/small enterprise mutual aid premium deduction are not included. Enter any of these under "other income deductions" if relevant.',
       'Social insurance payments (national pension, national health insurance, etc.) vary widely by household and municipality, so enter your own actual (or estimated) annual payment amount.',
       'The resident tax per-capita levy varies slightly by municipality; this tool uses a typical estimate of ¥5,000. If your income is below a municipality-specific tax-exempt threshold (roughly ¥380,000–¥450,000 for a single person, varying by municipality and dependents), both the per-capita and income-based levies are actually waived — this tool does not apply that exemption, so it may overestimate tax at low income levels.',

@@ -21,7 +21,7 @@ for (const { locale, prefix, heading } of locales) {
           page.locator('main h2', { hasText: new RegExp(`^${heading}$`) }),
         ).toHaveCount(1);
         const summaries = (
-          await page.locator('main details > summary').allTextContents()
+          await page.locator('[data-faq] summary').allTextContents()
         ).map((t) => t.trim());
         expect(summaries.length).toBeGreaterThanOrEqual(3);
 
@@ -34,7 +34,7 @@ for (const { locale, prefix, heading } of locales) {
         expect(faq[0].inLanguage).toBe(locale);
         expect(faq[0].mainEntity.length).toBeGreaterThanOrEqual(3);
         const names = faq[0].mainEntity.map((q: { name: string }) => q.name);
-        for (const name of names) expect(summaries).toContain(name);
+        expect(summaries).toEqual(names);
         for (const q of faq[0].mainEntity) {
           expect(q['@type']).toBe('Question');
           expect(q.name).toBeTruthy();

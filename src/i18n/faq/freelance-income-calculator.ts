@@ -15,7 +15,7 @@ export const faq: FaqContent = {
     {
       question: '実際の確定申告の結果とずれることはありますか？',
       answer:
-        'あります。住民税の調整控除や1,000円未満の端数処理などは簡略化しているため、実際の税額と数千円程度以上ずれることがあります。正確な税額は税理士や税務署に確認してください。',
+        'あります。住民税の調整控除は考慮しておらず、1,000円未満の端数処理なども簡略化しているため、実際の税額と数千円程度以上ずれることがあります。正確な税額は税理士や税務署に確認してください。',
     },
   ],
   en: [
@@ -32,7 +32,7 @@ export const faq: FaqContent = {
     {
       question: 'Can the result differ from my actual tax return?',
       answer:
-        'Yes. Adjustments such as the resident tax adjustment credit and rounding rules are simplified, so the result can differ from the actual tax by a few thousand yen or more. For exact amounts, consult a tax professional or the tax office.',
+        'Yes. The resident tax adjustment credit is not taken into account and rounding rules are simplified, so the result can differ from the actual tax by a few thousand yen or more. For exact amounts, consult a tax professional or the tax office.',
     },
   ],
 };

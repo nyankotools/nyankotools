@@ -32,7 +32,7 @@ export const uuidGeneratorContent: Record<Locale, UuidGeneratorPageContent> = {
       'ランダムなUUID（v4）を1件〜100件まとめて生成できる無料ツールです。ハイフンなし・大文字表記にも対応。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'UUID生成（v4）',
     introHtml:
-      'ランダムなUUID（バージョン4・RFC 4122準拠）をまとめて生成します。データベースの主キーやテスト用のダミーIDなどにご利用ください。生成したUUIDをJSONデータに組み込む場合は <a href="/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON整形</a> もあわせてご利用ください。',
+      'ランダムなUUID（バージョン4・RFC 4122準拠）をまとめて生成します。データベースの主キーやテスト用のダミーIDなどにご利用ください。生成したUUIDを組み込んだJSONを整形・検証したい場合は <a href="/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON整形</a> もあわせてご利用ください。',
     countLabel: '生成する個数（1〜100）',
     removeHyphens: 'ハイフンなし',
     uppercase: '大文字',
@@ -67,7 +67,7 @@ export const uuidGeneratorContent: Record<Locale, UuidGeneratorPageContent> = {
       'A free tool that generates 1 to 100 random UUIDs (v4) at once, with optional hyphen removal and uppercase formatting. Your data is processed in the browser and never sent to a server.',
     h1: 'UUID Generator (v4)',
     introHtml:
-      'Generates random, RFC 4122-compliant version 4 UUIDs in bulk. Useful for database primary keys, test fixtures, and dummy IDs. Need to embed the generated UUIDs into JSON data? Try the <a href="/en/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON Formatter</a> as well.',
+      'Generates random, RFC 4122-compliant version 4 UUIDs in bulk. Useful for database primary keys, test fixtures, and dummy IDs. To format or validate JSON that uses the generated UUIDs, try the <a href="/en/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON Formatter</a> as well.',
     countLabel: 'Number to generate (1-100)',
     removeHyphens: 'No hyphens',
     uppercase: 'Uppercase',

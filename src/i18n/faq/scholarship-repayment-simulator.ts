@@ -27,7 +27,7 @@ export const faq: FaqContent = {
     {
       question: 'What interest rate should I enter while still in school?',
       answer:
-        'The rate is not fixed until the loan period ends. Treat your input as an assumption and try several rates to see the range of payments.',
+        'The rate is not fixed until disbursement ends (usually at graduation). Treat your input as an assumption and try several rates to see the range of payments.',
     },
     {
       question: 'What is the rate-review method?',

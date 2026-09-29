@@ -12,6 +12,7 @@ describe('FAQ dictionary', () => {
         for (const item of items) {
           expect(item.question.trim()).not.toBe('');
           expect(item.answer.trim()).not.toBe('');
+          expect(item.answer).toBe(item.answer.trim());
         }
         const questions = items.map((i) => i.question);
         expect(new Set(questions).size).toBe(questions.length);

@@ -27,7 +27,7 @@ export const faq: FaqContent = {
     {
       question: 'Are transparent areas included?',
       answer:
-        'No. Fully transparent pixels are excluded. If an image is almost entirely transparent, no colors may be detected.',
+        'No. Nearly transparent pixels are excluded. If an image is almost entirely transparent, no colors may be detected.',
     },
     {
       question: 'How can I use the extracted colors?',

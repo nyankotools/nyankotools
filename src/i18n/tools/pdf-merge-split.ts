@@ -54,7 +54,7 @@ export const pdfMergeSplitContent: Record<Locale, PdfMergeSplitPageContent> = {
       '複数のPDFを1つに結合、PDFをページ数ごとに分割、「1-3,5」のようなページ指定で必要なページだけを抽出できる無料ツールです。PDFはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'PDF結合・分割・ページ抽出',
     introHtml:
-      'PDFを結合したり、ページ単位で分割・抽出したりできます。ファイルは端末の外に出ません。画像をPDFにしたいときは<a href="/tools/pdf-image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">PDF⇔画像変換</a>、その前に画像を軽くしたいときは<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ・圧縮</a>（JPEG形式がおすすめです）をご利用ください。',
+      'PDFを結合したり、ページ単位で分割・抽出したりできます。ファイルは端末の外に出ません。画像をPDFにしたいときは<a href="/tools/pdf-image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">PDF⇔画像変換</a>、その前に画像を軽くしたいときは<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ・圧縮</a>をご利用ください（出力形式はJPEGがおすすめです）。',
     modeLabel: '操作',
     modeMerge: '結合',
     modeExtract: 'ページ抽出',

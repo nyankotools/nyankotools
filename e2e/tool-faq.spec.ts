@@ -35,6 +35,14 @@ for (const { locale, prefix, heading } of locales) {
         expect(faq[0].mainEntity.length).toBeGreaterThanOrEqual(3);
         const names = faq[0].mainEntity.map((q: { name: string }) => q.name);
         expect(summaries).toEqual(names);
+        const answers = (
+          await page.locator('[data-faq] details > p').allTextContents()
+        ).map((t) => t.trim());
+        expect(answers).toEqual(
+          faq[0].mainEntity.map(
+            (q: { acceptedAnswer: { text: string } }) => q.acceptedAnswer.text,
+          ),
+        );
         for (const q of faq[0].mainEntity) {
           expect(q['@type']).toBe('Question');
           expect(q.name).toBeTruthy();

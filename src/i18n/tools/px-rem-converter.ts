@@ -54,7 +54,7 @@ export const pxRemConverterContent: Record<Locale, PxRemConverterPageContent> =
       notesHeading: '注意事項',
       notes: [
         'remはベースフォントサイズ（通常はhtml要素のfont-size）を基準にした相対単位です。ベースフォントサイズを変更すると、同じrem値でも実際のpxサイズが変わります。',
-        'ベースフォントサイズを変更すると、入力済みのpx値を優先して、新しいベースフォントサイズでrem値だけが再計算されます。',
+        'ベースフォントサイズを変更すると、入力済みのpx値を基準に、新しいベースフォントサイズでrem値が再計算されます（pxが空でremだけ入力されている場合は、rem値を基準にpx値を再計算します）。',
         '計算結果は小数第5位で丸めて表示します。',
       ],
       glossaryHeading: '用語解説',
@@ -100,7 +100,7 @@ export const pxRemConverterContent: Record<Locale, PxRemConverterPageContent> =
       notesHeading: 'Notes',
       notes: [
         'rem is relative to the base font size (usually the font-size on the html element). Changing the base font size changes the actual px size for the same rem value.',
-        'Changing the base font size keeps the px value and recalculates only the rem value using the new base font size.',
+        'Changing the base font size recalculates the rem value from the entered px value using the new base font size (if px is empty and only rem is entered, it recalculates px from the rem value instead).',
         'Results are rounded to 5 decimal places.',
       ],
       glossaryHeading: 'Glossary',

@@ -46,6 +46,30 @@ const GA_MEASUREMENT_ID = 'G-HF6QEXY6E7';
 const isHome = pathname === '/' || pathname === '/en' || pathname === '/en/';
 const toolMatch = pathname.match(/^\/(?:en\/)?tools\/([^/]+)\/?$/);
 
+const homeURL = new URL(lang === 'en' ? '/en/' : '/', Astro.site);
+
+const breadcrumbJsonLd: Record<string, unknown> | null =
+  noindex || isHome
+    ? null
+    : {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: siteName,
+            item: homeURL.toString(),
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: title,
+            item: canonicalURL.toString(),
+          },
+        ],
+      };
+
 const jsonLd: Record<string, unknown> | null = noindex
   ? null
   : toolMatch
@@ -128,6 +152,13 @@ const jsonLd: Record<string, unknown> | null = noindex
         type="application/ld+json"
         is:inline
         set:html={JSON.stringify(jsonLd)}
+      ></script>
+    )}
+    {breadcrumbJsonLd && (
+      <script
+        type="application/ld+json"
+        is:inline
+        set:html={JSON.stringify(breadcrumbJsonLd)}
       ></script>
     )}
     {import.meta.env.PROD && (

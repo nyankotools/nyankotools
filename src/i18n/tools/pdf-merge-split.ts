@@ -54,7 +54,7 @@ export const pdfMergeSplitContent: Record<Locale, PdfMergeSplitPageContent> = {
       '複数のPDFを1つに結合、PDFをページ数ごとに分割、「1-3,5」のようなページ指定で必要なページだけを抽出できる無料ツールです。PDFはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'PDF結合・分割・ページ抽出',
     introHtml:
-      'PDFを結合したり、ページ単位で分割・抽出したりできます。ファイルは端末の外に出ません。画像からPDFを作る前に画像を軽くしたいときは<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ・圧縮</a>、画像のPDF化は<a href="/tools/pdf-image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">PDF⇔画像変換</a>をご利用ください。',
+      'PDFを結合したり、ページ単位で分割・抽出したりできます。ファイルは端末の外に出ません。画像をPDFにしたいときは<a href="/tools/pdf-image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">PDF⇔画像変換</a>、その前に画像を軽くしたいときは<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ・圧縮</a>（JPEG形式がおすすめです）をご利用ください。',
     modeLabel: '操作',
     modeMerge: '結合',
     modeExtract: 'ページ抽出',
@@ -123,7 +123,7 @@ export const pdfMergeSplitContent: Record<Locale, PdfMergeSplitPageContent> = {
       'A free online tool to merge multiple PDFs into one, split a PDF every N pages, or extract specific pages such as "1-3,5". Your PDFs are processed in the browser and never uploaded to a server.',
     h1: 'PDF Merge, Split & Extract Pages',
     introHtml:
-      'Combine PDFs, or split a PDF and pull out just the pages you need. Your files never leave your device. To shrink images before making a PDF from them, try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer</a>, or turn images into a PDF with the <a href="/en/tools/pdf-image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">PDF ⇔ Image Converter</a>.',
+      'Combine PDFs, or split a PDF and pull out just the pages you need. Your files never leave your device. To turn images into a PDF, try the <a href="/en/tools/pdf-image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">PDF ⇔ Image Converter</a>. To shrink the images first, use the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer</a> (JPEG output is recommended).',
     modeLabel: 'Action',
     modeMerge: 'Merge',
     modeExtract: 'Extract pages',

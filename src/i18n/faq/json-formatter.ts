@@ -10,7 +10,7 @@ export const faq: FaqContent = {
     {
       question: '整形とミニファイの違いは何ですか？',
       answer:
-        '整形はインデントと改行を加えて読みやすくする処理、ミニファイは不要な空白や改行を取り除いてサイズを小さくする処理です。意味やデータは変わりません。',
+        '整形はインデントと改行を加えて読みやすくする処理、ミニファイは不要な空白や改行を取り除いてサイズを小さくする処理です。通常、意味やデータは変わりません。',
     },
     {
       question: '大きな数値や桁数の多い数値は正確に扱えますか？',
@@ -27,7 +27,7 @@ export const faq: FaqContent = {
     {
       question: 'What is the difference between formatting and minifying?',
       answer:
-        'Formatting adds indentation and line breaks for readability; minifying removes whitespace to reduce size. The data itself does not change.',
+        'Formatting adds indentation and line breaks for readability; minifying removes whitespace to reduce size. The data normally does not change.',
     },
     {
       question: 'Are very large numbers handled exactly?',

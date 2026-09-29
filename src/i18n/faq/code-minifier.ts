@@ -5,7 +5,7 @@ export const faq: FaqContent = {
     {
       question: 'ミニファイするとコードの動作は変わりませんか？',
       answer:
-        'ミニファイは空白やコメントなど動作に不要な部分を取り除く処理で、通常は動作が変わりません。ただし構文にエラーがあると意図しない結果になることがあるため、本番配信の前に必ず動作確認をしてください。',
+        'ミニファイは空白やコメントなど不要な部分を取り除く処理です。JavaScriptは変数名の短縮なども行いますが、通常は動作が変わりません。HTMLはタグ間の空白が除去されるため、インライン要素の間隔など見た目が変わる場合があります。また構文にエラーがあると意図しない結果になることがあるため、本番配信の前に必ず動作確認をしてください。',
     },
     {
       question: '整形とミニファイの違いは何ですか？',
@@ -22,7 +22,7 @@ export const faq: FaqContent = {
     {
       question: 'Does minifying change how the code behaves?',
       answer:
-        'Minifying removes whitespace and comments that do not affect behavior, so the behavior normally stays the same. Invalid syntax can produce unexpected output, so always test before deploying.',
+        'Minifying removes unneeded whitespace and comments. JavaScript is also compressed (for example, variable names are shortened) and normally behaves the same, while HTML loses whitespace between tags, which can change spacing between inline elements. Invalid syntax can produce unexpected output, so always test before deploying.',
     },
     {
       question: 'What is the difference between formatting and minifying?',

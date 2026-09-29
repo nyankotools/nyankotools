@@ -10,7 +10,7 @@ export const faq: FaqContent = {
     {
       question: '税金や手数料は考慮されていますか？',
       answer:
-        '考慮されていません。運用益にかかる税金（通常20.315%）や信託報酬などのコストは含みません。NISAなどの非課税制度を使う場合は、結果がそのまま手取りの目安になります。',
+        '考慮されていません。運用益にかかる税金（通常20.315%）や信託報酬などのコストは含みません。NISAなどの非課税制度を使う場合は、税金の面では結果が手取りの目安になります（コストは別途かかります）。',
     },
     {
       question: '求める項目を選ぶとどうなりますか？',
@@ -27,7 +27,7 @@ export const faq: FaqContent = {
     {
       question: 'Are taxes and fees included?',
       answer:
-        'No. Taxes on gains (typically 20.315% in Japan) and fund fees are not reflected. If you use tax-free accounts such as NISA, the result is close to your take-home estimate.',
+        'No. Taxes on gains (typically 20.315% in Japan) and fund fees are not reflected. If you use tax-free accounts such as NISA, the result is close to your take-home estimate as far as tax is concerned (costs still apply).',
     },
     {
       question: 'What happens when I choose which value to solve for?',

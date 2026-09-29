@@ -15,7 +15,7 @@ export const faq: FaqContent = {
     {
       question: '割引後の価格に消費税を加算するにはどうしますか？',
       answer:
-        '割引率・割引額はそれぞれ単独で計算されます。割引後の価格に消費税を加える場合は、その価格を税抜金額の欄に入力してください。',
+        '割引計算と消費税計算は連動しません。割引後の価格に消費税を加える場合は、その価格を税抜金額の欄に入力してください。',
     },
   ],
   en: [
@@ -32,7 +32,7 @@ export const faq: FaqContent = {
     {
       question: 'How do I add tax to a discounted price?',
       answer:
-        'Percentage and amount discounts are calculated separately. To add tax afterward, enter the discounted price as the pre-tax amount.',
+        'The discount calculation and the tax calculation are independent. To add tax afterward, enter the discounted price as the pre-tax amount.',
     },
   ],
 };

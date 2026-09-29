@@ -15,7 +15,7 @@ export const faq: FaqContent = {
     {
       question: '表示される解像度やFPSは正確ですか？',
       answer:
-        '解像度は指定した値が必ず得られるわけではなく、カメラが対応する最も近い値になります。フレームレートは実測値で、暗い場所ではカメラが自動的に下げることがあります。',
+        '解像度は指定した値が必ず得られるわけではなく、カメラが対応する最も近い値になります。フレームレートは対応ブラウザでは実測値で、暗い場所ではカメラが自動的に下げることがあります。',
     },
   ],
   en: [
@@ -32,7 +32,7 @@ export const faq: FaqContent = {
     {
       question: 'Are the displayed resolution and FPS accurate?',
       answer:
-        'The camera provides the closest resolution it supports, not always the requested one. Frame rate is measured live and may drop in dim lighting.',
+        'The camera provides the closest resolution it supports, not always the requested one. Where supported, frame rate is measured live and may drop in dim lighting.',
     },
   ],
 };

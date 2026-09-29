@@ -10,7 +10,7 @@ export const faq: FaqContent = {
     {
       question: 'ベースフォントサイズを変えると入力済みの値はどうなりますか？',
       answer:
-        'ベースフォントサイズを変更すると、すでに入力したpxとremの欄も新しい基準で再計算されます。プロジェクトの設定に合わせて先に基準を指定しておくと確実です。',
+        'ベースフォントサイズを変更すると、入力済みのpx（なければrem）を基準に、もう一方が新しい基準で再計算されます。プロジェクトの設定に合わせて先に基準を指定しておくと確実です。',
     },
     {
       question: 'remとemはどう違いますか？',
@@ -28,7 +28,7 @@ export const faq: FaqContent = {
       question:
         'What happens to entered values when I change the base font size?',
       answer:
-        'Both the px and rem fields are recalculated with the new base. Set the base to match your project first to avoid surprises.',
+        'The other field is recalculated with the new base, using the px value if entered (otherwise rem). Set the base to match your project first to avoid surprises.',
     },
     {
       question: 'How is rem different from em?',

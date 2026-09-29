@@ -20,8 +20,10 @@ for (const { locale, prefix, heading } of locales) {
         await expect(
           page.locator('main h2', { hasText: new RegExp(`^${heading}$`) }),
         ).toHaveCount(1);
-        const faqCount = await page.locator('main details').count();
-        expect(faqCount).toBeGreaterThanOrEqual(3);
+        const summaries = (
+          await page.locator('main details > summary').allTextContents()
+        ).map((t) => t.trim());
+        expect(summaries.length).toBeGreaterThanOrEqual(3);
 
         const jsonLds = await page
           .locator('script[type="application/ld+json"]')
@@ -31,6 +33,8 @@ for (const { locale, prefix, heading } of locales) {
         expect(faq).toHaveLength(1);
         expect(faq[0].inLanguage).toBe(locale);
         expect(faq[0].mainEntity.length).toBeGreaterThanOrEqual(3);
+        const names = faq[0].mainEntity.map((q: { name: string }) => q.name);
+        for (const name of names) expect(summaries).toContain(name);
         for (const q of faq[0].mainEntity) {
           expect(q['@type']).toBe('Question');
           expect(q.name).toBeTruthy();

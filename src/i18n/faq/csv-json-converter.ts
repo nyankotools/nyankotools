@@ -10,7 +10,7 @@ export const faq: FaqContent = {
     {
       question: '区切り文字がカンマ以外のファイルにも使えますか？',
       answer:
-        'はい。区切り文字を切り替えて、タブ区切り（TSV）などにも対応できます。値の中に区切り文字や改行が含まれる場合は、ダブルクォートで囲む一般的なCSVの規則で処理します。',
+        'はい。区切り文字はカンマとタブ（TSV）から選べます。値の中に区切り文字や改行が含まれる場合は、ダブルクォートで囲む一般的なCSVの規則で処理します。',
     },
     {
       question: '「列数が一致しません」というエラーが出るのはなぜですか？',
@@ -27,7 +27,7 @@ export const faq: FaqContent = {
     {
       question: 'Does it work with delimiters other than commas?',
       answer:
-        'Yes. You can switch the delimiter, for example to tabs for TSV. Values containing delimiters or line breaks are handled with standard double-quote rules.',
+        'Yes. You can choose between comma and tab (TSV) delimiters. Values containing delimiters or line breaks are handled with standard double-quote rules.',
     },
     {
       question: 'Why do I get a column count mismatch error?',

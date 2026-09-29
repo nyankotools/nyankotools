@@ -15,13 +15,13 @@ export const faq: FaqContent = {
     {
       question: '2月29日生まれの人の年齢はどう計算されますか？',
       answer:
-        'うるう年でない年は、便宜上2月28日を経過した時点で1歳加算する扱いにしています。法律上は「年齢計算ニ関スル法律」により誕生日の前日の終了時に加算されるため、実際の手続きでは該当の規定も確認してください。',
+        'うるう年でない年は、便宜上2月28日を誕生日として、2月28日に1歳加算します。法律上は「年齢計算ニ関スル法律」により誕生日の前日の終了時に加算されるため、実際の手続きでは該当の規定も確認してください。',
     },
   ],
   en: [
     {
       question:
-        'What is the difference between international age and Korean-style counting age (kazoedoshi)?',
+        'What is the difference between international age and traditional East Asian age (kazoedoshi)?',
       answer:
         "International (full) age starts at 0 on the day you are born and increases by one on each birthday. Kazoedoshi, the traditional East Asian count, starts at 1 at birth and adds one every New Year's Day. This tool shows both at once.",
     },

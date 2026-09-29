@@ -169,21 +169,21 @@ const jsonLd: Record<string, unknown> | null = noindex
       <script
         type="application/ld+json"
         is:inline
-        set:html={JSON.stringify(jsonLd)}
+        set:html={JSON.stringify(jsonLd).replace(/</g, '\\u003c')}
       ></script>
     )}
     {breadcrumbJsonLd && (
       <script
         type="application/ld+json"
         is:inline
-        set:html={JSON.stringify(breadcrumbJsonLd)}
+        set:html={JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')}
       ></script>
     )}
     {faqJsonLd && (
       <script
         type="application/ld+json"
         is:inline
-        set:html={JSON.stringify(faqJsonLd)}
+        set:html={JSON.stringify(faqJsonLd).replace(/</g, '\\u003c')}
       ></script>
     )}
     {import.meta.env.PROD && (

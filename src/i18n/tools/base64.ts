@@ -44,7 +44,7 @@ export const base64Content: Record<Locale, Base64PageContent> = {
     notesHeading: '注意事項',
     notes: [
       'Base64は暗号化ではありません。誰でも元のデータに戻せるため、パスワードなどの秘匿情報の保護には使えません。',
-      'テキストはUTF-8のバイト列として扱われるため、日本語や絵文字を含む文字列も変換できます。他の文字コード（Shift_JISなど）で作られたBase64をデコードすると、文字化けする場合があります。',
+      'テキストはUTF-8のバイト列として扱われるため、日本語や絵文字を含む文字列も変換できます。他の文字コード（Shift_JISなど）で作られたBase64をデコードすると、エラーになる場合があります。',
       'Base64にするとデータ量は元のおよそ1.33倍（4/3倍）に増えます。',
     ],
     glossaryHeading: '用語解説',
@@ -82,7 +82,7 @@ export const base64Content: Record<Locale, Base64PageContent> = {
     notesHeading: 'Notes',
     notes: [
       'Base64 is not encryption. Anyone can decode it, so it cannot protect passwords or other secrets.',
-      'Text is handled as UTF-8 bytes, so Japanese characters and emoji work. Decoding Base64 that was created from another encoding (such as Shift_JIS) may produce garbled text.',
+      'Text is handled as UTF-8 bytes, so Japanese characters and emoji work. Decoding Base64 that was created from another encoding (such as Shift_JIS) may fail with an error.',
       'Base64 output is about 1.33 times (4/3) larger than the original data.',
     ],
     glossaryHeading: 'Glossary',

@@ -15,7 +15,7 @@ export const faq: FaqContent = {
     {
       question: 'デコードでエラーになるのはなぜですか？',
       answer:
-        '入力がBase64として正しくない場合にエラーになります。文字列の途中に使えない文字が混ざっている、末尾の「=」が欠けている、コピー時に一部が切れている、などが主な原因です。元の文字列を確認してください。',
+        '入力がBase64として正しくない場合にエラーになります。文字列の途中に使えない文字が混ざっている、コピー時に一部が切れている、UTF-8のテキストとして解釈できないデータ（Shift_JISのテキストや画像などのバイナリ）である、などが主な原因です。元の文字列を確認してください。',
     },
   ],
   en: [
@@ -32,7 +32,7 @@ export const faq: FaqContent = {
     {
       question: 'Why does decoding show an error?',
       answer:
-        'The input is not valid Base64. Common causes are stray characters in the string, missing "=" padding at the end, or a truncated copy. Check the original string.',
+        'The input is not valid Base64. Common causes are stray characters in the string, a truncated copy, or data that is not valid UTF-8 text (such as Shift_JIS text or binary files like images). Check the original string.',
     },
   ],
 };

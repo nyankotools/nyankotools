@@ -41,6 +41,8 @@ export interface PdfMergeSplitPageContent {
   errorOutOfRange: string;
   errorBadCount: string;
   errorFailed: string;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: { term: string; description: string }[];
 }
@@ -90,6 +92,12 @@ export const pdfMergeSplitContent: Record<Locale, PdfMergeSplitPageContent> = {
     errorOutOfRange: '指定したページがPDFの範囲外です（全{pages}ページ）。',
     errorBadCount: '分割するページ数は1以上の整数で指定してください。',
     errorFailed: '処理に失敗しました。',
+    notesHeading: '注意事項',
+    notes: [
+      'パスワードで保護されたPDFは処理できません。先に保護を解除してから使ってください。',
+      'ページ範囲は「1-3, 5, 8-」のようにカンマ区切りで指定します。ページ抽出では、指定した順にページが並びます。',
+      'ファイルはブラウザ内で処理され、端末の外には送信されません。非常に大きなPDFは、端末のメモリ状況によって処理に時間がかかる場合があります。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -152,6 +160,12 @@ export const pdfMergeSplitContent: Record<Locale, PdfMergeSplitPageContent> = {
       'The specified pages are outside the PDF (it has {pages} pages).',
     errorBadCount: 'Enter a whole number of pages, 1 or more.',
     errorFailed: 'Processing failed.',
+    notesHeading: 'Notes',
+    notes: [
+      'Password-protected PDFs cannot be processed. Remove the protection first.',
+      'Specify page ranges separated by commas, like "1-3, 5, 8-". When extracting pages, they appear in the order you list them.',
+      "Files are processed in the browser and never leave your device. Very large PDFs may take longer depending on your device's memory.",
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

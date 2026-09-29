@@ -19,6 +19,8 @@ export interface UuidGeneratorPageContent {
   copied: string;
   copyFailed: string;
   outputLabel: string;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -39,6 +41,12 @@ export const uuidGeneratorContent: Record<Locale, UuidGeneratorPageContent> = {
     copied: 'コピーしました',
     copyFailed: 'コピーに失敗しました',
     outputLabel: '結果',
+    notesHeading: '注意事項',
+    notes: [
+      '生成されるのはバージョン4（ランダム）のUUIDです。ブラウザの暗号学的乱数を使っており、衝突する確率は現実的には無視できるほど低くなります。',
+      '一度に生成できるのは1〜100個です。ハイフンの有無と大文字・小文字を選べます。',
+      'バージョン4は生成順に並ばないため、データベースの主キーにする場合はインデックスの効率に注意してください。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -68,6 +76,12 @@ export const uuidGeneratorContent: Record<Locale, UuidGeneratorPageContent> = {
     copied: 'Copied',
     copyFailed: 'Copy failed',
     outputLabel: 'Result',
+    notesHeading: 'Notes',
+    notes: [
+      "Generated values are version 4 (random) UUIDs. They use the browser's cryptographic random source, so collisions are practically negligible.",
+      'You can generate 1 to 100 at a time, with or without hyphens and in upper or lower case.',
+      'Version 4 values are not ordered, so consider index efficiency when using them as database primary keys.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

@@ -1,5 +1,6 @@
 ---
 import Glossary from '../Glossary.astro';
+import Notes from '../Notes.astro';
 import Layout from '../../layouts/Layout.astro';
 import { svgOptimizerContent } from '../../i18n/tools/svg-optimizer';
 import type { Locale } from '../../data/tools';
@@ -151,6 +152,8 @@ const t = svgOptimizerContent[locale];
       class="max-h-64 max-w-full rounded border border-gray-300 bg-white object-contain p-2 dark:border-gray-700"
     />
   </div>
+
+  <Notes heading={t.notesHeading} items={t.notes} />
 
   <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
 </Layout>

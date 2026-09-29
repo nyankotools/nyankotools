@@ -45,6 +45,8 @@ export interface PdfPageEditorPageContent {
   errorOutOfRange: string;
   errorWrongPassword: string;
   errorFailed: string;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: { term: string; description: string }[];
 }
@@ -96,6 +98,12 @@ export const pdfPageEditorContent: Record<Locale, PdfPageEditorPageContent> = {
     errorOutOfRange: 'ページ指定が不正です。ファイルを選び直してください。',
     errorWrongPassword: 'パスワードが正しくありません。',
     errorFailed: '処理に失敗しました。',
+    notesHeading: '注意事項',
+    notes: [
+      'パスワードを知っているPDFのみ保護を解除できます。パスワードの解析や回避は行いません。',
+      '保護を解除したPDFは各ページを画像化して作り直すため、文字の選択・検索ができなくなり、ファイルサイズが大きくなることがあります。',
+      '「実行」を押すと、ページ一覧の並び・回転・削除の状態のとおりに新しいPDFが作られます。元のファイルは変更されません。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -155,6 +163,12 @@ export const pdfPageEditorContent: Record<Locale, PdfPageEditorPageContent> = {
     errorOutOfRange: 'Invalid page selection. Please choose the file again.',
     errorWrongPassword: 'The password is incorrect.',
     errorFailed: 'Processing failed.',
+    notesHeading: 'Notes',
+    notes: [
+      'Protection can only be removed from PDFs whose password you know. The tool does not crack or bypass passwords.',
+      'An unlocked PDF is rebuilt from page images, so text can no longer be selected or searched and the file may become larger.',
+      'Pressing the run button creates a new PDF that reflects the order, rotation and deletions shown in the page list. The original file is not modified.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

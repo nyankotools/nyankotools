@@ -10,12 +10,15 @@ export interface CharCounterPageContent {
   title: string;
   description: string;
   h1: string;
-  intro: string;
+  /** set:html で描画するため、開発者管理の固定リテラルのみを入れること（ユーザー入力を混ぜない） */
+  introHtml: string;
   inputPlaceholder: string;
   statCharacters: string;
   statCharactersNoSpaces: string;
   statWords: string;
   statLines: string;
+  notesHeading: string;
+  notes: string[];
   relatedHeading: string;
   relatedIntro: string;
   relatedLinks: RelatedLink[];
@@ -27,12 +30,20 @@ export const charCounterContent: Record<Locale, CharCounterPageContent> = {
     description:
       '入力したテキストの文字数・単語数・行数をリアルタイムで数える無料ツールです。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: '文字数カウント',
-    intro: 'テキストを入力すると、文字数・単語数・行数を自動で表示します。',
+    introHtml:
+      'テキストを入力すると、文字数・空白を除いた文字数・単語数・行数をリアルタイムで自動表示します。原稿やSNS投稿の文字数制限の確認にご利用ください。全角・半角が混在した表記をそろえたい場合は<a href="/tools/zenkaku-hankaku/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">全角/半角変換</a>、改行コードの違いを統一したい場合は<a href="/tools/line-ending-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">改行コード変換</a>もあわせてご利用ください。入力した内容はブラウザ内で処理され、サーバーに送信されることはありません。',
     inputPlaceholder: 'ここにテキストを入力してください',
     statCharacters: '文字数',
     statCharactersNoSpaces: '文字数(空白除く)',
     statWords: '単語数',
     statLines: '行数',
+    notesHeading: '注意事項',
+    notes: [
+      '文字数はUnicodeのコードポイント単位で数え、全角・半角を区別せず1文字として扱います。複数の文字を組み合わせた絵文字などは、2文字以上として数えられることがあります。',
+      '「文字数(空白除く)」は、スペース・タブ・改行などの空白文字をすべて除いた文字数です。',
+      '単語数はブラウザの単語分割機能で数えるため、日本語の文章でも単語に近い単位で数えられます。ブラウザによって結果が異なる場合があります。',
+      'SNSや応募フォームなどは、独自のルール（URLや絵文字を特別な文字数として扱うなど）で文字数を数える場合があります。最終的な文字数は投稿先の表示で確認してください。',
+    ],
     relatedHeading: '関連ツール',
     relatedIntro:
       '数えたテキストをさらに加工・変換したい場合は、以下のツールもあわせてご利用ください。',
@@ -84,13 +95,20 @@ export const charCounterContent: Record<Locale, CharCounterPageContent> = {
     description:
       'A free tool that counts the characters, words, and lines of your text in real time. Your data is processed in the browser and never sent to a server.',
     h1: 'Character Counter',
-    intro:
-      'Type or paste text below to automatically see its character, word, and line counts.',
+    introHtml:
+      'Type or paste text below to see its character count, character count without spaces, word count and line count update in real time. Use it to check length limits for drafts and social media posts. To normalize mixed full-width and half-width text, try the <a href="/en/tools/zenkaku-hankaku/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Full-width / Half-width Converter</a>; to unify line breaks, use the <a href="/en/tools/line-ending-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Line Ending Converter</a>. Your text is processed in the browser and never sent to a server.',
     inputPlaceholder: 'Type or paste your text here',
     statCharacters: 'Characters',
     statCharactersNoSpaces: 'Characters (no spaces)',
     statWords: 'Words',
     statLines: 'Lines',
+    notesHeading: 'Notes',
+    notes: [
+      'Characters are counted as Unicode code points, and full-width and half-width characters each count as one. Emoji made of several code points may count as two or more.',
+      '"Characters (no spaces)" excludes all whitespace, including spaces, tabs and line breaks.',
+      "Words are counted with the browser's word segmentation, so Japanese text is counted in word-like units too. Results can vary slightly between browsers.",
+      'Social networks and forms may count characters by their own rules, such as treating URLs or emoji specially. Check the final count on the destination.',
+    ],
     relatedHeading: 'Related tools',
     relatedIntro:
       'If you want to further edit or convert the text you just counted, try one of these tools too.',

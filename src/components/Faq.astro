@@ -1,0 +1,22 @@
+---
+import type { FaqItem } from '../i18n/faq';
+
+interface Props {
+  items: FaqItem[];
+  heading: string;
+}
+
+const { items, heading } = Astro.props;
+---
+
+<h2 class="mt-10 mb-2 text-lg font-bold">{heading}</h2>
+<div class="space-y-2">
+  {items.map((item) => (
+    <details class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+      <summary class="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300">
+        {item.question}
+      </summary>
+      <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{item.answer}</p>
+    </details>
+  ))}
+</div>

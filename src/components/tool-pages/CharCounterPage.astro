@@ -1,4 +1,5 @@
 ---
+import Notes from '../Notes.astro';
 import Layout from '../../layouts/Layout.astro';
 import { charCounterContent } from '../../i18n/tools/char-counter';
 import type { Locale } from '../../data/tools';
@@ -13,7 +14,7 @@ const t = charCounterContent[locale];
 
 <Layout title={t.title} description={t.description}>
   <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400">{t.intro}</p>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
 
   <textarea
     id="char-counter-input"
@@ -51,6 +52,8 @@ const t = charCounterContent[locale];
       </dd>
     </div>
   </dl>
+
+  <Notes heading={t.notesHeading} items={t.notes} />
 
   <h2 class="mt-10 mb-2 text-lg font-bold">{t.relatedHeading}</h2>
   <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">{t.relatedIntro}</p>

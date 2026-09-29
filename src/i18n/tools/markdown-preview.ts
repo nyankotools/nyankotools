@@ -27,6 +27,8 @@ export interface MarkdownPreviewPageContent {
   errorTemplate: string;
   sanitizeNoteBeforeCode: string;
   sanitizeNoteAfterCode: string;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -61,6 +63,12 @@ export const markdownPreviewContent: Record<
     sanitizeNoteBeforeCode:
       '※ プレビューは安全のためサニタイズして表示しています。',
     sanitizeNoteAfterCode: 'タグなど一部の要素は表示されません。',
+    notesHeading: '注意事項',
+    notes: [
+      'プレビューは安全のためサニタイズして表示するため、scriptタグなど一部のHTML要素は表示されません。',
+      'Markdownの解釈は環境ごとに細かな違いがあります。GitHubなど特定のサービスに掲載する場合は、そのサービス上の表示も確認してください。',
+      'HTMLからMarkdownへの変換では、複雑なレイアウトや装飾を完全には再現できない場合があります。変換後の内容を確認してください。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -111,6 +119,12 @@ export const markdownPreviewContent: Record<
     sanitizeNoteBeforeCode:
       'Note: the preview is sanitized for safety, so some elements like',
     sanitizeNoteAfterCode: 'tags are not rendered.',
+    notesHeading: 'Notes',
+    notes: [
+      'The preview is sanitized for safety, so some HTML elements such as script tags are not displayed.',
+      'Markdown rendering varies slightly between platforms. If you publish on a specific service such as GitHub, check how it looks there as well.',
+      'Converting HTML to Markdown may not reproduce complex layouts or styling exactly. Review the result.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

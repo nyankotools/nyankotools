@@ -25,6 +25,8 @@ export interface TextCaseConverterPageContent {
   copied: string;
   copyFailed: string;
   labels: Record<keyof TextCaseResult, string>;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: { term: string; description: string }[];
 }
@@ -56,6 +58,12 @@ export const textCaseConverterContent: Record<
       lowerCase: 'lower case',
       upperCase: 'UPPER CASE',
     },
+    notesHeading: '注意事項',
+    notes: [
+      'スペース・ハイフン・アンダースコアで区切られた単語と、camelCase・PascalCaseの大文字の位置から、単語の区切りを推測して変換します。',
+      'XMLHttpRequestのように大文字が連続する場合の区切りは推測のため、意図と異なる結果になることがあります。',
+      '日本語などの大文字・小文字の区別がない文字は、変換されません。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -99,6 +107,12 @@ export const textCaseConverterContent: Record<
       lowerCase: 'lower case',
       upperCase: 'UPPER CASE',
     },
+    notesHeading: 'Notes',
+    notes: [
+      'Word boundaries are inferred from spaces, hyphens, underscores and the capital letters in camelCase and PascalCase.',
+      'Runs of capitals such as XMLHttpRequest are split by inference, so the result may not always match your intent.',
+      'Characters without letter case, such as Japanese, are not converted.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

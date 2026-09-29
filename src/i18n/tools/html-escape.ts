@@ -22,6 +22,8 @@ export interface HtmlEscapePageContent {
   inputLabel: string;
   inputPlaceholder: string;
   outputLabel: string;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -45,6 +47,12 @@ export const htmlEscapeContent: Record<Locale, HtmlEscapePageContent> = {
     inputLabel: '入力',
     inputPlaceholder: '変換したいテキストを入力',
     outputLabel: '結果',
+    notesHeading: '注意事項',
+    notes: [
+      'HTMLエスケープは、&・<・>・"・\'の5文字を対象にしています。それ以外の文字はそのまま出力されます。',
+      'エスケープは画面表示のためのものであり、それだけですべてのセキュリティ対策になるわけではありません。表示する場所（HTML本文・属性・JavaScript・URL）に応じた処理が必要です。',
+      'JS文字列エスケープは、JavaScriptの文字列リテラルに埋め込むための変換です。HTMLの実体参照とは別のものです。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -77,6 +85,12 @@ export const htmlEscapeContent: Record<Locale, HtmlEscapePageContent> = {
     inputLabel: 'Input',
     inputPlaceholder: 'Enter text to convert',
     outputLabel: 'Result',
+    notesHeading: 'Notes',
+    notes: [
+      'HTML escaping covers five characters: &, <, >, " and \'. Everything else is output as is.',
+      'Escaping alone is not a complete security measure. The correct handling depends on where the text is inserted: HTML body, attribute, JavaScript or URL.',
+      'JS string escape is meant for embedding text in JavaScript string literals and is different from HTML entities.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

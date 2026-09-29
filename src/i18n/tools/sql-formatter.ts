@@ -30,6 +30,8 @@ export interface SqlFormatterPageContent {
   outputLabel: string;
   /** `{message}` を置換して使うテンプレート */
   errorTemplate: string;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -74,6 +76,12 @@ export const sqlFormatterContent: Record<Locale, SqlFormatterPageContent> = {
     outputLabel: '結果',
     errorTemplate:
       '構文エラー: {message}\n（内容: SQLの構文に誤りがあります。括弧・引用符の対応や、選択したSQL方言が入力内容に合っているかを確認してください。）',
+    notesHeading: '注意事項',
+    notes: [
+      '方言によってキーワードや引用符の扱いが異なります。使用しているデータベースに合った方言を選んでください。',
+      '整形は見た目（空白・改行・インデント・キーワードの大文字小文字）を変えるだけで、クエリの意味は変わりません。',
+      '構文が正しくないSQLは、整形できずエラーになることがあります。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -132,6 +140,12 @@ export const sqlFormatterContent: Record<Locale, SqlFormatterPageContent> = {
     outputLabel: 'Result',
     errorTemplate:
       'Syntax error: {message}\n(Check that parentheses and quotes are balanced, and that the selected SQL dialect matches your query.)',
+    notesHeading: 'Notes',
+    notes: [
+      'Keywords and quoting differ between dialects. Select the dialect that matches your database.',
+      'Formatting only changes appearance (whitespace, line breaks, indentation and keyword case). It does not change what the query does.',
+      'SQL with syntax errors may fail to format and show an error.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

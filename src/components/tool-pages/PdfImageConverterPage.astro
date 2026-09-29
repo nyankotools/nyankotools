@@ -1,5 +1,6 @@
 ---
 import Glossary from '../Glossary.astro';
+import Notes from '../Notes.astro';
 import Layout from '../../layouts/Layout.astro';
 import { pdfImageConverterContent } from '../../i18n/tools/pdf-image-converter';
 import type { Locale } from '../../data/tools';
@@ -219,6 +220,8 @@ const selectClass =
     <h2 class="mb-2 text-lg font-semibold">{t.resultHeading}</h2>
     <ul id="conv-result-list" class="flex flex-col gap-3"></ul>
   </section>
+
+  <Notes heading={t.notesHeading} items={t.notes} />
 
   <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
 </Layout>

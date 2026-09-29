@@ -25,6 +25,8 @@ export interface YamlJsonConverterPageContent {
   inputPlaceholderYamlToJson: string;
   inputPlaceholderJsonToYaml: string;
   syntaxErrorPrefix: string;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -55,6 +57,11 @@ export const yamlJsonConverterContent: Record<
     inputPlaceholderJsonToYaml:
       '{"name": "Taro", "hobbies": ["reading", "coding"]}',
     syntaxErrorPrefix: '構文エラー',
+    notesHeading: '注意事項',
+    notes: [
+      'JSONにはコメントがないため、YAMLのコメントは変換時に失われます。',
+      'YAMLはインデントに意味があり、タブ文字は使えません。エラーが出たときは、スペースでそろっているか確認してください。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -96,6 +103,11 @@ export const yamlJsonConverterContent: Record<
     inputPlaceholderJsonToYaml:
       '{"name": "Taro", "hobbies": ["reading", "coding"]}',
     syntaxErrorPrefix: 'Syntax error',
+    notesHeading: 'Notes',
+    notes: [
+      'JSON has no comments, so YAML comments are lost during conversion.',
+      'Indentation is significant in YAML and tabs are not allowed. If an error appears, check that spaces are used consistently.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

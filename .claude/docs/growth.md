@@ -10,7 +10,8 @@ NyankoTools aims to monetize in the future (ads, affiliate, etc.). Monetization 
 - **Internal links.** Link to related existing tools in the page body to improve crawlability and user circulation. When adding a tool, find and link at least one related existing tool.
 - **OGP image.** The default `og:image` is `https://nyankotools.com/ogp.png` (the file is `public/ogp.png`). If a tool-specific OGP image is available, pass it via the `ogImage` prop. Keeping the shared image is fine, but the referenced image file must exist.
 - **Sitemap / robots.txt.** `site` in `astro.config.mjs` is already set, so consider generating a sitemap with `@astrojs/sitemap` and maintaining `public/robots.txt` (propose it if not yet in place).
-- **Structured data (JSON-LD).** Consider adding schemas such as `SoftwareApplication` or `FAQPage` depending on the tool.
+- **Structured data (JSON-LD).** `Layout.astro` emits `SoftwareApplication` and `BreadcrumbList` for tool pages, and `FAQPage` automatically when `src/i18n/faq/<slug>.ts` exists (every tool must have one; see [adding-a-tool.md](./adding-a-tool.md)).
+- **Body content depth.** Every tool page should carry substantive body copy: intro (with an internal link), notes on limits, a tool-specific FAQ, and a glossary where jargon is used. Avoid thin, template-like pages.
 
 ## Responsive
 

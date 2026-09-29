@@ -487,6 +487,12 @@ const jsonLd: Record<string, unknown> | null = noindex
             {t('footer.about')}
           </a>
           <a
+            href={lang === 'en' ? '/en/updates/' : '/updates/'}
+            class="hover:text-blue-700 hover:underline dark:hover:text-blue-400"
+          >
+            {t('footer.updates')}
+          </a>
+          <a
             href={lang === 'en' ? '/en/faq/' : '/faq/'}
             class="hover:text-blue-700 hover:underline dark:hover:text-blue-400"
           >

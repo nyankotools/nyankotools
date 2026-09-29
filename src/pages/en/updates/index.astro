@@ -1,0 +1,18 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import UpdatesList from '../../../components/UpdatesList.astro';
+---
+
+<Layout
+  title="Updates"
+  description="A dated changelog of new tools and major features added to NyankoTools."
+>
+  <h1 class="mb-2 text-2xl font-bold">Updates</h1>
+  <p class="mb-8 text-gray-600 dark:text-gray-400">
+    A history of the new tools and features we've added to NyankoTools.
+  </p>
+
+  <div class="max-w-2xl">
+    <UpdatesList locale="en" />
+  </div>
+</Layout>

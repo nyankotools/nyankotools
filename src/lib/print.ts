@@ -16,7 +16,11 @@ export function initPrint(): void {
     printing = true;
     restoreDark = root.classList.contains('dark');
     root.classList.remove('dark');
-    opened = Array.from(document.querySelectorAll('details:not([open])'));
+    opened = Array.from(
+      document.querySelectorAll<HTMLDetailsElement>(
+        '[data-tool-page] details:not([open])',
+      ),
+    );
     opened.forEach((d) => d.setAttribute('open', ''));
   }
 

@@ -1,3 +1,5 @@
+import { LARGE_INPUT_LENGTH, LARGE_INPUT_DELAY_MS } from './input-scheduler';
+
 /** 1欄あたりに保存する最大文字数（sessionStorage の容量と保存負荷を抑える） */
 export const MAX_PERSIST_LENGTH = 200_000;
 
@@ -23,7 +25,7 @@ const TEXT_INPUT_TYPES = new Set([
   'range',
 ]);
 
-/** 保存される内容。`last` は最後にユーザーが操作した欄（連動欄の整合に使う） */
+/** 保存される内容。`last` は最後にユーザーが操作した欄のキー（連動欄の整合に使う） */
 export interface Snapshot {
   last: string | null;
   values: Record<string, string>;
@@ -36,7 +38,22 @@ function isToggle(el: Field): el is HTMLInputElement {
 }
 
 /**
- * 保存対象の欄か。id があり、編集可能（readonly/disabled でない）で、`data-no-persist` がなく、
+ * 欄を識別するキー。id があれば id。id の無いラジオは `name#value`、
+ * `data-option` を持つチェックボックスは `option:<値>`。それ以外は null（保存対象外）。
+ */
+export function fieldKey(el: Element): string | null {
+  if (el.id) return el.id;
+  if (el instanceof HTMLInputElement) {
+    if (el.type === 'radio' && el.name) return `${el.name}#${el.value}`;
+    if (el.type === 'checkbox' && el.dataset.option) {
+      return `option:${el.dataset.option}`;
+    }
+  }
+  return null;
+}
+
+/**
+ * 保存対象の欄か。キーがあり、編集可能（readonly/disabled でない）で、`data-no-persist` がなく、
  * テキスト系・数値系・色・スライダー・チェックボックス・ラジオ・select のいずれか。
  */
 export function isPersistable(el: Element): el is Field {
@@ -47,7 +64,7 @@ export function isPersistable(el: Element): el is Field {
   )) {
     return false;
   }
-  if (!el.id || el.disabled) return false;
+  if (fieldKey(el) === null || el.disabled) return false;
   if (el.hasAttribute('data-no-persist')) return false;
   if (el instanceof HTMLSelectElement) return true;
   if (el instanceof HTMLTextAreaElement) return !el.readOnly;
@@ -115,9 +132,12 @@ function getStorage(): Storage | null {
  * - 機微ツール（`data-tool-sensitive`）は保存も復元もしない。
  * - 保存は入力・変更のたびに、ページ内の対象欄をまとめてスナップショットする（ツールが計算で書き換えた
  *   連動欄や、`change` 時の範囲補正後の値も含む）。あわせて最後に操作した欄を記録する。
- * - 復元は全欄の値を入れてから、最後に操作した欄が最後になる順で `input`/`change` を発火する
- *   （連動欄が、最後に打った値で決まる）。select・チェックボックス・ラジオは先に反映して、
- *   それによる欄の有効/無効の切替を先に済ませる。
+ *   ページ読み込み直後の値（JS が入れる「現在時刻」などの既定値を含む）から変わっていない欄は
+ *   保存しない（古い時刻などが次回以降に固定されるのを避ける）。
+ * - 復元は、全欄の値を入れて `input`/`change` を発火し（最後に操作した欄が最後）、ツールの結果を
+ *   再計算させたうえで、最後に全欄へ保存値を黙って入れ直す（丸めを伴う連動欄が、
+ *   他の欄の再計算で書き換わったままにならないように）。select・チェックボックス・ラジオは先に
+ *   反映して、それによる欄の有効/無効の切替を先に済ませる。
  * - 前回の復元中にページが固まった場合（重い正規表現など）、次の読み込みでは復元しない。
  * - sessionStorage はタブを閉じると消え、他のタブ・端末には届かない
  *   （ブラウザの「前回のページを開く」やタブの複製では残ることがある）。
@@ -136,30 +156,46 @@ export function initInputPersist(): void {
 
   const fields = () =>
     Array.from(
-      container.querySelectorAll<Field>('input[id], textarea[id], select[id]'),
+      container.querySelectorAll<Field>('input, textarea, select'),
     ).filter(isPersistable);
 
-  function save(last: string | null): void {
+  // 読み込み直後（復元前）の値。ここから変わった欄だけを保存する
+  const initial = new Map<string, string>();
+  for (const el of fields()) initial.set(fieldKey(el)!, readValue(el));
+
+  let lastEdited: string | null = null;
+
+  function save(): void {
     const values: Record<string, string> = {};
     for (const el of fields()) {
+      const k = fieldKey(el)!;
       const value = readValue(el);
-      if (value.length <= MAX_PERSIST_LENGTH) values[el.id] = value;
+      if (value === initial.get(k)) continue;
+      if (value.length > MAX_PERSIST_LENGTH) {
+        // 一部の欄だけ欠けると、連動する欄と食い違った状態で復元されるため、全体を保存しない
+        removeSaved();
+        return;
+      }
+      values[k] = value;
     }
     try {
-      storage!.setItem(key, JSON.stringify({ last, values }));
+      storage!.setItem(key, JSON.stringify({ last: lastEdited, values }));
     } catch {
       // 容量超過などで保存できないとき、古い値が復元されないよう消しておく
-      try {
-        storage!.removeItem(key);
-      } catch {
-        // ツール本体の動作は妨げない
-      }
+      removeSaved();
     }
   }
 
-  restore();
+  function removeSaved(): void {
+    try {
+      storage!.removeItem(key);
+    } catch {
+      // ツール本体の動作は妨げない
+    }
+  }
 
   function restore(): void {
+    let snapshot: Snapshot | null;
     try {
       if (storage!.getItem(restoringKey) !== null) {
         // 前回の復元が完了しなかった（固まった）ので、保存内容を捨てて素の状態で開く
@@ -167,60 +203,78 @@ export function initInputPersist(): void {
         storage!.removeItem(key);
         return;
       }
-      const snapshot = parseSnapshot(storage!.getItem(key));
+      snapshot = parseSnapshot(storage!.getItem(key));
       if (!snapshot) return;
       storage!.setItem(restoringKey, '1');
-      try {
-        const restored: Field[] = [];
-        const apply = (el: Field) => {
-          const saved = snapshot.values[el.id];
-          if (saved === undefined) return;
-          if (writeValue(el, saved)) restored.push(el);
-        };
-        // 選択系を先に反映・発火して、欄の有効/無効の切替を済ませる
-        fields()
-          .filter((el) => el instanceof HTMLSelectElement || isToggle(el))
-          .forEach((el) => {
-            apply(el);
-            if (restored.includes(el)) fire(el);
-          });
-        const textFields = fields().filter(
-          (el) => !(el instanceof HTMLSelectElement || isToggle(el)),
-        );
-        const rest: Field[] = [];
-        textFields.forEach((el) => {
-          const before = restored.length;
-          apply(el);
-          if (restored.length > before) rest.push(el);
+    } catch {
+      return;
+    }
+    lastEdited = snapshot.last;
+
+    let deferClear = false;
+    try {
+      const saved = snapshot;
+      const restored: Array<[Field, string]> = [];
+      const apply = (el: Field): boolean => {
+        const value = saved.values[fieldKey(el)!];
+        if (value === undefined || !writeValue(el, value)) return false;
+        restored.push([el, value]);
+        return true;
+      };
+
+      // 選択系を先に反映・発火して、欄の有効/無効の切替を済ませる
+      fields()
+        .filter((el) => el instanceof HTMLSelectElement || isToggle(el))
+        .forEach((el) => {
+          if (apply(el)) fire(el);
         });
-        // 最後に操作した欄を最後に発火する
-        rest.sort(
-          (a, b) =>
-            Number(a.id === snapshot.last) - Number(b.id === snapshot.last),
-        );
-        rest.forEach(fire);
-      } finally {
-        storage!.removeItem(restoringKey);
-      }
+      const changed = fields()
+        .filter((el) => !(el instanceof HTMLSelectElement || isToggle(el)))
+        .filter(apply);
+      // 最後に操作した欄を最後に発火する
+      changed.sort(
+        (a, b) =>
+          Number(fieldKey(a) === saved.last) -
+          Number(fieldKey(b) === saved.last),
+      );
+      changed.forEach(fire);
+      // 他の欄の再計算で書き換わった値を、保存した（整合の取れた）値へ戻す
+      for (const [el, value] of restored) writeValue(el, value);
+
+      // 大きな入力はツール側で遅延処理される（onTextInput）ため、その処理が終わるまで
+      // 「復元中」の印を残し、固まった場合に次回の復元を止められるようにする
+      const total = restored.reduce((sum, [, v]) => sum + v.length, 0);
+      deferClear = total >= LARGE_INPUT_LENGTH;
     } catch {
       // 保存内容を使えなくても、ツール本体の動作は妨げない
+    } finally {
+      const clear = () => {
+        try {
+          storage!.removeItem(restoringKey);
+        } catch {
+          // 何もしない
+        }
+      };
+      if (deferClear) setTimeout(clear, LARGE_INPUT_DELAY_MS + 500);
+      else clear();
     }
   }
 
-  let lastEdited: string | null = null;
+  restore();
+
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   function flush(): void {
     if (timer === undefined) return;
     clearTimeout(timer);
     timer = undefined;
-    save(lastEdited);
+    save();
   }
 
   const onEdit = (event: Event) => {
     const el = event.target;
     if (!(el instanceof Element) || !isPersistable(el)) return;
-    lastEdited = el.id;
+    lastEdited = fieldKey(el);
     if (timer !== undefined) clearTimeout(timer);
     timer = setTimeout(flush, SAVE_DELAY_MS);
   };

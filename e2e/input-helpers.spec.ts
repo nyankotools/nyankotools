@@ -218,3 +218,66 @@ test.describe('入力状態の保持（連動欄・change・選択系）', () =>
     await expect(page.locator('#qr-generator-input')).toHaveValue('');
   });
 });
+
+test.describe('入力状態の保持（レビュー再指摘）', () => {
+  test('丸めを伴う連動欄でも、最後に入力した値のまま復元される（基準14・px 13）', async ({
+    page,
+  }) => {
+    await page.goto('/tools/px-rem-converter/');
+    await page.locator('#px-rem-base-input').fill('14');
+    await page.locator('#px-rem-px-input').fill('13');
+    await page.waitForTimeout(500);
+
+    await page.reload();
+    await expect(page.locator('#px-rem-base-input')).toHaveValue('14');
+    await expect(page.locator('#px-rem-px-input')).toHaveValue('13');
+  });
+
+  test('JSが入れる「現在時刻」の既定値は、触っていなければ保存されない（cron）', async ({
+    page,
+  }) => {
+    await page.goto('/tools/cron-parser/');
+    const base = page.locator('#cron-base-datetime');
+    const initialBase = await base.inputValue();
+    await page.locator('#cron-input').fill('*/5 * * * *');
+    await page.waitForTimeout(500);
+
+    const saved = await page.evaluate(() =>
+      sessionStorage.getItem('nyanko:input:cron-parser'),
+    );
+    expect(saved).toContain('cron-input');
+    expect(saved).not.toContain('cron-base-datetime');
+    expect(initialBase).not.toBe('');
+
+    await page.reload();
+    await expect(page.locator('#cron-input')).toHaveValue('*/5 * * * *');
+  });
+
+  test('id の無いラジオも復元される（ratio-calculator の未知数）', async ({
+    page,
+  }) => {
+    await page.goto('/tools/ratio-calculator/');
+    await page.locator('input[name="proportion-unknown"][value="a"]').check();
+    await page.locator('#proportion-input-b').fill('2');
+    await page.waitForTimeout(500);
+
+    await page.reload();
+    await expect(
+      page.locator('input[name="proportion-unknown"][value="a"]'),
+    ).toBeChecked();
+    await expect(page.locator('#proportion-input-b')).toHaveValue('2');
+  });
+
+  test('復元中フラグは、通常の入力では読み込み後すぐに消える', async ({
+    page,
+  }) => {
+    await page.goto('/tools/text-case-converter/');
+    await page.locator('#text-case-input').fill('abc');
+    await page.waitForTimeout(500);
+    await page.reload();
+    const flag = await page.evaluate(() =>
+      sessionStorage.getItem('nyanko:restoring:text-case-converter'),
+    );
+    expect(flag).toBeNull();
+  });
+});

@@ -515,7 +515,7 @@ const jsonLd: Record<string, unknown> | null = noindex
       <main class="flex min-w-0 flex-1 flex-col p-4 sm:p-6 md:p-10">
         <div
           class:list={['relative flex-1', toolMatch && '[&>h1]:pr-12']}
-          data-tool-slug={currentTool?.slug}
+          data-tool-page={currentTool?.slug}
           data-tool-sensitive={currentTool?.sensitive ? '' : undefined}
         >
           {toolMatch && (

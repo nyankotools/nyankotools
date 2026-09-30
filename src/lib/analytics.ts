@@ -1,8 +1,8 @@
-/** ツールページなら、Layout が付ける `data-tool-slug` からslugを取り出す（それ以外は null） */
+/** ツールページなら、Layout が付ける `data-tool-page` からslugを取り出す（それ以外は null） */
 export function getToolSlug(): string | null {
   if (typeof document === 'undefined') return null;
   return (
-    document.querySelector<HTMLElement>('[data-tool-slug]')?.dataset.toolSlug ??
+    document.querySelector<HTMLElement>('[data-tool-page]')?.dataset.toolPage ??
     null
   );
 }

@@ -35,7 +35,7 @@ export function stripQueryParams(
  * 反映の成否や機微ツールかどうかに関わらず、該当パラメータはURLから消す。
  */
 export function initQueryInit(): void {
-  const container = document.querySelector<HTMLElement>('[data-tool-slug]');
+  const container = document.querySelector<HTMLElement>('[data-tool-page]');
   if (!container) return;
 
   const targets = Array.from(

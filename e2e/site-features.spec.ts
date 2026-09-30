@@ -187,3 +187,22 @@ test.describe('エラー境界', () => {
     await expect(page.locator('#error-toast')).toBeHidden();
   });
 });
+
+test.describe('ツールページのレイアウト', () => {
+  test('フッターはツール本体より下に表示される（トップのグリッド並べ替えと干渉しない）', async ({
+    page,
+  }) => {
+    await page.goto('/tools/char-counter/');
+    const footerY = await page
+      .locator('main > footer')
+      .evaluate((el) => el.getBoundingClientRect().y);
+    const h1Y = await page
+      .locator('main h1')
+      .evaluate((el) => el.getBoundingClientRect().y);
+    expect(footerY).toBeGreaterThan(h1Y);
+    await expect(page.locator('main > *').last()).toHaveJSProperty(
+      'tagName',
+      'FOOTER',
+    );
+  });
+});

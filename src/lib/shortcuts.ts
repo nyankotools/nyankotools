@@ -45,7 +45,7 @@ function isUsable(el: HTMLButtonElement): boolean {
 
 /** ツールページで、共通ショートカットに対応するボタンを押す */
 export function initShortcuts(): void {
-  const container = document.querySelector<HTMLElement>('[data-tool-slug]');
+  const container = document.querySelector<HTMLElement>('[data-tool-page]');
   if (!container) return;
 
   // パレットの案内には、このページで実際に効くショートカットだけを出す

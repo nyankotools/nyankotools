@@ -3,7 +3,7 @@ import { getToolSlug, trackEvent } from './analytics';
 
 function stubDocument(slug?: string) {
   vi.stubGlobal('document', {
-    querySelector: vi.fn(() => (slug ? { dataset: { toolSlug: slug } } : null)),
+    querySelector: vi.fn(() => (slug ? { dataset: { toolPage: slug } } : null)),
   });
 }
 
@@ -14,7 +14,7 @@ describe('getToolSlug', () => {
     expect(getToolSlug()).toBeNull();
   });
 
-  it('data-tool-slug があればそのslug、無ければ null', () => {
+  it('data-tool-page があればそのslug、無ければ null', () => {
     stubDocument('base64');
     expect(getToolSlug()).toBe('base64');
     stubDocument();

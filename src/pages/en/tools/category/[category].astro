@@ -1,0 +1,15 @@
+---
+import CategoryPage from '../../../../components/CategoryPage.astro';
+import { categoryIds } from '../../../../data/tools';
+
+export function getStaticPaths() {
+  return categoryIds.map((category) => ({
+    params: { category },
+    props: { category },
+  }));
+}
+
+const { category } = Astro.props;
+---
+
+<CategoryPage locale="en" category={category} />

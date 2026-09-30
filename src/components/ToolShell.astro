@@ -3,6 +3,7 @@ import Glossary from './Glossary.astro';
 import HowTo from './HowTo.astro';
 import Notes from './Notes.astro';
 import Layout from '../layouts/Layout.astro';
+import { useTranslations } from '../i18n/ui';
 
 interface Props {
   t: {
@@ -20,11 +21,20 @@ interface Props {
 }
 
 const { t } = Astro.props;
+const badge = useTranslations(Astro.currentLocale === 'en' ? 'en' : 'ja')(
+  'badge.local',
+);
 ---
 
 <Layout title={t.title} description={t.description}>
   <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+  <p class="mb-3 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+  <p
+    data-local-badge
+    class="mb-6 inline-block rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-medium text-green-800 dark:border-green-900 dark:bg-green-950/40 dark:text-green-300"
+  >
+    {badge}
+  </p>
 
   <slot />
 

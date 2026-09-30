@@ -1,4 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+} from 'vitest';
 import { downloadBlob } from './download';
 
 describe('downloadBlob', () => {
@@ -9,7 +17,7 @@ describe('downloadBlob', () => {
     remove: ReturnType<typeof vi.fn>;
   };
   let appendChild: ReturnType<typeof vi.fn>;
-  let revoke: ReturnType<typeof vi.fn>;
+  let revoke: Mock<(url: string) => void>;
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -19,7 +27,7 @@ describe('downloadBlob', () => {
       createElement: vi.fn(() => anchor),
       body: { appendChild },
     });
-    revoke = vi.fn();
+    revoke = vi.fn<(url: string) => void>();
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:test');
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(revoke);
   });

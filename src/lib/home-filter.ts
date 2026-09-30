@@ -9,7 +9,7 @@ export interface HomeFilterOptions {
 const ALL_CATEGORY = 'all';
 
 /** 大文字小文字と全角/半角（ＪＳＯＮ→json など）の表記ゆれを揃える */
-function normalize(text: string): string {
+export function normalize(text: string): string {
   return text.normalize('NFKC').toLowerCase();
 }
 

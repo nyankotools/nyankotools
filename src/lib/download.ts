@@ -1,3 +1,5 @@
+import { trackEvent } from './analytics';
+
 /**
  * Blob をファイルとしてダウンロードさせる（クリックで即保存する用途）。
  * 生成した object URL は保存開始後に必ず revoke する。
@@ -11,6 +13,7 @@ export function downloadBlob(blob: Blob, filename: string): void {
   document.body.appendChild(a);
   a.click();
   a.remove();
+  trackEvent('download');
   // 保存開始前に revoke すると失敗するブラウザがある（iOS Safari は保存確認の
   // シート表示中も URL を参照する）ため、余裕をもって待つ
   setTimeout(() => URL.revokeObjectURL(url), 60_000);

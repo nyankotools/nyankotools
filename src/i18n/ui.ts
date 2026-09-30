@@ -44,6 +44,22 @@ export const ui = {
     'share.copied': 'コピーしました',
     'share.copyFailed': 'コピーに失敗しました',
     'share.native': '共有',
+    'badge.local': '🔒 ブラウザ内で完結・入力データはサーバーに送信されません',
+    'palette.open': 'ツールを検索',
+    'palette.placeholder': 'ツール名・キーワードで検索',
+    'palette.empty': '該当するツールがありません',
+    'palette.hint.nav': '↑↓ 選択　Enter 開く　Esc 閉じる',
+    'palette.hint.tool': 'このページ: Ctrl/⌘+Enter 実行　Alt+Shift+C コピー',
+    'error.toast':
+      '予期しないエラーが発生しました。ページを再読み込みして、もう一度お試しください。',
+    'error.close': '閉じる',
+    'category.title': '{category}のツール一覧',
+    'category.description':
+      '{category}カテゴリの無料ツール{count}件の一覧。すべてブラウザ内で完結し、登録不要で使えます。',
+    'category.lead':
+      '{category}カテゴリのツールを{count}件まとめました。入力したデータはサーバーに送信されず、ブラウザ内だけで処理されます。',
+    'category.others': '他のカテゴリ',
+    'category.viewAll': 'カテゴリ別の一覧',
     'home.title': '🐾 にゃんこツール',
     'home.lead':
       'JSON整形やBase64変換などの定番ツールに加え、かな変換・全角/半角変換のような日本語特有の処理まで丁寧にカバー。ブラウザだけで完結し、入力したデータがサーバーに送信されることはありません。',
@@ -89,6 +105,23 @@ export const ui = {
     'share.copied': 'Copied',
     'share.copyFailed': 'Copy failed',
     'share.native': 'Share',
+    'badge.local':
+      '🔒 Runs in your browser · Your data is never sent to a server',
+    'palette.open': 'Search tools',
+    'palette.placeholder': 'Search by tool name or keyword',
+    'palette.empty': 'No matching tools',
+    'palette.hint.nav': '↑↓ Select  Enter Open  Esc Close',
+    'palette.hint.tool': 'This page: Ctrl/⌘+Enter Run  Alt+Shift+C Copy',
+    'error.toast':
+      'An unexpected error occurred. Please reload the page and try again.',
+    'error.close': 'Close',
+    'category.title': '{category} Tools',
+    'category.description':
+      'All {count} free {category} tools in one place. Everything runs in your browser, with no sign-up.',
+    'category.lead':
+      '{count} {category} tools, collected in one list. Nothing you enter is sent to a server; it is all processed in your browser.',
+    'category.others': 'Other categories',
+    'category.viewAll': 'Browse by category',
     'home.title': '🐾 NyankoTools',
     'home.lead':
       'Everyday tools like JSON formatting and Base64 conversion, plus careful support for Japanese-specific text processing like kana and full-width/half-width conversion — all running entirely in your browser. Nothing you type is ever sent to a server.',

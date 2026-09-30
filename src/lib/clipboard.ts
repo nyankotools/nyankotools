@@ -1,15 +1,21 @@
+import { trackEvent } from './analytics';
+
 /**
  * テキストをクリップボードへコピーする。成功したら true。
  * Clipboard API が使えない環境（非セキュアコンテキスト等）では
  * 一時的な textarea と execCommand('copy') にフォールバックする。
+ * 成功時は計測イベント `copy` を送る（内容は送らない）。
  */
 export async function copyText(text: string): Promise<boolean> {
+  let ok: boolean;
   try {
     await navigator.clipboard.writeText(text);
-    return true;
+    ok = true;
   } catch {
-    return legacyCopy(text);
+    ok = legacyCopy(text);
   }
+  if (ok) trackEvent('copy');
+  return ok;
 }
 
 function legacyCopy(text: string): boolean {
@@ -20,7 +26,12 @@ function legacyCopy(text: string): boolean {
   textarea.setAttribute('readonly', '');
   textarea.style.position = 'fixed';
   textarea.style.opacity = '0';
-  document.body.appendChild(textarea);
+  // モーダル<dialog>の表示中は外側の要素がinertで選択できないため、
+  // フォーカス中の要素が属するダイアログの内側に置く
+  const host =
+    (previouslyFocused?.closest?.('dialog') as HTMLElement | null) ??
+    document.body;
+  host.appendChild(textarea);
   try {
     textarea.select();
     textarea.setSelectionRange(0, text.length);

@@ -13,6 +13,7 @@ export interface TextListToolsPageContent {
   introHtml: string;
   inputLabel: string;
   inputPlaceholder: string;
+  sampleText: string;
   trimLabel: string;
   removeEmptyLabel: string;
   dedupeLabel: string;
@@ -46,6 +47,7 @@ export const textListToolsContent: Record<Locale, TextListToolsPageContent> = {
       '1行1項目のテキストを対象に、重複行の削除・並び替え（ソート）・ランダムなシャッフルをまとめて行えます。メールアドレスや名簿、タグ一覧などの整理に便利です。行数や文字数を確認したい場合は <a href="/tools/char-counter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">文字数カウント</a> もあわせてご利用ください。',
     inputLabel: '入力（1行1項目）',
     inputPlaceholder: '例:\nbanana\napple\napple\ncherry',
+    sampleText: 'banana\napple\napple\ncherry',
     trimLabel: '各行の前後の空白を削除する',
     removeEmptyLabel: '空行を削除する',
     dedupeLabel: '重複する行を削除する',
@@ -99,6 +101,7 @@ export const textListToolsContent: Record<Locale, TextListToolsPageContent> = {
       'Cleans up a list of one item per line by deduplicating lines, sorting them, or shuffling them into a random order. Handy for tidying up email lists, name rosters, or tag lists. To check the number of lines or characters, also try the <a href="/en/tools/char-counter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Character Counter</a> tool.',
     inputLabel: 'Input (one item per line)',
     inputPlaceholder: 'e.g.\nbanana\napple\napple\ncherry',
+    sampleText: 'banana\napple\napple\ncherry',
     trimLabel: 'Trim leading/trailing whitespace on each line',
     removeEmptyLabel: 'Remove empty lines',
     dedupeLabel: 'Remove duplicate lines',

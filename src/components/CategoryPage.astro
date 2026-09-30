@@ -2,7 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import { getLocalizedTools, type CategoryId, type Locale } from '../data/tools';
 import { groupByCategory } from '../lib/home-filter';
-import { useTranslations } from '../i18n/ui';
+import { localePath, useTranslations } from '../i18n/ui';
 
 interface Props {
   locale: Locale;
@@ -29,7 +29,7 @@ const fill = (template: string) =>
     .replace('{category}', label)
     .replace('{count}', String(current.tools.length));
 
-const prefix = locale === 'en' ? '/en' : '';
+const prefix = localePath(locale, '');
 const title = fill(t('category.title'));
 ---
 

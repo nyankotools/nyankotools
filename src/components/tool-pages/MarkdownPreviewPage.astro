@@ -212,6 +212,7 @@ const t = markdownPreviewContent[locale];
 </style>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { copyText } from '../../lib/clipboard';
   import DOMPurify from 'dompurify';
   import {
@@ -311,7 +312,7 @@ const t = markdownPreviewContent[locale];
     }
   }
 
-  input.addEventListener('input', convert);
+  onTextInput(input, convert);
 
   modeButtons.forEach((button) => {
     button.addEventListener('click', () => {

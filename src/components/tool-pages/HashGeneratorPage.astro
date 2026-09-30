@@ -64,6 +64,7 @@ const algorithms = [
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { copyText } from '../../lib/clipboard';
   import { computeHashes } from '../../lib/tools/hash-generator';
 
@@ -89,7 +90,7 @@ const algorithms = [
     }
   }
 
-  input.addEventListener('input', generate);
+  onTextInput(input, generate);
 
   copyButtons.forEach((button) => {
     button.addEventListener('click', async () => {

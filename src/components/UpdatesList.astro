@@ -1,6 +1,7 @@
 ---
 import { getSortedUpdates } from '../data/updates';
 import { getLocalizedTools, type Locale } from '../data/tools';
+import { localePath } from '../i18n/ui';
 
 interface Props {
   locale: Locale;
@@ -12,7 +13,7 @@ const entries = getSortedUpdates();
 const toolBySlug = new Map(
   getLocalizedTools(locale).map((tool) => [tool.slug, tool]),
 );
-const toolBasePath = locale === 'en' ? '/en/tools/' : '/tools/';
+const toolBasePath = localePath(locale, '/tools/');
 const dateFormatter = new Intl.DateTimeFormat(
   locale === 'en' ? 'en-US' : 'ja-JP',
   { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' },

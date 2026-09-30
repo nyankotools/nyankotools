@@ -131,6 +131,7 @@ const t = jwtDecoderContent[locale];
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { copyText as copyToClipboard } from '../../lib/clipboard';
   import {
     decodeJwt,
@@ -221,7 +222,7 @@ const t = jwtDecoderContent[locale];
     }
   }
 
-  input.addEventListener('input', render);
+  onTextInput(input, render);
 
   async function copyText(text: string, statusEl: Element) {
     if (!text) return;

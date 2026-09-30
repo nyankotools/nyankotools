@@ -165,6 +165,7 @@ const t = unixTimestampContent[locale];
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { copyText } from '../../lib/clipboard';
   import {
     dateToTimestamp,
@@ -267,7 +268,7 @@ const t = unixTimestampContent[locale];
     isoEl.textContent = date.toISOString();
   }
 
-  input.addEventListener('input', renderTimestampToDate);
+  onTextInput(input, renderTimestampToDate);
   unitSelect.addEventListener('change', renderTimestampToDate);
 
   function renderDateToTimestamp() {

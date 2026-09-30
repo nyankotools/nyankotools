@@ -141,6 +141,7 @@ const t = tomlConverterContent[locale];
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { copyText } from '../../lib/clipboard';
   import { convert, type DataFormat } from '../../lib/tools/toml-converter';
 
@@ -211,7 +212,7 @@ const t = tomlConverterContent[locale];
     }
   }
 
-  input.addEventListener('input', runConvert);
+  onTextInput(input, runConvert);
   indentSelect.addEventListener('change', runConvert);
 
   fromSelect.addEventListener('change', () => {

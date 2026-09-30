@@ -80,6 +80,7 @@ const t = base64Content[locale];
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { copyText } from '../../lib/clipboard';
   import { decodeBase64, encodeBase64 } from '../../lib/tools/base64';
 
@@ -127,7 +128,7 @@ const t = base64Content[locale];
     }
   }
 
-  input.addEventListener('input', convert);
+  onTextInput(input, convert);
 
   modeButtons.forEach((button) => {
     button.addEventListener('click', () => {

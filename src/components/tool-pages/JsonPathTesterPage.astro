@@ -140,6 +140,7 @@ const t = jsonPathTesterContent[locale];
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import {
     evaluateJsonPath,
     evaluateJsonPointer,
@@ -316,7 +317,7 @@ const t = jsonPathTesterContent[locale];
     render();
   }
 
-  jsonInput.addEventListener('input', render);
+  onTextInput(jsonInput, render);
   queryInput.addEventListener('input', render);
   modeJsonPath.addEventListener('change', updateModeUI);
   modePointer.addEventListener('change', updateModeUI);

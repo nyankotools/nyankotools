@@ -85,6 +85,7 @@ const t = urlEncodeContent[locale];
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { copyText } from '../../lib/clipboard';
   import { decodeUrl, encodeUrl } from '../../lib/tools/url-encode';
 
@@ -134,7 +135,7 @@ const t = urlEncodeContent[locale];
     }
   }
 
-  input.addEventListener('input', convert);
+  onTextInput(input, convert);
 
   modeButtons.forEach((button) => {
     button.addEventListener('click', () => {

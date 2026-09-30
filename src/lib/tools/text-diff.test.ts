@@ -120,3 +120,26 @@ describe('getDiffStats', () => {
     expect(getDiffStats(lines)).toEqual({ added: 2, removed: 1, equal: 2 });
   });
 });
+
+describe('diffLines（先頭・末尾の切り落とし）', () => {
+  it('中央だけ変わったとき、切り落とした前後も元の行番号で返す', () => {
+    const result = diffLines('a\nb\nX\nd\ne', 'a\nb\nY\nZ\nd\ne');
+    expect(result).toEqual([
+      { type: 'equal', text: 'a', leftLine: 1, rightLine: 1 },
+      { type: 'equal', text: 'b', leftLine: 2, rightLine: 2 },
+      { type: 'removed', text: 'X', leftLine: 3, rightLine: null },
+      { type: 'added', text: 'Y', leftLine: null, rightLine: 3 },
+      { type: 'added', text: 'Z', leftLine: null, rightLine: 4 },
+      { type: 'equal', text: 'd', leftLine: 4, rightLine: 5 },
+      { type: 'equal', text: 'e', leftLine: 5, rightLine: 6 },
+    ]);
+  });
+
+  it('ほぼ同じ数万行の比較でもLCS表が巨大にならず完了する', () => {
+    const lines = Array.from({ length: 50_000 }, (_, i) => `line ${i}`);
+    const changed = [...lines];
+    changed[25_000] = 'changed';
+    const stats = getDiffStats(diffLines(lines.join('\n'), changed.join('\n')));
+    expect(stats).toEqual({ added: 1, removed: 1, equal: 49_999 });
+  });
+});

@@ -3,7 +3,7 @@ import Glossary from './Glossary.astro';
 import HowTo from './HowTo.astro';
 import Notes from './Notes.astro';
 import Layout from '../layouts/Layout.astro';
-import { useTranslations } from '../i18n/ui';
+import { resolveLocale, useTranslations } from '../i18n/ui';
 
 interface Props {
   t: {
@@ -21,7 +21,7 @@ interface Props {
 }
 
 const { t } = Astro.props;
-const badge = useTranslations(Astro.currentLocale === 'en' ? 'en' : 'ja')(
+const badge = useTranslations(resolveLocale(Astro.currentLocale))(
   'badge.local',
 );
 ---
@@ -31,7 +31,7 @@ const badge = useTranslations(Astro.currentLocale === 'en' ? 'en' : 'ja')(
   <p class="mb-3 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
   <p
     data-local-badge
-    class="mb-6 inline-block rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-medium text-green-800 dark:border-green-900 dark:bg-green-950/40 dark:text-green-300"
+    class="mb-6 inline-block print:hidden rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-medium text-green-800 dark:border-green-900 dark:bg-green-950/40 dark:text-green-300"
   >
     {badge}
   </p>

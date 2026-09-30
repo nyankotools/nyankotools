@@ -22,6 +22,7 @@ const t = textCaseConverterContent[locale];
     <textarea
       id="text-case-input"
       data-query-target="text"
+      data-sample={t.sampleText}
       class="ui-input h-32 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
       placeholder={t.inputPlaceholder}
       spellcheck="false"
@@ -69,6 +70,7 @@ const t = textCaseConverterContent[locale];
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { copyText } from '../../lib/clipboard';
   import {
     convertTextCase,
@@ -93,7 +95,7 @@ const t = textCaseConverterContent[locale];
     });
   }
 
-  input.addEventListener('input', convert);
+  onTextInput(input, convert);
 
   copyButtons.forEach((button) => {
     button.addEventListener('click', async () => {

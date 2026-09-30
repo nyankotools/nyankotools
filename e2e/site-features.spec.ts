@@ -288,6 +288,8 @@ test.describe('URLクエリ（全対象ツール）', () => {
       await expect(page.locator(sel)).toHaveValue(xss);
       expect(new URL(page.url()).search).toBe('?utm_source=x');
       expect(new URL(page.url()).hash).toBe('#h');
+      await page.waitForTimeout(400); // 保存のデバウンス完了を待つ
+      await page.evaluate(() => sessionStorage.clear());
       await page.goto(`/tools/${slug}/?text=${'a'.repeat(5001)}`);
       await expect(page.locator(sel)).toHaveValue('');
       expect(new URL(page.url()).search).toBe('');

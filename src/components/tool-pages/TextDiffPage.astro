@@ -76,6 +76,7 @@ const t = textDiffContent[locale];
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { escapeHtml } from '../../lib/tools/html-escape';
   import {
     diffLines,
@@ -131,8 +132,8 @@ const t = textDiffContent[locale];
       .join('');
   }
 
-  inputA.addEventListener('input', render);
-  inputB.addEventListener('input', render);
+  onTextInput(inputA, render);
+  onTextInput(inputB, render);
   ignoreWhitespace.addEventListener('change', render);
   ignoreCase.addEventListener('change', render);
 

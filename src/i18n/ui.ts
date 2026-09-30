@@ -54,6 +54,12 @@ export const ui = {
     'error.toast':
       '予期しないエラーが発生しました。ページを再読み込みして、もう一度お試しください。',
     'error.close': '閉じる',
+    'input.paste': '貼り付け',
+    'input.pasteFailed':
+      'クリップボードを読み取れませんでした。Ctrl+V で貼り付けてください。',
+    'input.clear': 'クリア',
+    'input.sample': 'サンプル入力',
+    'input.count': '{n}文字',
     'category.title': '{category}のツール一覧',
     'category.description':
       '{category}カテゴリの無料ツール{count}件の一覧。すべてブラウザ内で完結し、登録不要で使えます。',
@@ -117,6 +123,12 @@ export const ui = {
     'error.toast':
       'An unexpected error occurred. Please reload the page and try again.',
     'error.close': 'Close',
+    'input.paste': 'Paste',
+    'input.pasteFailed':
+      'Could not read the clipboard. Please paste with Ctrl+V.',
+    'input.clear': 'Clear',
+    'input.sample': 'Insert sample',
+    'input.count': '{n} chars',
     'category.title': '{category} Tools',
     'category.description':
       'Free {category} tools that run entirely in your browser, with no sign-up.',
@@ -147,6 +159,18 @@ export function useTranslations(locale: Locale) {
   return function t(key: UiKey): string {
     return ui[locale][key];
   };
+}
+
+/** 未知・未指定のロケールは既定ロケールに寄せる */
+export function resolveLocale(locale: string | undefined): Locale {
+  return (locales as string[]).includes(locale ?? '')
+    ? (locale as Locale)
+    : defaultLocale;
+}
+
+/** ロケールに応じたパスを返す（既定ロケールは接頭辞なし、それ以外は `/<locale>` を付ける） */
+export function localePath(locale: Locale, path: string): string {
+  return locale === defaultLocale ? path : `/${locale}${path}`;
 }
 
 /** ja版パスから対応するen版パス（またはその逆）を求める */

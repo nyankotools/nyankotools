@@ -188,6 +188,7 @@ const textareaClass =
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { enableFileDrop } from '../../lib/file-drop';
   import { downloadBlob } from '../../lib/download';
   import { copyText } from '../../lib/clipboard';
@@ -346,7 +347,7 @@ const textareaClass =
   enableFileDrop(dropzone, fileInput);
 
   sourceSelect.addEventListener('change', loadBytes);
-  textArea.addEventListener('input', updateUnmappable);
+  onTextInput(textArea, updateUnmappable);
   targetSelect.addEventListener('change', () => {
     updateBomState();
     updateUnmappable();
@@ -436,5 +437,5 @@ const textareaClass =
     }
   }
 
-  garbledInput.addEventListener('input', renderDiagnosis);
+  onTextInput(garbledInput, renderDiagnosis);
 </script>

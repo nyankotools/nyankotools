@@ -79,3 +79,34 @@
     @apply flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300;
   }
 }
+
+/*
+ * 印刷用スタイル。サイドバー・ヘッダー・フッター・シェア欄などは各要素の `print:hidden` で消し、
+ * ここでは本文の見た目（白背景・黒文字・改ページ）を整える。
+ * ダークテーマの印刷は、印刷中だけ `dark` クラスを外す（src/lib/print.ts）。
+ */
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  /* 結果の表・カード・コードブロックがページ途中で分断されにくくする */
+  table,
+  pre,
+  dl,
+  li {
+    break-inside: avoid;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+
+  /* 入力欄は枠だけを残し、スクロールバーや伸縮ハンドルは出さない */
+  textarea {
+    resize: none;
+  }
+}

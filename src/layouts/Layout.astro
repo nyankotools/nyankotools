@@ -7,6 +7,8 @@ import {
   languageNames,
   ogLocaleMap,
   getAlternatePath,
+  localePath,
+  resolveLocale,
 } from '../i18n/ui';
 import ShareButtons from '../components/ShareButtons.astro';
 import FavoriteToggle from '../components/FavoriteToggle.astro';
@@ -30,7 +32,7 @@ const {
   languageSwitchToHome = false,
 } = Astro.props;
 
-const lang: Locale = Astro.currentLocale === 'en' ? 'en' : 'ja';
+const lang = resolveLocale(Astro.currentLocale);
 const t = useTranslations(lang);
 const localizedTools = getLocalizedTools(lang);
 const toolsByCategory = groupByCategory(localizedTools);
@@ -56,6 +58,14 @@ const enURL = new URL(
 const siteName = t('site.name');
 const fullTitle = `${title} | ${siteName}`;
 
+const inputLabels = JSON.stringify({
+  paste: t('input.paste'),
+  pasteFailed: t('input.pasteFailed'),
+  clear: t('input.clear'),
+  sample: t('input.sample'),
+  count: t('input.count'),
+});
+
 const GA_MEASUREMENT_ID = 'G-HF6QEXY6E7';
 
 const isHome = pathname === '/' || pathname === '/en' || pathname === '/en/';
@@ -65,7 +75,7 @@ const currentTool = toolMatch
   ? tools.find((tool) => tool.slug === toolMatch[1])
   : undefined;
 
-const homeURL = new URL(lang === 'en' ? '/en/' : '/', Astro.site);
+const homeURL = new URL(localePath(lang, '/'), Astro.site);
 
 const breadcrumbJsonLd: Record<string, unknown> | null =
   noindex || isHome
@@ -238,8 +248,8 @@ const jsonLd: Record<string, unknown> | null = noindex
       initErrorBoundary();
     </script>
     <div class="flex min-h-screen flex-col md:flex-row">
-      <header class="flex items-center justify-between border-b border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900 md:hidden">
-        <a href={lang === 'en' ? '/en/' : '/'} class="block">
+      <header class="flex items-center justify-between print:hidden border-b border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900 md:hidden">
+        <a href={localePath(lang, '/')} class="block">
           <img src="/logo.png" alt={siteName} class="h-8 w-auto" />
         </a>
         <div class="flex items-center gap-1">
@@ -315,14 +325,14 @@ const jsonLd: Record<string, unknown> | null = noindex
 
       <div
         id="sidebar-overlay"
-        class="fixed inset-0 z-30 hidden bg-black/40 md:hidden"
+        class="fixed inset-0 z-30 hidden bg-black/40 md:hidden print:hidden"
       ></div>
 
       <aside
         id="sidebar"
-        class="fixed inset-y-0 left-0 z-40 w-72 max-w-[80%] -translate-x-full overflow-y-auto border-r border-gray-200 bg-white p-4 transition-transform duration-200 ease-in-out dark:border-gray-800 dark:bg-gray-900 md:sticky md:top-0 md:z-auto md:h-screen md:w-64 md:translate-x-0 md:self-start md:border-r"
+        class="print:hidden fixed inset-y-0 left-0 z-40 w-72 max-w-[80%] -translate-x-full overflow-y-auto border-r border-gray-200 bg-white p-4 transition-transform duration-200 ease-in-out dark:border-gray-800 dark:bg-gray-900 md:sticky md:top-0 md:z-auto md:h-screen md:w-64 md:translate-x-0 md:self-start md:border-r"
       >
-        <a href={lang === 'en' ? '/en/' : '/'} class="mb-4 hidden md:block">
+        <a href={localePath(lang, '/')} class="mb-4 hidden md:block">
           <img
             src="/logo.png"
             alt={siteName}
@@ -439,10 +449,7 @@ const jsonLd: Record<string, unknown> | null = noindex
           </details>
           {toolsByCategory.map((category) => {
             const hasActiveTool = category.tools.some((tool) => {
-              const href =
-                lang === 'en'
-                  ? `/en/tools/${tool.slug}/`
-                  : `/tools/${tool.slug}/`;
+              const href = localePath(lang, `/tools/${tool.slug}/`);
               return pathname === href;
             });
             return (
@@ -471,10 +478,7 @@ const jsonLd: Record<string, unknown> | null = noindex
                 </summary>
                 <ul class="space-y-1 pb-1">
                   {category.tools.map((tool) => {
-                    const href =
-                      lang === 'en'
-                        ? `/en/tools/${tool.slug}/`
-                        : `/tools/${tool.slug}/`;
+                    const href = localePath(lang, `/tools/${tool.slug}/`);
                     return (
                       <li class="flex items-center gap-0.5">
                         <a
@@ -518,17 +522,18 @@ const jsonLd: Record<string, unknown> | null = noindex
           display: none;
         }
       </style>
-      <main class="flex min-w-0 flex-1 flex-col p-4 sm:p-6 md:p-10">
+      <main class="flex min-w-0 flex-1 flex-col p-4 sm:p-6 md:p-10 print:p-0">
         <div
           class:list={['relative flex-1', toolMatch && '[&>h1]:pr-12']}
           data-tool-page={currentTool?.slug}
           data-tool-sensitive={currentTool?.sensitive ? '' : undefined}
+          data-input-labels={currentTool ? inputLabels : undefined}
         >
           {toolMatch && (
             <FavoriteToggle
               slug={toolMatch[1]}
               locale={lang}
-              class="absolute -top-1.5 right-0 flex h-11 w-11 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-yellow-500 focus-visible:outline-2 focus-visible:outline-blue-600 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-yellow-400"
+              class="absolute -top-1.5 right-0 print:hidden flex h-11 w-11 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 hover:text-yellow-500 focus-visible:outline-2 focus-visible:outline-blue-600 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-yellow-400"
             />
           )}
           <slot />
@@ -539,41 +544,39 @@ const jsonLd: Record<string, unknown> | null = noindex
             <ShareButtons url={canonicalURL} title={fullTitle} lang={lang} />
           )}
         </div>
-        <footer class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-200 pt-4 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">
+        <footer class="mt-4 print:hidden flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-gray-200 pt-4 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">
           <a
-            href={lang === 'en' ? '/en/privacy-policy/' : '/privacy-policy/'}
+            href={localePath(lang, '/privacy-policy/')}
             class="hover:text-blue-700 hover:underline dark:hover:text-blue-400"
           >
             {t('footer.privacy')}
           </a>
           <a
-            href={
-              lang === 'en' ? '/en/terms-of-service/' : '/terms-of-service/'
-            }
+            href={localePath(lang, '/terms-of-service/')}
             class="hover:text-blue-700 hover:underline dark:hover:text-blue-400"
           >
             {t('footer.terms')}
           </a>
           <a
-            href={lang === 'en' ? '/en/contact/' : '/contact/'}
+            href={localePath(lang, '/contact/')}
             class="hover:text-blue-700 hover:underline dark:hover:text-blue-400"
           >
             {t('footer.contact')}
           </a>
           <a
-            href={lang === 'en' ? '/en/about/' : '/about/'}
+            href={localePath(lang, '/about/')}
             class="hover:text-blue-700 hover:underline dark:hover:text-blue-400"
           >
             {t('footer.about')}
           </a>
           <a
-            href={lang === 'en' ? '/en/updates/' : '/updates/'}
+            href={localePath(lang, '/updates/')}
             class="hover:text-blue-700 hover:underline dark:hover:text-blue-400"
           >
             {t('footer.updates')}
           </a>
           <a
-            href={lang === 'en' ? '/en/faq/' : '/faq/'}
+            href={localePath(lang, '/faq/')}
             class="hover:text-blue-700 hover:underline dark:hover:text-blue-400"
           >
             {t('footer.faq')}
@@ -593,7 +596,7 @@ const jsonLd: Record<string, unknown> | null = noindex
     <dialog
       id="command-palette"
       aria-label={t('palette.open')}
-      class="m-auto mt-[12vh] w-[min(36rem,calc(100%-2rem))] rounded-lg border border-gray-200 bg-white p-0 text-gray-900 shadow-xl backdrop:bg-black/40 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      class="print:hidden m-auto mt-[12vh] w-[min(36rem,calc(100%-2rem))] rounded-lg border border-gray-200 bg-white p-0 text-gray-900 shadow-xl backdrop:bg-black/40 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
     >
       <input
         id="palette-input"
@@ -641,7 +644,7 @@ const jsonLd: Record<string, unknown> | null = noindex
       id="error-toast"
       role="alert"
       hidden
-      class="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-md items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-lg dark:border-red-900 dark:bg-red-950 dark:text-red-200"
+      class="print:hidden fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-md items-start gap-3 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 shadow-lg dark:border-red-900 dark:bg-red-950 dark:text-red-200"
     >
       <p class="flex-1">{t('error.toast')}</p>
       <button
@@ -664,6 +667,9 @@ const jsonLd: Record<string, unknown> | null = noindex
       import { initCommandPalette } from '../lib/command-palette';
       import { initShortcuts } from '../lib/shortcuts';
       import { initQueryInit } from '../lib/query-init';
+      import { initInputPersist } from '../lib/input-persist';
+      import { initInputHelpers } from '../lib/input-helpers';
+      import { initPrint } from '../lib/print';
 
       initSidebar();
       initTheme();
@@ -672,7 +678,21 @@ const jsonLd: Record<string, unknown> | null = noindex
       initSidebarScroll();
       initCommandPalette();
       initShortcuts();
-      initQueryInit();
+      initPrint();
+
+      // 入力値の復元・URLクエリの初期値・入力補助UIは、各ツールのスクリプトが
+      // リスナーを付けて初期化を終えた後（DOMContentLoaded）に行い、`input` イベントで
+      // ツールの処理に反映させる。順序: 復元 → URLクエリ（優先） → 補助UI（文字数は最終値で数える）
+      function initToolInputs() {
+        initInputPersist();
+        initQueryInit();
+        initInputHelpers();
+      }
+      if (document.readyState === 'complete') {
+        initToolInputs();
+      } else {
+        document.addEventListener('DOMContentLoaded', initToolInputs);
+      }
     </script>
   </body>
 </html>

@@ -100,6 +100,7 @@ const t = yamlJsonConverterContent[locale];
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { copyText } from '../../lib/clipboard';
   import {
     yamlToJson,
@@ -164,7 +165,7 @@ const t = yamlJsonConverterContent[locale];
     }
   }
 
-  input.addEventListener('input', convert);
+  onTextInput(input, convert);
   indentSelect.addEventListener('change', convert);
 
   modeButtons.forEach((button) => {

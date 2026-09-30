@@ -15,6 +15,7 @@ const t = charCounterContent[locale];
   <textarea
     id="char-counter-input"
     data-query-target="text"
+    data-no-count
     class="h-64 w-full max-w-2xl rounded-lg border border-gray-300 p-4 focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
     placeholder={t.inputPlaceholder}
   ></textarea>
@@ -72,6 +73,7 @@ const t = charCounterContent[locale];
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { countText } from '../../lib/tools/char-counter';
 
   const input = document.getElementById(
@@ -92,6 +94,6 @@ const t = charCounterContent[locale];
     linesEl.textContent = String(result.lines);
   }
 
-  input.addEventListener('input', update);
+  onTextInput(input, update);
   update();
 </script>

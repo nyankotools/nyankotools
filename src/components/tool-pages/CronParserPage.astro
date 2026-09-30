@@ -192,6 +192,7 @@ const t = cronParserContent[locale];
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { copyText } from '../../lib/clipboard';
   import {
     FIELD_RANGES,
@@ -548,7 +549,7 @@ const t = cronParserContent[locale];
     }
   }
 
-  input.addEventListener('input', render);
+  onTextInput(input, render);
   baseDatetimeInput.addEventListener('input', render);
   countSelect.addEventListener('change', render);
 

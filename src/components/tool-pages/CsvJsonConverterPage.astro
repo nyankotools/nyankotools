@@ -104,6 +104,7 @@ const t = csvJsonConverterContent[locale];
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { copyText } from '../../lib/clipboard';
   import {
     csvToJson,
@@ -201,7 +202,7 @@ const t = csvJsonConverterContent[locale];
     }
   }
 
-  input.addEventListener('input', convert);
+  onTextInput(input, convert);
   delimiterSelect.addEventListener('change', convert);
 
   modeButtons.forEach((button) => {

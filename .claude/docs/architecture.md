@@ -41,6 +41,10 @@ src/
     shortcuts.ts        # Ctrl/Cmd+Enter (run), Alt+Shift+C (copy)
     command-palette.ts  # Ctrl/Cmd+K tool search dialog (rankTools + init)
     query-init.ts       # ?text= initial value for opted-in (data-query-target) non-sensitive tools
+    input-helpers.ts    # Paste / Clear / Sample / char count bar under data-query-target textareas (data-sample, data-no-count)
+    input-persist.ts    # sessionStorage save/restore of editable text/number inputs (skipped for sensitive tools, data-no-persist)
+    input-scheduler.ts  # onTextInput: immediate below 20k chars, debounced above (use instead of addEventListener('input') for text areas)
+    print.ts            # Light theme while printing (print CSS lives in global.css + print:hidden classes)
   pages/
     index.astro         # Homepage (tool grid)
     404.astro

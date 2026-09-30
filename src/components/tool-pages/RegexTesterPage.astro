@@ -158,6 +158,7 @@ const t = regexTesterContent[locale];
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { copyText } from '../../lib/clipboard';
   import { escapeHtml } from '../../lib/tools/html-escape';
   import {
@@ -305,9 +306,9 @@ const t = regexTesterContent[locale];
     }
   }
 
-  patternInput.addEventListener('input', render);
-  testInput.addEventListener('input', render);
-  replacementInput.addEventListener('input', render);
+  onTextInput(patternInput, render);
+  onTextInput(testInput, render);
+  onTextInput(replacementInput, render);
   for (const flag of [flagI, flagM, flagS, flagU]) {
     flag.addEventListener('change', render);
   }

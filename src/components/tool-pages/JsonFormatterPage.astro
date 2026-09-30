@@ -81,6 +81,7 @@ const t = jsonFormatterContent[locale];
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { copyText } from '../../lib/clipboard';
   import { formatJson, minifyJson } from '../../lib/tools/json-formatter';
 
@@ -160,7 +161,7 @@ const t = jsonFormatterContent[locale];
     }
   }
 
-  input.addEventListener('input', format);
+  onTextInput(input, format);
   indentSelect.addEventListener('change', format);
   minifyButton.addEventListener('click', minify);
 

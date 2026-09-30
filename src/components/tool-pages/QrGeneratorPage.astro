@@ -93,6 +93,7 @@ const t = qrGeneratorContent[locale];
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { downloadBlob } from '../../lib/download';
   import { generateQrMatrix } from '../../lib/tools/qr-generator';
   import type {
@@ -179,7 +180,7 @@ const t = qrGeneratorContent[locale];
     downloadButton.disabled = false;
   }
 
-  input.addEventListener('input', generate);
+  onTextInput(input, generate);
   levelSelect.addEventListener('change', generate);
   sizeSelect.addEventListener('change', generate);
 

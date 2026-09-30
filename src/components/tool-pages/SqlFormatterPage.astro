@@ -109,6 +109,7 @@ const t = sqlFormatterContent[locale];
 </ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { copyText } from '../../lib/clipboard';
   import {
     formatSqlQuery,
@@ -186,7 +187,7 @@ const t = sqlFormatterContent[locale];
     showOutput(minifySqlQuery(input.value, dialectSelect.value as SqlDialect));
   }
 
-  input.addEventListener('input', format);
+  onTextInput(input, format);
   dialectSelect.addEventListener('change', format);
   indentSelect.addEventListener('change', format);
   keywordCaseSelect.addEventListener('change', format);

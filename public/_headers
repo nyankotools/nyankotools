@@ -4,3 +4,7 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Content-Security-Policy: frame-ancestors 'none'
   Permissions-Policy: accelerometer=(), autoplay=(self), camera=(self), display-capture=(), encrypted-media=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(self), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()
+
+# ファイル名にコンテンツハッシュが付くビルド成果物は不変。1年キャッシュして再訪問を高速化する
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable

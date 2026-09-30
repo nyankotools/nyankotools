@@ -18,10 +18,11 @@ describe('calculateMortgagePrepayment', () => {
       result!.monthlyPaymentBefore,
       6,
     );
-    expect(result!.remainingMonthsAfter).toBe(277);
-    expect(result!.monthsShortened).toBe(23);
-    expect(result!.totalInterestAfter).toBeCloseTo(3_318_100.95, 1);
-    expect(result!.interestSaved).toBeCloseTo(600_419.93, 1);
+    // 端数の月は最終回として数え（切り上げ）、最終回の支払額は毎月の返済額より小さい
+    expect(result!.remainingMonthsAfter).toBe(278);
+    expect(result!.monthsShortened).toBe(22);
+    expect(result!.totalInterestAfter).toBeCloseTo(3_373_686.18, 1);
+    expect(result!.interestSaved).toBeCloseTo(544_834.71, 1);
     expect(result!.monthlyPaymentReduced).toBe(0);
   });
 

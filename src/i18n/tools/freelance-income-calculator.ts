@@ -84,8 +84,8 @@ export const freelanceIncomeCalculatorContent: Record<
     notesHeading: '注意事項',
     notes: [
       '本ツールは、給与所得など事業所得以外の収入がないフリーランス（個人事業主）を前提とした簡易シミュレーションです。複数の所得がある場合の正確な税額は税理士や税務署にご確認ください。',
-      '令和6年分の所得税・住民税の税率区分と基礎控除額（所得税48万円・住民税43万円）をもとに計算しています。税制改正により、翌年以降は数値が変更される場合があります。なお、令和6年分に実施された定額減税（本人分で所得税3万円・住民税1万円等）は考慮していないため、令和6年分の実際の税額は本ツールの計算結果より少なくなる場合があります。',
-      '住民税の調整控除は考慮しておらず、課税所得金額の1,000円未満切り捨てなどの端数処理も簡略化しているため、住民税は実際より高めに出る傾向があり、実際の税額と数千円程度以上ずれることがあります。',
+      '令和7・8年分の所得税の税率区分と基礎控除額（令和7年度税制改正後。合計所得金額に応じて58万円に最大37万円の特例加算、住民税は43万円）をもとに計算しています。特例加算のうち132万円超の区分は令和7・8年分の時限措置で、令和9年分以後は58万円になる予定です。税制改正により、翌年以降は数値が変更される場合があります。課税所得は1,000円未満を切り捨てています。',
+      '住民税の調整控除は考慮していないため、住民税は実際より高めに出る傾向があり、実際の税額と数千円程度以上ずれることがあります。',
       '個人事業税、消費税（インボイス制度を含む）、ふるさと納税、iDeCo・小規模企業共済等掛金控除は考慮していません。必要に応じて「その他の所得控除」欄にまとめて入力してください。',
       '社会保険料（国民年金・国民健康保険等）は世帯構成や自治体によって金額が大きく異なるため、年間の実際の支払額（見込み額）をご自身で入力してください。',
       '住民税の均等割は自治体により金額がやや異なりますが、本ツールでは目安として5,000円で計算しています。所得が一定の非課税限度額（自治体・扶養人数により異なり、単身者でおおむね38万〜45万円程度）を下回る場合は均等割・所得割ともに非課税となりますが、本ツールはこの非課税判定を考慮していないため、低所得の場合は実際より税額を高く見積もることがあります。',
@@ -105,7 +105,7 @@ export const freelanceIncomeCalculatorContent: Record<
       {
         term: '基礎控除',
         description:
-          'すべての納税者が対象となる所得控除で、合計所得金額2,400万円以下の場合、所得税は48万円、住民税は43万円が所得から控除されます（合計所得金額が大きいほど控除額は逓減・消失します）。',
+          'すべての納税者が対象となる所得控除です。所得税は令和7年分から58万円に引き上げられ、合計所得金額655万円以下なら特例加算で最大95万円（132万円以下）まで増えます。住民税は合計所得金額2,400万円以下で43万円です。どちらも合計所得金額が大きいと逓減・消失します。',
       },
       {
         term: '復興特別所得税',
@@ -158,8 +158,8 @@ export const freelanceIncomeCalculatorContent: Record<
     notesHeading: 'Notes',
     notes: [
       'This tool assumes a freelancer (sole proprietor) whose only income is business income, with no salary or other income sources. If you have multiple income sources, consult a tax accountant or your local tax office for an accurate figure.',
-      "Calculated using Japan's income tax brackets and basic deductions for the 2024 tax year (¥480,000 for income tax, ¥430,000 for resident tax). These figures can change in later tax years due to tax reform. Note that this tool does not account for the one-time 2024 fixed-amount tax reduction (定額減税: roughly ¥30,000 off income tax and ¥10,000 off resident tax per person), so actual 2024 tax amounts may be lower than this tool's result.",
-      'The resident tax adjustment credit is not taken into account, and rounding rules such as rounding taxable income down to the nearest ¥1,000 are simplified, so resident tax tends to come out higher than reality, and real amounts can differ from this tool by a few thousand yen or more.',
+      "Calculated using Japan's income tax brackets and basic deductions for tax years 2025-2026 (as amended by the FY2025 tax reform: ¥580,000 plus a special addition of up to ¥370,000 depending on total income; ¥430,000 for resident tax). The additions for total income above ¥1.32 million are temporary measures for 2025-2026 and are scheduled to end from tax year 2027. These figures can change in later tax years due to tax reform. Taxable income is rounded down to the nearest ¥1,000.",
+      'The resident tax adjustment credit is not taken into account, so resident tax tends to come out higher than reality, and real amounts can differ from this tool by a few thousand yen or more.',
       'The local business tax (個人事業税), consumption tax (including the invoice system), the furusato nozei hometown tax donation program, and the iDeCo/small enterprise mutual aid premium deduction are not included. Enter any of these under "other income deductions" if relevant.',
       'Social insurance payments (national pension, national health insurance, etc.) vary widely by household and municipality, so enter your own actual (or estimated) annual payment amount.',
       'The resident tax per-capita levy varies slightly by municipality; this tool uses a typical estimate of ¥5,000. If your income is below a municipality-specific tax-exempt threshold (roughly ¥380,000–¥450,000 for a single person, varying by municipality and dependents), both the per-capita and income-based levies are actually waived — this tool does not apply that exemption, so it may overestimate tax at low income levels.',
@@ -179,7 +179,7 @@ export const freelanceIncomeCalculatorContent: Record<
       {
         term: 'Basic deduction',
         description:
-          'A deduction available to every taxpayer. If total income is ¥24 million or less, ¥480,000 is deducted for income tax and ¥430,000 for resident tax (the deduction phases out and disappears at higher income levels).',
+          'A deduction available to every taxpayer. For income tax it is ¥580,000 from 2025, rising up to ¥950,000 (total income of ¥1.32 million or less) through special additions for total income up to ¥6.55 million. For resident tax it is ¥430,000 when total income is ¥24 million or less. Both phase out and disappear at higher income levels.',
       },
       {
         term: 'Reconstruction surtax',

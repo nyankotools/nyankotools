@@ -37,8 +37,8 @@ export interface TaxCalculationResult {
 
 /**
  * 税抜/税込金額の一方から、消費税額ともう一方の金額を計算する。
- * 税込金額から税抜金額を逆算する場合、端数処理は税抜金額に対して行い、
- * 消費税額は差分（税込金額－税抜金額）として求める。
+ * 税込金額から逆算する場合も、端数処理は消費税額に対して行い、
+ * 税抜金額は差分（税込金額－消費税額）として求める。
  * 金額または税率が負、あるいはNaNの場合はnull。
  */
 export function calculateTax(
@@ -48,13 +48,13 @@ export function calculateTax(
   if (!(amount >= 0) || !(taxRatePercent >= 0)) return null;
 
   if (priceIncludesTax) {
-    const taxExcludedAmount = roundBy(
-      amount / (1 + taxRatePercent / 100),
+    const taxAmount = roundBy(
+      (amount * taxRatePercent) / (100 + taxRatePercent),
       rounding,
     );
     return {
-      taxExcludedAmount,
-      taxAmount: amount - taxExcludedAmount,
+      taxExcludedAmount: amount - taxAmount,
+      taxAmount,
       taxIncludedAmount: amount,
     };
   }

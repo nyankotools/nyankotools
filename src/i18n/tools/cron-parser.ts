@@ -153,7 +153,7 @@ export const cronParserContent: Record<Locale, CronParserPageContent> = {
       {
         term: 'AND/OR判定（日・曜日フィールド）',
         description:
-          '「日」と「曜日」の両方に*以外の値を指定した場合、cronの仕様上はどちらか一方が一致すればマッチするOR判定になります（AND判定ではありません）。片方だけ指定した場合はその条件のみで判定します。',
+          '「日」と「曜日」の両方に*以外の値を指定した場合、cronの仕様上はどちらか一方が一致すればマッチするOR判定になります（AND判定ではありません）。ただし、どちらかが*で始まる場合（*/2 など）は、Vixie cron / cronie と同様にAND判定（両方一致）になります。片方だけ指定した場合はその条件のみで判定します。',
       },
     ],
   },
@@ -252,7 +252,7 @@ export const cronParserContent: Record<Locale, CronParserPageContent> = {
       {
         term: 'AND/OR logic for day-of-month and day-of-week',
         description:
-          "When both the day-of-month and day-of-week fields are restricted (not *), cron matches a date if EITHER field matches (an OR condition, not AND). If only one is restricted, only that field's condition applies.",
+          "When both the day-of-month and day-of-week fields are restricted (not *), cron matches a date if EITHER field matches (an OR condition, not AND). If either field starts with * (such as */2), Vixie cron / cronie uses AND instead (both must match). If only one is restricted, only that field's condition applies.",
       },
     ],
   },

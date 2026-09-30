@@ -104,21 +104,35 @@ export function calculateMortgagePrepayment(
 
   let monthlyPaymentAfter: number;
   let remainingMonthsAfter: number;
+  /** 返済総額（繰上返済後）のうち、繰上返済額を除いた毎月返済分の合計 */
+  let scheduledPaymentsAfter: number;
 
   if (prepaymentType === 'shortenTerm') {
     monthlyPaymentAfter = monthlyPaymentBefore;
     // newPrincipal > 0（prepaymentAmount < remainingBalanceで保証）なので、
     // 完済までの月数は必ず1以上になる
+    // 端数の月は最終回の支払いとして数えるため切り上げる（浮動小数点の誤差分だけ許容する）
     remainingMonthsAfter = Math.max(
       1,
-      Math.round(
+      Math.ceil(
         calculateMonthsToPayOff(
           newPrincipal,
           monthlyRate,
           monthlyPaymentBefore,
-        ),
+        ) - 1e-9,
       ),
     );
+    // 最終回は残高＋その月の利息だけを支払う（毎月の返済額より小さい）
+    const growth = Math.pow(1 + monthlyRate, remainingMonthsAfter - 1);
+    const balanceBeforeLast =
+      monthlyRate === 0
+        ? newPrincipal - monthlyPaymentBefore * (remainingMonthsAfter - 1)
+        : newPrincipal * growth -
+          (monthlyPaymentBefore * (growth - 1)) / monthlyRate;
+    const lastPayment = Math.max(0, balanceBeforeLast * (1 + monthlyRate));
+    scheduledPaymentsAfter =
+      monthlyPaymentBefore * (remainingMonthsAfter - 1) +
+      Math.min(lastPayment, monthlyPaymentBefore);
   } else {
     remainingMonthsAfter = remainingMonths;
     monthlyPaymentAfter = calculateMonthlyPayment(
@@ -126,10 +140,10 @@ export function calculateMortgagePrepayment(
       monthlyRate,
       remainingMonths,
     );
+    scheduledPaymentsAfter = monthlyPaymentAfter * remainingMonthsAfter;
   }
 
-  const totalPaymentAfter =
-    prepaymentAmount + monthlyPaymentAfter * remainingMonthsAfter;
+  const totalPaymentAfter = prepaymentAmount + scheduledPaymentsAfter;
   const totalInterestAfter = totalPaymentAfter - remainingBalance;
   const interestSaved = totalInterestBefore - totalInterestAfter;
 

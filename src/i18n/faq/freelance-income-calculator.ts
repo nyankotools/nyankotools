@@ -5,7 +5,7 @@ export const faq: FaqContent = {
     {
       question: '手取りの計算にはどの年度の税制を使っていますか？',
       answer:
-        '令和6年分の所得税・住民税の税率区分と基礎控除額（所得税48万円、住民税43万円）を使っています。税制改正で数値が変わる場合があり、令和6年分の定額減税は考慮していません。',
+        '令和7・8年分の所得税の税率区分と基礎控除額（令和7年度税制改正後の58万円＋特例加算、住民税は43万円）を使っています。今後の税制改正で数値が変わる場合があります。',
     },
     {
       question: '個人事業税や消費税は含まれますか？',
@@ -22,7 +22,7 @@ export const faq: FaqContent = {
     {
       question: 'Which tax year does the calculation use?',
       answer:
-        'It uses the 2024 (Reiwa 6) Japanese income and resident tax brackets and basic deductions (¥480,000 for income tax, ¥430,000 for resident tax). Later tax reforms are not reflected, and the 2024 flat-rate tax reduction is not applied.',
+        'It uses the Japanese income tax brackets and basic deductions for tax years 2025-2026 (Reiwa 7-8), as amended by the FY2025 tax reform (¥580,000 plus special additions for lower incomes; ¥430,000 for resident tax). Future tax reforms are not reflected.',
     },
     {
       question: 'Are business tax and consumption tax included?',

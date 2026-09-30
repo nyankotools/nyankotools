@@ -428,7 +428,7 @@ const t = cronParserContent[locale];
       }
       if (cron.dayOfMonthRestricted && cron.dayOfWeekRestricted) {
         parts.push(
-          `on day ${describeField(dayOfMonth, 'day', ...FIELD_RANGES.dayOfMonth)} or ${describeWeekdays(dayOfWeek)}`,
+          `on day ${describeField(dayOfMonth, 'day', ...FIELD_RANGES.dayOfMonth)} ${cron.dayFieldsOr ? 'or' : 'and'} ${describeWeekdays(dayOfWeek)}`,
         );
       } else if (cron.dayOfMonthRestricted) {
         parts.push(
@@ -452,7 +452,7 @@ const t = cronParserContent[locale];
     }
 
     if (cron.dayOfMonthRestricted && cron.dayOfWeekRestricted) {
-      dayPart = `${describeField(dayOfMonth, 'day', ...FIELD_RANGES.dayOfMonth)}または${describeWeekdays(dayOfWeek)}の`;
+      dayPart = `${describeField(dayOfMonth, 'day', ...FIELD_RANGES.dayOfMonth)}${cron.dayFieldsOr ? 'または' : 'かつ'}${describeWeekdays(dayOfWeek)}の`;
     } else if (cron.dayOfMonthRestricted) {
       dayPart = `${describeField(dayOfMonth, 'day', ...FIELD_RANGES.dayOfMonth)}の`;
       if (!cron.monthRestricted) prefix = '毎月';

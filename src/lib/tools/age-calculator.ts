@@ -81,7 +81,8 @@ export function calculatePreciseAge(
   let cursor = afterYears;
   let months = 0;
   while (true) {
-    const next = addMonthsClamped(cursor, 1);
+    // 月末クランプ後の日付を起点に足すと日付がずれていくため、常に誕生日（起点）から数える
+    const next = addMonthsClamped(afterYears, months + 1);
     const diff = diffInDays(next, reference, false)!;
     if (diff < 0) break;
     cursor = next;

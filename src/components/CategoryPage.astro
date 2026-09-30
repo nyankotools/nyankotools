@@ -17,6 +17,7 @@ if (!current) throw new Error(`No tools in category: ${category}`);
 
 // 英語ラベルが動詞（Calculate / Generate）のカテゴリは、「〜 Tools」が不自然にならない名詞形にする
 const enLabel: Partial<Record<CategoryId, string>> = {
+  data: 'Data Format',
   calc: 'Calculator',
   generate: 'Generator',
 };

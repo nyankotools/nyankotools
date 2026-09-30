@@ -60,7 +60,7 @@ const categories = groupByCategory(tools);
     {t('home.noResults')}
   </p>
 
-  <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <ul id="tool-grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {tools.map((tool) => (
       <li data-tool-slug={tool.slug} class="relative">
         <a

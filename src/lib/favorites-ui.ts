@@ -36,10 +36,10 @@ function updateToggleButtons(slug: string, active: boolean): void {
 
 /** お気に入りに登録済みのツールを先頭（登録順）に、それ以外を元の順序のまま並べ替える */
 function reorderHomepageGrid(tools: LocalizedTool[]): void {
-  const items = document.querySelectorAll<HTMLElement>('[data-tool-slug]');
-  if (items.length === 0) return;
-  const container = items[0].parentElement;
+  const container = document.getElementById('tool-grid');
   if (!container) return;
+  const items = container.querySelectorAll<HTMLElement>('[data-tool-slug]');
+  if (items.length === 0) return;
 
   const elementBySlug = new Map<string, HTMLElement>();
   items.forEach((el) => {

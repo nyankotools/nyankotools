@@ -36,19 +36,19 @@ export function stripQueryParams(
  */
 export function initQueryInit(): void {
   const container = document.querySelector<HTMLElement>('[data-tool-page]');
-  if (!container) return;
-
-  const targets = Array.from(
-    container.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
-      '[data-query-target]',
-    ),
-  );
+  const targets = container
+    ? Array.from(
+        container.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+          '[data-query-target]',
+        ),
+      )
+    : [];
   const names = Array.from(
     new Set(['text', ...targets.map((t) => t.dataset.queryTarget || 'text')]),
   );
 
   try {
-    if (container.hasAttribute('data-tool-sensitive')) return;
+    if (!container || container.hasAttribute('data-tool-sensitive')) return;
     targets.forEach((target) => {
       const value = readQueryText(
         window.location.search,

@@ -212,12 +212,18 @@ const jsonLd: Record<string, unknown> | null = noindex
         ></script>
         <script is:inline define:vars={{ GA_MEASUREMENT_ID }}>
           window.dataLayer = window.dataLayer || [];
-          function gtag(...args) {
-            dataLayer.push(args);
-          }
+          // Astro は define:vars のスクリプトを関数で包むため、window に明示的に代入しないと
+          // ほかのスクリプト（analytics.ts の trackEvent）から gtag を呼べない。
+          // gtag.js は dataLayer に積まれた Arguments オブジェクトをコマンドとして処理するため、
+          // rest 引数（配列）ではなく arguments を push する。
+          window.gtag = function gtag() {
+            // eslint-disable-next-line prefer-rest-params
+            window.dataLayer.push(arguments);
+          };
           gtag('js', new Date());
           // ?text= には入力データが載りうるため計測から除く。
           // utm_* / gclid など流入元の計測に必要なパラメータは残す。
+          // ここに書く名前は、query-init.ts の除去対象（data-query-target の値）と揃えること。
           const gaUrl = new URL(location.href);
           gaUrl.searchParams.delete('text');
           gtag('config', GA_MEASUREMENT_ID, { page_location: gaUrl.href });
@@ -620,7 +626,11 @@ const jsonLd: Record<string, unknown> | null = noindex
           <span data-hint-run hidden>
             {t('palette.hint.run')}
           </span>
-          <span data-hint-copy hidden class="ml-3">
+          <span
+            data-hint-copy
+            hidden
+            class="[[data-hint-run]:not([hidden])+&]:ml-3"
+          >
             {t('palette.hint.copy')}
           </span>
         </span>

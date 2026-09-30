@@ -206,3 +206,33 @@ test.describe('ツールページのレイアウト', () => {
     );
   });
 });
+
+test.describe('GA4 グローバル gtag', () => {
+  test('window.gtag が定義され、dataLayer には Arguments が積まれる', async ({
+    page,
+  }) => {
+    await page.route('https://www.googletagmanager.com/**', (route) =>
+      route.abort(),
+    );
+    await page.goto('/tools/char-counter/?text=hi&utm_source=x');
+    const info = await page.evaluate(() => {
+      const w = window as unknown as {
+        gtag?: unknown;
+        dataLayer?: unknown[];
+      };
+      return {
+        type: typeof w.gtag,
+        kinds: (w.dataLayer ?? []).map((e) =>
+          Object.prototype.toString.call(e),
+        ),
+        config: JSON.stringify(
+          Array.from((w.dataLayer?.[1] ?? []) as ArrayLike<unknown>),
+        ),
+      };
+    });
+    expect(info.type).toBe('function');
+    expect(info.kinds.every((k) => k === '[object Arguments]')).toBe(true);
+    expect(info.config).toContain('utm_source=x');
+    expect(info.config).not.toContain('text=hi');
+  });
+});

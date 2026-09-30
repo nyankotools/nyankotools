@@ -64,7 +64,7 @@ export const imagePixelartConverterContent: Record<
       '画像をドット絵（ピクセルアート）風に変換できる無料ツールです。ブロックサイズでモザイク・ドット感の強さを、色数で減色（ポスタリゼーション）の度合いを調整し、WebP・JPEG・PNGで書き出せます。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: '画像ドット絵化・モザイク・減色ツール',
     introHtml:
-      '画像を選択し、「ブロックサイズ」でモザイク・ドット絵の粗さを、「色数（階調）」で減色の度合いを調整して、レトロなピクセルアート風の画像に変換できます。SNSアイコンやアイキャッチ画像の加工、顔やナンバープレートなどを隠すモザイク処理にも使えます。画像そのもののサイズを変更したい場合は<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ・圧縮</a>もご利用ください。',
+      '画像を選択し、「ブロックサイズ」でモザイク・ドット絵の粗さを、「色数」で減色の度合いを調整して、レトロなピクセルアート風の画像に変換できます。SNSアイコンやアイキャッチ画像の加工、顔やナンバープレートなどを隠すモザイク処理にも使えます。画像そのもののサイズを変更したい場合は<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ・圧縮</a>もご利用ください。',
     dropLabel: '画像ファイルを選択',
     dropHint: 'ここに画像ファイルをドラッグ＆ドロップすることもできます',
     sourceInfoTemplate: '元画像: {width}×{height}px（{size}）',
@@ -136,7 +136,7 @@ export const imagePixelartConverterContent: Record<
       'Free tool that turns a photo into retro pixel art. Adjust the block size to control the pixelate/mosaic strength and the color count to control posterization, then export as WebP, JPEG, or PNG. Your image is processed in the browser and never sent to a server.',
     h1: 'Image Pixelate, Mosaic & Color Reduction Tool',
     introHtml:
-      'Select an image, then adjust the "block size" to control how chunky the pixelate/mosaic effect is and the "color count" to control how much the palette is reduced, turning your photo into retro pixel art. Useful for stylizing social media icons and thumbnails, or for mosaic-blurring faces and license plates. If you just need to change the image dimensions, try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer & Compressor</a> instead.',
+      'Select an image, then adjust the "Block size" to control how chunky the pixelate/mosaic effect is and the "Color levels" to control how much the palette is reduced, turning your photo into retro pixel art. Useful for stylizing social media icons and thumbnails, or for mosaic-blurring faces and license plates. If you just need to change the image dimensions, try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer & Compressor</a> instead.',
     dropLabel: 'Choose an image file',
     dropHint: 'You can also drag and drop an image file here',
     sourceInfoTemplate: 'Original: {width}×{height}px ({size})',

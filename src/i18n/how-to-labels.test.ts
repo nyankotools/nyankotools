@@ -32,10 +32,14 @@ function collectStrings(node: unknown, out: string[]) {
   }
 }
 
+// UIラベルではなく、外部サービスの機能名などを引用している箇所
+const NON_UI_QUOTES = new Set(['Add to Home Screen']);
+
 const cases: {
   file: string;
   locale: 'ja' | 'en';
   steps: string[];
+  prose: string[];
   strings: string[];
 }[] = [];
 for (const [file, mod] of Object.entries(modules)) {
@@ -46,7 +50,19 @@ for (const [file, mod] of Object.entries(modules)) {
       if (!dict || !Array.isArray(dict.howToSteps)) continue;
       const strings: string[] = [];
       collectStrings(dict, strings);
-      cases.push({ file, locale, steps: dict.howToSteps as string[], strings });
+      const prose = [
+        ...(typeof dict.introHtml === 'string'
+          ? [dict.introHtml.replace(/<[^>]*>/g, '')]
+          : []),
+        ...(Array.isArray(dict.notes) ? (dict.notes as string[]) : []),
+      ];
+      cases.push({
+        file,
+        locale,
+        steps: dict.howToSteps as string[],
+        prose,
+        strings,
+      });
     }
   }
 }
@@ -56,16 +72,30 @@ describe('使い方の手順文が引用するラベル', () => {
     expect(cases.length).toBe(24);
   });
 
-  for (const { file, locale, steps, strings } of cases) {
-    it(`${file} [${locale}]: 引用ラベルが同じ辞書のUI文言に存在する`, () => {
-      const re = locale === 'ja' ? /「([^」]+)」/g : /"([^"]+)"/g;
-      const missing: string[] = [];
-      for (const step of steps) {
-        for (const m of step.matchAll(re)) {
-          if (!strings.some((s) => s.includes(m[1]))) missing.push(m[1]);
-        }
+  const findMissing = (
+    texts: string[],
+    locale: 'ja' | 'en',
+    strings: string[],
+  ) => {
+    const re = locale === 'ja' ? /「([^」]+)」/g : /"([^"]+)"/g;
+    const missing: string[] = [];
+    for (const text of texts) {
+      for (const m of text.matchAll(re)) {
+        if (NON_UI_QUOTES.has(m[1])) continue;
+        if (!strings.some((s) => s.includes(m[1]))) missing.push(m[1]);
       }
-      expect(missing).toEqual([]);
+    }
+    return missing;
+  };
+
+  for (const { file, locale, steps, prose, strings } of cases) {
+    it(`${file} [${locale}]: 手順文の引用ラベルが同じ辞書のUI文言に存在する`, () => {
+      expect(findMissing(steps, locale, strings)).toEqual([]);
+    });
+
+    // 導線文・注意事項も同じラベルを引用するため、表記のずれを検出する
+    it(`${file} [${locale}]: 導線文・注意事項の引用ラベルが同じ辞書のUI文言に存在する`, () => {
+      expect(findMissing(prose, locale, strings)).toEqual([]);
     });
   }
 });

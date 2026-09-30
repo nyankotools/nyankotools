@@ -29,3 +29,89 @@
   animation: none;
   opacity: 1;
 }
+
+/*
+ * UIプリミティブ（ツールページ共通のボタン・入力欄・ラベルなど）。
+ * デザイン変更（角丸・フォーカスリング・タップ領域）はここで1回行う。
+ * 寸法（h-11 w-24 など）や、背景色（bg-gray-50 / dark:bg-gray-900）は
+ * 要素ごとに異なるため各要素のユーティリティクラスで指定する。
+ * （背景色を含めないのは、components レイヤーの dark: 指定が utilities の
+ * bg-* に負けるのを避けるため）
+ */
+@layer components {
+  .ui-label {
+    @apply mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300;
+  }
+
+  .ui-btn {
+    @apply min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800;
+  }
+
+  .ui-btn-primary {
+    @apply min-h-11 rounded-lg bg-blue-600 px-6 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50;
+  }
+
+  .ui-input {
+    @apply rounded-lg border border-gray-300 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:text-gray-100;
+  }
+
+  .ui-error {
+    @apply rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400;
+  }
+
+  .ui-seg {
+    @apply flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700;
+  }
+
+  .ui-seg-btn {
+    @apply min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300;
+  }
+
+  .ui-dropzone {
+    @apply rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700;
+  }
+
+  .ui-file {
+    @apply block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300;
+  }
+
+  .ui-check {
+    @apply flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300;
+  }
+}
+
+/*
+ * 印刷用スタイル。サイドバー・ヘッダー・フッター・シェア欄などは各要素の `print:hidden` で消し、
+ * ここでは本文の見た目（白背景・黒文字・改ページ）を整える。
+ * ダークテーマの印刷は、印刷中だけ `dark` クラスを外す（src/lib/print.ts）。
+ */
+@media print {
+  /* ラジオ・チェックボックスなどの標準部品も、OSがダークテーマでも印刷ではライトの配色にする */
+  :root {
+    color-scheme: light;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  /* 結果の表・カード・コードブロックがページ途中で分断されにくくする */
+  table,
+  pre,
+  dl,
+  li {
+    break-inside: avoid;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+
+  /* 入力欄は枠だけを残し、スクロールバーや伸縮ハンドルは出さない */
+  textarea {
+    resize: none;
+  }
+}

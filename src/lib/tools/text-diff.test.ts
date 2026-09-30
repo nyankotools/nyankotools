@@ -120,3 +120,57 @@ describe('getDiffStats', () => {
     expect(getDiffStats(lines)).toEqual({ added: 2, removed: 1, equal: 2 });
   });
 });
+
+describe('diffLines（先頭・末尾の切り落とし）', () => {
+  it('中央だけ変わったとき、切り落とした前後も元の行番号で返す', () => {
+    const result = diffLines('a\nb\nX\nd\ne', 'a\nb\nY\nZ\nd\ne');
+    expect(result).toEqual([
+      { type: 'equal', text: 'a', leftLine: 1, rightLine: 1 },
+      { type: 'equal', text: 'b', leftLine: 2, rightLine: 2 },
+      { type: 'removed', text: 'X', leftLine: 3, rightLine: null },
+      { type: 'added', text: 'Y', leftLine: null, rightLine: 3 },
+      { type: 'added', text: 'Z', leftLine: null, rightLine: 4 },
+      { type: 'equal', text: 'd', leftLine: 4, rightLine: 5 },
+      { type: 'equal', text: 'e', leftLine: 5, rightLine: 6 },
+    ]);
+  });
+
+  it('ほぼ同じ数万行の比較でもLCS表が巨大にならず完了する', () => {
+    const lines = Array.from({ length: 50_000 }, (_, i) => `line ${i}`);
+    const changed = [...lines];
+    changed[25_000] = 'changed';
+    const stats = getDiffStats(diffLines(lines.join('\n'), changed.join('\n')));
+    expect(stats).toEqual({ added: 1, removed: 1, equal: 49_999 });
+  });
+});
+
+describe('diffLines（巨大な変更）', () => {
+  it('変更部分が十数万行でも例外にならない', () => {
+    const lines = Array.from({ length: 200_000 }, (_, i) => `line ${i}`);
+    const result = diffLines(lines.join('\n'), '');
+    expect(getDiffStats(result)).toEqual({
+      added: 1,
+      removed: 200_000,
+      equal: 0,
+    });
+  });
+});
+
+describe('diffLines（LCS表が大きすぎる場合）', () => {
+  it('数万行同士で全行が違っても例外にならず、全行削除＋全行追加になる', () => {
+    const make = (p: string) =>
+      Array.from({ length: 40_000 }, (_, i) => `${p}${i}`).join('\n');
+    const result = diffLines(make('L'), make('R'));
+    expect(getDiffStats(result)).toEqual({
+      added: 40_000,
+      removed: 40_000,
+      equal: 0,
+    });
+    expect(result[0]).toEqual({
+      type: 'removed',
+      text: 'L0',
+      leftLine: 1,
+      rightLine: null,
+    });
+  });
+});

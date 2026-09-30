@@ -1,170 +1,178 @@
 import { describe, it, expect } from 'vitest';
-import { tools } from './tools';
+import { categories, categoryIds, getLocalizedTools, tools } from './tools';
+import { updates } from './updates';
 
-describe('tools registry - category consistency', () => {
-  // Define the expected 10 categories for ja and en
-  const VALID_JA_CATEGORIES = [
-    'テキスト',
-    'データ変換',
-    'エンコード/デコード',
-    '日付・時間',
-    '画像・デザイン',
-    'PDF',
-    '計算',
-    '開発',
-    '生成',
-    'カメラ',
-  ];
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
-  const VALID_EN_CATEGORIES = [
-    'Text',
-    'Data Formats',
-    'Encode/Decode',
-    'Date & Time',
-    'Image & Design',
-    'PDF',
-    'Calculate',
-    'Development',
-    'Generate',
-    'Camera',
-  ];
-
-  it('all tools should have valid ja category from the 10 categories', () => {
-    const invalidTools: string[] = [];
-    for (const tool of tools) {
-      const jaCategory = tool.translations.ja.category;
-      if (!VALID_JA_CATEGORIES.includes(jaCategory)) {
-        invalidTools.push(
-          `Tool "${tool.slug}" has invalid ja category: "${jaCategory}"`,
-        );
-      }
-    }
-    expect(invalidTools).toHaveLength(0);
-  });
-
-  it('all tools should have valid en category from the 10 categories', () => {
-    const invalidTools: string[] = [];
-    for (const tool of tools) {
-      const enCategory = tool.translations.en.category;
-      if (!VALID_EN_CATEGORIES.includes(enCategory)) {
-        invalidTools.push(
-          `Tool "${tool.slug}" has invalid en category: "${enCategory}"`,
-        );
-      }
-    }
-    expect(invalidTools).toHaveLength(0);
-  });
-
-  it('ja and en categories should be consistently paired (no orphaned categories)', () => {
-    const categoryMapping: Record<string, Set<string>> = {};
-
-    for (const tool of tools) {
-      const jaCategory = tool.translations.ja.category;
-      const enCategory = tool.translations.en.category;
-
-      if (!categoryMapping[jaCategory]) {
-        categoryMapping[jaCategory] = new Set();
-      }
-      categoryMapping[jaCategory].add(enCategory);
-    }
-
-    // Each ja category should map to exactly one en category
-    const inconsistentMappings: string[] = [];
-    for (const [jaCategory, enCategories] of Object.entries(categoryMapping)) {
-      if (enCategories.size > 1) {
-        inconsistentMappings.push(
-          `JA category "${jaCategory}" maps to multiple EN categories: ${Array.from(enCategories).join(', ')}`,
-        );
-      }
-    }
-    expect(inconsistentMappings).toHaveLength(0);
-  });
-
-  it('should not contain old categories (変換, Convert)', () => {
-    const oldJACategories = ['変換'];
-    const oldENCategories = ['Convert'];
-    const toolsWithOldCategories: string[] = [];
-
-    for (const tool of tools) {
-      if (oldJACategories.includes(tool.translations.ja.category)) {
-        toolsWithOldCategories.push(
-          `Tool "${tool.slug}" still uses old JA category: "${tool.translations.ja.category}"`,
-        );
-      }
-      if (oldENCategories.includes(tool.translations.en.category)) {
-        toolsWithOldCategories.push(
-          `Tool "${tool.slug}" still uses old EN category: "${tool.translations.en.category}"`,
-        );
-      }
-    }
-    expect(toolsWithOldCategories).toHaveLength(0);
-  });
-
-  it('every tool should belong to exactly one category', () => {
-    const emptyOrInvalidCategories: string[] = [];
-    for (const tool of tools) {
-      const jaCategory = tool.translations.ja.category;
-      const enCategory = tool.translations.en.category;
-
-      if (!jaCategory) {
-        emptyOrInvalidCategories.push(
-          `Tool "${tool.slug}" has empty ja category`,
-        );
-      }
-      if (!enCategory) {
-        emptyOrInvalidCategories.push(
-          `Tool "${tool.slug}" has empty en category`,
-        );
-      }
-      if (typeof jaCategory !== 'string') {
-        emptyOrInvalidCategories.push(
-          `Tool "${tool.slug}" has non-string ja category`,
-        );
-      }
-      if (typeof enCategory !== 'string') {
-        emptyOrInvalidCategories.push(
-          `Tool "${tool.slug}" has non-string en category`,
-        );
-      }
-    }
-    expect(emptyOrInvalidCategories).toHaveLength(0);
-  });
-
+describe('tools registry', () => {
   it('all tools count should be 69', () => {
-    // Verify total tool count
     expect(tools.length).toBe(69);
   });
 
-  it('category mapping should be consistent (ja -> en)', () => {
-    const expectedMapping: Record<string, string> = {
-      テキスト: 'Text',
-      データ変換: 'Data Formats',
-      'エンコード/デコード': 'Encode/Decode',
-      '日付・時間': 'Date & Time',
-      '画像・デザイン': 'Image & Design',
-      PDF: 'PDF',
-      計算: 'Calculate',
-      開発: 'Development',
-      生成: 'Generate',
-      カメラ: 'Camera',
-    };
+  it('slug が重複していない', () => {
+    const slugs = tools.map((t) => t.slug);
+    expect(slugs.filter((s, i) => slugs.indexOf(s) !== i)).toEqual([]);
+  });
+});
 
-    const inconsistentMappings: string[] = [];
-    for (const tool of tools) {
-      const jaCategory = tool.translations.ja.category;
-      const enCategory = tool.translations.en.category;
-      const expectedEnCategory = expectedMapping[jaCategory];
+describe('tools registry - category', () => {
+  it('categories は categoryIds と同じ10個のIDを持つ', () => {
+    expect(Object.keys(categories).sort()).toEqual([...categoryIds].sort());
+    expect(categoryIds).toHaveLength(10);
+  });
 
-      if (!expectedEnCategory) {
-        inconsistentMappings.push(
-          `No mapping defined for JA category "${jaCategory}"`,
-        );
-      } else if (enCategory !== expectedEnCategory) {
-        inconsistentMappings.push(
-          `Tool "${tool.slug}": JA category "${jaCategory}" should map to EN "${expectedEnCategory}", but got "${enCategory}"`,
-        );
+  it('各カテゴリに ja/en の表示名があり、ロケール内で重複しない', () => {
+    for (const locale of ['ja', 'en'] as const) {
+      const labels = categoryIds.map((id) => categories[id][locale]);
+      for (const label of labels) expect(label.trim()).not.toBe('');
+      expect(new Set(labels).size).toBe(labels.length);
+    }
+  });
+
+  it('全ツールが定義済みのカテゴリIDに属する', () => {
+    const invalid = tools
+      .filter((t) => !(categoryIds as readonly string[]).includes(t.category))
+      .map((t) => `${t.slug}: ${t.category}`);
+    expect(invalid).toEqual([]);
+  });
+
+  it('どのカテゴリにも1つ以上のツールがある', () => {
+    for (const id of categoryIds) {
+      expect(tools.some((t) => t.category === id)).toBe(true);
+    }
+  });
+
+  it('getLocalizedTools がカテゴリIDと表示名をロケールごとに解決する', () => {
+    const ja = getLocalizedTools('ja').find((t) => t.slug === 'char-counter');
+    const en = getLocalizedTools('en').find((t) => t.slug === 'char-counter');
+    expect(ja).toMatchObject({ categoryId: 'text', category: 'テキスト' });
+    expect(en).toMatchObject({ categoryId: 'text', category: 'Text' });
+  });
+});
+
+describe('tools registry - dates', () => {
+  it('addedAt / updatedAt は実在する YYYY-MM-DD 形式である', () => {
+    for (const t of tools) {
+      for (const value of [t.addedAt, t.updatedAt]) {
+        expect(value, t.slug).toMatch(DATE_PATTERN);
+        const d = new Date(`${value}T00:00:00Z`);
+        expect(d.toISOString().slice(0, 10), t.slug).toBe(value);
       }
     }
-    expect(inconsistentMappings).toHaveLength(0);
+  });
+
+  it('updatedAt は addedAt 以降である', () => {
+    const invalid = tools
+      .filter((t) => t.updatedAt < t.addedAt)
+      .map((t) => t.slug);
+    expect(invalid).toEqual([]);
+  });
+
+  it('addedAt は updates.ts で最初にそのツールを紹介した日付と一致する', () => {
+    const firstSeen = new Map<string, string>();
+    for (const u of [...updates].sort((a, b) => (a.date < b.date ? -1 : 1))) {
+      for (const slug of u.toolSlugs ?? []) {
+        if (!firstSeen.has(slug)) firstSeen.set(slug, u.date);
+      }
+    }
+    const mismatched = tools
+      .filter((t) => firstSeen.get(t.slug) !== t.addedAt)
+      .map(
+        (t) => `${t.slug}: ${t.addedAt} (updates: ${firstSeen.get(t.slug)})`,
+      );
+    expect(mismatched).toEqual([]);
+  });
+});
+
+describe('tools registry - related', () => {
+  const slugs = new Set(tools.map((t) => t.slug));
+
+  it('全ツールに関連ツールが1〜3件ある', () => {
+    const invalid = tools
+      .filter((t) => t.related.length < 1 || t.related.length > 3)
+      .map((t) => `${t.slug}: ${t.related.length}`);
+    expect(invalid).toEqual([]);
+  });
+
+  it('関連ツールは実在し、自己参照・重複がない', () => {
+    const problems: string[] = [];
+    for (const t of tools) {
+      for (const [i, r] of t.related.entries()) {
+        if (!slugs.has(r)) problems.push(`${t.slug}: unknown "${r}"`);
+        if (r === t.slug) problems.push(`${t.slug}: self reference`);
+        if (t.related.indexOf(r) !== i)
+          problems.push(`${t.slug}: duplicate "${r}"`);
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+});
+
+describe('tools registry - keywords', () => {
+  it('全ツール・全ロケールにキーワードが2〜8件あり、空文字・重複がない', () => {
+    const problems: string[] = [];
+    for (const t of tools) {
+      for (const locale of ['ja', 'en'] as const) {
+        const list = t.translations[locale].keywords;
+        const lowered = list.map((k) =>
+          k.trim().normalize('NFKC').toLowerCase(),
+        );
+        const id = `${t.slug}/${locale}`;
+        if (list.length < 2 || list.length > 8)
+          problems.push(`${id}: ${list.length}件`);
+        if (lowered.some((k) => k === ''))
+          problems.push(`${id}: 空のキーワード`);
+        if (new Set(lowered).size !== lowered.length)
+          problems.push(`${id}: 重複`);
+      }
+    }
+    expect(problems).toEqual([]);
+  });
+});
+
+describe('tools registry - flags', () => {
+  it('needsCamera のツールは sensitive でもある（カメラ映像は機微情報）', () => {
+    const invalid = tools
+      .filter((t) => t.needsCamera && !t.sensitive)
+      .map((t) => t.slug);
+    expect(invalid).toEqual([]);
+  });
+
+  it('秘密情報・個人情報を扱うツールと、データ貼り付け系・画像系は sensitive である', () => {
+    for (const slug of [
+      'password-generator',
+      'jwt-decoder',
+      'hash-generator',
+      'base64',
+      'json-formatter',
+      'text-diff',
+      'csv-json-converter',
+      'yaml-json-converter',
+      'toml-converter',
+      'url-encode',
+      'json-path-tester',
+      'image-converter',
+      'image-resizer',
+      'image-to-base64',
+      'image-pixelart-converter',
+      'image-palette-extractor',
+      'exif-viewer',
+      'webcam-tester',
+      'age-calculator',
+      'bmi-calculator',
+      'hourly-wage-calculator',
+      'freelance-income-calculator',
+      'mortgage-calculator',
+      'investment-simulator',
+      'scholarship-repayment-simulator',
+      'pdf-merge-split',
+      'pdf-image-converter',
+      'pdf-compressor',
+      'pdf-page-editor',
+      'pdf-password-protector',
+      'pdf-to-markdown',
+    ]) {
+      expect(tools.find((t) => t.slug === slug)?.sensitive, slug).toBe(true);
+    }
   });
 });

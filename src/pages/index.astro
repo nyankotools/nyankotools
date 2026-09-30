@@ -1,13 +1,13 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import { getLocalizedTools } from '../data/tools';
-import { getCategories } from '../lib/home-filter';
+import { groupByCategory } from '../lib/home-filter';
 import { useTranslations } from '../i18n/ui';
 import FavoriteToggle from '../components/FavoriteToggle.astro';
 
 const t = useTranslations('ja');
 const tools = getLocalizedTools('ja');
-const categories = getCategories(tools);
+const categories = groupByCategory(tools);
 ---
 
 <Layout
@@ -46,11 +46,11 @@ const categories = getCategories(tools);
       {categories.map((category) => (
         <button
           type="button"
-          data-category-filter={category}
+          data-category-filter={category.id}
           aria-pressed="false"
           class="inline-flex min-h-11 items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700 aria-pressed:border-blue-600 aria-pressed:bg-blue-600 aria-pressed:text-white dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
         >
-          {category}
+          {category.label}
         </button>
       ))}
     </div>
@@ -60,7 +60,7 @@ const categories = getCategories(tools);
     {t('home.noResults')}
   </p>
 
-  <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <ul id="tool-grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {tools.map((tool) => (
       <li data-tool-slug={tool.slug} class="relative">
         <a
@@ -85,10 +85,27 @@ const categories = getCategories(tools);
       </li>
     ))}
   </ul>
+  <nav class="mt-10" aria-labelledby="home-categories-heading">
+    <h2 id="home-categories-heading" class="mb-3 text-lg font-semibold">
+      {t('category.viewAll')}
+    </h2>
+    <ul class="flex flex-wrap gap-2">
+      {categories.map((category) => (
+        <li>
+          <a
+            href={`/tools/category/${category.id}/`}
+            class="inline-flex min-h-11 items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
+          >
+            {category.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
 </Layout>
 
 <script>
-  import { getLocalizedTools } from '../data/tools';
+  import { getLocalizedTools, type CategoryId } from '../data/tools';
   import { filterTools } from '../lib/home-filter';
 
   const tools = getLocalizedTools(
@@ -104,7 +121,7 @@ const categories = getCategories(tools);
   const items = document.querySelectorAll<HTMLLIElement>('[data-tool-slug]');
   const noResults = document.getElementById('no-results');
 
-  let activeCategory = 'all';
+  let activeCategory: CategoryId | 'all' = 'all';
 
   function applyFilter() {
     const query = searchInput?.value ?? '';
@@ -131,7 +148,8 @@ const categories = getCategories(tools);
 
   categoryButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      activeCategory = button.dataset.categoryFilter ?? 'all';
+      activeCategory = (button.dataset.categoryFilter ?? 'all') as
+        CategoryId | 'all';
       categoryButtons.forEach((b) => {
         b.setAttribute('aria-pressed', String(b === button));
       });

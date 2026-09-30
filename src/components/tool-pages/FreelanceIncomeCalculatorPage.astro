@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { freelanceIncomeCalculatorContent } from '../../i18n/tools/freelance-income-calculator';
 import type { Locale } from '../../data/tools';
 
@@ -12,10 +11,7 @@ const { locale } = Astro.props;
 const t = freelanceIncomeCalculatorContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <section
     class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-number-locale={t.numberLocale}
@@ -25,10 +21,7 @@ const t = freelanceIncomeCalculatorContent[locale];
 
     <div class="mb-3 flex flex-wrap items-end gap-3">
       <div>
-        <label
-          for="freelance-calc-revenue"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="freelance-calc-revenue" class="ui-label">
           {t.revenueLabel}
         </label>
         <input
@@ -36,14 +29,11 @@ const t = freelanceIncomeCalculatorContent[locale];
           type="text"
           inputmode="decimal"
           placeholder={t.revenuePlaceholder}
-          class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-36 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <div>
-        <label
-          for="freelance-calc-expenses"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="freelance-calc-expenses" class="ui-label">
           {t.expensesLabel}
         </label>
         <input
@@ -51,16 +41,13 @@ const t = freelanceIncomeCalculatorContent[locale];
           type="text"
           inputmode="decimal"
           placeholder={t.expensesPlaceholder}
-          class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-36 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
     </div>
 
     <div class="mb-3">
-      <span
-        id="freelance-calc-blue-return-label"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <span id="freelance-calc-blue-return-label" class="ui-label">
         {t.blueReturnLegend}
       </span>
       <div
@@ -106,10 +93,7 @@ const t = freelanceIncomeCalculatorContent[locale];
 
     <div class="mb-3 flex flex-wrap items-end gap-3">
       <div>
-        <label
-          for="freelance-calc-social-insurance"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="freelance-calc-social-insurance" class="ui-label">
           {t.socialInsuranceLabel}
         </label>
         <input
@@ -117,14 +101,11 @@ const t = freelanceIncomeCalculatorContent[locale];
           type="text"
           inputmode="decimal"
           placeholder={t.socialInsurancePlaceholder}
-          class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-36 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <div>
-        <label
-          for="freelance-calc-other-deductions"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="freelance-calc-other-deductions" class="ui-label">
           {t.otherDeductionsLabel}
         </label>
         <input
@@ -132,7 +113,7 @@ const t = freelanceIncomeCalculatorContent[locale];
           type="text"
           inputmode="decimal"
           placeholder={t.otherDeductionsPlaceholder}
-          class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-36 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
     </div>
@@ -228,16 +209,7 @@ const t = freelanceIncomeCalculatorContent[locale];
       </div>
     </dl>
   </section>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
   import {

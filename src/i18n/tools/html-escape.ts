@@ -21,6 +21,7 @@ export interface HtmlEscapePageContent {
   copyFailed: string;
   inputLabel: string;
   inputPlaceholder: string;
+  sampleText: string;
   outputLabel: string;
   notesHeading: string;
   notes: string[];
@@ -46,6 +47,7 @@ export const htmlEscapeContent: Record<Locale, HtmlEscapePageContent> = {
     copyFailed: 'コピーに失敗しました',
     inputLabel: '入力',
     inputPlaceholder: '変換したいテキストを入力',
+    sampleText: '<a href="https://example.com/?a=1&b=2">Tom & Jerry</a>',
     outputLabel: '結果',
     notesHeading: '注意事項',
     notes: [
@@ -84,6 +86,7 @@ export const htmlEscapeContent: Record<Locale, HtmlEscapePageContent> = {
     copyFailed: 'Copy failed',
     inputLabel: 'Input',
     inputPlaceholder: 'Enter text to convert',
+    sampleText: '<a href="https://example.com/?a=1&b=2">Tom & Jerry</a>',
     outputLabel: 'Result',
     notesHeading: 'Notes',
     notes: [

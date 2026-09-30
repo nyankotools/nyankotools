@@ -1,7 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Notes from '../Notes.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { svgOptimizerContent } from '../../i18n/tools/svg-optimizer';
 import type { Locale } from '../../data/tools';
 
@@ -13,25 +11,16 @@ const { locale } = Astro.props;
 const t = svgOptimizerContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
-  <label
-    for="svgo-file"
-    class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-  >
+<ToolShell t={t}>
+  <label for="svgo-file" class="ui-label">
     {t.fileLabel}
   </label>
-  <div
-    id="svgo-drop"
-    class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
-  >
+  <div id="svgo-drop" class="ui-dropzone">
     <input
       id="svgo-file"
       type="file"
       accept=".svg,image/svg+xml"
-      class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+      class="ui-file"
     />
     <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
@@ -70,30 +59,24 @@ const t = svgOptimizerContent[locale];
 
   <div class="mt-4 grid gap-4 lg:grid-cols-2">
     <div>
-      <label
-        for="svgo-input"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="svgo-input" class="ui-label">
         {t.inputLabel}
       </label>
       <textarea
         id="svgo-input"
-        class="h-64 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm break-all focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        class="ui-input h-64 w-full p-4 font-mono break-all dark:bg-gray-900 dark:placeholder-gray-500"
         placeholder={t.inputPlaceholder}
         spellcheck="false"
       ></textarea>
     </div>
     <div>
-      <label
-        for="svgo-output"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="svgo-output" class="ui-label">
         {t.outputLabel}
       </label>
       <textarea
         id="svgo-output"
         readonly
-        class="h-64 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm break-all focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-64 w-full bg-gray-50 p-4 font-mono break-all dark:bg-gray-900"
       ></textarea>
     </div>
   </div>
@@ -105,7 +88,7 @@ const t = svgOptimizerContent[locale];
     data-invalid={t.errorInvalid}
     data-not-svg={t.errorNotSvg}
     data-read-failed={t.errorReadFailed}
-    class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+    class="ui-error mt-4 max-w-2xl"
   ></p>
 
   <div id="svgo-result" hidden class="mt-4" data-size-template={t.sizeTemplate}>
@@ -119,22 +102,18 @@ const t = svgOptimizerContent[locale];
         type="button"
         data-copied={t.copied}
         data-copy-failed={t.copyFailed}
-        class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        class="ui-btn"
       >
         {t.copy}
       </button>
       <a
         id="svgo-download"
         download="optimized.svg"
-        class="inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        class="ui-btn inline-flex items-center"
       >
         {t.download}
       </a>
-      <button
-        id="svgo-clear"
-        type="button"
-        class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-      >
+      <button id="svgo-clear" type="button" class="ui-btn">
         {t.clear}
       </button>
       <span
@@ -143,22 +122,17 @@ const t = svgOptimizerContent[locale];
         aria-live="polite"
       ></span>
     </div>
-    <span class="mt-4 mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-      {t.previewLabel}
-    </span>
+    <span class="ui-label mt-4">{t.previewLabel}</span>
     <img
       id="svgo-preview"
       alt=""
       class="max-h-64 max-w-full rounded border border-gray-300 bg-white object-contain p-2 dark:border-gray-700"
     />
   </div>
-
-  <Notes heading={t.notesHeading} items={t.notes} />
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { copyText } from '../../lib/clipboard';
   import { optimizeSvg } from '../../lib/tools/svg-optimizer';
   import { enableFileDrop } from '../../lib/file-drop';
 
@@ -285,12 +259,9 @@ const t = svgOptimizerContent[locale];
 
   copyButton.addEventListener('click', async () => {
     if (!output.value) return;
-    try {
-      await navigator.clipboard.writeText(output.value);
-      statusEl.textContent = copyButton.dataset.copied ?? '';
-    } catch {
-      statusEl.textContent = copyButton.dataset.copyFailed ?? '';
-    }
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
   });
 
   clearButton.addEventListener('click', () => {

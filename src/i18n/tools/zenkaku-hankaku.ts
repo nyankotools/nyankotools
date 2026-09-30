@@ -24,6 +24,7 @@ export interface ZenkakuHankakuPageContent {
   optSpace: string;
   inputLabel: string;
   inputPlaceholder: string;
+  sampleText: string;
   outputLabel: string;
   notesHeading: string;
   notes: string[];
@@ -53,6 +54,7 @@ export const zenkakuHankakuContent: Record<Locale, ZenkakuHankakuPageContent> =
       optSpace: 'スペース',
       inputLabel: '入力',
       inputPlaceholder: '変換したいテキストを入力',
+      sampleText: 'ＡＢＣ　１２３　ｶﾀｶﾅ abc 123',
       outputLabel: '結果',
       notesHeading: '注意事項',
       notes: [
@@ -94,6 +96,7 @@ export const zenkakuHankakuContent: Record<Locale, ZenkakuHankakuPageContent> =
       optSpace: 'Space',
       inputLabel: 'Input',
       inputPlaceholder: 'Enter text to convert',
+      sampleText: 'ＡＢＣ　１２３　ｶﾀｶﾅ abc 123',
       outputLabel: 'Result',
       notesHeading: 'Notes',
       notes: [

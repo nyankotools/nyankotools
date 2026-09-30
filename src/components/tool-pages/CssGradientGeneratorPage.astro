@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { cssGradientGeneratorContent } from '../../i18n/tools/css-gradient-generator';
 import type { Locale } from '../../data/tools';
 
@@ -12,20 +11,14 @@ const { locale } = Astro.props;
 const t = cssGradientGeneratorContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div class="mb-4">
-    <label
-      for="cg-type-select"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="cg-type-select" class="ui-label">
       {t.typeLabel}
     </label>
     <select
       id="cg-type-select"
-      class="h-11 w-full max-w-64 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      class="ui-input h-11 w-full max-w-64 px-3 dark:bg-gray-900"
     >
       <option value="linear">{t.typeLinear}</option>
       <option value="radial">{t.typeRadial}</option>
@@ -33,10 +26,7 @@ const t = cssGradientGeneratorContent[locale];
   </div>
 
   <div id="cg-linear-controls" class="mb-4 max-w-sm">
-    <label
-      for="cg-angle-range"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="cg-angle-range" class="ui-label">
       {t.angleLabel}{' '}
       <span id="cg-angle-value" data-template={t.angleValueTemplate}></span>
     </label>
@@ -51,15 +41,12 @@ const t = cssGradientGeneratorContent[locale];
   </div>
 
   <div id="cg-radial-controls" hidden class="mb-4 max-w-sm">
-    <label
-      for="cg-shape-select"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="cg-shape-select" class="ui-label">
       {t.shapeLabel}
     </label>
     <select
       id="cg-shape-select"
-      class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      class="ui-input h-11 w-full px-3 dark:bg-gray-900"
     >
       {t.shapeOptions.map((option) => (
         <option value={option.value}>{option.label}</option>
@@ -73,7 +60,7 @@ const t = cssGradientGeneratorContent[locale];
     <button
       id="cg-add-stop-button"
       type="button"
-      class="mt-3 min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      class="ui-btn mt-3 disabled:cursor-not-allowed disabled:opacity-50"
     >
       {t.addStopButton}
     </button>
@@ -99,13 +86,13 @@ const t = cssGradientGeneratorContent[locale];
         min="0"
         max="100"
         aria-label={t.positionLabel}
-        class="h-11 w-20 rounded-lg border border-gray-300 px-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-11 w-20 px-2 dark:bg-gray-900"
       />
       <span class="text-sm text-gray-500 dark:text-gray-400">%</span>
       <button
         data-remove
         type="button"
-        class="ml-auto min-h-11 shrink-0 rounded-lg border border-gray-300 px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        class="ui-btn ml-auto shrink-0 px-3 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {t.removeStopButton}
       </button>
@@ -119,10 +106,7 @@ const t = cssGradientGeneratorContent[locale];
   ></div>
 
   <div data-copied={t.copied} data-copy-failed={t.copyFailed}>
-    <label
-      for="cg-css-output"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="cg-css-output" class="ui-label">
       {t.cssHeading}
     </label>
     <div class="flex gap-2">
@@ -130,12 +114,12 @@ const t = cssGradientGeneratorContent[locale];
         id="cg-css-output"
         readonly
         rows="2"
-        class="h-20 w-full min-w-0 resize-none rounded-lg border border-gray-300 bg-gray-50 p-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-20 w-full min-w-0 resize-none bg-gray-50 p-3 font-mono dark:bg-gray-900"
       ></textarea>
       <button
         id="cg-copy-button"
         type="button"
-        class="min-h-11 shrink-0 self-start rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        class="ui-btn shrink-0 self-start"
       >
         {t.copyButton}
       </button>
@@ -146,18 +130,10 @@ const t = cssGradientGeneratorContent[locale];
       aria-live="polite"
     ></span>
   </div>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { copyText } from '../../lib/clipboard';
   import {
     buildCssDeclaration,
     buildGradientValue,
@@ -320,12 +296,9 @@ const t = cssGradientGeneratorContent[locale];
 
   copyButton.addEventListener('click', async () => {
     if (!cssOutput.value) return;
-    try {
-      await navigator.clipboard.writeText(cssOutput.value);
-      statusEl.textContent = copied;
-    } catch {
-      statusEl.textContent = copyFailed;
-    }
+    statusEl.textContent = (await copyText(cssOutput.value))
+      ? copied
+      : copyFailed;
   });
 
   addStopRow({ color: DEFAULT_STOP_COLORS[0], position: 0 });

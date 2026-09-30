@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { kishuIzonCheckerContent } from '../../i18n/tools/kishu-izon-checker';
 import type { Locale } from '../../data/tools';
 
@@ -12,21 +11,16 @@ const { locale } = Astro.props;
 const t = kishuIzonCheckerContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div>
-    <label
-      for="kishu-izon-input"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="kishu-izon-input" class="ui-label">
       {t.inputLabel}
     </label>
     <textarea
       id="kishu-izon-input"
+      data-query-target="text"
       data-locale={locale}
-      class="h-48 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      class="ui-input h-48 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
       placeholder={t.inputPlaceholder}
       spellcheck="false"
     ></textarea>
@@ -64,7 +58,7 @@ const t = kishuIzonCheckerContent[locale];
           type="button"
           data-copied={t.copied}
           data-copy-failed={t.copyFailed}
-          class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          class="ui-btn"
         >
           {t.copyReplaced}
         </button>
@@ -95,18 +89,11 @@ const t = kishuIzonCheckerContent[locale];
       </table>
     </div>
   </div>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
   import { escapeHtml } from '../../lib/tools/html-escape';
   import {
     findKishuIzonMoji,
@@ -185,18 +172,15 @@ const t = kishuIzonCheckerContent[locale];
     tableWrapper.classList.remove('hidden');
   }
 
-  input.addEventListener('input', render);
+  onTextInput(input, render);
 
   copyButton.addEventListener('click', async () => {
     if (!input.value) return;
-    try {
-      await navigator.clipboard.writeText(
-        replaceKishuIzonMoji(input.value, locale),
-      );
-      copyStatusEl.textContent = copyButton.dataset.copied ?? '';
-    } catch {
-      copyStatusEl.textContent = copyButton.dataset.copyFailed ?? '';
-    }
+    copyStatusEl.textContent = (await copyText(
+      replaceKishuIzonMoji(input.value, locale),
+    ))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
   });
 
   render();

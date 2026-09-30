@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { cronParserContent } from '../../i18n/tools/cron-parser';
 import type { Locale } from '../../data/tools';
 
@@ -12,10 +11,7 @@ const { locale } = Astro.props;
 const t = cronParserContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <section
     class="mb-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-locale={locale}
@@ -23,10 +19,7 @@ const t = cronParserContent[locale];
     data-error-fallback={t.errorFallback}
     data-no-matching-run={t.noMatchingRun}
   >
-    <label
-      for="cron-input"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="cron-input" class="ui-label">
       {t.cronInputLabel}
     </label>
     <input
@@ -35,7 +28,7 @@ const t = cronParserContent[locale];
       spellcheck="false"
       autocomplete="off"
       placeholder="*/15 9-18 * * 1-5"
-      class="h-11 w-full rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
     />
 
     <div class="mt-3 flex flex-wrap gap-2">
@@ -117,36 +110,26 @@ const t = cronParserContent[locale];
   >
     <div class="flex flex-wrap items-end gap-3">
       <div class="min-w-0 flex-1">
-        <label
-          for="cron-base-datetime"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="cron-base-datetime" class="ui-label">
           {t.baseDatetimeLabel}
         </label>
         <input
           id="cron-base-datetime"
           type="datetime-local"
           step="60"
-          class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
         />
       </div>
-      <button
-        type="button"
-        id="cron-base-now"
-        class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-      >
+      <button type="button" id="cron-base-now" class="ui-btn shrink-0">
         {t.useCurrentTimeButton}
       </button>
       <div>
-        <label
-          for="cron-count"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="cron-count" class="ui-label">
           {t.countLabel}
         </label>
         <select
           id="cron-count"
-          class="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
         >
           {t.countOptions.map(({ value, label }) => (
             <option value={value}>{label}</option>
@@ -157,11 +140,7 @@ const t = cronParserContent[locale];
 
     <div class="mt-4 flex items-center justify-between">
       <h2 class="text-lg font-bold">{t.upcomingHeading}</h2>
-      <button
-        type="button"
-        id="cron-copy"
-        class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-      >
+      <button type="button" id="cron-copy" class="ui-btn shrink-0">
         {t.copyListButton}
       </button>
     </div>
@@ -210,11 +189,11 @@ const t = cronParserContent[locale];
     <li>{t.note2}</li>
     <li>{t.note3}</li>
   </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
   import {
     FIELD_RANGES,
     getNextRunTimes,
@@ -570,7 +549,7 @@ const t = cronParserContent[locale];
     }
   }
 
-  input.addEventListener('input', render);
+  onTextInput(input, render);
   baseDatetimeInput.addEventListener('input', render);
   countSelect.addEventListener('change', render);
 
@@ -593,12 +572,7 @@ const t = cronParserContent[locale];
       .map((li) => li.textContent ?? '')
       .join('\n');
     if (!text) return;
-    try {
-      await navigator.clipboard.writeText(text);
-      statusEl.textContent = copied;
-    } catch {
-      statusEl.textContent = copyFailed;
-    }
+    statusEl.textContent = (await copyText(text)) ? copied : copyFailed;
   });
 
   baseDatetimeInput.value = formatDateTimeLocalValue(new Date());

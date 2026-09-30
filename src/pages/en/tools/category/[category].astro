@@ -1,0 +1,16 @@
+---
+import CategoryPage from '../../../../components/CategoryPage.astro';
+import { tools } from '../../../../data/tools';
+
+export function getStaticPaths() {
+  // ツールが1件以上あるカテゴリだけを生成する（空のカテゴリでビルドが止まらないように）
+  return [...new Set(tools.map((tool) => tool.category))].map((category) => ({
+    params: { category },
+    props: { category },
+  }));
+}
+
+const { category } = Astro.props;
+---
+
+<CategoryPage locale="en" category={category} />

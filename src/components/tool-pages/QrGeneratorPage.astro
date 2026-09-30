@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { qrGeneratorContent } from '../../i18n/tools/qr-generator';
 import type { Locale } from '../../data/tools';
 
@@ -12,36 +11,29 @@ const { locale } = Astro.props;
 const t = qrGeneratorContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div class="grid gap-6 md:grid-cols-2">
     <div>
-      <label
-        for="qr-generator-input"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="qr-generator-input" class="ui-label">
         {t.inputLabel}
       </label>
       <textarea
         id="qr-generator-input"
-        class="h-40 w-full rounded-lg border border-gray-300 p-4 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        data-query-target="text"
+        data-no-persist
+        class="ui-input h-40 w-full p-4 dark:bg-gray-900 dark:placeholder-gray-500"
         placeholder={t.inputPlaceholder}
         spellcheck="false"
       ></textarea>
 
       <div class="mt-4 flex flex-wrap gap-4">
         <div>
-          <label
-            for="qr-generator-level"
-            class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
+          <label for="qr-generator-level" class="ui-label">
             {t.levelLabel}
           </label>
           <select
             id="qr-generator-level"
-            class="h-11 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
           >
             {t.levelOptions.map(({ value, label, selected }) => (
               <option value={value} selected={selected}>
@@ -52,15 +44,12 @@ const t = qrGeneratorContent[locale];
         </div>
 
         <div>
-          <label
-            for="qr-generator-size"
-            class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
+          <label for="qr-generator-size" class="ui-label">
             {t.sizeLabel}
           </label>
           <select
             id="qr-generator-size"
-            class="h-11 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
           >
             {t.sizeOptions.map(({ value, label, selected }) => (
               <option value={value} selected={selected}>
@@ -102,18 +91,11 @@ const t = qrGeneratorContent[locale];
       ></span>
     </div>
   </div>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { downloadBlob } from '../../lib/download';
   import { generateQrMatrix } from '../../lib/tools/qr-generator';
   import type {
     ErrorCorrectionLevel,
@@ -199,19 +181,14 @@ const t = qrGeneratorContent[locale];
     downloadButton.disabled = false;
   }
 
-  input.addEventListener('input', generate);
+  onTextInput(input, generate);
   levelSelect.addEventListener('change', generate);
   sizeSelect.addEventListener('change', generate);
 
   downloadButton.addEventListener('click', () => {
     canvas.toBlob((blob) => {
       if (!blob) return;
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'qrcode.png';
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, 'qrcode.png');
       statusEl.textContent = downloaded;
     }, 'image/png');
   });

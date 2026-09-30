@@ -1,0 +1,79 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { getLocalizedTools, type CategoryId, type Locale } from '../data/tools';
+import { groupByCategory } from '../lib/home-filter';
+import { localePath, useTranslations } from '../i18n/ui';
+
+interface Props {
+  locale: Locale;
+  category: CategoryId;
+}
+
+const { locale, category } = Astro.props;
+const t = useTranslations(locale);
+const groups = groupByCategory(getLocalizedTools(locale));
+const current = groups.find((group) => group.id === category);
+if (!current) throw new Error(`No tools in category: ${category}`);
+
+// 英語ラベルが動詞（Calculate / Generate）のカテゴリは、「〜 Tools」が不自然にならない名詞形にする
+const enLabel: Partial<Record<CategoryId, string>> = {
+  data: 'Data Format',
+  calc: 'Calculator',
+  generate: 'Generator',
+};
+const label =
+  locale === 'en' ? (enLabel[category] ?? current.label) : current.label;
+
+const fill = (template: string) =>
+  template
+    .replace('{category}', label)
+    .replace('{count}', String(current.tools.length));
+
+const prefix = localePath(locale, '');
+const title = fill(t('category.title'));
+---
+
+<Layout title={title} description={fill(t('category.description'))}>
+  <h1 class="mb-2 text-2xl font-bold">{title}</h1>
+  <p class="mb-8 text-gray-600 dark:text-gray-400">
+    {fill(t('category.lead'))}
+  </p>
+
+  <ul class="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {current.tools.map((tool) => (
+      <li>
+        <a
+          href={`${prefix}/tools/${tool.slug}/`}
+          class="block h-full rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-900 dark:hover:border-blue-500"
+        >
+          <h2 class="mb-1 font-semibold text-blue-700 dark:text-blue-400">
+            {tool.name}
+          </h2>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            {tool.description}
+          </p>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <nav aria-labelledby="category-others-heading">
+    <h2 id="category-others-heading" class="mb-3 text-lg font-semibold">
+      {t('category.others')}
+    </h2>
+    <ul class="flex flex-wrap gap-2">
+      {groups
+        .filter((group) => group.id !== category)
+        .map((group) => (
+          <li>
+            <a
+              href={`${prefix}/tools/category/${group.id}/`}
+              class="inline-flex min-h-11 items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
+            >
+              {group.label}
+            </a>
+          </li>
+        ))}
+    </ul>
+  </nav>
+</Layout>

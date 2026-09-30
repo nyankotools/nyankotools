@@ -19,6 +19,7 @@ export interface KanaConverterPageContent {
   copyFailed: string;
   inputLabel: string;
   inputPlaceholder: string;
+  sampleText: string;
   outputLabel: string;
   notesHeading: string;
   notes: string[];
@@ -42,6 +43,7 @@ export const kanaConverterContent: Record<Locale, KanaConverterPageContent> = {
     copyFailed: 'コピーに失敗しました',
     inputLabel: '入力',
     inputPlaceholder: '変換したいテキストを入力',
+    sampleText: 'ニャンコツールズ ｶﾀｶﾅ ひらがな',
     outputLabel: '結果',
     notesHeading: '注意事項',
     notes: [
@@ -78,6 +80,7 @@ export const kanaConverterContent: Record<Locale, KanaConverterPageContent> = {
     copyFailed: 'Copy failed',
     inputLabel: 'Input',
     inputPlaceholder: 'Enter text to convert',
+    sampleText: 'ニャンコツールズ ｶﾀｶﾅ ひらがな',
     outputLabel: 'Result',
     notesHeading: 'Notes',
     notes: [

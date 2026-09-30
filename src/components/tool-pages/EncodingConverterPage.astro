@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { encodingConverterContent } from '../../i18n/tools/encoding-converter';
 import { ENCODINGS } from '../../lib/tools/encoding-converter';
 import type { Locale } from '../../data/tools';
@@ -14,29 +13,20 @@ const t = encodingConverterContent[locale];
 
 const selectClass =
   'min-h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
-const buttonClass =
-  'min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800';
+const buttonClass = 'ui-btn';
 const labelClass =
   'mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300';
 const textareaClass =
   'h-64 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500';
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
-  <div
-    id="enc-mode"
-    class="mb-6 flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700"
-    role="group"
-    aria-label={t.modeLabel}
-  >
+<ToolShell t={t}>
+  <div id="enc-mode" class="ui-seg mb-6" role="group" aria-label={t.modeLabel}>
     <button
       type="button"
       data-mode="convert"
       aria-pressed="true"
-      class="min-h-9 flex-1 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      class="ui-seg-btn flex-1"
     >
       {t.modeConvert}
     </button>
@@ -44,7 +34,7 @@ const textareaClass =
       type="button"
       data-mode="diagnose"
       aria-pressed="false"
-      class="min-h-9 flex-1 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+      class="ui-seg-btn flex-1"
     >
       {t.modeDiagnose}
     </button>
@@ -63,15 +53,8 @@ const textareaClass =
     <label for="enc-file-input" class={labelClass}>
       {t.fileLabel}
     </label>
-    <div
-      id="enc-dropzone"
-      class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
-    >
-      <input
-        id="enc-file-input"
-        type="file"
-        class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
-      />
+    <div id="enc-dropzone" class="ui-dropzone">
+      <input id="enc-file-input" type="file" class="ui-file" />
       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
     </div>
     <p
@@ -202,18 +185,13 @@ const textareaClass =
     </p>
     <ul id="enc-diagnose-results" class="space-y-3"></ul>
   </section>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import { copyText } from '../../lib/clipboard';
   import {
     applyLineEnding,
     decodeBytes,
@@ -360,27 +338,16 @@ const textareaClass =
 
   fileInput.addEventListener('change', () => {
     const file = fileInput.files?.[0];
+    // 同じファイルを続けて選んでも change が発火するようクリアする
+    fileInput.value = '';
     if (file) void handleFile(file);
   });
 
   const dropzone = document.getElementById('enc-dropzone')!;
-  const dropzoneActiveClasses = ['border-blue-400', 'bg-blue-50'];
-  dropzone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropzone.classList.add(...dropzoneActiveClasses);
-  });
-  dropzone.addEventListener('dragleave', () => {
-    dropzone.classList.remove(...dropzoneActiveClasses);
-  });
-  dropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropzone.classList.remove(...dropzoneActiveClasses);
-    const file = e.dataTransfer?.files?.[0];
-    if (file) void handleFile(file);
-  });
+  enableFileDrop(dropzone, fileInput);
 
   sourceSelect.addEventListener('change', loadBytes);
-  textArea.addEventListener('input', updateUnmappable);
+  onTextInput(textArea, updateUnmappable);
   targetSelect.addEventListener('change', () => {
     updateBomState();
     updateUnmappable();
@@ -402,14 +369,7 @@ const textareaClass =
     const blob = new Blob([bytes as BlobPart], {
       type: 'application/octet-stream',
     });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filenameInput.value.trim() || 'converted.txt';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadBlob(blob, filenameInput.value.trim() || 'converted.txt');
   });
 
   updateBomState();
@@ -467,12 +427,9 @@ const textareaClass =
       status.className = 'text-sm text-green-600 dark:text-green-400';
       status.setAttribute('aria-live', 'polite');
       copy.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(c.text);
-          status.textContent = diagnoseSection.dataset.copied ?? '';
-        } catch {
-          status.textContent = diagnoseSection.dataset.copyFailed ?? '';
-        }
+        status.textContent = (await copyText(c.text))
+          ? (diagnoseSection.dataset.copied ?? '')
+          : (diagnoseSection.dataset.copyFailed ?? '');
       });
       row.append(copy, status);
       li.append(caption, pre, row);
@@ -480,5 +437,5 @@ const textareaClass =
     }
   }
 
-  garbledInput.addEventListener('input', renderDiagnosis);
+  onTextInput(garbledInput, renderDiagnosis);
 </script>

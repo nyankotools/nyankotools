@@ -1,6 +1,5 @@
 ---
-import Notes from '../Notes.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { charCounterContent } from '../../i18n/tools/char-counter';
 import type { Locale } from '../../data/tools';
 
@@ -12,12 +11,11 @@ const { locale } = Astro.props;
 const t = charCounterContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <textarea
     id="char-counter-input"
+    data-query-target="text"
+    data-no-count
     class="h-64 w-full max-w-2xl rounded-lg border border-gray-300 p-4 focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
     placeholder={t.inputPlaceholder}
   ></textarea>
@@ -53,26 +51,29 @@ const t = charCounterContent[locale];
     </div>
   </dl>
 
-  <Notes heading={t.notesHeading} items={t.notes} />
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.relatedHeading}</h2>
-  <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">{t.relatedIntro}</p>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.relatedLinks.map((link) => (
-      <li>
-        <a
-          href={link.href}
-          class="text-blue-700 underline hover:no-underline dark:text-blue-400"
-        >
-          {link.label}
-        </a>{' '}
-        — {link.description}
-      </li>
-    ))}
-  </ul>
-</Layout>
+  <Fragment slot="after">
+    <h2 class="mt-10 mb-2 text-lg font-bold">{t.relatedHeading}</h2>
+    <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+      {t.relatedIntro}
+    </p>
+    <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+      {t.relatedLinks.map((link) => (
+        <li>
+          <a
+            href={link.href}
+            class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+          >
+            {link.label}
+          </a>{' '}
+          — {link.description}
+        </li>
+      ))}
+    </ul>
+  </Fragment>
+</ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { countText } from '../../lib/tools/char-counter';
 
   const input = document.getElementById(
@@ -93,6 +94,6 @@ const t = charCounterContent[locale];
     linesEl.textContent = String(result.lines);
   }
 
-  input.addEventListener('input', update);
+  onTextInput(input, update);
   update();
 </script>

@@ -20,12 +20,17 @@ const facebookShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encoded
 const lineShareUrl = `https://social-plugins.line.me/lineit/share?url=${encodedUrl}&text=${encodedTitle}`;
 const hatenaShareUrl = `https://b.hatena.ne.jp/add?mode=confirm&url=${encodedUrl}&title=${encodedTitle}`;
 
+const textWithUrl = encodeURIComponent(`${title} ${shareUrl}`);
+const threadsShareUrl = `https://www.threads.com/intent/post?text=${textWithUrl}`;
+const blueskyShareUrl = `https://bsky.app/intent/compose?text=${textWithUrl}`;
+const redditShareUrl = `https://www.reddit.com/submit?url=${encodedUrl}&title=${encodedTitle}`;
+
 const badgeClass =
   'inline-flex h-11 min-w-11 items-center justify-center rounded-lg border border-gray-300 px-3 text-sm font-bold hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800';
 ---
 
 <section
-  class="mt-10 border-t border-gray-200 pt-6 dark:border-gray-800"
+  class="mt-10 print:hidden border-t border-gray-200 pt-6 dark:border-gray-800"
   aria-label={t('share.heading')}
 >
   <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -68,9 +73,45 @@ const badgeClass =
       rel="noopener noreferrer"
       aria-label={t('share.line')}
       title={t('share.line')}
-      class={`${badgeClass} text-[#06C755]`}
+      class={`${badgeClass} text-[#047a35] dark:text-[#06C755]`}
     >
       LINE
+    </a>
+
+    <a
+      href={threadsShareUrl}
+      data-share-popup
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={t('share.threads')}
+      title={t('share.threads')}
+      class={`${badgeClass} text-gray-900 dark:text-gray-100`}
+    >
+      Threads
+    </a>
+
+    <a
+      href={blueskyShareUrl}
+      data-share-popup
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={t('share.bluesky')}
+      title={t('share.bluesky')}
+      class={`${badgeClass} text-[#0a66d6] dark:text-[#1185FE]`}
+    >
+      Bluesky
+    </a>
+
+    <a
+      href={redditShareUrl}
+      data-share-popup
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={t('share.reddit')}
+      title={t('share.reddit')}
+      class={`${badgeClass} text-[#c2410c] dark:text-[#FF5700]`}
+    >
+      Reddit
     </a>
 
     {lang === 'ja' && (
@@ -81,7 +122,7 @@ const badgeClass =
         rel="noopener noreferrer"
         aria-label={t('share.hatena')}
         title={t('share.hatena')}
-        class={`${badgeClass} text-[#00A4DE]`}
+        class={`${badgeClass} text-[#0075a3] dark:text-[#00A4DE]`}
       >
         B!
       </a>

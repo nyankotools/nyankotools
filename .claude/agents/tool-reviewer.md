@@ -42,7 +42,7 @@ Project-wide premises are in `CLAUDE.md`, the add-a-tool procedure in `.claude/d
 ### SEO / responsive ([growth.md](.claude/docs/growth.md), [adding-a-tool.md](.claude/docs/adding-a-tool.md))
 
 - Is it wrapped in `Layout`, with page-specific `title` / `description` designed and exactly one `<h1>`?
-- Is it registered in `src/data/tools.ts` with a `category` whose spelling matches existing categories?
+- Is it registered in `src/data/tools.ts` with a valid category ID, `addedAt` / `updatedAt`, `related` (1-3 existing slugs), `keywords` (ja/en, only things the tool actually does), and appropriate flags (`sensitive` / `heavy` / `needsCamera`)?
 - Does it look intact at narrow widths (~375px)? (Judge from the markup and CSS; if you can't be sure, say so in the report.)
 
 ### Security

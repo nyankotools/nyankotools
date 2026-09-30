@@ -1,0 +1,52 @@
+---
+import Glossary from './Glossary.astro';
+import HowTo from './HowTo.astro';
+import Notes from './Notes.astro';
+import Layout from '../layouts/Layout.astro';
+import { resolveLocale, useTranslations } from '../i18n/ui';
+
+interface Props {
+  t: {
+    title: string;
+    description: string;
+    h1: string;
+    introHtml: string;
+    howToHeading?: string;
+    howToSteps?: string[];
+    notesHeading?: string;
+    notes?: string[];
+    glossaryHeading?: string;
+    glossaryTerms?: { term: string; description: string }[];
+  };
+}
+
+const { t } = Astro.props;
+const badge = useTranslations(resolveLocale(Astro.currentLocale))(
+  'badge.local',
+);
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-3 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+  <p
+    data-local-badge
+    class="mb-6 inline-block print:hidden rounded-full border border-green-200 bg-green-50 px-3 py-1 text-xs font-medium text-green-800 dark:border-green-900 dark:bg-green-950/40 dark:text-green-300"
+  >
+    {badge}
+  </p>
+
+  <slot />
+
+  {t.howToSteps && t.howToHeading && (
+    <HowTo heading={t.howToHeading} steps={t.howToSteps} />
+  )}
+  {t.notes && t.notesHeading && (
+    <Notes heading={t.notesHeading} items={t.notes} />
+  )}
+  {t.glossaryTerms && t.glossaryHeading && (
+    <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+  )}
+
+  <slot name="after" />
+</Layout>

@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { scholarshipRepaymentSimulatorContent } from '../../i18n/tools/scholarship-repayment-simulator';
 import type { Locale } from '../../data/tools';
 
@@ -12,10 +11,7 @@ const { locale } = Astro.props;
 const t = scholarshipRepaymentSimulatorContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-4 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <p
     class="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200"
     set:html={t.noticeHtml}
@@ -34,10 +30,7 @@ const t = scholarshipRepaymentSimulatorContent[locale];
 
     <div class="mb-3 flex flex-wrap items-end gap-3">
       <div>
-        <label
-          for="scholarship-calc-amount"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="scholarship-calc-amount" class="ui-label">
           {t.amountLabel}
         </label>
         <input
@@ -45,14 +38,11 @@ const t = scholarshipRepaymentSimulatorContent[locale];
           type="text"
           inputmode="decimal"
           placeholder={t.amountPlaceholder}
-          class="h-11 w-40 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-40 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <div>
-        <label
-          for="scholarship-calc-rate"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="scholarship-calc-rate" class="ui-label">
           {t.rateLabel}
         </label>
         <input
@@ -62,14 +52,11 @@ const t = scholarshipRepaymentSimulatorContent[locale];
           min="0"
           step="0.01"
           placeholder={t.ratePlaceholder}
-          class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <div>
-        <label
-          for="scholarship-calc-years"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="scholarship-calc-years" class="ui-label">
           {t.yearsLabel}
         </label>
         <div class="flex items-center gap-1">
@@ -81,7 +68,7 @@ const t = scholarshipRepaymentSimulatorContent[locale];
             max="20"
             step="1"
             placeholder={t.yearsPlaceholder}
-            class="h-11 w-20 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-600 dark:text-gray-400">
             {t.yearsUnit}
@@ -91,10 +78,7 @@ const t = scholarshipRepaymentSimulatorContent[locale];
     </div>
 
     <div class="mb-3">
-      <span
-        id="scholarship-calc-method-label"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <span id="scholarship-calc-method-label" class="ui-label">
         {t.methodLegend}
       </span>
       <div
@@ -119,10 +103,7 @@ const t = scholarshipRepaymentSimulatorContent[locale];
     </div>
 
     <div id="scholarship-calc-rate-change-row" class="mb-3 hidden">
-      <label
-        for="scholarship-calc-rate-change"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="scholarship-calc-rate-change" class="ui-label">
         {t.rateChangeLabel}
       </label>
       <input
@@ -131,7 +112,7 @@ const t = scholarshipRepaymentSimulatorContent[locale];
         inputmode="decimal"
         step="0.01"
         placeholder={t.rateChangePlaceholder}
-        class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
       />
       <p class="mt-1 max-w-xl text-xs text-gray-500 dark:text-gray-400">
         {t.rateChangeHelp}
@@ -219,16 +200,7 @@ const t = scholarshipRepaymentSimulatorContent[locale];
       </div>
     </div>
   </section>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
   import {

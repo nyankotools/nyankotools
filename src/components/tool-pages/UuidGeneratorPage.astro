@@ -1,7 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Notes from '../Notes.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { uuidGeneratorContent } from '../../i18n/tools/uuid-generator';
 import type { Locale } from '../../data/tools';
 
@@ -13,16 +11,10 @@ const { locale } = Astro.props;
 const t = uuidGeneratorContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div class="flex flex-wrap items-end gap-4">
     <div>
-      <label
-        for="uuid-generator-count"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="uuid-generator-count" class="ui-label">
         {t.countLabel}
       </label>
       <input
@@ -31,11 +23,11 @@ const t = uuidGeneratorContent[locale];
         min="1"
         max="100"
         value="5"
-        class="h-11 w-28 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
       />
     </div>
 
-    <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+    <label class="ui-check">
       <input
         id="uuid-generator-remove-hyphens"
         type="checkbox"
@@ -44,7 +36,7 @@ const t = uuidGeneratorContent[locale];
       {t.removeHyphens}
     </label>
 
-    <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+    <label class="ui-check">
       <input id="uuid-generator-uppercase" type="checkbox" class="h-4 w-4" />
       {t.uppercase}
     </label>
@@ -62,7 +54,7 @@ const t = uuidGeneratorContent[locale];
       type="button"
       data-copied={t.copied}
       data-copy-failed={t.copyFailed}
-      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      class="ui-btn"
     >
       {t.copy}
     </button>
@@ -74,25 +66,19 @@ const t = uuidGeneratorContent[locale];
   </div>
 
   <div class="mt-4">
-    <label
-      for="uuid-generator-output"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="uuid-generator-output" class="ui-label">
       {t.outputLabel}
     </label>
     <textarea
       id="uuid-generator-output"
       readonly
-      class="h-64 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      class="ui-input h-64 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
     ></textarea>
   </div>
-
-  <Notes heading={t.notesHeading} items={t.notes} />
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { copyText } from '../../lib/clipboard';
   import {
     clampUuidCount,
     generateUuids,
@@ -142,12 +128,9 @@ const t = uuidGeneratorContent[locale];
 
   copyButton.addEventListener('click', async () => {
     if (!output.value) return;
-    try {
-      await navigator.clipboard.writeText(output.value);
-      statusEl.textContent = copyButton.dataset.copied ?? '';
-    } catch {
-      statusEl.textContent = copyButton.dataset.copyFailed ?? '';
-    }
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
   });
 
   generate();

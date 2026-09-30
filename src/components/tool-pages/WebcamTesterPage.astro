@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { webcamTesterContent } from '../../i18n/tools/webcam-tester';
 import type { Locale } from '../../data/tools';
 
@@ -37,10 +36,7 @@ const ICONS = {
 };
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div
     id="webcam-root"
     data-default-device={t.defaultDevice}
@@ -94,7 +90,7 @@ const ICONS = {
       id="webcam-error"
       hidden
       role="alert"
-      class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+      class="ui-error mt-4 max-w-2xl"
     ></p>
 
     <div
@@ -272,16 +268,7 @@ const ICONS = {
       </table>
     </div>
   </div>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
   import {

@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { tomlConverterContent } from '../../i18n/tools/toml-converter';
 import type { Locale } from '../../data/tools';
 
@@ -12,10 +11,7 @@ const { locale } = Astro.props;
 const t = tomlConverterContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div
     id="toml-converter-controls"
     class="flex flex-wrap items-end gap-3"
@@ -24,15 +20,12 @@ const t = tomlConverterContent[locale];
     data-error-template={t.errorTemplate}
   >
     <div>
-      <label
-        for="toml-converter-from"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="toml-converter-from" class="ui-label">
         {t.fromLabel}
       </label>
       <select
         id="toml-converter-from"
-        class="min-h-11 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input min-h-11 bg-white px-3 py-2 dark:bg-gray-900"
       >
         {t.fromOptions.map(({ value, label, selected }) => (
           <option value={value} selected={selected}>
@@ -65,15 +58,12 @@ const t = tomlConverterContent[locale];
       </svg>
     </button>
     <div>
-      <label
-        for="toml-converter-to"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="toml-converter-to" class="ui-label">
         {t.toLabel}
       </label>
       <select
         id="toml-converter-to"
-        class="min-h-11 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input min-h-11 bg-white px-3 py-2 dark:bg-gray-900"
       >
         {t.toOptions.map(({ value, label, selected }) => (
           <option value={value} selected={selected}>
@@ -83,26 +73,19 @@ const t = tomlConverterContent[locale];
       </select>
     </div>
     <div id="toml-converter-indent-wrapper">
-      <label
-        for="toml-converter-indent"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="toml-converter-indent" class="ui-label">
         {t.indentLabel}
       </label>
       <select
         id="toml-converter-indent"
-        class="min-h-11 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input min-h-11 bg-white px-3 py-2 dark:bg-gray-900"
       >
         {t.indentOptions.map(({ value, label }) => (
           <option value={value}>{label}</option>
         ))}
       </select>
     </div>
-    <button
-      id="toml-converter-copy-button"
-      type="button"
-      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-    >
+    <button id="toml-converter-copy-button" type="button" class="ui-btn">
       {t.copyButton}
     </button>
     <span
@@ -114,29 +97,23 @@ const t = tomlConverterContent[locale];
 
   <div class="mt-4 grid gap-4 lg:grid-cols-2">
     <div>
-      <label
-        for="toml-converter-input"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="toml-converter-input" class="ui-label">
         {t.inputLabel}
       </label>
       <textarea
         id="toml-converter-input"
-        class="h-80 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        class="ui-input h-80 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
         spellcheck="false"
       ></textarea>
     </div>
     <div>
-      <label
-        for="toml-converter-output"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="toml-converter-output" class="ui-label">
         {t.outputLabel}
       </label>
       <textarea
         id="toml-converter-output"
         readonly
-        class="h-80 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-80 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
       ></textarea>
     </div>
   </div>
@@ -161,11 +138,11 @@ const t = tomlConverterContent[locale];
     <li>{t.noteSameFormat}</li>
     <li>{t.noteClientSideOnly}</li>
   </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
   import { convert, type DataFormat } from '../../lib/tools/toml-converter';
 
   const controls = document.getElementById('toml-converter-controls')!;
@@ -235,7 +212,7 @@ const t = tomlConverterContent[locale];
     }
   }
 
-  input.addEventListener('input', runConvert);
+  onTextInput(input, runConvert);
   indentSelect.addEventListener('change', runConvert);
 
   fromSelect.addEventListener('change', () => {
@@ -260,12 +237,7 @@ const t = tomlConverterContent[locale];
 
   copyButton.addEventListener('click', async () => {
     if (!output.value) return;
-    try {
-      await navigator.clipboard.writeText(output.value);
-      statusEl.textContent = copied;
-    } catch {
-      statusEl.textContent = copyFailed;
-    }
+    statusEl.textContent = (await copyText(output.value)) ? copied : copyFailed;
   });
 
   input.value = samples.toml;

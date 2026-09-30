@@ -17,6 +17,8 @@ export const ui = {
   ja: {
     'site.name': 'にゃんこツール',
     'nav.menu.open': 'メニューを開く',
+    'nav.skip': '本文へスキップ',
+    'nav.backToTop': 'ページの先頭に戻る',
     'nav.language': '言語',
     'nav.theme': '表示テーマ',
     'nav.theme.light': 'ライト',
@@ -35,15 +37,42 @@ export const ui = {
     'footer.faq': 'よくある質問',
     'faq.heading': 'よくある質問',
     'footer.x': '公式X（旧Twitter）',
+    'footer.github': 'GitHub（ソースコード公開）',
     'share.heading': 'このページをシェア',
     'share.x': 'Xでシェア',
     'share.facebook': 'Facebookでシェア',
     'share.line': 'LINEでシェア',
     'share.hatena': 'はてなブックマークに追加',
+    'share.threads': 'Threadsでシェア',
+    'share.bluesky': 'Blueskyでシェア',
+    'share.reddit': 'Redditでシェア',
     'share.copy': 'リンクをコピー',
     'share.copied': 'コピーしました',
     'share.copyFailed': 'コピーに失敗しました',
     'share.native': '共有',
+    'badge.local': '🔒 ブラウザ内で完結・入力データはサーバーに送信されません',
+    'palette.open': 'ツールを検索',
+    'palette.placeholder': 'ツール名・キーワードで検索',
+    'palette.empty': '該当するツールがありません',
+    'palette.hint.nav': '↑↓ 選択　Enter 開く　Esc 閉じる',
+    'palette.hint.run': 'Ctrl/⌘+Enter 実行',
+    'palette.hint.copy': 'Alt+Shift+C コピー',
+    'error.toast':
+      '予期しないエラーが発生しました。ページを再読み込みして、もう一度お試しください。',
+    'error.close': '閉じる',
+    'input.paste': '貼り付け',
+    'input.pasteFailed':
+      'クリップボードを読み取れませんでした。Ctrl+V で貼り付けてください。',
+    'input.clear': 'クリア',
+    'input.sample': 'サンプル入力',
+    'input.count': '{n}文字',
+    'category.title': '{category}のツール一覧',
+    'category.description':
+      '{category}カテゴリの無料ツール{count}件の一覧。すべてブラウザ内で完結し、登録不要で使えます。',
+    'category.lead':
+      '{category}カテゴリのツールを{count}件まとめました。入力したデータはサーバーに送信されず、ブラウザ内だけで処理されます。',
+    'category.others': '他のカテゴリ',
+    'category.viewAll': 'カテゴリ別の一覧',
     'home.title': '🐾 にゃんこツール',
     'home.lead':
       'JSON整形やBase64変換などの定番ツールに加え、かな変換・全角/半角変換のような日本語特有の処理まで丁寧にカバー。ブラウザだけで完結し、入力したデータがサーバーに送信されることはありません。',
@@ -62,6 +91,8 @@ export const ui = {
   en: {
     'site.name': 'NyankoTools',
     'nav.menu.open': 'Open menu',
+    'nav.skip': 'Skip to main content',
+    'nav.backToTop': 'Back to top',
     'nav.language': 'Language',
     'nav.theme': 'Theme',
     'nav.theme.light': 'Light',
@@ -80,15 +111,43 @@ export const ui = {
     'footer.faq': 'FAQ',
     'faq.heading': 'FAQ',
     'footer.x': 'Official X (Twitter)',
+    'footer.github': 'GitHub (source code)',
     'share.heading': 'Share this page',
     'share.x': 'Share on X',
     'share.facebook': 'Share on Facebook',
     'share.line': 'Share on LINE',
     'share.hatena': 'Add to Hatena Bookmark',
+    'share.threads': 'Share on Threads',
+    'share.bluesky': 'Share on Bluesky',
+    'share.reddit': 'Share on Reddit',
     'share.copy': 'Copy link',
     'share.copied': 'Copied',
     'share.copyFailed': 'Copy failed',
     'share.native': 'Share',
+    'badge.local':
+      '🔒 Runs in your browser · Your data is never sent to a server',
+    'palette.open': 'Search tools',
+    'palette.placeholder': 'Search by tool name or keyword',
+    'palette.empty': 'No matching tools',
+    'palette.hint.nav': '↑↓ Select  Enter Open  Esc Close',
+    'palette.hint.run': 'Ctrl/⌘+Enter Run',
+    'palette.hint.copy': 'Alt+Shift+C Copy',
+    'error.toast':
+      'An unexpected error occurred. Please reload the page and try again.',
+    'error.close': 'Close',
+    'input.paste': 'Paste',
+    'input.pasteFailed':
+      'Could not read the clipboard. Please paste with Ctrl+V.',
+    'input.clear': 'Clear',
+    'input.sample': 'Insert sample',
+    'input.count': '{n} chars',
+    'category.title': '{category} Tools',
+    'category.description':
+      'Free {category} tools that run entirely in your browser, with no sign-up.',
+    'category.lead':
+      'A list of our {category} tools. Nothing you enter is sent to a server; it is all processed in your browser.',
+    'category.others': 'Other categories',
+    'category.viewAll': 'Browse by category',
     'home.title': '🐾 NyankoTools',
     'home.lead':
       'Everyday tools like JSON formatting and Base64 conversion, plus careful support for Japanese-specific text processing like kana and full-width/half-width conversion — all running entirely in your browser. Nothing you type is ever sent to a server.',
@@ -112,6 +171,18 @@ export function useTranslations(locale: Locale) {
   return function t(key: UiKey): string {
     return ui[locale][key];
   };
+}
+
+/** 未知・未指定のロケールは既定ロケールに寄せる */
+export function resolveLocale(locale: string | undefined): Locale {
+  return (locales as string[]).includes(locale ?? '')
+    ? (locale as Locale)
+    : defaultLocale;
+}
+
+/** ロケールに応じたパスを返す（既定ロケールは接頭辞なし、それ以外は `/<locale>` を付ける） */
+export function localePath(locale: Locale, path: string): string {
+  return locale === defaultLocale ? path : `/${locale}${path}`;
 }
 
 /** ja版パスから対応するen版パス（またはその逆）を求める */

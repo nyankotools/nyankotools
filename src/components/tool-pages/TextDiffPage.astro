@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { textDiffContent } from '../../i18n/tools/text-diff';
 import type { Locale } from '../../data/tools';
 
@@ -12,35 +11,26 @@ const { locale } = Astro.props;
 const t = textDiffContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div class="grid gap-4 sm:grid-cols-2">
     <div>
-      <label
-        for="diff-input-a"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="diff-input-a" class="ui-label">
         {t.inputALabel}
       </label>
       <textarea
         id="diff-input-a"
-        class="h-52 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        class="ui-input h-52 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
         placeholder={t.inputPlaceholder}
         spellcheck="false"
       ></textarea>
     </div>
     <div>
-      <label
-        for="diff-input-b"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="diff-input-b" class="ui-label">
         {t.inputBLabel}
       </label>
       <textarea
         id="diff-input-b"
-        class="h-52 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        class="ui-input h-52 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
         placeholder={t.inputPlaceholder}
         spellcheck="false"
       ></textarea>
@@ -83,18 +73,10 @@ const t = textDiffContent[locale];
       <tbody id="diff-body" class="font-mono"></tbody>
     </table>
   </div>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
   import { escapeHtml } from '../../lib/tools/html-escape';
   import {
     diffLines,
@@ -150,8 +132,8 @@ const t = textDiffContent[locale];
       .join('');
   }
 
-  inputA.addEventListener('input', render);
-  inputB.addEventListener('input', render);
+  onTextInput(inputA, render, { watch: [inputB] });
+  onTextInput(inputB, render, { watch: [inputA] });
   ignoreWhitespace.addEventListener('change', render);
   ignoreCase.addEventListener('change', render);
 

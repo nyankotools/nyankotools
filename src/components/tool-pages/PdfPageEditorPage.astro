@@ -1,8 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Notes from '../Notes.astro';
-import HowTo from '../HowTo.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { pdfPageEditorContent } from '../../i18n/tools/pdf-page-editor';
 import type { Locale } from '../../data/tools';
 
@@ -12,31 +9,21 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = pdfPageEditorContent[locale];
-const buttonClass =
-  'min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800';
+const buttonClass = 'ui-btn';
 const smallButtonClass =
   'min-h-9 rounded-lg border border-gray-300 px-2 text-xs text-gray-700 hover:bg-gray-100 disabled:opacity-40 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800';
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
-  <label
-    for="pe-file"
-    class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-  >
+<ToolShell t={t}>
+  <label for="pe-file" class="ui-label">
     {t.fileLabel}
   </label>
-  <div
-    id="pe-drop"
-    class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
-  >
+  <div id="pe-drop" class="ui-dropzone">
     <input
       id="pe-file"
       type="file"
       accept=".pdf,application/pdf"
-      class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+      class="ui-file"
     />
     <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
@@ -53,10 +40,7 @@ const smallButtonClass =
     <p class="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
       {t.passwordNote}
     </p>
-    <label
-      for="pe-password"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="pe-password" class="ui-label">
       {t.passwordLabel}
     </label>
     <div class="flex flex-wrap items-center gap-3">
@@ -64,7 +48,7 @@ const smallButtonClass =
         id="pe-password"
         type="password"
         autocomplete="off"
-        class="min-h-11 w-full max-w-xs rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input min-h-11 w-full max-w-xs px-3 dark:bg-gray-900"
       />
       <button
         id="pe-unlock"
@@ -72,7 +56,7 @@ const smallButtonClass =
         data-label={t.unlock}
         data-busy={t.unlocking}
         data-progress={t.unlockProgress}
-        class="min-h-11 rounded-lg bg-blue-600 px-6 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        class="ui-btn-primary"
       >
         {t.unlock}
       </button>
@@ -110,7 +94,7 @@ const smallButtonClass =
       type="button"
       data-run={t.run}
       data-processing={t.processing}
-      class="min-h-11 rounded-lg bg-blue-600 px-6 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+      class="ui-btn-primary"
     >
       {t.run}
     </button>
@@ -131,7 +115,7 @@ const smallButtonClass =
     data-out-of-range={t.errorOutOfRange}
     data-wrong-password={t.errorWrongPassword}
     data-failed={t.errorFailed}
-    class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+    class="ui-error mt-4 max-w-2xl"
   ></p>
 
   <section
@@ -143,13 +127,7 @@ const smallButtonClass =
     <h2 class="mb-2 text-lg font-semibold">{t.resultHeading}</h2>
     <ul id="pe-result-list" class="flex flex-col gap-2"></ul>
   </section>
-
-  <HowTo heading={t.howToHeading} steps={t.howToSteps} />
-
-  <Notes heading={t.notesHeading} items={t.notes} />
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
   import * as pdfjs from 'pdfjs-dist';

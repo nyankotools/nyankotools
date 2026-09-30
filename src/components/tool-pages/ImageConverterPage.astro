@@ -1,7 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import HowTo from '../HowTo.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { imageConverterContent } from '../../i18n/tools/image-converter';
 import type { Locale } from '../../data/tools';
 
@@ -13,24 +11,18 @@ const { locale } = Astro.props;
 const t = imageConverterContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div>
-    <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+    <label for="ic-file-input" class="ui-label">
       {t.dropLabel}
-    </span>
-    <div
-      id="ic-dropzone"
-      class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
-    >
+    </label>
+    <div id="ic-dropzone" class="ui-dropzone">
       <input
         id="ic-file-input"
         type="file"
         multiple
         accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
-        class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+        class="ui-file"
       />
       <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
     </div>
@@ -52,12 +44,10 @@ const t = imageConverterContent[locale];
 
   <div class="mt-4 flex flex-wrap items-end gap-6">
     <div>
-      <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-        {t.formatLabel}
-      </span>
+      <span class="ui-label">{t.formatLabel}</span>
       <div
         id="ic-format"
-        class="flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700"
+        class="ui-seg"
         role="group"
         aria-label={t.formatLabel}
       >
@@ -65,7 +55,7 @@ const t = imageConverterContent[locale];
           type="button"
           data-format="webp"
           aria-pressed="true"
-          class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+          class="ui-seg-btn"
         >
           {t.formatWebp}
         </button>
@@ -73,7 +63,7 @@ const t = imageConverterContent[locale];
           type="button"
           data-format="jpeg"
           aria-pressed="false"
-          class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+          class="ui-seg-btn"
         >
           {t.formatJpeg}
         </button>
@@ -81,7 +71,7 @@ const t = imageConverterContent[locale];
           type="button"
           data-format="png"
           aria-pressed="false"
-          class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+          class="ui-seg-btn"
         >
           {t.formatPng}
         </button>
@@ -89,10 +79,7 @@ const t = imageConverterContent[locale];
     </div>
 
     <div class="min-w-48 flex-1">
-      <label
-        for="ic-quality"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="ic-quality" class="ui-label">
         {t.qualityLabel}
         <span
           id="ic-quality-value"
@@ -120,7 +107,7 @@ const t = imageConverterContent[locale];
       id="ic-clear-button"
       type="button"
       disabled
-      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
     >
       {t.clearButton}
     </button>
@@ -162,27 +149,13 @@ const t = imageConverterContent[locale];
         download
         class="inline-flex min-h-11 items-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 aria-disabled:pointer-events-none aria-disabled:bg-gray-300 aria-disabled:text-gray-500 dark:aria-disabled:bg-gray-700 dark:aria-disabled:text-gray-400"
       ></a>
-      <button
-        data-remove
-        type="button"
-        class="min-h-11 rounded-lg border border-gray-300 px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-      ></button>
+      <button data-remove type="button" class="ui-btn px-3"></button>
     </li>
   </template>
-
-  <HowTo heading={t.howToHeading} steps={t.howToSteps} />
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { enableFileDrop } from '../../lib/file-drop';
   import {
     buildOutputFileName,
     calculateReductionPercent,
@@ -435,24 +408,7 @@ const t = imageConverterContent[locale];
     fileInput.value = '';
   });
 
-  const dropzoneActiveClasses = ['border-blue-400', 'bg-blue-50'];
-
-  dropzone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropzone.classList.add(...dropzoneActiveClasses);
-  });
-
-  dropzone.addEventListener('dragleave', () => {
-    dropzone.classList.remove(...dropzoneActiveClasses);
-  });
-
-  dropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropzone.classList.remove(...dropzoneActiveClasses);
-    if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-      void addFiles(e.dataTransfer.files);
-    }
-  });
+  enableFileDrop(dropzone, fileInput);
 
   formatButtons.forEach((button) => {
     button.addEventListener('click', () => {

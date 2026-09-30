@@ -4,7 +4,7 @@ NyankoTools aims to monetize in the future (ads, affiliate, etc.). Monetization 
 
 ## SEO
 
-- **Design `title` / `description` per page.** The `description` in `src/data/tools.ts` is the short blurb for the homepage/sidebar. Pass the tool page's `<Layout description=...>` a separate text of proper meta-description length and wording (don't reuse it).
+- **Design `title` / `description` per page.** The `description` in `src/data/tools.ts` is the short blurb for the homepage/sidebar. Give the tool page's dictionary `description` (ToolShell passes it to `Layout`) a separate text of proper meta-description length and wording (don't reuse it).
 - **Write down the long-tail keywords first.** Before adding a tool, decide which search terms should bring traffic (e.g. 「JSON 整形 オンライン 無料」) and reflect them in `title` / `description` / body headings. Don't rely on overly generic terms alone.
 - **Heading structure.** Exactly one `<h1>` per page, specific about the tool name or the problem it solves. Supplementing usage and cautions under `<h2>` and below adds substance and helps SEO.
 - **Internal links.** Link to related existing tools in the page body to improve crawlability and user circulation. When adding a tool, find and link at least one related existing tool.
@@ -30,7 +30,7 @@ NyankoTools aims to monetize in the future (ads, affiliate, etc.). Monetization 
   - `src/pages/tools/<slug>/index.astro` and `src/pages/en/tools/<slug>/index.astro` are thin wrappers that only call the shared component with a different `locale`.
   - Implement new tools with this structure (details in [adding-a-tool.md](./adding-a-tool.md)).
 - **Site-wide UI copy**: copy used across tools (sidebar, footer, homepage headings, etc.) is consolidated in the `ui.ja` / `ui.en` dictionaries in `src/i18n/ui.ts` and referenced via the `t()` function returned by `useTranslations(locale)` (a separate dictionary from the per-tool `src/i18n/tools/<slug>.ts`).
-- **Tool name and description (for home/sidebar)**: `Tool.translations` in `src/data/tools.ts` holds both locales as `{ ja: { name, description, category }, en: { name, description, category } }`. The array resolved by `getLocalizedTools(locale)` drives the homepage and sidebar display (the tool page body's copy is held separately by `src/i18n/tools/<slug>.ts` above).
+- **Tool name and description (for home/sidebar)**: `Tool.translations` in `src/data/tools.ts` holds both locales as `{ ja: { name, description, keywords }, en: { name, description, keywords } }`; the category is a top-level ID (`Tool.category`) whose display names come from `categories`. The array resolved by `getLocalizedTools(locale)` (with `categoryId` and the localized `category` label) drives the homepage and sidebar display (the tool page body's copy is held separately by `src/i18n/tools/<slug>.ts` above).
 - Keep the logic functions in `src/lib/tools/<slug>.ts` free of UI copy (consistent with the existing "framework-free pure functions" policy). If copy such as error messages is unavoidable, put it in the `src/i18n/tools/<slug>.ts` dictionary and keep the logic layer independent of copy.
 - **SEO meta**: `src/layouts/Layout.astro` emits the following per locale automatically; no per-page work is needed.
   - `<html lang={lang}>`

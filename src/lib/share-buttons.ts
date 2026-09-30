@@ -1,3 +1,5 @@
+import { copyText } from './clipboard';
+
 export function initShareButtons(): void {
   document
     .querySelectorAll<HTMLElement>('[data-share-buttons]')
@@ -25,12 +27,9 @@ export function initShareButtons(): void {
         container.querySelector<HTMLButtonElement>('[data-share-copy]');
       copyButton?.addEventListener('click', async () => {
         if (!statusEl) return;
-        try {
-          await navigator.clipboard.writeText(shareUrl);
-          statusEl.textContent = copyButton.dataset.copiedText ?? '';
-        } catch {
-          statusEl.textContent = copyButton.dataset.copyFailedText ?? '';
-        }
+        statusEl.textContent = (await copyText(shareUrl, { track: false }))
+          ? (copyButton.dataset.copiedText ?? '')
+          : (copyButton.dataset.copyFailedText ?? '');
       });
 
       const nativeButton = container.querySelector<HTMLButtonElement>(

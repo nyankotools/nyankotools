@@ -21,6 +21,7 @@ export interface TextCaseConverterPageContent {
   introHtml: string;
   inputLabel: string;
   inputPlaceholder: string;
+  sampleText: string;
   copy: string;
   copied: string;
   copyFailed: string;
@@ -44,6 +45,7 @@ export const textCaseConverterContent: Record<
       '文字列を入力すると、camelCase・PascalCase・snake_case・kebab-caseなど9種類の命名規則へ自動で一括変換します。単語の区切り（スペース・ハイフン・アンダースコア）や既存のcamelCase表記も自動で認識します。文字列の重複削除やソートが必要な場合は<a href="/tools/text-list-tools/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">文字列の重複削除・ソート・シャッフル</a>、全角/半角の統一には<a href="/tools/zenkaku-hankaku/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">全角/半角変換</a>もあわせてご利用ください。',
     inputLabel: '入力',
     inputPlaceholder: '変換したい文字列を入力（例: hello world / hello_world）',
+    sampleText: 'hello world sample_text',
     copy: 'コピー',
     copied: 'コピーしました',
     copyFailed: 'コピーに失敗しました',
@@ -93,6 +95,7 @@ export const textCaseConverterContent: Record<
       'Type or paste text below to automatically convert it into 9 naming conventions, including camelCase, PascalCase, snake_case, and kebab-case. Word boundaries (spaces, hyphens, underscores) and existing camelCase text are detected automatically. Need to dedupe or sort a list instead? Try <a href="/en/tools/text-list-tools/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Text List Deduplicate, Sort & Shuffle</a>. To unify full-width and half-width characters, use the <a href="/en/tools/zenkaku-hankaku/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Full-width / Half-width Converter</a>.',
     inputLabel: 'Input',
     inputPlaceholder: 'Enter text to convert (e.g. hello world / hello_world)',
+    sampleText: 'hello world sample_text',
     copy: 'Copy',
     copied: 'Copied',
     copyFailed: 'Copy failed',

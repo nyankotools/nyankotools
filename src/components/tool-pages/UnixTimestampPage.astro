@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { unixTimestampContent } from '../../i18n/tools/unix-timestamp';
 import type { Locale } from '../../data/tools';
 
@@ -12,10 +11,7 @@ const { locale } = Astro.props;
 const t = unixTimestampContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <section
     class="mb-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-number-locale={t.numberLocale}
@@ -31,7 +27,7 @@ const t = unixTimestampContent[locale];
       <button
         type="button"
         id="unix-timestamp-now-copy"
-        class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        class="ui-btn shrink-0"
       >
         {t.copyButton}
       </button>
@@ -46,10 +42,7 @@ const t = unixTimestampContent[locale];
     <h2 class="mb-3 text-lg font-bold">{t.timestampToDateHeading}</h2>
     <div class="flex flex-wrap items-end gap-3">
       <div class="min-w-0 flex-1">
-        <label
-          for="unix-timestamp-input"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="unix-timestamp-input" class="ui-label">
           {t.timestampLabel}
         </label>
         <input
@@ -58,19 +51,16 @@ const t = unixTimestampContent[locale];
           inputmode="numeric"
           placeholder={t.timestampPlaceholder}
           spellcheck="false"
-          class="h-11 w-full rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <div>
-        <label
-          for="unix-timestamp-unit"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="unix-timestamp-unit" class="ui-label">
           {t.unitLabel}
         </label>
         <select
           id="unix-timestamp-unit"
-          class="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
         >
           {t.unitOptions.map(({ value, label }) => (
             <option value={value}>{label}</option>
@@ -112,23 +102,20 @@ const t = unixTimestampContent[locale];
     <h2 class="mb-3 text-lg font-bold">{t.dateToTimestampHeading}</h2>
     <div class="flex flex-wrap items-end gap-3">
       <div class="min-w-0 flex-1">
-        <label
-          for="unix-timestamp-datetime"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="unix-timestamp-datetime" class="ui-label">
           {t.datetimeLabel}
         </label>
         <input
           id="unix-timestamp-datetime"
           type="datetime-local"
           step="1"
-          class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
         />
       </div>
       <button
         type="button"
         id="unix-timestamp-datetime-now"
-        class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        class="ui-btn shrink-0"
       >
         {t.useCurrentDatetime}
       </button>
@@ -139,27 +126,34 @@ const t = unixTimestampContent[locale];
         <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">
           {t.secondsLabel}
         </dt>
-        <dd id="unix-timestamp-result-seconds" class="font-mono"></dd>
-        <button
-          type="button"
-          data-copy-target="unix-timestamp-result-seconds"
-          class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-        >
-          {t.copyButton}
-        </button>
+        <dd class="flex flex-wrap items-center gap-2">
+          <span id="unix-timestamp-result-seconds" class="font-mono"></span>
+          <button
+            type="button"
+            data-copy-target="unix-timestamp-result-seconds"
+            class="ui-btn shrink-0"
+          >
+            {t.copyButton}
+          </button>
+        </dd>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">
           {t.millisecondsLabel}
         </dt>
-        <dd id="unix-timestamp-result-milliseconds" class="font-mono"></dd>
-        <button
-          type="button"
-          data-copy-target="unix-timestamp-result-milliseconds"
-          class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-        >
-          {t.copyButton}
-        </button>
+        <dd class="flex flex-wrap items-center gap-2">
+          <span
+            id="unix-timestamp-result-milliseconds"
+            class="font-mono"
+          ></span>
+          <button
+            type="button"
+            data-copy-target="unix-timestamp-result-milliseconds"
+            class="ui-btn shrink-0"
+          >
+            {t.copyButton}
+          </button>
+        </dd>
       </div>
     </dl>
     <span
@@ -168,18 +162,11 @@ const t = unixTimestampContent[locale];
       aria-live="polite"
     ></span>
   </section>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
   import {
     dateToTimestamp,
     detectTimestampUnit,
@@ -249,11 +236,7 @@ const t = unixTimestampContent[locale];
   setInterval(updateNow, 1000);
 
   nowCopyButton.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(nowEl.textContent ?? '');
-    } catch {
-      // クリップボードが使えない環境では何もしない
-    }
+    await copyText(nowEl.textContent ?? '');
   });
 
   function renderTimestampToDate() {
@@ -285,7 +268,7 @@ const t = unixTimestampContent[locale];
     isoEl.textContent = date.toISOString();
   }
 
-  input.addEventListener('input', renderTimestampToDate);
+  onTextInput(input, renderTimestampToDate);
   unitSelect.addEventListener('change', renderTimestampToDate);
 
   function renderDateToTimestamp() {
@@ -315,12 +298,9 @@ const t = unixTimestampContent[locale];
         const targetId = button.dataset.copyTarget!;
         const target = document.getElementById(targetId);
         if (!target?.textContent) return;
-        try {
-          await navigator.clipboard.writeText(target.textContent);
-          statusEl.textContent = copied;
-        } catch {
-          statusEl.textContent = copyFailed;
-        }
+        statusEl.textContent = (await copyText(target.textContent))
+          ? copied
+          : copyFailed;
       });
     });
 

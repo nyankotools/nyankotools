@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { contrastCheckerContent } from '../../i18n/tools/contrast-checker';
 import type { Locale } from '../../data/tools';
 
@@ -12,16 +11,10 @@ const { locale } = Astro.props;
 const t = contrastCheckerContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
     <div class="flex-1">
-      <label
-        for="contrast-checker-fg"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="contrast-checker-fg" class="ui-label">
         {t.foregroundLabel}
       </label>
       <div class="flex gap-2">
@@ -31,7 +24,7 @@ const t = contrastCheckerContent[locale];
           value="#111827"
           placeholder={t.colorPlaceholder}
           spellcheck="false"
-          class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
         />
         <input
           id="contrast-checker-fg-picker"
@@ -48,16 +41,13 @@ const t = contrastCheckerContent[locale];
       type="button"
       aria-label={t.swapLabel}
       title={t.swapLabel}
-      class="mt-6 flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-gray-300 px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 sm:mt-7 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      class="ui-btn mt-6 flex shrink-0 items-center justify-center px-3 sm:mt-7"
     >
       ⇄
     </button>
 
     <div class="flex-1">
-      <label
-        for="contrast-checker-bg"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="contrast-checker-bg" class="ui-label">
         {t.backgroundLabel}
       </label>
       <div class="flex gap-2">
@@ -67,7 +57,7 @@ const t = contrastCheckerContent[locale];
           value="#ffffff"
           placeholder={t.colorPlaceholder}
           spellcheck="false"
-          class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
         />
         <input
           id="contrast-checker-bg-picker"
@@ -130,16 +120,7 @@ const t = contrastCheckerContent[locale];
       </ul>
     </div>
   </div>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
   import {

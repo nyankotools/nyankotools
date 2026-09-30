@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { chmodCalculatorContent } from '../../i18n/tools/chmod-calculator';
 import type { Locale } from '../../data/tools';
 
@@ -19,10 +18,7 @@ const kindAriaLabels: Record<(typeof kinds)[number], string> = {
 };
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div class="overflow-x-auto">
     <table class="w-full min-w-[420px] border-collapse text-sm">
       <thead>
@@ -64,15 +60,15 @@ const kindAriaLabels: Record<(typeof kinds)[number], string> = {
   </div>
 
   <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2">
-    <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+    <label class="ui-check">
       <input id="chmod-setuid" type="checkbox" class="h-4 w-4" />
       {t.setuidLabel}
     </label>
-    <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+    <label class="ui-check">
       <input id="chmod-setgid" type="checkbox" class="h-4 w-4" />
       {t.setgidLabel}
     </label>
-    <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+    <label class="ui-check">
       <input id="chmod-sticky" type="checkbox" class="h-4 w-4" />
       {t.stickyLabel}
     </label>
@@ -85,10 +81,7 @@ const kindAriaLabels: Record<(typeof kinds)[number], string> = {
     data-sample-file-name={t.sampleFileName}
   >
     <div>
-      <label
-        for="chmod-octal-input"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="chmod-octal-input" class="ui-label">
         {t.octalLabel}
       </label>
       <div class="flex gap-2">
@@ -97,22 +90,19 @@ const kindAriaLabels: Record<(typeof kinds)[number], string> = {
           type="text"
           placeholder={t.octalPlaceholder}
           spellcheck="false"
-          class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
         />
         <button
           type="button"
           data-copy-target="chmod-octal-input"
-          class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          class="ui-btn shrink-0"
         >
           {t.copyButton}
         </button>
       </div>
     </div>
     <div>
-      <label
-        for="chmod-symbolic-input"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="chmod-symbolic-input" class="ui-label">
         {t.symbolicLabel}
       </label>
       <div class="flex gap-2">
@@ -121,12 +111,12 @@ const kindAriaLabels: Record<(typeof kinds)[number], string> = {
           type="text"
           placeholder={t.symbolicPlaceholder}
           spellcheck="false"
-          class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
         />
         <button
           type="button"
           data-copy-target="chmod-symbolic-input"
-          class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          class="ui-btn shrink-0"
         >
           {t.copyButton}
         </button>
@@ -135,10 +125,7 @@ const kindAriaLabels: Record<(typeof kinds)[number], string> = {
   </div>
 
   <div class="mt-4">
-    <label
-      for="chmod-command-output"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="chmod-command-output" class="ui-label">
       {t.commandLabel}
     </label>
     <div class="flex gap-2">
@@ -151,7 +138,7 @@ const kindAriaLabels: Record<(typeof kinds)[number], string> = {
       <button
         type="button"
         data-copy-target="chmod-command-output"
-        class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        class="ui-btn shrink-0"
       >
         {t.copyButton}
       </button>
@@ -170,18 +157,10 @@ const kindAriaLabels: Record<(typeof kinds)[number], string> = {
     class="mt-2 block text-sm text-green-600 dark:text-green-400"
     aria-live="polite"
   ></span>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { copyText } from '../../lib/clipboard';
   import {
     type ChmodPermissions,
     octalToPermissions,
@@ -327,12 +306,9 @@ const kindAriaLabels: Record<(typeof kinds)[number], string> = {
       const targetId = button.dataset.copyTarget!;
       const target = document.getElementById(targetId) as HTMLInputElement;
       if (!target.value) return;
-      try {
-        await navigator.clipboard.writeText(target.value);
-        statusEl.textContent = copied;
-      } catch {
-        statusEl.textContent = copyFailed;
-      }
+      statusEl.textContent = (await copyText(target.value))
+        ? copied
+        : copyFailed;
     });
   });
 

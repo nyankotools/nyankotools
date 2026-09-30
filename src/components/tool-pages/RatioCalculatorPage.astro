@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { ratioCalculatorContent } from '../../i18n/tools/ratio-calculator';
 import type { Locale } from '../../data/tools';
 
@@ -13,10 +12,7 @@ const t = ratioCalculatorContent[locale];
 const percentModeEntries = Object.entries(t.percentModes);
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <section
     class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-number-locale={t.numberLocale}
@@ -29,10 +25,7 @@ const percentModeEntries = Object.entries(t.percentModes);
 
     <div class="flex flex-wrap items-end gap-3">
       <div>
-        <label
-          for="ratio-input-a"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="ratio-input-a" class="ui-label">
           {t.ratioALabel}
         </label>
         <input
@@ -41,15 +34,12 @@ const percentModeEntries = Object.entries(t.percentModes);
           inputmode="decimal"
           min="0"
           placeholder={t.ratioAPlaceholder}
-          class="h-11 w-28 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <span class="pb-2 text-lg text-gray-500 dark:text-gray-400">:</span>
       <div>
-        <label
-          for="ratio-input-b"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="ratio-input-b" class="ui-label">
           {t.ratioBLabel}
         </label>
         <input
@@ -58,7 +48,7 @@ const percentModeEntries = Object.entries(t.percentModes);
           inputmode="decimal"
           min="0"
           placeholder={t.ratioBPlaceholder}
-          class="h-11 w-28 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
     </div>
@@ -87,10 +77,7 @@ const percentModeEntries = Object.entries(t.percentModes);
     </p>
 
     <div class="mb-3">
-      <span
-        id="proportion-unknown-label"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <span id="proportion-unknown-label" class="ui-label">
         {t.proportionUnknownLegend}
       </span>
       <div
@@ -124,7 +111,7 @@ const percentModeEntries = Object.entries(t.percentModes);
         inputmode="decimal"
         min="0"
         aria-label={t.proportionLabelA}
-        class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-11 w-24 px-3 disabled:opacity-50 dark:bg-gray-900"
       />
       <span class="text-gray-500 dark:text-gray-400">:</span>
       <input
@@ -133,7 +120,7 @@ const percentModeEntries = Object.entries(t.percentModes);
         inputmode="decimal"
         min="0"
         aria-label={t.proportionLabelB}
-        class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-11 w-24 px-3 disabled:opacity-50 dark:bg-gray-900"
       />
       <span class="px-1 text-gray-500 dark:text-gray-400">=</span>
       <input
@@ -142,7 +129,7 @@ const percentModeEntries = Object.entries(t.percentModes);
         inputmode="decimal"
         min="0"
         aria-label={t.proportionLabelC}
-        class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-11 w-24 px-3 disabled:opacity-50 dark:bg-gray-900"
       />
       <span class="text-gray-500 dark:text-gray-400">:</span>
       <input
@@ -152,7 +139,7 @@ const percentModeEntries = Object.entries(t.percentModes);
         min="0"
         aria-label={t.proportionLabelD}
         disabled
-        class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-11 w-24 px-3 disabled:opacity-50 dark:bg-gray-900"
       />
     </div>
 
@@ -181,10 +168,7 @@ const percentModeEntries = Object.entries(t.percentModes);
     </p>
 
     <div class="mb-3">
-      <span
-        id="percent-mode-label"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <span id="percent-mode-label" class="ui-label">
         {t.percentModeLegend}
       </span>
       <div
@@ -211,7 +195,7 @@ const percentModeEntries = Object.entries(t.percentModes);
         <label
           for="percent-input-value1"
           id="percent-value1-label"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+          class="ui-label"
         >
           {percentModeEntries[0][1].value1Label}
         </label>
@@ -221,14 +205,14 @@ const percentModeEntries = Object.entries(t.percentModes);
           inputmode="decimal"
           min="0"
           placeholder={percentModeEntries[0][1].value1Placeholder}
-          class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-32 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <div>
         <label
           for="percent-input-value2"
           id="percent-value2-label"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+          class="ui-label"
         >
           {percentModeEntries[0][1].value2Label}
         </label>
@@ -238,7 +222,7 @@ const percentModeEntries = Object.entries(t.percentModes);
           inputmode="decimal"
           min="0"
           placeholder={percentModeEntries[0][1].value2Placeholder}
-          class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-32 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
     </div>
@@ -259,16 +243,7 @@ const percentModeEntries = Object.entries(t.percentModes);
       <dd class="text-lg font-semibold" id="percent-result"></dd>
     </dl>
   </section>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
   import {

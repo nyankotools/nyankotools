@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { ERAS } from '../../lib/tools/japanese-era-converter';
 import { japaneseEraConverterContent } from '../../i18n/tools/japanese-era-converter';
 import type { Locale } from '../../data/tools';
@@ -14,10 +13,7 @@ const t = japaneseEraConverterContent[locale];
 const reversedEras = ERAS.slice().reverse();
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <section
     class="mb-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-locale={locale}
@@ -26,10 +22,7 @@ const reversedEras = ERAS.slice().reverse();
     <h2 class="mb-3 text-lg font-bold">{t.westernToJapaneseHeading}</h2>
     <div class="flex flex-wrap items-end gap-3">
       <div>
-        <span
-          id="era-w2j-label"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <span id="era-w2j-label" class="ui-label">
           {t.westernDateLabel}
         </span>
         <div
@@ -45,7 +38,7 @@ const reversedEras = ERAS.slice().reverse();
             max="9999"
             placeholder={t.yearPlaceholder}
             aria-label={t.westernYearAriaLabel}
-            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-600 dark:text-gray-400">
             {t.yearUnit}
@@ -58,7 +51,7 @@ const reversedEras = ERAS.slice().reverse();
             max="12"
             placeholder={t.monthPlaceholder}
             aria-label={t.westernMonthAriaLabel}
-            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-600 dark:text-gray-400">
             {t.monthUnit}
@@ -71,7 +64,7 @@ const reversedEras = ERAS.slice().reverse();
             max="31"
             placeholder={t.dayPlaceholder}
             aria-label={t.westernDayAriaLabel}
-            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           {t.dayUnit && (
             <span class="text-sm text-gray-600 dark:text-gray-400">
@@ -100,15 +93,12 @@ const reversedEras = ERAS.slice().reverse();
     <h2 class="mb-3 text-lg font-bold">{t.japaneseToWesternHeading}</h2>
     <div class="flex flex-wrap items-end gap-3">
       <div>
-        <label
-          for="era-j2w-era"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="era-j2w-era" class="ui-label">
           {t.eraLabel}
         </label>
         <select
           id="era-j2w-era"
-          class="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
         >
           {reversedEras.map((era) => (
             <option value={era.name}>
@@ -118,10 +108,7 @@ const reversedEras = ERAS.slice().reverse();
         </select>
       </div>
       <div class="w-24">
-        <label
-          for="era-j2w-year"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="era-j2w-year" class="ui-label">
           {t.j2wYearLabel}
         </label>
         <input
@@ -131,14 +118,11 @@ const reversedEras = ERAS.slice().reverse();
           max="99"
           inputmode="numeric"
           placeholder={t.j2wYearPlaceholder}
-          class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <div class="w-20">
-        <label
-          for="era-j2w-month"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="era-j2w-month" class="ui-label">
           {t.j2wMonthLabel}
         </label>
         <input
@@ -148,14 +132,11 @@ const reversedEras = ERAS.slice().reverse();
           max="12"
           inputmode="numeric"
           placeholder={t.monthPlaceholder}
-          class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <div class="w-20">
-        <label
-          for="era-j2w-day"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="era-j2w-day" class="ui-label">
           {t.j2wDayLabel}
         </label>
         <input
@@ -165,7 +146,7 @@ const reversedEras = ERAS.slice().reverse();
           max="31"
           inputmode="numeric"
           placeholder={t.dayPlaceholder}
-          class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
     </div>
@@ -217,16 +198,7 @@ const reversedEras = ERAS.slice().reverse();
       </tbody>
     </table>
   </div>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
   import {

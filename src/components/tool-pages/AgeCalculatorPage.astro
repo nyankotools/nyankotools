@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { ageCalculatorContent } from '../../i18n/tools/age-calculator';
 import type { Locale } from '../../data/tools';
 
@@ -12,10 +11,7 @@ const { locale } = Astro.props;
 const t = ageCalculatorContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <section
     class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-locale={locale}
@@ -24,10 +20,7 @@ const t = ageCalculatorContent[locale];
   >
     <div class="flex flex-wrap items-end gap-3">
       <div>
-        <span
-          id="age-calc-birth-label"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <span id="age-calc-birth-label" class="ui-label">
           {t.birthLabel}
         </span>
         <div
@@ -43,7 +36,7 @@ const t = ageCalculatorContent[locale];
             max="9999"
             placeholder={t.yearPlaceholder}
             aria-label={t.birthYearAriaLabel}
-            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-600 dark:text-gray-400">
             {t.yearUnit}
@@ -56,7 +49,7 @@ const t = ageCalculatorContent[locale];
             max="12"
             placeholder={t.birthMonthPlaceholder}
             aria-label={t.birthMonthAriaLabel}
-            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-600 dark:text-gray-400">
             {t.monthUnit}
@@ -69,7 +62,7 @@ const t = ageCalculatorContent[locale];
             max="31"
             placeholder={t.birthDayPlaceholder}
             aria-label={t.birthDayAriaLabel}
-            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           {t.dayUnit && (
             <span class="text-sm text-gray-600 dark:text-gray-400">
@@ -79,10 +72,7 @@ const t = ageCalculatorContent[locale];
         </div>
       </div>
       <div>
-        <span
-          id="age-calc-reference-label"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <span id="age-calc-reference-label" class="ui-label">
           {t.referenceLabel}
         </span>
         <div
@@ -98,7 +88,7 @@ const t = ageCalculatorContent[locale];
             max="9999"
             placeholder={t.referenceYearPlaceholder}
             aria-label={t.referenceYearAriaLabel}
-            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-600 dark:text-gray-400">
             {t.yearUnit}
@@ -111,7 +101,7 @@ const t = ageCalculatorContent[locale];
             max="12"
             placeholder={t.birthMonthPlaceholder}
             aria-label={t.referenceMonthAriaLabel}
-            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-600 dark:text-gray-400">
             {t.monthUnit}
@@ -124,7 +114,7 @@ const t = ageCalculatorContent[locale];
             max="31"
             placeholder={t.birthDayPlaceholder}
             aria-label={t.referenceDayAriaLabel}
-            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           {t.dayUnit && (
             <span class="text-sm text-gray-600 dark:text-gray-400">
@@ -177,16 +167,7 @@ const t = ageCalculatorContent[locale];
       </div>
     </dl>
   </section>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
   import {

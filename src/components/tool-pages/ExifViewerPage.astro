@@ -1,7 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import HowTo from '../HowTo.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { exifViewerContent } from '../../i18n/tools/exif-viewer';
 import type { Locale } from '../../data/tools';
 
@@ -13,23 +11,15 @@ const { locale } = Astro.props;
 const t = exifViewerContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div>
-    <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-      {t.dropLabel}
-    </span>
-    <div
-      id="ev-dropzone"
-      class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
-    >
+    <span class="ui-label">{t.dropLabel}</span>
+    <div id="ev-dropzone" class="ui-dropzone">
       <input
         id="ev-file-input"
         type="file"
         accept="image/jpeg"
-        class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+        class="ui-file"
       />
       <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
     </div>
@@ -124,7 +114,7 @@ const t = exifViewerContent[locale];
         aria-expanded="false"
         data-show-label={t.showAllButton}
         data-hide-label={t.hideAllButton}
-        class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        class="ui-btn"
       >
         {t.showAllButton}
       </button>
@@ -163,11 +153,7 @@ const t = exifViewerContent[locale];
       >
         {t.removeButton}
       </button>
-      <button
-        id="ev-clear-button"
-        type="button"
-        class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-      >
+      <button id="ev-clear-button" type="button" class="ui-btn">
         {t.clearButton}
       </button>
       <span
@@ -179,20 +165,11 @@ const t = exifViewerContent[locale];
       ></span>
     </div>
   </div>
-
-  <HowTo heading={t.howToHeading} steps={t.howToSteps} />
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
   import { parse as parseExif } from 'exifr';
   import {
     buildExifSummary,
@@ -264,7 +241,6 @@ const t = exifViewerContent[locale];
   const labels: SummaryLabels = JSON.parse(summaryList.dataset.labels ?? '{}');
 
   let previewObjectUrl: string | null = null;
-  let downloadObjectUrl: string | null = null;
   let currentFile: File | null = null;
   let currentBytes: Uint8Array<ArrayBuffer> | null = null;
 
@@ -285,16 +261,8 @@ const t = exifViewerContent[locale];
     }
   }
 
-  function revokeDownloadObjectUrl() {
-    if (downloadObjectUrl) {
-      URL.revokeObjectURL(downloadObjectUrl);
-      downloadObjectUrl = null;
-    }
-  }
-
   function resetState() {
     revokePreviewObjectUrl();
-    revokeDownloadObjectUrl();
     currentFile = null;
     currentBytes = null;
     resultEl.hidden = true;
@@ -469,23 +437,7 @@ const t = exifViewerContent[locale];
     if (file) void handleFile(file);
   });
 
-  const dropzoneActiveClasses = ['border-blue-400', 'bg-blue-50'];
-
-  dropzone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropzone.classList.add(...dropzoneActiveClasses);
-  });
-
-  dropzone.addEventListener('dragleave', () => {
-    dropzone.classList.remove(...dropzoneActiveClasses);
-  });
-
-  dropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropzone.classList.remove(...dropzoneActiveClasses);
-    const file = e.dataTransfer?.files?.[0];
-    if (file) void handleFile(file);
-  });
+  enableFileDrop(dropzone, fileInput);
 
   showAllButton.addEventListener('click', () => {
     const expanded = showAllButton.getAttribute('aria-expanded') === 'true';
@@ -505,13 +457,10 @@ const t = exifViewerContent[locale];
     const { bytes, hadExif } = removeExifFromJpeg(currentBytes);
 
     if (hadExif) {
-      revokeDownloadObjectUrl();
-      const blob = new Blob([bytes], { type: 'image/jpeg' });
-      downloadObjectUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = downloadObjectUrl;
-      link.download = buildNoExifFileName(currentFile.name);
-      link.click();
+      downloadBlob(
+        new Blob([bytes], { type: 'image/jpeg' }),
+        buildNoExifFileName(currentFile.name),
+      );
       removeStatusEl.textContent = removeStatusEl.dataset.successMessage ?? '';
     } else {
       removeStatusEl.textContent = removeStatusEl.dataset.noExifMessage ?? '';

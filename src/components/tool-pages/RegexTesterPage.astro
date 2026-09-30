@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { regexTesterContent } from '../../i18n/tools/regex-tester';
 import type { Locale } from '../../data/tools';
 
@@ -12,15 +11,9 @@ const { locale } = Astro.props;
 const t = regexTesterContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div>
-    <label
-      for="regex-pattern-input"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="regex-pattern-input" class="ui-label">
       {t.patternLabel}
     </label>
     <div class="flex items-center gap-1 font-mono text-sm">
@@ -60,15 +53,12 @@ const t = regexTesterContent[locale];
   <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.globalNote}</p>
 
   <div class="mt-4">
-    <label
-      for="regex-test-input"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="regex-test-input" class="ui-label">
       {t.testInputLabel}
     </label>
     <textarea
       id="regex-test-input"
-      class="h-40 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      class="ui-input h-40 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
       placeholder={t.testInputPlaceholder}
       spellcheck="false"
     ></textarea>
@@ -130,16 +120,13 @@ const t = regexTesterContent[locale];
   </div>
 
   <div class="mt-6">
-    <label
-      for="regex-replacement-input"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="regex-replacement-input" class="ui-label">
       {t.replacementLabel}
     </label>
     <input
       id="regex-replacement-input"
       type="text"
-      class="w-full rounded-lg border border-gray-300 p-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      class="ui-input w-full p-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
       placeholder={t.replacementPlaceholder}
       spellcheck="false"
       autocomplete="off"
@@ -152,11 +139,7 @@ const t = regexTesterContent[locale];
         {t.replacementPreviewHeading}
       </p>
       <div class="flex items-center gap-3">
-        <button
-          id="regex-replace-copy-button"
-          type="button"
-          class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-        >
+        <button id="regex-replace-copy-button" type="button" class="ui-btn">
           {t.copyButton}
         </button>
         <span
@@ -172,18 +155,10 @@ const t = regexTesterContent[locale];
       readonly
     ></textarea>
   </div>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { copyText } from '../../lib/clipboard';
   import { escapeHtml } from '../../lib/tools/html-escape';
   import {
     replaceWithRegex,
@@ -339,12 +314,9 @@ const t = regexTesterContent[locale];
 
   replaceCopyButton.addEventListener('click', async () => {
     if (!replaceResult.value) return;
-    try {
-      await navigator.clipboard.writeText(replaceResult.value);
-      replaceCopyStatus.textContent = copied;
-    } catch {
-      replaceCopyStatus.textContent = copyFailed;
-    }
+    replaceCopyStatus.textContent = (await copyText(replaceResult.value))
+      ? copied
+      : copyFailed;
   });
 
   render();

@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { jsonPathTesterContent } from '../../i18n/tools/json-path-tester';
 import type { Locale } from '../../data/tools';
 
@@ -12,20 +11,14 @@ const { locale } = Astro.props;
 const t = jsonPathTesterContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div>
-    <label
-      for="json-path-tester-input"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="json-path-tester-input" class="ui-label">
       {t.jsonDataLabel}
     </label>
     <textarea
       id="json-path-tester-input"
-      class="h-56 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      class="ui-input h-56 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
       spellcheck="false"
     ></textarea>
   </div>
@@ -35,7 +28,7 @@ const t = jsonPathTesterContent[locale];
     hidden
     role="alert"
     data-error-template={t.errorInvalidJsonTemplate}
-    class="mt-2 max-w-2xl whitespace-pre-line rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+    class="ui-error mt-2 max-w-2xl whitespace-pre-line"
   ></p>
 
   <div class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
@@ -68,16 +61,13 @@ const t = jsonPathTesterContent[locale];
   </div>
 
   <div class="mt-2">
-    <label
-      for="json-path-tester-query"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="json-path-tester-query" class="ui-label">
       {t.queryLabel}
     </label>
     <input
       id="json-path-tester-query"
       type="text"
-      class="w-full rounded-lg border border-gray-300 p-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      class="ui-input w-full p-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
       spellcheck="false"
       autocomplete="off"
     />
@@ -106,7 +96,7 @@ const t = jsonPathTesterContent[locale];
     }
     data-error-key-not-found-template={t.pointerErrorKeyNotFoundTemplate}
     data-error-not-traversable-template={t.pointerErrorNotTraversableTemplate}
-    class="mt-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+    class="ui-error mt-2"
     role="alert"
   ></div>
 
@@ -147,9 +137,7 @@ const t = jsonPathTesterContent[locale];
     <li set:html={t.note3Html} />
     <li>{t.noteClientSideOnly}</li>
   </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
   import {

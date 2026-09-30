@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { bmiCalculatorContent } from '../../i18n/tools/bmi-calculator';
 import type { Locale } from '../../data/tools';
 
@@ -12,10 +11,7 @@ const { locale } = Astro.props;
 const t = bmiCalculatorContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <section
     class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-number-locale={t.numberLocale}
@@ -26,10 +22,7 @@ const t = bmiCalculatorContent[locale];
     data-category-labels={JSON.stringify(t.categoryLabels)}
   >
     <div class="mb-4">
-      <span
-        id="unit-legend"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <span id="unit-legend" class="ui-label">
         {t.unitLegend}
       </span>
       <div
@@ -60,10 +53,7 @@ const t = bmiCalculatorContent[locale];
 
     <div class="flex flex-wrap items-end gap-3">
       <div>
-        <span
-          id="height-legend"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <span id="height-legend" class="ui-label">
           {t.heightLabel}
         </span>
         <div
@@ -78,7 +68,7 @@ const t = bmiCalculatorContent[locale];
             inputmode="decimal"
             min="0"
             placeholder={t.heightCmPlaceholder}
-            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-500 dark:text-gray-400">cm</span>
         </div>
@@ -94,7 +84,7 @@ const t = bmiCalculatorContent[locale];
             inputmode="decimal"
             min="0"
             placeholder={t.heightFtPlaceholder}
-            class="h-11 w-20 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-500 dark:text-gray-400">ft</span>
           <input
@@ -103,17 +93,14 @@ const t = bmiCalculatorContent[locale];
             inputmode="decimal"
             min="0"
             placeholder={t.heightInPlaceholder}
-            class="h-11 w-20 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-500 dark:text-gray-400">in</span>
         </div>
       </div>
 
       <div>
-        <span
-          id="weight-legend"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <span id="weight-legend" class="ui-label">
           {t.weightLabel}
         </span>
         <div
@@ -128,7 +115,7 @@ const t = bmiCalculatorContent[locale];
             inputmode="decimal"
             min="0"
             placeholder={t.weightKgPlaceholder}
-            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-500 dark:text-gray-400">kg</span>
         </div>
@@ -144,7 +131,7 @@ const t = bmiCalculatorContent[locale];
             inputmode="decimal"
             min="0"
             placeholder={t.weightLbPlaceholder}
-            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-500 dark:text-gray-400">lb</span>
         </div>
@@ -175,16 +162,7 @@ const t = bmiCalculatorContent[locale];
       </div>
     </dl>
   </section>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
   import {

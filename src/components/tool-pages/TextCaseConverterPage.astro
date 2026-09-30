@@ -1,7 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Notes from '../Notes.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import {
   textCaseConverterContent,
   textCaseOrder,
@@ -16,20 +14,14 @@ const { locale } = Astro.props;
 const t = textCaseConverterContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div>
-    <label
-      for="text-case-input"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="text-case-input" class="ui-label">
       {t.inputLabel}
     </label>
     <textarea
       id="text-case-input"
-      class="h-32 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      class="ui-input h-32 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
       placeholder={t.inputPlaceholder}
       spellcheck="false"
     ></textarea>
@@ -73,13 +65,10 @@ const t = textCaseConverterContent[locale];
       </div>
     ))}
   </div>
-
-  <Notes heading={t.notesHeading} items={t.notes} />
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { copyText } from '../../lib/clipboard';
   import {
     convertTextCase,
     type TextCaseResult,
@@ -112,12 +101,9 @@ const t = textCaseConverterContent[locale];
         `[data-case="${key}"]`,
       );
       if (!target || !target.value) return;
-      try {
-        await navigator.clipboard.writeText(target.value);
-        statusEl.textContent = button.dataset.copied ?? '';
-      } catch {
-        statusEl.textContent = button.dataset.copyFailed ?? '';
-      }
+      statusEl.textContent = (await copyText(target.value))
+        ? (button.dataset.copied ?? '')
+        : (button.dataset.copyFailed ?? '');
     });
   });
 

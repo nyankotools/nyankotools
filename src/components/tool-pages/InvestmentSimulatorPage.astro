@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { investmentSimulatorContent } from '../../i18n/tools/investment-simulator';
 import type { Locale } from '../../data/tools';
 
@@ -12,10 +11,7 @@ const { locale } = Astro.props;
 const t = investmentSimulatorContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <section
     class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-number-locale={t.numberLocale}
@@ -49,10 +45,7 @@ const t = investmentSimulatorContent[locale];
     <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
 
     <div class="mb-4">
-      <span
-        id="investment-sim-mode-label"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <span id="investment-sim-mode-label" class="ui-label">
         {t.modeLegend}
       </span>
       <div
@@ -94,10 +87,7 @@ const t = investmentSimulatorContent[locale];
 
     <div class="mb-3 flex flex-wrap items-end gap-3">
       <div>
-        <label
-          for="investment-sim-rate"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="investment-sim-rate" class="ui-label">
           {t.rateLabel}
         </label>
         <input
@@ -108,14 +98,11 @@ const t = investmentSimulatorContent[locale];
           max="50"
           step="0.1"
           placeholder={t.ratePlaceholder}
-          class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <div data-field="initial">
-        <label
-          for="investment-sim-initial"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="investment-sim-initial" class="ui-label">
           {t.initialLabel}
         </label>
         <input
@@ -123,14 +110,11 @@ const t = investmentSimulatorContent[locale];
           type="text"
           inputmode="decimal"
           placeholder={t.initialPlaceholder}
-          class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-36 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <div data-field="monthly">
-        <label
-          for="investment-sim-monthly"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="investment-sim-monthly" class="ui-label">
           {t.monthlyLabel}
         </label>
         <input
@@ -138,14 +122,11 @@ const t = investmentSimulatorContent[locale];
           type="text"
           inputmode="decimal"
           placeholder={t.monthlyPlaceholder}
-          class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-36 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <div data-field="years">
-        <label
-          for="investment-sim-years"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="investment-sim-years" class="ui-label">
           {t.yearsLabel}
         </label>
         <input
@@ -155,14 +136,11 @@ const t = investmentSimulatorContent[locale];
           min="0"
           max="60"
           placeholder={t.yearsPlaceholder}
-          class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <div data-field="target">
-        <label
-          for="investment-sim-target"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="investment-sim-target" class="ui-label">
           {t.targetLabel}
         </label>
         <input
@@ -170,7 +148,7 @@ const t = investmentSimulatorContent[locale];
           type="text"
           inputmode="decimal"
           placeholder={t.targetPlaceholder}
-          class="h-11 w-40 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-40 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
     </div>
@@ -337,10 +315,7 @@ const t = investmentSimulatorContent[locale];
         </p>
 
         <div class="mb-4">
-          <span
-            id="investment-sim-withdrawal-mode-label"
-            class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-          >
+          <span id="investment-sim-withdrawal-mode-label" class="ui-label">
             {t.withdrawalModeLegend}
           </span>
           <div
@@ -378,10 +353,7 @@ const t = investmentSimulatorContent[locale];
 
         <div class="mb-3 flex flex-wrap items-end gap-3">
           <div data-withdrawal-field="years">
-            <label
-              for="investment-sim-withdrawal-years"
-              class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
+            <label for="investment-sim-withdrawal-years" class="ui-label">
               <span id="investment-sim-withdrawal-years-label">
                 {t.withdrawalYearsLabel}
               </span>
@@ -394,14 +366,11 @@ const t = investmentSimulatorContent[locale];
               max="60"
               placeholder={t.withdrawalYearsPlaceholder}
               data-error={t.withdrawalError}
-              class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+              class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
             />
           </div>
           <div data-withdrawal-field="amount">
-            <label
-              for="investment-sim-withdrawal-amount"
-              class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
+            <label for="investment-sim-withdrawal-amount" class="ui-label">
               {t.withdrawalAmountLabel}
             </label>
             <input
@@ -409,14 +378,11 @@ const t = investmentSimulatorContent[locale];
               type="text"
               inputmode="decimal"
               placeholder={t.withdrawalAmountPlaceholder}
-              class="h-11 w-36 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+              class="ui-input h-11 w-36 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
             />
           </div>
           <div data-withdrawal-field="rate">
-            <label
-              for="investment-sim-withdrawal-rate"
-              class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-            >
+            <label for="investment-sim-withdrawal-rate" class="ui-label">
               {t.withdrawalRateLabel}
             </label>
             <input
@@ -427,7 +393,7 @@ const t = investmentSimulatorContent[locale];
               max="100"
               step="0.1"
               placeholder={t.withdrawalRatePlaceholder}
-              class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+              class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
             />
           </div>
         </div>
@@ -505,16 +471,7 @@ const t = investmentSimulatorContent[locale];
       </div>
     </div>
   </section>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <style>
   :global(:root) {

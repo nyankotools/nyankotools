@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { pxRemConverterContent } from '../../i18n/tools/px-rem-converter';
 import { DEFAULT_BASE_FONT_SIZE } from '../../lib/tools/px-rem-converter';
 import type { Locale } from '../../data/tools';
@@ -13,15 +12,9 @@ const { locale } = Astro.props;
 const t = pxRemConverterContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div class="mb-4">
-    <label
-      for="px-rem-base-input"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="px-rem-base-input" class="ui-label">
       {t.baseFontSizeLabel}
     </label>
     <input
@@ -30,7 +23,7 @@ const t = pxRemConverterContent[locale];
       inputmode="decimal"
       spellcheck="false"
       value={DEFAULT_BASE_FONT_SIZE}
-      class="h-11 w-full max-w-40 rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      class="ui-input h-11 w-full max-w-40 px-3 font-mono dark:bg-gray-900"
     />
     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
       {t.baseFontSizeHint}
@@ -43,10 +36,7 @@ const t = pxRemConverterContent[locale];
     data-copy-failed={t.copyFailed}
   >
     <div>
-      <label
-        for="px-rem-px-input"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="px-rem-px-input" class="ui-label">
         {t.pxLabel}
       </label>
       <div class="flex gap-2">
@@ -56,22 +46,19 @@ const t = pxRemConverterContent[locale];
           inputmode="decimal"
           placeholder={t.pxPlaceholder}
           spellcheck="false"
-          class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
         />
         <button
           type="button"
           data-copy-target="px-rem-px-input"
-          class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          class="ui-btn shrink-0"
         >
           {t.copyButton}
         </button>
       </div>
     </div>
     <div>
-      <label
-        for="px-rem-rem-input"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="px-rem-rem-input" class="ui-label">
         {t.remLabel}
       </label>
       <div class="flex gap-2">
@@ -81,12 +68,12 @@ const t = pxRemConverterContent[locale];
           inputmode="decimal"
           placeholder={t.remPlaceholder}
           spellcheck="false"
-          class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
         />
         <button
           type="button"
           data-copy-target="px-rem-rem-input"
-          class="min-h-11 shrink-0 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+          class="ui-btn shrink-0"
         >
           {t.copyButton}
         </button>
@@ -107,18 +94,10 @@ const t = pxRemConverterContent[locale];
     class="mt-2 block text-sm text-green-600 dark:text-green-400"
     aria-live="polite"
   ></span>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { copyText } from '../../lib/clipboard';
   import {
     DEFAULT_BASE_FONT_SIZE,
     formatNumber,
@@ -220,12 +199,9 @@ const t = pxRemConverterContent[locale];
       const targetId = button.dataset.copyTarget!;
       const target = document.getElementById(targetId) as HTMLInputElement;
       if (!target.value) return;
-      try {
-        await navigator.clipboard.writeText(target.value);
-        statusEl.textContent = copied;
-      } catch {
-        statusEl.textContent = copyFailed;
-      }
+      statusEl.textContent = (await copyText(target.value))
+        ? copied
+        : copyFailed;
     });
   });
 

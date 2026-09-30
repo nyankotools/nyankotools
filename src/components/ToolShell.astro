@@ -1,0 +1,42 @@
+---
+import Glossary from './Glossary.astro';
+import HowTo from './HowTo.astro';
+import Notes from './Notes.astro';
+import Layout from '../layouts/Layout.astro';
+
+interface Props {
+  t: {
+    title: string;
+    description: string;
+    h1: string;
+    introHtml: string;
+    howToHeading?: string;
+    howToSteps?: string[];
+    notesHeading?: string;
+    notes?: string[];
+    glossaryHeading?: string;
+    glossaryTerms?: { term: string; description: string }[];
+  };
+}
+
+const { t } = Astro.props;
+---
+
+<Layout title={t.title} description={t.description}>
+  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
+  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
+
+  <slot />
+
+  {t.howToSteps && t.howToHeading && (
+    <HowTo heading={t.howToHeading} steps={t.howToSteps} />
+  )}
+  {t.notes && t.notesHeading && (
+    <Notes heading={t.notesHeading} items={t.notes} />
+  )}
+  {t.glossaryTerms && t.glossaryHeading && (
+    <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
+  )}
+
+  <slot name="after" />
+</Layout>

@@ -1,7 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Notes from '../Notes.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { placeholderImageGeneratorContent } from '../../i18n/tools/placeholder-image-generator';
 import {
   MIN_SIZE,
@@ -33,10 +31,7 @@ const pickerClass =
   'h-11 w-14 shrink-0 cursor-pointer rounded-lg border border-gray-300 dark:border-gray-700';
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div class="grid max-w-2xl gap-4 sm:grid-cols-2">
     <div>
       <label for="ph-width" class={labelClass}>
@@ -154,7 +149,7 @@ const pickerClass =
     data-max={MAX_SIZE}
     data-color={t.errorColor}
     data-encode={t.errorEncode}
-    class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+    class="ui-error mt-4 max-w-2xl"
   ></p>
 
   <div class="mt-4 flex flex-wrap items-center gap-3">
@@ -177,9 +172,7 @@ const pickerClass =
     ></span>
   </div>
 
-  <span class="mt-4 mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-    {t.previewLabel}
-  </span>
+  <span class="ui-label mt-4">{t.previewLabel}</span>
   <div class="max-w-full overflow-auto rounded border border-gray-300 p-2 dark:border-gray-700">
     <canvas
       id="ph-canvas"
@@ -188,11 +181,7 @@ const pickerClass =
       aria-label={t.previewLabel}
     ></canvas>
   </div>
-
-  <Notes heading={t.notesHeading} items={t.notes} />
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
   import {

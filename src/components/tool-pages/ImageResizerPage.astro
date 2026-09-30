@@ -1,7 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import HowTo from '../HowTo.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { imageResizerContent } from '../../i18n/tools/image-resizer';
 import { MIN_DIMENSION, MAX_DIMENSION } from '../../lib/tools/image-resizer';
 import type { Locale } from '../../data/tools';
@@ -14,24 +12,16 @@ const { locale } = Astro.props;
 const t = imageResizerContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div>
-    <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-      {t.dropLabel}
-    </span>
-    <div
-      id="ir-dropzone"
-      class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
-    >
+    <span class="ui-label">{t.dropLabel}</span>
+    <div id="ir-dropzone" class="ui-dropzone">
       <input
         id="ir-file-input"
         type="file"
         multiple
         accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
-        class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+        class="ui-file"
       />
       <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
     </div>
@@ -52,12 +42,10 @@ const t = imageResizerContent[locale];
   </div>
 
   <div class="mt-4">
-    <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-      {t.resizeModeLabel}
-    </span>
+    <span class="ui-label">{t.resizeModeLabel}</span>
     <div
       id="ir-dimension-mode"
-      class="mb-3 flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700"
+      class="ui-seg mb-3"
       role="group"
       aria-label={t.resizeModeLabel}
     >
@@ -65,7 +53,7 @@ const t = imageResizerContent[locale];
         type="button"
         data-dimension-mode="px"
         aria-pressed="true"
-        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+        class="ui-seg-btn"
       >
         {t.modePxLabel}
       </button>
@@ -73,7 +61,7 @@ const t = imageResizerContent[locale];
         type="button"
         data-dimension-mode="percent"
         aria-pressed="false"
-        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+        class="ui-seg-btn"
       >
         {t.modePercentLabel}
       </button>
@@ -81,10 +69,7 @@ const t = imageResizerContent[locale];
 
     <div id="ir-px-panel" class="flex flex-wrap items-end gap-3">
       <div>
-        <label
-          for="ir-width"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="ir-width" class="ui-label">
           {t.widthLabel}
         </label>
         <input
@@ -97,10 +82,7 @@ const t = imageResizerContent[locale];
       </div>
       <span class="mb-2.5 text-gray-500 dark:text-gray-400">×</span>
       <div>
-        <label
-          for="ir-height"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="ir-height" class="ui-label">
           {t.heightLabel}
         </label>
         <input
@@ -126,10 +108,7 @@ const t = imageResizerContent[locale];
     </div>
 
     <div id="ir-percent-panel" hidden class="max-w-xs">
-      <label
-        for="ir-percent"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="ir-percent" class="ui-label">
         {t.percentLabel}
         <span
           id="ir-percent-value"
@@ -149,12 +128,10 @@ const t = imageResizerContent[locale];
 
   <div class="mt-4 flex flex-wrap items-end gap-6">
     <div>
-      <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-        {t.formatLabel}
-      </span>
+      <span class="ui-label">{t.formatLabel}</span>
       <div
         id="ir-format"
-        class="flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700"
+        class="ui-seg"
         role="group"
         aria-label={t.formatLabel}
       >
@@ -162,7 +139,7 @@ const t = imageResizerContent[locale];
           type="button"
           data-format="webp"
           aria-pressed="true"
-          class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+          class="ui-seg-btn"
         >
           {t.formatWebp}
         </button>
@@ -170,7 +147,7 @@ const t = imageResizerContent[locale];
           type="button"
           data-format="jpeg"
           aria-pressed="false"
-          class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+          class="ui-seg-btn"
         >
           {t.formatJpeg}
         </button>
@@ -178,7 +155,7 @@ const t = imageResizerContent[locale];
           type="button"
           data-format="png"
           aria-pressed="false"
-          class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+          class="ui-seg-btn"
         >
           {t.formatPng}
         </button>
@@ -186,10 +163,7 @@ const t = imageResizerContent[locale];
     </div>
 
     <div class="min-w-48 flex-1">
-      <label
-        for="ir-quality"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="ir-quality" class="ui-label">
         {t.qualityLabel}
         <span
           id="ir-quality-value"
@@ -217,7 +191,7 @@ const t = imageResizerContent[locale];
       id="ir-clear-button"
       type="button"
       disabled
-      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
     >
       {t.clearButton}
     </button>
@@ -267,20 +241,10 @@ const t = imageResizerContent[locale];
       ></button>
     </li>
   </template>
-
-  <HowTo heading={t.howToHeading} steps={t.howToSteps} />
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { enableFileDrop } from '../../lib/file-drop';
   import {
     buildOutputFileName,
     calculateReductionPercent,
@@ -650,24 +614,7 @@ const t = imageResizerContent[locale];
     fileInput.value = '';
   });
 
-  const dropzoneActiveClasses = ['border-blue-400', 'bg-blue-50'];
-
-  dropzone.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    dropzone.classList.add(...dropzoneActiveClasses);
-  });
-
-  dropzone.addEventListener('dragleave', () => {
-    dropzone.classList.remove(...dropzoneActiveClasses);
-  });
-
-  dropzone.addEventListener('drop', (e) => {
-    e.preventDefault();
-    dropzone.classList.remove(...dropzoneActiveClasses);
-    if (e.dataTransfer?.files && e.dataTransfer.files.length > 0) {
-      void addFiles(e.dataTransfer.files);
-    }
-  });
+  enableFileDrop(dropzone, fileInput);
 
   dimensionModeButtons.forEach((button) => {
     button.addEventListener('click', () => {

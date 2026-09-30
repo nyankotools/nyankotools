@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { loremIpsumContent } from '../../i18n/tools/lorem-ipsum';
 import type { Locale } from '../../data/tools';
 
@@ -12,17 +11,12 @@ const { locale } = Astro.props;
 const t = loremIpsumContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div class="flex flex-wrap items-end gap-4">
     <div>
-      <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-        {t.languageLegend}
-      </span>
+      <span class="ui-label">{t.languageLegend}</span>
       <div class="flex gap-4">
-        <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+        <label class="ui-check">
           <input
             type="radio"
             name="lorem-language"
@@ -33,7 +27,7 @@ const t = loremIpsumContent[locale];
           />
           {t.languageLatinLabel}
         </label>
-        <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+        <label class="ui-check">
           <input
             type="radio"
             name="lorem-language"
@@ -54,11 +48,9 @@ const t = loremIpsumContent[locale];
     data-copy-failed={t.copyFailed}
   >
     <div>
-      <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-        {t.unitLegend}
-      </span>
+      <span class="ui-label">{t.unitLegend}</span>
       <div class="flex gap-4">
-        <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+        <label class="ui-check">
           <input
             type="radio"
             name="lorem-unit"
@@ -69,7 +61,7 @@ const t = loremIpsumContent[locale];
           />
           {t.unitParagraphsLabel}
         </label>
-        <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+        <label class="ui-check">
           <input
             type="radio"
             name="lorem-unit"
@@ -79,10 +71,7 @@ const t = loremIpsumContent[locale];
           />
           {t.unitSentencesLabel}
         </label>
-        <label
-          id="lorem-unit-words-label"
-          class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300"
-        >
+        <label id="lorem-unit-words-label" class="ui-check">
           <input
             type="radio"
             name="lorem-unit"
@@ -96,10 +85,7 @@ const t = loremIpsumContent[locale];
     </div>
 
     <div>
-      <label
-        for="lorem-count"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="lorem-count" class="ui-label">
         {t.countLabel}
       </label>
       <input
@@ -108,7 +94,7 @@ const t = loremIpsumContent[locale];
         min="1"
         max="200"
         value="3"
-        class="h-11 w-28 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
       />
     </div>
 
@@ -120,11 +106,7 @@ const t = loremIpsumContent[locale];
       {t.generateButton}
     </button>
 
-    <button
-      id="lorem-copy-button"
-      type="button"
-      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-    >
+    <button id="lorem-copy-button" type="button" class="ui-btn">
       {t.copyButton}
     </button>
     <span
@@ -135,37 +117,26 @@ const t = loremIpsumContent[locale];
   </div>
 
   <div class="mt-4">
-    <label class="flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+    <label class="ui-check">
       <input id="lorem-fixed-opening" type="checkbox" class="h-4 w-4" checked />
       {t.fixedOpeningLabel}
     </label>
   </div>
 
   <div class="mt-4">
-    <label
-      for="lorem-output"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="lorem-output" class="ui-label">
       {t.outputLabel}
     </label>
     <textarea
       id="lorem-output"
       readonly
-      class="h-64 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm whitespace-pre-wrap focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      class="ui-input h-64 w-full bg-gray-50 p-4 font-mono whitespace-pre-wrap dark:bg-gray-900"
     ></textarea>
   </div>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { copyText } from '../../lib/clipboard';
   import {
     clampLoremCount,
     generateLoremIpsum,
@@ -256,12 +227,7 @@ const t = loremIpsumContent[locale];
 
   copyButton.addEventListener('click', async () => {
     if (!output.value) return;
-    try {
-      await navigator.clipboard.writeText(output.value);
-      statusEl.textContent = copied;
-    } catch {
-      statusEl.textContent = copyFailed;
-    }
+    statusEl.textContent = (await copyText(output.value)) ? copied : copyFailed;
   });
 
   syncUnitAvailability();

@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { textListToolsContent } from '../../i18n/tools/text-list-tools';
 import type { Locale } from '../../data/tools';
 
@@ -12,20 +11,14 @@ const { locale } = Astro.props;
 const t = textListToolsContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div>
-    <label
-      for="tlt-input"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="tlt-input" class="ui-label">
       {t.inputLabel}
     </label>
     <textarea
       id="tlt-input"
-      class="h-52 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      class="ui-input h-52 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
       placeholder={t.inputPlaceholder}
       spellcheck="false"
     ></textarea>
@@ -54,16 +47,10 @@ const t = textListToolsContent[locale];
 
   <div class="mt-4 flex flex-wrap items-end gap-4">
     <div>
-      <label
-        for="tlt-sort-order"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="tlt-sort-order" class="ui-label">
         {t.sortLabel}
       </label>
-      <select
-        id="tlt-sort-order"
-        class="h-11 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-      >
+      <select id="tlt-sort-order" class="ui-input h-11 px-3 dark:bg-gray-900">
         <option value="none">{t.sortOptionNone}</option>
         <option value="asc">{t.sortOptionAsc}</option>
         <option value="desc">{t.sortOptionDesc}</option>
@@ -86,7 +73,7 @@ const t = textListToolsContent[locale];
       type="button"
       data-copied={t.copied}
       data-copy-failed={t.copyFailed}
-      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      class="ui-btn"
     >
       {t.copy}
     </button>
@@ -114,21 +101,13 @@ const t = textListToolsContent[locale];
     <textarea
       id="tlt-output"
       readonly
-      class="h-52 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm whitespace-pre-wrap focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      class="ui-input h-52 w-full bg-gray-50 p-4 font-mono whitespace-pre-wrap dark:bg-gray-900"
     ></textarea>
   </div>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { copyText } from '../../lib/clipboard';
   import {
     processTextList,
     type SortOrder,
@@ -190,12 +169,9 @@ const t = textListToolsContent[locale];
 
   copyButton.addEventListener('click', async () => {
     if (!output.value) return;
-    try {
-      await navigator.clipboard.writeText(output.value);
-      statusEl.textContent = copyButton.dataset.copied ?? '';
-    } catch {
-      statusEl.textContent = copyButton.dataset.copyFailed ?? '';
-    }
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
   });
 
   process();

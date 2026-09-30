@@ -1,8 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Notes from '../Notes.astro';
-import HowTo from '../HowTo.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { pdfMergeSplitContent } from '../../i18n/tools/pdf-merge-split';
 import type { Locale } from '../../data/tools';
 
@@ -23,10 +20,7 @@ const smallButtonClass =
   'min-h-9 rounded-lg border border-gray-300 px-2 text-xs text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800';
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <fieldset class="mb-4">
     <legend class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
       {t.modeLabel}
@@ -52,20 +46,17 @@ const smallButtonClass =
     for="pdf-file"
     data-merge={t.fileLabelMerge}
     data-single={t.fileLabelSingle}
-    class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+    class="ui-label"
   >
     {t.fileLabelMerge}
   </label>
-  <div
-    id="pdf-drop"
-    class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
-  >
+  <div id="pdf-drop" class="ui-dropzone">
     <input
       id="pdf-file"
       type="file"
       accept=".pdf,application/pdf"
       multiple
-      class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+      class="ui-file"
     />
     <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
@@ -82,10 +73,7 @@ const smallButtonClass =
   ></ul>
 
   <div id="pdf-opt-extract" hidden class="mt-4 max-w-xl">
-    <label
-      for="pdf-range"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="pdf-range" class="ui-label">
       {t.rangeLabel}
     </label>
     <input
@@ -94,7 +82,7 @@ const smallButtonClass =
       autocomplete="off"
       spellcheck="false"
       placeholder={t.rangePlaceholder}
-      class="min-h-11 w-full rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      class="ui-input min-h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
     />
     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.rangeHint}</p>
   </div>
@@ -120,7 +108,7 @@ const smallButtonClass =
       type="button"
       data-run={t.run}
       data-processing={t.processing}
-      class="min-h-11 rounded-lg bg-blue-600 px-6 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+      class="ui-btn-primary"
     >
       {t.run}
     </button>
@@ -143,7 +131,7 @@ const smallButtonClass =
     data-out-of-range={t.errorOutOfRange}
     data-bad-count={t.errorBadCount}
     data-failed={t.errorFailed}
-    class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+    class="ui-error mt-4 max-w-2xl"
   ></p>
 
   <section
@@ -155,13 +143,7 @@ const smallButtonClass =
     <h2 class="mb-2 text-lg font-semibold">{t.resultHeading}</h2>
     <ul id="pdf-result-list" class="flex flex-col gap-2"></ul>
   </section>
-
-  <HowTo heading={t.howToHeading} steps={t.howToSteps} />
-
-  <Notes heading={t.notesHeading} items={t.notes} />
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
   import {

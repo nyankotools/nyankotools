@@ -1,7 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Notes from '../Notes.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { kanaConverterContent } from '../../i18n/tools/kana-converter';
 import type { Locale } from '../../data/tools';
 
@@ -13,14 +11,11 @@ const { locale } = Astro.props;
 const t = kanaConverterContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div class="flex flex-wrap items-center gap-3">
     <div
       id="kana-converter-mode"
-      class="flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700"
+      class="ui-seg"
       role="group"
       aria-label={t.directionLabel}
     >
@@ -28,7 +23,7 @@ const t = kanaConverterContent[locale];
         type="button"
         data-mode="toKatakana"
         aria-pressed="true"
-        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+        class="ui-seg-btn"
       >
         {t.modeToKatakana}
       </button>
@@ -36,7 +31,7 @@ const t = kanaConverterContent[locale];
         type="button"
         data-mode="toHiragana"
         aria-pressed="false"
-        class="min-h-9 rounded-md px-3 font-medium text-gray-700 aria-pressed:bg-blue-600 aria-pressed:text-white dark:text-gray-300"
+        class="ui-seg-btn"
       >
         {t.modeToHiragana}
       </button>
@@ -46,7 +41,7 @@ const t = kanaConverterContent[locale];
       type="button"
       data-copied={t.copied}
       data-copy-failed={t.copyFailed}
-      class="min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+      class="ui-btn"
     >
       {t.copy}
     </button>
@@ -59,40 +54,31 @@ const t = kanaConverterContent[locale];
 
   <div class="mt-4 grid gap-4 lg:grid-cols-2">
     <div>
-      <label
-        for="kana-converter-input"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="kana-converter-input" class="ui-label">
         {t.inputLabel}
       </label>
       <textarea
         id="kana-converter-input"
-        class="h-64 w-full rounded-lg border border-gray-300 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        class="ui-input h-64 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
         placeholder={t.inputPlaceholder}
         spellcheck="false"
       ></textarea>
     </div>
     <div>
-      <label
-        for="kana-converter-output"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <label for="kana-converter-output" class="ui-label">
         {t.outputLabel}
       </label>
       <textarea
         id="kana-converter-output"
         readonly
-        class="h-64 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-64 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
       ></textarea>
     </div>
   </div>
-
-  <Notes heading={t.notesHeading} items={t.notes} />
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { copyText } from '../../lib/clipboard';
   import {
     convertKana,
     type KanaDirection,
@@ -133,12 +119,9 @@ const t = kanaConverterContent[locale];
 
   copyButton.addEventListener('click', async () => {
     if (!output.value) return;
-    try {
-      await navigator.clipboard.writeText(output.value);
-      statusEl.textContent = copyButton.dataset.copied ?? '';
-    } catch {
-      statusEl.textContent = copyButton.dataset.copyFailed ?? '';
-    }
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
   });
 
   convert();

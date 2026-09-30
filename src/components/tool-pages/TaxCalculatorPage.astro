@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { taxCalculatorContent } from '../../i18n/tools/tax-calculator';
 import type { Locale } from '../../data/tools';
 
@@ -12,10 +11,7 @@ const { locale } = Astro.props;
 const t = taxCalculatorContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <section
     class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-number-locale={t.numberLocale}
@@ -24,10 +20,7 @@ const t = taxCalculatorContent[locale];
     <h2 class="mb-3 text-lg font-bold">{t.section1Heading}</h2>
 
     <div class="mb-3">
-      <span
-        id="tax-calc-mode-label"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <span id="tax-calc-mode-label" class="ui-label">
         {t.modeLegend}
       </span>
       <div
@@ -47,10 +40,7 @@ const t = taxCalculatorContent[locale];
     </div>
 
     <div class="mb-3">
-      <span
-        id="tax-calc-rate-label"
-        class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-      >
+      <span id="tax-calc-rate-label" class="ui-label">
         {t.rateLegend}
       </span>
       <div
@@ -78,7 +68,7 @@ const t = taxCalculatorContent[locale];
           step="0.1"
           placeholder={t.rateCustomPlaceholder}
           disabled
-          class="h-9 w-20 rounded-lg border border-gray-300 px-2 text-sm focus:border-blue-400 focus:outline-none disabled:opacity-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          class="ui-input h-9 w-20 px-2 disabled:opacity-50 dark:bg-gray-900"
         />
         <span class="text-sm text-gray-600 dark:text-gray-400">%</span>
       </div>
@@ -86,10 +76,7 @@ const t = taxCalculatorContent[locale];
 
     <div class="flex flex-wrap items-end gap-3">
       <div>
-        <label
-          for="tax-calc-amount"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="tax-calc-amount" class="ui-label">
           {t.amountLabel}
         </label>
         <input
@@ -97,14 +84,11 @@ const t = taxCalculatorContent[locale];
           type="text"
           inputmode="decimal"
           placeholder={t.amountPlaceholder}
-          class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-32 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <div>
-        <span
-          id="tax-calc-rounding-label"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <span id="tax-calc-rounding-label" class="ui-label">
           {t.roundingLegend}
         </span>
         <div
@@ -175,10 +159,7 @@ const t = taxCalculatorContent[locale];
 
     <div class="mb-3 flex flex-wrap items-end gap-3">
       <div>
-        <label
-          for="discount-calc-original"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="discount-calc-original" class="ui-label">
           {t.originalPriceLabel}
         </label>
         <input
@@ -186,14 +167,11 @@ const t = taxCalculatorContent[locale];
           type="text"
           inputmode="decimal"
           placeholder={t.originalPricePlaceholder}
-          class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-32 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <div>
-        <span
-          id="discount-calc-type-label"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <span id="discount-calc-type-label" class="ui-label">
           {t.discountTypeLegend}
         </span>
         <div
@@ -217,10 +195,7 @@ const t = taxCalculatorContent[locale];
         </div>
       </div>
       <div>
-        <label
-          for="discount-calc-value"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="discount-calc-value" class="ui-label">
           {t.discountValueLabel}
         </label>
         <input
@@ -228,14 +203,11 @@ const t = taxCalculatorContent[locale];
           type="text"
           inputmode="decimal"
           placeholder={t.discountValuePlaceholder}
-          class="h-11 w-32 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-32 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <div>
-        <span
-          id="discount-calc-rounding-label"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <span id="discount-calc-rounding-label" class="ui-label">
           {t.discountRoundingLegend}
         </span>
         <div
@@ -295,16 +267,7 @@ const t = taxCalculatorContent[locale];
       </div>
     </dl>
   </section>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
   import {

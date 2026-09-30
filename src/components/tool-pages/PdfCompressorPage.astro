@@ -1,7 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import HowTo from '../HowTo.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { pdfCompressorContent } from '../../i18n/tools/pdf-compressor';
 import type { Locale } from '../../data/tools';
 
@@ -17,26 +15,17 @@ const selectClass =
   'min-h-11 rounded-lg border border-gray-300 px-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div>
-    <label
-      for="cmp-file"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="cmp-file" class="ui-label">
       {t.fileLabel}
     </label>
-    <div
-      id="cmp-drop"
-      class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
-    >
+    <div id="cmp-drop" class="ui-dropzone">
       <input
         id="cmp-file"
         type="file"
         accept=".pdf,application/pdf"
-        class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+        class="ui-file"
       />
       <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
       <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
@@ -78,7 +67,7 @@ const selectClass =
       data-run={t.run}
       data-processing={t.processing}
       data-progress={t.progressTemplate}
-      class="min-h-11 rounded-lg bg-blue-600 px-6 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+      class="ui-btn-primary"
     >
       {t.run}
     </button>
@@ -96,7 +85,7 @@ const selectClass =
     data-invalid={t.errorInvalid}
     data-encrypted={t.errorEncrypted}
     data-failed={t.errorFailed}
-    class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+    class="ui-error mt-4 max-w-2xl"
   ></p>
 
   <section
@@ -114,11 +103,7 @@ const selectClass =
     ></p>
     <ul id="cmp-result-list" class="flex flex-col gap-3"></ul>
   </section>
-
-  <HowTo heading={t.howToHeading} steps={t.howToSteps} />
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
   import * as pdfjs from 'pdfjs-dist';

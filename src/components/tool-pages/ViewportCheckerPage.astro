@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { TAILWIND_BREAKPOINTS } from '../../lib/tools/viewport-checker';
 import { viewportCheckerContent } from '../../i18n/tools/viewport-checker';
 import type { Locale } from '../../data/tools';
@@ -32,10 +31,7 @@ const breakpointRows: {
 ];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div class="overflow-x-auto">
     <table
       class="w-full min-w-[420px] border-collapse text-sm"
@@ -94,16 +90,7 @@ const breakpointRows: {
       <li>{item}</li>
     ))}
   </ul>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
   import {

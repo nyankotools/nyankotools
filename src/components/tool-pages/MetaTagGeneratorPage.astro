@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { metaTagGeneratorContent } from '../../i18n/tools/meta-tag-generator';
 import type { Locale } from '../../data/tools';
 
@@ -12,10 +11,7 @@ const { locale } = Astro.props;
 const t = metaTagGeneratorContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <h2 class="mb-2 text-lg font-bold">{t.formHeading}</h2>
   <div class="mb-6 grid gap-4 sm:grid-cols-2">
     <label class="text-sm text-gray-700 sm:col-span-2 dark:text-gray-300">
@@ -24,7 +20,7 @@ const t = metaTagGeneratorContent[locale];
         id="mtg-title"
         type="text"
         placeholder={t.titlePlaceholder}
-        class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
       />
     </label>
     <label class="text-sm text-gray-700 sm:col-span-2 dark:text-gray-300">
@@ -33,7 +29,7 @@ const t = metaTagGeneratorContent[locale];
         id="mtg-description"
         rows="3"
         placeholder={t.descriptionPlaceholder}
-        class="w-full resize-none rounded-lg border border-gray-300 p-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input w-full resize-none p-3 dark:bg-gray-900"
       ></textarea>
     </label>
     <label class="text-sm text-gray-700 dark:text-gray-300">
@@ -42,7 +38,7 @@ const t = metaTagGeneratorContent[locale];
         id="mtg-url"
         type="text"
         placeholder={t.urlPlaceholder}
-        class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
       />
     </label>
     <label class="text-sm text-gray-700 dark:text-gray-300">
@@ -51,7 +47,7 @@ const t = metaTagGeneratorContent[locale];
         id="mtg-image-url"
         type="text"
         placeholder={t.imageUrlPlaceholder}
-        class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
       />
     </label>
     <label class="text-sm text-gray-700 dark:text-gray-300">
@@ -60,7 +56,7 @@ const t = metaTagGeneratorContent[locale];
         id="mtg-site-name"
         type="text"
         placeholder={t.siteNamePlaceholder}
-        class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
       />
     </label>
     <label class="text-sm text-gray-700 dark:text-gray-300">
@@ -69,14 +65,14 @@ const t = metaTagGeneratorContent[locale];
         id="mtg-locale"
         type="text"
         placeholder={t.localePlaceholder}
-        class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
       />
     </label>
     <label class="text-sm text-gray-700 dark:text-gray-300">
       <span class="mb-1 block">{t.twitterCardLabel}</span>
       <select
         id="mtg-twitter-card"
-        class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
       >
         <option value="summary_large_image">
           {t.twitterCardSummaryLargeImage}
@@ -90,7 +86,7 @@ const t = metaTagGeneratorContent[locale];
         id="mtg-twitter-site"
         type="text"
         placeholder={t.twitterSitePlaceholder}
-        class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
       />
     </label>
   </div>
@@ -134,10 +130,7 @@ const t = metaTagGeneratorContent[locale];
   </div>
 
   <div data-copied={t.copied} data-copy-failed={t.copyFailed}>
-    <label
-      for="mtg-output"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="mtg-output" class="ui-label">
       {t.outputHeading}
     </label>
     <div class="flex gap-2">
@@ -151,7 +144,7 @@ const t = metaTagGeneratorContent[locale];
       <button
         id="mtg-copy-button"
         type="button"
-        class="min-h-11 shrink-0 self-start rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+        class="ui-btn shrink-0 self-start"
       >
         {t.copyButton}
       </button>
@@ -162,18 +155,10 @@ const t = metaTagGeneratorContent[locale];
       aria-live="polite"
     ></span>
   </div>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { copyText } from '../../lib/clipboard';
   import {
     buildMetaTags,
     extractDomain,
@@ -256,12 +241,7 @@ const t = metaTagGeneratorContent[locale];
 
   copyButton.addEventListener('click', async () => {
     if (!output.value) return;
-    try {
-      await navigator.clipboard.writeText(output.value);
-      statusEl.textContent = copied;
-    } catch {
-      statusEl.textContent = copyFailed;
-    }
+    statusEl.textContent = (await copyText(output.value)) ? copied : copyFailed;
   });
 
   update();

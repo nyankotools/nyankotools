@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { cidrCalculatorContent } from '../../i18n/tools/cidr-calculator';
 import type { Locale } from '../../data/tools';
 
@@ -12,15 +11,9 @@ const { locale } = Astro.props;
 const t = cidrCalculatorContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div>
-    <label
-      for="cidr-input"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="cidr-input" class="ui-label">
       {t.inputLabel}
     </label>
     <input
@@ -28,7 +21,7 @@ const t = cidrCalculatorContent[locale];
       type="text"
       placeholder={t.inputPlaceholder}
       spellcheck="false"
-      class="h-11 w-full min-w-0 rounded-lg border border-gray-300 px-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
     />
   </div>
 
@@ -72,11 +65,7 @@ const t = cidrCalculatorContent[locale];
       </table>
     </div>
 
-    <button
-      type="button"
-      id="cidr-copy-button"
-      class="mt-4 min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-    >
+    <button type="button" id="cidr-copy-button" class="ui-btn mt-4">
       {t.copyResult}
     </button>
     <span
@@ -87,18 +76,10 @@ const t = cidrCalculatorContent[locale];
       aria-live="polite"
     ></span>
   </div>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { copyText } from '../../lib/clipboard';
   import {
     calculateCidr,
     type CidrInfo,
@@ -197,12 +178,9 @@ const t = cidrCalculatorContent[locale];
 
   copyButton.addEventListener('click', async () => {
     if (!lastResult) return;
-    try {
-      await navigator.clipboard.writeText(toClipboardText(lastResult));
-      statusEl.textContent = statusEl.dataset.copied ?? '';
-    } catch {
-      statusEl.textContent = statusEl.dataset.copyFailed ?? '';
-    }
+    statusEl.textContent = (await copyText(toClipboardText(lastResult)))
+      ? (statusEl.dataset.copied ?? '')
+      : (statusEl.dataset.copyFailed ?? '');
   });
 
   input.value = '192.168.1.10/24';

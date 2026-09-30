@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { catLogoTextGeneratorContent } from '../../i18n/tools/cat-logo-text-generator';
 import {
   DECOR_KINDS,
@@ -38,10 +37,7 @@ const colorFields = [
 ];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <div class="grid max-w-3xl gap-4 sm:grid-cols-2">
     <div class="sm:col-span-2">
       <label for="cl-text" class={labelClass}>
@@ -225,7 +221,7 @@ const colorFields = [
     data-max-outline={MAX_OUTLINE}
     data-color={t.errorColor}
     data-encode={t.errorEncode}
-    class="mt-4 max-w-3xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+    class="ui-error mt-4 max-w-3xl"
   ></p>
 
   <div class="mt-4 flex flex-wrap items-center gap-3">
@@ -297,9 +293,7 @@ const colorFields = [
       <li>{n}</li>
     ))}
   </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <style>
   #cl-stage[data-bg='checker'] {

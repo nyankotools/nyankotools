@@ -1,7 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import HowTo from '../HowTo.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { pdfToMarkdownContent } from '../../i18n/tools/pdf-to-markdown';
 import type { Locale } from '../../data/tools';
 
@@ -20,25 +18,16 @@ const options = [
 ];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
-  <label
-    for="md-file"
-    class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-  >
+<ToolShell t={t}>
+  <label for="md-file" class="ui-label">
     {t.fileLabel}
   </label>
-  <div
-    id="md-drop"
-    class="rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700"
-  >
+  <div id="md-drop" class="ui-dropzone">
     <input
       id="md-file"
       type="file"
       accept=".pdf,application/pdf"
-      class="block w-full text-sm text-gray-700 file:mr-4 file:min-h-11 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-600 file:px-4 file:text-sm file:font-medium file:text-white hover:file:bg-blue-700 dark:text-gray-300"
+      class="ui-file"
     />
     <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
@@ -75,7 +64,7 @@ const options = [
       type="button"
       data-run={t.run}
       data-processing={t.processing}
-      class="min-h-11 rounded-lg bg-blue-600 px-6 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+      class="ui-btn-primary"
     >
       {t.run}
     </button>
@@ -92,7 +81,7 @@ const options = [
     data-invalid={t.errorInvalid}
     data-encrypted={t.errorEncrypted}
     data-failed={t.errorFailed}
-    class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
+    class="ui-error mt-4 max-w-2xl"
   ></p>
 
   <section id="md-result" hidden class="mt-6">
@@ -109,10 +98,7 @@ const options = [
       data-no-text={t.warnNoText}
       class="mb-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300"
     ></p>
-    <label
-      for="md-output"
-      class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-    >
+    <label for="md-output" class="ui-label">
       {t.markdownLabel}
     </label>
     <textarea
@@ -120,7 +106,7 @@ const options = [
       readonly
       rows="16"
       spellcheck="false"
-      class="w-full rounded-lg border border-gray-300 p-3 font-mono text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      class="ui-input w-full p-3 font-mono dark:bg-gray-900"
     ></textarea>
     <div class="mt-2 flex flex-wrap items-center gap-3">
       <button
@@ -141,20 +127,11 @@ const options = [
       ></span>
     </div>
   </section>
-
-  <HowTo heading={t.howToHeading} steps={t.howToSteps} />
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-disc space-y-1 pl-5 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((n) => (
-      <li>{n}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
+  import { downloadBlob } from '../../lib/download';
+  import { copyText } from '../../lib/clipboard';
   import * as pdfjs from 'pdfjs-dist';
   import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
   import type { PDFPageProxy } from 'pdfjs-dist';
@@ -405,23 +382,18 @@ const options = [
 
   copyButton.addEventListener('click', async () => {
     if (!output.value) return;
-    try {
-      await navigator.clipboard.writeText(output.value);
+    if (await copyText(output.value)) {
       copyStatus.textContent = copyButton.dataset.copied ?? '';
-    } catch {
+    } else {
       output.select();
     }
   });
 
   downloadButton.addEventListener('click', () => {
     if (!output.value) return;
-    const url = URL.createObjectURL(
+    downloadBlob(
       new Blob([output.value], { type: 'text/markdown;charset=utf-8' }),
+      `${pdfName.replace(/\.[^.]+$/, '') || 'document'}.md`,
     );
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${pdfName.replace(/\.[^.]+$/, '') || 'document'}.md`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
 </script>

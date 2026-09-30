@@ -1,6 +1,5 @@
 ---
-import Glossary from '../Glossary.astro';
-import Layout from '../../layouts/Layout.astro';
+import ToolShell from '../ToolShell.astro';
 import { dateCalculatorContent } from '../../i18n/tools/date-calculator';
 import type { Locale } from '../../data/tools';
 
@@ -12,10 +11,7 @@ const { locale } = Astro.props;
 const t = dateCalculatorContent[locale];
 ---
 
-<Layout title={t.title} description={t.description}>
-  <h1 class="mb-2 text-2xl font-bold">{t.h1}</h1>
-  <p class="mb-6 text-gray-600 dark:text-gray-400" set:html={t.introHtml} />
-
+<ToolShell t={t}>
   <section
     class="mb-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-locale={locale}
@@ -24,10 +20,7 @@ const t = dateCalculatorContent[locale];
     <h2 class="mb-3 text-lg font-bold">{t.diffHeading}</h2>
     <div class="flex flex-wrap items-end gap-3">
       <div>
-        <span
-          id="date-calc-diff-start-label"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <span id="date-calc-diff-start-label" class="ui-label">
           {t.startLabel}
         </span>
         <div
@@ -43,7 +36,7 @@ const t = dateCalculatorContent[locale];
             max="9999"
             placeholder={t.yearPlaceholder}
             aria-label={t.startYearAriaLabel}
-            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-600 dark:text-gray-400">
             {t.yearUnit}
@@ -56,7 +49,7 @@ const t = dateCalculatorContent[locale];
             max="12"
             placeholder={t.monthPlaceholder}
             aria-label={t.startMonthAriaLabel}
-            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-600 dark:text-gray-400">
             {t.monthUnit}
@@ -69,7 +62,7 @@ const t = dateCalculatorContent[locale];
             max="31"
             placeholder={t.dayPlaceholder}
             aria-label={t.startDayAriaLabel}
-            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           {t.dayUnit && (
             <span class="text-sm text-gray-600 dark:text-gray-400">
@@ -79,10 +72,7 @@ const t = dateCalculatorContent[locale];
         </div>
       </div>
       <div>
-        <span
-          id="date-calc-diff-end-label"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <span id="date-calc-diff-end-label" class="ui-label">
           {t.endLabel}
         </span>
         <div
@@ -98,7 +88,7 @@ const t = dateCalculatorContent[locale];
             max="9999"
             placeholder={t.yearPlaceholder}
             aria-label={t.endYearAriaLabel}
-            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-600 dark:text-gray-400">
             {t.yearUnit}
@@ -111,7 +101,7 @@ const t = dateCalculatorContent[locale];
             max="12"
             placeholder={t.monthPlaceholder}
             aria-label={t.endMonthAriaLabel}
-            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-600 dark:text-gray-400">
             {t.monthUnit}
@@ -124,7 +114,7 @@ const t = dateCalculatorContent[locale];
             max="31"
             placeholder={t.dayPlaceholder}
             aria-label={t.endDayAriaLabel}
-            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           {t.dayUnit && (
             <span class="text-sm text-gray-600 dark:text-gray-400">
@@ -172,10 +162,7 @@ const t = dateCalculatorContent[locale];
     <h2 class="mb-3 text-lg font-bold">{t.addHeading}</h2>
     <div class="flex flex-wrap items-end gap-3">
       <div>
-        <span
-          id="date-calc-add-base-label"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <span id="date-calc-add-base-label" class="ui-label">
           {t.baseLabel}
         </span>
         <div
@@ -191,7 +178,7 @@ const t = dateCalculatorContent[locale];
             max="9999"
             placeholder={t.yearPlaceholder}
             aria-label={t.baseYearAriaLabel}
-            class="h-11 w-24 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-600 dark:text-gray-400">
             {t.yearUnit}
@@ -204,7 +191,7 @@ const t = dateCalculatorContent[locale];
             max="12"
             placeholder={t.monthPlaceholder}
             aria-label={t.baseMonthAriaLabel}
-            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           <span class="text-sm text-gray-600 dark:text-gray-400">
             {t.monthUnit}
@@ -217,7 +204,7 @@ const t = dateCalculatorContent[locale];
             max="31"
             placeholder={t.dayPlaceholder}
             aria-label={t.baseDayAriaLabel}
-            class="h-11 w-16 rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+            class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
           />
           {t.dayUnit && (
             <span class="text-sm text-gray-600 dark:text-gray-400">
@@ -227,10 +214,7 @@ const t = dateCalculatorContent[locale];
         </div>
       </div>
       <div class="w-28">
-        <label
-          for="date-calc-add-days"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="date-calc-add-days" class="ui-label">
           {t.daysLabel}
         </label>
         <input
@@ -239,19 +223,16 @@ const t = dateCalculatorContent[locale];
           min="0"
           inputmode="numeric"
           placeholder={t.daysPlaceholder}
-          class="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
         />
       </div>
       <div>
-        <label
-          for="date-calc-add-direction"
-          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
-        >
+        <label for="date-calc-add-direction" class="ui-label">
           {t.directionLabel}
         </label>
         <select
           id="date-calc-add-direction"
-          class="h-11 rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
         >
           <option value="after">{t.directionAfter}</option>
           <option value="before">{t.directionBefore}</option>
@@ -269,16 +250,7 @@ const t = dateCalculatorContent[locale];
       aria-live="polite"
     ></p>
   </section>
-
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.notes.map((note) => (
-      <li>{note}</li>
-    ))}
-  </ul>
-
-  <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
-</Layout>
+</ToolShell>
 
 <script>
   import {

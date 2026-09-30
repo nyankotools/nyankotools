@@ -111,6 +111,7 @@ import { CONTACT_EMAIL } from '../../../lib/contact-form';
 </Layout>
 
 <script>
+  import { copyText } from '../../../lib/clipboard';
   import {
     buildMailtoLink,
     formatMailBody,
@@ -171,19 +172,17 @@ import { CONTACT_EMAIL } from '../../../lib/contact-form';
 
   copyButton.addEventListener('click', async () => {
     if (!validate()) return;
-    try {
-      await navigator.clipboard.writeText(formatMailBody(getValues(), labels));
+    if (await copyText(formatMailBody(getValues(), labels))) {
       setStatus('Copied', false);
-    } catch {
+    } else {
       setStatus('Copy failed', true);
     }
   });
 
   emailCopyButton.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(CONTACT_EMAIL);
+    if (await copyText(CONTACT_EMAIL)) {
       setStatus('Email address copied', false);
-    } catch {
+    } else {
       setStatus('Copy failed', true);
     }
   });

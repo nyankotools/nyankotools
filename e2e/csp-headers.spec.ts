@@ -2,11 +2,11 @@ import { test, expect } from './helpers/test';
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { blockAnalytics } from './helpers/block-analytics';
 
-// public/_headers に定義した Content-Security-Policy は Cloudflare Workers Static
-// Assets（本番配信）でのみ適用され、`pnpm dev`（Astro dev server）では送出されない。
+// Content-Security-Policy は astro.config.mjs の security.csp により <meta> タグで配信される
+// （public/_headers には frame-ancestors のみ）。`pnpm dev`（Astro dev server）では適用されない。
 // そのため、このスペックだけは `pnpm build` 済みの dist を `wrangler dev` で実配信し、
-// 実際にCSPヘッダーが送出されること、および connect-src を同一オリジンのみに絞ったCSPによって
-// 既存機能（QRコード生成・ダウンロード、Markdownプレビュー、共有ボタンのコピー等）が
+// CSPが実際に出力されること、および connect-src（同一オリジン＋GA/Cloudflare計測のみ許可）の
+// CSPによって既存機能（QRコード生成・ダウンロード、Markdownプレビュー、共有ボタンのコピー等）が
 // 壊れていないことを確認する。
 
 const PORT = 18787;

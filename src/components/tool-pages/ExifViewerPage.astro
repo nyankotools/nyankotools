@@ -357,7 +357,10 @@ const t = exifViewerContent[locale];
     }
   }
 
+  let loadGeneration = 0;
+
   async function handleFile(file: File) {
+    const generation = ++loadGeneration;
     clearError();
     resetState();
 
@@ -379,9 +382,11 @@ const t = exifViewerContent[locale];
     try {
       buffer = await file.arrayBuffer();
     } catch {
+      if (generation !== loadGeneration) return;
       showError(errorEl.dataset.readFailed ?? '');
       return;
     }
+    if (generation !== loadGeneration) return;
 
     let tags: Record<string, unknown> | undefined;
     try {
@@ -398,9 +403,11 @@ const t = exifViewerContent[locale];
         jfif: false,
       });
     } catch {
+      if (generation !== loadGeneration) return;
       showError(errorEl.dataset.parseFailed ?? '');
       return;
     }
+    if (generation !== loadGeneration) return;
 
     currentFile = file;
     currentBytes = new Uint8Array(buffer);
@@ -420,6 +427,7 @@ const t = exifViewerContent[locale];
       preview.addEventListener('load', () => resolve(), { once: true });
       preview.addEventListener('error', () => resolve(), { once: true });
     });
+    if (generation !== loadGeneration) return;
     dimensionsEl.textContent =
       preview.naturalWidth > 0
         ? dimensionsTemplate

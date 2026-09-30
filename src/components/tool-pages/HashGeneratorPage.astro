@@ -82,9 +82,13 @@ const algorithms = [
   const copyButtons =
     document.querySelectorAll<HTMLButtonElement>('[data-copy-target]');
 
+  let generation = 0;
+
   async function generate() {
+    const current = ++generation;
     statusEl.textContent = '';
     const hashes = await computeHashes(input.value);
+    if (current !== generation) return;
     for (const [algorithm, value] of Object.entries(hashes)) {
       outputs[algorithm as keyof typeof outputs].value = value;
     }

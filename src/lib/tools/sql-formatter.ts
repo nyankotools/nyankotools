@@ -65,11 +65,23 @@ const BACKSLASH_ESCAPE_DIALECTS: ReadonlySet<SqlDialect> = new Set([
   'bigquery',
 ]);
 
+/** # で始まる行コメントを解釈する方言（PostgreSQL 等では # は演算子なので対象外） */
+const HASH_COMMENT_DIALECTS: ReadonlySet<SqlDialect> = new Set([
+  'mysql',
+  'mariadb',
+  'bigquery',
+]);
+
+/** `$$...$$` / `$tag$...$tag$` のドル引用符文字列を使う方言 */
+const DOLLAR_QUOTE_DIALECTS: ReadonlySet<SqlDialect> = new Set(['postgresql']);
+
 export function minifySqlQuery(
   input: string,
   dialect: SqlDialect = 'sql',
 ): string {
   const allowBackslashEscape = BACKSLASH_ESCAPE_DIALECTS.has(dialect);
+  const allowHashComment = HASH_COMMENT_DIALECTS.has(dialect);
+  const allowDollarQuote = DOLLAR_QUOTE_DIALECTS.has(dialect);
   let result = '';
   let pendingSpace = false;
   let i = 0;
@@ -83,6 +95,30 @@ export function minifySqlQuery(
       while (i < input.length && input[i] !== '\n') i++;
       pendingSpace = true;
       continue;
+    }
+
+    // 行コメント（# ...。MySQL / MariaDB / BigQuery）
+    if (ch === '#' && allowHashComment) {
+      i++;
+      while (i < input.length && input[i] !== '\n') i++;
+      pendingSpace = true;
+      continue;
+    }
+
+    // ドル引用符文字列（PostgreSQL）。中身の空白・コメント記号はそのまま保持する
+    if (ch === '$' && allowDollarQuote) {
+      const open = /^\$([A-Za-z_][A-Za-z0-9_]*)?\$/.exec(
+        input.slice(i, i + 64),
+      );
+      if (open) {
+        const end = input.indexOf(open[0], i + open[0].length);
+        const stop = end === -1 ? input.length : end + open[0].length;
+        if (pendingSpace && result.length > 0) result += ' ';
+        pendingSpace = false;
+        result += input.slice(i, stop);
+        i = stop;
+        continue;
+      }
     }
 
     // ブロックコメント（/* ... */）

@@ -73,7 +73,7 @@ describe('convert: JSON → TOML', () => {
     const result = convert('json', 'toml', '[1, 2, 3]');
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.message).toContain('オブジェクト');
+      expect(result.reason).toBe('toml-top-level');
     }
   });
 
@@ -144,7 +144,7 @@ describe('境界値', () => {
     const result = convert('yaml', 'toml', '');
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.message).toContain('オブジェクト');
+      expect(result.reason).toBe('toml-top-level');
     }
   });
 
@@ -252,7 +252,7 @@ describe('特殊な値・データ構造', () => {
     const result = convert('yaml', 'toml', 'just a plain string');
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.message).toContain('オブジェクト');
+      expect(result.reason).toBe('toml-top-level');
     }
   });
 

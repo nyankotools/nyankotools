@@ -30,6 +30,8 @@ export interface TomlConverterPageContent {
   outputLabel: string;
   /** `{message}` を置換して使うテンプレート */
   errorTemplate: string;
+  /** TOML出力時にトップレベルがテーブルでない場合のエラー文（テンプレートは使わない） */
+  errorTopLevelTable: string;
   notesHeading: string;
   noteTopLevelTable: string;
   noteNullPart1: string;
@@ -73,6 +75,8 @@ export const tomlConverterContent: Record<Locale, TomlConverterPageContent> = {
     inputLabel: '入力',
     outputLabel: '結果',
     errorTemplate: '構文エラー: {message}',
+    errorTopLevelTable:
+      'TOMLはトップレベルがオブジェクト（テーブル）である必要があります。配列や文字列などの単一の値はTOMLとして出力できません。',
     notesHeading: '注意点',
     noteTopLevelTable:
       'TOMLはトップレベルが必ずテーブル（オブジェクト）である必要があります。JSONやYAMLのトップレベルが配列や文字列などの場合はTOMLに変換できません。',
@@ -138,6 +142,8 @@ export const tomlConverterContent: Record<Locale, TomlConverterPageContent> = {
     inputLabel: 'Input',
     outputLabel: 'Result',
     errorTemplate: 'Syntax error: {message}',
+    errorTopLevelTable:
+      'TOML requires the top level to be an object (table). A single value such as an array or a string cannot be output as TOML.',
     notesHeading: 'Notes',
     noteTopLevelTable:
       'TOML requires its top level to be a table (object). JSON or YAML whose top level is an array, string, or other non-object value cannot be converted to TOML.',

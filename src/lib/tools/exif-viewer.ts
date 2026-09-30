@@ -217,13 +217,45 @@ export function isJpegBytes(bytes: Uint8Array): boolean {
   );
 }
 
-function isExifApp1Segment(bytes: Uint8Array, contentStart: number): boolean {
-  if (contentStart + EXIF_IDENTIFIER.length > bytes.length) return false;
-  return EXIF_IDENTIFIER.every((b, i) => bytes[contentStart + i] === b);
+const ascii = (text: string): number[] =>
+  Array.from(text, (c) => c.charCodeAt(0));
+
+/** 位置情報などの個人情報を含みうるメタデータセグメントの識別子（APP1 の Exif・XMP、APP13 の IPTC） */
+const XMP_IDENTIFIER = ascii('http://ns.adobe.com/xap/1.0/\0');
+const XMP_EXTENSION_IDENTIFIER = ascii('http://ns.adobe.com/xmp/extension/\0');
+const PHOTOSHOP_IDENTIFIER = ascii('Photoshop 3.0\0');
+
+function startsWithAt(
+  bytes: Uint8Array,
+  contentStart: number,
+  identifier: readonly number[],
+): boolean {
+  if (contentStart + identifier.length > bytes.length) return false;
+  return identifier.every((b, i) => bytes[contentStart + i] === b);
+}
+
+/** 削除対象のメタデータセグメント（Exif / XMP / 拡張XMP / IPTC を含む APP13）か */
+function isMetadataSegment(
+  bytes: Uint8Array,
+  marker: number,
+  contentStart: number,
+): boolean {
+  if (marker === 0xe1) {
+    return (
+      startsWithAt(bytes, contentStart, EXIF_IDENTIFIER) ||
+      startsWithAt(bytes, contentStart, XMP_IDENTIFIER) ||
+      startsWithAt(bytes, contentStart, XMP_EXTENSION_IDENTIFIER)
+    );
+  }
+  if (marker === 0xed) {
+    return startsWithAt(bytes, contentStart, PHOTOSHOP_IDENTIFIER);
+  }
+  return false;
 }
 
 /**
- * JPEGのバイト列から、Exif情報（APP1セグメントのうち"Exif\0\0"で始まるもの）だけを取り除く。
+ * JPEGのバイト列から、撮影情報・位置情報を含みうるメタデータ
+ * （APP1 の Exif・XMP、APP13 の IPTC）を取り除く。ICCプロファイル等は残す。
  * マーカーセグメントを走査して対象セグメントを飛ばすだけで、画像データの再圧縮は行わないため画質は劣化しない。
  * JPEGとして解釈できないバイト列を渡した場合は、そのまま返す。
  */
@@ -232,56 +264,65 @@ export function removeExifFromJpegBytes(
 ): Uint8Array<ArrayBuffer> {
   if (!isJpegBytes(bytes)) return bytes as Uint8Array<ArrayBuffer>;
 
-  const kept: number[] = [0xff, 0xd8]; // SOI
+  // 1バイトずつ配列に積むと巨大画像でメモリを食うため、残す範囲を subarray で集めて最後に連結する
+  const kept: Uint8Array[] = [bytes.subarray(0, 2)]; // SOI
   let offset = 2;
+
+  const keepRest = () => {
+    kept.push(bytes.subarray(offset));
+  };
 
   while (offset + 1 < bytes.length) {
     if (bytes[offset] !== 0xff) {
-      for (let i = offset; i < bytes.length; i++) kept.push(bytes[i]);
+      keepRest();
       break;
     }
     const marker = bytes[offset + 1];
 
     // SOS（スキャン開始）以降は画像本体データなので、そのままコピーして終了する
     if (marker === 0xda) {
-      for (let i = offset; i < bytes.length; i++) kept.push(bytes[i]);
+      keepRest();
       break;
     }
     // 0xFF埋めのパディング、およびTEM(0x01)・RSTn(0xD0-0xD9)等の長さフィールドを持たないマーカー
     if (marker === 0xff) {
-      kept.push(0xff);
+      kept.push(bytes.subarray(offset, offset + 1));
       offset += 1;
       continue;
     }
     if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd9)) {
-      kept.push(0xff, marker);
+      kept.push(bytes.subarray(offset, offset + 2));
       offset += 2;
       if (marker === 0xd9) break; // EOI
       continue;
     }
 
     if (offset + 3 >= bytes.length) {
-      for (let i = offset; i < bytes.length; i++) kept.push(bytes[i]);
+      keepRest();
       break;
     }
     const length = (bytes[offset + 2] << 8) | bytes[offset + 3];
     if (length < 2) {
       // 長さフィールドが不正（自身の2バイトより短い）。これ以上マーカーとして解釈せず、末尾までそのまま保持する
-      for (let i = offset; i < bytes.length; i++) kept.push(bytes[i]);
+      keepRest();
       break;
     }
     const segmentEnd = Math.min(offset + 2 + length, bytes.length);
 
-    const isExifSegment =
-      marker === 0xe1 && length >= 8 && isExifApp1Segment(bytes, offset + 4);
-
-    if (!isExifSegment) {
-      for (let i = offset; i < segmentEnd; i++) kept.push(bytes[i]);
+    if (!isMetadataSegment(bytes, marker, offset + 4)) {
+      kept.push(bytes.subarray(offset, segmentEnd));
     }
     offset = segmentEnd;
   }
 
-  return Uint8Array.from(kept);
+  const total = kept.reduce((sum, part) => sum + part.length, 0);
+  const result = new Uint8Array(total);
+  let position = 0;
+  for (const part of kept) {
+    result.set(part, position);
+    position += part.length;
+  }
+  return result;
 }
 
 export interface RemoveExifResult {

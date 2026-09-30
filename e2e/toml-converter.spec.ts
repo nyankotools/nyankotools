@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('TOML⇔JSON/YAML変換ツール（日本語版）', () => {
   test('直接アクセスして正しく表示され、サンプルTOMLがJSONに変換される', async ({
@@ -162,7 +162,10 @@ test.describe('TOML to JSON/YAML Converter (English)', () => {
     await page.locator('#toml-converter-input').fill('[1, 2, 3]');
 
     await expect(page.locator('#toml-converter-error')).toContainText(
-      'Syntax error',
+      'object (table)',
+    );
+    await expect(page.locator('#toml-converter-error')).not.toContainText(
+      'オブジェクト',
     );
   });
 });

@@ -65,6 +65,74 @@ const RAW_TEXT_ELEMENTS: ReadonlySet<string> = new Set([
 ]);
 
 /**
+ * 前後の空白が表示に影響しないブロック・構造系の要素。
+ * これらのタグに隣接する空白は捨ててよいが、インライン要素（b, i, span, a 等）に隣接する空白は
+ * 語間の空白として表示に効くため、1個のスペースに圧縮して残す。
+ */
+const BLOCK_LEVEL_ELEMENTS: ReadonlySet<string> = new Set([
+  'html',
+  'head',
+  'body',
+  'title',
+  'meta',
+  'link',
+  'base',
+  'script',
+  'style',
+  'noscript',
+  'template',
+  'address',
+  'article',
+  'aside',
+  'blockquote',
+  'details',
+  'dialog',
+  'dd',
+  'div',
+  'dl',
+  'dt',
+  'fieldset',
+  'figcaption',
+  'figure',
+  'footer',
+  'form',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'header',
+  'hgroup',
+  'hr',
+  'legend',
+  'li',
+  'main',
+  'menu',
+  'nav',
+  'ol',
+  'p',
+  'pre',
+  'section',
+  'summary',
+  'table',
+  'caption',
+  'colgroup',
+  'col',
+  'thead',
+  'tbody',
+  'tfoot',
+  'tr',
+  'th',
+  'td',
+  'ul',
+  'br',
+  'option',
+  'optgroup',
+  'datalist',
+]);
+
+/**
  * HTMLコメントの除去とタグ間の空白圧縮のみを行う簡易ミニファイ。
  * フルスペックのHTMLパーサーではなく、SQL整形ツールのminifySqlQueryと同様に
  * 「タグ」「コメント」「raw要素の中身」を読み飛ばしながら処理する軽量実装。
@@ -72,6 +140,8 @@ const RAW_TEXT_ELEMENTS: ReadonlySet<string> = new Set([
 export function minifyHtmlSource(input: string): string {
   let result = '';
   let pendingSpace = false;
+  // 直前がブロック要素のタグ（または先頭）か。その直後の空白は表示に影響しないので捨てる
+  let afterBlock = true;
   let i = 0;
 
   while (i < input.length) {
@@ -81,7 +151,6 @@ export function minifyHtmlSource(input: string): string {
     if (ch === '<' && input.startsWith('<!--', i)) {
       const end = input.indexOf('-->', i + 4);
       i = end === -1 ? input.length : end + 3;
-      pendingSpace = false;
       continue;
     }
 
@@ -91,9 +160,13 @@ export function minifyHtmlSource(input: string): string {
       const tagName = tagNameMatch?.[1].toLowerCase() ?? '';
       const isClosingTag = input[i + 1] === '/';
       const [tagText, afterTag] = readTag(input, i);
+      const isBlock = BLOCK_LEVEL_ELEMENTS.has(tagName);
+      // インライン要素の直前の空白は語間の空白なので1個残す（例: "Hello <b>world</b>"）
+      if (pendingSpace && !isBlock && !afterBlock) result += ' ';
       result += tagText;
       i = afterTag;
       pendingSpace = false;
+      afterBlock = isBlock;
 
       if (!isClosingTag && RAW_TEXT_ELEMENTS.has(tagName)) {
         const [rawText, afterRaw] = readRawUntilCloseTag(input, i, tagName);
@@ -116,10 +189,9 @@ export function minifyHtmlSource(input: string): string {
       continue;
     }
 
-    if (pendingSpace) {
-      result += ' ';
-      pendingSpace = false;
-    }
+    if (pendingSpace && !afterBlock) result += ' ';
+    pendingSpace = false;
+    afterBlock = false;
     result += ch;
     i++;
   }

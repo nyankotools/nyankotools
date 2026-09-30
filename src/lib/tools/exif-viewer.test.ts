@@ -292,6 +292,62 @@ function buildJpegWithoutExif(): Uint8Array {
   ]);
 }
 
+/** テスト用: SOI + 指定マーカーのセグメント + APP0 + EOI のJPEG風バイト列を組み立てる */
+function buildJpegWithSegment(marker: number, identifier: string): Uint8Array {
+  const content = [
+    ...Array.from(identifier, (c) => c.charCodeAt(0)),
+    0x00,
+    0x09,
+  ];
+  const length = content.length + 2;
+  return Uint8Array.from([
+    0xff,
+    0xd8, // SOI
+    0xff,
+    marker,
+    (length >> 8) & 0xff,
+    length & 0xff,
+    ...content,
+    0xff,
+    0xe0,
+    0x00,
+    0x04,
+    0x00,
+    0x00, // APP0 は残す
+    0xff,
+    0xd9, // EOI
+  ]);
+}
+
+describe('removeExifFromJpegBytes のXMP・IPTC対応', () => {
+  const keptOnly = [0xff, 0xd8, 0xff, 0xe0, 0x00, 0x04, 0x00, 0x00, 0xff, 0xd9];
+
+  it('APP1のXMP（位置情報を含みうる）も取り除く', () => {
+    const jpeg = buildJpegWithSegment(0xe1, 'http://ns.adobe.com/xap/1.0/');
+    expect(Array.from(removeExifFromJpegBytes(jpeg))).toEqual(keptOnly);
+  });
+
+  it('APP1の拡張XMPも取り除く', () => {
+    const jpeg = buildJpegWithSegment(
+      0xe1,
+      'http://ns.adobe.com/xmp/extension/',
+    );
+    expect(Array.from(removeExifFromJpegBytes(jpeg))).toEqual(keptOnly);
+  });
+
+  it('APP13のIPTC（Photoshop 3.0）も取り除く', () => {
+    const jpeg = buildJpegWithSegment(0xed, 'Photoshop 3.0');
+    expect(Array.from(removeExifFromJpegBytes(jpeg))).toEqual(keptOnly);
+  });
+
+  it('識別子が異なるAPP1・APP13は残す', () => {
+    const app1 = buildJpegWithSegment(0xe1, 'OtherApp');
+    expect(removeExifFromJpegBytes(app1).length).toBe(app1.length);
+    const app13 = buildJpegWithSegment(0xed, 'OtherApp');
+    expect(removeExifFromJpegBytes(app13).length).toBe(app13.length);
+  });
+});
+
 describe('removeExifFromJpegBytes', () => {
   it('APP1のExifセグメントのみを取り除き、他のマーカーは保持する', () => {
     const jpeg = buildJpegWithExifApp1([0x01, 0x02, 0x03]);

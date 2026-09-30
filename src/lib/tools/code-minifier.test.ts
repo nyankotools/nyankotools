@@ -104,6 +104,27 @@ describe('formatCode', () => {
 });
 
 describe('minifyCode', () => {
+  it('HTML: インライン要素に隣接する語間の空白は1個残す', async () => {
+    const result = await minifyCode(
+      '<p>Hello <b>world</b> and <i>you</i></p>',
+      'html',
+    );
+    expect(result).toBe('<p>Hello <b>world</b> and <i>you</i></p>');
+  });
+
+  it('HTML: コメントを除去しても語間の空白は残る', async () => {
+    const result = await minifyCode('<p>Hello <!-- c -->world</p>', 'html');
+    expect(result).toBe('<p>Hello world</p>');
+  });
+
+  it('HTML: ブロック要素の前後の空白・改行は除去する', async () => {
+    const result = await minifyCode(
+      '<ul>\n  <li> <a href="#">a</a> </li>\n  <li>b</li>\n</ul>',
+      'html',
+    );
+    expect(result).toBe('<ul><li><a href="#">a</a></li><li>b</li></ul>');
+  });
+
   it('CSSをミニファイする', async () => {
     const result = await minifyCode(
       '.a {\n  color: red;\n  margin: 0;\n}\n',

@@ -239,6 +239,8 @@ const t = lineEndingConverterContent[locale];
 
   fileInput.addEventListener('change', () => {
     const file = fileInput.files?.[0];
+    // 同じファイルを続けて選んでも change が発火するようクリアする
+    fileInput.value = '';
     if (!file) return;
     loadFile(file);
   });

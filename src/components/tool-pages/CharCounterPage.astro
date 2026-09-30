@@ -49,21 +49,25 @@ const t = charCounterContent[locale];
     </div>
   </dl>
 
-  <h2 class="mt-10 mb-2 text-lg font-bold">{t.relatedHeading}</h2>
-  <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">{t.relatedIntro}</p>
-  <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
-    {t.relatedLinks.map((link) => (
-      <li>
-        <a
-          href={link.href}
-          class="text-blue-700 underline hover:no-underline dark:text-blue-400"
-        >
-          {link.label}
-        </a>{' '}
-        — {link.description}
-      </li>
-    ))}
-  </ul>
+  <Fragment slot="after">
+    <h2 class="mt-10 mb-2 text-lg font-bold">{t.relatedHeading}</h2>
+    <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+      {t.relatedIntro}
+    </p>
+    <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+      {t.relatedLinks.map((link) => (
+        <li>
+          <a
+            href={link.href}
+            class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+          >
+            {link.label}
+          </a>{' '}
+          — {link.description}
+        </li>
+      ))}
+    </ul>
+  </Fragment>
 </ToolShell>
 
 <script>

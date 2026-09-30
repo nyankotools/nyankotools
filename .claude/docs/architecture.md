@@ -26,11 +26,15 @@ src/
   layouts/
     Layout.astro       # <head> and sidebar shared by all pages
   components/
+    ToolShell.astro    # Tool page skeleton (Layout + h1/intro/HowTo/Notes/Glossary)
     tool-pages/
       <Slug>Page.astro  # Shared per-tool page (markup + <script>), takes a locale prop
   lib/
     tools/
       <slug>.ts         # Per-tool logic (framework-free pure functions)
+    clipboard.ts        # copyText (Clipboard API + execCommand fallback)
+    download.ts         # downloadBlob (click-to-save download)
+    file-drop.ts        # enableFileDrop (drag & drop onto a file input)
   pages/
     index.astro         # Homepage (tool grid)
     404.astro
@@ -47,7 +51,7 @@ src/
 1. The `tools` array in `src/data/tools.ts` is the single tool registry.
 2. `src/layouts/Layout.astro` reads it to build the sidebar navigation.
 3. `src/pages/index.astro` builds the homepage tool grid from the same array.
-4. Each locale's page (`src/pages/tools/<slug>/index.astro`, `src/pages/en/tools/<slug>/index.astro`) calls the shared component `src/components/tool-pages/<Slug>Page.astro`. The component wraps everything in `Layout` and, in its `<script>` tag, calls the pure functions in `src/lib/tools/<slug>.ts` to update the DOM.
+4. Each locale's page (`src/pages/tools/<slug>/index.astro`, `src/pages/en/tools/<slug>/index.astro`) calls the shared component `src/components/tool-pages/<Slug>Page.astro`. The component wraps the tool body in `ToolShell` (which wraps `Layout` and renders the h1, intro, how-to, notes and glossary from the dictionary) and, in its `<script>` tag, calls the pure functions in `src/lib/tools/<slug>.ts` to update the DOM.
 
 A tool page not registered in `tools.ts` does not appear in navigation (the page itself is still reachable by direct URL). See [adding-a-tool.md](./adding-a-tool.md) for the procedure.
 

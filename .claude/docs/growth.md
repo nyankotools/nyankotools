@@ -4,7 +4,7 @@ NyankoTools aims to monetize in the future (ads, affiliate, etc.). Monetization 
 
 ## SEO
 
-- **Design `title` / `description` per page.** The `description` in `src/data/tools.ts` is the short blurb for the homepage/sidebar. Pass the tool page's `<Layout description=...>` a separate text of proper meta-description length and wording (don't reuse it).
+- **Design `title` / `description` per page.** The `description` in `src/data/tools.ts` is the short blurb for the homepage/sidebar. Give the tool page's dictionary `description` (ToolShell passes it to `Layout`) a separate text of proper meta-description length and wording (don't reuse it).
 - **Write down the long-tail keywords first.** Before adding a tool, decide which search terms should bring traffic (e.g. 「JSON 整形 オンライン 無料」) and reflect them in `title` / `description` / body headings. Don't rely on overly generic terms alone.
 - **Heading structure.** Exactly one `<h1>` per page, specific about the tool name or the problem it solves. Supplementing usage and cautions under `<h2>` and below adds substance and helps SEO.
 - **Internal links.** Link to related existing tools in the page body to improve crawlability and user circulation. When adding a tool, find and link at least one related existing tool.

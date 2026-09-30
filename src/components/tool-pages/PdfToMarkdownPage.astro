@@ -9,8 +9,7 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = pdfToMarkdownContent[locale];
-const buttonClass =
-  'min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800';
+const buttonClass = 'ui-btn';
 const options = [
   { id: 'md-opt-header-footer', label: t.optHeaderFooter, checked: true },
   { id: 'md-opt-tables', label: t.optTables, checked: true },

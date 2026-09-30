@@ -33,3 +33,8 @@ Rules to follow in day-to-day development. See [CLAUDE.md](../../CLAUDE.md) for 
 ## Permission settings
 
 `.claude/settings.json` currently auto-allows only the file read/write tools (Read/Edit/Write/MultiEdit/Glob/Grep). Shell commands such as git and pnpm are intentionally set to prompt every time; this is not an oversight. Ask the user before changing it.
+
+## UI primitives
+
+- Tool pages use the `ui-*` classes defined in `@layer components` of `src/styles/global.css` (`ui-btn`, `ui-input`, `ui-label`, etc.) so that design changes (radius, focus ring, tap area) happen in one place. Sizing (`h-11 w-24`) and background colors (`bg-*` / `dark:bg-*`) are set per element as utilities.
+- Classes in the components layer always lose to utilities that set the same property, regardless of variants. That is why the primitives contain no background colors: a `dark:bg-*` inside a primitive would lose to a plain `bg-gray-50` on the element and break dark mode. Do not add properties to a primitive that elements commonly override with utilities.

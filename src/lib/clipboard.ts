@@ -14,6 +14,7 @@ export async function copyText(text: string): Promise<boolean> {
 
 function legacyCopy(text: string): boolean {
   if (typeof document === 'undefined') return false;
+  const previouslyFocused = document.activeElement as HTMLElement | null;
   const textarea = document.createElement('textarea');
   textarea.value = text;
   textarea.setAttribute('readonly', '');
@@ -22,10 +23,13 @@ function legacyCopy(text: string): boolean {
   document.body.appendChild(textarea);
   try {
     textarea.select();
+    textarea.setSelectionRange(0, text.length);
     return document.execCommand('copy');
   } catch {
     return false;
   } finally {
     textarea.remove();
+    // キーボード操作のユーザーがボタンの位置を見失わないよう、フォーカスを戻す
+    previouslyFocused?.focus?.();
   }
 }

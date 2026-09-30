@@ -11,6 +11,7 @@ export function downloadBlob(blob: Blob, filename: string): void {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  // 保存開始前に revoke するとブラウザによっては失敗するため少し待つ
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  // 保存開始前に revoke すると失敗するブラウザがある（iOS Safari は保存確認の
+  // シート表示中も URL を参照する）ため、余裕をもって待つ
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }

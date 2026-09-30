@@ -53,6 +53,21 @@ test.describe('404ページの言語切替', () => {
     );
   });
 
+  test('英語URL: html の lang と title が英語になる', async ({ page }) => {
+    await page.goto('/en/no-such-page/');
+
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    await expect(page).toHaveTitle('404 - Page Not Found | NyankoTools');
+  });
+
+  test('404ページは canonical を出力しない（存在しない URL を指さない）', async ({
+    page,
+  }) => {
+    await page.goto('/no-such-page/');
+
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
+  });
+
   test('英語URL: モバイルの言語切替が日本語トップへ向く', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 800 });
     await page.goto('/en/no-such-page/');

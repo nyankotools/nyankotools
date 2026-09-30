@@ -236,7 +236,8 @@ test.describe('px⇔rem変換ツール（日本語版）', () => {
   }) => {
     await page.goto('/tools/px-rem-converter/');
 
-    // px欄がまだ空の状態でコピーボタンをクリック
+    // 初期化時にpx欄へ既定値が入るため、先に空にしてからコピーボタンをクリック
+    await page.locator('#px-rem-px-input').fill('');
     const pxCopyButton = page.locator(
       'button[data-copy-target="px-rem-px-input"]',
     );

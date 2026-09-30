@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { tools } from '../src/data/tools';
 
 // 複数ステップの操作が必要なツールに「使い方」セクション（HowTo.astro）が表示されること。
 const slugs = [
@@ -33,6 +34,19 @@ for (const { prefix, heading } of locales) {
       ).toHaveCount(1);
       const steps = page.locator('main [data-howto] li');
       expect(await steps.count()).toBeGreaterThanOrEqual(3);
+    });
+  }
+}
+
+// 対象外のツールには「使い方」を出さない（手順が自明なツールに冗長な見出しを足さない）
+for (const { prefix } of locales) {
+  for (const { slug } of tools.filter((t) => !slugs.includes(t.slug))) {
+    test(`${prefix || '/ja'}/${slug}: 使い方セクションが表示されない`, async ({
+      page,
+    }) => {
+      await page.goto(`${prefix}/tools/${slug}/`);
+      await expect(page.locator('main h1')).toBeVisible();
+      await expect(page.locator('[data-howto]')).toHaveCount(0);
     });
   }
 }

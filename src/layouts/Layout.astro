@@ -148,7 +148,7 @@ const jsonLd: Record<string, unknown> | null = noindex
     <meta name="theme-color" content="#f9fafb" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonicalURL} />
+    {!noindex && <link rel="canonical" href={canonicalURL} />}
     {noindex ? (
       <meta name="robots" content="noindex" />
     ) : (

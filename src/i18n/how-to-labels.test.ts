@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 
-// 「使い方」の手順文が引用するボタン名・ラベル（ja は「」、en は ""）が、同じ辞書の
-// UI ラベル側の文言に存在することを保証する。UI 文言を変えたときの食い違いを防ぐ。
-// 説明文（intro・notes・description・glossary・faq など）は、UI と異なる表記が含まれていても
-// 一致してしまうため検索対象から除く。
+// 「使い方」の手順文・導線文・注意事項が引用するボタン名・ラベル（ja は「」、en は ""）が、
+// 同じ辞書の UI ラベル側の文言に存在することを保証する。UI 文言を変えたときの食い違いを防ぐ。
+// 照合先は UI ラベル側の文言のみ。説明文（intro・notes・description・glossary など）は、
+// UI と異なる表記が含まれていても一致してしまうため検索対象から除く。
+// FAQ（src/i18n/faq/*.ts）は別ファイルのため、この検査の対象外。
 const modules = import.meta.glob('./tools/*.ts', { eager: true }) as Record<
   string,
   Record<string, unknown>

@@ -33,7 +33,7 @@ export const faq: FaqContent = {
     {
       question: 'Can I turn Base64 back into an image?',
       answer:
-        'Yes. Choose "Base64 to image". Even without the prefix, the format (PNG, JPEG, GIF, WebP, BMP, SVG, ICO) is detected from the first bytes; if it cannot be detected, an error is shown.',
+        'Yes. Choose "Base64 to Image". Even without the prefix, the format (PNG, JPEG, GIF, WebP, BMP, SVG, ICO) is detected from the first bytes; if it cannot be detected, an error is shown.',
     },
   ],
 };

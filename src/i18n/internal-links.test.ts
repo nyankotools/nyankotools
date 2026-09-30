@@ -62,13 +62,12 @@ describe('i18n 本文の内部リンク', () => {
     expect(internal.length).toBeGreaterThan(0);
   });
 
-  it('ja は /tools/ 系、en は /en/tools/ 系のリンクだけを含む', () => {
+  it('ja は /en/ 以外、en は /en/ 配下のリンクだけを含む', () => {
     const bad = internal
-      .filter((f) => f.href.startsWith('/tools/') || f.href.startsWith('/en/'))
       .filter((f) =>
         f.locale === 'ja'
-          ? !f.href.startsWith('/tools/')
-          : !f.href.startsWith('/en/tools/'),
+          ? f.href.startsWith('/en/') || f.href === '/en'
+          : !(f.href.startsWith('/en/') || f.href === '/en'),
       )
       .map((f) => `${f.file} [${f.locale}] ${f.href}`);
     expect(bad).toEqual([]);

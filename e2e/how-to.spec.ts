@@ -31,11 +31,7 @@ for (const { prefix, heading } of locales) {
       await expect(
         page.getByRole('heading', { level: 2, name: heading, exact: true }),
       ).toHaveCount(1);
-      const steps = page
-        .locator('main ol')
-        .filter({ has: page.locator('li') })
-        .last()
-        .locator('li');
+      const steps = page.locator('main [data-howto] li');
       expect(await steps.count()).toBeGreaterThanOrEqual(3);
     });
   }

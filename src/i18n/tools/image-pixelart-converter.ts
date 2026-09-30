@@ -108,7 +108,7 @@ export const imagePixelartConverterContent: Record<
     howToSteps: [
       '画像ファイルを選択します（ドラッグ＆ドロップも可能です）。',
       '「ブロックサイズ」でドットの粗さを、「色数（階調）」で減色の強さを調整します。',
-      '変換前後のプレビューを見比べながら、出力フォーマットと画質を選びます。',
+      '変換前後のプレビューを見比べながら、出力フォーマットを選び、JPEG・WebP では画質も調整します。',
       '結果を確認してダウンロードします。',
     ],
     glossaryHeading: '用語解説',
@@ -180,7 +180,7 @@ export const imagePixelartConverterContent: Record<
     howToSteps: [
       'Choose an image file (drag & drop also works).',
       'Use "Block size" to set how coarse the pixels are and "Color levels" to set how strongly colors are reduced.',
-      'Compare the before/after previews while you pick the output format and quality.',
+      'Compare the before/after previews while you pick the output format and, for JPEG and WebP, adjust the quality.',
       'Check the result and download it.',
     ],
     glossaryHeading: 'Glossary',

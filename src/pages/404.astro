@@ -46,5 +46,15 @@ import Layout from '../layouts/Layout.astro';
       mobileSwitch.hreflang = 'ja';
       mobileSwitch.textContent = '日本語';
     }
+    // デスクトップのサイドバーも日本語ビルド前提で「日本語」が現在の言語になっているため、英語に付け替える
+    document
+      .querySelectorAll('[data-lang-switch-desktop] a[hreflang]')
+      .forEach((a) => {
+        if (a.getAttribute('hreflang') === 'en') {
+          a.setAttribute('aria-current', 'true');
+        } else {
+          a.removeAttribute('aria-current');
+        }
+      });
   }
 </script>

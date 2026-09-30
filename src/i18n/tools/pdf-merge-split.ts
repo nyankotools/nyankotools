@@ -178,7 +178,7 @@ export const pdfMergeSplitContent: Record<Locale, PdfMergeSplitPageContent> = {
     howToHeading: 'How to use',
     howToSteps: [
       'Choose an action: Merge, Extract pages, or Split.',
-      'Choose your PDF files (Merge accepts several; use the up/down buttons to reorder them).',
+      'Choose your PDF files (Merge accepts several; use "Move up" / "Move down" to reorder them).',
       'For Extract pages, enter pages such as "1-3, 5". For Split, enter how many pages each file should have.',
       'Press "Run", then download the files listed under the result.',
     ],

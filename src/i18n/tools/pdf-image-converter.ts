@@ -208,7 +208,7 @@ export const pdfImageConverterContent: Record<
     howToHeading: 'How to use',
     howToSteps: [
       'Choose a direction: "PDF → Images" or "Images → PDF".',
-      'Choose the PDF or image files (images become one page each in the order chosen; use the up/down buttons to reorder).',
+      'Choose the PDF or image files (images become one page each in the order chosen; use "Move up" / "Move down" to reorder).',
       'Adjust the output format, resolution and pages (PDF → Images), or the page size (Images → PDF), if needed.',
       'Press "Convert" and download the result.',
     ],

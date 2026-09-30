@@ -115,7 +115,7 @@ export const imageResizerContent: Record<Locale, ImageResizerPageContent> = {
     howToSteps: [
       '画像ファイルを選択します（複数選択やドラッグ＆ドロップも可能です）。',
       'リサイズ方法を「サイズ指定（px）」または「割合指定（%）」から選び、幅・高さまたは倍率を入力します。',
-      '出力フォーマットと画質（圧縮率）を選びます。',
+      '出力フォーマットを選び、JPEG・WebP では画質（圧縮率）も調整します。',
       '変換結果の一覧で、変換前後のサイズを確認してダウンロードします。',
     ],
     glossaryHeading: '用語解説',
@@ -192,7 +192,7 @@ export const imageResizerContent: Record<Locale, ImageResizerPageContent> = {
     howToSteps: [
       'Choose your image files (multiple files and drag & drop are supported).',
       'Pick a resize method, "Pixel size" or "Percentage", and enter the width and height or the scale.',
-      'Choose the output format and quality (compression level).',
+      'Choose the output format and, for JPEG and WebP, adjust the quality (compression level).',
       'Check the before/after sizes in the results list, then download the files.',
     ],
     glossaryHeading: 'Glossary',

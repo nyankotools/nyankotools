@@ -8,7 +8,10 @@ const { heading, steps } = Astro.props;
 ---
 
 <h2 class="mt-10 mb-2 text-lg font-bold">{heading}</h2>
-<ol class="list-inside list-decimal space-y-1 text-sm text-gray-600 dark:text-gray-400">
+<ol
+  data-howto
+  class="list-inside list-decimal space-y-1 text-sm text-gray-600 dark:text-gray-400"
+>
   {steps.map((step) => (
     <li>{step}</li>
   ))}

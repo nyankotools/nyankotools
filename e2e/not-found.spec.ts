@@ -18,6 +18,22 @@ test.describe('404ページの言語切替', () => {
     }
   });
 
+  test('英語URL: デスクトップのサイドバーで英語が現在の言語になる', async ({
+    page,
+  }) => {
+    await page.goto('/en/no-such-page/');
+
+    const group = page.locator('[data-lang-switch-desktop]');
+    await expect(group.locator('a[hreflang="en"]')).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+    await expect(group.locator('a[hreflang="ja"]')).not.toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+  });
+
   test('英語URL: モバイルの言語切替が日本語トップへ向く', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 800 });
     await page.goto('/en/no-such-page/');

@@ -93,7 +93,7 @@ export const pdfPasswordProtectorContent: Record<
     howToSteps: [
       'PDFファイルを選択します。',
       '「開くためのパスワード」を入力します。',
-      '印刷・コピー・編集のうち許可する操作を選びます（制限を解除するためのパスワードは任意です）。',
+      '印刷・コピー・編集のうち許可する操作を選びます（「制限解除用のパスワード」は任意です）。',
       '「暗号化する」を押し、結果のファイルをダウンロードします。パスワードは忘れないよう控えておいてください。',
     ],
     glossaryHeading: '用語解説',
@@ -160,7 +160,7 @@ export const pdfPasswordProtectorContent: Record<
     howToSteps: [
       'Choose a PDF file.',
       'Enter the password required to open the PDF.',
-      'Select which actions to allow: printing, copying, and editing (an owner password to lift the restrictions is optional).',
+      'Select which actions to allow: printing, copying, and editing (the "Permissions password" is optional).',
       'Press "Encrypt" and download the result. Keep a copy of the password somewhere safe.',
     ],
     glossaryHeading: 'Glossary',

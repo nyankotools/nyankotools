@@ -160,7 +160,7 @@ const t = investmentSimulatorContent[locale];
     ></p>
 
     <div id="investment-sim-results" class="mt-4 hidden" aria-live="polite">
-      <div class="mb-4 rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
+      <dl class="mb-4 rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
         <dt
           class="text-sm text-gray-600 dark:text-gray-400"
           id="investment-sim-primary-label"
@@ -169,7 +169,7 @@ const t = investmentSimulatorContent[locale];
           class="text-xl font-semibold text-blue-700 dark:text-blue-400"
           id="investment-sim-primary-value"
         ></dd>
-      </div>
+      </dl>
 
       <h3 class="mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">
         {t.resultHeading}
@@ -284,7 +284,10 @@ const t = investmentSimulatorContent[locale];
       <h3 class="mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">
         {t.tableHeading}
       </h3>
-      <div class="max-h-80 overflow-x-auto overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700">
+      <div
+        tabindex="0"
+        class="max-h-80 overflow-x-auto overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700"
+      >
         <table class="w-full min-w-full text-left text-sm">
           <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800">
             <tr>
@@ -452,7 +455,10 @@ const t = investmentSimulatorContent[locale];
           <h4 class="mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">
             {t.withdrawalTableHeading}
           </h4>
-          <div class="max-h-64 overflow-x-auto overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700">
+          <div
+            tabindex="0"
+            class="max-h-64 overflow-x-auto overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700"
+          >
             <table class="w-full min-w-full text-left text-sm">
               <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800">
                 <tr>

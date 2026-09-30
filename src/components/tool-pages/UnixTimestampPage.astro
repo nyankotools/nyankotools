@@ -126,27 +126,34 @@ const t = unixTimestampContent[locale];
         <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">
           {t.secondsLabel}
         </dt>
-        <dd id="unix-timestamp-result-seconds" class="font-mono"></dd>
-        <button
-          type="button"
-          data-copy-target="unix-timestamp-result-seconds"
-          class="ui-btn shrink-0"
-        >
-          {t.copyButton}
-        </button>
+        <dd class="flex flex-wrap items-center gap-2">
+          <span id="unix-timestamp-result-seconds" class="font-mono"></span>
+          <button
+            type="button"
+            data-copy-target="unix-timestamp-result-seconds"
+            class="ui-btn shrink-0"
+          >
+            {t.copyButton}
+          </button>
+        </dd>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <dt class="w-24 shrink-0 text-gray-500 dark:text-gray-400">
           {t.millisecondsLabel}
         </dt>
-        <dd id="unix-timestamp-result-milliseconds" class="font-mono"></dd>
-        <button
-          type="button"
-          data-copy-target="unix-timestamp-result-milliseconds"
-          class="ui-btn shrink-0"
-        >
-          {t.copyButton}
-        </button>
+        <dd class="flex flex-wrap items-center gap-2">
+          <span
+            id="unix-timestamp-result-milliseconds"
+            class="font-mono"
+          ></span>
+          <button
+            type="button"
+            data-copy-target="unix-timestamp-result-milliseconds"
+            class="ui-btn shrink-0"
+          >
+            {t.copyButton}
+          </button>
+        </dd>
       </div>
     </dl>
     <span

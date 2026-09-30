@@ -99,6 +99,16 @@ test.describe('URLクエリ初期値', () => {
     await expect(page).toHaveURL(/\/tools\/char-counter\/$/);
   });
 
+  test('utm_* は残し、機微ツールでもtextはURLから消える', async ({ page }) => {
+    await page.goto('/tools/char-counter/?text=hello&utm_source=x');
+    await expect(page.locator('#char-counter-input')).toHaveValue('hello');
+    await expect(page).toHaveURL(/\/tools\/char-counter\/\?utm_source=x$/);
+
+    await page.goto('/tools/base64/?text=secret');
+    await expect(page.locator('textarea').first()).toHaveValue('');
+    await expect(page).toHaveURL(/\/tools\/base64\/$/);
+  });
+
   test('入力をHTMLとして描画するツール（markdown-preview）では無視する', async ({
     page,
   }) => {

@@ -34,6 +34,7 @@ export function initErrorBoundary(): void {
   const toast = document.getElementById('error-toast');
   let reports = 0;
   let dismissed = false;
+  let sentUnattributed = false;
 
   document
     .getElementById('error-toast-close')
@@ -42,9 +43,14 @@ export function initErrorBoundary(): void {
       toast?.setAttribute('hidden', '');
     });
 
-  function report(name: string, filename?: string, line?: number): void {
+  function report(
+    name: string,
+    filename?: string,
+    line?: number,
+    notify = true,
+  ): void {
     // 閉じた後は、エラーが続いても同じページでは再表示しない
-    if (!dismissed) toast?.removeAttribute('hidden');
+    if (notify && !dismissed) toast?.removeAttribute('hidden');
     if (reports >= MAX_REPORTS) return;
     reports += 1;
     trackEvent('exception', {
@@ -60,13 +66,14 @@ export function initErrorBoundary(): void {
 
   window.addEventListener('unhandledrejection', (event) => {
     const reason: unknown = event.reason;
-    // 拡張機能などページ外が原因の拒否で誤通知しないよう、自サイトのスクリプト由来と分かるものだけ扱う
-    if (
-      !(reason instanceof Error) ||
-      !reason.stack?.includes(location.origin)
-    ) {
-      return;
+    // 拡張機能などページ外が原因の拒否でトーストを出さないよう、通知は自サイトのスクリプト由来と
+    // 分かるものに限る。ネイティブAPI（getUserMedia・fetch 等）の拒否のように由来を判別できないものは、
+    // 通知せず計測にだけ区別して残す（1ページ1回まで）。
+    if (reason instanceof Error && reason.stack?.includes(location.origin)) {
+      report(reason.name);
+    } else if (!sentUnattributed) {
+      sentUnattributed = true;
+      report('UnhandledRejection(unattributed)', undefined, undefined, false);
     }
-    report(reason.name);
   });
 }

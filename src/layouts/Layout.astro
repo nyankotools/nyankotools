@@ -216,10 +216,11 @@ const jsonLd: Record<string, unknown> | null = noindex
             dataLayer.push(args);
           }
           gtag('js', new Date());
-          // ?text= 等のクエリに入力データが載りうるため、計測にはクエリを含めない
-          gtag('config', GA_MEASUREMENT_ID, {
-            page_location: location.origin + location.pathname,
-          });
+          // ?text= には入力データが載りうるため計測から除く。
+          // utm_* / gclid など流入元の計測に必要なパラメータは残す。
+          const gaUrl = new URL(location.href);
+          gaUrl.searchParams.delete('text');
+          gtag('config', GA_MEASUREMENT_ID, { page_location: gaUrl.href });
         </script>
       </>
     )}
@@ -619,7 +620,7 @@ const jsonLd: Record<string, unknown> | null = noindex
           <span data-hint-run hidden>
             {t('palette.hint.run')}
           </span>
-          <span data-hint-copy hidden>
+          <span data-hint-copy hidden class="ml-3">
             {t('palette.hint.copy')}
           </span>
         </span>

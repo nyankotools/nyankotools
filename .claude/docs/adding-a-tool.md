@@ -44,7 +44,13 @@ Where to touch and in what order when adding one tool. See [architecture.md](./a
    <<Slug>Page locale="ja" />
    ```
 
-5. **Register in the registry**: add an entry to the `tools` array in `src/data/tools.ts` with `slug` and `translations.ja` / `translations.en` (each `{ name, description, category }`). This is the short copy for the homepage grid and sidebar nav, separate from the step 2 page dictionary. Without registration the tool appears in neither the homepage grid nor the sidebar. `category` drives the homepage search/category filter (`src/lib/home-filter.ts`). Check first whether you can reuse an existing category name and spelling; only introduce a new one if you can't (provide `category` for both ja and en).
+5. **Register in the registry**: add an entry to the `tools` array in `src/data/tools.ts`. This is the short copy and metadata for the homepage grid and sidebar nav, separate from the step 2 page dictionary. Without registration the tool appears in neither the homepage grid nor the sidebar. Fields:
+   - `slug`
+   - `category`: a category ID (`CategoryId`, e.g. `'text'` / `'dev'`). The display names live in `categories` in the same file. Reuse an existing ID; to add a new category, append it to both `categoryIds` and `categories` (ja/en). It drives the homepage category filter and the sidebar grouping/open-state persistence.
+   - `addedAt` / `updatedAt` (`YYYY-MM-DD`; the same value at first release; `addedAt` must match the date the tool first appears in `src/data/updates.ts`, which `tools.test.ts` checks)
+   - `related`: 1-3 slugs of related tools (they must exist, no self-reference or duplicates)
+   - Optional flags: `sensitive` (handles secrets, personal data including photos/documents, health, or income; when unsure, set it), `heavy` (loads wasm/PDF/large JS libraries), `needsCamera`, `ads`
+   - `translations.ja` / `translations.en`: each `{ name, description, keywords }`. `keywords` (2-8 items) are search aliases for the homepage search (abbreviations, alternate spellings, English terms); only list things the tool actually does.
 
 6. **Verify**:
    - Run `pnpm dev` and check the sidebar, the homepage, and direct access to both `/tools/<slug>/` and `/en/tools/<slug>/`.
@@ -64,7 +70,7 @@ Note: this "shared component + dictionary + thin wrapper" structure is the stand
 - [ ] For multi-step tools: added `howToHeading` / `howToSteps` (ja/en) to the copy dictionary, rendered them with `HowTo.astro`, and added the slug to `e2e/how-to.spec.ts`
 - [ ] Implemented `src/components/tool-pages/<Slug>Page.astro` wrapped in `Layout`, resolving copy from the dictionary
 - [ ] Made `src/pages/tools/<slug>/index.astro` (ja) and `src/pages/en/tools/<slug>/index.astro` (en) thin wrappers that only call the shared component
-- [ ] Registered `translations.ja` / `translations.en` (including `category`) in `src/data/tools.ts`
+- [ ] Registered the tool in `src/data/tools.ts`: `category` (ID), `addedAt` / `updatedAt`, `related` (1-3), flags if applicable, and `translations.ja` / `translations.en` (`name` / `description` / `keywords`)
 - [ ] If the tool takes a file: it uses the dashed-border dropzone and works by both file picker and drag & drop (see step 3)
 - [ ] Runs entirely client-side; sends no data to any server
 - [ ] Designed page-specific `title` / `description` for ja and en, and exactly one `<h1>` (see [growth.md](./growth.md))

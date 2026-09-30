@@ -46,9 +46,12 @@ export interface Tool {
   updatedAt: string;
   /** 関連ツールのslug（「関連ツール」欄の表示用。存在しないslug・自己参照は tools.test.ts が検出する） */
   related: string[];
-  /** 入力に機微な情報を含みやすい（URLクエリ初期値・入力状態の保持の対象外にする） */
+  /**
+   * 秘密情報・個人情報（写真・書類を含む）・健康・収入を入力として扱う。
+   * URLクエリ初期値・入力状態の保持の対象外にする。迷ったら付ける側に倒す。
+   */
   sensitive?: boolean;
-  /** 重いライブラリ（wasm・PDF処理など）を読み込む */
+  /** 重いライブラリ（wasm・PDF処理・大きめのJSライブラリなど）を読み込む */
   heavy?: boolean;
   /** カメラ・マイクの権限を要求する */
   needsCamera?: boolean;
@@ -156,6 +159,7 @@ export const tools: Tool[] = [
     addedAt: '2026-09-15',
     updatedAt: '2026-09-15',
     related: ['json-path-tester', 'yaml-json-converter', 'csv-json-converter'],
+    sensitive: true,
     translations: {
       ja: {
         name: 'JSON整形',
@@ -356,6 +360,7 @@ export const tools: Tool[] = [
     addedAt: '2026-09-15',
     updatedAt: '2026-09-15',
     related: ['image-to-base64', 'url-encode', 'jwt-decoder'],
+    sensitive: true,
     translations: {
       ja: {
         name: 'Base64エンコード/デコード',
@@ -534,30 +539,13 @@ export const tools: Tool[] = [
     translations: {
       ja: {
         name: 'ハッシュ生成',
-        keywords: [
-          'ハッシュ',
-          'SHA-256',
-          'SHA-1',
-          'SHA-512',
-          'MD5',
-          'チェックサム',
-          'HMAC',
-        ],
+        keywords: ['ハッシュ', 'SHA-256', 'SHA-1', 'MD5', 'チェックサム'],
         description:
           'テキストからMD5・SHA-1・SHA-256のハッシュ値をリアルタイムで計算します。',
       },
       en: {
         name: 'Hash Generator',
-        keywords: [
-          'hash',
-          'SHA-256',
-          'SHA-1',
-          'SHA-512',
-          'MD5',
-          'checksum',
-          'HMAC',
-          'digest',
-        ],
+        keywords: ['hash', 'SHA-256', 'SHA-1', 'MD5', 'checksum', 'digest'],
         description:
           'Computes MD5, SHA-1, and SHA-256 hashes from text in real time.',
       },
@@ -597,6 +585,7 @@ export const tools: Tool[] = [
     addedAt: '2026-09-16',
     updatedAt: '2026-09-16',
     related: ['char-counter', 'regex-tester', 'line-ending-converter'],
+    sensitive: true,
     translations: {
       ja: {
         name: 'テキスト差分比較（diff）',
@@ -736,7 +725,7 @@ export const tools: Tool[] = [
       },
       en: {
         name: 'QR Code Generator',
-        keywords: ['QR code', 'QR', 'qr generator', 'barcode'],
+        keywords: ['QR code', 'QR', 'qr generator', '2D code'],
         description:
           'Generates a QR code from a URL or text and downloads it as a PNG, with a selectable error correction level.',
       },
@@ -751,7 +740,14 @@ export const tools: Tool[] = [
     translations: {
       ja: {
         name: 'Cron式スケジュールシミュレーター',
-        keywords: ['cron', 'クーロン', 'crontab', 'スケジュール', '定期実行'],
+        keywords: [
+          'cron',
+          'クーロン',
+          'クロン',
+          'crontab',
+          'スケジュール',
+          '定期実行',
+        ],
         description:
           'cron式の意味を日本語で解説し、次回の実行予定日時を一覧表示します。crontabやGitHub Actionsの動作確認に便利。',
       },
@@ -850,7 +846,7 @@ export const tools: Tool[] = [
     translations: {
       ja: {
         name: '年齢計算機',
-        keywords: ['年齢計算', '満年齢', '生年月日', '誕生日', '干支'],
+        keywords: ['年齢計算', '満年齢', '生年月日', '誕生日'],
         description:
           '生年月日から満年齢・数え年・生まれてから経過した日数・次の誕生日までの日数を計算します。基準日を指定して未来・過去時点の年齢も確認可能。',
       },
@@ -917,7 +913,6 @@ export const tools: Tool[] = [
       'hourly-wage-calculator',
       'mortgage-calculator',
     ],
-    sensitive: true,
     translations: {
       ja: {
         name: '消費税・割引計算機',
@@ -1417,6 +1412,7 @@ export const tools: Tool[] = [
     addedAt: '2026-09-24',
     updatedAt: '2026-09-24',
     related: ['image-resizer', 'image-to-base64', 'favicon-generator'],
+    sensitive: true,
     translations: {
       ja: {
         name: '画像フォーマット変換',
@@ -1453,11 +1449,8 @@ export const tools: Tool[] = [
     category: 'image',
     addedAt: '2026-09-24',
     updatedAt: '2026-09-24',
-    related: [
-      'image-converter',
-      'image-pixelart-converter',
-      'ratio-calculator',
-    ],
+    related: ['image-converter', 'image-pixelart-converter', 'exif-viewer'],
+    sensitive: true,
     translations: {
       ja: {
         name: '画像リサイズ・圧縮',
@@ -1474,13 +1467,7 @@ export const tools: Tool[] = [
       },
       en: {
         name: 'Image Resizer & Compressor',
-        keywords: [
-          'image resizer',
-          'resize image',
-          'scale image',
-          'shrink',
-          'crop',
-        ],
+        keywords: ['image resizer', 'resize image', 'scale image', 'shrink'],
         description:
           'Resizes images by pixel size or percentage and compresses them to WebP, JPEG, or PNG, with support for processing several files at once.',
       },
@@ -1492,6 +1479,7 @@ export const tools: Tool[] = [
     addedAt: '2026-09-24',
     updatedAt: '2026-09-24',
     related: ['base64', 'image-converter', 'svg-optimizer'],
+    sensitive: true,
     translations: {
       ja: {
         name: '画像のBase64（Data URL）変換',
@@ -1576,6 +1564,7 @@ export const tools: Tool[] = [
     addedAt: '2026-09-24',
     updatedAt: '2026-09-24',
     related: ['image-resizer', 'image-palette-extractor', 'image-converter'],
+    sensitive: true,
     translations: {
       ja: {
         name: '画像ドット絵化・モザイク・減色',
@@ -1614,10 +1603,11 @@ export const tools: Tool[] = [
       'contrast-checker',
       'image-pixelart-converter',
     ],
+    sensitive: true,
     translations: {
       ja: {
         name: '画像カラーパレット抽出',
-        keywords: ['カラーパレット', '配色', '主要色', '色抽出', 'スポイト'],
+        keywords: ['カラーパレット', '配色', '主要色', '色抽出'],
         description:
           '画像から主要な色を自動検出し、HEX・RGBコードと使用割合の一覧として表示・コピーできます。',
       },
@@ -1661,7 +1651,7 @@ export const tools: Tool[] = [
     category: 'image',
     addedAt: '2026-09-25',
     updatedAt: '2026-09-25',
-    related: ['image-resizer', 'lorem-ipsum', 'favicon-generator'],
+    related: ['image-resizer', 'lorem-ipsum', 'cat-logo-text-generator'],
     translations: {
       ja: {
         name: 'ダミー画像生成',
@@ -1774,6 +1764,7 @@ export const tools: Tool[] = [
       ja: {
         name: 'PDFページ回転・削除・並び替え',
         keywords: [
+          'パスワード解除',
           'PDFページ編集',
           'ページ並べ替え',
           'ページ削除',
@@ -1786,6 +1777,7 @@ export const tools: Tool[] = [
       en: {
         name: 'PDF Page Editor',
         keywords: [
+          'remove password',
           'PDF page editor',
           'reorder pages',
           'delete pages',
@@ -1807,25 +1799,13 @@ export const tools: Tool[] = [
     translations: {
       ja: {
         name: 'PDFパスワード設定',
-        keywords: [
-          'PDFパスワード',
-          'PDF暗号化',
-          'PDFロック',
-          'PDF保護',
-          'パスワード解除',
-        ],
+        keywords: ['PDFパスワード', 'PDF暗号化', 'PDFロック', 'PDF保護'],
         description:
           'PDFに開くためのパスワードを設定しAES-256で暗号化。印刷・コピー・編集の制限も指定できます。',
       },
       en: {
         name: 'PDF Password Protector',
-        keywords: [
-          'PDF password',
-          'encrypt PDF',
-          'lock PDF',
-          'protect PDF',
-          'remove password',
-        ],
+        keywords: ['PDF password', 'encrypt PDF', 'lock PDF', 'protect PDF'],
         description:
           'Add a password to a PDF and encrypt it with AES-256, with optional print/copy/edit restrictions.',
       },

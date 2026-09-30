@@ -58,7 +58,7 @@ You are an independent QA-only agent for the NyankoTools repository. Don't take 
 
 - Does it send no data to any server (grep for `fetch` / `XMLHttpRequest` calls)?
 - Is it wrapped in `Layout`, with page-specific `title` / `description` designed and exactly one `<h1>`?
-- Is it registered in `src/data/tools.ts` including `category`?
+- Is it registered in `src/data/tools.ts` including `category` (ID), `addedAt` / `updatedAt`, `related`, and `keywords`?
 - Does the layout hold at narrow widths (~375px)? (Horizontal scroll is verified automatically by `e2e/tools-common.spec.ts`; judge other breakage by reading the markup.)
 
 ## Notes

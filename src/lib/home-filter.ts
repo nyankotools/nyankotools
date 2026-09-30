@@ -8,11 +8,16 @@ export interface HomeFilterOptions {
 
 const ALL_CATEGORY = 'all';
 
+/** 大文字小文字と全角/半角（ＪＳＯＮ→json など）の表記ゆれを揃える */
+function normalize(text: string): string {
+  return text.normalize('NFKC').toLowerCase();
+}
+
 export function filterTools(
   tools: LocalizedTool[],
   options: HomeFilterOptions = {},
 ): LocalizedTool[] {
-  const query = options.query?.trim().toLowerCase() ?? '';
+  const query = normalize(options.query?.trim() ?? '');
   const category = options.category ?? ALL_CATEGORY;
 
   return tools.filter((tool) => {
@@ -22,9 +27,9 @@ export function filterTools(
 
     if (!query) return true;
     return (
-      tool.name.toLowerCase().includes(query) ||
-      tool.description.toLowerCase().includes(query) ||
-      tool.keywords.some((keyword) => keyword.toLowerCase().includes(query))
+      normalize(tool.name).includes(query) ||
+      normalize(tool.description).includes(query) ||
+      tool.keywords.some((keyword) => normalize(keyword).includes(query))
     );
   });
 }

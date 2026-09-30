@@ -64,6 +64,10 @@ describe('filterTools', () => {
     expect(filterTools(tools, { query: '字数' })).toEqual([tools[0]]);
   });
 
+  it('ignores full-width/half-width differences', () => {
+    expect(filterTools(tools, { query: 'ＰＲＥＴＴＹ' })).toEqual([tools[1]]);
+  });
+
   it('returns an empty array when nothing matches', () => {
     expect(filterTools(tools, { query: '存在しない' })).toEqual([]);
   });

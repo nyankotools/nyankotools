@@ -141,6 +141,7 @@ describe('tools registry - flags', () => {
       'password-generator',
       'jwt-decoder',
       'hash-generator',
+      'base64',
     ]) {
       expect(tools.find((t) => t.slug === slug)?.sensitive, slug).toBe(true);
     }

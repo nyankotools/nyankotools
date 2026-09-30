@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 
 // 「使い方」の手順文が引用するボタン名・ラベル（ja は「」、en は ""）が、同じ辞書の
-// 他の文言（UI ラベル）に存在することを保証する。UI 文言を変えたときの食い違いを防ぐ。
+// UI ラベル側の文言に存在することを保証する。UI 文言を変えたときの食い違いを防ぐ。
+// 説明文（intro・notes・description・glossary・faq など）は、UI と異なる表記が含まれていても
+// 一致してしまうため検索対象から除く。
 const modules = import.meta.glob('./tools/*.ts', { eager: true }) as Record<
   string,
   Record<string, unknown>
@@ -9,13 +11,23 @@ const modules = import.meta.glob('./tools/*.ts', { eager: true }) as Record<
 
 type Dict = Record<string, unknown>;
 
-// howToSteps を除く、辞書内のすべての文字列を集める
+const EXCLUDED_KEYS = new Set([
+  'howToSteps',
+  'title',
+  'description',
+  'intro',
+  'introHtml',
+  'notes',
+  'glossaryTerms',
+]);
+
+// 説明文系のキーを除く、辞書内の文字列（UI ラベル等）を集める
 function collectStrings(node: unknown, out: string[]) {
   if (typeof node === 'string') out.push(node);
   else if (Array.isArray(node)) node.forEach((n) => collectStrings(n, out));
   else if (node && typeof node === 'object') {
     for (const [k, v] of Object.entries(node)) {
-      if (k !== 'howToSteps') collectStrings(v, out);
+      if (!EXCLUDED_KEYS.has(k)) collectStrings(v, out);
     }
   }
 }

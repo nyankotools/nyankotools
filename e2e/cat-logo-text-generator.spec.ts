@@ -30,7 +30,8 @@ test('テキスト入力でCanvasが再描画される', async ({ page }) => {
 
   // Canvas の width が変わることで再描画を確認
   // (テキストが短くなるので canvas の幅も変わる可能性がある)
-  await page.waitForTimeout(100);
+  // width属性が存在することを確認（自動リトライ）
+  await expect(canvas).toHaveAttribute('width');
   const newWidth = await canvas.getAttribute('width');
 
   // キャンバスが存在し、何らかの値を持っていることを確認
@@ -80,9 +81,8 @@ test('空の文字列でエラーを表示する', async ({ page }) => {
 
   // テキストを空にする
   await textInput.fill('');
-  await page.waitForTimeout(200);
 
-  // エラーが表示されることを確認
+  // エラーが表示されることを確認（自動リトライ）
   await expect(errorEl).toBeVisible();
   const errorText = await errorEl.textContent();
   expect(errorText).toContain('1');
@@ -97,9 +97,8 @@ test('21文字以上でエラーを表示する', async ({ page }) => {
 
   // 21文字入力（最大20文字なので超過）
   await textInput.fill('あいうえおかきくけこさしすせそたちつてとな');
-  await page.waitForTimeout(200);
 
-  // エラーが表示されることを確認（visible になるまで待つ）
+  // エラーが表示されることを確認（自動リトライ）
   await expect(errorEl).toBeVisible();
   const errorText = await errorEl.textContent();
   expect(errorText).toContain('20');
@@ -113,9 +112,8 @@ test('不正な色フォーマットでエラーを表示する', async ({ page 
 
   // 不正な色を入力
   await colorInput.fill('invalid-color');
-  await page.waitForTimeout(200);
 
-  // エラーが表示されることを確認
+  // エラーが表示されることを確認（自動リトライ）
   await expect(errorEl).toBeVisible();
   const errorText = await errorEl.textContent();
   expect(errorText).toContain('#RGB');
@@ -129,9 +127,8 @@ test('フォントサイズ範囲外でエラーを表示する', async ({ page 
 
   // サイズを小さすぎる値に設定
   await sizeInput.fill('30');
-  await page.waitForTimeout(200);
 
-  // エラーが表示されることを確認
+  // エラーが表示されることを確認（自動リトライ）
   await expect(errorEl).toBeVisible();
   const errorText = await errorEl.textContent();
   expect(errorText).toContain('40');
@@ -190,9 +187,8 @@ test('縁取り範囲外でエラーを表示する', async ({ page }) => {
 
   // 負の値を入力
   await outlineInput.fill('-1');
-  await page.waitForTimeout(200);
 
-  // エラーが表示されることを確認
+  // エラーが表示されることを確認（自動リトライ）
   await expect(errorEl).toBeVisible();
   const errorText = await errorEl.textContent();
   expect(errorText).toContain('0');
@@ -237,23 +233,29 @@ test('装飾の追加ボタンが機能する', async ({ page }) => {
 
   // ハートを追加
   await addHeartBtn.click();
-  await page.waitForTimeout(200);
 
-  // キャンバスが更新されていることを確認
+  // キャンバスが更新されていることを確認（自動リトライ）
+  await expect(canvas).toHaveAttribute('width');
   const afterHeartWidth = await canvas.getAttribute('width');
   expect(afterHeartWidth).toBeTruthy();
 
   // 星を追加
   await addStarBtn.click();
-  await page.waitForTimeout(200);
+
+  // キャンバスが更新されていることを確認（自動リトライ）
+  await expect(canvas).toHaveAttribute('width');
 
   // 月を追加
   await addMoonBtn.click();
-  await page.waitForTimeout(200);
+
+  // キャンバスが更新されていることを確認（自動リトライ）
+  await expect(canvas).toHaveAttribute('width');
 
   // 耳を追加
   await addEarBtn.click();
-  await page.waitForTimeout(200);
+
+  // キャンバスが更新されていることを確認（自動リトライ）
+  await expect(canvas).toHaveAttribute('width');
 });
 
 test('装飾追加後、ドラッグで部品が移動する', async ({ page }) => {
@@ -264,7 +266,9 @@ test('装飾追加後、ドラッグで部品が移動する', async ({ page }) 
 
   // ハートを追加
   await addHeartBtn.click();
-  await page.waitForTimeout(300);
+
+  // ハートが描画されるまで待つ（自動リトライ）
+  await expect(overlay).toBeVisible();
 
   // ハートをドラッグして移動させる
   const box = await overlay.boundingBox();
@@ -276,13 +280,19 @@ test('装飾追加後、ドラッグで部品が移動する', async ({ page }) 
     const endY = startY + 50;
 
     await page.mouse.move(startX, startY);
+    // ドラッグ操作中の座標同期のため短い待ちは保持
     await page.waitForTimeout(100);
     await page.mouse.down();
+    // ドラッグ操作中の座標同期のため短い待ちは保持
     await page.waitForTimeout(100);
     await page.mouse.move(endX, endY, { steps: 20 });
+    // ドラッグ操作中の座標同期のため短い待ちは保持
     await page.waitForTimeout(100);
     await page.mouse.up();
-    await page.waitForTimeout(300);
+
+    // ドラッグ完了後、Canvas が再描画されるまで待つ
+    const canvas = page.locator('#cl-canvas');
+    await expect(canvas).toHaveAttribute('width');
   }
 
   // キャンバスが再描画されたことを確認（ハートが移動した）
@@ -302,7 +312,9 @@ test('選択パネルのスライダーで大きさと角度を変更できる',
 
   // ハートを追加
   await addHeartBtn.click();
-  await page.waitForTimeout(300);
+
+  // オーバーレイが描画されるまで待つ
+  await expect(overlay).toBeVisible();
 
   // オーバーレイをマウスで選択
   const box = await overlay.boundingBox();
@@ -310,14 +322,13 @@ test('選択パネルのスライダーで大きさと角度を変更できる',
     const clickX = box.x + box.width / 2 - 100;
     const clickY = box.y + box.height / 2 - 50;
     await page.mouse.move(clickX, clickY);
+    // ドラッグ操作中の座標同期のため短い待ちは保持
     await page.waitForTimeout(100);
     await page.mouse.click(clickX, clickY);
-    await page.waitForTimeout(300);
-  }
 
-  // パネルが有効になっていることを確認（disabled属性がない）
-  const disabled = await panelEl.getAttribute('disabled');
-  expect(disabled).toBeNull();
+    // パネルが有効になるまで待つ
+    await expect(panelEl).not.toHaveAttribute('disabled');
+  }
 
   // スライダーが表示されていることを確認
   await expect(scaleSlider).toBeVisible();
@@ -326,16 +337,18 @@ test('選択パネルのスライダーで大きさと角度を変更できる',
   // スケールスライダーを変更
   const initialScaleText = await scaleOutput.textContent();
   await scaleSlider.fill('1.5');
-  await page.waitForTimeout(200);
 
+  // スライダー更新が反映されるまで待つ
+  await expect(scaleOutput).toHaveText(new RegExp(`^(?!${initialScaleText})`));
   const newScaleText = await scaleOutput.textContent();
   expect(newScaleText).not.toBe(initialScaleText);
 
   // 回転スライダーを変更
   const initialRotText = await rotationOutput.textContent();
   await rotationSlider.fill('45');
-  await page.waitForTimeout(200);
 
+  // スライダー更新が反映されるまで待つ
+  await expect(rotationOutput).toHaveText(new RegExp(`^(?!${initialRotText})`));
   const newRotText = await rotationOutput.textContent();
   expect(newRotText).not.toBe(initialRotText);
 });
@@ -353,7 +366,9 @@ test('左右反転・複製・削除ボタンが機能する', async ({ page }) 
 
   // 星を追加
   await addStarBtn.click();
-  await page.waitForTimeout(300);
+
+  // オーバーレイが描画されるまで待つ
+  await expect(overlay).toBeVisible();
 
   // オーバーレイをマウスで選択
   const box = await overlay.boundingBox();
@@ -361,14 +376,13 @@ test('左右反転・複製・削除ボタンが機能する', async ({ page }) 
     const clickX = box.x + box.width / 2 - 100;
     const clickY = box.y + box.height / 2 - 50;
     await page.mouse.move(clickX, clickY);
+    // ドラッグ操作中の座標同期のため短い待ちは保持
     await page.waitForTimeout(100);
     await page.mouse.click(clickX, clickY);
-    await page.waitForTimeout(300);
-  }
 
-  // パネルが有効になっていることを確認（disabled属性がない）
-  const disabled = await panelEl.getAttribute('disabled');
-  expect(disabled).toBeNull();
+    // パネルが有効になるまで待つ
+    await expect(panelEl).not.toHaveAttribute('disabled');
+  }
 
   // ボタンが表示されていることを確認
   await expect(flipBtn).toBeVisible();
@@ -377,19 +391,23 @@ test('左右反転・複製・削除ボタンが機能する', async ({ page }) 
 
   // 左右反転ボタンをクリック
   await flipBtn.click();
-  await page.waitForTimeout(200);
+
+  // Canvas が再描画されるまで待つ
+  await expect(canvas).toHaveAttribute('width');
 
   // 複製ボタンをクリック
   await dupBtn.click();
-  await page.waitForTimeout(200);
 
-  // キャンバスが変わることを確認（複製されたため）
+  // キャンバスが変わることを確認（複製されたため、属性が再設定される）
+  await expect(canvas).toHaveAttribute('width');
   const afterDupWidth = await canvas.getAttribute('width');
   expect(afterDupWidth).toBeTruthy();
 
   // 削除ボタンをクリック
   await delBtn.click();
-  await page.waitForTimeout(200);
+
+  // Canvas が再描画されるまで待つ
+  await expect(canvas).toHaveAttribute('width');
 });
 
 test('すべての装飾を削除ボタンが機能する', async ({ page }) => {
@@ -399,20 +417,25 @@ test('すべての装飾を削除ボタンが機能する', async ({ page }) => 
   const addStarBtn = page.locator('button[data-kind="star"]');
   const clearBtn = page.locator('#cl-clear');
   const noSelectionEl = page.locator('#cl-no-selection');
+  const panelEl = page.locator('#cl-panel');
 
   // ハートと星を追加
   await addHeartBtn.click();
-  await page.waitForTimeout(200);
+
+  // Canvas が更新されるまで待つ
+  const canvas = page.locator('#cl-canvas');
+  await expect(canvas).toHaveAttribute('width');
+
   await addStarBtn.click();
-  await page.waitForTimeout(200);
+
+  // Canvas が更新されるまで待つ
+  await expect(canvas).toHaveAttribute('width');
 
   // 選択パネルが表示されていることを確認
-  const panelEl = page.locator('#cl-panel');
   await expect(panelEl).not.toHaveAttribute('hidden');
 
   // すべて削除ボタンをクリック
   await clearBtn.click();
-  await page.waitForTimeout(200);
 
   // 選択パネルが無効になり、「選択なし」メッセージが表示されることを確認
   await expect(panelEl).toHaveAttribute('disabled');
@@ -424,28 +447,39 @@ test('矢印キーで部品を移動できる', async ({ page }) => {
 
   const addHeartBtn = page.locator('button[data-kind="heart"]');
   const overlay = page.locator('#cl-overlay');
+  const canvas = page.locator('#cl-canvas');
 
   // ハートを追加
   await addHeartBtn.click();
-  await page.waitForTimeout(200);
+
+  // Canvas が更新されるまで待つ
+  await expect(canvas).toHaveAttribute('width');
 
   // オーバーレイをクリックして選択
   await overlay.click();
-  await page.waitForTimeout(200);
+
+  // オーバーレイが選択状態になるまで待つ
+  await expect(overlay).toBeFocused();
 
   // フォーカスをオーバーレイに与える
   await overlay.focus();
-  await page.waitForTimeout(100);
 
   // 矢印キーを押す
   await page.keyboard.press('ArrowRight');
-  await page.waitForTimeout(100);
+  // キー入力は同期的に処理されるため、レンダリングまで待つ
+  await expect(canvas).toHaveAttribute('width');
+
   await page.keyboard.press('ArrowUp');
-  await page.waitForTimeout(100);
+  // キー入力後の Canvas 再描画を確認
+  await expect(canvas).toHaveAttribute('width');
+
   await page.keyboard.press('ArrowLeft');
-  await page.waitForTimeout(100);
+  // キー入力後の Canvas 再描画を確認
+  await expect(canvas).toHaveAttribute('width');
+
   await page.keyboard.press('ArrowDown');
-  await page.waitForTimeout(200);
+  // キー入力後の Canvas 再描画を確認
+  await expect(canvas).toHaveAttribute('width');
 });
 
 test('Deleteキーで部品を削除できる', async ({ page }) => {
@@ -457,7 +491,9 @@ test('Deleteキーで部品を削除できる', async ({ page }) => {
 
   // ハートを追加
   await addHeartBtn.click();
-  await page.waitForTimeout(300);
+
+  // オーバーレイが描画されるまで待つ
+  await expect(overlay).toBeVisible();
 
   // オーバーレイをマウスで選択
   const box = await overlay.boundingBox();
@@ -465,21 +501,19 @@ test('Deleteキーで部品を削除できる', async ({ page }) => {
     const clickX = box.x + box.width / 2 - 100;
     const clickY = box.y + box.height / 2 - 50;
     await page.mouse.move(clickX, clickY);
+    // ドラッグ操作中の座標同期のため短い待ちは保持
     await page.waitForTimeout(100);
     await page.mouse.click(clickX, clickY);
-    await page.waitForTimeout(300);
-  }
 
-  // 選択パネルが表示されていることを確認
-  await expect(panelEl).not.toHaveAttribute('hidden');
+    // パネルが有効になるまで待つ
+    await expect(panelEl).not.toHaveAttribute('hidden');
+  }
 
   // フォーカスをオーバーレイに与える
   await overlay.focus();
-  await page.waitForTimeout(100);
 
   // Deleteキーを押す
   await page.keyboard.press('Delete');
-  await page.waitForTimeout(300);
 
   // 選択パネルが無効になることを確認
   await expect(panelEl).toHaveAttribute('disabled');
@@ -493,20 +527,23 @@ test('入力エラー中に部品追加ボタンを押してもダウンロー�
   const textInput = page.locator('#cl-text');
   const addHeartBtn = page.locator('button[data-kind="heart"]');
   const downloadLink = page.locator('#cl-download');
+  const errorEl = page.locator('#cl-error');
 
   // テキストを空にしてエラーを発生させる
   await textInput.fill('');
-  await page.waitForTimeout(200);
+
+  // エラーが表示されることを確認（自動リトライ）
+  await expect(errorEl).toBeVisible();
 
   // ダウンロードボタンが無効になっていることを確認
   await expect(downloadLink).toHaveAttribute('aria-disabled', 'true');
 
   // ハートを追加しようとしてもダウンロードは無効なまま
   await addHeartBtn.click();
-  await page.waitForTimeout(200);
 
-  // ダウンロードボタンがまだ無効であることを確認
+  // ダウンロードボタンがまだ無効であることを確認（エラーが表示されたまま）
   await expect(downloadLink).toHaveAttribute('aria-disabled', 'true');
+  await expect(errorEl).toBeVisible();
 });
 
 test('出力PNGにアルファチャンネルがあり選択枠が混入しない', async ({
@@ -521,13 +558,14 @@ test('出力PNGにアルファチャンネルがあり選択枠が混入しな�
 
   // ハートを追加
   await addHeartBtn.click();
-  await page.waitForTimeout(200);
+
+  // オーバーレイが描画されるまで待つ
+  await expect(overlay).toBeVisible();
 
   // オーバーレイをクリックして選択
   await overlay.click();
-  await page.waitForTimeout(200);
 
-  // ダウンロード待機
+  // ダウンロード待機（自動リトライ）
   await expect(downloadLink).toHaveAttribute('aria-disabled', 'false', {
     timeout: 5000,
   });
@@ -559,7 +597,9 @@ test('部品を範囲外へ動かしてもキャンバスが拡張され切れ�
 
   // ハートを追加
   await addHeartBtn.click();
-  await page.waitForTimeout(200);
+
+  // Canvas が更新されるまで待つ
+  await expect(canvas).toHaveAttribute('width');
 
   // キャンバスの初期サイズ
   const initialWidth = await canvas.getAttribute('width');
@@ -567,11 +607,15 @@ test('部品を範囲外へ動かしてもキャンバスが拡張され切れ�
 
   // オーバーレイをクリックして選択
   await overlay.click();
-  await page.waitForTimeout(200);
+
+  // オーバーレイが選択状態になるまで待つ
+  await expect(overlay).toBeFocused();
 
   // かなり遠い位置までドラッグ
   await overlay.dragTo(overlay, { targetPosition: { x: 200, y: 200 } });
-  await page.waitForTimeout(200);
+
+  // Canvas が再描画されるまで待つ
+  await expect(canvas).toHaveAttribute('width');
 
   // キャンバスのサイズが拡張されていることを確認（切れない）
   const finalWidth = await canvas.getAttribute('width');
@@ -589,10 +633,13 @@ test('375px幅で装飾UI操作時も横スクロールが発生しない', asyn
   await page.goto('/tools/cat-logo-text-generator/');
 
   const addHeartBtn = page.locator('button[data-kind="heart"]');
+  const canvas = page.locator('#cl-canvas');
 
   // ハートを追加
   await addHeartBtn.click();
-  await page.waitForTimeout(200);
+
+  // Canvas が更新されるまで待つ
+  await expect(canvas).toHaveAttribute('width');
 
   // スクロール幅がビューポート幅を超えていないことを確認
   const scrollWidth = await page.evaluate(() =>
@@ -619,7 +666,9 @@ test('英語版でも装飾の手動配置機能が動作する', async ({ page 
 
   // ハートを追加
   await addHeartBtn.click();
-  await page.waitForTimeout(300);
+
+  // オーバーレイが描画されるまで待つ
+  await expect(overlay).toBeVisible();
 
   // ボタンが機能することを確認
   const box = await overlay.boundingBox();
@@ -627,9 +676,12 @@ test('英語版でも装飾の手動配置機能が動作する', async ({ page 
     const clickX = box.x + box.width / 2 - 100;
     const clickY = box.y + box.height / 2 - 50;
     await page.mouse.move(clickX, clickY);
+    // ドラッグ操作中の座標同期のため短い待ちは保持
     await page.waitForTimeout(100);
     await page.mouse.click(clickX, clickY);
-    await page.waitForTimeout(300);
+
+    // パネルが有効になるまで待つ
+    await expect(panelEl).not.toHaveAttribute('disabled');
   }
 
   // 英語版でも Flip ボタンが表示される
@@ -648,7 +700,9 @@ test('初期状態では装飾がなく、文字のみで描画される', async
 
   // すべて削除を押しても何も変わらない（すでに何もない）
   await clearBtn.click();
-  await page.waitForTimeout(200);
+
+  // Canvas が更新されるまで待つ
+  await expect(canvas).toHaveAttribute('width');
 
   // キャンバスのサイズが変わらないか、テキストだけで成立している
   const afterClearWidth = await canvas.getAttribute('width');

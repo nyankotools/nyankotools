@@ -342,8 +342,9 @@ test.describe('CSSグラデーションジェネレーター（日本語版）',
     const colorInput = page.locator('[data-color]').first();
     await colorInput.fill('#ff0000');
 
-    // 変更が反映されるまで待つ
-    await page.waitForTimeout(100);
+    // 変更が反映されるまで待つ（自動リトライ）
+    // style 属性が変更されるまで待つ
+    await expect(preview).toHaveAttribute('style', new RegExp(`.+`));
 
     const styleAfter = await preview.getAttribute('style');
 

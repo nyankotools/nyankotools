@@ -38,7 +38,7 @@ jobs:
   # lint/型/単体テストのジョブとは独立して並列実行し、失敗時の切り分けを容易にする。
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
 

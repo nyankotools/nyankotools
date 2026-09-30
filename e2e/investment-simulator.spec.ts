@@ -789,12 +789,10 @@ test('資産運用シミュレーション: グラフのSVG要素のfill色がCS
     document.documentElement.classList.add('dark');
   });
 
-  // フォーマッターがレンダリングされるまで待機
-  await page.waitForTimeout(100);
-
-  // トレンドチャートのパス要素を取得
+  // トレンドチャートのパス要素が描画されるまで待つ（自動リトライ）
   const trendChartEl = page.locator('#investment-sim-trend-chart');
   const paths = trendChartEl.locator('path');
+  await expect(paths.first()).toBeVisible();
   const pathCount = await paths.count();
   expect(pathCount).toBeGreaterThan(0);
 

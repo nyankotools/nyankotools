@@ -98,8 +98,8 @@ test('ダミー画像生成ツール：背景色を変更すると画像が更�
   // 背景色を赤（#ff0000）に変更
   await bgInput.fill('#ff0000');
 
-  // href が新しくなっていることを確認
-  await page.waitForTimeout(100); // レンダリング完了を待つ
+  // href が新しくなっていることを確認（自動リトライ）
+  await expect(downloadBtn).toHaveAttribute('href', new RegExp(`.+`));
   const newHref = await downloadBtn.getAttribute('href');
   expect(newHref).not.toBe(initialHref);
 
@@ -173,8 +173,8 @@ test('ダミー画像生成ツール：テキストを入力すると画像に�
   // テキストを入力
   await textInput.fill('Custom Text');
 
-  // href が新しくなっていることを確認（画像が再生成されたことを示す）
-  await page.waitForTimeout(100);
+  // href が新しくなっていることを確認（自動リトライ、画像が再生成されたことを示す）
+  await expect(downloadBtn).toHaveAttribute('href', new RegExp(`.+`));
   const newHref = await downloadBtn.getAttribute('href');
   expect(newHref).not.toBe(initialHref);
 

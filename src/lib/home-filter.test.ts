@@ -1,24 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import { filterTools, getCategories, groupByCategory } from './home-filter';
+import { filterTools, groupByCategory } from './home-filter';
 import type { LocalizedTool } from '../data/tools';
 
 const tools: LocalizedTool[] = [
   {
     slug: 'char-counter',
     name: '文字数カウント',
+    keywords: ['字数'],
     description: 'テキストの文字数を数えます。',
+    categoryId: 'text',
     category: 'テキスト',
   },
   {
     slug: 'json-formatter',
     name: 'JSON整形ツール',
+    keywords: ['pretty print'],
     description: 'JSONを見やすく整形します。',
+    categoryId: 'data',
     category: '変換',
   },
   {
     slug: 'base64-encoder',
     name: 'Base64エンコーダー',
+    keywords: [],
     description: 'テキストをBase64に変換します。',
+    categoryId: 'data',
     category: '変換',
   },
 ];
@@ -37,7 +43,7 @@ describe('filterTools', () => {
   });
 
   it('filters by category', () => {
-    expect(filterTools(tools, { category: '変換' })).toEqual([
+    expect(filterTools(tools, { category: 'data' })).toEqual([
       tools[1],
       tools[2],
     ]);
@@ -48,9 +54,14 @@ describe('filterTools', () => {
   });
 
   it('combines query and category filters', () => {
-    expect(filterTools(tools, { query: 'base64', category: '変換' })).toEqual([
+    expect(filterTools(tools, { query: 'base64', category: 'data' })).toEqual([
       tools[2],
     ]);
+  });
+
+  it('matches keywords (aliases), case-insensitively', () => {
+    expect(filterTools(tools, { query: 'PRETTY' })).toEqual([tools[1]]);
+    expect(filterTools(tools, { query: '字数' })).toEqual([tools[0]]);
   });
 
   it('returns an empty array when nothing matches', () => {
@@ -62,17 +73,11 @@ describe('filterTools', () => {
   });
 });
 
-describe('getCategories', () => {
-  it('returns unique categories in first-seen order', () => {
-    expect(getCategories(tools)).toEqual(['テキスト', '変換']);
-  });
-});
-
 describe('groupByCategory', () => {
   it('groups tools under their category, preserving first-seen category order', () => {
     expect(groupByCategory(tools)).toEqual([
-      ['テキスト', [tools[0]]],
-      ['変換', [tools[1], tools[2]]],
+      { id: 'text', label: 'テキスト', tools: [tools[0]] },
+      { id: 'data', label: '変換', tools: [tools[1], tools[2]] },
     ]);
   });
 

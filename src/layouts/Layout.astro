@@ -404,8 +404,8 @@ const jsonLd: Record<string, unknown> | null = noindex
             </summary>
             <ul id="sidebar-favorites-list" class="space-y-1 pb-1"></ul>
           </details>
-          {toolsByCategory.map(([category, categoryTools]) => {
-            const hasActiveTool = categoryTools.some((tool) => {
+          {toolsByCategory.map((category) => {
+            const hasActiveTool = category.tools.some((tool) => {
               const href =
                 lang === 'en'
                   ? `/en/tools/${tool.slug}/`
@@ -415,11 +415,11 @@ const jsonLd: Record<string, unknown> | null = noindex
             return (
               <details
                 class="group mb-1 last:mb-0"
-                data-category={category}
+                data-category={category.id}
                 open={hasActiveTool}
               >
                 <summary class="flex cursor-pointer items-center justify-between rounded px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300">
-                  {category}
+                  {category.label}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     class="h-3 w-3 shrink-0 text-gray-400 transition-transform group-open:rotate-90 dark:text-gray-500"
@@ -437,7 +437,7 @@ const jsonLd: Record<string, unknown> | null = noindex
                   </svg>
                 </summary>
                 <ul class="space-y-1 pb-1">
-                  {categoryTools.map((tool) => {
+                  {category.tools.map((tool) => {
                     const href =
                       lang === 'en'
                         ? `/en/tools/${tool.slug}/`

@@ -1,5 +1,6 @@
 ---
 import Glossary from '../Glossary.astro';
+import Notes from '../Notes.astro';
 import Layout from '../../layouts/Layout.astro';
 import { markdownPreviewContent } from '../../i18n/tools/markdown-preview';
 import type { Locale } from '../../data/tools';
@@ -136,6 +137,8 @@ const t = markdownPreviewContent[locale];
     </code>
     {t.sanitizeNoteAfterCode}
   </p>
+
+  <Notes heading={t.notesHeading} items={t.notes} />
 
   <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
 </Layout>

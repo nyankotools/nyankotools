@@ -1,0 +1,18 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import UpdatesList from '../../components/UpdatesList.astro';
+---
+
+<Layout
+  title="更新情報"
+  description="にゃんこツールの新規ツール追加・主要機能追加の更新履歴を、日付ごとにまとめています。"
+>
+  <h1 class="mb-2 text-2xl font-bold">更新情報</h1>
+  <p class="mb-8 text-gray-600 dark:text-gray-400">
+    にゃんこツールに追加した新しいツールや機能の更新履歴です。
+  </p>
+
+  <div class="max-w-2xl">
+    <UpdatesList locale="ja" />
+  </div>
+</Layout>

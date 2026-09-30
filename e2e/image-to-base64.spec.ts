@@ -284,9 +284,9 @@ test.describe('Image to Base64 (Data URL) Converter (English)', () => {
       const fileInput = page.locator('#itb-file-input');
       await fileInput.setInputFiles(pngPath);
 
+      // FileReader の非同期処理が終わるまで待つ（値を1回だけ読むと空文字を拾うことがある）
       const output = page.locator('#itb-output');
-      const outputValue = await output.inputValue();
-      expect(outputValue).toMatch(/^data:image\/png;base64,/);
+      await expect(output).toHaveValue(/^data:image\/png;base64,/);
 
       // ダウンロードボタンが表示される
       const downloadLink = page.locator('#itb-download-link');

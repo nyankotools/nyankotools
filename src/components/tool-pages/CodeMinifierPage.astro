@@ -1,5 +1,6 @@
 ---
 import Glossary from '../Glossary.astro';
+import Notes from '../Notes.astro';
 import Layout from '../../layouts/Layout.astro';
 import { codeMinifierContent } from '../../i18n/tools/code-minifier';
 import type { Locale } from '../../data/tools';
@@ -114,6 +115,8 @@ const t = codeMinifierContent[locale];
     class="mt-6 text-sm text-gray-500 dark:text-gray-400"
     set:html={t.footnoteHtml}
   />
+
+  <Notes heading={t.notesHeading} items={t.notes} />
 
   <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
 </Layout>

@@ -23,6 +23,8 @@ export interface PlaceholderImageGeneratorPageContent {
   errorSizeTemplate: string;
   errorColor: string;
   errorEncode: string;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: { term: string; description: string }[];
 }
@@ -55,6 +57,12 @@ export const placeholderImageGeneratorContent: Record<
     errorColor: '色は #RGB または #RRGGBB 形式で入力してください。',
     errorEncode:
       '画像の生成に失敗しました。サイズを小さくして再度お試しください。',
+    notesHeading: '注意事項',
+    notes: [
+      '幅・高さは1〜4096pxの整数で指定します。',
+      '色は #RGB または #RRGGBB 形式で指定します。文字を空欄にすると「幅×高さ」が表示されます。',
+      'PNG・JPEG・WebPで書き出せます。JPEGは透過に対応していません。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -94,6 +102,12 @@ export const placeholderImageGeneratorContent: Record<
       'Enter whole numbers from {min} to {max} for width and height.',
     errorColor: 'Enter colors as #RGB or #RRGGBB.',
     errorEncode: 'Could not generate the image. Try a smaller size.',
+    notesHeading: 'Notes',
+    notes: [
+      'Width and height must be whole numbers from 1 to 4096 px.',
+      'Colors are specified as #RGB or #RRGGBB. If the text is left empty, "width × height" is shown.',
+      'You can export as PNG, JPEG or WebP. JPEG does not support transparency.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

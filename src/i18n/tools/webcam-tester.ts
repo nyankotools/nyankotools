@@ -50,7 +50,7 @@ export const webcamTesterContent: Record<Locale, WebcamTesterPageContent> = {
       'Webカメラとマイクの動作確認をブラウザ上で行える無料ツールです。映像のプレビュー、解像度・フレームレート（FPS）の実測、マイクの入力レベル確認に対応。映像・音声はブラウザ内で処理され、サーバーには送信・保存されません。',
     h1: 'Webカメラ動作確認ツール',
     introHtml:
-      'Webカメラの購入直後や、Web会議・配信の前に、映像が映るか・解像度やFPSはどのくらいか・マイクが音を拾っているかを確認できます。映像も音声もこのページの外には出ません。撮影した画像の縮小には<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ</a>もご利用ください。',
+      'Webカメラの購入直後や、Web会議・配信の前に、映像が映るか・解像度やFPSはどのくらいか・マイクが音を拾っているかを確認できます。映像も音声もこのページの外には出ません。別のアプリで撮影した画像の縮小には<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ</a>もご利用ください。',
     fullscreen: '全画面表示',
     exitFullscreen: '全画面を終了',
     mirror: '左右反転して表示',
@@ -91,7 +91,7 @@ export const webcamTesterContent: Record<Locale, WebcamTesterPageContent> = {
     notes: [
       '初回は、ブラウザからカメラ（マイクを確認する場合はマイクも）の使用許可を求められます。「許可」を選んでください。',
       '解像度は指定した値が必ず得られるとは限らず、カメラが対応する最も近い値になります。「自動」は最大フルHDで取得します。実際の値は「取得できた情報」で確認できます。',
-      'フレームレートは映像の描画間隔から算出した実測値です。暗い場所ではカメラが自動で下げることがあります。',
+      'フレームレートは、対応ブラウザでは映像の描画間隔から算出した実測値です（非対応のブラウザではカメラの設定値を表示します）。暗い場所ではカメラが自動で下げることがあります。',
       '映像・音声は録画も保存もされず、ページを閉じる・停止すると破棄されます。',
     ],
     glossaryHeading: '用語解説',
@@ -114,7 +114,7 @@ export const webcamTesterContent: Record<Locale, WebcamTesterPageContent> = {
       'A free online webcam test. Preview your camera, measure the actual resolution and frame rate (FPS), and check your microphone input level right in the browser. Video and audio stay in your browser and are never uploaded or stored.',
     h1: 'Webcam & Microphone Test',
     introHtml:
-      'Check that your new webcam works, see its real resolution and FPS, and confirm your microphone is picking up sound before a video call or stream. Nothing leaves this page. Need to shrink a captured image? Try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer</a>.',
+      'Check that your new webcam works, see its real resolution and FPS, and confirm your microphone is picking up sound before a video call or stream. Nothing leaves this page. Need to shrink an image taken with another app? Try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer</a>.',
     fullscreen: 'Fullscreen',
     exitFullscreen: 'Exit fullscreen',
     mirror: 'Mirror preview',
@@ -157,7 +157,7 @@ export const webcamTesterContent: Record<Locale, WebcamTesterPageContent> = {
     notes: [
       'The first time, your browser asks for permission to use the camera (and the microphone, if you test it). Choose "Allow".',
       'A requested resolution is not guaranteed ("Auto" uses up to Full HD); you get the closest one the camera supports. The actual value appears under "Detected information".',
-      'The frame rate is measured from how often frames are drawn. Cameras often lower it automatically in dim light.',
+      'Where supported, the frame rate is measured from how often frames are drawn (browsers without support show the configured value reported by the camera instead). Cameras often lower it automatically in dim light.',
       'Video and audio are neither recorded nor stored, and are discarded when you stop or close the page.',
     ],
     glossaryHeading: 'Glossary',

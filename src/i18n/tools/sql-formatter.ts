@@ -30,6 +30,8 @@ export interface SqlFormatterPageContent {
   outputLabel: string;
   /** `{message}` を置換して使うテンプレート */
   errorTemplate: string;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -41,7 +43,7 @@ export const sqlFormatterContent: Record<Locale, SqlFormatterPageContent> = {
       'SQLクエリをブラウザ上で整形・ミニファイ（圧縮）できる無料ツールです。MySQL・PostgreSQL・SQLite・BigQuery等の方言、インデント幅、キーワードの大文字/小文字に対応。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'SQL整形・ミニファイツール',
     introHtml:
-      'SQLクエリを入力すると自動で読みやすく整形して表示します。方言・インデント幅・キーワードの大文字/小文字を指定可能。1行に圧縮したい場合は「ミニファイ」ボタンを使ってください。整形結果をさらにJSONとして確認したい場合は <a href="/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON整形</a> もあわせてご利用ください。',
+      'SQLクエリを入力すると自動で読みやすく整形して表示します。方言・インデント幅・キーワードの大文字/小文字を指定可能。1行に圧縮したい場合は「ミニファイ」ボタンを使ってください。クエリ結果のJSONを整形したい場合は <a href="/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON整形</a> もあわせてご利用ください。',
     dialectLabel: 'SQL方言',
     dialectOptions: [
       { value: 'sql', label: '標準SQL' },
@@ -74,6 +76,12 @@ export const sqlFormatterContent: Record<Locale, SqlFormatterPageContent> = {
     outputLabel: '結果',
     errorTemplate:
       '構文エラー: {message}\n（内容: SQLの構文に誤りがあります。括弧・引用符の対応や、選択したSQL方言が入力内容に合っているかを確認してください。）',
+    notesHeading: '注意事項',
+    notes: [
+      '方言によってキーワードや引用符の扱いが異なります。使用しているデータベースに合った方言を選んでください。',
+      '整形は見た目（空白・改行・インデント・キーワードの大文字小文字）を変えるだけで、クエリの意味は変わりません。',
+      '構文が正しくないSQLは、整形できずエラーになることがあります。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -99,7 +107,7 @@ export const sqlFormatterContent: Record<Locale, SqlFormatterPageContent> = {
       'Free online tool to format and minify SQL queries right in your browser. Supports MySQL, PostgreSQL, SQLite, BigQuery and other dialects, plus indent width and keyword case options. Your data is processed in the browser and never sent to a server.',
     h1: 'SQL Formatter & Minifier',
     introHtml:
-      'Paste a SQL query to have it automatically formatted for readability. Choose the dialect, indent width, and keyword case. Click "Minify" to collapse it back to a single line. To further inspect the result as JSON, try the <a href="/en/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON Formatter</a> as well.',
+      'Paste a SQL query to have it automatically formatted for readability. Choose the dialect, indent width, and keyword case. Click "Minify" to collapse it back to a single line. To format JSON query results, try the <a href="/en/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON Formatter</a> as well.',
     dialectLabel: 'Dialect',
     dialectOptions: [
       { value: 'sql', label: 'Standard SQL' },
@@ -132,6 +140,12 @@ export const sqlFormatterContent: Record<Locale, SqlFormatterPageContent> = {
     outputLabel: 'Result',
     errorTemplate:
       'Syntax error: {message}\n(Check that parentheses and quotes are balanced, and that the selected SQL dialect matches your query.)',
+    notesHeading: 'Notes',
+    notes: [
+      'Keywords and quoting differ between dialects. Select the dialect that matches your database.',
+      'Formatting only changes appearance (whitespace, line breaks, indentation and keyword case). It does not change what the query does.',
+      'SQL with syntax errors may fail to format and show an error.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

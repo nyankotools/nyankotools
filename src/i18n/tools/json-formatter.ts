@@ -34,6 +34,8 @@ export interface JsonFormatterPageContent {
   errorTemplate: string;
   errorExplanations: ErrorExplanation[];
   errorExplanationFallback: string;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -93,6 +95,12 @@ export const jsonFormatterContent: Record<Locale, JsonFormatterPageContent> = {
     ],
     errorExplanationFallback:
       '（内容: JSONの構文に誤りがあります。カンマ・括弧・引用符の対応を確認してください。）',
+    notesHeading: '注意事項',
+    notes: [
+      'JSONの仕様では、末尾のカンマ・シングルクォート・コメントは使えません。これらが含まれていると構文エラーになります。',
+      'JavaScriptの数値の精度（約15〜17桁）を超える整数は、整形時に丸められることがあります。桁数の多いIDなどは文字列として扱うことをおすすめします。',
+      '入力したJSONはブラウザ内で処理され、サーバーには送信されません。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -129,6 +137,12 @@ export const jsonFormatterContent: Record<Locale, JsonFormatterPageContent> = {
     errorTemplate: 'Syntax error: {message}',
     errorExplanations: [],
     errorExplanationFallback: '',
+    notesHeading: 'Notes',
+    notes: [
+      'JSON does not allow trailing commas, single quotes or comments. Including any of them causes a syntax error.',
+      "Integers beyond JavaScript's numeric precision (about 15 to 17 digits) may be rounded when formatted. Store long IDs as strings.",
+      'Your JSON is processed in the browser and is never sent to a server.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

@@ -41,6 +41,10 @@ export interface PdfMergeSplitPageContent {
   errorOutOfRange: string;
   errorBadCount: string;
   errorFailed: string;
+  notesHeading: string;
+  notes: string[];
+  howToHeading: string;
+  howToSteps: string[];
   glossaryHeading: string;
   glossaryTerms: { term: string; description: string }[];
 }
@@ -52,7 +56,7 @@ export const pdfMergeSplitContent: Record<Locale, PdfMergeSplitPageContent> = {
       '複数のPDFを1つに結合、PDFをページ数ごとに分割、「1-3,5」のようなページ指定で必要なページだけを抽出できる無料ツールです。PDFはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'PDF結合・分割・ページ抽出',
     introHtml:
-      'PDFを結合したり、ページ単位で分割・抽出したりできます。ファイルは端末の外に出ません。PDFに載せる画像を軽くしたいときは<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ・圧縮</a>もご利用ください。',
+      'PDFを結合したり、ページ単位で分割・抽出したりできます。ファイルは端末の外に出ません。画像をPDFにしたいときは<a href="/tools/pdf-image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">PDF⇔画像変換</a>、その前に画像を軽くしたいときは<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ・圧縮</a>をご利用ください（出力形式はJPEGがおすすめです）。',
     modeLabel: '操作',
     modeMerge: '結合',
     modeExtract: 'ページ抽出',
@@ -90,6 +94,19 @@ export const pdfMergeSplitContent: Record<Locale, PdfMergeSplitPageContent> = {
     errorOutOfRange: '指定したページがPDFの範囲外です（全{pages}ページ）。',
     errorBadCount: '分割するページ数は1以上の整数で指定してください。',
     errorFailed: '処理に失敗しました。',
+    notesHeading: '注意事項',
+    notes: [
+      'パスワードで保護されたPDFは処理できません。先に保護を解除してから使ってください。',
+      'ページ範囲は「1-3, 5, 8-」のようにカンマ区切りで指定します。ページ抽出では、指定した順にページが並びます。',
+      'ファイルはブラウザ内で処理され、端末の外には送信されません。非常に大きなPDFは、端末のメモリ状況によって処理に時間がかかる場合があります。',
+    ],
+    howToHeading: '使い方',
+    howToSteps: [
+      '「結合」「ページ抽出」「分割」から、行いたい操作を選びます。',
+      'PDFファイルを選択します（結合では複数選択でき、「上へ」「下へ」で順番を入れ替えられます）。',
+      'ページ抽出では「1-3, 5」のようにページを、分割では何ページごとに分けるかを入力します。',
+      '「実行」を押し、結果に表示されたファイルをダウンロードします。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -115,7 +132,7 @@ export const pdfMergeSplitContent: Record<Locale, PdfMergeSplitPageContent> = {
       'A free online tool to merge multiple PDFs into one, split a PDF every N pages, or extract specific pages such as "1-3,5". Your PDFs are processed in the browser and never uploaded to a server.',
     h1: 'PDF Merge, Split & Extract Pages',
     introHtml:
-      'Combine PDFs, or split a PDF and pull out just the pages you need. Your files never leave your device. To shrink images before adding them to a document, try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer</a>.',
+      'Combine PDFs, or split a PDF and pull out just the pages you need. Your files never leave your device. To turn images into a PDF, try the <a href="/en/tools/pdf-image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">PDF ⇔ Image Converter</a>. To shrink the images first, use the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer</a> (JPEG output is recommended).',
     modeLabel: 'Action',
     modeMerge: 'Merge',
     modeExtract: 'Extract pages',
@@ -152,6 +169,19 @@ export const pdfMergeSplitContent: Record<Locale, PdfMergeSplitPageContent> = {
       'The specified pages are outside the PDF (it has {pages} pages).',
     errorBadCount: 'Enter a whole number of pages, 1 or more.',
     errorFailed: 'Processing failed.',
+    notesHeading: 'Notes',
+    notes: [
+      'Password-protected PDFs cannot be processed. Remove the protection first.',
+      'Specify page ranges separated by commas, like "1-3, 5, 8-". When extracting pages, they appear in the order you list them.',
+      "Files are processed in the browser and never leave your device. Very large PDFs may take longer depending on your device's memory.",
+    ],
+    howToHeading: 'How to use',
+    howToSteps: [
+      'Choose an action: Merge, Extract pages, or Split.',
+      'Choose your PDF files (Merge accepts several; use "Move up" / "Move down" to reorder them).',
+      'For Extract pages, enter pages such as "1-3, 5". For Split, enter how many pages each file should have.',
+      'Press "Run", then download the files listed under the result.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

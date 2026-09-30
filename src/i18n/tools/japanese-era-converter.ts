@@ -49,7 +49,7 @@ export const japaneseEraConverterContent: Record<
       '令和・平成・昭和・大正・明治の和暦と西暦を相互に変換できる無料ツールです。改元日をまたぐ日付にも対応。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: '和暦⇔西暦変換',
     introHtml:
-      '明治・大正・昭和・平成・令和の和暦と西暦をリアルタイムで相互変換します。改元日（例: 昭和64年1月7日→平成元年1月8日）をまたぐ日付も正しく判定します。ブラウザ内で処理され、入力内容がサーバーに送信されることはありません。生年月日から年齢を計算したい場合は <a href="/tools/unix-timestamp/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Unixタイムスタンプ変換</a> もあわせてご利用ください。',
+      '明治・大正・昭和・平成・令和の和暦と西暦をリアルタイムで相互変換します。改元日（例: 昭和64年1月7日→平成元年1月8日）をまたぐ日付も正しく判定します。ブラウザ内で処理され、入力内容がサーバーに送信されることはありません。生年月日から年齢を計算したい場合は <a href="/tools/age-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">年齢計算機</a> もあわせてご利用ください。',
     westernToJapaneseHeading: '西暦 → 和暦',
     westernDateLabel: '西暦の日付',
     westernYearAriaLabel: '西暦の年',
@@ -106,7 +106,7 @@ export const japaneseEraConverterContent: Record<
       'A free tool to convert between the Japanese era calendar (Reiwa, Heisei, Showa, Taisho, Meiji) and the Western (Gregorian) year, including dates around an era transition. Your data is processed in the browser and never sent to a server.',
     h1: 'Japanese Era Converter',
     introHtml:
-      'Converts between the Japanese era calendar (Meiji, Taisho, Showa, Heisei, Reiwa) and the Western year in real time, correctly handling dates around an era transition (e.g. Showa 64 / January 7 → Heisei 1 / January 8). Everything happens in your browser, and nothing you type is ever sent to a server. If you need to calculate an age from a date of birth, check out the <a href="/en/tools/unix-timestamp/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Unix Timestamp Converter</a> as well.',
+      'Converts between the Japanese era calendar (Meiji, Taisho, Showa, Heisei, Reiwa) and the Western year in real time, correctly handling dates around an era transition (e.g. Showa 64 / January 7 → Heisei 1 / January 8). Everything happens in your browser, and nothing you type is ever sent to a server. If you need to calculate an age from a date of birth, check out the <a href="/en/tools/age-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Age Calculator</a> as well.',
     westernToJapaneseHeading: 'Western year → Japanese era',
     westernDateLabel: 'Western date',
     westernYearAriaLabel: 'Western year',
@@ -136,7 +136,7 @@ export const japaneseEraConverterContent: Record<
     notes: [
       'Supported range starts at Meiji 1 (January 25, 1868). Dates before that cannot be converted.',
       'Dates right around an era transition (e.g. Showa 64 / January 7 vs. Heisei 1 / January 8) are especially easy to get wrong, so conversion is determined at the day level.',
-      'The first year of an era is displayed as "gannen" on the Japanese version of this tool (e.g. Reiwa gannen = Reiwa 1).',
+      'The first year of an era is shown as "1 (gannen)" (e.g. Reiwa gannen = Reiwa 1).',
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

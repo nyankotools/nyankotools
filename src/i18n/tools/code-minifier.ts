@@ -30,6 +30,8 @@ export interface CodeMinifierPageContent {
   errorTemplate: string;
   /** set:html で描画する固定リテラルの注記 */
   footnoteHtml: string;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -65,6 +67,12 @@ export const codeMinifierContent: Record<Locale, CodeMinifierPageContent> = {
       '構文エラー: {message}\n（内容: コードの構文に誤りがあります。括弧・引用符の対応や、選択した言語が入力内容に合っているかを確認してください。）',
     footnoteHtml:
       '※ CSSのミニファイは構文エラーがあっても例外を投げず、該当箇所を無視して処理する場合があります。想定と異なる結果になった場合は、整形結果で構文を確認してから再度お試しください。HTMLのミニファイはコメント除去とタグ間の空白圧縮のみを行い、<code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-gray-800">&lt;style&gt;</code>・<code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-gray-800">&lt;script&gt;</code>タグの中身はそのまま保持します（圧縮したい場合はCSS・JavaScriptとして個別に処理してください）。',
+    notesHeading: '注意事項',
+    notes: [
+      '整形（Prettier）とミニファイ（CSSはcsso、JavaScriptはterser）は、対象の言語に合わせて処理されます。言語の選択が実際のコードと合っているか確認してください。',
+      'ミニファイした結果は読みにくいため、元のコードは必ず別に保管してください。本番で不具合が出たときは、元のコードで原因を調べます。',
+      '入力したコードはブラウザ内で処理され、サーバーには送信されません。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -109,6 +117,12 @@ export const codeMinifierContent: Record<Locale, CodeMinifierPageContent> = {
       'Syntax error: {message}\n(Check that parentheses and quotes are balanced, and that the selected language matches your code.)',
     footnoteHtml:
       'Note: minifying CSS does not throw on invalid syntax — it may silently skip the affected part instead. If the result looks unexpected, check the formatted output first to confirm the syntax is valid. Minifying HTML only strips comments and collapses whitespace between tags — the contents of <code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-gray-800">&lt;style&gt;</code> and <code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-gray-800">&lt;script&gt;</code> tags are kept as-is (switch to the CSS or JavaScript language to minify those separately).',
+    notesHeading: 'Notes',
+    notes: [
+      'Formatting uses Prettier, and minifying uses csso for CSS and terser for JavaScript, chosen by the selected language. Make sure the language matches your code.',
+      'Minified output is hard to read, so always keep the original source. If a problem appears in production, investigate with the original code.',
+      'Your code is processed in the browser and is never sent to a server.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

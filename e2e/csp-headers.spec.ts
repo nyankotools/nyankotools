@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
+import { blockAnalytics } from './helpers/block-analytics';
 
 // public/_headers に定義した Content-Security-Policy は Cloudflare Workers Static
 // Assets（本番配信）でのみ適用され、`pnpm dev`（Astro dev server）では送出されない。
@@ -112,6 +113,7 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
     browser,
   }) => {
     const context = await browser.newContext({ baseURL: BASE_URL });
+    await blockAnalytics(context);
     const page = await context.newPage();
     const consoleErrors: string[] = [];
     page.on('console', (msg) => {
@@ -136,6 +138,7 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
     browser,
   }) => {
     const context = await browser.newContext({ baseURL: BASE_URL });
+    await blockAnalytics(context);
     const page = await context.newPage();
     const consoleErrors: string[] = [];
     page.on('console', (msg) => {
@@ -160,6 +163,7 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
       baseURL: BASE_URL,
       permissions: ['clipboard-read', 'clipboard-write'],
     });
+    await blockAnalytics(context);
     const page = await context.newPage();
     const consoleErrors: string[] = [];
     page.on('console', (msg) => {
@@ -181,6 +185,7 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
     browser,
   }) => {
     const context = await browser.newContext({ baseURL: BASE_URL });
+    await blockAnalytics(context);
     const page = await context.newPage();
     const consoleErrors: string[] = [];
     page.on('console', (msg) => {

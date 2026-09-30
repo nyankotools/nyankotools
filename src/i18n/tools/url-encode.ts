@@ -21,6 +21,8 @@ export interface UrlEncodePageContent {
   inputPlaceholder: string;
   outputLabel: string;
   decodeError: string;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -44,6 +46,12 @@ export const urlEncodeContent: Record<Locale, UrlEncodePageContent> = {
     outputLabel: '結果',
     decodeError:
       'URLエンコード文字列として解釈できませんでした。%XX形式が正しいか確認してください。',
+    notesHeading: '注意事項',
+    notes: [
+      'パーセントエンコード（%XX形式）に変換します。スペースは「%20」になり、フォーム送信で使われる「+」にはなりません。',
+      'URL全体ではなく、クエリパラメータの値などの必要な部分だけをエンコードしてください。全体をエンコードすると「:」や「/」も変換され、URLとして機能しなくなります。',
+      '文字はUTF-8としてエンコードされます。他の文字コード（Shift_JISなど）を前提とするシステムでは、結果が異なる場合があります。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -76,6 +84,12 @@ export const urlEncodeContent: Record<Locale, UrlEncodePageContent> = {
     outputLabel: 'Result',
     decodeError:
       'Could not decode this string as a URL-encoded value. Please check the %XX format.',
+    notesHeading: 'Notes',
+    notes: [
+      'Text is percent-encoded (%XX). A space becomes "%20", not the "+" used in form submissions.',
+      'Encode only the parts you need, such as query parameter values, not the entire URL. Encoding everything also converts ":" and "/" and breaks the URL.',
+      'Characters are encoded as UTF-8. Systems that expect another encoding, such as Shift_JIS, may need a different result.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

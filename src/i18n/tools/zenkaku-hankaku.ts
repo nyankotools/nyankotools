@@ -25,6 +25,8 @@ export interface ZenkakuHankakuPageContent {
   inputLabel: string;
   inputPlaceholder: string;
   outputLabel: string;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -52,6 +54,12 @@ export const zenkakuHankakuContent: Record<Locale, ZenkakuHankakuPageContent> =
       inputLabel: '入力',
       inputPlaceholder: '変換したいテキストを入力',
       outputLabel: '結果',
+      notesHeading: '注意事項',
+      notes: [
+        '変換できる文字種は、英数字・記号・カタカナ・スペースです。ひらがなと漢字は変換されません。',
+        '半角カタカナの濁点・半濁点は別の文字（例:「ｶﾞ」は2文字）のため、全角に変換すると文字数が減り、半角に変換すると増えます。',
+        '変換する文字種は選択したものだけです。チェックを外した文字種はそのまま残ります。',
+      ],
       glossaryHeading: '用語解説',
       glossaryTerms: [
         {
@@ -87,6 +95,12 @@ export const zenkakuHankakuContent: Record<Locale, ZenkakuHankakuPageContent> =
       inputLabel: 'Input',
       inputPlaceholder: 'Enter text to convert',
       outputLabel: 'Result',
+      notesHeading: 'Notes',
+      notes: [
+        'You can convert alphanumerics, symbols, katakana and spaces. Hiragana and kanji are not converted.',
+        'Half-width katakana with dakuten is two characters (for example "ｶﾞ"), so the character count decreases when converting to full-width and increases when converting to half-width.',
+        'Only the selected character types are converted. Types you deselect are left as they are.',
+      ],
       glossaryHeading: 'Glossary',
       glossaryTerms: [
         {

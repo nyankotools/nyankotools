@@ -63,6 +63,8 @@ export interface ExifViewerPageContent {
   clearButton: string;
   notesHeading: string;
   notes: string[];
+  howToHeading: string;
+  howToSteps: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -134,6 +136,13 @@ export const exifViewerContent: Record<Locale, ExifViewerPageContent> = {
       '対応形式はJPEG（.jpg/.jpeg）のみです。PNG・WebP等はExifを持たないか扱いが異なるため対象外です。',
       'カメラのモデルによっては、Exifの一部（メーカー独自のMakerNote等）が正しく解釈できない場合があります。その場合も一覧表示から除外されるだけで、削除処理自体には影響しません。',
       'すべての処理はブラウザ内で完結し、選択した画像がサーバーに送信されることはありません。',
+    ],
+    howToHeading: '使い方',
+    howToSteps: [
+      'JPEG画像を選択します（ドラッグ＆ドロップも可能です）。',
+      '撮影日時・カメラ機種・露出などの撮影情報を確認します。',
+      '必要に応じて「すべての項目を表示」で全項目を確認します。',
+      'GPS位置情報などを消したいときは「Exif情報を削除してダウンロード」を押します。',
     ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
@@ -219,6 +228,13 @@ export const exifViewerContent: Record<Locale, ExifViewerPageContent> = {
       'Only JPEG (.jpg/.jpeg) is supported. PNG and WebP either lack Exif or handle it differently, so they are out of scope.',
       'Some camera-specific Exif fields (proprietary MakerNote data) may not be parsed correctly depending on the model. This only affects what is shown in the list — it has no effect on the removal process.',
       'All processing happens in your browser — the image you select is never sent to a server.',
+    ],
+    howToHeading: 'How to use',
+    howToSteps: [
+      'Choose a JPEG image (drag & drop also works).',
+      'Review the shooting details, such as the date, camera model, and exposure.',
+      'Use "Show all fields" to see every item if needed.',
+      'To remove data such as GPS location, press "Remove Exif & Download".',
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

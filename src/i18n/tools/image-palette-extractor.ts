@@ -33,6 +33,8 @@ export interface ImagePaletteExtractorPageContent {
   errorNoOpaquePixels: string;
   notesHeading: string;
   notes: string[];
+  howToHeading: string;
+  howToSteps: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -74,6 +76,13 @@ export const imagePaletteExtractorContent: Record<
       '近い色同士は1つの色としてまとめて集計されるため、微妙な色の違いは反映されない場合があります。',
       '透明（アルファ値がほぼ0）のピクセルは集計対象から除外されます。画像全体が透明に近い場合、色を検出できないことがあります。',
       'すべての処理はブラウザ内で完結し、選択した画像がサーバーに送信されることはありません。',
+    ],
+    howToHeading: '使い方',
+    howToSteps: [
+      '画像ファイルを選択します（ドラッグ＆ドロップも可能です）。',
+      '「抽出する色数」を選びます。',
+      '表示されたカラーパレットを確認します。',
+      '色ごとの「コピー」、または「すべてのHEXコードをコピー」でコードを取得します。',
     ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
@@ -127,6 +136,13 @@ export const imagePaletteExtractorContent: Record<
       'Similar colors are grouped together and counted as one, so subtle color differences may not show up separately.',
       'Nearly fully transparent pixels are excluded from the count. If the whole image is close to transparent, no colors may be detected.',
       'All processing happens in your browser — the image you select is never sent to a server.',
+    ],
+    howToHeading: 'How to use',
+    howToSteps: [
+      'Choose an image file (drag & drop also works).',
+      'Pick the number of colors to extract.',
+      'Review the color palette that appears.',
+      'Copy the code of each color, or use "Copy all HEX codes" to get them at once.',
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

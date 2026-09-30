@@ -25,6 +25,8 @@ export interface TextCaseConverterPageContent {
   copied: string;
   copyFailed: string;
   labels: Record<keyof TextCaseResult, string>;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: { term: string; description: string }[];
 }
@@ -56,6 +58,12 @@ export const textCaseConverterContent: Record<
       lowerCase: 'lower case',
       upperCase: 'UPPER CASE',
     },
+    notesHeading: '注意事項',
+    notes: [
+      'スペース・ハイフン・アンダースコアで区切られた単語と、camelCase・PascalCaseの大文字の位置から、単語の区切りを推測して変換します。',
+      'XMLHttpRequestのように大文字が連続する場合の区切りは推測のため、意図と異なる結果になることがあります。',
+      '日本語などの大文字・小文字の区別がない文字は、変換されません。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -82,7 +90,7 @@ export const textCaseConverterContent: Record<
       'A free tool that converts text into 9 naming conventions at once — camelCase, PascalCase, snake_case, kebab-case, CONSTANT_CASE and more. Handy for renaming variables and functions. Your data is processed in the browser and never sent to a server.',
     h1: 'Text Case Converter (camelCase / snake_case / kebab-case / PascalCase)',
     introHtml:
-      'Type or paste text below to automatically convert it into 9 naming conventions, including camelCase, PascalCase, snake_case, and kebab-case. Word boundaries (spaces, hyphens, underscores) and existing camelCase text are detected automatically. Need to dedupe or sort a list instead? Try <a href="/en/tools/text-list-tools/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Text List Deduplicate, Sort & Shuffle</a>.',
+      'Type or paste text below to automatically convert it into 9 naming conventions, including camelCase, PascalCase, snake_case, and kebab-case. Word boundaries (spaces, hyphens, underscores) and existing camelCase text are detected automatically. Need to dedupe or sort a list instead? Try <a href="/en/tools/text-list-tools/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Text List Deduplicate, Sort & Shuffle</a>. To unify full-width and half-width characters, use the <a href="/en/tools/zenkaku-hankaku/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Full-width / Half-width Converter</a>.',
     inputLabel: 'Input',
     inputPlaceholder: 'Enter text to convert (e.g. hello world / hello_world)',
     copy: 'Copy',
@@ -99,6 +107,12 @@ export const textCaseConverterContent: Record<
       lowerCase: 'lower case',
       upperCase: 'UPPER CASE',
     },
+    notesHeading: 'Notes',
+    notes: [
+      'Word boundaries are inferred from spaces, hyphens, underscores and the capital letters in camelCase and PascalCase.',
+      'Runs of capitals such as XMLHttpRequest are split by inference, so the result may not always match your intent.',
+      'Characters without letter case, such as Japanese, are not converted.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

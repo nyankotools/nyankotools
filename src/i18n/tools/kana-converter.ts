@@ -20,6 +20,8 @@ export interface KanaConverterPageContent {
   inputLabel: string;
   inputPlaceholder: string;
   outputLabel: string;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -41,6 +43,12 @@ export const kanaConverterContent: Record<Locale, KanaConverterPageContent> = {
     inputLabel: '入力',
     inputPlaceholder: '変換したいテキストを入力',
     outputLabel: '結果',
+    notesHeading: '注意事項',
+    notes: [
+      '変換されるのはひらがなとカタカナだけです。漢字、英数字、記号はそのまま維持されます。',
+      '半角カタカナはこのツールの変換対象外です。全角/半角変換ツールで全角にしてから使ってください。',
+      '長音符「ー」は、ひらがな・カタカナのどちらの文字列でもそのまま残ります。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -71,6 +79,12 @@ export const kanaConverterContent: Record<Locale, KanaConverterPageContent> = {
     inputLabel: 'Input',
     inputPlaceholder: 'Enter text to convert',
     outputLabel: 'Result',
+    notesHeading: 'Notes',
+    notes: [
+      'Only hiragana and katakana are converted. Kanji, alphanumerics and symbols are left as they are.',
+      'Half-width katakana is not handled here. Convert it to full-width with the full-width/half-width converter first.',
+      'The prolonged sound mark "ー" is kept as it is in both hiragana and katakana text.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

@@ -1,5 +1,6 @@
 ---
 import Glossary from '../Glossary.astro';
+import Notes from '../Notes.astro';
 import Layout from '../../layouts/Layout.astro';
 import { htmlEscapeContent } from '../../i18n/tools/html-escape';
 import type { Locale } from '../../data/tools';
@@ -101,6 +102,8 @@ const t = htmlEscapeContent[locale];
       ></textarea>
     </div>
   </div>
+
+  <Notes heading={t.notesHeading} items={t.notes} />
 
   <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
 </Layout>

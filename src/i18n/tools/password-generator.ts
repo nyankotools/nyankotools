@@ -31,6 +31,8 @@ export interface PasswordGeneratorPageContent {
   errorMissingCharType: string;
   tipsHeading: string;
   tips: string[];
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -45,7 +47,7 @@ export const passwordGeneratorContent: Record<
       '文字種（大文字・小文字・数字・記号）と桁数を指定して、安全なランダムパスワードを無料で生成できるツールです。強度の目安も表示。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'パスワード生成',
     introHtml:
-      '文字種と桁数を指定して、推測されにくいランダムなパスワードを生成します。ブラウザの暗号学的乱数生成機能（Web Crypto API）を使っており、生成したパスワードがサーバーに送信されることはありません。生成したIDと組み合わせて使いたい場合は <a href="/tools/uuid-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">UUID生成</a> もあわせてご利用ください。',
+      '文字種と桁数を指定して、推測されにくいランダムなパスワードを生成します。ブラウザの暗号学的乱数生成機能（Web Crypto API）を使っており、生成したパスワードがサーバーに送信されることはありません。パスワードと組み合わせて使うランダムなIDが必要な場合は <a href="/tools/uuid-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">UUID生成</a> もあわせてご利用ください。',
     lengthLabel: '桁数（4〜128）',
     countLabel: '生成する個数（1〜100）',
     generateButton: '生成する',
@@ -70,6 +72,12 @@ export const passwordGeneratorContent: Record<
       '桁数はできるだけ長く（12桁以上推奨）し、複数の文字種を組み合わせる',
       '他のサービスで使い回さず、サービスごとに異なるパスワードを設定する',
       '生成したパスワードはパスワードマネージャーなどで安全に保管する',
+    ],
+    notesHeading: '注意事項',
+    notes: [
+      'パスワードはブラウザの暗号学的乱数生成機能（Web Crypto API）で生成され、サーバーには送信されません。画面を閉じると再現できないため、必要なものはパスワードマネージャーなどに保管してください。',
+      '桁数は4〜128、一度に生成できる個数は1〜100の範囲で指定できます。',
+      '「紛らわしい文字を除外」を有効にすると、l・1・I・O・0などの見間違えやすい文字が含まれなくなります。',
     ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
@@ -116,6 +124,12 @@ export const passwordGeneratorContent: Record<
       'Use as many characters as practical (12+ recommended) and combine multiple character types',
       'Avoid reusing the same password across different services',
       'Store generated passwords safely, such as in a password manager',
+    ],
+    notesHeading: 'Notes',
+    notes: [
+      'Passwords are generated in the browser using the Web Crypto API and are never sent to a server. They cannot be reproduced after you leave the page, so save what you need in a password manager.',
+      'Length can be 4 to 128 characters, and you can generate 1 to 100 passwords at a time.',
+      'Enabling "exclude similar characters" removes look-alikes such as l, 1, I, O and 0.',
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

@@ -72,7 +72,7 @@ export const contrastCheckerContent: Record<
     notesHeading: '注意事項',
     notes: [
       '色は「#333333」のようなHEX形式、または「rgb(51, 51, 51)」「51, 51, 51」のようなRGB形式で入力できます。',
-      '「大きな文字」の基準は、太字で18pt（24px）以上、または通常の太さで14pt（約18.66px）以上の文字を指します。',
+      '「大きな文字」の基準は、通常の太さで18pt（約24px）以上、または太字で14pt（約18.66px）以上の文字を指します。',
       '判定はWCAG 2.x（2.0〜2.2共通）のコントラスト比の計算式に基づきます。次期WCAG 3で検討されているAPCAなど、新しい算出方式には対応していません。',
       '透明度（アルファ値）には対応していません。rgba()形式を入力した場合はアルファ値を無視して計算します。',
     ],
@@ -96,7 +96,7 @@ export const contrastCheckerContent: Record<
       {
         term: '大きな文字（Large Text）',
         description:
-          'WCAGにおいて、太字で18pt（24px）以上、または通常の太さで14pt（約18.66px）以上の文字のことです。大きな文字は小さな文字より視認性が高いため、コントラスト比の基準がやや緩やかになります。',
+          'WCAGにおいて、通常の太さで18pt（約24px）以上、または太字で14pt（約18.66px）以上の文字のことです。大きな文字は小さな文字より視認性が高いため、コントラスト比の基準がやや緩やかになります。',
       },
     ],
   },
@@ -131,7 +131,7 @@ export const contrastCheckerContent: Record<
     notesHeading: 'Notes',
     notes: [
       'Colors can be entered in HEX format like "#333333", or RGB format like "rgb(51, 51, 51)" or "51, 51, 51".',
-      '"Large text" means bold text at 18pt (24px) or larger, or regular-weight text at 14pt (about 18.66px) or larger.',
+      '"Large text" means regular-weight text at 18pt (about 24px) or larger, or bold text at 14pt (about 18.66px) or larger.',
       'Results follow the contrast ratio formula shared by WCAG 2.0 through 2.2. Newer methods being explored for WCAG 3, such as APCA, are not supported.',
       'Transparency (alpha) is not supported. If you enter an rgba() value, the alpha component is ignored during calculation.',
     ],
@@ -155,7 +155,7 @@ export const contrastCheckerContent: Record<
       {
         term: 'Large text',
         description:
-          'In WCAG, text that is bold at 18pt (24px) or larger, or regular weight at 14pt (about 18.66px) or larger. Because large text is easier to read than small text, its contrast ratio requirement is slightly relaxed.',
+          'In WCAG, text that is regular weight at 18pt (about 24px) or larger, or bold at 14pt (about 18.66px) or larger. Because large text is easier to read than small text, its contrast ratio requirement is slightly relaxed.',
       },
     ],
   },

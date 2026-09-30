@@ -36,7 +36,7 @@ export const pxRemConverterContent: Record<Locale, PxRemConverterPageContent> =
         'pxとremの値をリアルタイムに相互変換する無料ツールです。ベースフォントサイズ（デフォルト16px）を自由に指定でき、CSSのフォントサイズ・余白などの単位換算に使えます。データはブラウザ内で処理され、サーバーには送信されません。',
       h1: 'px⇔rem変換ツール',
       introHtml:
-        'ベースフォントサイズ（通常はhtml要素のfont-size、デフォルト16px）を指定したうえで、pxまたはremのどちらかの欄に数値を入力すると、もう一方の欄にリアルタイムに変換結果を表示します。CSSのfont-size・margin・paddingなどをpx指定からrem指定に置き換える際の換算に便利です。CSSの単位そのものについては <a href="/tools/css-gradient-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">CSSグラデーションジェネレーター</a> など他のCSS系ツールもあわせてご利用ください。',
+        'ベースフォントサイズ（通常はhtml要素のfont-size、デフォルト16px）を指定したうえで、pxまたはremのどちらかの欄に数値を入力すると、もう一方の欄にリアルタイムに変換結果を表示します。CSSのfont-size・margin・paddingなどをpx指定からrem指定に置き換える際の換算に便利です。他のCSS系ツール（<a href="/tools/css-gradient-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">CSSグラデーションジェネレーター</a>など）もあわせてご利用ください。',
       baseFontSizeLabel: 'ベースフォントサイズ（px）',
       baseFontSizeHint:
         '通常はhtml要素に設定されているfont-size（多くのブラウザの初期値は16px）を指定します。',
@@ -54,7 +54,7 @@ export const pxRemConverterContent: Record<Locale, PxRemConverterPageContent> =
       notesHeading: '注意事項',
       notes: [
         'remはベースフォントサイズ（通常はhtml要素のfont-size）を基準にした相対単位です。ベースフォントサイズを変更すると、同じrem値でも実際のpxサイズが変わります。',
-        'ベースフォントサイズを変更すると、既に入力済みのpx・rem欄の値も新しいベースフォントサイズで再計算されます。',
+        'ベースフォントサイズを変更すると、入力済みのpx値を基準に、新しいベースフォントサイズでrem値が再計算されます（pxが空でremだけ入力されている場合は、rem値を基準にpx値を再計算します）。',
         '計算結果は小数第5位で丸めて表示します。',
       ],
       glossaryHeading: '用語解説',
@@ -100,7 +100,7 @@ export const pxRemConverterContent: Record<Locale, PxRemConverterPageContent> =
       notesHeading: 'Notes',
       notes: [
         'rem is relative to the base font size (usually the font-size on the html element). Changing the base font size changes the actual px size for the same rem value.',
-        'Changing the base font size recalculates whatever values are already entered in the px and rem fields.',
+        'Changing the base font size recalculates the rem value from the entered px value using the new base font size (if px is empty and only rem is entered, it recalculates px from the rem value instead).',
         'Results are rounded to 5 decimal places.',
       ],
       glossaryHeading: 'Glossary',

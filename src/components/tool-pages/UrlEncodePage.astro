@@ -1,5 +1,6 @@
 ---
 import Glossary from '../Glossary.astro';
+import Notes from '../Notes.astro';
 import Layout from '../../layouts/Layout.astro';
 import { urlEncodeContent } from '../../i18n/tools/url-encode';
 import type { Locale } from '../../data/tools';
@@ -92,6 +93,8 @@ const t = urlEncodeContent[locale];
     data-message={t.decodeError}
     class="mt-4 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
   ></p>
+
+  <Notes heading={t.notesHeading} items={t.notes} />
 
   <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
 </Layout>

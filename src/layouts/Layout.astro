@@ -10,12 +10,16 @@ import {
 } from '../i18n/ui';
 import ShareButtons from '../components/ShareButtons.astro';
 import FavoriteToggle from '../components/FavoriteToggle.astro';
+import Faq from '../components/Faq.astro';
+import { getFaqItems } from '../i18n/faq';
 
 interface Props {
   title: string;
   description: string;
   ogImage?: string;
   noindex?: boolean;
+  /** 言語切替リンクの先を各言語のトップページにする（対応する別言語ページが存在しない404用） */
+  languageSwitchToHome?: boolean;
 }
 
 const {
@@ -23,6 +27,7 @@ const {
   description,
   ogImage = 'https://nyankotools.com/ogp.png',
   noindex = false,
+  languageSwitchToHome = false,
 } = Astro.props;
 
 const lang: Locale = Astro.currentLocale === 'en' ? 'en' : 'ja';
@@ -31,12 +36,22 @@ const localizedTools = getLocalizedTools(lang);
 const toolsByCategory = groupByCategory(localizedTools);
 
 const pathname = Astro.url.pathname;
-const alternatePath = getAlternatePath(pathname, lang);
+const alternatePath = languageSwitchToHome
+  ? lang === 'ja'
+    ? '/en/'
+    : '/'
+  : getAlternatePath(pathname, lang);
 const alternateLang: Locale = lang === 'ja' ? 'en' : 'ja';
 
 const canonicalURL = new URL(pathname, Astro.site);
-const jaURL = new URL(lang === 'ja' ? pathname : alternatePath, Astro.site);
-const enURL = new URL(lang === 'en' ? pathname : alternatePath, Astro.site);
+const jaURL = new URL(
+  languageSwitchToHome ? '/' : lang === 'ja' ? pathname : alternatePath,
+  Astro.site,
+);
+const enURL = new URL(
+  languageSwitchToHome ? '/en/' : lang === 'en' ? pathname : alternatePath,
+  Astro.site,
+);
 
 const siteName = t('site.name');
 const fullTitle = `${title} | ${siteName}`;
@@ -45,6 +60,46 @@ const GA_MEASUREMENT_ID = 'G-HF6QEXY6E7';
 
 const isHome = pathname === '/' || pathname === '/en' || pathname === '/en/';
 const toolMatch = pathname.match(/^\/(?:en\/)?tools\/([^/]+)\/?$/);
+
+const homeURL = new URL(lang === 'en' ? '/en/' : '/', Astro.site);
+
+const breadcrumbJsonLd: Record<string, unknown> | null =
+  noindex || isHome
+    ? null
+    : {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: siteName,
+            item: homeURL.toString(),
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: title,
+            item: canonicalURL.toString(),
+          },
+        ],
+      };
+
+const faqItems = !noindex && toolMatch ? getFaqItems(toolMatch[1], lang) : [];
+
+const faqJsonLd: Record<string, unknown> | null =
+  faqItems.length > 0
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        inLanguage: lang,
+        mainEntity: faqItems.map((item) => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: { '@type': 'Answer', text: item.answer },
+        })),
+      }
+    : null;
 
 const jsonLd: Record<string, unknown> | null = noindex
   ? null
@@ -93,7 +148,7 @@ const jsonLd: Record<string, unknown> | null = noindex
     <meta name="theme-color" content="#f9fafb" />
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonicalURL} />
+    {!noindex && <link rel="canonical" href={canonicalURL} />}
     {noindex ? (
       <meta name="robots" content="noindex" />
     ) : (
@@ -105,7 +160,7 @@ const jsonLd: Record<string, unknown> | null = noindex
     )}
 
     <meta property="og:type" content="website" />
-    <meta property="og:url" content={canonicalURL} />
+    {!noindex && <meta property="og:url" content={canonicalURL} />}
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:site_name" content={siteName} />
@@ -127,7 +182,21 @@ const jsonLd: Record<string, unknown> | null = noindex
       <script
         type="application/ld+json"
         is:inline
-        set:html={JSON.stringify(jsonLd)}
+        set:html={JSON.stringify(jsonLd).replace(/</g, '\\u003c')}
+      ></script>
+    )}
+    {breadcrumbJsonLd && (
+      <script
+        type="application/ld+json"
+        is:inline
+        set:html={JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c')}
+      ></script>
+    )}
+    {faqJsonLd && (
+      <script
+        type="application/ld+json"
+        is:inline
+        set:html={JSON.stringify(faqJsonLd).replace(/</g, '\\u003c')}
       ></script>
     )}
     {import.meta.env.PROD && (
@@ -158,6 +227,7 @@ const jsonLd: Record<string, unknown> | null = noindex
           <a
             href={alternatePath}
             hreflang={alternateLang}
+            data-lang-switch-mobile
             aria-label={t('nav.language')}
             class="rounded px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
           >
@@ -246,6 +316,7 @@ const jsonLd: Record<string, unknown> | null = noindex
           <span class="sr-only">{t('nav.language')}</span>
           <div
             class="flex gap-2 text-sm"
+            data-lang-switch-desktop
             role="group"
             aria-label={t('nav.language')}
           >
@@ -424,6 +495,9 @@ const jsonLd: Record<string, unknown> | null = noindex
             />
           )}
           <slot />
+          {faqItems.length > 0 && (
+            <Faq items={faqItems} heading={t('faq.heading')} />
+          )}
           {!noindex && (
             <ShareButtons url={canonicalURL} title={fullTitle} lang={lang} />
           )}
@@ -454,6 +528,12 @@ const jsonLd: Record<string, unknown> | null = noindex
             class="hover:text-blue-700 hover:underline dark:hover:text-blue-400"
           >
             {t('footer.about')}
+          </a>
+          <a
+            href={lang === 'en' ? '/en/updates/' : '/updates/'}
+            class="hover:text-blue-700 hover:underline dark:hover:text-blue-400"
+          >
+            {t('footer.updates')}
           </a>
           <a
             href={lang === 'en' ? '/en/faq/' : '/faq/'}

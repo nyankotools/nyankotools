@@ -48,6 +48,8 @@ export interface ImagePixelartConverterPageContent {
   errorFileTooLargeTemplate: string;
   notesHeading: string;
   notes: string[];
+  howToHeading: string;
+  howToSteps: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -62,7 +64,7 @@ export const imagePixelartConverterContent: Record<
       '画像をドット絵（ピクセルアート）風に変換できる無料ツールです。ブロックサイズでモザイク・ドット感の強さを、色数で減色（ポスタリゼーション）の度合いを調整し、WebP・JPEG・PNGで書き出せます。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: '画像ドット絵化・モザイク・減色ツール',
     introHtml:
-      '画像を選択し、「ブロックサイズ」でモザイク・ドット絵の粗さを、「色数（階調）」で減色の度合いを調整して、レトロなピクセルアート風の画像に変換できます。SNSアイコンやアイキャッチ画像の加工、顔やナンバープレートなどを隠すモザイク処理にも使えます。画像そのもののサイズを変更したい場合は<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ・圧縮</a>もご利用ください。',
+      '画像を選択し、「ブロックサイズ」でモザイク・ドット絵の粗さを、「色数」で減色の度合いを調整して、レトロなピクセルアート風の画像に変換できます。SNSアイコンやアイキャッチ画像の加工、顔やナンバープレートなどを隠すモザイク処理にも使えます。画像そのもののサイズを変更したい場合は<a href="/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像リサイズ・圧縮</a>もご利用ください。',
     dropLabel: '画像ファイルを選択',
     dropHint: 'ここに画像ファイルをドラッグ＆ドロップすることもできます',
     sourceInfoTemplate: '元画像: {width}×{height}px（{size}）',
@@ -102,6 +104,13 @@ export const imagePixelartConverterContent: Record<
       'JPEGには透過（アルファチャンネル）情報がないため、透過部分は白色で塗りつぶされます。透過を維持したい場合はWebPまたはPNGを選んでください。',
       'すべての処理はブラウザ内で完結し、選択した画像がサーバーに送信されることはありません。',
     ],
+    howToHeading: '使い方',
+    howToSteps: [
+      '画像ファイルを選択します（ドラッグ＆ドロップも可能です）。',
+      '「ブロックサイズ」でドットの粗さを、「色数」で減色の強さを調整します。',
+      '変換前後のプレビューを見比べながら、出力フォーマットを選び、JPEG・WebP では画質も調整します。',
+      '結果を確認してダウンロードします。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -127,7 +136,7 @@ export const imagePixelartConverterContent: Record<
       'Free tool that turns a photo into retro pixel art. Adjust the block size to control the pixelate/mosaic strength and the color count to control posterization, then export as WebP, JPEG, or PNG. Your image is processed in the browser and never sent to a server.',
     h1: 'Image Pixelate, Mosaic & Color Reduction Tool',
     introHtml:
-      'Select an image, then adjust the "block size" to control how chunky the pixelate/mosaic effect is and the "color count" to control how much the palette is reduced, turning your photo into retro pixel art. Useful for stylizing social media icons and thumbnails, or for mosaic-blurring faces and license plates. If you just need to change the image dimensions, try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer & Compressor</a> instead.',
+      'Select an image, then adjust the "Block size" to control how chunky the pixelate/mosaic effect is and the "Color levels" to control how much the palette is reduced, turning your photo into retro pixel art. Useful for stylizing social media icons and thumbnails, or for mosaic-blurring faces and license plates. If you just need to change the image dimensions, try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer & Compressor</a> instead.',
     dropLabel: 'Choose an image file',
     dropHint: 'You can also drag and drop an image file here',
     sourceInfoTemplate: 'Original: {width}×{height}px ({size})',
@@ -166,6 +175,13 @@ export const imagePixelartConverterContent: Record<
       'If you use this to mosaic a face or license plate for privacy, a small block size may still let the original details be guessed. Choose a large enough block size to be safe.',
       'JPEG has no alpha channel, so transparent areas are filled with white. Use WebP or PNG if you need to keep transparency.',
       'All processing happens in your browser — the image you select is never sent to a server.',
+    ],
+    howToHeading: 'How to use',
+    howToSteps: [
+      'Choose an image file (drag & drop also works).',
+      'Use "Block size" to set how coarse the pixels are and "Color levels" to set how strongly colors are reduced.',
+      'Compare the before/after previews while you pick the output format and, for JPEG and WebP, adjust the quality.',
+      'Check the result and download it.',
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

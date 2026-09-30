@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { blockAnalytics } from './helpers/block-analytics';
 
 test.describe('CSS/JS/HTMLミニファイ＆整形（日本語版）', () => {
   test('直接アクセスして正しく表示される', async ({ page }) => {
@@ -96,6 +97,7 @@ test.describe('CSS/JS/HTMLミニファイ＆整形（日本語版）', () => {
   test('CSS/JS/HTMLいずれの整形・ミニファイでもコンソールエラーが発生しない', async ({
     page,
   }) => {
+    await blockAnalytics(page);
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
     page.on('console', (msg) => {

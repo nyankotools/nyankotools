@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
+import { blockAnalytics } from './helpers/block-analytics';
 
 // サイドバーのカテゴリ開閉状態（localStorage: sidebar-open-categories）の復元が、
 // 本番相当のCSP配信（Cloudflare Workers Static Assets = wrangler dev）下でも
@@ -80,6 +81,7 @@ test.describe('サイドバーのカテゴリ開閉状態の復元（wrangler de
     browser,
   }) => {
     const context = await browser.newContext({ baseURL: BASE_URL });
+    await blockAnalytics(context);
     const page = await context.newPage();
     const consoleErrors: string[] = [];
     page.on('console', (msg) => {

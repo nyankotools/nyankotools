@@ -1,5 +1,6 @@
 ---
 import Glossary from '../Glossary.astro';
+import Notes from '../Notes.astro';
 import Layout from '../../layouts/Layout.astro';
 import { placeholderImageGeneratorContent } from '../../i18n/tools/placeholder-image-generator';
 import {
@@ -187,6 +188,8 @@ const pickerClass =
       aria-label={t.previewLabel}
     ></canvas>
   </div>
+
+  <Notes heading={t.notesHeading} items={t.notes} />
 
   <Glossary terms={t.glossaryTerms} heading={t.glossaryHeading} />
 </Layout>

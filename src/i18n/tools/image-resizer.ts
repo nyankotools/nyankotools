@@ -52,6 +52,8 @@ export interface ImageResizerPageContent {
   errorFileTooLargeTemplate: string;
   notesHeading: string;
   notes: string[];
+  howToHeading: string;
+  howToSteps: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -108,6 +110,13 @@ export const imageResizerContent: Record<Locale, ImageResizerPageContent> = {
       'WebPの書き出しに対応していないブラウザでは変換に失敗する場合があります。最新版のChrome・Firefox・Edge・Safariでの利用を推奨します。',
       'アニメーションGIFを変換すると、アニメーションは失われ最初のフレームのみが変換されます。',
       'すべての処理はブラウザ内で完結し、選択した画像がサーバーに送信されることはありません。',
+    ],
+    howToHeading: '使い方',
+    howToSteps: [
+      '画像ファイルを選択します（複数選択やドラッグ＆ドロップも可能です）。',
+      'リサイズ方法を「サイズ指定（px）」または「割合指定（%）」から選び、幅・高さまたは倍率を入力します。',
+      '出力フォーマットを選び、JPEG・WebP では画質（圧縮率）も調整します。',
+      '変換結果の一覧で、変換前後のサイズを確認してダウンロードします。',
     ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
@@ -178,6 +187,13 @@ export const imageResizerContent: Record<Locale, ImageResizerPageContent> = {
       'Conversion may fail in browsers that lack WebP encoding support. Use a recent version of Chrome, Firefox, Edge, or Safari.',
       'Converting an animated GIF discards the animation and keeps only its first frame.',
       'All processing happens in your browser — the images you select are never sent to a server.',
+    ],
+    howToHeading: 'How to use',
+    howToSteps: [
+      'Choose your image files (multiple files and drag & drop are supported).',
+      'Pick a resize method, "Pixel size" or "Percentage", and enter the width and height or the scale.',
+      'Choose the output format and, for JPEG and WebP, adjust the quality (compression level).',
+      'Check the before/after sizes in the results list, then download the files.',
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

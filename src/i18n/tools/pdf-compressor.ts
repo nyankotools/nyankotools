@@ -34,6 +34,8 @@ export interface PdfCompressorPageContent {
   errorInvalid: string;
   errorEncrypted: string;
   errorFailed: string;
+  howToHeading: string;
+  howToSteps: string[];
   glossaryHeading: string;
   glossaryTerms: { term: string; description: string }[];
 }
@@ -76,6 +78,13 @@ export const pdfCompressorContent: Record<Locale, PdfCompressorPageContent> = {
     errorEncrypted:
       'パスワードで保護されたPDFは処理できません。保護を解除してからお試しください。',
     errorFailed: '処理に失敗しました。',
+    howToHeading: '使い方',
+    howToSteps: [
+      'PDFファイルを選択します。',
+      '圧縮レベル（低圧縮・標準・高圧縮）を選びます。',
+      '「圧縮する」を押します。ページ数が多いと時間がかかります。',
+      '削減前後のサイズを確認し、結果のファイルをダウンロードします。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -131,6 +140,13 @@ export const pdfCompressorContent: Record<Locale, PdfCompressorPageContent> = {
     errorEncrypted:
       'Password-protected PDFs cannot be processed. Remove the protection first and try again.',
     errorFailed: 'Processing failed.',
+    howToHeading: 'How to use',
+    howToSteps: [
+      'Choose a PDF file.',
+      'Pick a compression level (Light, Standard, or Strong).',
+      'Press "Compress". Files with many pages take longer.',
+      'Check the before/after sizes, then download the result.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

@@ -34,6 +34,8 @@ export interface PdfToMarkdownPageContent {
   errorFailed: string;
   notesHeading: string;
   notes: string[];
+  howToHeading: string;
+  howToSteps: string[];
   glossaryHeading: string;
   glossaryTerms: { term: string; description: string }[];
 }
@@ -80,6 +82,13 @@ export const pdfToMarkdownContent: Record<Locale, PdfToMarkdownPageContent> = {
       'セルの結合や、セル内で改行された表は崩れることがあります。変換後に内容を確認してください。',
       '2段組みは左の段から順に読みますが、図や囲み記事が混在するレイアウトでは読み順が乱れることがあります。',
       '図・画像・数式は変換されません。縦書きのPDFにも対応していません。',
+    ],
+    howToHeading: '使い方',
+    howToSteps: [
+      'PDFファイルを選択します。',
+      '必要に応じて、ヘッダー・フッターの除去、表の検出、ページ区切りの挿入のオプションを切り替えます。',
+      '「変換」を押します。',
+      '変換結果を確認し、コピーするか、.mdファイルとしてダウンロードします。',
     ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
@@ -140,6 +149,13 @@ export const pdfToMarkdownContent: Record<Locale, PdfToMarkdownPageContent> = {
       'Merged cells and cells with wrapped text may break a table. Please review the output.',
       'Two-column pages are read left column first, but layouts mixing figures and sidebars can come out in the wrong order.',
       'Figures, images and equations are not converted. Vertical (tategaki) text is not supported.',
+    ],
+    howToHeading: 'How to use',
+    howToSteps: [
+      'Choose a PDF file.',
+      'Toggle the options as needed: removing headers/footers, detecting tables, and inserting page separators.',
+      'Press "Convert".',
+      'Review the output, then copy it or download it as a .md file.',
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

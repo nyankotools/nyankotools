@@ -32,6 +32,25 @@ for (const { locale, prefix } of locales) {
         expect(hasHorizontalOverflow).toBe(false);
       });
 
+      test(`${tool.slug}: FAQを展開した375px幅でも横スクロールが発生しない`, async ({
+        page,
+      }) => {
+        await page.setViewportSize({ width: 375, height: 800 });
+        await page.goto(toolPath);
+
+        // FAQを持たないツールでも失敗させない（開くのは存在するものだけ）
+        await page.evaluate(() => {
+          document
+            .querySelectorAll('[data-faq] details')
+            .forEach((d) => d.setAttribute('open', ''));
+        });
+
+        const hasHorizontalOverflow = await page.evaluate(
+          () => document.documentElement.scrollWidth > window.innerWidth + 1,
+        );
+        expect(hasHorizontalOverflow).toBe(false);
+      });
+
       test(`${tool.slug}: サイドバーからツールページへ遷移できる`, async ({
         page,
       }) => {

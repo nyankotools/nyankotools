@@ -35,6 +35,8 @@ export interface CsvJsonConverterPageContent {
   errorNotArray: string;
   /** `{index}` を置換して使うテンプレート */
   errorNotObjectTemplate: string;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -73,6 +75,12 @@ export const csvJsonConverterContent: Record<
     errorNotArray: 'JSONは配列である必要があります（例: [{"a": 1}]）。',
     errorNotObjectTemplate:
       '{index}番目の要素: 配列の各要素はオブジェクトである必要があります（例: {"a": 1}）。',
+    notesHeading: '注意事項',
+    notes: [
+      'CSVの1行目はヘッダー（キー）として扱われます。データ行の列数がヘッダーと異なるとエラーになります。',
+      'CSVからJSONへの変換では、すべての値が文字列として出力されます。数値や真偽値には変換されません。',
+      'JSONからCSVへの変換は、オブジェクトの配列のみ対応しています。ネストしたオブジェクトや配列を含む値は、JSON文字列としてセルに入ります。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -127,6 +135,12 @@ export const csvJsonConverterContent: Record<
     errorNotArray: 'The JSON must be an array (e.g. [{"a": 1}]).',
     errorNotObjectTemplate:
       'Item {index}: each array element must be an object (e.g. {"a": 1}).',
+    notesHeading: 'Notes',
+    notes: [
+      'The first CSV row is treated as the header (keys). A data row with a different number of columns causes an error.',
+      'When converting CSV to JSON, every value is output as a string. Numbers and booleans are not converted.',
+      'JSON to CSV only supports arrays of objects. Nested objects and arrays are placed in the cell as JSON strings.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

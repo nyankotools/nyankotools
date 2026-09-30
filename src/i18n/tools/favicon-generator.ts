@@ -33,6 +33,8 @@ export interface FaviconGeneratorPageContent {
   copyFailedMessage: string;
   notesHeading: string;
   notes: string[];
+  howToHeading: string;
+  howToSteps: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -44,7 +46,7 @@ export const faviconGeneratorContent: Record<
   ja: {
     title: 'favicon（ファビコン）一括生成ツール｜ICO/PNGを複数サイズで書き出し',
     description:
-      '1枚の画像から、favicon.ico（16/32/48px同梱）とfavicon-16x16.png・apple-touch-icon.png・android-chrome-192x192.png等の複数サイズPNGを一括生成できる無料ツールです。HTMLに貼り付ける&lt;link&gt;タグも自動生成。データはブラウザ内で処理され、サーバーには送信されません。',
+      '1枚の画像から、favicon.ico（16/32/48px同梱）とfavicon-16x16.png・apple-touch-icon.png・android-chrome-192x192.png等の複数サイズPNGを一括生成できる無料ツールです。HTMLに貼り付ける<link>タグも自動生成。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'favicon（ファビコン）一括生成',
     introHtml:
       '画像を1枚選択するだけで、favicon.ico（16px・32px・48pxを1ファイルに格納）と、favicon-16x16.png・favicon-32x32.png・favicon-48x48.png・apple-touch-icon.png（180px）・android-chrome-192x192.png・android-chrome-512x512.pngをまとめて生成します。長方形の画像は中央を基準に正方形へ自動的に切り抜かれますが、プレビュー上の枠をドラッグして切り抜く位置を調整することもできます。生成したファイルをHTMLで読み込むための&lt;link&gt;タグも合わせて出力します。フォーマット変換のみでよい場合は<a href="/tools/image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像フォーマット変換</a>もご利用ください。',
@@ -81,6 +83,13 @@ export const faviconGeneratorContent: Record<
       'android-chrome-192x192.png・android-chrome-512x512.pngは、PWA（ホーム画面への追加）用のWeb App Manifest（manifest.json）から参照する想定のサイズです。本ツールは画像ファイルのみ生成し、manifest.json自体は生成しません。',
       'すべての処理はブラウザ内で完結し、選択した画像がサーバーに送信されることはありません。',
     ],
+    howToHeading: '使い方',
+    howToSteps: [
+      '元になる画像を選択します（正方形で512×512px以上を推奨します）。',
+      'プレビュー上の枠をドラッグして、切り抜く範囲を調整します。',
+      '生成されたfavicon.icoや各サイズのPNGを、必要なものだけダウンロードします。',
+      '「HTML貼り付け用コード」をコピーして、サイトのheadに貼り付けます。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -108,7 +117,7 @@ export const faviconGeneratorContent: Record<
   en: {
     title: 'Favicon Generator – Create ICO & PNG Icons in Every Size',
     description:
-      'Free tool that generates favicon.ico (bundling 16/32/48px) plus favicon-16x16.png, apple-touch-icon.png, android-chrome-192x192.png, and other standard sizes from a single image, along with ready-to-paste HTML &lt;link&gt; tags. Your image is processed in the browser and never sent to a server.',
+      'Free tool that generates favicon.ico (bundling 16/32/48px) plus favicon-16x16.png, apple-touch-icon.png, android-chrome-192x192.png, and other standard sizes from a single image, along with ready-to-paste HTML <link> tags. Your image is processed in the browser and never sent to a server.',
     h1: 'Favicon Generator',
     introHtml:
       'Choose one image and this tool generates favicon.ico (bundling 16px, 32px, and 48px into one file) along with favicon-16x16.png, favicon-32x32.png, favicon-48x48.png, apple-touch-icon.png (180px), android-chrome-192x192.png, and android-chrome-512x512.png. A non-square image is automatically cropped to a centered square, and you can drag the box on the preview to adjust the crop position. It also outputs the &lt;link&gt; tags you need to reference the generated files from your HTML. If you only need format conversion, try the <a href="/en/tools/image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Format Converter</a> instead.',
@@ -144,6 +153,13 @@ export const faviconGeneratorContent: Record<
       'favicon.ico bundles 16px, 32px, and 48px into a single file using the PNG-compressed ICO format supported by Windows Vista and later. Very old browsers or OSes (such as Internet Explorer on Windows XP) may fail to display it.',
       'android-chrome-192x192.png and android-chrome-512x512.png are the sizes typically referenced from a Web App Manifest (manifest.json) for "Add to Home Screen" / PWA installs. This tool only generates the image files, not manifest.json itself.',
       'All processing happens in your browser — the image you select is never sent to a server.',
+    ],
+    howToHeading: 'How to use',
+    howToSteps: [
+      'Choose a source image (a square image of 512×512px or larger is recommended).',
+      'Drag the frame on the preview to adjust the crop area.',
+      'Download the generated favicon.ico and PNG files you need.',
+      "Copy the HTML snippet and paste it into your site's head element.",
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

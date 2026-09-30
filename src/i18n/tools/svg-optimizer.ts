@@ -28,6 +28,8 @@ export interface SvgOptimizerPageContent {
   errorInvalid: string;
   errorNotSvg: string;
   errorReadFailed: string;
+  notesHeading: string;
+  notes: string[];
   glossaryHeading: string;
   glossaryTerms: { term: string; description: string }[];
 }
@@ -63,6 +65,12 @@ export const svgOptimizerContent: Record<Locale, SvgOptimizerPageContent> = {
       'SVGとして解釈できませんでした。タグが正しく閉じられているか確認してください。',
     errorNotSvg: 'SVGファイル（.svg）を選択してください。',
     errorReadFailed: 'ファイルの読み込みに失敗しました。',
+    notesHeading: '注意事項',
+    notes: [
+      '最適化にはSVGOを使用しています。メタデータや不要な属性・空白を取り除くほか、数値の精度も調整するため、非常に細かい図形では見た目に差が出ることがあります。',
+      '最適化の前後は、プレビューで見た目を確認してから使ってください。',
+      'ファイルはブラウザ内で処理され、サーバーには送信されません。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -111,6 +119,12 @@ export const svgOptimizerContent: Record<Locale, SvgOptimizerPageContent> = {
       'Could not parse this as SVG. Please check that all tags are properly closed.',
     errorNotSvg: 'Please choose an SVG (.svg) file.',
     errorReadFailed: 'Failed to read the file.',
+    notesHeading: 'Notes',
+    notes: [
+      'Optimization uses SVGO. It removes metadata, unused attributes and whitespace, and adjusts numeric precision, which can slightly change very fine shapes.',
+      'Compare the before and after in the preview before using the result.',
+      'Files are processed in the browser and are never sent to a server.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

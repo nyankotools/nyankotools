@@ -21,6 +21,8 @@ export interface RegexTesterPageContent {
   testInputPlaceholder: string;
   /** `{message}` を置換して使うテンプレート */
   errorInvalidPatternTemplate: string;
+  /** 正規表現の実行が制限時間内に終わらなかったときのメッセージ */
+  errorTimeout: string;
   /** `{count}` を置換して使うテンプレート（1件の場合） */
   statusMatchSingularTemplate: string;
   /** `{count}` を置換して使うテンプレート（複数件の場合） */
@@ -64,6 +66,8 @@ export const regexTesterContent: Record<Locale, RegexTesterPageContent> = {
     testInputLabel: 'テスト対象の文字列',
     testInputPlaceholder: 'マッチを確認したいテキストを入力',
     errorInvalidPatternTemplate: '正規表現が不正です: {message}',
+    errorTimeout:
+      '処理に時間がかかりすぎたため中断しました。パターンが重い（バックトラッキングが多発する）可能性があります。(a+)+ のような入れ子の繰り返しを見直してください。',
     statusMatchSingularTemplate: '{count}件マッチしました。',
     statusMatchPluralTemplate: '{count}件マッチしました。',
     highlightHeading: 'マッチ箇所のハイライト表示',
@@ -128,6 +132,8 @@ export const regexTesterContent: Record<Locale, RegexTesterPageContent> = {
     testInputLabel: 'Test string',
     testInputPlaceholder: 'Enter the text you want to test matches against',
     errorInvalidPatternTemplate: 'Invalid regular expression: {message}',
+    errorTimeout:
+      'The match took too long and was stopped. The pattern may cause heavy backtracking; try avoiding nested repetition such as (a+)+.',
     statusMatchSingularTemplate: '{count} match found.',
     statusMatchPluralTemplate: '{count} matches found.',
     highlightHeading: 'Highlighted matches',

@@ -67,6 +67,7 @@ const t = regexTesterContent[locale];
   <div
     class="mt-4 flex flex-wrap items-center gap-3"
     data-error-template={t.errorInvalidPatternTemplate}
+    data-timeout-message={t.errorTimeout}
     data-match-singular-template={t.statusMatchSingularTemplate}
     data-match-plural-template={t.statusMatchPluralTemplate}
     data-no-groups={t.noGroups}
@@ -161,11 +162,12 @@ const t = regexTesterContent[locale];
   import { onTextInput } from '../../lib/input-scheduler';
   import { copyText } from '../../lib/clipboard';
   import { escapeHtml } from '../../lib/tools/html-escape';
+  import type { RegexMatchResult } from '../../lib/tools/regex-tester';
   import {
-    replaceWithRegex,
-    testRegex,
-    type RegexMatchResult,
-  } from '../../lib/tools/regex-tester';
+    createRegexRunner,
+    type RegexWorkerLike,
+  } from '../../lib/regex-runner';
+  import regexWorkerUrl from '../../lib/tools/regex-tester.worker.ts?worker&url';
 
   const patternInput = document.getElementById(
     'regex-pattern-input',
@@ -201,6 +203,16 @@ const t = regexTesterContent[locale];
   )!;
 
   const errorTemplate = statusContainer.dataset.errorTemplate ?? '';
+  const timeoutMessage = statusContainer.dataset.timeoutMessage ?? '';
+
+  // 利用者の正規表現は Worker で実行し、破滅的バックトラッキングでタブが固まらないようにする
+  const runner = createRegexRunner(
+    () =>
+      new Worker(regexWorkerUrl, {
+        type: 'module',
+      }) as unknown as RegexWorkerLike,
+  );
+  let renderSeq = 0;
   const matchSingularTemplate =
     statusContainer.dataset.matchSingularTemplate ?? '';
   const matchPluralTemplate = statusContainer.dataset.matchPluralTemplate ?? '';
@@ -229,14 +241,30 @@ const t = regexTesterContent[locale];
       .join(', ');
   }
 
-  function render() {
+  async function render() {
     flagsLabel.textContent = `/${currentFlags()}`;
     replaceCopyStatus.textContent = '';
 
     const pattern = patternInput.value;
     const flags = currentFlags();
     const text = testInput.value;
-    const result = testRegex(pattern, flags, text);
+    const replacement = replacementInput.value;
+
+    const seq = ++renderSeq;
+    const outcome = await runner.run({ pattern, flags, text, replacement });
+    // 後から入力が変わっていたら、古い結果は捨てる
+    if (seq !== renderSeq || outcome.status === 'superseded') return;
+
+    if (outcome.status === 'timeout') {
+      errorEl.textContent = timeoutMessage;
+      errorEl.classList.remove('hidden');
+      statusEl.textContent = '';
+      highlightEl.textContent = text;
+      matchesWrapper.classList.add('hidden');
+      replaceWrapper.classList.add('hidden');
+      return;
+    }
+    const result = outcome.response.test;
 
     if (!result.isValid) {
       errorEl.textContent = errorTemplate.replace(
@@ -292,15 +320,10 @@ const t = regexTesterContent[locale];
       matchesWrapper.classList.remove('hidden');
     }
 
-    if (replacementInput.value === '') {
+    const replaced = outcome.response.replace;
+    if (replacement === '' || replaced === null) {
       replaceWrapper.classList.add('hidden');
     } else {
-      const replaced = replaceWithRegex(
-        pattern,
-        flags,
-        text,
-        replacementInput.value,
-      );
       replaceResult.value = replaced.error ? text : replaced.result;
       replaceWrapper.classList.remove('hidden');
     }

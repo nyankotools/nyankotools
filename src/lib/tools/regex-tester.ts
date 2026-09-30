@@ -123,3 +123,31 @@ export function replaceWithRegex(
     return { result: text, error: (e as Error).message };
   }
 }
+
+/** Worker（または同期フォールバック）に渡す、1回分の正規表現テスト・置換の依頼 */
+export interface RegexJobRequest {
+  id: number;
+  pattern: string;
+  flags: string;
+  text: string;
+  /** 空文字のときは置換を行わない */
+  replacement: string;
+}
+
+export interface RegexJobResponse {
+  id: number;
+  test: RegexTestResult;
+  /** replacement が空、またはパターンが不正・空のとき null */
+  replace: RegexReplaceResult | null;
+}
+
+/** テストと置換をまとめて実行する。Worker 内でも、メインスレッドのフォールバックでも同じ関数を使う */
+export function runRegexJob(request: RegexJobRequest): RegexJobResponse {
+  const { id, pattern, flags, text, replacement } = request;
+  const test = testRegex(pattern, flags, text);
+  const replace =
+    test.isValid && pattern !== '' && replacement !== ''
+      ? replaceWithRegex(pattern, flags, text, replacement)
+      : null;
+  return { id, test, replace };
+}

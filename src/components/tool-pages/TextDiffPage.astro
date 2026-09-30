@@ -132,8 +132,8 @@ const t = textDiffContent[locale];
       .join('');
   }
 
-  onTextInput(inputA, render);
-  onTextInput(inputB, render);
+  onTextInput(inputA, render, { watch: [inputB] });
+  onTextInput(inputB, render, { watch: [inputA] });
   ignoreWhitespace.addEventListener('change', render);
   ignoreCase.addEventListener('change', render);
 

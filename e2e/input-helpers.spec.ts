@@ -151,3 +151,70 @@ test.describe('印刷CSS（No.178）', () => {
     await expect(page.locator('#sidebar')).toBeVisible();
   });
 });
+
+test.describe('入力状態の保持（連動欄・change・選択系）', () => {
+  test('連動欄は、最後に入力した欄の値で復元される（px-rem）', async ({
+    page,
+  }) => {
+    await page.goto('/tools/px-rem-converter/');
+    await page.locator('#px-rem-rem-input').fill('2');
+    await page.locator('#px-rem-px-input').fill('48');
+    await expect(page.locator('#px-rem-rem-input')).toHaveValue('3');
+    await page.waitForTimeout(500);
+
+    await page.reload();
+    await expect(page.locator('#px-rem-px-input')).toHaveValue('48');
+    await expect(page.locator('#px-rem-rem-input')).toHaveValue('3');
+  });
+
+  test('change でだけ再計算するツールも、復元後に結果が揃う（lorem-ipsum）', async ({
+    page,
+  }) => {
+    await page.goto('/tools/lorem-ipsum/');
+    await page.locator('#lorem-count').fill('7');
+    await page.locator('#lorem-count').blur();
+    await page.waitForTimeout(500);
+
+    await page.reload();
+    await expect(page.locator('#lorem-count')).toHaveValue('7');
+    // 復元で change が発火し、件数 7 で再生成されている
+    const output = await page.locator('#lorem-output').inputValue();
+    expect(output.split(/\n+/).filter(Boolean)).toHaveLength(7);
+  });
+
+  test('ラジオ・チェックボックスの選択も復元される（lorem-ipsum）', async ({
+    page,
+  }) => {
+    await page.goto('/tools/lorem-ipsum/');
+    await page.locator('#lorem-unit-sentences').check();
+    await page.waitForTimeout(500);
+    await page.reload();
+    await expect(page.locator('#lorem-unit-sentences')).toBeChecked();
+  });
+
+  test('前回の復元が完了しなかった場合は、保存内容を使わず素の状態で開く', async ({
+    page,
+  }) => {
+    await page.goto('/tools/text-case-converter/');
+    await page.locator('#text-case-input').fill('boom');
+    await page.waitForTimeout(500);
+    await page.evaluate(() =>
+      sessionStorage.setItem('nyanko:restoring:text-case-converter', '1'),
+    );
+    await page.reload();
+    await expect(page.locator('#text-case-input')).toHaveValue('');
+    // フラグは消え、次の読み込みからは通常どおり保存・復元される
+    await page.locator('#text-case-input').fill('again');
+    await page.waitForTimeout(500);
+    await page.reload();
+    await expect(page.locator('#text-case-input')).toHaveValue('again');
+  });
+
+  test('QR生成の入力は保存しない', async ({ page }) => {
+    await page.goto('/tools/qr-generator/');
+    await page.locator('#qr-generator-input').fill('wifi-password');
+    await page.waitForTimeout(500);
+    await page.reload();
+    await expect(page.locator('#qr-generator-input')).toHaveValue('');
+  });
+});

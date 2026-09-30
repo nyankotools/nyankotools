@@ -48,4 +48,26 @@ describe('onTextInput', () => {
     vi.advanceTimersByTime(100);
     expect(handler).toHaveBeenCalledTimes(1);
   });
+
+  it('watch した他の欄が大きいときは、小さい側の入力も遅延する', () => {
+    let listener: () => void = () => {};
+    const el = {
+      value: '',
+      addEventListener: (_t: string, fn: () => void) => {
+        listener = fn;
+      },
+    };
+    const other = { value: 'x'.repeat(50) };
+    const handler = vi.fn();
+    onTextInput(el as unknown as HTMLTextAreaElement, handler, {
+      threshold: 10,
+      delay: 100,
+      watch: [other as unknown as HTMLTextAreaElement],
+    });
+    el.value = 'a';
+    listener();
+    expect(handler).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(100);
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
 });

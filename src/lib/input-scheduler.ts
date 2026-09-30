@@ -12,10 +12,16 @@ export const LARGE_INPUT_DELAY_MS = 250;
 export function onTextInput(
   el: HTMLInputElement | HTMLTextAreaElement,
   handler: () => void,
-  options: { threshold?: number; delay?: number } = {},
+  options: {
+    threshold?: number;
+    delay?: number;
+    /** 長さの判定に含める他の入力欄（例: 比較ツールの相手側。片方が巨大なら、小さい側の入力も遅らせる） */
+    watch?: Array<HTMLInputElement | HTMLTextAreaElement>;
+  } = {},
 ): void {
   const threshold = options.threshold ?? LARGE_INPUT_LENGTH;
   const delay = options.delay ?? LARGE_INPUT_DELAY_MS;
+  const watch = options.watch ?? [];
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   el.addEventListener('input', () => {
@@ -23,7 +29,11 @@ export function onTextInput(
       clearTimeout(timer);
       timer = undefined;
     }
-    if (el.value.length < threshold) {
+    const size = watch.reduce(
+      (sum, w) => sum + w.value.length,
+      el.value.length,
+    );
+    if (size < threshold) {
       handler();
       return;
     }

@@ -96,6 +96,8 @@ function lcsDiff(
  * 2つのテキストを行単位でLCS（最長共通部分列）比較し、行ごとの差分を返す。
  * 表示は元の文字列のまま、比較のみ正規化した値で行う。
  * 先頭・末尾で一致する行はLCS表に載せず切り落とす（ほぼ同じ長文の比較でメモリと時間を節約）。
+ * 切り落としの有無で追加・削除の件数は変わらない最小差分だが、重複行がある場合は
+ * 同点時の行の対応づけ（どちらの重複行を「一致」とみなすか）が変わりうる。
  */
 export function diffLines(
   left: string,
@@ -126,16 +128,16 @@ export function diffLines(
   });
   const result: DiffLine[] = [];
   for (let k = 0; k < head; k++) result.push(equal(k, k));
-  result.push(
-    ...lcsDiff(
-      a.slice(head, a.length - tail),
-      b.slice(head, b.length - tail),
-      na.slice(head, a.length - tail),
-      nb.slice(head, b.length - tail),
-      head,
-      head,
-    ),
+  // スプレッド（push(...arr)）は引数の上限を超えて例外になるため、1行ずつ追加する
+  const middle = lcsDiff(
+    a.slice(head, a.length - tail),
+    b.slice(head, b.length - tail),
+    na.slice(head, a.length - tail),
+    nb.slice(head, b.length - tail),
+    head,
+    head,
   );
+  for (const line of middle) result.push(line);
   for (let k = tail; k > 0; k--) result.push(equal(a.length - k, b.length - k));
   return result;
 }

@@ -15,6 +15,13 @@ import {
 // 3言語目を追加したときに「辞書の書き忘れ」で壊れないことを保証する。
 // `locales`（ui.ts）が唯一の正で、Record<Locale, …> の各辞書がそのキーを過不足なく持つことを検査する。
 // 新しいロケールを足したら、ここが失敗する箇所が「対応が必要な辞書」の一覧になる。
+//
+// このテストでは検出できない、2言語前提のまま残っている箇所（3言語目の追加時に要対応）:
+// - Layout.astro: alternateLang（ja↔en の二択）・isHome（'/en' 直書き）・言語切替ボタン・hreflang
+// - ui.ts: getAlternatePath（'/en' の付け外し）
+// - command-palette.ts / favorites-ui.ts: '/en/' 直書きのパス組み立て
+// - CategoryPage.astro: enLabel（英語のカテゴリ名の直書き）
+// - 各ツールページ内の isJa 分岐、e2e・一部テストの ['ja', 'en'] 直書き、sitemap の i18n 設定
 
 const root = resolve(import.meta.dirname, '../..');
 const sorted = (keys: string[]) => [...keys].sort();

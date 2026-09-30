@@ -1,3 +1,5 @@
+import { onTextInput } from './input-scheduler';
+
 /** 入力欄の文字数（サロゲートペアなどをコードポイント単位で数える） */
 export function countChars(value: string): number {
   let count = 0;
@@ -108,7 +110,8 @@ export function initInputHelpers(): void {
             countChars(target.value),
           );
         };
-        target.addEventListener('input', update);
+        // 数MBの入力でも、キー入力のたびに全文を数えて固まらないようにする
+        onTextInput(target, update);
         update();
         bar.append(count);
       }

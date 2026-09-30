@@ -143,3 +143,15 @@ describe('diffLines（先頭・末尾の切り落とし）', () => {
     expect(stats).toEqual({ added: 1, removed: 1, equal: 49_999 });
   });
 });
+
+describe('diffLines（巨大な変更）', () => {
+  it('変更部分が十数万行でも例外にならない', () => {
+    const lines = Array.from({ length: 200_000 }, (_, i) => `line ${i}`);
+    const result = diffLines(lines.join('\n'), '');
+    expect(getDiffStats(result)).toEqual({
+      added: 1,
+      removed: 200_000,
+      equal: 0,
+    });
+  });
+});

@@ -306,8 +306,8 @@ const t = regexTesterContent[locale];
     }
   }
 
-  onTextInput(patternInput, render);
-  onTextInput(testInput, render);
+  onTextInput(patternInput, render, { watch: [testInput] });
+  onTextInput(testInput, render, { watch: [patternInput] });
   onTextInput(replacementInput, render);
   for (const flag of [flagI, flagM, flagS, flagU]) {
     flag.addEventListener('change', render);

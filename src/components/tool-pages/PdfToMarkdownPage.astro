@@ -1,5 +1,6 @@
 ---
 import Glossary from '../Glossary.astro';
+import HowTo from '../HowTo.astro';
 import Layout from '../../layouts/Layout.astro';
 import { pdfToMarkdownContent } from '../../i18n/tools/pdf-to-markdown';
 import type { Locale } from '../../data/tools';
@@ -140,6 +141,8 @@ const options = [
       ></span>
     </div>
   </section>
+
+  <HowTo heading={t.howToHeading} steps={t.howToSteps} />
 
   <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
   <ul class="list-disc space-y-1 pl-5 text-sm text-gray-600 dark:text-gray-400">

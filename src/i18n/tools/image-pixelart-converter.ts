@@ -48,6 +48,8 @@ export interface ImagePixelartConverterPageContent {
   errorFileTooLargeTemplate: string;
   notesHeading: string;
   notes: string[];
+  howToHeading: string;
+  howToSteps: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -101,6 +103,13 @@ export const imagePixelartConverterContent: Record<
       '顔やナンバープレートなど個人情報を隠す目的でモザイク処理を使う場合、ブロックサイズが小さいと元の情報が推測できてしまうことがあります。十分に大きいブロックサイズを選んでください。',
       'JPEGには透過（アルファチャンネル）情報がないため、透過部分は白色で塗りつぶされます。透過を維持したい場合はWebPまたはPNGを選んでください。',
       'すべての処理はブラウザ内で完結し、選択した画像がサーバーに送信されることはありません。',
+    ],
+    howToHeading: '使い方',
+    howToSteps: [
+      '画像ファイルを選択します（ドラッグ＆ドロップも可能です）。',
+      '「ブロックサイズ」でドットの粗さを、「色数（階調）」で減色の強さを調整します。',
+      '変換前後のプレビューを見比べながら、出力フォーマットと画質を選びます。',
+      '結果を確認してダウンロードします。',
     ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
@@ -166,6 +175,13 @@ export const imagePixelartConverterContent: Record<
       'If you use this to mosaic a face or license plate for privacy, a small block size may still let the original details be guessed. Choose a large enough block size to be safe.',
       'JPEG has no alpha channel, so transparent areas are filled with white. Use WebP or PNG if you need to keep transparency.',
       'All processing happens in your browser — the image you select is never sent to a server.',
+    ],
+    howToHeading: 'How to use',
+    howToSteps: [
+      'Choose an image file (drag & drop also works).',
+      'Use "Block size" to set how coarse the pixels are and "Color levels" to set how strongly colors are reduced.',
+      'Compare the before/after previews while you pick the output format and quality.',
+      'Check the result and download it.',
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

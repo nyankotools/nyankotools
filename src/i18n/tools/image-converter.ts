@@ -40,6 +40,8 @@ export interface ImageConverterPageContent {
   errorFileTooLargeTemplate: string;
   notesHeading: string;
   notes: string[];
+  howToHeading: string;
+  howToSteps: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -87,6 +89,13 @@ export const imageConverterContent: Record<Locale, ImageConverterPageContent> =
         '画質（圧縮率）はWebP・JPEGのみ有効です。PNGは可逆圧縮のため常に元画像と同じ画質で出力されます。',
         'アニメーションGIFを変換すると、アニメーションは失われ最初のフレームのみが変換されます。',
         'すべての処理はブラウザ内で完結し、選択した画像がサーバーに送信されることはありません。',
+      ],
+      howToHeading: '使い方',
+      howToSteps: [
+        '画像ファイルを選択します（複数選択やドラッグ＆ドロップも可能です）。',
+        '変換先フォーマット（WebP・JPEG・PNG）を選びます。',
+        'JPEG・WebP では画質（圧縮率）を調整します。',
+        '変換結果の一覧で、変換前後のサイズを確認してダウンロードします。',
       ],
       glossaryHeading: '用語解説',
       glossaryTerms: [
@@ -147,6 +156,13 @@ export const imageConverterContent: Record<Locale, ImageConverterPageContent> =
         'The quality setting only affects WebP and JPEG. PNG is lossless and is always exported at the same quality as the original.',
         'Converting an animated GIF discards the animation and keeps only its first frame.',
         'All processing happens in your browser — the images you select are never sent to a server.',
+      ],
+      howToHeading: 'How to use',
+      howToSteps: [
+        'Choose your image files (multiple files and drag & drop are supported).',
+        'Pick the output format: WebP, JPEG, or PNG.',
+        'For JPEG and WebP, adjust the quality (compression level).',
+        'Check the before/after sizes in the results list, then download the files.',
       ],
       glossaryHeading: 'Glossary',
       glossaryTerms: [

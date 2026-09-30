@@ -51,6 +51,8 @@ export interface PdfImageConverterPageContent {
   errorFailed: string;
   notesHeading: string;
   notes: string[];
+  howToHeading: string;
+  howToSteps: string[];
   glossaryHeading: string;
   glossaryTerms: { term: string; description: string }[];
 }
@@ -118,6 +120,13 @@ export const pdfImageConverterContent: Record<
       'PDFを画像にする場合、解像度は標準（72dpi）・高（144dpi）・最高（216dpi）から選べます。ページが非常に大きい場合は、ブラウザの制限に収まるよう自動で縮小されます。',
       'パスワードで保護されたPDFは処理できません。保護を解除してから使ってください。',
       'ファイルはブラウザ内で処理され、端末の外には送信されません。',
+    ],
+    howToHeading: '使い方',
+    howToSteps: [
+      '変換方向として「PDF → 画像」または「画像 → PDF」を選びます。',
+      'PDF、または画像ファイルを選択します（画像は選んだ順に1枚1ページになり、「上へ」「下へ」で入れ替えられます）。',
+      '出力形式・解像度・変換するページ（PDF→画像）や、ページサイズ（画像→PDF）を必要に応じて設定します。',
+      '「変換」を押し、結果のファイルをダウンロードします。',
     ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
@@ -195,6 +204,13 @@ export const pdfImageConverterContent: Record<
       'When converting a PDF to images, you can choose standard (72 dpi), high (144 dpi) or maximum (216 dpi). Very large pages are scaled down automatically to fit browser limits.',
       'Password-protected PDFs cannot be processed. Remove the protection first.',
       'Files are processed in the browser and never leave your device.',
+    ],
+    howToHeading: 'How to use',
+    howToSteps: [
+      'Choose a direction: "PDF → Images" or "Images → PDF".',
+      'Choose the PDF or image files (images become one page each in the order chosen; use the up/down buttons to reorder).',
+      'Adjust the output format, resolution and pages (PDF → Images), or the page size (Images → PDF), if needed.',
+      'Press "Convert" and download the result.',
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

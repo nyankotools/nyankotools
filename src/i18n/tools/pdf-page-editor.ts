@@ -47,6 +47,8 @@ export interface PdfPageEditorPageContent {
   errorFailed: string;
   notesHeading: string;
   notes: string[];
+  howToHeading: string;
+  howToSteps: string[];
   glossaryHeading: string;
   glossaryTerms: { term: string; description: string }[];
 }
@@ -103,6 +105,13 @@ export const pdfPageEditorContent: Record<Locale, PdfPageEditorPageContent> = {
       'パスワードを知っているPDFのみ保護を解除できます。パスワードの解析や回避は行いません。',
       '保護を解除したPDFは各ページを画像化して作り直すため、文字の選択・検索ができなくなり、ファイルサイズが大きくなることがあります。',
       '「実行」を押すと、ページ一覧の並び・回転・削除の状態のとおりに新しいPDFが作られます。元のファイルは変更されません。',
+    ],
+    howToHeading: '使い方',
+    howToSteps: [
+      'PDFファイルを選択します。パスワードで保護されている場合は、パスワードを入力して解除します。',
+      'ページ一覧で、各ページを回転・削除・並び替えします。',
+      '「実行」を押すと、一覧のとおりに新しいPDFが作られます。',
+      '結果に表示されたファイルをダウンロードします。',
     ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
@@ -168,6 +177,13 @@ export const pdfPageEditorContent: Record<Locale, PdfPageEditorPageContent> = {
       'Protection can only be removed from PDFs whose password you know. The tool does not crack or bypass passwords.',
       'An unlocked PDF is rebuilt from page images, so text can no longer be selected or searched and the file may become larger.',
       'Pressing the run button creates a new PDF that reflects the order, rotation and deletions shown in the page list. The original file is not modified.',
+    ],
+    howToHeading: 'How to use',
+    howToSteps: [
+      'Choose a PDF file. If it is password-protected, enter the password to unlock it.',
+      'In the page list, rotate, delete, or reorder pages as needed.',
+      'Press "Run" to build a new PDF that matches the list.',
+      'Download the file shown under the result.',
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

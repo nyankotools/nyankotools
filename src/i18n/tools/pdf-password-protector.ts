@@ -35,6 +35,8 @@ export interface PdfPasswordProtectorPageContent {
   errorInvalid: string;
   errorEncrypted: string;
   errorFailed: string;
+  howToHeading: string;
+  howToSteps: string[];
   glossaryHeading: string;
   glossaryTerms: { term: string; description: string }[];
 }
@@ -87,6 +89,13 @@ export const pdfPasswordProtectorContent: Record<
     errorEncrypted:
       'すでにパスワードで保護されているPDFは処理できません。先に保護を解除してください。',
     errorFailed: '暗号化に失敗しました。',
+    howToHeading: '使い方',
+    howToSteps: [
+      'PDFファイルを選択します。',
+      '「開くためのパスワード」を入力します。',
+      '印刷・コピー・編集のうち許可する操作を選びます（制限を解除するためのパスワードは任意です）。',
+      '「暗号化する」を押し、結果のファイルをダウンロードします。パスワードは忘れないよう控えておいてください。',
+    ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
       {
@@ -147,6 +156,13 @@ export const pdfPasswordProtectorContent: Record<
     errorEncrypted:
       'This PDF is already password-protected. Remove the protection first.',
     errorFailed: 'Encryption failed.',
+    howToHeading: 'How to use',
+    howToSteps: [
+      'Choose a PDF file.',
+      'Enter the password required to open the PDF.',
+      'Select which actions to allow: printing, copying, and editing (an owner password to lift the restrictions is optional).',
+      'Press "Encrypt" and download the result. Keep a copy of the password somewhere safe.',
+    ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [
       {

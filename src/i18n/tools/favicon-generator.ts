@@ -33,6 +33,8 @@ export interface FaviconGeneratorPageContent {
   copyFailedMessage: string;
   notesHeading: string;
   notes: string[];
+  howToHeading: string;
+  howToSteps: string[];
   glossaryHeading: string;
   glossaryTerms: GlossaryTerm[];
 }
@@ -80,6 +82,13 @@ export const faviconGeneratorContent: Record<
       'favicon.icoは16px・32px・48pxの3サイズを1ファイルに格納した、Windows Vista以降が対応するPNG格納形式のICOファイルです。非常に古いブラウザ・OS（Windows XP時代のIEなど）では表示できない場合があります。',
       'android-chrome-192x192.png・android-chrome-512x512.pngは、PWA（ホーム画面への追加）用のWeb App Manifest（manifest.json）から参照する想定のサイズです。本ツールは画像ファイルのみ生成し、manifest.json自体は生成しません。',
       'すべての処理はブラウザ内で完結し、選択した画像がサーバーに送信されることはありません。',
+    ],
+    howToHeading: '使い方',
+    howToSteps: [
+      '元になる画像を選択します（正方形で512×512px以上を推奨します）。',
+      'プレビュー上の枠をドラッグして、切り抜く範囲を調整します。',
+      '生成されたfavicon.icoや各サイズのPNGを、必要なものだけダウンロードします。',
+      '「HTML貼り付け用コード」をコピーして、サイトのheadに貼り付けます。',
     ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
@@ -144,6 +153,13 @@ export const faviconGeneratorContent: Record<
       'favicon.ico bundles 16px, 32px, and 48px into a single file using the PNG-compressed ICO format supported by Windows Vista and later. Very old browsers or OSes (such as Internet Explorer on Windows XP) may fail to display it.',
       'android-chrome-192x192.png and android-chrome-512x512.png are the sizes typically referenced from a Web App Manifest (manifest.json) for "Add to Home Screen" / PWA installs. This tool only generates the image files, not manifest.json itself.',
       'All processing happens in your browser — the image you select is never sent to a server.',
+    ],
+    howToHeading: 'How to use',
+    howToSteps: [
+      'Choose a source image (a square image of 512×512px or larger is recommended).',
+      'Drag the frame on the preview to adjust the crop area.',
+      'Download the generated favicon.ico and PNG files you need.',
+      "Copy the HTML snippet and paste it into your site's head element.",
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

@@ -1,5 +1,6 @@
 ---
 import Glossary from '../Glossary.astro';
+import HowTo from '../HowTo.astro';
 import Layout from '../../layouts/Layout.astro';
 import { imagePaletteExtractorContent } from '../../i18n/tools/image-palette-extractor';
 import {
@@ -149,6 +150,8 @@ const t = imagePaletteExtractorContent[locale];
       ></button>
     </li>
   </template>
+
+  <HowTo heading={t.howToHeading} steps={t.howToSteps} />
 
   <h2 class="mt-10 mb-2 text-lg font-bold">{t.notesHeading}</h2>
   <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 // Astro開発ツールバー（`astro-dev-toolbar`）が開発サーバーでのみ画面下部中央に
 // 固定表示され、フッターの一部リンクのクリックを阻害することがあるため、

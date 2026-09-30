@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('スクリーンサイズ・Viewportチェッカー（日本語版）', () => {
   test('直接アクセスするとビューポートサイズ等が即座に表示される', async ({

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('テキストケース変換ツール（日本語版）', () => {
   test('直接アクセスして正しく表示され、入力すると各ケースへ変換される', async ({

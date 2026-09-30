@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 // サイドバーのスクロール位置がページ遷移で先頭に戻らないことを確認する。
 // 実装は public/sidebar-category-init.js（初回復元）と layout-nav.ts の

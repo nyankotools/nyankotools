@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import { PDFDocument } from 'pdf-lib';
 
 async function createTestPdf(): Promise<Buffer> {

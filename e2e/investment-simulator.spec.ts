@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test('資産運用シミュレーション: 日本語版が表示される', async ({ page }) => {
   await page.goto('/tools/investment-simulator/');

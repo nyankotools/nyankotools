@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 // astro.config.mjs の prefetch: { prefetchAll: true, defaultStrategy: 'hover' } の
 // 動作確認。同一オリジンのリンクをホバーすると <link rel="prefetch"> がhead内に

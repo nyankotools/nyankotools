@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 // 「こんにちは、世界」のShift_JIS
 const SJIS_BYTES = Buffer.from([

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 // Astro開発ツールバーが開発サーバーでのみフッターのクリックを阻害することがあるため非表示にする
 test.beforeEach(async ({ page }) => {

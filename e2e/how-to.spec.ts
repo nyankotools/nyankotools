@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import { tools } from '../src/data/tools';
 
 // 複数ステップの操作が必要なツールに「使い方」セクション（HowTo.astro）が表示されること。

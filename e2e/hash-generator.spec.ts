@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('ハッシュ生成ツール（日本語版）', () => {
   test('直接アクセスして正しく表示され、入力するとMD5/SHA-1/SHA-256が計算される', async ({

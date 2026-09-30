@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 // 404 用に追加した languageSwitchToHome が既定値（false）のとき、通常ページの
 // 言語切替・hreflang・canonical が従来どおり対応ページを指すことの回帰確認。

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 // Step 5: 入力欄まわり共通機能（No.169）・入力状態の保持（No.176）・印刷CSS（No.178）
 

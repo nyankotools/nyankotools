@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 // サイト機能 Step 3: バッジ（No.150）・ショートカット（No.151）・コマンドパレット（No.152）・
 // URLクエリ初期値（No.153）・カテゴリ別LP（No.154）・エラー境界（No.175）

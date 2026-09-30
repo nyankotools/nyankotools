@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import type { CDPSession } from '@playwright/test';
 
 /**

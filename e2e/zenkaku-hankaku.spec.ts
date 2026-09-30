@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('全角/半角変換ツール（日本語版）', () => {
   test('直接アクセスして正しく表示され、初期状態は全角→半角変換', async ({

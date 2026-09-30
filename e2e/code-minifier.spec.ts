@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import { blockAnalytics } from './helpers/block-analytics';
 
 test.describe('CSS/JS/HTMLミニファイ＆整形（日本語版）', () => {

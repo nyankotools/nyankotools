@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import * as fs from 'fs';
 
 test('日本語版でページが表示される', async ({ page }) => {

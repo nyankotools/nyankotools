@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('CIDR/サブネット計算機（日本語版）', () => {
   test('直接アクセスして正しく表示され、デフォルトで192.168.1.10/24の結果が表示される', async ({

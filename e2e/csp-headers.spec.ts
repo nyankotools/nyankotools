@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { blockAnalytics } from './helpers/block-analytics';
 

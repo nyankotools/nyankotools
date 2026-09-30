@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import { tools } from '../src/data/tools';
 
 // トップページ（/）のカテゴリフィルタが、新しい9分類で正しく表示され、

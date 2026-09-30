@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('消費税・割引計算機', () => {
   test('直接アクセスして正しく表示される', async ({ page }) => {

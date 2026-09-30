@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 // サイト機能 Step 0: 先頭に戻る（No.083）・シェア先追加（No.148）・GitHubリンク（No.149）・スキップリンク（No.177）
 

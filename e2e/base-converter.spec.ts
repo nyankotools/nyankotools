@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('進数変換ツール（日本語版）', () => {
   test('直接アクセスして正しく表示され、デフォルトで8bit・-1が4進数それぞれに表示される', async ({

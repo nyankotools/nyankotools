@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test('ダミー画像生成ツール：デフォルト値（600x400）で画像が生成される', async ({
   page,

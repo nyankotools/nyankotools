@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test('住宅ローン繰り上げ返済比較シミュレーション: 日本語版が表示される', async ({
   page,

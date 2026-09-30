@@ -18,6 +18,26 @@ test.describe('ページ先頭に戻るボタン', () => {
     await button.click();
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
     await expect(button).toBeHidden();
+    await expect(page.locator('#main-content')).toBeFocused();
+  });
+
+  test('375px幅でページ末尾のフッターリンクと重ならない', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 700 });
+    await page.goto('/tools/char-counter/');
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    const button = page.locator('#back-to-top');
+    await expect(button).toBeVisible();
+    const b = (await button.boundingBox())!;
+    const links = await page.locator('footer a').all();
+    for (const link of links) {
+      const r = (await link.boundingBox())!;
+      const overlap =
+        r.x < b.x + b.width &&
+        r.x + r.width > b.x &&
+        r.y < b.y + b.height &&
+        r.y + r.height > b.y;
+      expect(overlap).toBe(false);
+    }
   });
 
   test('英語版のラベル', async ({ page }) => {
@@ -38,7 +58,7 @@ test.describe('シェア先の追加', () => {
     const hrefs = await links.evaluateAll((els) =>
       els.map((el) => (el as HTMLAnchorElement).href),
     );
-    const threads = hrefs.find((h) => h.startsWith('https://www.threads.net/'));
+    const threads = hrefs.find((h) => h.startsWith('https://www.threads.com/'));
     const bluesky = hrefs.find((h) => h.startsWith('https://bsky.app/'));
     const reddit = hrefs.find((h) => h.startsWith('https://www.reddit.com/'));
     for (const href of [threads, bluesky, reddit]) {

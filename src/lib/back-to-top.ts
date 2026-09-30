@@ -29,6 +29,8 @@ export function initBackToTop(): void {
     const reduce = window.matchMedia(
       '(prefers-reduced-motion: reduce)',
     ).matches;
-    window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+    window.scrollTo({ top: 0, behavior: reduce ? 'instant' : 'smooth' });
+    // 先頭へ戻るとボタンは隠れるため、フォーカスが失われないよう本文へ移す
+    document.getElementById('main-content')?.focus({ preventScroll: true });
   });
 }

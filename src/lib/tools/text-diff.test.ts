@@ -155,3 +155,22 @@ describe('diffLines（巨大な変更）', () => {
     });
   });
 });
+
+describe('diffLines（LCS表が大きすぎる場合）', () => {
+  it('数万行同士で全行が違っても例外にならず、全行削除＋全行追加になる', () => {
+    const make = (p: string) =>
+      Array.from({ length: 40_000 }, (_, i) => `${p}${i}`).join('\n');
+    const result = diffLines(make('L'), make('R'));
+    expect(getDiffStats(result)).toEqual({
+      added: 40_000,
+      removed: 40_000,
+      equal: 0,
+    });
+    expect(result[0]).toEqual({
+      type: 'removed',
+      text: 'L0',
+      leftLine: 1,
+      rightLine: null,
+    });
+  });
+});

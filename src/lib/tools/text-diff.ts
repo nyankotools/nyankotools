@@ -18,6 +18,12 @@ export interface DiffStats {
   equal: number;
 }
 
+/**
+ * LCS表の最大セル数（Int32Array で約240MB）。超える比較は最小差分を諦める。
+ * 数千行×数千行までは最小差分、それ以上で先頭・末尾以外がほぼ全部違う場合だけ該当する。
+ */
+const MAX_LCS_CELLS = 60_000_000;
+
 function normalizeLine(line: string, options: DiffOptions): string {
   let normalized = line;
   if (options.ignoreWhitespace) {
@@ -43,18 +49,6 @@ function lcsDiff(
 ): DiffLine[] {
   const n = a.length;
   const m = b.length;
-  const width = m + 1;
-  // 巨大な入力でも配列の配列を作らず、1本の型付き配列で持つ
-  const dp = new Int32Array((n + 1) * width);
-  for (let i = n - 1; i >= 0; i--) {
-    for (let j = m - 1; j >= 0; j--) {
-      dp[i * width + j] =
-        na[i] === nb[j]
-          ? dp[(i + 1) * width + j + 1] + 1
-          : Math.max(dp[(i + 1) * width + j], dp[i * width + j + 1]);
-    }
-  }
-
   const removed = (i: number): DiffLine => ({
     type: 'removed',
     text: a[i],
@@ -67,6 +61,25 @@ function lcsDiff(
     leftLine: null,
     rightLine: j + 1 + offsetB,
   });
+
+  // LCS表が大きすぎる（メモリ確保に失敗する）比較は、最小差分を諦めて「全行削除→全行追加」にする
+  if ((n + 1) * (m + 1) > MAX_LCS_CELLS) {
+    const all: DiffLine[] = [];
+    for (let i = 0; i < n; i++) all.push(removed(i));
+    for (let j = 0; j < m; j++) all.push(added(j));
+    return all;
+  }
+  const width = m + 1;
+  // 巨大な入力でも配列の配列を作らず、1本の型付き配列で持つ
+  const dp = new Int32Array((n + 1) * width);
+  for (let i = n - 1; i >= 0; i--) {
+    for (let j = m - 1; j >= 0; j--) {
+      dp[i * width + j] =
+        na[i] === nb[j]
+          ? dp[(i + 1) * width + j + 1] + 1
+          : Math.max(dp[(i + 1) * width + j], dp[i * width + j + 1]);
+    }
+  }
 
   const result: DiffLine[] = [];
   let i = 0;

@@ -281,3 +281,54 @@ test.describe('入力状態の保持（レビュー再指摘）', () => {
     expect(flag).toBeNull();
   });
 });
+
+test.describe('入力状態の保持（QA再指摘）', () => {
+  test('最後に打った値が既定値と同じでも、復元後にその値のまま（px-rem 基準14・px16）', async ({
+    page,
+  }) => {
+    await page.goto('/tools/px-rem-converter/');
+    await page.locator('#px-rem-base-input').fill('14');
+    await page.locator('#px-rem-px-input').fill('16');
+    await page.waitForTimeout(500);
+    await page.reload();
+    await expect(page.locator('#px-rem-px-input')).toHaveValue('16');
+  });
+
+  test('OSがダークでも、印刷ではフォーム部品がライトの配色になる', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ colorScheme: 'dark' });
+    const page = await context.newPage();
+    await page.goto('/tools/tax-calculator/');
+    await page.emulateMedia({ media: 'print' });
+    const scheme = await page.evaluate(
+      () => getComputedStyle(document.documentElement).colorScheme,
+    );
+    expect(scheme).toBe('light');
+    await context.close();
+  });
+
+  test('トップページのお気に入りボタンは印刷に出ない', async ({ page }) => {
+    await page.goto('/');
+    await page.emulateMedia({ media: 'print' });
+    await expect(page.locator('[data-favorite-toggle]').first()).toBeHidden();
+  });
+
+  test('text-diff: 数万行同士で全行が違ってもエラートーストを出さない', async ({
+    page,
+  }) => {
+    await page.goto('/tools/text-diff/');
+    await page.evaluate(() => {
+      const [a, b] = document.querySelectorAll<HTMLTextAreaElement>(
+        '[data-tool-page] textarea',
+      );
+      const gen = (p: string) =>
+        Array.from({ length: 40000 }, (_, i) => p + i).join('\n');
+      a.value = gen('L');
+      b.value = gen('R');
+      a.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    await expect(page.locator('#error-toast')).toBeHidden();
+    await expect(page.locator('main')).toContainText('40000');
+  });
+});

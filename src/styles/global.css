@@ -86,6 +86,11 @@
  * ダークテーマの印刷は、印刷中だけ `dark` クラスを外す（src/lib/print.ts）。
  */
 @media print {
+  /* ラジオ・チェックボックスなどの標準部品も、OSがダークテーマでも印刷ではライトの配色にする */
+  :root {
+    color-scheme: light;
+  }
+
   body {
     background: #fff;
     color: #000;

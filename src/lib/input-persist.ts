@@ -170,7 +170,8 @@ export function initInputPersist(): void {
     for (const el of fields()) {
       const k = fieldKey(el)!;
       const value = readValue(el);
-      if (value === initial.get(k)) continue;
+      // 最後に操作した欄は、既定値と同じでも保存する（連動欄の逆算で値が変わらないように）
+      if (value === initial.get(k) && k !== lastEdited) continue;
       if (value.length > MAX_PERSIST_LENGTH) {
         // 一部の欄だけ欠けると、連動する欄と食い違った状態で復元されるため、全体を保存しない
         removeSaved();

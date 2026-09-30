@@ -18,6 +18,25 @@ test.describe('404ページの言語切替', () => {
     }
   });
 
+  // 英語URL用の付け替えスクリプトが、日本語URLや /en で始まるだけのURLで動かないことを確認する
+  for (const path of ['/no-such-page/', '/enfoo/']) {
+    test(`${path}: デスクトップのサイドバーは日本語が現在の言語のまま`, async ({
+      page,
+    }) => {
+      await page.goto(path);
+
+      const group = page.locator('[data-lang-switch-desktop]');
+      await expect(group.locator('a[hreflang="ja"]')).toHaveAttribute(
+        'aria-current',
+        'true',
+      );
+      await expect(group.locator('a[hreflang="en"]')).not.toHaveAttribute(
+        'aria-current',
+        'true',
+      );
+    });
+  }
+
   test('英語URL: デスクトップのサイドバーで英語が現在の言語になる', async ({
     page,
   }) => {

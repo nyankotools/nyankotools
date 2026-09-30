@@ -63,12 +63,9 @@ describe('i18n 本文の内部リンク', () => {
   });
 
   it('ja は /en/ 以外、en は /en/ 配下のリンクだけを含む', () => {
+    const isEnPath = (href: string) => /^\/en(?:[/?#]|$)/.test(href);
     const bad = internal
-      .filter((f) =>
-        f.locale === 'ja'
-          ? f.href.startsWith('/en/') || f.href === '/en'
-          : !(f.href.startsWith('/en/') || f.href === '/en'),
-      )
+      .filter((f) => (f.locale === 'ja' ? isEnPath(f.href) : !isEnPath(f.href)))
       .map((f) => `${f.file} [${f.locale}] ${f.href}`);
     expect(bad).toEqual([]);
   });

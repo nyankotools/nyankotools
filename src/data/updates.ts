@@ -233,6 +233,19 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-09-30',
+    translations: {
+      ja: {
+        summary:
+          'コマンドパレット（Ctrl+K）によるツール検索、キーボードショートカット、「🔒 ブラウザ内完結」バッジ、カテゴリ別一覧ページ、URLクエリでの入力初期値の指定、入力内容の保持（更新・言語切替後も維持）、ページ先頭に戻るボタン、シェア先の追加（Threads・Bluesky・Reddit）、印刷用表示、スキップリンクなどのアクセシビリティ改善を追加しました。各ツールページにも、よくある質問（FAQ）・注意事項・使い方の解説を拡充しています。',
+      },
+      en: {
+        summary:
+          'Added a command palette (Ctrl+K) for finding tools, keyboard shortcuts, a "🔒 Runs in your browser" badge, category listing pages, pre-filling inputs via URL query, input persistence across reloads and language switches, a back-to-top button, more share targets (Threads, Bluesky, Reddit), print-friendly layouts, and accessibility improvements such as a skip link. Tool pages also gained expanded FAQs, notes, and how-to guides.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

@@ -18,6 +18,8 @@ interface Props {
   description: string;
   ogImage?: string;
   noindex?: boolean;
+  /** 言語切替リンクの先を各言語のトップページにする（対応する別言語ページが存在しない404用） */
+  languageSwitchToHome?: boolean;
 }
 
 const {
@@ -25,6 +27,7 @@ const {
   description,
   ogImage = 'https://nyankotools.com/ogp.png',
   noindex = false,
+  languageSwitchToHome = false,
 } = Astro.props;
 
 const lang: Locale = Astro.currentLocale === 'en' ? 'en' : 'ja';
@@ -33,12 +36,22 @@ const localizedTools = getLocalizedTools(lang);
 const toolsByCategory = groupByCategory(localizedTools);
 
 const pathname = Astro.url.pathname;
-const alternatePath = getAlternatePath(pathname, lang);
+const alternatePath = languageSwitchToHome
+  ? lang === 'ja'
+    ? '/en/'
+    : '/'
+  : getAlternatePath(pathname, lang);
 const alternateLang: Locale = lang === 'ja' ? 'en' : 'ja';
 
 const canonicalURL = new URL(pathname, Astro.site);
-const jaURL = new URL(lang === 'ja' ? pathname : alternatePath, Astro.site);
-const enURL = new URL(lang === 'en' ? pathname : alternatePath, Astro.site);
+const jaURL = new URL(
+  languageSwitchToHome ? '/' : lang === 'ja' ? pathname : alternatePath,
+  Astro.site,
+);
+const enURL = new URL(
+  languageSwitchToHome ? '/en/' : lang === 'en' ? pathname : alternatePath,
+  Astro.site,
+);
 
 const siteName = t('site.name');
 const fullTitle = `${title} | ${siteName}`;
@@ -214,6 +227,7 @@ const jsonLd: Record<string, unknown> | null = noindex
           <a
             href={alternatePath}
             hreflang={alternateLang}
+            data-lang-switch-mobile
             aria-label={t('nav.language')}
             class="rounded px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
           >

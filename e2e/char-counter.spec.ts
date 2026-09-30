@@ -81,14 +81,18 @@ test('関連ツールセクションに他ツールへのリンクが表示さ�
     { href: '/tools/unix-timestamp/', name: 'Unixタイムスタンプ変換' },
   ];
 
+  // 導線文にも同名リンクがあるため、関連ツールのリスト内に範囲を絞る
+  const relatedList = page.locator('main ul').filter({
+    has: page.getByRole('link', { name: '全角/半角変換', exact: true }),
+  });
+
   for (const { href, name } of relatedLinks) {
     await expect(
-      page.locator('main').getByRole('link', { name, exact: true }),
+      relatedList.getByRole('link', { name, exact: true }),
     ).toHaveAttribute('href', href);
   }
 
-  await page
-    .locator('main')
+  await relatedList
     .getByRole('link', { name: '全角/半角変換', exact: true })
     .click();
 

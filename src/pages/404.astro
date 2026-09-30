@@ -6,6 +6,7 @@ import Layout from '../layouts/Layout.astro';
   title="ページが見つかりません"
   description="お探しのページは見つかりませんでした。"
   noindex
+  languageSwitchToHome
 >
   <div id="404-ja">
     <h1 class="mb-2 text-2xl font-bold">404 - ページが見つかりません</h1>
@@ -36,5 +37,14 @@ import Layout from '../layouts/Layout.astro';
     document.title = '404 - Page Not Found | NyankoTools';
     document.getElementById('404-ja')?.setAttribute('hidden', '');
     document.getElementById('404-en')?.removeAttribute('hidden');
+    // モバイルヘッダーの言語切替は日本語ビルド前提（EN→/en/）なので、英語URLでは日本語トップへ向ける
+    const mobileSwitch = document.querySelector<HTMLAnchorElement>(
+      '[data-lang-switch-mobile]',
+    );
+    if (mobileSwitch) {
+      mobileSwitch.href = '/';
+      mobileSwitch.hreflang = 'ja';
+      mobileSwitch.textContent = '日本語';
+    }
   }
 </script>

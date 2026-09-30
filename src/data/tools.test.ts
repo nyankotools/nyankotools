@@ -114,7 +114,9 @@ describe('tools registry - keywords', () => {
     for (const t of tools) {
       for (const locale of ['ja', 'en'] as const) {
         const list = t.translations[locale].keywords;
-        const lowered = list.map((k) => k.trim().toLowerCase());
+        const lowered = list.map((k) =>
+          k.trim().normalize('NFKC').toLowerCase(),
+        );
         const id = `${t.slug}/${locale}`;
         if (list.length < 2 || list.length > 8)
           problems.push(`${id}: ${list.length}件`);
@@ -136,12 +138,24 @@ describe('tools registry - flags', () => {
     expect(invalid).toEqual([]);
   });
 
-  it('パスワード・トークンを扱うツールは sensitive である', () => {
+  it('秘密情報・個人情報を扱うツールと、データ貼り付け系・画像系は sensitive である', () => {
     for (const slug of [
       'password-generator',
       'jwt-decoder',
       'hash-generator',
       'base64',
+      'json-formatter',
+      'text-diff',
+      'csv-json-converter',
+      'yaml-json-converter',
+      'toml-converter',
+      'url-encode',
+      'json-path-tester',
+      'image-converter',
+      'image-resizer',
+      'image-to-base64',
+      'image-pixelart-converter',
+      'image-palette-extractor',
     ]) {
       expect(tools.find((t) => t.slug === slug)?.sensitive, slug).toBe(true);
     }

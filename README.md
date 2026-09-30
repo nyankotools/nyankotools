@@ -86,7 +86,7 @@ pnpm run test:e2e:ui  # Playwright E2E（UIモード）
 
 ```
 src/
-  data/tools.ts              # ツールレジストリ（ja/en の name/description/category）
+  data/tools.ts              # ツールレジストリ（slug・category ID・日付・related・フラグ、ja/en の name/description/keywords）
   i18n/
     ui.ts                    # サイト共通UI文言（サイドバー・フッター等）
     tools/<slug>.ts          # ツールページ専用の文言辞書（ja/en）

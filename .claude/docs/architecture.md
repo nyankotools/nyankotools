@@ -19,7 +19,7 @@ On the Cloudflare side, `wrangler.jsonc` sets `pnpm build` as `build.command` an
 ```
 src/
   data/
-    tools.ts          # Tool registry ({ slug, translations: { ja, en } })
+    tools.ts          # Tool registry ({ slug, category, addedAt, updatedAt, related, flags, translations })
   i18n/
     ui.ts             # Site-wide UI copy (ui.ja / ui.en)
     tools/<slug>.ts   # Per-tool page copy (Record<Locale, XxxContent>)

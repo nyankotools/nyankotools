@@ -48,6 +48,7 @@ export interface Tool {
   related: string[];
   /**
    * 秘密情報・個人情報（写真・書類を含む）・健康・収入を入力として扱う。
+   * 任意のデータを貼り付ける変換・整形系（JSON/YAML/CSV/URL など）も対象。
    * URLクエリ初期値・入力状態の保持の対象外にする。迷ったら付ける側に倒す。
    */
   sensitive?: boolean;
@@ -196,6 +197,7 @@ export const tools: Tool[] = [
     addedAt: '2026-09-15',
     updatedAt: '2026-09-15',
     related: ['json-formatter', 'toml-converter', 'csv-json-converter'],
+    sensitive: true,
     translations: {
       ja: {
         name: 'YAML⇔JSON変換',
@@ -231,6 +233,7 @@ export const tools: Tool[] = [
     addedAt: '2026-09-15',
     updatedAt: '2026-09-15',
     related: ['json-formatter', 'yaml-json-converter', 'text-list-tools'],
+    sensitive: true,
     translations: {
       ja: {
         name: 'CSV⇔JSON変換',
@@ -252,6 +255,7 @@ export const tools: Tool[] = [
     addedAt: '2026-09-17',
     updatedAt: '2026-09-17',
     related: ['yaml-json-converter', 'json-formatter', 'csv-json-converter'],
+    sensitive: true,
     translations: {
       ja: {
         name: 'TOML⇔JSON/YAML変換',
@@ -382,6 +386,7 @@ export const tools: Tool[] = [
     addedAt: '2026-09-15',
     updatedAt: '2026-09-15',
     related: ['base64', 'html-escape', 'encoding-converter'],
+    sensitive: true,
     translations: {
       ja: {
         name: 'URLエンコード/デコード',
@@ -1315,6 +1320,7 @@ export const tools: Tool[] = [
     addedAt: '2026-09-17',
     updatedAt: '2026-09-17',
     related: ['json-formatter', 'yaml-json-converter', 'regex-tester'],
+    sensitive: true,
     translations: {
       ja: {
         name: 'JSON Path / JSON Pointerテスター',

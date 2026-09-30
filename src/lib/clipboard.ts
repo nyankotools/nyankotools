@@ -4,9 +4,12 @@ import { trackEvent } from './analytics';
  * テキストをクリップボードへコピーする。成功したら true。
  * Clipboard API が使えない環境（非セキュアコンテキスト等）では
  * 一時的な textarea と execCommand('copy') にフォールバックする。
- * 成功時は計測イベント `copy` を送る（内容は送らない）。
+ * 成功時は計測イベント `copy` を送る（内容は送らない。共有URLのコピーなど結果以外は `track: false`）。
  */
-export async function copyText(text: string): Promise<boolean> {
+export async function copyText(
+  text: string,
+  options: { track?: boolean } = {},
+): Promise<boolean> {
   let ok: boolean;
   try {
     await navigator.clipboard.writeText(text);
@@ -14,7 +17,7 @@ export async function copyText(text: string): Promise<boolean> {
   } catch {
     ok = legacyCopy(text);
   }
-  if (ok) trackEvent('copy');
+  if (ok && options.track !== false) trackEvent('copy');
   return ok;
 }
 

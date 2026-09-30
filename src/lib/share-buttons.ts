@@ -27,7 +27,7 @@ export function initShareButtons(): void {
         container.querySelector<HTMLButtonElement>('[data-share-copy]');
       copyButton?.addEventListener('click', async () => {
         if (!statusEl) return;
-        statusEl.textContent = (await copyText(shareUrl))
+        statusEl.textContent = (await copyText(shareUrl, { track: false }))
           ? (copyButton.dataset.copiedText ?? '')
           : (copyButton.dataset.copyFailedText ?? '');
       });

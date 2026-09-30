@@ -21,7 +21,15 @@ const fill = (template: string) =>
     .replace('{count}', String(current.tools.length));
 
 const prefix = locale === 'en' ? '/en' : '';
-const title = fill(t('category.title'));
+// 英語ラベルが動詞（Calculate / Generate）のカテゴリは、「〜 Tools」が不自然にならない名詞形にする
+const enTitleLabel: Partial<Record<CategoryId, string>> = {
+  calc: 'Calculator',
+  generate: 'Generator',
+};
+const title = fill(t('category.title')).replace(
+  current.label,
+  locale === 'en' ? (enTitleLabel[category] ?? current.label) : current.label,
+);
 ---
 
 <Layout title={title} description={fill(t('category.description'))}>

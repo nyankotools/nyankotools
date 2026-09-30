@@ -1,7 +1,10 @@
-/** `/tools/<slug>/` `/en/tools/<slug>/` からツールのslugを取り出す（それ以外は null） */
-export function getToolSlug(pathname: string): string | null {
-  const match = pathname.match(/^\/(?:en\/)?tools\/([^/]+)\/?$/);
-  return match ? match[1] : null;
+/** ツールページなら、Layout が付ける `data-tool-slug` からslugを取り出す（それ以外は null） */
+export function getToolSlug(): string | null {
+  if (typeof document === 'undefined') return null;
+  return (
+    document.querySelector<HTMLElement>('[data-tool-slug]')?.dataset.toolSlug ??
+    null
+  );
 }
 
 type Gtag = (command: 'event', name: string, params: object) => void;
@@ -18,7 +21,7 @@ export function trackEvent(
   try {
     const gtag = (window as unknown as { gtag?: Gtag }).gtag;
     if (typeof gtag !== 'function') return;
-    const tool = getToolSlug(window.location.pathname);
+    const tool = getToolSlug();
     gtag('event', name, tool ? { tool, ...params } : params);
   } catch {
     // 計測の失敗でツール本体の動作を止めない

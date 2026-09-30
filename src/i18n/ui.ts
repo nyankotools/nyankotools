@@ -49,7 +49,8 @@ export const ui = {
     'palette.placeholder': 'ツール名・キーワードで検索',
     'palette.empty': '該当するツールがありません',
     'palette.hint.nav': '↑↓ 選択　Enter 開く　Esc 閉じる',
-    'palette.hint.tool': 'このページ: Ctrl/⌘+Enter 実行　Alt+Shift+C コピー',
+    'palette.hint.run': 'Ctrl/⌘+Enter 実行',
+    'palette.hint.copy': 'Alt+Shift+C コピー',
     'error.toast':
       '予期しないエラーが発生しました。ページを再読み込みして、もう一度お試しください。',
     'error.close': '閉じる',
@@ -111,15 +112,16 @@ export const ui = {
     'palette.placeholder': 'Search by tool name or keyword',
     'palette.empty': 'No matching tools',
     'palette.hint.nav': '↑↓ Select  Enter Open  Esc Close',
-    'palette.hint.tool': 'This page: Ctrl/⌘+Enter Run  Alt+Shift+C Copy',
+    'palette.hint.run': 'Ctrl/⌘+Enter Run',
+    'palette.hint.copy': 'Alt+Shift+C Copy',
     'error.toast':
       'An unexpected error occurred. Please reload the page and try again.',
     'error.close': 'Close',
     'category.title': '{category} Tools',
     'category.description':
-      'All {count} free {category} tools in one place. Everything runs in your browser, with no sign-up.',
+      'Free {category} tools that run entirely in your browser, with no sign-up.',
     'category.lead':
-      '{count} {category} tools, collected in one list. Nothing you enter is sent to a server; it is all processed in your browser.',
+      'A list of our {category} tools. Nothing you enter is sent to a server; it is all processed in your browser.',
     'category.others': 'Other categories',
     'category.viewAll': 'Browse by category',
     'home.title': '🐾 NyankoTools',

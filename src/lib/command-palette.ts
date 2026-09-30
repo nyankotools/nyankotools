@@ -44,6 +44,11 @@ export function initCommandPalette(): void {
   const empty = document.getElementById('palette-empty');
   if (!dialog || !input || !list || !empty) return;
 
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
+  document.querySelectorAll('[data-palette-kbd]').forEach((el) => {
+    el.textContent = isMac ? '⌘ K' : 'Ctrl K';
+  });
+
   const locale = document.documentElement.lang === 'en' ? 'en' : 'ja';
   const tools = getLocalizedTools(locale);
   const prefix = locale === 'en' ? '/en/tools/' : '/tools/';
@@ -100,7 +105,7 @@ export function initCommandPalette(): void {
   document.addEventListener('keydown', (event) => {
     if (
       event.key.toLowerCase() === 'k' &&
-      (event.ctrlKey || event.metaKey) &&
+      (isMac ? event.metaKey : event.ctrlKey) &&
       !event.altKey &&
       !event.shiftKey &&
       !event.isComposing
@@ -117,10 +122,13 @@ export function initCommandPalette(): void {
 
   input.addEventListener('input', render);
   input.addEventListener('keydown', (event) => {
-    if (event.isComposing) return;
+    // Safari は変換確定の Enter/Esc で isComposing が false になり keyCode が 229 になる
+    if (event.isComposing || event.keyCode === 229) return;
     if (event.key === 'Escape') {
-      // type="search" は Esc で入力欄のクリアを先に行うため、1回で閉じるよう自前で閉じる
+      // type="search" は Esc で入力欄のクリアを先に行うため、1回で閉じるよう自前で閉じる。
+      // サイドバーの Esc ハンドラ（ドロワーを閉じる）へは伝えない
       event.preventDefault();
+      event.stopPropagation();
       dialog.close();
     } else if (event.key === 'ArrowDown') {
       event.preventDefault();

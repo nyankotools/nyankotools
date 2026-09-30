@@ -26,7 +26,8 @@ src/
   layouts/
     Layout.astro       # <head> and sidebar shared by all pages
   components/
-    ToolShell.astro    # Tool page skeleton (Layout + h1/intro/HowTo/Notes/Glossary)
+    ToolShell.astro    # Tool page skeleton (Layout + h1/intro/badge/HowTo/Notes/Glossary)
+    CategoryPage.astro # Category landing page (/tools/category/<id>/, ja/en)
     tool-pages/
       <Slug>Page.astro  # Shared per-tool page (markup + <script>), takes a locale prop
   lib/
@@ -35,6 +36,11 @@ src/
     clipboard.ts        # copyText (Clipboard API + execCommand fallback)
     download.ts         # downloadBlob (click-to-save download)
     file-drop.ts        # enableFileDrop (drag & drop onto a file input)
+    analytics.ts        # trackEvent (GA4 copy/download/exception; tool slug only, never user input)
+    error-boundary.ts   # Error toast + GA4 exception for uncaught errors
+    shortcuts.ts        # Ctrl/Cmd+Enter (run), Alt+Shift+C (copy)
+    command-palette.ts  # Ctrl/Cmd+K tool search dialog (rankTools + init)
+    query-init.ts       # ?text= initial value for opted-in (data-query-target) non-sensitive tools
   pages/
     index.astro         # Homepage (tool grid)
     404.astro

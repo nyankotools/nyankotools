@@ -33,13 +33,18 @@ const MAX_REPORTS = 3;
 export function initErrorBoundary(): void {
   const toast = document.getElementById('error-toast');
   let reports = 0;
+  let dismissed = false;
 
   document
     .getElementById('error-toast-close')
-    ?.addEventListener('click', () => toast?.setAttribute('hidden', ''));
+    ?.addEventListener('click', () => {
+      dismissed = true;
+      toast?.setAttribute('hidden', '');
+    });
 
   function report(name: string, filename?: string, line?: number): void {
-    toast?.removeAttribute('hidden');
+    // 閉じた後は、エラーが続いても同じページでは再表示しない
+    if (!dismissed) toast?.removeAttribute('hidden');
     if (reports >= MAX_REPORTS) return;
     reports += 1;
     trackEvent('exception', {
@@ -55,7 +60,13 @@ export function initErrorBoundary(): void {
 
   window.addEventListener('unhandledrejection', (event) => {
     const reason: unknown = event.reason;
-    const name = reason instanceof Error ? reason.name : 'UnhandledRejection';
-    report(name);
+    // 拡張機能などページ外が原因の拒否で誤通知しないよう、自サイトのスクリプト由来と分かるものだけ扱う
+    if (
+      !(reason instanceof Error) ||
+      !reason.stack?.includes(location.origin)
+    ) {
+      return;
+    }
+    report(reason.name);
   });
 }

@@ -8,6 +8,7 @@ interface KeyLike {
   altKey: boolean;
   shiftKey: boolean;
   isComposing?: boolean;
+  keyCode?: number;
 }
 
 /**
@@ -17,7 +18,8 @@ interface KeyLike {
  * Esc でのクリアは、入力の消失事故とダイアログ・サイドバーのEscとの衝突を避けるため設けない。
  */
 export function matchShortcut(e: KeyLike): ShortcutAction | null {
-  if (e.isComposing) return null;
+  // Safari は変換確定の Enter で isComposing が false になり keyCode が 229 になる
+  if (e.isComposing || e.keyCode === 229) return null;
   if (
     e.key === 'Enter' &&
     (e.ctrlKey || e.metaKey) &&
@@ -45,6 +47,14 @@ function isUsable(el: HTMLButtonElement): boolean {
 export function initShortcuts(): void {
   const container = document.querySelector<HTMLElement>('[data-tool-slug]');
   if (!container) return;
+
+  // パレットの案内には、このページで実際に効くショートカットだけを出す
+  const hint = document.getElementById('palette-tool-hint');
+  (['run', 'copy'] as const).forEach((action) => {
+    if (!container.querySelector(TARGET_SELECTORS[action])) return;
+    hint?.removeAttribute('hidden');
+    hint?.querySelector(`[data-hint-${action}]`)?.removeAttribute('hidden');
+  });
 
   document.addEventListener('keydown', (event) => {
     const action = matchShortcut(event);

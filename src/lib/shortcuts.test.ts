@@ -47,6 +47,12 @@ describe('matchShortcut', () => {
     ).toBeNull();
   });
 
+  it('Safari の変換確定（keyCode 229）は無視する', () => {
+    expect(
+      matchShortcut({ ...base, key: 'Enter', ctrlKey: true, keyCode: 229 }),
+    ).toBeNull();
+  });
+
   it('IME 変換中は無視する', () => {
     expect(
       matchShortcut({

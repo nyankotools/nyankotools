@@ -93,6 +93,19 @@ test.describe('URLクエリ初期値', () => {
     await expect(page.locator('#char-counter-input')).toHaveValue('あい');
   });
 
+  test('読み込み後はURLからクエリが消える', async ({ page }) => {
+    await page.goto('/tools/char-counter/?text=hello');
+    await expect(page.locator('#char-counter-input')).toHaveValue('hello');
+    await expect(page).toHaveURL(/\/tools\/char-counter\/$/);
+  });
+
+  test('入力をHTMLとして描画するツール（markdown-preview）では無視する', async ({
+    page,
+  }) => {
+    await page.goto('/tools/markdown-preview/?text=%3Cb%3Ex%3C%2Fb%3E');
+    await expect(page.locator('#markdown-preview-input')).toHaveValue('');
+  });
+
   test('機微ツール（base64）ではクエリを無視する', async ({ page }) => {
     await page.goto('/tools/base64/?text=secret');
     await expect(page.locator('textarea').first()).toHaveValue('');
@@ -133,14 +146,34 @@ test.describe('カテゴリ別ランディングページ', () => {
 });
 
 test.describe('エラー境界', () => {
-  test('未処理のPromise拒否で通知が出て、閉じられる', async ({ page }) => {
+  test('自サイトのスクリプト由来の未処理Promise拒否で通知が出て、閉じたら再表示しない', async ({
+    page,
+  }) => {
+    await page.route('**/boom.js*', (route) =>
+      route.fulfill({
+        contentType: 'application/javascript',
+        body: 'Promise.reject(new Error("boom"));',
+      }),
+    );
     await page.goto('/tools/char-counter/');
     await expect(page.locator('#error-toast')).toBeHidden();
-    await page.evaluate(() => {
-      void Promise.reject(new Error('boom'));
-    });
+    await page.addScriptTag({ url: '/boom.js' });
     await expect(page.locator('#error-toast')).toBeVisible();
     await page.locator('#error-toast-close').click();
+    await expect(page.locator('#error-toast')).toBeHidden();
+    await page.addScriptTag({ url: '/boom.js?again' });
+    await page.waitForTimeout(300);
+    await expect(page.locator('#error-toast')).toBeHidden();
+  });
+
+  test('ページ外（拡張機能など）由来と分かる拒否では通知しない', async ({
+    page,
+  }) => {
+    await page.goto('/tools/char-counter/');
+    await page.evaluate(() => {
+      void Promise.reject(new Error('from extension'));
+    });
+    await page.waitForTimeout(300);
     await expect(page.locator('#error-toast')).toBeHidden();
   });
 });

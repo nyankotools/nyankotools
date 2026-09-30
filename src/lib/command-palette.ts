@@ -30,7 +30,7 @@ export function rankTools(
 }
 
 const OPTION_CLASS =
-  'flex cursor-pointer items-baseline justify-between gap-3 rounded px-3 py-2 text-sm aria-selected:bg-blue-50 aria-selected:text-blue-700 dark:aria-selected:bg-blue-950/40 dark:aria-selected:text-blue-400';
+  'flex cursor-pointer items-baseline justify-between gap-3 min-h-11 rounded px-3 py-2 text-sm aria-selected:bg-blue-50 aria-selected:text-blue-700 dark:aria-selected:bg-blue-950/40 dark:aria-selected:text-blue-400';
 
 /** Ctrl+K / ⌘+K でツール検索ダイアログを開閉する */
 export function initCommandPalette(): void {
@@ -136,7 +136,12 @@ export function initCommandPalette(): void {
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
       select(active - 1);
-    } else if (event.key === 'Enter') {
+    } else if (
+      event.key === 'Enter' &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.altKey
+    ) {
       event.preventDefault();
       const current = results[active];
       if (current) window.location.href = `${prefix}${current.slug}/`;

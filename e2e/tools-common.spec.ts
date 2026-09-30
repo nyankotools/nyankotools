@@ -51,6 +51,16 @@ for (const { locale, prefix } of locales) {
         expect(hasHorizontalOverflow).toBe(false);
       });
 
+      test(`${tool.slug}: フッターがmainの最後の子で、ツール本体より下にある`, async ({
+        page,
+      }) => {
+        await page.goto(toolPath);
+        await expect(page.locator('main > *').last()).toHaveJSProperty(
+          'tagName',
+          'FOOTER',
+        );
+      });
+
       test(`${tool.slug}: サイドバーからツールページへ遷移できる`, async ({
         page,
       }) => {

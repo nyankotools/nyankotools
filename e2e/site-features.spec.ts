@@ -236,3 +236,68 @@ test.describe('GA4 グローバル gtag', () => {
     expect(info.config).not.toContain('text=hi');
   });
 });
+
+test.describe('コマンドパレット（追加）', () => {
+  test('パレット表示中の Ctrl+Enter では遷移もツールの実行もしない', async ({
+    page,
+  }) => {
+    await page.goto('/tools/uuid-generator/');
+    const before = await page.locator('#uuid-generator-output').inputValue();
+    await page.keyboard.press('Control+k');
+    await page.keyboard.press('Control+Enter');
+    await page.waitForTimeout(300);
+    await expect(page).toHaveURL(/\/tools\/uuid-generator\/$/);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#uuid-generator-output')).toHaveValue(before);
+  });
+
+  test('候補のタップ領域が44px以上ある（375px）', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.goto('/');
+    await page.locator('[data-palette-open]').evaluate((el) => {
+      (el as HTMLElement).click();
+    });
+    const h = await page
+      .locator('#palette-list [role=option]')
+      .first()
+      .evaluate((el) => el.getBoundingClientRect().height);
+    expect(h).toBeGreaterThanOrEqual(44);
+  });
+});
+
+test.describe('URLクエリ（全対象ツール）', () => {
+  const targets: Record<string, string> = {
+    'char-counter': '#char-counter-input',
+    'zenkaku-hankaku': '#zenkaku-hankaku-input',
+    'kana-converter': '#kana-converter-input',
+    'html-escape': '#html-escape-input',
+    'line-ending-converter': '#lec-input',
+    'text-case-converter': '#text-case-input',
+    'text-list-tools': '#tlt-input',
+    'qr-generator': '#qr-generator-input',
+    'kishu-izon-checker': '#kishu-izon-input',
+  };
+  for (const [slug, sel] of Object.entries(targets)) {
+    test(`${slug}: 反映・HTMLとして解釈しない・5001文字は無視・textだけ消す`, async ({
+      page,
+    }) => {
+      const xss = '<img src=x onerror=alert(1)>';
+      await page.goto(
+        `/tools/${slug}/?text=${encodeURIComponent(xss)}&utm_source=x#h`,
+      );
+      await expect(page.locator(sel)).toHaveValue(xss);
+      expect(new URL(page.url()).search).toBe('?utm_source=x');
+      expect(new URL(page.url()).hash).toBe('#h');
+      await page.goto(`/tools/${slug}/?text=${'a'.repeat(5001)}`);
+      await expect(page.locator(sel)).toHaveValue('');
+      expect(new URL(page.url()).search).toBe('');
+    });
+  }
+
+  for (const path of ['/', '/tools/category/text/', '/about/']) {
+    test(`ツール以外のページ ${path} でも text が消える`, async ({ page }) => {
+      await page.goto(`${path}?text=secret&utm_source=x`);
+      await expect.poll(() => new URL(page.url()).search).toBe('?utm_source=x');
+    });
+  }
+});

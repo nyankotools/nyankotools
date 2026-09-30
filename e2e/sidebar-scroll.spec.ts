@@ -229,7 +229,7 @@ test.describe('サイドバーのスクロール位置の保存・復元（デ�
   });
 
   test('empty favorites section remains hidden', async ({ page }) => {
-    page.setViewportSize({ width: 1024, height: 768 });
+    await page.setViewportSize({ width: 1024, height: 768 });
 
     // Clear favorite-tools to ensure empty state
     await page.goto('/tools/char-counter/');

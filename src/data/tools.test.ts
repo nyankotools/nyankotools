@@ -156,6 +156,21 @@ describe('tools registry - flags', () => {
       'image-to-base64',
       'image-pixelart-converter',
       'image-palette-extractor',
+      'exif-viewer',
+      'webcam-tester',
+      'age-calculator',
+      'bmi-calculator',
+      'hourly-wage-calculator',
+      'freelance-income-calculator',
+      'mortgage-calculator',
+      'investment-simulator',
+      'scholarship-repayment-simulator',
+      'pdf-merge-split',
+      'pdf-image-converter',
+      'pdf-compressor',
+      'pdf-page-editor',
+      'pdf-password-protector',
+      'pdf-to-markdown',
     ]) {
       expect(tools.find((t) => t.slug === slug)?.sensitive, slug).toBe(true);
     }

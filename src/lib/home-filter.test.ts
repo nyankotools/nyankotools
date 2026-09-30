@@ -68,6 +68,20 @@ describe('filterTools', () => {
     expect(filterTools(tools, { query: 'ＰＲＥＴＴＹ' })).toEqual([tools[1]]);
   });
 
+  it('treats a full-width-space-only query as no filter', () => {
+    expect(filterTools(tools, { query: '　　' })).toEqual(tools);
+  });
+
+  it('treats half-width katakana as full-width', () => {
+    expect(filterTools(tools, { query: 'ｶｳﾝﾄ' })).toEqual([tools[0]]);
+  });
+
+  it('does not throw on regex meta characters in the query', () => {
+    for (const q of ['(', '[', '*', '.*', '\\', '?']) {
+      expect(() => filterTools(tools, { query: q })).not.toThrow();
+    }
+  });
+
   it('returns an empty array when nothing matches', () => {
     expect(filterTools(tools, { query: '存在しない' })).toEqual([]);
   });

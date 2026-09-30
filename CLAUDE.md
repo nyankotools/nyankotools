@@ -35,6 +35,7 @@ Each tool has its own indexable URL (`/tools/<slug>/`, `/en/tools/<slug>/`) for 
 - `main` はブランチ保護されており、直接 push できない。`develop` を push して、`develop` → `main` のPRを作り、PRのCI（`check`）が成功したらマージコミット方式（Create a merge commit）でマージする。squash / rebase は無効。
 - PRがマージされたら、続けて `develop` に切り替え、`git fetch` のうえ `git merge --ff-only origin/main` で `main` に追いつかせ、`develop` も push すること（確認は不要）。最終的に `develop` ブランチにいる状態で終える。
 - ただし PRの作成・マージ（`main` への反映）自体は、これまで通りユーザーの明示的な指示があるときだけ行う。
+- **更新情報（`src/data/updates.ts`、ツールの `updatedAt` など）はデプロイ時点の情報なので、`develop` → `main` のPRを作成する前に作成・反映すること。** 実装やコミットの都度ではなく、PR作成の直前にまとめて更新し、そのコミットを含めた状態でPRを作る。
 
 ## memo更新のルール
 

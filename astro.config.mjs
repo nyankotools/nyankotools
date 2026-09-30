@@ -100,7 +100,7 @@ export default defineConfig({
         'jsonpath-plus',
         'marked',
         'pdf-lib',
-        'pdfjs-dist',
+        'pdfjs-dist/legacy/build/pdf.mjs',
         'prettier/standalone',
         'prettier/plugins/babel',
         'prettier/plugins/estree',

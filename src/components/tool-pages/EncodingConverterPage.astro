@@ -392,7 +392,12 @@ const textareaClass =
       messageEl.hidden = false;
       return;
     }
-    const candidates = diagnoseMojibake(input);
+    let candidates: ReturnType<typeof diagnoseMojibake> = [];
+    try {
+      candidates = diagnoseMojibake(input);
+    } catch {
+      // 想定外の入力でも画面が固まらないよう、候補なしとして扱う
+    }
     if (candidates.length === 0) {
       messageEl.textContent = messageEl.dataset.none ?? '';
       messageEl.hidden = false;

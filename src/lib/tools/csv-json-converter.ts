@@ -145,21 +145,30 @@ function toFailure(error: unknown): ConvertFailure {
 
 export function csvToJson(input: string, delimiter = ','): ConvertOutcome {
   try {
-    const rows = parseCsvRows(input, delimiter);
+    // 空行（空フィールド1つだけの行）は読み飛ばす。エラー表示の行番号は元の行位置のまま保つ
+    const rows = parseCsvRows(input, delimiter)
+      .map((row, index) => ({ row, line: index + 1 }))
+      .filter(({ row }) => !(row.length === 1 && row[0] === ''));
     if (rows.length === 0) {
       return { success: true, output: '[]' };
     }
 
-    const header = rows[0];
+    const header = rows[0].row;
     const dataRows = rows.slice(1);
 
-    const records = dataRows.map((row, index) => {
+    const records = dataRows.map(({ row, line }) => {
       if (row.length !== header.length) {
-        throw new ColumnMismatchError(index + 2, header.length, row.length);
+        throw new ColumnMismatchError(line, header.length, row.length);
       }
+      // "__proto__" 列が黙って消えないよう、代入ではなく定義で追加する
       const record: Record<string, string> = {};
       header.forEach((key, columnIndex) => {
-        record[key] = row[columnIndex];
+        Object.defineProperty(record, key, {
+          value: row[columnIndex],
+          enumerable: true,
+          writable: true,
+          configurable: true,
+        });
       });
       return record;
     });

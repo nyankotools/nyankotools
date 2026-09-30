@@ -2,6 +2,33 @@ import { describe, expect, it } from 'vitest';
 import { csvToJson, jsonToCsv } from './csv-json-converter';
 
 describe('csvToJson', () => {
+  it('末尾や途中の空行は読み飛ばす', () => {
+    const result = csvToJson('a,b\n1,2\n\n3,4\n\n');
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(JSON.parse(result.output)).toEqual([
+        { a: '1', b: '2' },
+        { a: '3', b: '4' },
+      ]);
+    }
+  });
+
+  it('空行を挟んだあとの列数不一致でも、元の行番号を報告する', () => {
+    const result = csvToJson('a,b\n\n1');
+    expect(result.success).toBe(false);
+    if (!result.success && result.reason === 'column-mismatch') {
+      expect(result.line).toBe(3);
+    }
+  });
+
+  it('ヘッダーが __proto__ の列も出力から消えない', () => {
+    const result = csvToJson('__proto__,b\n1,2');
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.output).toContain('"__proto__": "1"');
+    }
+  });
+
   it('シンプルなCSVをJSONに変換する', () => {
     const result = csvToJson('name,age\nTaro,30\nHanako,25');
     expect(result.success).toBe(true);

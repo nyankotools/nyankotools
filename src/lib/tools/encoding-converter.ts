@@ -444,7 +444,8 @@ function encodeAsMisread(
       if (r.unmappable.length > 0) return null;
       part = r.bytes;
     }
-    bytes.push(...part);
+    // 巨大入力でもスタックを溢れさせないよう、スプレッドではなくループで追加する
+    for (let j = 0; j < part.length; j++) bytes.push(part[j]);
   }
   return Uint8Array.from(bytes);
 }

@@ -17,6 +17,8 @@ const slugs = [
   'exif-viewer',
   'curl-converter',
   'file-hash-calculator',
+  'svg-to-png',
+  'ogp-image-generator',
 ];
 
 const locales = [

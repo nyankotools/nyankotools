@@ -256,15 +256,17 @@ export const updates: UpdateEntry[] = [
       'ulid-nanoid-generator',
       'password-strength-checker',
       'file-hash-calculator',
+      'svg-to-png',
+      'ogp-image-generator',
     ],
     translations: {
       ja: {
         summary:
-          'cURL→Fetch/Axios変換、JSON→TypeScript型生成、JSON差分比較、バーコード生成、ULID・NanoID生成、パスワード強度チェッカー、ファイルハッシュ計算を追加しました。',
+          'cURL→Fetch/Axios変換、JSON→TypeScript型生成、JSON差分比較、バーコード生成、ULID・NanoID生成、パスワード強度チェッカー、ファイルハッシュ計算、SVG→PNG変換、OGP画像ジェネレーターを追加しました。',
       },
       en: {
         summary:
-          'Added the cURL to Fetch / Axios Converter, JSON to TypeScript Converter, JSON Diff, Barcode Generator, ULID & NanoID Generator, Password Strength Checker, and File Hash Calculator.',
+          'Added the cURL to Fetch / Axios Converter, JSON to TypeScript Converter, JSON Diff, Barcode Generator, ULID & NanoID Generator, Password Strength Checker, File Hash Calculator, SVG to PNG Converter, and OGP Image Generator.',
       },
     },
   },

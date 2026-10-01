@@ -2339,6 +2339,62 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'svg-to-png',
+    category: 'image',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['svg-optimizer', 'image-converter', 'favicon-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'SVG→PNG変換',
+        keywords: ['SVG', 'PNG', '画像変換', 'ラスター化', '透過', '高解像度'],
+        description:
+          'SVGファイルやSVGコードをPNG画像に変換します。1〜4倍の高解像度出力と、透過・白・任意色の背景に対応しています。',
+      },
+      en: {
+        name: 'SVG to PNG Converter',
+        keywords: ['SVG', 'PNG', 'rasterize', 'convert', 'transparent'],
+        description:
+          'Converts SVG files or code to PNG at 1x to 4x resolution, with a transparent, white, or custom background.',
+      },
+    },
+  },
+  {
+    slug: 'ogp-image-generator',
+    category: 'image',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['meta-tag-generator', 'svg-to-png', 'image-resizer'],
+    translations: {
+      ja: {
+        name: 'OGP画像ジェネレーター',
+        keywords: [
+          'OGP',
+          'OGP画像',
+          'SNS',
+          'サムネイル',
+          'シェア画像',
+          'og:image',
+        ],
+        description:
+          'タイトルとサイト名を入力して、SNSシェア用のOGP画像（1200×630）をPNGで作成します。背景色や文字色も調整できます。',
+      },
+      en: {
+        name: 'OGP Image Generator',
+        keywords: [
+          'OGP',
+          'og:image',
+          'social image',
+          'thumbnail',
+          'share image',
+        ],
+        description:
+          'Creates a social share (OGP) image at 1200×630 as PNG from a title and site name, with adjustable background and text colors.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

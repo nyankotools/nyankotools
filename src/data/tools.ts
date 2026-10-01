@@ -14,6 +14,7 @@ export const categoryIds = [
   'camera',
   'security',
   'file',
+  'hardware',
 ] as const;
 
 export type CategoryId = (typeof categoryIds)[number];
@@ -32,6 +33,7 @@ export const categories: Record<CategoryId, Record<Locale, string>> = {
   camera: { ja: 'カメラ', en: 'Camera' },
   security: { ja: 'セキュリティ', en: 'Security' },
   file: { ja: 'ファイル', en: 'File' },
+  hardware: { ja: 'ハードウェア', en: 'Hardware' },
 };
 
 export interface ToolTranslation {
@@ -2462,6 +2464,110 @@ export const tools: Tool[] = [
         ],
         description:
           'Makes a solid-color background transparent and saves a PNG, with edge cleanup for leftover background color and an optional outline of any color and width.',
+      },
+    },
+  },
+  {
+    slug: 'mic-tester',
+    category: 'hardware',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['webcam-tester', 'keyboard-tester', 'dead-pixel-checker'],
+    sensitive: true,
+    needsCamera: true,
+    translations: {
+      ja: {
+        name: 'マイクテスト（入力レベル・録音）',
+        keywords: [
+          'マイクテスト',
+          'マイク確認',
+          '録音',
+          '音量',
+          '音割れ',
+          'マイク入力',
+        ],
+        description:
+          'マイクの入力レベルをリアルタイムで確認し、音割れを検出できます。録音して聞き返すことも可能。Web会議や配信の前のチェックに。',
+      },
+      en: {
+        name: 'Microphone Test (Level & Recording)',
+        keywords: [
+          'mic test',
+          'microphone test',
+          'mic check',
+          'record audio',
+          'input level',
+        ],
+        description:
+          'See your microphone input level live, detect clipping, and record a clip to play back. Handy before a call or stream.',
+      },
+    },
+  },
+  {
+    slug: 'keyboard-tester',
+    category: 'hardware',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['keycode-checker', 'mic-tester', 'dead-pixel-checker'],
+    translations: {
+      ja: {
+        name: 'キーボードテスト（全キー押下判定）',
+        keywords: [
+          'キーボードテスト',
+          'キーテスト',
+          '全キー',
+          'チャタリング',
+          'キーボード確認',
+        ],
+        description:
+          'キーボードの全キーを押して、反応するかを画面のキーボード図で確認します。押し忘れが一目で分かり、キー名・コードも表示。',
+      },
+      en: {
+        name: 'Keyboard Tester (Test Every Key)',
+        keywords: [
+          'keyboard test',
+          'key tester',
+          'test all keys',
+          'key chatter',
+          'keyboard checker',
+        ],
+        description:
+          'Press every key and see it light up on an on-screen keyboard so missed keys are obvious, with the key name and code shown.',
+      },
+    },
+  },
+  {
+    slug: 'dead-pixel-checker',
+    category: 'hardware',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['viewport-checker', 'keyboard-tester', 'webcam-tester'],
+    translations: {
+      ja: {
+        name: 'ドット抜けチェック（色ムラ確認）',
+        keywords: [
+          'ドット抜け',
+          '輝点',
+          '黒点',
+          '色ムラ',
+          'モニター確認',
+          '焼き付き',
+        ],
+        description:
+          '画面全体を単色で塗りつぶして、モニター・スマホのドット抜けや色ムラを確認します。白・黒・RGBなど9色をクリックやキーで切り替え。',
+      },
+      en: {
+        name: 'Dead Pixel Test (Screen Check)',
+        keywords: [
+          'dead pixel',
+          'stuck pixel',
+          'screen test',
+          'monitor test',
+          'backlight bleed',
+          'burn-in',
+        ],
+        description:
+          'Fill the screen with a solid color to check a monitor or phone for dead pixels and uneven color, cycling through 9 colors with a click or the arrow keys.',
       },
     },
   },

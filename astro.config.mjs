@@ -39,6 +39,9 @@ export default defineConfig({
         // GA4がトラッキングピクセルをgoogletagmanager.comに送信するため許可する。
         "img-src 'self' blob: https://www.googletagmanager.com",
         "font-src 'self'",
+        // mic-testerが録音をblob: URLで<audio>に設定して再生するため。省略するとdefault-src 'self'
+        // が適用され、本番相当のCSP配信でのみ録音の再生がブロックされる。
+        "media-src 'self' blob:",
         // ツール本体はサーバーに一切データを送らない完全ローカル処理を維持しているが、
         // アクセス解析向けの通信（GA4、およびCloudflare Web Analytics）のみ例外として許可する。
         // prefetch機能は <link rel="prefetch"> 非対応ブラウザ（旧Safari等）では fetch()

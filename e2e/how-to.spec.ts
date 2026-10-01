@@ -21,6 +21,8 @@ const slugs = [
   'ogp-image-generator',
   'image-cropper',
   'image-background-remover',
+  'mic-tester',
+  'dead-pixel-checker',
 ];
 
 const locales = [

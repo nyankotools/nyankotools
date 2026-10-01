@@ -272,6 +272,20 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-02',
+    toolSlugs: ['mic-tester', 'keyboard-tester', 'dead-pixel-checker'],
+    translations: {
+      ja: {
+        summary:
+          'マイクテスト（入力レベル・録音）、キーボードテスト（全キー押下判定）、ドット抜けチェック（色ムラ確認）を追加し、新カテゴリ「ハードウェア」を設けました。',
+      },
+      en: {
+        summary:
+          'Added the Microphone Test (level & recording), Keyboard Tester, and Dead Pixel Test, plus a new Hardware category.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

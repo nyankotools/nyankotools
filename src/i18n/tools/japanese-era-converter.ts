@@ -13,6 +13,10 @@ export interface EraResultFormat {
   eraYear: string;
   eraYearFirst: string;
   western: string;
+  /** 元号一覧表の開始日（{y}{m}{d}{mm}{dd}） */
+  tableStartDate: string;
+  /** 元号一覧表の元年の西暦（{y}） */
+  tableYear1: string;
 }
 
 export interface JapaneseEraConverterPageContent {
@@ -61,6 +65,8 @@ export const japaneseEraConverterContent: Record<
       eraYear: '{n}年',
       eraYearFirst: '元年',
       western: '西暦{y}年{m}月{d}日',
+      tableStartDate: '{y}年{m}月{d}日',
+      tableYear1: '{y}年',
     },
     title: '和暦⇔西暦変換（元号早見表）',
     description:
@@ -125,6 +131,8 @@ export const japaneseEraConverterContent: Record<
       eraYear: '{n}',
       eraYearFirst: '1 (gannen)',
       western: '{y}-{mm}-{dd}',
+      tableStartDate: '{y}-{mm}-{dd}',
+      tableYear1: '{y}',
     },
     title: 'Japanese Era Converter (Wareki ⇔ Western Year)',
     description:

@@ -35,7 +35,7 @@ test.describe('Cron式スケジュールシミュレーター（日本語版）'
 
     await page.locator('#cron-input').fill('30 */2 * * *');
     await expect(page.locator('#cron-description')).toHaveText(
-      '毎日2時間ごと30分に実行されます',
+      '毎日2時間ごとの30分に実行されます',
     );
   });
 

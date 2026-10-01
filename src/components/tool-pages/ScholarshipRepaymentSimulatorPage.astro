@@ -20,12 +20,11 @@ const t = scholarshipRepaymentSimulatorContent[locale];
   <section
     class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-number-locale={t.numberLocale}
-    data-years-format={t.yearsFormat}
+    data-period-format={t.periodFormat}
     data-error={t.error}
     data-periods-initial-label={t.periodsInitialRowLabel}
     data-periods-review-label-template={t.periodsReviewRowLabelTemplate}
     data-year-from-suffix={t.yearFromSuffix}
-    data-installments-unit={t.installmentsUnit}
   >
     <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
 
@@ -224,8 +223,7 @@ const t = scholarshipRepaymentSimulatorContent[locale];
   const periodsReviewLabelTemplate =
     configEl.dataset.periodsReviewLabelTemplate ?? '#{n}';
   const yearFromSuffix = configEl.dataset.yearFromSuffix ?? '';
-  const installmentsUnit = configEl.dataset.installmentsUnit ?? '';
-  const yearsFormat = configEl.dataset.yearsFormat ?? '';
+  const periodFormat = configEl.dataset.periodFormat ?? '';
 
   const yen = new Intl.NumberFormat(numberLocale, {
     style: 'currency',
@@ -321,9 +319,10 @@ const t = scholarshipRepaymentSimulatorContent[locale];
 
     initialMonthlyEl.textContent = yen.format(result.initialMonthlyPayment);
     finalMonthlyEl.textContent = yen.format(result.finalMonthlyPayment);
-    periodEl.textContent = `${fill(yearsFormat, {
+    periodEl.textContent = fill(periodFormat, {
       y: String(Math.round(result.repaymentMonths / 12)),
-    })}（${result.repaymentMonths}${installmentsUnit}）`;
+      n: String(result.repaymentMonths),
+    });
     totalPaymentEl.textContent = yen.format(result.totalPayment);
     totalInterestEl.textContent = yen.format(result.totalInterest);
 

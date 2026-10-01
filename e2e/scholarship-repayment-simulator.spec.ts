@@ -164,3 +164,17 @@ test('奨学金返済シミュレーション: 英語版でも結果が表示さ
     .textContent();
   expect(totalPaymentText).toMatch(/¥|￥/);
 });
+
+test('奨学金返済シミュレーション: 返還期間の表示が言語ごとの書式になる', async ({
+  page,
+}) => {
+  await page.goto('/tools/scholarship-repayment-simulator/');
+  await expect(page.locator('#scholarship-calc-period')).toHaveText(
+    /^\d+年（\d+回）$/,
+  );
+
+  await page.goto('/en/tools/scholarship-repayment-simulator/');
+  await expect(page.locator('#scholarship-calc-period')).toHaveText(
+    /^\d+ yr \(\d+ installments\)$/,
+  );
+});

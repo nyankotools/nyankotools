@@ -2,6 +2,7 @@
 import ToolShell from '../ToolShell.astro';
 import { ERAS } from '../../lib/tools/japanese-era-converter';
 import { japaneseEraConverterContent } from '../../i18n/tools/japanese-era-converter';
+import { fill } from '../../lib/format-template';
 import type { Locale } from '../../data/tools';
 
 interface Props {
@@ -11,6 +12,16 @@ interface Props {
 const { locale } = Astro.props;
 const t = japaneseEraConverterContent[locale];
 const reversedEras = ERAS.slice().reverse();
+type Era = (typeof ERAS)[number];
+const eraName = (era: Era) =>
+  t.resultFormat.romajiEraName ? era.romaji : era.name;
+const startDateValues = (era: Era) => ({
+  y: String(era.start.year),
+  m: String(era.start.month),
+  d: String(era.start.day),
+  mm: String(era.start.month).padStart(2, '0'),
+  dd: String(era.start.day).padStart(2, '0'),
+});
 ---
 
 <ToolShell t={t}>
@@ -102,9 +113,7 @@ const reversedEras = ERAS.slice().reverse();
           class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
         >
           {reversedEras.map((era) => (
-            <option value={era.name}>
-              {locale === 'ja' ? era.name : era.romaji}
-            </option>
+            <option value={era.name}>{eraName(era)}</option>
           ))}
         </select>
       </div>
@@ -176,23 +185,12 @@ const reversedEras = ERAS.slice().reverse();
       <tbody>
         {reversedEras.map((era) => (
           <tr class="border-b border-gray-100 dark:border-gray-800">
-            <td class="py-2 pr-4 font-medium">
-              {locale === 'ja' ? era.name : era.romaji}
-            </td>
+            <td class="py-2 pr-4 font-medium">{eraName(era)}</td>
             <td class="py-2 pr-4">
-              {locale === 'ja' ? (
-                <>
-                  {era.start.year}年{era.start.month}月{era.start.day}日
-                </>
-              ) : (
-                <>
-                  {era.start.year}-{String(era.start.month).padStart(2, '0')}-
-                  {String(era.start.day).padStart(2, '0')}
-                </>
-              )}
+              {fill(t.resultFormat.tableStartDate, startDateValues(era))}
             </td>
             <td class="py-2">
-              {locale === 'ja' ? `${era.start.year}年` : era.start.year}
+              {fill(t.resultFormat.tableYear1, { y: String(era.start.year) })}
             </td>
           </tr>
         ))}

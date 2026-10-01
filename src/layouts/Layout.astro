@@ -22,6 +22,8 @@ interface Props {
   noindex?: boolean;
   /** 言語切替リンクの先を各言語のトップページにする（対応する別言語ページが存在しない404用） */
   languageSwitchToHome?: boolean;
+  /** 構造化データ（BreadcrumbList / SoftwareApplication）の name。省略時は title */
+  structuredName?: string;
 }
 
 const {
@@ -30,6 +32,7 @@ const {
   ogImage = 'https://nyankotools.com/ogp.png',
   noindex = false,
   languageSwitchToHome = false,
+  structuredName = title,
 } = Astro.props;
 
 const lang = resolveLocale(Astro.currentLocale);
@@ -93,7 +96,7 @@ const breadcrumbJsonLd: Record<string, unknown> | null =
           {
             '@type': 'ListItem',
             position: 2,
-            name: title,
+            name: structuredName,
             item: canonicalURL.toString(),
           },
         ],
@@ -121,7 +124,7 @@ const jsonLd: Record<string, unknown> | null = noindex
     ? {
         '@context': 'https://schema.org',
         '@type': 'SoftwareApplication',
-        name: title,
+        name: structuredName,
         description,
         url: canonicalURL.toString(),
         applicationCategory: 'UtilitiesApplication',

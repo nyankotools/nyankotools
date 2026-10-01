@@ -41,7 +41,7 @@ const CASES: [expr: string, ja: string, en: string][] = [
   [
     '1-10/2 * * * *',
     '毎時1分から10分の2分ごとに実行されます',
-    'Runs 1-10 every 2 minutes.',
+    'Runs every 2 minutes from 1 through 10.',
   ],
   [
     '* 9 * * *',
@@ -50,7 +50,7 @@ const CASES: [expr: string, ja: string, en: string][] = [
   ],
   [
     '0 9-17 * * *',
-    '毎日9時から17時0分に実行されます',
+    '毎日9時から17時の0分に実行されます',
     'Runs at hour 9-17, minute 0.',
   ],
   [
@@ -60,7 +60,7 @@ const CASES: [expr: string, ja: string, en: string][] = [
   ],
   [
     '0 */2 * * *',
-    '毎日2時間ごと0分に実行されます',
+    '毎日2時間ごとの0分に実行されます',
     'Runs every 2 hours, at minute 0.',
   ],
   [
@@ -96,7 +96,7 @@ const CASES: [expr: string, ja: string, en: string][] = [
   [
     '0 0 1-10/2 * *',
     '毎月1日から10日の2日ごとの0時0分に実行されます',
-    'Runs on day 1-10 every 2 days, at hour 0, minute 0.',
+    'Runs every 2 days from 1 through 10, at hour 0, minute 0.',
   ],
   [
     '0 0 1 1 *',
@@ -106,7 +106,7 @@ const CASES: [expr: string, ja: string, en: string][] = [
   [
     '0 0 1 */3 *',
     '毎年3ヶ月ごとの1日の0時0分に実行されます',
-    'Runs in month every 3 months, on day 1, at hour 0, minute 0.',
+    'Runs every 3 months, on day 1, at hour 0, minute 0.',
   ],
   [
     '0 12 * 6-8 *',
@@ -114,9 +114,19 @@ const CASES: [expr: string, ja: string, en: string][] = [
     'Runs in month 6-8, at hour 12, minute 0.',
   ],
   [
+    '0 0 1,*/2 * *',
+    '毎月1日、2日ごとの0時0分に実行されます',
+    'Runs on day 1 and every 2 days, at hour 0, minute 0.',
+  ],
+  [
+    '0 0 1 1,*/3 *',
+    '毎年1月、3ヶ月ごとの1日の0時0分に実行されます',
+    'Runs in month 1 and every 3 months, on day 1, at hour 0, minute 0.',
+  ],
+  [
     '0 0 */2 * 1',
     '2日ごとかつ月曜日の0時0分に実行されます',
-    'Runs on day every 2 days and Monday, at hour 0, minute 0.',
+    'Runs every 2 days and Monday, at hour 0, minute 0.',
   ],
   [
     '0 0 1 * 1',

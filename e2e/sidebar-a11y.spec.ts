@@ -50,11 +50,12 @@ test.describe('モバイルのサイドバーのアクセシビリティ', () =>
       await page.keyboard.press('Tab');
       const inside = await page.evaluate(() => {
         const active = document.activeElement;
+        // サイドバー末尾から Tab で抜ける瞬間は body にフォーカスが移るため許容する。
+        // 守るべきは「inert な main 側へフォーカスが漏れないこと」
+        if (!active || active === document.body) return true;
         return (
-          !!active &&
-          (active === document.body ||
-            !!active.closest('#sidebar') ||
-            active.id === 'sidebar-toggle')
+          !active.closest('main') &&
+          (!!active.closest('#sidebar') || active.id === 'sidebar-toggle')
         );
       });
       expect(inside).toBe(true);

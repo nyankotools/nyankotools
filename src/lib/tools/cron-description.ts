@@ -81,7 +81,7 @@ export function createCronDescriber(locale: CronDescriptionLocale) {
         : `every ${unitSingular}`;
     }
     if (item.step !== undefined) {
-      return `${item.start}-${item.end} every ${item.step} ${unitPlural}`;
+      return `every ${item.step} ${unitPlural} from ${item.start} through ${item.end}`;
     }
     if (item.end !== item.start) {
       return `${item.start}-${item.end}`;
@@ -166,7 +166,12 @@ export function createCronDescriber(locale: CronDescriptionLocale) {
       ...FIELD_RANGES.minute,
     );
     if (isJa) {
-      const joiner = minuteDesc.includes('ごと') ? 'の' : '';
+      const joiner =
+        minuteDesc.includes('ごと') ||
+        hourDesc.includes('ごと') ||
+        hourDesc.includes('から')
+          ? 'の'
+          : '';
       return `${hourDesc}${joiner}${minuteDesc}`;
     }
 
@@ -193,19 +198,32 @@ export function createCronDescriber(locale: CronDescriptionLocale) {
 
     if (!isJa) {
       const parts: string[] = [];
+      // 単一の間隔指定（"every 3 months" など）は既に完結しているので "in month" / "on day" で囲まない。
+      // "1 and every 3 months" のような混在リストは囲む
+      const withPrefix = (
+        raw: string,
+        unitKey: UnitKey,
+        range: readonly [number, number],
+        prefix: string,
+      ) => {
+        const desc = describeField(raw, unitKey, ...range);
+        const items = parseFieldItems(raw, ...range);
+        return items?.length === 1 && items[0].step !== undefined
+          ? desc
+          : `${prefix} ${desc}`;
+      };
       if (cron.monthRestricted) {
-        parts.push(
-          `in month ${describeField(month, 'month', ...FIELD_RANGES.month)}`,
-        );
+        parts.push(withPrefix(month, 'month', FIELD_RANGES.month, 'in month'));
       }
+      const dayDesc = cron.dayOfMonthRestricted
+        ? withPrefix(dayOfMonth, 'day', FIELD_RANGES.dayOfMonth, 'on day')
+        : '';
       if (cron.dayOfMonthRestricted && cron.dayOfWeekRestricted) {
         parts.push(
-          `on day ${describeField(dayOfMonth, 'day', ...FIELD_RANGES.dayOfMonth)} ${cron.dayFieldsOr ? 'or' : 'and'} ${describeWeekdays(dayOfWeek)}`,
+          `${dayDesc} ${cron.dayFieldsOr ? 'or' : 'and'} ${describeWeekdays(dayOfWeek)}`,
         );
       } else if (cron.dayOfMonthRestricted) {
-        parts.push(
-          `on day ${describeField(dayOfMonth, 'day', ...FIELD_RANGES.dayOfMonth)}`,
-        );
+        parts.push(dayDesc);
       } else if (cron.dayOfWeekRestricted) {
         parts.push(`on ${describeWeekdays(dayOfWeek)}`);
       }

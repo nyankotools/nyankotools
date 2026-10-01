@@ -1,0 +1,421 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { bmrCalorieCalculatorContent } from '../../i18n/tools/bmr-calorie-calculator';
+import {
+  activityLevels,
+  type BmrFormula,
+  type Sex,
+} from '../../lib/tools/bmr-calorie-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = bmrCalorieCalculatorContent[locale];
+
+const sexes: Sex[] = ['male', 'female'];
+const formulas: BmrFormula[] = ['mifflin', 'harris', 'japan'];
+---
+
+<ToolShell t={t}>
+  <section
+    id="bmr-calc"
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+    data-japan-age-error={t.japanAgeError}
+    data-kcal-unit={t.kcalUnit}
+  >
+    <div class="mb-4 flex flex-wrap gap-x-8 gap-y-3">
+      <div>
+        <span id="bmr-unit-legend" class="ui-label">
+          {t.unitLegend}
+        </span>
+        <div
+          class="flex flex-wrap gap-3"
+          role="radiogroup"
+          aria-labelledby="bmr-unit-legend"
+        >
+          <label class="flex items-center gap-1 text-sm">
+            <input
+              type="radio"
+              name="bmr-unit-system"
+              value="metric"
+              checked={t.defaultUnit === 'metric'}
+            />
+            {t.unitMetric}
+          </label>
+          <label class="flex items-center gap-1 text-sm">
+            <input
+              type="radio"
+              name="bmr-unit-system"
+              value="imperial"
+              checked={t.defaultUnit === 'imperial'}
+            />
+            {t.unitImperial}
+          </label>
+        </div>
+      </div>
+      <div>
+        <span id="bmr-sex-legend" class="ui-label">
+          {t.sexLegend}
+        </span>
+        <div
+          class="flex flex-wrap gap-3"
+          role="radiogroup"
+          aria-labelledby="bmr-sex-legend"
+        >
+          {sexes.map((sex) => (
+            <label class="flex items-center gap-1 text-sm">
+              <input
+                type="radio"
+                name="bmr-sex"
+                value={sex}
+                checked={sex === 'male'}
+              />
+              {t.sexLabels[sex]}
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="bmr-age-input" class="ui-label">
+          {t.ageLabel}
+        </label>
+        <input
+          id="bmr-age-input"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="120"
+          step="1"
+          placeholder={t.agePlaceholder}
+          class="ui-input h-11 w-20 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+
+      <div>
+        <span id="bmr-height-legend" class="ui-label">
+          {t.heightLabel}
+        </span>
+        <div
+          id="bmr-height-metric-fields"
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="bmr-height-legend"
+        >
+          <input
+            id="bmr-height-cm-input"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            placeholder={t.heightCmPlaceholder}
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-500 dark:text-gray-400">cm</span>
+        </div>
+        <div
+          id="bmr-height-imperial-fields"
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="bmr-height-legend"
+        >
+          <input
+            id="bmr-height-ft-input"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            placeholder={t.heightFtPlaceholder}
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-500 dark:text-gray-400">ft</span>
+          <input
+            id="bmr-height-in-input"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            placeholder={t.heightInPlaceholder}
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-500 dark:text-gray-400">in</span>
+        </div>
+      </div>
+
+      <div>
+        <span id="bmr-weight-legend" class="ui-label">
+          {t.weightLabel}
+        </span>
+        <div
+          id="bmr-weight-metric-fields"
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="bmr-weight-legend"
+        >
+          <input
+            id="bmr-weight-kg-input"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            placeholder={t.weightKgPlaceholder}
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-500 dark:text-gray-400">kg</span>
+        </div>
+        <div
+          id="bmr-weight-imperial-fields"
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="bmr-weight-legend"
+        >
+          <input
+            id="bmr-weight-lb-input"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            placeholder={t.weightLbPlaceholder}
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-500 dark:text-gray-400">lb</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div>
+        <label for="bmr-formula-select" class="ui-label">
+          {t.formulaLabel}
+        </label>
+        <select
+          id="bmr-formula-select"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          {formulas.map((formula) => (
+            <option value={formula}>{t.formulaLabels[formula]}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="bmr-activity-select" class="ui-label">
+          {t.activityLabel}
+        </label>
+        <select
+          id="bmr-activity-select"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          {activityLevels.map((level) => (
+            <option value={level} selected={level === 'light'}>
+              {t.activityLabels[level]}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <p
+      id="bmr-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="bmr-results" class="mt-4 hidden" aria-live="polite">
+      <dl class="space-y-2">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.bmrResultLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="bmr-result"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.tdeeResultLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="bmr-tdee-result"></dd>
+        </div>
+      </dl>
+      <h2 class="mt-4 mb-1 text-sm font-medium">{t.targetsHeading}</h2>
+      <dl class="space-y-1 text-sm">
+        <div class="flex flex-wrap justify-between gap-x-4">
+          <dt class="text-gray-600 dark:text-gray-400">{t.targetMaintain}</dt>
+          <dd class="font-semibold" id="bmr-target-maintain"></dd>
+        </div>
+        <div class="flex flex-wrap justify-between gap-x-4">
+          <dt class="text-gray-600 dark:text-gray-400">{t.targetMildLoss}</dt>
+          <dd class="font-semibold" id="bmr-target-mild-loss"></dd>
+        </div>
+        <div class="flex flex-wrap justify-between gap-x-4">
+          <dt class="text-gray-600 dark:text-gray-400">{t.targetLoss}</dt>
+          <dd class="font-semibold" id="bmr-target-loss"></dd>
+        </div>
+        <div class="flex flex-wrap justify-between gap-x-4">
+          <dt class="text-gray-600 dark:text-gray-400">{t.targetGain}</dt>
+          <dd class="font-semibold" id="bmr-target-gain"></dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    calculateBmr,
+    calculateCalorieTargets,
+    calculateTdee,
+    JAPAN_FORMULA_MIN_AGE,
+    type ActivityLevel,
+    type BmrFormula,
+    type Sex,
+  } from '../../lib/tools/bmr-calorie-calculator';
+  import { feetInchesToCm, lbToKg } from '../../lib/tools/bmi-calculator';
+
+  const section = document.getElementById('bmr-calc')!;
+  const numberLocale = section.dataset.numberLocale ?? 'en-US';
+  const errorMessage = section.dataset.error ?? '';
+  const japanAgeErrorMessage = section.dataset.japanAgeError ?? '';
+  const kcalUnit = section.dataset.kcalUnit ?? 'kcal';
+
+  const kcalFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 0,
+  });
+  const formatKcal = (value: number) =>
+    `${kcalFormat.format(value)} ${kcalUnit}`;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const unitInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="bmr-unit-system"]',
+  );
+  const sexInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="bmr-sex"]',
+  );
+  const heightMetricFields = $('bmr-height-metric-fields');
+  const heightImperialFields = $('bmr-height-imperial-fields');
+  const weightMetricFields = $('bmr-weight-metric-fields');
+  const weightImperialFields = $('bmr-weight-imperial-fields');
+
+  const ageInput = $<HTMLInputElement>('bmr-age-input');
+  const heightCmInput = $<HTMLInputElement>('bmr-height-cm-input');
+  const heightFtInput = $<HTMLInputElement>('bmr-height-ft-input');
+  const heightInInput = $<HTMLInputElement>('bmr-height-in-input');
+  const weightKgInput = $<HTMLInputElement>('bmr-weight-kg-input');
+  const weightLbInput = $<HTMLInputElement>('bmr-weight-lb-input');
+  const formulaSelect = $<HTMLSelectElement>('bmr-formula-select');
+  const activitySelect = $<HTMLSelectElement>('bmr-activity-select');
+
+  const errorEl = $('bmr-error');
+  const resultsEl = $('bmr-results');
+
+  function selectedUnit(): 'metric' | 'imperial' {
+    return (
+      (Array.from(unitInputs).find((el) => el.checked)?.value as
+        'metric' | 'imperial') ?? 'metric'
+    );
+  }
+
+  function selectedSex(): Sex {
+    return (
+      (Array.from(sexInputs).find((el) => el.checked)?.value as Sex) ?? 'male'
+    );
+  }
+
+  function updateUnitVisibility() {
+    const isMetric = selectedUnit() === 'metric';
+    heightMetricFields.classList.toggle('hidden', !isMetric);
+    heightImperialFields.classList.toggle('hidden', isMetric);
+    weightMetricFields.classList.toggle('hidden', !isMetric);
+    weightImperialFields.classList.toggle('hidden', isMetric);
+  }
+
+  function heightCm(): number | null {
+    if (selectedUnit() === 'metric') {
+      if (heightCmInput.value.trim() === '') return null;
+      return Number(heightCmInput.value);
+    }
+    if (heightFtInput.value.trim() === '' && heightInInput.value.trim() === '')
+      return null;
+    const ft =
+      heightFtInput.value.trim() === '' ? 0 : Number(heightFtInput.value);
+    const inch =
+      heightInInput.value.trim() === '' ? 0 : Number(heightInInput.value);
+    return feetInchesToCm(ft, inch);
+  }
+
+  function weightKg(): number | null {
+    if (selectedUnit() === 'metric') {
+      if (weightKgInput.value.trim() === '') return null;
+      return Number(weightKgInput.value);
+    }
+    if (weightLbInput.value.trim() === '') return null;
+    return lbToKg(Number(weightLbInput.value));
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    const h = heightCm();
+    const w = weightKg();
+    if (ageInput.value.trim() === '' || h === null || w === null) return;
+
+    const age = Number(ageInput.value);
+    const formula = formulaSelect.value as BmrFormula;
+    const bmr = calculateBmr(formula, selectedSex(), age, h, w);
+    if (bmr === null) {
+      errorEl.textContent =
+        formula === 'japan' &&
+        age > 0 &&
+        age < JAPAN_FORMULA_MIN_AGE &&
+        isFinite(h) &&
+        h > 0 &&
+        isFinite(w) &&
+        w > 0
+          ? japanAgeErrorMessage
+          : errorMessage;
+      return;
+    }
+
+    const tdee = calculateTdee(bmr, activitySelect.value as ActivityLevel);
+    const targets = calculateCalorieTargets(tdee);
+    $('bmr-result').textContent = formatKcal(bmr);
+    $('bmr-tdee-result').textContent = formatKcal(tdee);
+    $('bmr-target-maintain').textContent = formatKcal(targets.maintain);
+    $('bmr-target-mild-loss').textContent = formatKcal(targets.mildLoss);
+    $('bmr-target-loss').textContent = formatKcal(targets.loss);
+    $('bmr-target-gain').textContent = formatKcal(targets.gain);
+    resultsEl.classList.remove('hidden');
+  }
+
+  unitInputs.forEach((el) =>
+    el.addEventListener('change', () => {
+      updateUnitVisibility();
+      render();
+    }),
+  );
+  sexInputs.forEach((el) => el.addEventListener('change', render));
+  [
+    ageInput,
+    heightCmInput,
+    heightFtInput,
+    heightInInput,
+    weightKgInput,
+    weightLbInput,
+  ].forEach((input) => input.addEventListener('input', render));
+  formulaSelect.addEventListener('change', render);
+  activitySelect.addEventListener('change', render);
+
+  updateUnitVisibility();
+
+  // 初期値
+  ageInput.value = '30';
+  heightCmInput.value = '170';
+  weightKgInput.value = '65';
+  heightFtInput.value = '5';
+  heightInInput.value = '7';
+  weightLbInput.value = '143';
+  render();
+</script>

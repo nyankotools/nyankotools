@@ -274,15 +274,22 @@ export const updates: UpdateEntry[] = [
   },
   {
     date: '2026-10-02',
-    toolSlugs: ['mic-tester', 'keyboard-tester', 'dead-pixel-checker'],
+    toolSlugs: [
+      'mic-tester',
+      'keyboard-tester',
+      'dead-pixel-checker',
+      'unit-converter',
+      'split-bill-calculator',
+      'bmr-calorie-calculator',
+    ],
     translations: {
       ja: {
         summary:
-          'マイクテスト（入力レベル・録音）、キーボードテスト（全キー押下判定）、ドット抜けチェック（色ムラ確認）を追加し、新カテゴリ「ハードウェア」を設けました。',
+          'マイクテスト（入力レベル・録音）、キーボードテスト（全キー押下判定）、ドット抜けチェック（色ムラ確認）を追加し、新カテゴリ「ハードウェア」を設けました。あわせて、単位変換、割り勘計算機（端数処理・傾斜割り勘）、基礎代謝・消費カロリー計算機も追加しました。',
       },
       en: {
         summary:
-          'Added the Microphone Test (level & recording), Keyboard Tester, and Dead Pixel Test, plus a new Hardware category.',
+          'Added the Microphone Test (level & recording), Keyboard Tester, and Dead Pixel Test, plus a new Hardware category. Also added the Unit Converter, Split Bill Calculator, and BMR & Calorie Calculator.',
       },
     },
   },

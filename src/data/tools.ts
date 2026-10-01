@@ -986,7 +986,7 @@ export const tools: Tool[] = [
     category: 'calc',
     addedAt: '2026-09-23',
     updatedAt: '2026-09-23',
-    related: ['age-calculator', 'ratio-calculator'],
+    related: ['age-calculator', 'ratio-calculator', 'bmr-calorie-calculator'],
     sensitive: true,
     translations: {
       ja: {
@@ -2568,6 +2568,116 @@ export const tools: Tool[] = [
         ],
         description:
           'Fill the screen with a solid color to check a monitor or phone for dead pixels and uneven color, cycling through 9 colors with a click or the arrow keys.',
+      },
+    },
+  },
+  {
+    slug: 'unit-converter',
+    category: 'calc',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['px-rem-converter', 'base-converter', 'ratio-calculator'],
+    translations: {
+      ja: {
+        name: '単位変換（長さ・重さ・面積・体積・温度・データ容量）',
+        keywords: [
+          '単位変換',
+          '尺貫法',
+          '坪',
+          '畳',
+          'インチ',
+          'ポンド',
+          'KB KiB',
+          '華氏',
+        ],
+        description:
+          '長さ・重さ・面積・体積・温度・データ容量の単位を相互に変換します。尺・坪・畳・合・貫などの尺貫法やインチ・ポンド、KBとKiBの違いにも対応。',
+      },
+      en: {
+        name: 'Unit Converter (Length, Weight, Area, Volume, Temperature, Data)',
+        keywords: [
+          'unit converter',
+          'metric imperial',
+          'inches to cm',
+          'pounds to kg',
+          'KB vs KiB',
+          'tsubo',
+          'fahrenheit celsius',
+        ],
+        description:
+          'Convert length, weight, area, volume, temperature, and data size, including metric, imperial, traditional Japanese units, and KB vs KiB.',
+      },
+    },
+  },
+  {
+    slug: 'split-bill-calculator',
+    category: 'calc',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['tax-calculator', 'ratio-calculator', 'mortgage-calculator'],
+    translations: {
+      ja: {
+        name: '割り勘計算機（端数処理・傾斜割り勘）',
+        keywords: [
+          '割り勘',
+          '飲み会',
+          '幹事',
+          '傾斜',
+          '端数',
+          '切り上げ',
+          '人数割り',
+        ],
+        description:
+          '合計金額と人数から1人あたりの金額を計算します。100円単位の端数処理や、上司・幹事が多めに払う傾斜割り勘にも対応。余りと不足も表示。',
+      },
+      en: {
+        name: 'Split Bill Calculator (Rounding & Uneven Shares)',
+        keywords: [
+          'split bill',
+          'bill splitter',
+          'split the check',
+          'dinner split',
+          'tip split',
+          'uneven split',
+        ],
+        description:
+          'Split a total among people with rounding up, down, or to the nearest unit, and let some people pay more. Shows the extra or shortfall.',
+      },
+    },
+  },
+  {
+    slug: 'bmr-calorie-calculator',
+    category: 'calc',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['bmi-calculator', 'age-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '基礎代謝・消費カロリー計算機',
+        keywords: [
+          '基礎代謝',
+          '消費カロリー',
+          '必要カロリー',
+          'TDEE',
+          'ダイエット',
+          '摂取カロリー',
+        ],
+        description:
+          '年齢・性別・身長・体重から基礎代謝量と、活動レベルを加味した1日の消費カロリーを計算します。ダイエット・増量の目安カロリーも表示。',
+      },
+      en: {
+        name: 'BMR & Calorie Calculator',
+        keywords: [
+          'BMR',
+          'TDEE',
+          'daily calories',
+          'calorie calculator',
+          'basal metabolic rate',
+          'Mifflin-St Jeor',
+        ],
+        description:
+          'Estimate your basal metabolic rate and daily calorie needs from age, sex, height, weight, and activity level, with calorie targets for losing or gaining weight.',
       },
     },
   },

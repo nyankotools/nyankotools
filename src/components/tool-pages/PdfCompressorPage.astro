@@ -105,6 +105,7 @@ const selectClass =
 </ToolShell>
 
 <script>
+  import { paren } from '../../lib/paren';
   import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
   import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
   import { getPageCount, PdfToolError } from '../../lib/tools/pdf-merge-split';
@@ -221,7 +222,7 @@ const selectClass =
       void task.destroy();
       pdfBytes = bytes;
       pdfName = file.name;
-      info.textContent = `${file.name}（${(info.dataset.template ?? '').replace('{pages}', String(pdfPages))}、${formatBytes(bytes.length)}）`;
+      info.textContent = `${file.name}${paren(`${(info.dataset.template ?? '').replace('{pages}', String(pdfPages))}${document.documentElement.lang === 'en' ? ', ' : '、'}${formatBytes(bytes.length)}`)}`;
       info.hidden = false;
     } catch (e) {
       pdfBytes = null;

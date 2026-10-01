@@ -95,7 +95,7 @@ export const kishuIzonCheckerContent: Record<
   en: {
     title: 'Machine-Dependent Character Checker',
     description:
-      'A free tool that detects machine-dependent characters (environment-dependent characters) such as circled numbers (①②③), Roman numerals (ⅠⅡⅢ), and ligatures like ㈱ ㍉ ㍻. Lists every character that may turn into mojibake in email or other environments, with a safe replacement suggestion for each. Your data is processed in the browser and never sent to a server.',
+      'Detect machine-dependent characters such as ①②③, ⅠⅡⅢ, and ㈱ that may garble in email, with safe replacement suggestions. Runs in your browser.',
     h1: 'Machine-Dependent Character Checker',
     introHtml:
       'Scans your text for machine-dependent characters (also called environment-dependent characters) such as circled numbers (①②③), Roman numerals (ⅠⅡⅢ), and ligatures like ㈱ ㍉ ㍻. Use it before sending an email or newsletter, or filling in a web form, to catch characters that might turn into mojibake on the recipient\'s device. Need to convert between full-width and half-width characters instead? Try the <a href="/en/tools/zenkaku-hankaku/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Full-width / Half-width Converter</a>.',

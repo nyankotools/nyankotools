@@ -242,6 +242,7 @@ const t = imageResizerContent[locale];
 </ToolShell>
 
 <script>
+  import { paren } from '../../lib/paren';
   import { enableFileDrop } from '../../lib/file-drop';
   import {
     buildOutputFileName,
@@ -600,7 +601,7 @@ const t = imageResizerContent[locale];
         dims,
         formatFileSize(blob.size),
       );
-      sizeEl.textContent = `${originalLabel}: ${originalText} → ${convertedLabel}: ${convertedText}（${reductionText}）`;
+      sizeEl.textContent = `${originalLabel}: ${originalText} → ${convertedLabel}: ${convertedText}${paren(reductionText)}`;
 
       resultsList.appendChild(li);
     }

@@ -150,7 +150,7 @@ export const pdfImageConverterContent: Record<
   en: {
     title: 'PDF to Image & Image to PDF Converter – Free, No Upload',
     description:
-      'A free online tool to convert each PDF page to PNG or JPEG, or combine several images into one PDF. Your files are processed in the browser and never uploaded to a server.',
+      'Convert PDF pages to PNG or JPEG, or combine images into one PDF. Runs in your browser; your files are never uploaded.',
     h1: 'PDF ⇔ Image Converter (PNG/JPEG)',
     introHtml:
       'Turn a PDF into one image per page, or turn images into a PDF. Your files never leave your device. To merge or split PDF pages, use the <a href="/en/tools/pdf-merge-split/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">PDF Merge, Split & Extract</a> tool.',

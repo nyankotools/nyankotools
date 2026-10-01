@@ -263,6 +263,10 @@ test.describe('サイドバーのスクロール位置の保存・復元（デ�
 
     // Reload to ensure fresh state
     await page.reload();
+    // お気に入りの描画は開閉状態の保存リスナー登録のあとに行われるため、描画を待ってから操作する
+    await expect(page.locator('#sidebar-favorites-list a[href]')).toHaveCount(
+      2,
+    );
 
     const favoritesDetails = page.locator('#sidebar-favorites');
 
@@ -281,6 +285,12 @@ test.describe('サイドバーのスクロール位置の保存・復元（デ�
       (el) => el instanceof HTMLDetailsElement && el.open,
     );
     expect(isClosedAfter).toBeFalsy();
+    // toggle イベントは非同期に届くため、保存されるのを待ってから遷移する
+    await expect
+      .poll(() =>
+        page.evaluate(() => localStorage.getItem('sidebar-favorites-open')),
+      )
+      .toBe('0');
 
     // Navigate to another tool
     await page.goto('/tools/password-generator/');
@@ -311,6 +321,10 @@ test.describe('サイドバーのスクロール位置の保存・復元（デ�
 
     // Reload to ensure the closed state is applied
     await page.reload();
+    // お気に入りの描画は開閉状態の保存リスナー登録のあとに行われるため、描画を待ってから操作する
+    await expect(page.locator('#sidebar-favorites-list a[href]')).toHaveCount(
+      2,
+    );
 
     const favoritesDetails = page.locator('#sidebar-favorites');
 
@@ -329,6 +343,12 @@ test.describe('サイドバーのスクロール位置の保存・復元（デ�
       (el) => el instanceof HTMLDetailsElement && el.open,
     );
     expect(isOpenAfter).toBeTruthy();
+    // toggle イベントは非同期に届くため、保存されるのを待ってから遷移する
+    await expect
+      .poll(() =>
+        page.evaluate(() => localStorage.getItem('sidebar-favorites-open')),
+      )
+      .toBe('1');
 
     // Navigate to another tool
     await page.goto('/tools/uuid-generator/');

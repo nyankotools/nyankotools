@@ -202,6 +202,7 @@ const selectClass =
 </ToolShell>
 
 <script>
+  import { paren } from '../../lib/paren';
   import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
   import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
   import {
@@ -415,7 +416,7 @@ const selectClass =
       void task.destroy();
       pdfBytes = bytes;
       pdfName = file.name;
-      pdfInfo.textContent = `${file.name}（${(pdfInfo.dataset.template ?? '').replace('{pages}', String(pdfPages))}）`;
+      pdfInfo.textContent = `${file.name}${paren((pdfInfo.dataset.template ?? '').replace('{pages}', String(pdfPages)))}`;
       pdfInfo.hidden = false;
     } catch (e) {
       pdfBytes = null;
@@ -489,7 +490,7 @@ const selectClass =
     a.download = name;
     a.className =
       'inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-blue-700 hover:bg-gray-100 dark:border-gray-700 dark:text-blue-400 dark:hover:bg-gray-800';
-    a.textContent = `${(resultEl.dataset.download ?? '').replace('{name}', name)}（${formatBytes(blob.size)}）`;
+    a.textContent = `${(resultEl.dataset.download ?? '').replace('{name}', name)}${paren(formatBytes(blob.size))}`;
     li.append(a);
     resultList.append(li);
   }

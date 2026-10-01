@@ -52,7 +52,7 @@
   }
 
   .ui-input {
-    @apply rounded-lg border border-gray-300 text-sm focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:text-gray-100;
+    @apply rounded-lg border border-gray-300 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:text-gray-100;
   }
 
   .ui-error {

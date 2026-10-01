@@ -120,9 +120,9 @@ export const baseConverterContent: Record<Locale, BaseConverterPageContent> = {
     ],
   },
   en: {
-    title: "Base Converter with Two's Complement (Binary, Octal, Decimal, Hex)",
+    title: "Base Converter (Binary, Octal, Decimal, Hex, 2's Complement)",
     description:
-      "Convert numbers between binary, octal, decimal, and hexadecimal in real time — free and works from any of the four fields. Choose a bit width (8/16/32/64-bit) and negative numbers convert correctly using two's complement. Supports 0x/0b/0o prefixes. Your data is processed in the browser and never sent to a server.",
+      "Convert between binary, octal, decimal, and hex, with 8/16/32/64-bit two's complement for negatives. Runs in your browser; nothing is sent to a server.",
     h1: 'Base Converter',
     introHtml:
       'Pick a bit width (8/16/32/64-bit), then type a number into any of the binary, octal, decimal, or hexadecimal fields, and the other three update instantly. Negative numbers convert using the two\'s complement representation for the selected bit width (e.g. with 8 bits, decimal "-1" becomes binary "11111111" and hex "FF"). Only the decimal field accepts a signed value with a leading "-"; the binary, octal, and hex fields represent the raw bit pattern itself (0x/0b/0o-prefixed input is accepted there) and have no sign. Large numbers convert without losing precision. If you also work with bitwise networking values, try the <a href="/en/tools/cidr-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">CIDR / Subnet Calculator</a>.',

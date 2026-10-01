@@ -106,7 +106,7 @@ export const imageToBase64Content: Record<Locale, ImageToBase64PageContent> = {
   en: {
     title: 'Image to Base64 / Data URL Converter',
     description:
-      'Free tool that converts an image file to a Base64 string or Data URL, and converts a Base64 string or Data URL back into a downloadable image file. Handy for embedding images in CSS, JSON, or HTML. Your images are processed in the browser and never sent to a server.',
+      'Convert an image to a Base64 string or Data URL, or turn Base64 back into an image file. Runs in your browser; nothing is uploaded to a server.',
     h1: 'Image to Base64 (Data URL) Converter',
     introHtml:
       'Select an image file to convert it directly to a Base64 string or Data URL, with no re-compression or quality loss. Switch to "Base64 to Image" to turn a Base64 string or Data URL back into a downloadable image. For plain text conversion, try the <a href="/en/tools/base64/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Base64 Encoder/Decoder</a>; for format conversion and compression, see the <a href="/en/tools/image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Format Converter</a>.',

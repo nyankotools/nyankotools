@@ -22,7 +22,7 @@ test.describe('ダミーテキスト生成ツール（日本語版）', () => {
     // outputが見つからない場合は、プレビュー領域を確認
     if (!outputText || outputText.trim() === '') {
       const previewArea = page.locator('[id*="preview"], [id*="render"]');
-      outputText = await previewArea.first().textContent();
+      outputText = (await previewArea.first().textContent()) ?? '';
     }
 
     expect(outputText).toBeTruthy();
@@ -49,7 +49,7 @@ test.describe('ダミーテキスト生成ツール（日本語版）', () => {
 
     if (!outputText || outputText.trim() === '') {
       const previewArea = page.locator('[id*="preview"], [id*="render"]');
-      outputText = await previewArea.first().textContent();
+      outputText = (await previewArea.first().textContent()) ?? '';
     }
 
     // テキストが生成されていることを確認
@@ -140,7 +140,7 @@ test.describe('Lorem Ipsum Generator (English)', () => {
 
     if (!outputText || outputText.trim() === '') {
       const previewArea = page.locator('[id*="preview"], [id*="render"]');
-      outputText = await previewArea.first().textContent();
+      outputText = (await previewArea.first().textContent()) ?? '';
     }
 
     expect(outputText).toBeTruthy();

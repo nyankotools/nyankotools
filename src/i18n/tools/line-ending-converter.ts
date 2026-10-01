@@ -99,7 +99,7 @@ export const lineEndingConverterContent: Record<
   en: {
     title: 'Line Ending Converter (LF / CRLF / CR)',
     description:
-      'Free tool to detect and convert line endings in your text to LF, CRLF, or CR. Shows a breakdown of the line endings currently present. Your data is processed in the browser and never sent to a server.',
+      'Detect and convert line endings to LF, CRLF, or CR, with a breakdown of those present. Runs in your browser; nothing is sent to a server.',
     h1: 'Line Ending Converter (LF / CRLF / CR)',
     introHtml:
       'Detects the line endings (LF, CRLF, or CR) in your text and converts them all to the type you choose. Handy for fixing mixed line endings after exchanging files between Windows and macOS/Linux, or for keeping unrelated line-ending changes out of a Git diff. To check the number of lines or characters, also try the <a href="/en/tools/char-counter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Character Counter</a> tool.',

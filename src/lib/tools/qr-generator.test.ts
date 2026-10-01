@@ -37,7 +37,7 @@ describe('generateQrMatrix', () => {
     const result = generateQrMatrix('A'.repeat(5000), 'H');
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.message).toContain('長すぎる');
+    expect(result.reason).toBe('too-long');
   });
 
   it('isDarkは指定した行・列の範囲内で真偽値を返す', () => {

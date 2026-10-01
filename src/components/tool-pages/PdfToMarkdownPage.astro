@@ -129,6 +129,7 @@ const options = [
 </ToolShell>
 
 <script>
+  import { paren } from '../../lib/paren';
   import { downloadBlob } from '../../lib/download';
   import { copyText } from '../../lib/clipboard';
   import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
@@ -328,7 +329,7 @@ const options = [
       extracted = pages;
       pdfBytes = bytes;
       pdfName = file.name;
-      info.textContent = `${file.name}（${(info.dataset.template ?? '').replace('{pages}', String(extracted.length))}）`;
+      info.textContent = `${file.name}${paren((info.dataset.template ?? '').replace('{pages}', String(extracted.length)))}`;
       info.hidden = false;
       render();
     } catch (e) {

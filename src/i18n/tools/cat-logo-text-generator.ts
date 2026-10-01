@@ -139,9 +139,9 @@ export const catLogoTextGeneratorContent: Record<
     ],
   },
   en: {
-    title: 'Cat Logo Text Generator – Make Transparent PNG Text with Cat Ears',
+    title: 'Cat Logo Text Generator – Transparent PNG with Cat Ears',
     description:
-      'A free cat-themed logo text maker. Place cat ears, whiskers, paw prints, sparkles, hearts, stars, and moons anywhere on bold rounded lettering and download it as a transparent-background PNG. Everything runs in your browser and nothing is sent to a server.',
+      'Make cat-themed logo text: add cat ears, whiskers and paw prints to rounded lettering and download a transparent PNG. Runs in your browser; nothing is uploaded.',
     h1: 'Cat Logo Text Generator (Transparent PNG)',
     introHtml:
       'Turn any text into a cute cat-style logo with bold rounded lettering and cat ears, whiskers, paw prints, sparkles, hearts, stars, and moons placed wherever you like. The exported PNG has a transparent background, so you can drop it straight onto banners and headers. To change the size afterwards, try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer</a>.',

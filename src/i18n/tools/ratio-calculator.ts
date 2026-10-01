@@ -169,7 +169,7 @@ export const ratioCalculatorContent: Record<
   en: {
     title: 'Ratio & Percentage Calculator',
     description:
-      'Reduce a ratio (A:B) to its simplest whole-number form, solve for a missing term in a proportion (A:B = C:D), or convert between a part, a whole, a percentage, and a rate of change. Your data is processed in the browser and never sent to a server.',
+      'Simplify ratios, solve proportions (A:B = C:D), or convert between part, whole, and percentage. Runs in your browser; nothing is sent to a server.',
     h1: 'Ratio & Percentage Calculator',
     introHtml:
       'This tool bundles three related calculations: reducing a ratio to its simplest whole-number form, solving for a missing term in a proportion (A:B = C:D), and converting between a part, a whole, a percentage, and a rate of change. Everything happens in your browser, and nothing you type is ever sent to a server. If you want to work out a tax-included/excluded price or a discounted price, try the <a href="/en/tools/tax-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Consumption Tax & Discount Calculator</a> as well.',

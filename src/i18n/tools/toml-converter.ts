@@ -114,7 +114,7 @@ export const tomlConverterContent: Record<Locale, TomlConverterPageContent> = {
   en: {
     title: 'TOML to JSON/YAML Converter',
     description:
-      'A free tool for converting between TOML, JSON, and YAML. Handy for checking the contents of a Cargo.toml or pyproject.toml as JSON or YAML, with clear syntax error messages. Your data is processed in the browser and never sent to a server.',
+      'Convert between TOML, JSON, and YAML, handy for Cargo.toml or pyproject.toml, with clear syntax errors. Runs in your browser; nothing is sent to a server.',
     h1: 'TOML to JSON/YAML Converter',
     introHtml:
       'Converts freely between any pair of TOML, JSON, and YAML. Handy for checking a TOML config file such as Cargo.toml or pyproject.toml as JSON or YAML. For JSON⇔YAML only, also try the <a href="/en/tools/yaml-json-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">YAML to JSON Converter</a>, and if you want to further format or validate the resulting JSON, try the <a href="/en/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON Formatter</a> tool.',

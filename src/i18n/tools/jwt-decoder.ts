@@ -99,7 +99,7 @@ export const jwtDecoderContent: Record<Locale, JwtDecoderPageContent> = {
   en: {
     title: 'JWT Decoder (Header & Payload Viewer)',
     description:
-      'A free tool that decodes a JWT (JSON Web Token) in your browser and displays the header and payload as formatted JSON. Time-based claims like exp, iat, and nbf are also shown as human-readable dates. The signature is not verified. Your data is processed in the browser and never sent to a server.',
+      'Decode a JWT in your browser and view the header and payload as JSON, with exp/iat/nbf as dates. Signature is not verified. Nothing is sent to a server.',
     h1: 'JWT Decoder',
     introHtml:
       'Paste a JWT (JSON Web Token) to see its header and payload formatted as JSON. Time-based claims such as <code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-gray-800">exp</code> <code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-gray-800">iat</code> <code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-gray-800">nbf</code> are also shown as human-readable dates. The signature is not verified, so this tool cannot confirm whether a token is authentic. The payload is just JSON, so for a closer look at the formatted result, also try the <a href="/en/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON Formatter</a> tool.',

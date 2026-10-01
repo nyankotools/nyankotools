@@ -49,7 +49,7 @@ export const metaTagGeneratorContent: Record<
   ja: {
     title: 'metaタグ・OGPタグ生成ツール（SNSシェアプレビュー付き）',
     description:
-      'タイトル・説明文・URL・画像などを入力するだけで、基本のmetaタグ・OGP（Open Graph Protocol）・Twitter Cardのタグをまとめて生成できる無料ツールです。X（旧Twitter）やFacebookでシェアした際のカードレイアウト（タイトル・説明文・ドメイン）をその場で確認できます。生成したHTMLはワンクリックでコピー可能。データはブラウザ内で処理され、サーバーには送信されません。',
+      'タイトル・説明文・URL・画像から、基本のmetaタグ・OGP・Twitter Cardのタグをまとめて生成できる無料ツールです。シェア時のカード表示も確認できます。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'metaタグ・OGPタグ生成',
     introHtml:
       'ページタイトルや説明文、URL、OGP画像などを入力すると、<code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">&lt;title&gt;</code>や<code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">&lt;meta name="description"&gt;</code>などの基本タグ、OGP（<code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">og:title</code>など）、Twitter Cardのタグがリアルタイムに生成されます。入力した項目に対応するタグのみが出力されるため、不要な空タグは含まれません。生成したHTMLはそのまま<code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">&lt;head&gt;</code>内に貼り付けて使用できます。OGP画像のサイズを作る際は <a href="/tools/placeholder-image-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">ダミー画像生成ツール</a> も参考にしてください。',
@@ -109,7 +109,7 @@ export const metaTagGeneratorContent: Record<
   en: {
     title: 'Meta Tag & Open Graph (OGP) Generator with Social Preview',
     description:
-      'Generate basic meta tags, Open Graph (OGP), and Twitter Card tags from a page title, description, URL, and image — with a live preview of the card layout (title, description, domain) as it would appear when shared on X (Twitter) or Facebook. Copy the generated HTML with one click. Your data is processed in the browser and never sent to a server.',
+      'Generate meta, Open Graph (OGP), and Twitter Card tags with a live share preview for X and Facebook. Runs in your browser; nothing is sent to a server.',
     h1: 'Meta Tag & OGP Generator',
     introHtml:
       'Enter a page title, description, URL, and OGP image, and the tool instantly generates the basic tags (<code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">&lt;title&gt;</code>, <code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">&lt;meta name="description"&gt;</code>, …), Open Graph tags (<code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">og:title</code>, …), and Twitter Card tags. Only tags for the fields you fill in are output, so there are no empty attributes cluttering the result. Paste the generated HTML directly into your page\'s <code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">&lt;head&gt;</code>. If you need a placeholder image sized for OGP testing, the <a href="/en/tools/placeholder-image-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Placeholder Image Generator</a> can help.',

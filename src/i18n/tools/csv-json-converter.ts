@@ -108,7 +108,7 @@ export const csvJsonConverterContent: Record<
   en: {
     title: 'CSV to JSON Converter',
     description:
-      'Free online tool to convert between CSV and JSON, handy for turning a spreadsheet export into JSON for an API. Supports comma/tab delimiters and quoted fields. Your data is processed in the browser and never sent to a server.',
+      'Convert between CSV and JSON with comma/tab delimiters and quoted fields, handy for spreadsheet exports. Runs in your browser; nothing is sent to a server.',
     h1: 'CSV ⇔ JSON Converter',
     introHtml:
       'Paste CSV to convert it to a JSON array, or paste a JSON array to convert it to CSV. The header row is used as the JSON keys, which is handy when you want to turn a spreadsheet export straight into JSON for an API. To further format or validate the resulting JSON, try the <a href="/en/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON Formatter</a> as well.',

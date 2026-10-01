@@ -79,7 +79,7 @@ export const pxRemConverterContent: Record<Locale, PxRemConverterPageContent> =
     en: {
       title: 'px to rem Converter | Custom Base Font Size',
       description:
-        'Convert between px and rem instantly with this free tool. Set a custom base font size (16px by default) to match your CSS, useful for converting font sizes, margins, and padding. Your data is processed in the browser and never sent to a server.',
+        'Convert between px and rem with a custom base font size, and see a reference table. Runs in your browser; nothing is sent to a server.',
       h1: 'px to rem Converter',
       introHtml:
         'Set a base font size (usually the font-size on the html element, 16px by default), then type a value into either the px or rem field and the other field updates instantly. Handy when converting CSS font-size, margin, or padding values from px to rem. See also the other CSS tools such as the <a href="/en/tools/css-gradient-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">CSS Gradient Generator</a>.',

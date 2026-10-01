@@ -160,7 +160,7 @@ export const cronParserContent: Record<Locale, CronParserPageContent> = {
   en: {
     title: 'Cron Expression Simulator (Next Run Time & Meaning)',
     description:
-      'Enter a cron expression to get a plain-English explanation and a list of upcoming run times. Useful for checking crontab, GitHub Actions, and Kubernetes CronJob schedules. Your data is processed in the browser and never sent to a server.',
+      'Enter a cron expression to get a plain-English explanation and upcoming run times for crontab, GitHub Actions, or Kubernetes CronJob. Runs in your browser.',
     h1: 'Cron Expression Simulator',
     introHtml:
       'Enter a cron expression (e.g. <code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-gray-800">*/15 9-18 * * 1-5</code>) to get a plain-English explanation and a list of upcoming run times. Handy for checking a crontab entry or validating a GitHub Actions or Kubernetes CronJob schedule. Everything happens in your browser, and nothing you type is ever sent to a server. Need to convert a date/time as well? Check out the <a href="/en/tools/unix-timestamp/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Unix Timestamp Converter</a> too.',

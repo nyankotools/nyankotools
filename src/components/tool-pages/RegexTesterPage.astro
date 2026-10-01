@@ -21,7 +21,7 @@ const t = regexTesterContent[locale];
       <input
         id="regex-pattern-input"
         type="text"
-        class="w-full rounded-lg border border-gray-300 p-3 focus:border-blue-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+        class="w-full rounded-lg border border-gray-300 p-3 focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
         placeholder={t.patternPlaceholder}
         spellcheck="false"
         autocomplete="off"
@@ -152,6 +152,7 @@ const t = regexTesterContent[locale];
     </div>
     <textarea
       id="regex-replace-result"
+      aria-label={t.replacementPreviewHeading}
       class="mt-2 h-32 w-full rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
       readonly
     ></textarea>

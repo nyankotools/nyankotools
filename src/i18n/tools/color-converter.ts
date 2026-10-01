@@ -80,7 +80,7 @@ export const colorConverterContent: Record<Locale, ColorConverterPageContent> =
     en: {
       title: 'Color Converter (HEX/RGB/HSL)',
       description:
-        'A free tool to convert color codes between HEX, RGB, and HSL. You can also pick a color intuitively with the color picker. Your data is processed in the browser and never sent to a server.',
+        'Convert color codes between HEX, RGB, and HSL, with a color picker. Runs in your browser; nothing is sent to a server.',
       h1: 'Color Converter (HEX/RGB/HSL)',
       introHtml:
         'Converts HEX, RGB, and HSL color codes to each other in real time. Enter a value in any field, or pick a color with the color picker, and the other formats update automatically. Everything happens in your browser, and nothing you type is ever sent to a server. Want to check whether two colors are easy to read together? Try the <a href="/en/tools/contrast-checker/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Color Contrast Checker (WCAG)</a> as well.',

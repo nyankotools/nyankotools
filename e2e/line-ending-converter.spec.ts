@@ -19,7 +19,7 @@ test.describe('改行コード変換ツール（日本語版）', () => {
     await input.fill(testText);
 
     // 出力が生成されることを確認
-    const outputText = await output.textContent();
+    const outputText = (await output.textContent()) ?? '';
     expect(outputText).toBeTruthy();
     expect(outputText.length).toBeGreaterThan(0);
   });
@@ -45,12 +45,12 @@ test.describe('改行コード変換ツール（日本語版）', () => {
 
     // 入力を設定
     await input.fill('test\nlines');
-    let outputText = await output.textContent();
+    let outputText = (await output.textContent()) ?? '';
     expect(outputText).toBeTruthy();
 
     // 入力をクリア
     await input.fill('');
-    outputText = await output.textContent();
+    outputText = (await output.textContent()) ?? '';
     expect(outputText.length).toBe(0);
   });
 
@@ -90,7 +90,7 @@ test.describe('Line Ending Converter (English)', () => {
 
     await input.fill('line1\nline2\nline3');
 
-    const outputText = await output.textContent();
+    const outputText = (await output.textContent()) ?? '';
     expect(outputText).toBeTruthy();
     expect(outputText.length).toBeGreaterThan(0);
   });

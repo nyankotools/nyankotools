@@ -103,7 +103,7 @@ export const japaneseEraConverterContent: Record<
   en: {
     title: 'Japanese Era Converter (Wareki ⇔ Western Year)',
     description:
-      'A free tool to convert between the Japanese era calendar (Reiwa, Heisei, Showa, Taisho, Meiji) and the Western (Gregorian) year, including dates around an era transition. Your data is processed in the browser and never sent to a server.',
+      'Convert between Japanese eras (Reiwa, Heisei, Showa, Taisho, Meiji) and Western years, incl. era changes. Runs in your browser; nothing is sent to a server.',
     h1: 'Japanese Era Converter',
     introHtml:
       'Converts between the Japanese era calendar (Meiji, Taisho, Showa, Heisei, Reiwa) and the Western year in real time, correctly handling dates around an era transition (e.g. Showa 64 / January 7 → Heisei 1 / January 8). Everything happens in your browser, and nothing you type is ever sent to a server. If you need to calculate an age from a date of birth, check out the <a href="/en/tools/age-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Age Calculator</a> as well.',

@@ -117,7 +117,7 @@ export const regexTesterContent: Record<Locale, RegexTesterPageContent> = {
   en: {
     title: 'Regex Tester (Match Checker & Replace Preview)',
     description:
-      'A free tool for testing regular expression patterns live in your browser. Highlights every match, lists capture groups, and previews the result of a replacement pattern. Your data is processed in the browser and never sent to a server.',
+      'Test regular expressions live: highlight matches, list capture groups, and preview replacements. Runs in your browser; nothing is sent to a server.',
     h1: 'Regex Tester',
     introHtml:
       'Enter a regular expression pattern and some test text to see every match highlighted, along with a list of any capture groups. Add a replacement pattern to preview the result of a replace operation instantly. This tool follows JavaScript (ECMAScript) regular expression syntax. For plain string transformations, also try the <a href="/en/tools/html-escape/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">HTML/JS String Escape & Unescape</a> tool.',

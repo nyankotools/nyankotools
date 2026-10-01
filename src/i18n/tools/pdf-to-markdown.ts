@@ -110,9 +110,9 @@ export const pdfToMarkdownContent: Record<Locale, PdfToMarkdownPageContent> = {
     ],
   },
   en: {
-    title: 'PDF to Markdown Converter with Tables | Free, Runs in Your Browser',
+    title: 'PDF to Markdown Converter with Tables – Free, No Upload',
     description:
-      'Convert PDF text to Markdown, detecting headings, paragraphs, lists and tables. Handy for preparing documents for ChatGPT and other AI tools. Files are processed in your browser and never uploaded.',
+      'Convert PDF text to Markdown, detecting headings, lists and tables, handy for AI tools. Runs in your browser; files are never uploaded.',
     h1: 'PDF to Markdown Converter',
     introHtml:
       'Extracts text from a PDF and uses font sizes and positions to rebuild headings, paragraphs, lists and tables as Markdown. Useful for feeding documents to AI tools or reusing their content. Your file never leaves your device. To turn pages into images instead, try the <a href="/en/tools/pdf-image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">PDF ⇔ Image Converter</a>.',

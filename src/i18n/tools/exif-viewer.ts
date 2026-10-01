@@ -166,7 +166,7 @@ export const exifViewerContent: Record<Locale, ExifViewerPageContent> = {
   en: {
     title: 'EXIF Viewer & Remover (JPEG Metadata)',
     description:
-      "Free tool that reads a JPEG photo's Exif metadata (date taken, camera model, lens, exposure settings, GPS location, and more) right in your browser, and lets you download a copy with the Exif data stripped out, with no quality loss or re-compression. Your photos are never sent to a server.",
+      'View a JPEG photo’s Exif metadata (date, camera, lens, GPS) and download a copy with Exif stripped, losslessly. Runs in your browser; nothing is uploaded.',
     h1: 'EXIF Viewer & Remover',
     introHtml:
       'Select a JPEG photo to read its Exif metadata — date taken, camera model, lens, exposure settings, GPS location, and more. Use the "Remove Exif & Download" button to get a copy of the same image with only the Exif data stripped out (resolution and quality are untouched). For format conversion and compression, see the <a href="/en/tools/image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Format Converter</a>; for resizing, see the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer</a>.',

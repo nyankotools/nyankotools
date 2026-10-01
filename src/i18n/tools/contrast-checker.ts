@@ -103,7 +103,7 @@ export const contrastCheckerContent: Record<
   en: {
     title: 'Color Contrast Checker (WCAG)',
     description:
-      'A free tool that calculates the contrast ratio between text and background colors and checks it against the WCAG (Web Content Accessibility Guidelines) AA/AAA levels. Your data is processed in the browser and never sent to a server.',
+      'Calculate the contrast ratio between text and background colors and check it against WCAG AA/AAA levels. Runs in your browser; nothing is sent to a server.',
     h1: 'Color Contrast Checker (WCAG)',
     introHtml:
       'Enter a text color and a background color to calculate the WCAG 2.x contrast ratio in real time, and see whether it meets level AA or AAA for normal text and large text. Everything happens in your browser, and nothing you type is ever sent to a server. Need to convert a color code format? Check out the <a href="/en/tools/color-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Color Converter</a> as well.',

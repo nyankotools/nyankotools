@@ -102,7 +102,7 @@ export const unixTimestampContent: Record<Locale, UnixTimestampPageContent> = {
   en: {
     title: 'Unix Timestamp Converter',
     description:
-      'A free tool to convert between a Unix timestamp (epoch seconds or milliseconds) and a date/time. Also shows the current timestamp. Your data is processed in the browser and never sent to a server.',
+      'Convert between Unix timestamps (seconds or milliseconds) and dates, and see the current timestamp. Runs in your browser; nothing is sent to a server.',
     h1: 'Unix Timestamp Converter',
     introHtml:
       'Converts a Unix timestamp (epoch seconds or milliseconds) to a date/time and back, in real time. The unit is auto-detected from the number of digits, but you can also switch it manually. Everything happens in your browser, and nothing you type is ever sent to a server. Need to check the length of a formatted log line? Check out the <a href="/en/tools/char-counter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Character Counter</a> as well.',

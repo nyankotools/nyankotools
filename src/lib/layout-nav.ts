@@ -4,20 +4,34 @@ export function initSidebar(): void {
   const overlay = document.getElementById('sidebar-overlay');
   const mql = window.matchMedia('(min-width: 768px)');
 
+  // モバイル幅で閉じている間は画面外のサイドバーにフォーカスやスクリーンリーダーが入らないよう inert にする
+  function syncInert() {
+    if (!sidebar) return;
+    const isOpen = toggle?.getAttribute('aria-expanded') === 'true';
+    sidebar.inert = !mql.matches && !isOpen;
+  }
+
   function openSidebar() {
     sidebar?.classList.remove('-translate-x-full');
     sidebar?.classList.add('translate-x-0');
     overlay?.classList.remove('hidden');
     toggle?.setAttribute('aria-expanded', 'true');
     document.body.classList.add('overflow-hidden');
+    syncInert();
+    sidebar?.focus({ preventScroll: true });
   }
 
   function closeSidebar() {
+    // inert 化でフォーカスが外れる前に、サイドバー内にあったかを控える
+    const hadFocus = !!sidebar?.contains(document.activeElement);
     sidebar?.classList.add('-translate-x-full');
     sidebar?.classList.remove('translate-x-0');
     overlay?.classList.add('hidden');
     toggle?.setAttribute('aria-expanded', 'false');
     document.body.classList.remove('overflow-hidden');
+    syncInert();
+    // サイドバー内にフォーカスがあった場合のみトグルボタンへ戻す
+    if (hadFocus && !mql.matches) toggle?.focus();
   }
 
   toggle?.addEventListener('click', () => {
@@ -29,7 +43,10 @@ export function initSidebar(): void {
     }
   });
 
-  overlay?.addEventListener('click', closeSidebar);
+  overlay?.addEventListener('click', () => {
+    closeSidebar();
+    toggle?.focus();
+  });
 
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
@@ -41,7 +58,9 @@ export function initSidebar(): void {
     if (event.matches) {
       closeSidebar();
     }
+    syncInert();
   });
+  syncInert();
 }
 
 type Theme = 'light' | 'dark' | 'system';

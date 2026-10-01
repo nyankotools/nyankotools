@@ -96,7 +96,7 @@ export const markdownPreviewContent: Record<
   en: {
     title: 'Markdown to HTML Converter',
     description:
-      'Free online tool that converts Markdown to HTML with a live preview, and HTML back to Markdown. Handy for checking a GitHub README or blog draft, copying the generated HTML source, or converting pasted HTML into Markdown. Your data is processed in the browser and never sent to a server.',
+      'Convert Markdown to HTML with live preview, or HTML back to Markdown. Runs in your browser; nothing is sent to a server.',
     h1: 'Markdown to HTML Converter (with Live Preview)',
     introHtml:
       'Type Markdown and it\'s converted to HTML with a live preview as you type. Copy the generated HTML source directly, or switch direction to paste HTML and convert it back to Markdown. Handy for checking a GitHub README or a blog draft before publishing. To count the characters in your result, try the <a href="/en/tools/char-counter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Character Counter</a> as well.',

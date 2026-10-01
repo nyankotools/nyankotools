@@ -111,7 +111,7 @@ export const webcamTesterContent: Record<Locale, WebcamTesterPageContent> = {
   en: {
     title: 'Webcam Test – Check Camera, Resolution, FPS & Microphone',
     description:
-      'A free online webcam test. Preview your camera, measure the actual resolution and frame rate (FPS), and check your microphone input level right in the browser. Video and audio stay in your browser and are never uploaded or stored.',
+      'Test your webcam online: preview video, measure resolution and FPS, and check microphone level. Runs in your browser; nothing is uploaded or stored.',
     h1: 'Webcam & Microphone Test',
     introHtml:
       'Check that your new webcam works, see its real resolution and FPS, and confirm your microphone is picking up sound before a video call or stream. Nothing leaves this page. Need to shrink an image taken with another app? Try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer</a>.',

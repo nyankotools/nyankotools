@@ -45,6 +45,7 @@ import Layout from '../layouts/Layout.astro';
       mobileSwitch.href = '/';
       mobileSwitch.hreflang = 'ja';
       mobileSwitch.textContent = '日本語';
+      mobileSwitch.setAttribute('aria-label', '日本語 Switch to Japanese');
     }
     // デスクトップのサイドバーも日本語ビルド前提で「日本語」が現在の言語になっているため、英語に付け替える
     document

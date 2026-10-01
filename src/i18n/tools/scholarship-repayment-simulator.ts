@@ -135,10 +135,9 @@ export const scholarshipRepaymentSimulatorContent: Record<
     ],
   },
   en: {
-    title:
-      'Japanese Student Loan (JASSO) Repayment Simulator — Fixed vs. Reviewed Rate',
+    title: 'JASSO Student Loan Repayment Simulator (Fixed vs. Review)',
     description:
-      'Estimates the monthly payment, total repayment, and total interest for a JASSO (Japan Student Services Organization) Type 2 (interest-bearing) student loan, comparing the fixed-rate method against the rate-review method, from your loan amount, interest rate, and repayment term. Your data is processed in the browser and never sent to a server.',
+      'Estimate monthly payment and total interest for a JASSO Type 2 student loan, comparing fixed-rate and rate-review methods. Runs in your browser.',
     h1: 'JASSO Student Loan Repayment Simulator',
     introHtml:
       'Enter your total loan amount, interest rate, and repayment term, and this tool estimates the monthly payment, total repayment, and total interest under an equal-payment (amortizing) loan. For the rate-review method, you can also enter an assumed rate change at each 5-year review to see how the payment might shift over time. To estimate a Japanese freelancer\'s take-home pay, try the <a href="/en/tools/freelance-income-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Freelancer Take-Home Pay Calculator</a> as well.',

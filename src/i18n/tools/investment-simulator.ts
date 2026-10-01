@@ -96,7 +96,7 @@ export const investmentSimulatorContent: Record<
   ja: {
     title: '資産運用シミュレーション（積立・複利計算／取り崩し試算つき）',
     description:
-      '初期投資額・毎月の積立額・想定利回り（年率）・積立期間のうち3つを入力すると、残る1つ（将来の資産額／毎月の積立額／積立期間／初期投資額）を複利計算で試算する無料ツールです。積立元本と運用益の内訳をグラフと年別の表で確認でき、取り崩し可能額（毎月）もあわせて試算できます。データはブラウザ内で処理され、サーバーには送信されません。',
+      '初期投資額・毎月の積立額・想定利回り・積立期間のうち3つを入力すると、残る1つを複利計算で試算する無料ツールです。取り崩し可能額も試算できます。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: '資産運用シミュレーション',
     introHtml:
       '「初期投資額」「毎月の積立額」「想定利回り（年率）」「積立期間」のうち、求めたい項目以外の3つを入力すると、複利運用を前提に残る1つを試算します。積立元本の累計と運用益の内訳をグラフと年別の推移表で確認できるほか、試算した資産額をもとに毎月の取り崩し可能額もシミュレーションできます。住宅ローンの繰り上げ返済効果を試算したい場合は <a href="/tools/mortgage-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">住宅ローン繰り上げ返済比較シミュレーション</a> もあわせてご利用ください。',
@@ -239,7 +239,7 @@ export const investmentSimulatorContent: Record<
   en: {
     title: 'Investment Growth & Withdrawal Simulator (Compound Interest)',
     description:
-      'Enter any 3 of "initial investment," "monthly contribution," "assumed annual return," and "time horizon," and this free tool solves for the remaining one (future value, monthly contribution, time horizon, or initial investment) under compound interest. See the split between contributions and investment gains in a chart and a year-by-year table, and estimate a sustainable monthly withdrawal amount from the resulting balance. Your data is processed in the browser and never sent to a server.',
+      'Solve for future value, monthly contribution, time horizon, or initial investment under compound interest, with charts and a yearly table. Runs in your browser.',
     h1: 'Investment Growth Simulator (Compound Interest & Withdrawal)',
     introHtml:
       'Enter 3 of "initial investment," "monthly contribution," "assumed annual return," and "time horizon," and this tool solves for the remaining one under compound interest (dollar-cost averaging). See the split between total contributions and investment gains in a chart and a year-by-year breakdown table, then estimate a sustainable monthly withdrawal amount from that future value. To estimate the effect of a lump-sum mortgage prepayment, try the <a href="/en/tools/mortgage-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Mortgage Prepayment Comparison Calculator</a> as well.',

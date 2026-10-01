@@ -72,7 +72,7 @@ export const htmlEscapeContent: Record<Locale, HtmlEscapePageContent> = {
   en: {
     title: 'HTML/JS String Escape & Unescape',
     description:
-      'A free tool that escapes or unescapes HTML special characters (& < > " \') and JavaScript string escape sequences such as newlines and quotes. Handy for XSS prevention and building strings in generated code. Your data is processed in the browser and never sent to a server.',
+      'Escape or unescape HTML special characters and JavaScript string escapes, handy for XSS prevention. Runs in your browser; nothing is sent to a server.',
     h1: 'HTML / JavaScript String Escape & Unescape',
     introHtml:
       'Escape your text as HTML special characters (&amp; &lt; &gt; &quot; \') or convert character references back to the original text. Choose "JS String Escape" to embed the text inside a JavaScript string literal instead. Need to convert a string for use in a URL? Try the <a href="/en/tools/url-encode/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">URL Encoder/Decoder</a>.',

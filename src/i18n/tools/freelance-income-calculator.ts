@@ -122,7 +122,7 @@ export const freelanceIncomeCalculatorContent: Record<
   en: {
     title: 'Freelancer Take-Home Pay Calculator (Japan)',
     description:
-      "Estimate a Japanese freelancer's (sole proprietor) income tax, reconstruction surtax, and resident tax from annual revenue, expenses, the blue-return deduction, and social insurance payments, and see a rough take-home pay figure. Your data is processed in the browser and never sent to a server.",
+      'Estimate a Japanese freelancer’s income tax, resident tax, and take-home pay from revenue, expenses, blue-return deduction, and insurance. Runs in your browser.',
     h1: 'Freelancer Take-Home Pay Calculator',
     introHtml:
       'Enter your annual revenue, necessary expenses, blue-return special deduction, and social insurance payments, and this tool estimates Japan\'s income tax, reconstruction surtax, and resident tax on your business income, along with a rough take-home pay figure. This is a simplified simulation that assumes business income is your only source of income. To work out consumption tax or a discounted price first, try the <a href="/en/tools/tax-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Consumption Tax & Discount Calculator</a> as well.',

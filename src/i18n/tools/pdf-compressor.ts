@@ -107,7 +107,7 @@ export const pdfCompressorContent: Record<Locale, PdfCompressorPageContent> = {
   en: {
     title: 'Compress PDF – Reduce File Size Free, No Upload',
     description:
-      'A free online tool to make a PDF smaller. Each page is recompressed as an image so the file fits email and upload limits. Your file is processed in the browser and never uploaded to a server.',
+      'Make a PDF smaller by recompressing each page as an image, to fit email and upload limits. Runs in your browser; your file is never uploaded.',
     h1: 'PDF Compressor (Reduce File Size)',
     introHtml:
       'Shrink a PDF by recompressing each page as an image. Your file never leaves your device. To drop pages you do not need first, use the <a href="/en/tools/pdf-merge-split/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">PDF Merge, Split & Extract</a> tool.',

@@ -138,9 +138,9 @@ export const imageResizerContent: Record<Locale, ImageResizerPageContent> = {
     ],
   },
   en: {
-    title: 'Image Resizer & Compressor (Resize + WebP/JPEG/PNG Compression)',
+    title: 'Image Resizer & Compressor (WebP/JPEG/PNG Compression)',
     description:
-      'Free tool that resizes images by pixel dimensions or percentage, then compresses them to WebP, JPEG, or PNG. Process multiple images at once and compare dimensions, file size, and reduction before and after. Your images are processed in the browser and never sent to a server.',
+      'Resize images by pixels or percentage and compress to WebP, JPEG, or PNG. Batch process and compare file sizes. Runs in your browser; nothing is uploaded.',
     h1: 'Image Resizer & Compressor',
     introHtml:
       'Select images, choose a target width/height in pixels or a scale percentage, and resize them in your browser before compressing to WebP, JPEG, or PNG. Handy for shrinking images before uploading to social media or a blog. You can process several files at once. If you only need format conversion, try the <a href="/en/tools/image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Format Converter</a> instead.',

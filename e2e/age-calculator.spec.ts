@@ -9,7 +9,7 @@ test.describe('年齢計算ツール（日本語版）', () => {
   test('ツールが読み込まれて基本的な表示がされる', async ({ page }) => {
     await page.goto('/tools/age-calculator/');
 
-    const mainContent = await page.locator('main').textContent();
+    const mainContent = (await page.locator('main').textContent()) ?? '';
     expect(mainContent).toBeTruthy();
     expect(mainContent.length).toBeGreaterThan(0);
   });
@@ -29,7 +29,7 @@ test.describe('年齢計算ツール（日本語版）', () => {
   test('計算機関連のテキストが表示される', async ({ page }) => {
     await page.goto('/tools/age-calculator/');
 
-    const mainText = await page.locator('main').textContent();
+    const mainText = (await page.locator('main').textContent()) ?? '';
     expect(mainText).toBeTruthy();
     expect(mainText.length).toBeGreaterThan(100);
   });
@@ -54,7 +54,7 @@ test.describe('Age Calculator (English)', () => {
   test('英語版でツールが読み込まれる', async ({ page }) => {
     await page.goto('/en/tools/age-calculator/');
 
-    const mainContent = await page.locator('main').textContent();
+    const mainContent = (await page.locator('main').textContent()) ?? '';
     expect(mainContent).toBeTruthy();
     expect(mainContent.length).toBeGreaterThan(0);
   });

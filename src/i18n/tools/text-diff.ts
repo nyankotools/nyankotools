@@ -67,7 +67,7 @@ export const textDiffContent: Record<Locale, TextDiffPageContent> = {
   en: {
     title: 'Text Diff Checker (Compare Two Texts)',
     description:
-      'A free tool that compares two texts line by line and highlights added and removed lines. Supports ignoring whitespace or case differences. Your data is processed in the browser and never sent to a server.',
+      'Compare two texts line by line and highlight added and removed lines, optionally ignoring whitespace or case. Runs in your browser; nothing is sent to a server.',
     h1: 'Text Diff Checker',
     introHtml:
       'Compares two texts line by line, highlighting added lines in green and removed lines in red. Handy for comparing config files or document drafts before and after a change. If you just need to format JSON content, also try the <a href="/en/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON Formatter</a> tool.',

@@ -122,10 +122,9 @@ export const mortgageCalculatorContent: Record<
     ],
   },
   en: {
-    title:
-      'Mortgage Prepayment Comparison Calculator (Shorten Term vs. Reduce Payment)',
+    title: 'Mortgage Prepayment Calculator (Shorten vs. Reduce)',
     description:
-      'Compare the two common ways to make a lump-sum mortgage prepayment — shortening the loan term or reducing the monthly payment — from your remaining balance, interest rate, remaining term, and prepayment amount. See the interest saved, months shortened, or payment reduction for each option. Your data is processed in the browser and never sent to a server.',
+      'Compare mortgage prepayment by shortening the term or reducing the payment, with interest saved. Runs in your browser; nothing is sent to a server.',
     h1: 'Mortgage Prepayment Comparison Calculator',
     introHtml:
       'Enter your remaining loan balance, annual interest rate, remaining term, and a lump-sum prepayment amount, and this tool estimates — assuming an equal-payment (amortizing) loan — how much interest you\'d save, how many months you\'d shorten the term by, or how much your monthly payment would drop, comparing "shorten the term" against "reduce the payment" prepayment strategies. To estimate a Japanese freelancer\'s take-home pay, try the <a href="/en/tools/freelance-income-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Freelancer Take-Home Pay Calculator</a> as well.',

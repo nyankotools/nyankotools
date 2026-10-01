@@ -50,7 +50,7 @@ export const chmodCalculatorContent: Record<
   ja: {
     title: 'Chmodパーミッション計算機（8進数・シンボル表記変換）',
     description:
-      'chmodコマンドで使うファイルパーミッションを、チェックボックス・8進数（例: 755）・シンボル表記（例: rwxr-xr-x）のいずれからでも相互変換できる無料ツールです。setuid/setgid/スティッキービットにも対応。データはブラウザ内で処理され、サーバーには送信されません。',
+      'chmodのファイルパーミッションを、チェックボックス・8進数（755）・シンボル表記（rwxr-xr-x）で相互変換できる無料ツールです。setuid等にも対応。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'Chmodパーミッション計算機',
     introHtml:
       '所有者・グループ・その他の読み取り/書き込み/実行権限をチェックボックスで指定すると、8進数（例: 755）とシンボル表記（例: rwxr-xr-x）、そのまま使えるchmodコマンドをリアルタイムで表示します。逆に8進数やシンボル表記を直接入力しても他の欄に反映されます。setuid・setgid・スティッキービットなどの特殊権限にも対応。ブラウザ内で処理され、入力内容がサーバーに送信されることはありません。正規表現でファイルパスを扱う場合は <a href="/tools/regex-tester/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">正規表現テスター</a> もあわせてご利用ください。',
@@ -115,7 +115,7 @@ export const chmodCalculatorContent: Record<
   en: {
     title: 'Chmod Permission Calculator (Octal & Symbolic Notation)',
     description:
-      'Convert file permissions for the chmod command between checkboxes, octal notation (e.g. 755), and symbolic notation (e.g. rwxr-xr-x) — free and works from any of the three. Supports setuid/setgid/sticky bit. Your data is processed in the browser and never sent to a server.',
+      'Convert chmod permissions between checkboxes, octal (755) and symbolic (rwx), with setuid/setgid/sticky. Runs in your browser; nothing is sent to a server.',
     h1: 'Chmod Permission Calculator',
     introHtml:
       'Check the read/write/execute boxes for the owner, group, and other, and this tool shows the octal notation (e.g. 755), the symbolic notation (e.g. rwxr-xr-x), and a ready-to-use chmod command in real time. You can also type an octal or symbolic value directly and the other fields update to match, including special permissions like setuid, setgid, and the sticky bit. Everything happens in your browser, and nothing you type is ever sent to a server. If you work with file paths using regular expressions, try the <a href="/en/tools/regex-tester/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Regex Tester</a> as well.',

@@ -47,7 +47,7 @@ export const viewportCheckerContent: Record<
     title:
       'スクリーンサイズ・Viewportチェッカー（画面幅・DPR・ブレークポイント確認）',
     description:
-      'ブラウザのビューポートサイズ・ウィンドウサイズ・画面解像度・デバイスピクセル比（DPR）・Tailwind CSSのブレークポイントなどをリアルタイムで確認できる無料ツールです。レスポンシブデザインの実機確認やデバッグに便利。データはブラウザ内で処理され、サーバーには送信されません。',
+      'ビューポートサイズ・画面解像度・デバイスピクセル比（DPR）・Tailwind CSSのブレークポイントをリアルタイムで確認できる無料ツールです。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'スクリーンサイズ・Viewportチェッカー',
     introHtml:
       'このページを開いているブラウザの <code class="rounded bg-gray-100 px-1 py-0.5 font-mono text-sm dark:bg-gray-800">window.innerWidth</code> などのビューポートサイズ・ウィンドウサイズ・画面解像度・デバイスピクセル比・現在のTailwind CSSブレークポイントなどをリアルタイムで表示します。ウィンドウサイズを変更したり、開発者ツールのデバイスツールバーで端末を切り替えたりすると、下の表が自動的に更新されます。ブラウザ内で処理され、値がサーバーに送信されることはありません。キーボードイベントの値を確認したい場合は <a href="/tools/keycode-checker/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">キーコード（e.code/e.key）チェッカー</a> もあわせてご利用ください。',
@@ -115,7 +115,7 @@ export const viewportCheckerContent: Record<
   en: {
     title: 'Screen Size & Viewport Checker (Width, DPR, Breakpoint)',
     description:
-      "Shows your browser's viewport size, window size, screen resolution, device pixel ratio (DPR), and current Tailwind CSS breakpoint in real time — free, and works entirely in your browser. Handy for checking responsive designs on real devices. Your data is processed locally and never sent to a server.",
+      'See your viewport size, screen resolution, device pixel ratio, and current Tailwind breakpoint in real time. Runs in your browser; nothing is sent to a server.',
     h1: 'Screen Size & Viewport Checker',
     introHtml:
       'Shows the <code class="rounded bg-gray-100 px-1 py-0.5 font-mono text-sm dark:bg-gray-800">window.innerWidth</code> and other viewport size, window size, screen resolution, device pixel ratio, and current Tailwind CSS breakpoint of the browser you\'re using, in real time. The table below updates automatically as you resize the window or switch devices in your browser\'s device toolbar. Everything happens in your browser, and no value is ever sent to a server. If you also want to check keyboard event values, try the <a href="/en/tools/keycode-checker/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Keycode (e.code / e.key) Checker</a> as well.',

@@ -6,25 +6,13 @@ qrcode.stringToBytes = (text: string) =>
 
 export type ErrorCorrectionLevel = 'L' | 'M' | 'Q' | 'H';
 
-export interface ErrorCorrectionLevelOption {
-  value: ErrorCorrectionLevel;
-  label: string;
-}
-
-export const ERROR_CORRECTION_LEVEL_OPTIONS: ErrorCorrectionLevelOption[] = [
-  { value: 'L', label: '低（約7%復元）' },
-  { value: 'M', label: '中（約15%復元）' },
-  { value: 'Q', label: '高（約25%復元）' },
-  { value: 'H', label: '最高（約30%復元）' },
-];
-
 export interface QrMatrix {
   moduleCount: number;
   isDark: (row: number, col: number) => boolean;
 }
 
 export type QrGenerateResult =
-  { ok: true; matrix: QrMatrix } | { ok: false; message: string };
+  { ok: true; matrix: QrMatrix } | { ok: false; reason: 'empty' | 'too-long' };
 
 /** テキストからQRコードのモジュール（白黒マス）情報を生成する */
 export function generateQrMatrix(
@@ -32,7 +20,7 @@ export function generateQrMatrix(
   errorCorrectionLevel: ErrorCorrectionLevel = 'M',
 ): QrGenerateResult {
   if (text === '') {
-    return { ok: false, message: 'テキストを入力してください。' };
+    return { ok: false, reason: 'empty' };
   }
 
   try {
@@ -48,10 +36,6 @@ export function generateQrMatrix(
       },
     };
   } catch {
-    return {
-      ok: false,
-      message:
-        '入力内容が長すぎるため、QRコードを生成できません。文字数を減らすか、誤り訂正レベルを下げてください。',
-    };
+    return { ok: false, reason: 'too-long' };
   }
 }

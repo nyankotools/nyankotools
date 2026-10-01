@@ -79,7 +79,7 @@ export const zenkakuHankakuContent: Record<Locale, ZenkakuHankakuPageContent> =
     en: {
       title: 'Full-width / Half-width Converter',
       description:
-        'A free tool that converts between full-width and half-width characters for alphanumerics, symbols, katakana, and spaces, with each character type selectable individually. Your data is processed in the browser and never sent to a server.',
+        'Convert between full-width and half-width letters, digits, symbols, katakana, and spaces, by character type. Runs in your browser; nothing is sent to a server.',
       h1: 'Full-width / Half-width Converter',
       introHtml:
         'Enter text and it will be converted between full-width and half-width for the character types you select (alphanumerics, symbols, katakana, and spaces). Useful for normalizing inconsistent form input or data that mixes in half-width katakana. To check the character count of the result, try the <a href="/en/tools/char-counter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Character Counter</a> as well.',

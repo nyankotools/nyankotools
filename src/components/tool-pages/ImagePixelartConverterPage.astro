@@ -205,6 +205,7 @@ const t = imagePixelartConverterContent[locale];
 </ToolShell>
 
 <script>
+  import { paren } from '../../lib/paren';
   import { enableFileDrop } from '../../lib/file-drop';
   import {
     buildOutputFileName,
@@ -458,7 +459,7 @@ const t = imagePixelartConverterContent[locale];
           currentDims!,
           formatFileSize(blob.size),
         );
-        resultSizeEl.textContent = `${originalLabel}: ${originalText} → ${convertedLabel}: ${convertedText}（${reductionText}）`;
+        resultSizeEl.textContent = `${originalLabel}: ${originalText} → ${convertedLabel}: ${convertedText}${paren(reductionText)}`;
       },
       option.mimeType,
       qualityArg,

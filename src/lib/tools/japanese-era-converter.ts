@@ -107,8 +107,3 @@ export function warekiToWestern(
 
   return year;
 }
-
-/** 元号年の表示用フォーマット（元年は「元年」、それ以外は数字+年） */
-export function formatEraYear(eraYear: number): string {
-  return eraYear === 1 ? '元年' : `${eraYear}年`;
-}

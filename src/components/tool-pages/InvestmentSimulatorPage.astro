@@ -15,6 +15,8 @@ const t = investmentSimulatorContent[locale];
   <section
     class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-number-locale={t.numberLocale}
+    data-years-months-format={t.yearsMonthsFormat}
+    data-years-format={t.yearsFormat}
     data-error={t.error}
     data-chart-aria-label-template={t.chartAriaLabelTemplate}
     data-trend-chart-aria-label-template={t.trendChartAriaLabelTemplate}
@@ -544,6 +546,7 @@ const t = investmentSimulatorContent[locale];
     formatNumberWithCommas,
     stripCommas,
   } from '../../lib/comma-number-input';
+  import { fill } from '../../lib/format-template';
 
   type Mode =
     'futureValue' | 'monthlyContribution' | 'months' | 'initialInvestment';
@@ -554,6 +557,8 @@ const t = investmentSimulatorContent[locale];
   )!;
   const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
   const errorMessage = configEl.dataset.error ?? '';
+  const yearsMonthsFormat = configEl.dataset.yearsMonthsFormat ?? '';
+  const yearsFormat = configEl.dataset.yearsFormat ?? '';
   const chartAriaLabelTemplate = configEl.dataset.chartAriaLabelTemplate ?? '';
   const trendChartAriaLabelTemplate =
     configEl.dataset.trendChartAriaLabelTemplate ?? '';
@@ -739,9 +744,10 @@ const t = investmentSimulatorContent[locale];
   function formatMonths(months: number): string {
     const years = Math.floor(months / 12);
     const remainder = months % 12;
-    return numberLocale === 'ja-JP'
-      ? `${years}年${remainder}ヶ月`
-      : `${years}yr ${remainder}mo`;
+    return fill(yearsMonthsFormat, {
+      y: String(years),
+      m: String(remainder),
+    });
   }
 
   function getMode(): Mode {
@@ -792,9 +798,7 @@ const t = investmentSimulatorContent[locale];
   }
 
   function yearAxisLabel(year: number): string {
-    return numberLocale === 'ja-JP'
-      ? `${Math.round(year)}年`
-      : `${Math.round(year)}yr`;
+    return fill(yearsFormat, { y: String(Math.round(year)) });
   }
 
   interface TrendPoint {

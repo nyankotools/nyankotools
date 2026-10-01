@@ -178,6 +178,7 @@ const t = ageCalculatorContent[locale];
     calculateNextBirthday,
     calculatePreciseAge,
   } from '../../lib/tools/age-calculator';
+  import { count, fill } from '../../lib/format-template';
   import type { AgeResultFormat } from '../../i18n/tools/age-calculator';
   import { getWeekday, type DateParts } from '../../lib/tools/date-calculator';
 
@@ -238,22 +239,6 @@ const t = ageCalculatorContent[locale];
   const daysLivedEl = document.getElementById('age-calc-days-lived')!;
   const weekdayEl = document.getElementById('age-calc-weekday')!;
   const nextBirthdayEl = document.getElementById('age-calc-next-birthday')!;
-
-  function fill(template: string, values: Record<string, string>): string {
-    return template.replace(
-      /\{(\w+)\}/g,
-      (_, key: string) => values[key] ?? '',
-    );
-  }
-
-  /** [単数形, 複数形] のテンプレートから件数に合うものを選んで {n} を埋める */
-  function count(
-    forms: [string, string],
-    n: number,
-    display: string = String(n),
-  ): string {
-    return fill(n === 1 ? forms[0] : forms[1], { n: display });
-  }
 
   function render() {
     errorEl.textContent = '';

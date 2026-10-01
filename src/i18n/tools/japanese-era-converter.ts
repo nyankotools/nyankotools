@@ -5,7 +5,18 @@ interface GlossaryTerm {
   description: string;
 }
 
+/** 変換結果の表示形式（{era}=元号名, {year}=和暦の年, {n}=年数, {y}{m}{d}=西暦の年月日, {mm}{dd}=0埋め） */
+export interface EraResultFormat {
+  /** 元号名にローマ字表記（romaji）を使うか（false なら日本語表記） */
+  romajiEraName: boolean;
+  wareki: string;
+  eraYear: string;
+  eraYearFirst: string;
+  western: string;
+}
+
 export interface JapaneseEraConverterPageContent {
+  resultFormat: EraResultFormat;
   title: string;
   description: string;
   h1: string;
@@ -44,6 +55,13 @@ export const japaneseEraConverterContent: Record<
   JapaneseEraConverterPageContent
 > = {
   ja: {
+    resultFormat: {
+      romajiEraName: false,
+      wareki: '{era}{year}',
+      eraYear: '{n}年',
+      eraYearFirst: '元年',
+      western: '西暦{y}年{m}月{d}日',
+    },
     title: '和暦⇔西暦変換（元号早見表）',
     description:
       '令和・平成・昭和・大正・明治の和暦と西暦を相互に変換できる無料ツールです。改元日をまたぐ日付にも対応。データはブラウザ内で処理され、サーバーには送信されません。',
@@ -101,6 +119,13 @@ export const japaneseEraConverterContent: Record<
     ],
   },
   en: {
+    resultFormat: {
+      romajiEraName: true,
+      wareki: '{era} {year}',
+      eraYear: '{n}',
+      eraYearFirst: '1 (gannen)',
+      western: '{y}-{mm}-{dd}',
+    },
     title: 'Japanese Era Converter (Wareki ⇔ Western Year)',
     description:
       'Convert between Japanese eras (Reiwa, Heisei, Showa, Taisho, Meiji) and Western years, incl. era changes. Runs in your browser; nothing is sent to a server.',

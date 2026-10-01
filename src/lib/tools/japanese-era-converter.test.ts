@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   ERAS,
-  formatEraYear,
   isValidDate,
   warekiToWestern,
   westernToWareki,
@@ -157,15 +156,5 @@ describe('warekiToWestern', () => {
     // 令和は2019年開始なので、令和100年は西暦2118年だが次の元号が無いため有効
     // ここでは明示的に「次の元号の開始日以降」になるケースを確認する
     expect(warekiToWestern('平成', 32, 1, 1)).toBeNull(); // 平成31年4月30日で終了
-  });
-});
-
-describe('formatEraYear', () => {
-  it('元年は「元年」と表示する', () => {
-    expect(formatEraYear(1)).toBe('元年');
-  });
-
-  it('それ以外は数字+年', () => {
-    expect(formatEraYear(6)).toBe('6年');
   });
 });

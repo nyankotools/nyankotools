@@ -11,6 +11,8 @@ export interface MortgageCalculatorPageContent {
   h1: string;
   introHtml: string;
   numberLocale: string;
+  /** 期間の表示形式（{y}=年, {m}=月） */
+  yearsMonthsFormat: string;
   sectionHeading: string;
   balanceLabel: string;
   balancePlaceholder: string;
@@ -59,6 +61,7 @@ export const mortgageCalculatorContent: Record<
     introHtml:
       '借入残高・年利・残りの返済期間・繰り上げ返済額を入力すると、元利均等返済を前提に、繰り上げ返済しなかった場合との比較で「期間短縮型」「返済額軽減型」それぞれの効果（総利息の軽減額、返済期間の短縮月数、毎月の返済額の軽減額）を試算します。フリーランスなど個人事業主の手取り額を試算したい場合は <a href="/tools/freelance-income-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">フリーランス手取り計算機</a> もあわせてご利用ください。',
     numberLocale: 'ja-JP',
+    yearsMonthsFormat: '{y}年{m}ヶ月',
     sectionHeading: 'ローン情報・繰り上げ返済額の入力',
     balanceLabel: '繰り上げ返済前の借入残高（円）',
     balancePlaceholder: '30000000',
@@ -129,6 +132,7 @@ export const mortgageCalculatorContent: Record<
     introHtml:
       'Enter your remaining loan balance, annual interest rate, remaining term, and a lump-sum prepayment amount, and this tool estimates — assuming an equal-payment (amortizing) loan — how much interest you\'d save, how many months you\'d shorten the term by, or how much your monthly payment would drop, comparing "shorten the term" against "reduce the payment" prepayment strategies. To estimate a Japanese freelancer\'s take-home pay, try the <a href="/en/tools/freelance-income-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Freelancer Take-Home Pay Calculator</a> as well.',
     numberLocale: 'en-US',
+    yearsMonthsFormat: '{y}yr {m}mo',
     sectionHeading: 'Loan details and prepayment amount',
     balanceLabel: 'Remaining balance before prepayment (JPY)',
     balancePlaceholder: '30000000',

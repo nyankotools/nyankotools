@@ -11,6 +11,8 @@ export interface PdfCompressorPageContent {
   fileHint: string;
   /** {pages} を置換 */
   pagesTemplate: string;
+  /** ファイル情報（ページ数とサイズ）の区切り */
+  infoSeparator: string;
   levelLabel: string;
   levelHigh: string;
   levelMedium: string;
@@ -52,6 +54,7 @@ export const pdfCompressorContent: Record<Locale, PdfCompressorPageContent> = {
     dropHint: 'ここにPDFファイルをドラッグ＆ドロップすることもできます',
     fileHint: '.pdfファイルを1つ選んでください。',
     pagesTemplate: '{pages}ページ',
+    infoSeparator: '、',
     levelLabel: '圧縮レベル',
     levelHigh: '低圧縮（高画質・144dpi）',
     levelMedium: '標準（108dpi）',
@@ -115,6 +118,7 @@ export const pdfCompressorContent: Record<Locale, PdfCompressorPageContent> = {
     dropHint: 'You can also drag and drop a PDF file here',
     fileHint: 'Pick a single .pdf file.',
     pagesTemplate: '{pages} pages',
+    infoSeparator: ', ',
     levelLabel: 'Compression level',
     levelHigh: 'Light (high quality, 144 dpi)',
     levelMedium: 'Standard (108 dpi)',

@@ -16,6 +16,10 @@ export interface InvestmentSimulatorPageContent {
   h1: string;
   introHtml: string;
   numberLocale: string;
+  /** 期間の表示形式（{y}=年, {m}=月） */
+  yearsMonthsFormat: string;
+  /** 年数のみの表示形式（{y}=年） */
+  yearsFormat: string;
 
   sectionHeading: string;
   modeLegend: string;
@@ -101,6 +105,8 @@ export const investmentSimulatorContent: Record<
     introHtml:
       '「初期投資額」「毎月の積立額」「想定利回り（年率）」「積立期間」のうち、求めたい項目以外の3つを入力すると、複利運用を前提に残る1つを試算します。積立元本の累計と運用益の内訳をグラフと年別の推移表で確認できるほか、試算した資産額をもとに毎月の取り崩し可能額もシミュレーションできます。住宅ローンの繰り上げ返済効果を試算したい場合は <a href="/tools/mortgage-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">住宅ローン繰り上げ返済比較シミュレーション</a> もあわせてご利用ください。',
     numberLocale: 'ja-JP',
+    yearsMonthsFormat: '{y}年{m}ヶ月',
+    yearsFormat: '{y}年',
 
     sectionHeading: '計算したい項目と条件の入力',
     modeLegend: '計算したい項目',
@@ -244,6 +250,8 @@ export const investmentSimulatorContent: Record<
     introHtml:
       'Enter 3 of "initial investment," "monthly contribution," "assumed annual return," and "time horizon," and this tool solves for the remaining one under compound interest (dollar-cost averaging). See the split between total contributions and investment gains in a chart and a year-by-year breakdown table, then estimate a sustainable monthly withdrawal amount from that future value. To estimate the effect of a lump-sum mortgage prepayment, try the <a href="/en/tools/mortgage-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Mortgage Prepayment Comparison Calculator</a> as well.',
     numberLocale: 'en-US',
+    yearsMonthsFormat: '{y}yr {m}mo',
+    yearsFormat: '{y}yr',
 
     sectionHeading: 'Choose what to calculate',
     modeLegend: 'What do you want to calculate?',

@@ -15,6 +15,7 @@ const t = mortgageCalculatorContent[locale];
   <section
     class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-number-locale={t.numberLocale}
+    data-years-months-format={t.yearsMonthsFormat}
     data-error={t.error}
   >
     <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
@@ -266,12 +267,14 @@ const t = mortgageCalculatorContent[locale];
     formatNumberWithCommas,
     stripCommas,
   } from '../../lib/comma-number-input';
+  import { fill } from '../../lib/format-template';
 
   const configEl = document.querySelector<HTMLElement>(
     'section[data-number-locale]',
   )!;
   const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
   const errorMessage = configEl.dataset.error ?? '';
+  const yearsMonthsFormat = configEl.dataset.yearsMonthsFormat ?? '';
 
   const yen = new Intl.NumberFormat(numberLocale, {
     style: 'currency',
@@ -338,9 +341,10 @@ const t = mortgageCalculatorContent[locale];
   function formatTerm(months: number): string {
     const years = Math.floor(months / 12);
     const remainder = months % 12;
-    return numberLocale === 'ja-JP'
-      ? `${years}年${remainder}ヶ月`
-      : `${years}yr ${remainder}mo`;
+    return fill(yearsMonthsFormat, {
+      y: String(years),
+      m: String(remainder),
+    });
   }
 
   function selectedPrepaymentType(): PrepaymentType {

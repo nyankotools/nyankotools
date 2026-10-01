@@ -261,6 +261,7 @@ const t = dateCalculatorContent[locale];
     toWeeksAndDays,
     type DateParts,
   } from '../../lib/tools/date-calculator';
+  import { count, fill } from '../../lib/format-template';
   import type { DateResultFormat } from '../../i18n/tools/date-calculator';
 
   const diffSection = document.querySelector<HTMLElement>(
@@ -328,18 +329,6 @@ const t = dateCalculatorContent[locale];
   const diffResultEl = document.getElementById('date-calc-diff-result')!;
   const diffNoteEl = document.getElementById('date-calc-diff-note')!;
   const diffWeeksEl = document.getElementById('date-calc-diff-weeks')!;
-
-  function fill(template: string, values: Record<string, string>): string {
-    return template.replace(
-      /\{(\w+)\}/g,
-      (_, key: string) => values[key] ?? '',
-    );
-  }
-
-  /** [単数形, 複数形] のテンプレートから件数に合うものを選んで {n} を埋める */
-  function count(forms: [string, string], n: number): string {
-    return fill(n === 1 ? forms[0] : forms[1], { n: String(n) });
-  }
 
   function formatDate(parts: { year: number; month: number; day: number }) {
     return fill(format.date, {

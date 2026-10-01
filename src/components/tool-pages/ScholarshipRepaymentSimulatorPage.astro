@@ -20,6 +20,7 @@ const t = scholarshipRepaymentSimulatorContent[locale];
   <section
     class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-number-locale={t.numberLocale}
+    data-years-format={t.yearsFormat}
     data-error={t.error}
     data-periods-initial-label={t.periodsInitialRowLabel}
     data-periods-review-label-template={t.periodsReviewRowLabelTemplate}
@@ -212,6 +213,7 @@ const t = scholarshipRepaymentSimulatorContent[locale];
     formatNumberWithCommas,
     stripCommas,
   } from '../../lib/comma-number-input';
+  import { fill } from '../../lib/format-template';
 
   const configEl = document.querySelector<HTMLElement>(
     'section[data-number-locale]',
@@ -223,6 +225,7 @@ const t = scholarshipRepaymentSimulatorContent[locale];
     configEl.dataset.periodsReviewLabelTemplate ?? '#{n}';
   const yearFromSuffix = configEl.dataset.yearFromSuffix ?? '';
   const installmentsUnit = configEl.dataset.installmentsUnit ?? '';
+  const yearsFormat = configEl.dataset.yearsFormat ?? '';
 
   const yen = new Intl.NumberFormat(numberLocale, {
     style: 'currency',
@@ -318,9 +321,9 @@ const t = scholarshipRepaymentSimulatorContent[locale];
 
     initialMonthlyEl.textContent = yen.format(result.initialMonthlyPayment);
     finalMonthlyEl.textContent = yen.format(result.finalMonthlyPayment);
-    periodEl.textContent = `${Math.round(result.repaymentMonths / 12)}${
-      numberLocale === 'ja-JP' ? '年' : 'yr'
-    }（${result.repaymentMonths}${installmentsUnit}）`;
+    periodEl.textContent = `${fill(yearsFormat, {
+      y: String(Math.round(result.repaymentMonths / 12)),
+    })}（${result.repaymentMonths}${installmentsUnit}）`;
     totalPaymentEl.textContent = yen.format(result.totalPayment);
     totalInterestEl.textContent = yen.format(result.totalInterest);
 

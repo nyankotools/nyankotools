@@ -33,6 +33,7 @@ const selectClass =
       id="cmp-info"
       hidden
       data-template={t.pagesTemplate}
+      data-separator={t.infoSeparator}
       class="mt-2 text-sm text-gray-700 dark:text-gray-300"
     ></p>
   </div>
@@ -105,6 +106,7 @@ const selectClass =
 </ToolShell>
 
 <script>
+  import { fill } from '../../lib/format-template';
   import { paren } from '../../lib/paren';
   import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
   import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
@@ -222,7 +224,7 @@ const selectClass =
       void task.destroy();
       pdfBytes = bytes;
       pdfName = file.name;
-      info.textContent = `${file.name}${paren(`${(info.dataset.template ?? '').replace('{pages}', String(pdfPages))}${document.documentElement.lang === 'en' ? ', ' : '、'}${formatBytes(bytes.length)}`)}`;
+      info.textContent = `${file.name}${paren(`${fill(info.dataset.template ?? '', { pages: String(pdfPages) })}${info.dataset.separator ?? ''}${formatBytes(bytes.length)}`)}`;
       info.hidden = false;
     } catch (e) {
       pdfBytes = null;

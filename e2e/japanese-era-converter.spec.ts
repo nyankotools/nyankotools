@@ -133,4 +133,15 @@ test.describe('Japanese Era Converter (English)', () => {
     await page.locator('#era-j2w-day').fill('15');
     await expect(page.locator('#era-j2w-result')).toHaveText('2024-06-15');
   });
+
+  test('英語版で元年が「1 (gannen)」と表示される', async ({ page }) => {
+    await page.goto('/en/tools/japanese-era-converter/');
+
+    await page.locator('#era-w2j-year').fill('2019');
+    await page.locator('#era-w2j-month').fill('5');
+    await page.locator('#era-w2j-day').fill('1');
+    await expect(page.locator('#era-w2j-result')).toHaveText(
+      'Reiwa 1 (gannen)',
+    );
+  });
 });

@@ -17,6 +17,7 @@ const reversedEras = ERAS.slice().reverse();
   <section
     class="mb-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-locale={locale}
+    data-result-format={JSON.stringify(t.resultFormat)}
     data-error-w2j={t.errorW2J}
   >
     <h2 class="mb-3 text-lg font-bold">{t.westernToJapaneseHeading}</h2>
@@ -202,15 +203,18 @@ const reversedEras = ERAS.slice().reverse();
 
 <script>
   import {
-    formatEraYear,
     warekiToWestern,
     westernToWareki,
   } from '../../lib/tools/japanese-era-converter';
+  import { fill } from '../../lib/format-template';
+  import type { EraResultFormat } from '../../i18n/tools/japanese-era-converter';
 
   const w2jSection = document.querySelector<HTMLElement>(
     'section[data-locale]',
   )!;
-  const isJa = w2jSection.dataset.locale === 'ja';
+  const format: EraResultFormat = JSON.parse(
+    w2jSection.dataset.resultFormat ?? '{}',
+  );
   const errorW2J = w2jSection.dataset.errorW2j ?? '';
 
   const w2jYearInput = document.getElementById(
@@ -247,13 +251,13 @@ const reversedEras = ERAS.slice().reverse();
       return;
     }
 
-    if (isJa) {
-      w2jResultEl.textContent = `${result.era.name}${formatEraYear(result.eraYear)}`;
-    } else {
-      const yearLabel =
-        result.eraYear === 1 ? '1 (gannen)' : String(result.eraYear);
-      w2jResultEl.textContent = `${result.era.romaji} ${yearLabel}`;
-    }
+    w2jResultEl.textContent = fill(format.wareki, {
+      era: format.romajiEraName ? result.era.romaji : result.era.name,
+      year:
+        result.eraYear === 1
+          ? format.eraYearFirst
+          : fill(format.eraYear, { n: String(result.eraYear) }),
+    });
   }
 
   w2jYearInput.addEventListener('input', renderWesternToWareki);
@@ -303,11 +307,13 @@ const reversedEras = ERAS.slice().reverse();
       return;
     }
 
-    if (isJa) {
-      j2wResultEl.textContent = `西暦${year}年${j2wMonthInput.value}月${j2wDayInput.value}日`;
-    } else {
-      j2wResultEl.textContent = `${year}-${j2wMonthInput.value.padStart(2, '0')}-${j2wDayInput.value.padStart(2, '0')}`;
-    }
+    j2wResultEl.textContent = fill(format.western, {
+      y: String(year),
+      m: j2wMonthInput.value,
+      d: j2wDayInput.value,
+      mm: j2wMonthInput.value.padStart(2, '0'),
+      dd: j2wDayInput.value.padStart(2, '0'),
+    });
   }
 
   j2wEraSelect.addEventListener('change', renderWarekiToWestern);

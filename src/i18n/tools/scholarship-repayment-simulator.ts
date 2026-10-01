@@ -11,6 +11,8 @@ export interface ScholarshipRepaymentSimulatorPageContent {
   h1: string;
   introHtml: string;
   numberLocale: string;
+  /** 年数の表示形式（{y}=年） */
+  yearsFormat: string;
   noticeHtml: string;
   sectionHeading: string;
   amountLabel: string;
@@ -61,6 +63,7 @@ export const scholarshipRepaymentSimulatorContent: Record<
     introHtml:
       '貸与総額・利率・返還期間を入力すると、元利均等返済を前提に、毎月の返済額・総返済額・総利息を試算します。利率見直し方式では、5年ごとの利率見直しで想定する利率の変化幅も入力でき、見直しのたびに返済額がどう変わるかを確認できます。フリーランスなど個人事業主の手取り額を試算したい場合は <a href="/tools/freelance-income-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">フリーランス手取り計算機</a> もあわせてご利用ください。',
     numberLocale: 'ja-JP',
+    yearsFormat: '{y}年',
     noticeHtml:
       '<strong>在学中（貸与中）は利率が未確定です。</strong>JASSO第二種奨学金の利率は、貸与を受けている間は決まっておらず、貸与終了時（卒業時など）に、その時点の市場金利をもとに確定します。本ツールで入力する「利率」は、貸与終了後に確定した（または確定すると仮定した）利率です。在学中に試算する場合は、あくまで仮の数値として利用してください。',
     sectionHeading: '貸与条件の入力',
@@ -142,6 +145,7 @@ export const scholarshipRepaymentSimulatorContent: Record<
     introHtml:
       'Enter your total loan amount, interest rate, and repayment term, and this tool estimates the monthly payment, total repayment, and total interest under an equal-payment (amortizing) loan. For the rate-review method, you can also enter an assumed rate change at each 5-year review to see how the payment might shift over time. To estimate a Japanese freelancer\'s take-home pay, try the <a href="/en/tools/freelance-income-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Freelancer Take-Home Pay Calculator</a> as well.',
     numberLocale: 'en-US',
+    yearsFormat: '{y}yr',
     noticeHtml:
       "<strong>While you're still enrolled, the interest rate is not yet fixed.</strong> For a JASSO Type 2 loan, the rate is undetermined while you're receiving disbursements, and is only fixed when disbursement ends (typically at graduation), based on the market rate at that time. The \"interest rate\" you enter below is the rate as fixed after disbursement ends (or an assumed rate). If you're estimating this while still enrolled, treat the result as a rough what-if figure only.",
     sectionHeading: 'Loan details',

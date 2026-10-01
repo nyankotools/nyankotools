@@ -258,15 +258,17 @@ export const updates: UpdateEntry[] = [
       'file-hash-calculator',
       'svg-to-png',
       'ogp-image-generator',
+      'image-cropper',
+      'image-background-remover',
     ],
     translations: {
       ja: {
         summary:
-          'cURL→Fetch/Axios変換、JSON→TypeScript型生成、JSON差分比較、バーコード生成、ULID・NanoID生成、パスワード強度チェッカー、ファイルハッシュ計算、SVG→PNG変換、OGP画像ジェネレーターを追加しました。',
+          'cURL→Fetch/Axios変換、JSON→TypeScript型生成、JSON差分比較、バーコード生成、ULID・NanoID生成、パスワード強度チェッカー、ファイルハッシュ計算、SVG→PNG変換、OGP画像ジェネレーター、画像トリミング・回転・反転、画像の背景透過（輪郭付き）を追加しました。',
       },
       en: {
         summary:
-          'Added the cURL to Fetch / Axios Converter, JSON to TypeScript Converter, JSON Diff, Barcode Generator, ULID & NanoID Generator, Password Strength Checker, File Hash Calculator, SVG to PNG Converter, and OGP Image Generator.',
+          'Added the cURL to Fetch / Axios Converter, JSON to TypeScript Converter, JSON Diff, Barcode Generator, ULID & NanoID Generator, Password Strength Checker, File Hash Calculator, SVG to PNG Converter, OGP Image Generator, Image Cropper, Rotator & Flipper, and Image Background Remover.',
       },
     },
   },

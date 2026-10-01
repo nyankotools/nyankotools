@@ -2395,6 +2395,76 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'image-cropper',
+    category: 'image',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['image-resizer', 'image-converter', 'favicon-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像トリミング・回転・反転',
+        keywords: [
+          'トリミング',
+          '切り抜き',
+          'クロップ',
+          '画像回転',
+          '左右反転',
+          '縦横比',
+        ],
+        description:
+          '画像を好きな範囲に切り抜き、90度回転や左右・上下反転ができます。縦横比の固定に対応し、PNG・JPEG・WebPで保存できます。',
+      },
+      en: {
+        name: 'Image Cropper, Rotator & Flipper',
+        keywords: [
+          'crop image',
+          'rotate image',
+          'flip image',
+          'trim',
+          'aspect ratio',
+        ],
+        description:
+          'Crops images to any area, rotates in 90° steps, and flips horizontally or vertically, with aspect ratio locking and PNG, JPEG, or WebP output.',
+      },
+    },
+  },
+  {
+    slug: 'image-background-remover',
+    category: 'image',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['image-cropper', 'image-converter', 'svg-to-png'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像の背景透過（輪郭付き）',
+        keywords: [
+          '背景透過',
+          '背景削除',
+          '透過PNG',
+          '白背景',
+          '縁取り',
+          'ステッカー',
+        ],
+        description:
+          '単色の背景を指定して透過PNGにします。縁に残る背景色の除去と、好きな色・太さの輪郭（縁取り）の追加に対応しています。',
+      },
+      en: {
+        name: 'Image Background Remover (With Outline)',
+        keywords: [
+          'remove background',
+          'transparent png',
+          'background eraser',
+          'outline',
+          'sticker',
+        ],
+        description:
+          'Makes a solid-color background transparent and saves a PNG, with edge cleanup for leftover background color and an optional outline of any color and width.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

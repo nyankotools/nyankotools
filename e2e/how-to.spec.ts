@@ -19,6 +19,8 @@ const slugs = [
   'file-hash-calculator',
   'svg-to-png',
   'ogp-image-generator',
+  'image-cropper',
+  'image-background-remover',
 ];
 
 const locales = [

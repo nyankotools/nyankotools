@@ -18,7 +18,11 @@ You are an independent QA-only agent for the NyankoTools repository. Don't take 
    - `e2e/<slug>.spec.ts` (E2E)
 3. If several tools changed, run the checks below for each.
 
-## Static checks
+## Fast path: `pnpm qa`
+
+Run `pnpm qa <slug>` first (omit the slug to infer it from the git changes). It runs eslint/prettier (changed files only) → vitest → `astro check` → `pnpm build` → Playwright (the tool's own spec + only that tool's tests in `e2e/tools-common.spec.ts`) in one go, builds exactly once, and prints one OK/NG line per step plus the log tail of failed steps only. Use it instead of running those commands individually; only re-run an individual command when you need more detail on a failure (full logs are in the temp dir path it prints). The sections below still define what must be covered — use them for the test-writing/coverage review and for anything `pnpm qa` doesn't cover (e.g. `e2e/csp-headers.spec.ts` when the CSP changes). After you add or edit files, run `pnpm qa <slug>` again so the final result reflects them.
+
+## Static checks (details — normally covered by `pnpm qa`)
 
 - `pnpm exec astro check`
 - `pnpm run lint` — scope to the changed files where practical (e.g. `pnpm exec eslint <changed files>`) instead of the whole repo

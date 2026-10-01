@@ -34,3 +34,4 @@ memo/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+.eslintcache

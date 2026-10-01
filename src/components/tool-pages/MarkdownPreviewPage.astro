@@ -280,7 +280,7 @@ const t = markdownPreviewContent[locale];
     latestOutput = '';
     renderEl.innerHTML = '';
     output.value = '';
-    errorEl.textContent = errorTemplate.replace('{message}', message);
+    errorEl.textContent = errorTemplate.replace('{message}', () => message);
     errorEl.hidden = false;
   }
 

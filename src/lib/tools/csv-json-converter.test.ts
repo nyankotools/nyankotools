@@ -191,4 +191,28 @@ describe('往復変換', () => {
     if (!csv.success) return;
     expect(csv.output).toBe(original);
   });
+
+  it('1列の空値を含む JSON→CSV→JSON で件数が保たれる', () => {
+    const original = [{ name: 'A' }, { name: '' }, { name: 'B' }];
+    const csv = jsonToCsv(JSON.stringify(original));
+    expect(csv).toEqual({ success: true, output: 'name\nA\n""\nB\n' });
+    if (!csv.success) return;
+    const json = csvToJson(csv.output);
+    expect(json.success).toBe(true);
+    if (json.success) expect(JSON.parse(json.output)).toEqual(original);
+  });
+
+  it('複数列の空値は引用符なしのまま（区切りで区別できる）', () => {
+    const csv = jsonToCsv('[{"a":"","b":""},{"a":"x","b":""}]');
+    expect(csv).toEqual({ success: true, output: 'a,b\n,\nx,\n' });
+  });
+
+  it('1列で列名が空でも読み戻せる', () => {
+    const original = [{ '': 'x' }, { '': '' }];
+    const csv = jsonToCsv(JSON.stringify(original));
+    if (!csv.success) throw new Error('failed');
+    const json = csvToJson(csv.output);
+    if (!json.success) throw new Error('failed');
+    expect(JSON.parse(json.output)).toEqual(original);
+  });
 });

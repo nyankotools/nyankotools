@@ -122,8 +122,8 @@ const t = jsonFormatterContent[locale];
   function showError(message: string) {
     output.value = '';
     errorEl.textContent = errorTemplate
-      .replace('{message}', message)
-      .replace('{explanation}', explainJsonError(message));
+      .replace('{message}', () => message)
+      .replace('{explanation}', () => explainJsonError(message));
     errorEl.hidden = false;
   }
 

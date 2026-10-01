@@ -142,7 +142,7 @@ const t = codeMinifierContent[locale];
 
   function showError(message: string) {
     output.value = '';
-    errorEl.textContent = errorTemplate.replace('{message}', message);
+    errorEl.textContent = errorTemplate.replace('{message}', () => message);
     errorEl.hidden = false;
   }
 

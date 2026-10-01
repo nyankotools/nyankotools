@@ -205,23 +205,26 @@ const t = jsonPathTesterContent[locale];
       case 'invalid-format':
         return pointerErrorInvalidFormat;
       case 'trailing-dash':
-        return pointerErrorTrailingDashTemplate.replace('{path}', result.path);
+        return pointerErrorTrailingDashTemplate.replace(
+          '{path}',
+          () => result.path,
+        );
       case 'invalid-array-index':
         return pointerErrorInvalidArrayIndexTemplate
-          .replace('{path}', result.path)
-          .replace('{token}', result.token);
+          .replace('{path}', () => result.path)
+          .replace('{token}', () => result.token);
       case 'index-out-of-range':
         return pointerErrorIndexOutOfRangeTemplate
-          .replace('{path}', result.path)
+          .replace('{path}', () => result.path)
           .replace('{length}', String(result.length));
       case 'key-not-found':
         return pointerErrorKeyNotFoundTemplate
-          .replace('{path}', result.path)
-          .replace('{key}', result.key);
+          .replace('{path}', () => result.path)
+          .replace('{key}', () => result.key);
       case 'not-traversable':
         return pointerErrorNotTraversableTemplate.replace(
           '{path}',
-          result.path,
+          () => result.path,
         );
     }
   }

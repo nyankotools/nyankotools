@@ -490,7 +490,7 @@ const selectClass =
     a.download = name;
     a.className =
       'inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-blue-700 hover:bg-gray-100 dark:border-gray-700 dark:text-blue-400 dark:hover:bg-gray-800';
-    a.textContent = `${(resultEl.dataset.download ?? '').replace('{name}', name)}${paren(formatBytes(blob.size))}`;
+    a.textContent = `${(resultEl.dataset.download ?? '').replace('{name}', () => name)}${paren(formatBytes(blob.size))}`;
     li.append(a);
     resultList.append(li);
   }

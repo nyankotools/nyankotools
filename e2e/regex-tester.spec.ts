@@ -94,7 +94,7 @@ for (const [locale, base, matchText, timeoutText] of [
     test('Worker が使えない環境ではエラーメッセージが表示され、固まらない', async ({
       page,
     }) => {
-      const noWorkerText = locale === 'ja' ? 'Web Worker' : 'Web Worker';
+      const noWorkerText = 'Web Worker';
 
       // Worker コンストラクタを削除して、Worker が使えない環境をシミュレート
       await page.addInitScript(() => {
@@ -114,6 +114,23 @@ for (const [locale, base, matchText, timeoutText] of [
       await page.locator('#regex-pattern-input').fill('s');
       await expect(errorEl).toBeVisible();
       // ハイライトはしない（エラー状態なので）
+      await expect(page.locator('#regex-highlight')).toContainText('test');
+    });
+
+    test('Worker スクリプトの読み込みに失敗してもエラーが表示され、固まらない', async ({
+      page,
+    }) => {
+      await page.route('**/*regex-tester.worker*', (route) =>
+        route.fulfill({ status: 404, body: 'not found' }),
+      );
+
+      await page.goto(base);
+      await page.locator('#regex-test-input').fill('test');
+      await page.locator('#regex-pattern-input').fill('t');
+
+      const errorEl = page.locator('#regex-error');
+      await expect(errorEl).toBeVisible({ timeout: 5000 });
+      await expect(errorEl).toContainText('Web Worker');
       await expect(page.locator('#regex-highlight')).toContainText('test');
     });
   });

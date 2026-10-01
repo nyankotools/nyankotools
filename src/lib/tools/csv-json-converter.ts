@@ -116,7 +116,13 @@ function isBlankFields(fields: string[]): boolean {
   return fields.length === 1 && fields[0] === '';
 }
 
-function escapeCsvField(value: string, delimiter: string): string {
+function escapeCsvField(
+  value: string,
+  delimiter: string,
+  singleColumn = false,
+): string {
+  // 1列だけの空値は、そのままだと空行になって読み戻し時に消えるので `""` にする
+  if (singleColumn && value === '') return '""';
   if (
     value.includes(delimiter) ||
     value.includes('"') ||
@@ -235,10 +241,11 @@ export function jsonToCsv(input: string, delimiter = ','): ConvertOutcome {
       }
     });
 
+    const singleColumn = columns.length === 1;
     const lines: string[] = [];
     lines.push(
       columns
-        .map((column) => escapeCsvField(column, delimiter))
+        .map((column) => escapeCsvField(column, delimiter, singleColumn))
         .join(delimiter),
     );
 
@@ -246,7 +253,11 @@ export function jsonToCsv(input: string, delimiter = ','): ConvertOutcome {
       const record = item as Record<string, unknown>;
       const line = columns
         .map((column) =>
-          escapeCsvField(stringifyCsvValue(record[column]), delimiter),
+          escapeCsvField(
+            stringifyCsvValue(record[column]),
+            delimiter,
+            singleColumn,
+          ),
         )
         .join(delimiter);
       lines.push(line);

@@ -325,7 +325,7 @@ const t = imageToBase64Content[locale];
     currentFile = file;
     encodePreview.src = dataUrl;
     encodeFileInfoEl.textContent = fileInfoTemplate
-      .replace('{name}', file.name)
+      .replace('{name}', () => file.name)
       .replace('{type}', file.type || '?')
       .replace('{size}', formatFileSize(file.size));
     encodeResultEl.hidden = false;

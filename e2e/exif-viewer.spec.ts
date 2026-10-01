@@ -673,10 +673,24 @@ test.describe('エッジケース・追加テスト', () => {
       // ダウンロードは発生せず、ステータスメッセージのみ表示
       const statusEl = page.locator('#ev-remove-status');
       const statusText = await statusEl.textContent();
-      expect(statusText).toContain('削除対象はありませんでした');
+      expect(statusText).toContain(
+        '削除対象のメタデータや連結データはありませんでした',
+      );
     } finally {
       if (fs.existsSync(jpegPath)) fs.unlinkSync(jpegPath);
     }
+  });
+
+  test("ファイル名に $& や $' を含んでも表示が崩れない", async ({ page }) => {
+    await page.goto('/tools/exif-viewer/');
+    const name = "a$&$'b.jpg";
+    await page.locator('#ev-file-input').setInputFiles({
+      name,
+      mimeType: 'image/jpeg',
+      buffer: Buffer.from(buildJpegWithoutExif()),
+    });
+    await expect(page.locator('#ev-result')).not.toHaveAttribute('hidden');
+    await expect(page.locator('#ev-file-info')).toContainText(name);
   });
 
   test('XMP（位置情報含む）削除後のダウンロード画像にXMPが残らない', async ({

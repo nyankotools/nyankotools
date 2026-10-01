@@ -109,6 +109,26 @@ describe('createRegexRunner', () => {
     expect(workers).toHaveLength(2);
   });
 
+  it('一度応答→Worker 再作成→新 Worker の読み込み失敗は unavailable になる', async () => {
+    const created: RegexWorkerLike[] = [];
+    const runner = createRegexRunner(() => {
+      const w = created.length === 0 ? new EchoWorker() : new HangingWorker();
+      created.push(w);
+      return w;
+    }, 1000);
+    await runner.run(request('a'));
+    // 古い Worker を詰まらせて破棄させ、新しい Worker を作らせる
+    created[0].postMessage = () => {};
+    const stuck = runner.run(request('b'));
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(await stuck).toEqual({ status: 'timeout' });
+
+    const reloaded = runner.run(request('c'));
+    created[1].onerror?.(new Error('load failed'));
+    expect(await reloaded).toEqual({ status: 'unavailable' });
+    expect(await runner.run(request('d'))).toEqual({ status: 'unavailable' });
+  });
+
   it('Worker の読み込み失敗時は、処理中の依頼も同期実行せず unavailable にする', async () => {
     let failing: HangingWorker | undefined;
     const runner = createRegexRunner(() => (failing = new HangingWorker()));

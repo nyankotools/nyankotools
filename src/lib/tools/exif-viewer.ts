@@ -285,7 +285,28 @@ function findNextMarker(bytes: Uint8Array, from: number): number {
 export function removeExifFromJpegBytes(
   bytes: Uint8Array,
 ): Uint8Array<ArrayBuffer> {
-  if (!isJpegBytes(bytes)) return bytes as Uint8Array<ArrayBuffer>;
+  return removeExifFromJpeg(bytes).bytes;
+}
+
+export interface RemoveExifResult {
+  bytes: Uint8Array<ArrayBuffer>;
+  /** Exif / XMP / IPTC / MPF のセグメントを実際に取り除いたか */
+  removedMetadata: boolean;
+  /** 主画像の EOI より後ろに連結されたデータを実際に取り除いたか */
+  removedTrailing: boolean;
+}
+
+/** メタデータ削除を行い、何を取り除いたか（メタデータ・末尾の連結データ）も合わせて返す */
+export function removeExifFromJpeg(bytes: Uint8Array): RemoveExifResult {
+  if (!isJpegBytes(bytes)) {
+    return {
+      bytes: bytes as Uint8Array<ArrayBuffer>,
+      removedMetadata: false,
+      removedTrailing: false,
+    };
+  }
+  let removedMetadata = false;
+  let removedTrailing = false;
 
   // 1バイトずつ配列に積むと巨大画像でメモリを食うため、残す範囲を subarray で集めて最後に連結する
   const kept: Uint8Array[] = [bytes.subarray(0, 2)]; // SOI
@@ -333,7 +354,10 @@ export function removeExifFromJpegBytes(
     if (marker === 0x01 || (marker >= 0xd0 && marker <= 0xd9)) {
       kept.push(bytes.subarray(offset, offset + 2));
       offset += 2;
-      if (marker === 0xd9) break; // EOI
+      if (marker === 0xd9) {
+        removedTrailing = offset < bytes.length; // EOI 以降は保持しない
+        break;
+      }
       continue;
     }
 
@@ -349,7 +373,9 @@ export function removeExifFromJpegBytes(
     }
     const segmentEnd = Math.min(offset + 2 + length, bytes.length);
 
-    if (!isMetadataSegment(bytes, marker, offset + 4)) {
+    if (isMetadataSegment(bytes, marker, offset + 4)) {
+      removedMetadata = true;
+    } else {
       kept.push(bytes.subarray(offset, segmentEnd));
     }
     offset = segmentEnd;
@@ -362,18 +388,7 @@ export function removeExifFromJpegBytes(
     result.set(part, position);
     position += part.length;
   }
-  return result;
-}
-
-export interface RemoveExifResult {
-  bytes: Uint8Array<ArrayBuffer>;
-  hadExif: boolean;
-}
-
-/** Exif削除を行い、実際にExifセグメントが見つかって取り除かれたかどうかも合わせて返す */
-export function removeExifFromJpeg(bytes: Uint8Array): RemoveExifResult {
-  const result = removeExifFromJpegBytes(bytes);
-  return { bytes: result, hadExif: result.length !== bytes.length };
+  return { bytes: result, removedMetadata, removedTrailing };
 }
 
 /** 元のファイル名から、Exif削除後のファイル名を組み立てる（例: "photo.jpg" → "photo-no-exif.jpg"） */

@@ -473,18 +473,39 @@ describe('removeExifFromJpegBytes', () => {
 });
 
 describe('removeExifFromJpeg', () => {
-  it('Exifがあれば削除してhadExif:trueを返す', () => {
+  it('Exifがあれば削除して removedMetadata:true を返す', () => {
     const jpeg = buildJpegWithExifApp1([0x01, 0x02, 0x03]);
     const result = removeExifFromJpeg(jpeg);
-    expect(result.hadExif).toBe(true);
+    expect(result.removedMetadata).toBe(true);
+    expect(result.removedTrailing).toBe(false);
     expect(result.bytes.length).toBeLessThan(jpeg.length);
   });
 
-  it('ExifがなければhadExif:falseを返す', () => {
+  it('Exifも連結データもなければ何も削除せず同じ内容を返す', () => {
     const jpeg = buildJpegWithoutExif();
     const result = removeExifFromJpeg(jpeg);
-    expect(result.hadExif).toBe(false);
+    expect(result.removedMetadata).toBe(false);
+    expect(result.removedTrailing).toBe(false);
     expect(result.bytes.length).toBe(jpeg.length);
+  });
+
+  it('Exifなし＋EOI 後にゼロ埋めのみ → 末尾の連結データだけ削除扱い', () => {
+    const main = [0xff, 0xd8, ...APP0, ...sos(0x12, 0x34), ...EOI];
+    const result = removeExifFromJpeg(
+      Uint8Array.from([...main, 0x00, 0x00, 0x00]),
+    );
+    expect(result.removedMetadata).toBe(false);
+    expect(result.removedTrailing).toBe(true);
+    expect(Array.from(result.bytes)).toEqual(main);
+  });
+
+  it('MPF のみ → メタデータ削除扱い', () => {
+    const mpf = [0xff, 0xe2, 0x00, 0x08, 0x4d, 0x50, 0x46, 0x00, 0x01, 0x02];
+    const result = removeExifFromJpeg(
+      Uint8Array.from([0xff, 0xd8, ...mpf, ...EOI]),
+    );
+    expect(result.removedMetadata).toBe(true);
+    expect(result.removedTrailing).toBe(false);
   });
 });
 

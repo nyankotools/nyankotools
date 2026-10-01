@@ -213,7 +213,7 @@ const t = tomlConverterContent[locale];
       showError(
         result.reason === 'toml-top-level'
           ? errorTopLevel
-          : errorTemplate.replace('{message}', result.message),
+          : errorTemplate.replace('{message}', () => result.message),
       );
     }
   }

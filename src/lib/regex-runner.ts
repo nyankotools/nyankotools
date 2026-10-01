@@ -28,7 +28,6 @@ export interface RegexRunner {
 
 interface PendingJob {
   id: number;
-  request: RegexJobRequest;
   resolve: (outcome: RegexRunOutcome) => void;
   timer: ReturnType<typeof setTimeout>;
 }
@@ -45,8 +44,6 @@ export function createRegexRunner(
 ): RegexRunner {
   let worker: RegexWorkerLike | null = null;
   let workerUnavailable = false;
-  /** 一度でも Worker から応答があったか（読み込み失敗と実行時エラーを区別する） */
-  let workerResponded = false;
   let pending: PendingJob | null = null;
   let nextId = 0;
 
@@ -68,13 +65,17 @@ export function createRegexRunner(
     if (worker) return worker;
     try {
       const created = createWorker();
+      // この Worker が一度でも応答したか（読み込み失敗と実行時エラーを区別する。Worker ごとに持つ）
+      let workerResponded = false;
       created.onmessage = (event) => {
+        if (worker !== created) return; // 破棄済みの古い Worker のイベントは無視
         workerResponded = true;
         if (pending && event.data.id === pending.id) {
           settle({ status: 'done', response: event.data });
         }
       };
       created.onerror = () => {
+        if (worker !== created) return;
         const job = pending;
         discardWorker();
         if (workerResponded) {
@@ -114,7 +115,7 @@ export function createRegexRunner(
           discardWorker();
           settle({ status: 'timeout' });
         }, timeoutMs);
-        pending = { id, request: full, resolve, timer };
+        pending = { id, resolve, timer };
         active.postMessage(full);
       });
     },

@@ -163,6 +163,7 @@ const t = exifViewerContent[locale];
         class="text-sm text-green-600 dark:text-green-400"
         aria-live="polite"
         data-success-message={t.removeSuccessMessage}
+        data-trailing-message={t.removeTrailingMessage}
         data-no-exif-message={t.removeNoExifMessage}
       ></span>
     </div>
@@ -416,7 +417,7 @@ const t = exifViewerContent[locale];
     preview.src = previewObjectUrl;
 
     fileInfoEl.textContent = fileInfoTemplate
-      .replace('{name}', file.name)
+      .replace('{name}', () => file.name)
       .replace('{size}', formatFileSize(file.size));
 
     await new Promise<void>((resolve) => {
@@ -464,14 +465,18 @@ const t = exifViewerContent[locale];
     removeButton.textContent = removeButton.dataset.busyLabel ?? '';
     removeStatusEl.textContent = '';
 
-    const { bytes, hadExif } = removeExifFromJpeg(currentBytes);
+    const { bytes, removedMetadata, removedTrailing } =
+      removeExifFromJpeg(currentBytes);
 
-    if (hadExif) {
+    if (removedMetadata || removedTrailing) {
       downloadBlob(
         new Blob([bytes], { type: 'image/jpeg' }),
         buildNoExifFileName(currentFile.name),
       );
-      removeStatusEl.textContent = removeStatusEl.dataset.successMessage ?? '';
+      removeStatusEl.textContent =
+        (removedMetadata
+          ? removeStatusEl.dataset.successMessage
+          : removeStatusEl.dataset.trailingMessage) ?? '';
     } else {
       removeStatusEl.textContent = removeStatusEl.dataset.noExifMessage ?? '';
     }

@@ -273,7 +273,7 @@ const t = regexTesterContent[locale];
     if (!result.isValid) {
       errorEl.textContent = errorTemplate.replace(
         '{message}',
-        result.error ?? '',
+        () => result.error ?? '',
       );
       errorEl.classList.remove('hidden');
       statusEl.textContent = '';

@@ -59,6 +59,8 @@ export interface ExifViewerPageContent {
   removeButton: string;
   removingButton: string;
   removeSuccessMessage: string;
+  /** メタデータはなく、末尾の連結データだけを取り除いたとき */
+  removeTrailingMessage: string;
   removeNoExifMessage: string;
   clearButton: string;
   notesHeading: string;
@@ -125,9 +127,11 @@ export const exifViewerContent: Record<Locale, ExifViewerPageContent> = {
     rawTableValueHeading: '値',
     removeButton: 'Exif情報を削除してダウンロード',
     removingButton: '処理中...',
-    removeSuccessMessage: 'Exif情報を削除した画像をダウンロードしました',
-    removeNoExifMessage:
-      '元々Exif情報が含まれていなかったため、削除対象はありませんでした',
+    removeSuccessMessage:
+      'メタデータ（Exif情報など）を削除した画像をダウンロードしました',
+    removeTrailingMessage:
+      '末尾に連結されていたデータを削除した画像をダウンロードしました',
+    removeNoExifMessage: '削除対象のメタデータや連結データはありませんでした',
     clearButton: 'クリア',
     notesHeading: '注意点',
     notes: [
@@ -218,8 +222,12 @@ export const exifViewerContent: Record<Locale, ExifViewerPageContent> = {
     rawTableValueHeading: 'Value',
     removeButton: 'Remove Exif & Download',
     removingButton: 'Processing...',
-    removeSuccessMessage: 'Downloaded the image with Exif data removed',
-    removeNoExifMessage: 'There was no Exif data to remove in this image',
+    removeSuccessMessage:
+      'Downloaded the image with metadata (Exif, etc.) removed',
+    removeTrailingMessage:
+      'Downloaded the image with the trailing appended data removed',
+    removeNoExifMessage:
+      'There was no metadata or appended data to remove in this image',
     clearButton: 'Clear',
     notesHeading: 'Notes',
     notes: [

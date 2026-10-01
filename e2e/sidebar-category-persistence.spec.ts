@@ -63,7 +63,15 @@ test.describe('サイドバーのカテゴリ開閉状態の復元（wrangler de
   test.beforeAll(async () => {
     serverProcess = spawn(
       'pnpm',
-      ['exec', 'wrangler', 'dev', '--port', String(PORT)],
+      [
+        'exec',
+        'wrangler',
+        'dev',
+        '-c',
+        'e2e/wrangler.e2e.jsonc',
+        '--port',
+        String(PORT),
+      ],
       {
         shell: true,
         stdio: 'ignore',

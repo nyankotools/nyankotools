@@ -20,6 +20,7 @@ Cloudflare Workers (static asset serving). `wrangler.jsonc` is configured as fol
 - `build.command` runs `pnpm build` automatically at deploy time to produce `dist/`.
 - There is no server-side Worker code (`assets` only), consistent with the static output setup that needs no SSR adapter.
 - `not_found_handling: "404-page"` makes `src/pages/404.astro` serve 404s.
+- `e2e/wrangler.e2e.jsonc` is the same config minus `build`, used only by `e2e/csp-headers.spec.ts` and `e2e/sidebar-category-persistence.spec.ts` (`wrangler dev -c`). `wrangler dev` otherwise runs `build.command` at startup and rebuilds `dist/` while other specs are served from it, causing transient 404s. Keep the `assets` settings in sync with `wrangler.jsonc`.
 
 ## Deploy flow (GitHub Actions)
 

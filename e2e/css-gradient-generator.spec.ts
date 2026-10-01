@@ -220,6 +220,7 @@ test.describe('CSSグラデーションジェネレーター（日本語版）',
     await page.goto('/tools/css-gradient-generator/');
 
     const removeButtons = page.locator('[data-remove]');
+    await expect(removeButtons).toHaveCount(2);
 
     // ボタンは無効
     for (let i = 0; i < (await removeButtons.count()); i++) {

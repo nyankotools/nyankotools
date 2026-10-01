@@ -52,9 +52,9 @@ test('ダミー画像生成ツール：サイズを変更すると新しい画�
   await expect(canvas).toHaveAttribute('height', '600');
 
   // href が新しくなっていることを確認
-  const newHref = await downloadBtn.getAttribute('href');
-  expect(newHref).not.toBe(initialHref1);
-  expect(newHref).toMatch(/^blob:/);
+  // （再生成は非同期のため、自動リトライする assertion で待つ）
+  await expect(downloadBtn).toHaveAttribute('href', /^blob:/);
+  await expect(downloadBtn).not.toHaveAttribute('href', initialHref1 ?? '');
 });
 
 test('ダミー画像生成ツール：不正なサイズ入力でエラーが表示される', async ({

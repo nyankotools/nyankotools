@@ -61,7 +61,15 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
   test.beforeAll(async () => {
     serverProcess = spawn(
       'pnpm',
-      ['exec', 'wrangler', 'dev', '--port', String(PORT)],
+      [
+        'exec',
+        'wrangler',
+        'dev',
+        '-c',
+        'e2e/wrangler.e2e.jsonc',
+        '--port',
+        String(PORT),
+      ],
       {
         shell: true,
         stdio: 'ignore',

@@ -484,3 +484,52 @@ test.describe('サイドバーのスクロール位置の保存・復元（デ�
     await expect(charCounterLinkAfter).not.toHaveAttribute('aria-current');
   });
 });
+
+test.describe('お気に入り欄のキャッシュHTML復元時のサニタイズ', () => {
+  test('改ざんされたキャッシュのリンク先・id・on属性は復元時に除去される', async ({
+    page,
+  }) => {
+    // 描画用スクリプト（モジュールJS）が実描画で置き換える前の、復元直後のHTMLを記録する
+    await page.addInitScript(() => {
+      const evilHtml = [
+        '<li id="evil-li"><a id="evil-a" href="/\\evil.example/" onclick="window.__pwned=1">backslash</a></li>',
+        '<li><a href="/\t/evil.example/">tab</a></li>',
+        '<li><a href="javascript:window.__pwned=1">js</a></li>',
+        '<li><a href="https://evil.example/">abs</a></li>',
+        '<li><a href="/tools/char-counter/" style="color:red">ok</a></li>',
+      ].join('');
+      localStorage.setItem('favorite-tools', JSON.stringify(['char-counter']));
+      localStorage.setItem(
+        'sidebar-favorites-html:ja',
+        JSON.stringify({ key: 'char-counter', html: evilHtml }),
+      );
+      (window as unknown as { __snapshot: string | null }).__snapshot = null;
+      const observer = new MutationObserver(() => {
+        const list = document.getElementById('sidebar-favorites-list');
+        if (list && list.querySelector('li')) {
+          (window as unknown as { __snapshot: string }).__snapshot =
+            list.innerHTML;
+          observer.disconnect();
+        }
+      });
+      observer.observe(document, { childList: true, subtree: true });
+    });
+
+    await page.goto('/tools/char-counter/');
+
+    const snapshot = await page.evaluate(
+      () => (window as unknown as { __snapshot: string | null }).__snapshot,
+    );
+    expect(snapshot).not.toBeNull();
+    const hrefs = Array.from(
+      (snapshot as string).matchAll(/href="([^"]*)"/g),
+      (m) => m[1],
+    );
+    // 同一オリジン向けのリンクだけが残る（外部・javascript: は href ごと除去）
+    expect(hrefs).toEqual(['/tools/char-counter/']);
+    expect(snapshot).not.toContain('id=');
+    expect(snapshot).not.toContain('onclick');
+    expect(snapshot).not.toContain('style=');
+    expect(await page.evaluate(() => '__pwned' in window)).toBe(false);
+  });
+});

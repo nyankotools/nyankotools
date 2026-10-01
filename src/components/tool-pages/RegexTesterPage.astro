@@ -68,6 +68,7 @@ const t = regexTesterContent[locale];
     class="mt-4 flex flex-wrap items-center gap-3"
     data-error-template={t.errorInvalidPatternTemplate}
     data-timeout-message={t.errorTimeout}
+    data-no-worker-message={t.errorNoWorker}
     data-match-singular-template={t.statusMatchSingularTemplate}
     data-match-plural-template={t.statusMatchPluralTemplate}
     data-no-groups={t.noGroups}
@@ -205,6 +206,7 @@ const t = regexTesterContent[locale];
 
   const errorTemplate = statusContainer.dataset.errorTemplate ?? '';
   const timeoutMessage = statusContainer.dataset.timeoutMessage ?? '';
+  const noWorkerMessage = statusContainer.dataset.noWorkerMessage ?? '';
 
   // 利用者の正規表現は Worker で実行し、破滅的バックトラッキングでタブが固まらないようにする
   const runner = createRegexRunner(
@@ -256,8 +258,9 @@ const t = regexTesterContent[locale];
     // 後から入力が変わっていたら、古い結果は捨てる
     if (seq !== renderSeq || outcome.status === 'superseded') return;
 
-    if (outcome.status === 'timeout') {
-      errorEl.textContent = timeoutMessage;
+    if (outcome.status === 'timeout' || outcome.status === 'unavailable') {
+      errorEl.textContent =
+        outcome.status === 'timeout' ? timeoutMessage : noWorkerMessage;
       errorEl.classList.remove('hidden');
       statusEl.textContent = '';
       highlightEl.textContent = text;

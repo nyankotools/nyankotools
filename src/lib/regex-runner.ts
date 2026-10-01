@@ -1,5 +1,4 @@
 import {
-  runRegexJob,
   type RegexJobRequest,
   type RegexJobResponse,
 } from './tools/regex-tester';
@@ -18,6 +17,8 @@ export interface RegexWorkerLike {
 export type RegexRunOutcome =
   | { status: 'done'; response: RegexJobResponse }
   | { status: 'timeout' }
+  /** Worker を使えず、フリーズから保護できないため実行しなかった */
+  | { status: 'unavailable' }
   /** 後続の依頼に置き換えられたため、結果は使わない */
   | { status: 'superseded' };
 
@@ -36,7 +37,7 @@ interface PendingJob {
  * 正規表現の実行を Worker に任せるランナー。
  * - 処理中に新しい依頼が来たら、古い依頼は破棄し、（Worker が詰まっている可能性があるので）Worker を作り直す
  * - 制限時間内に終わらなければ Worker を破棄して 'timeout' を返す
- * - Worker を作れない・読み込めない環境では、メインスレッドで同期実行にフォールバックする
+ * - Worker を作れない・読み込めない環境では、メインスレッドで実行するとフリーズしうるため実行せず 'unavailable' を返す
  */
 export function createRegexRunner(
   createWorker: () => RegexWorkerLike,
@@ -82,10 +83,9 @@ export function createRegexRunner(
           if (job) settle({ status: 'timeout' });
           return;
         }
-        // Worker の読み込み失敗など。以降はメインスレッドでの同期実行に切り替える
+        // Worker の読み込み失敗など。メインスレッドでの実行はフリーズ保護がないため、以降は実行しない
         workerUnavailable = true;
-        // 処理中だった依頼は、同期実行で結果を返す
-        if (job) settle({ status: 'done', response: runRegexJob(job.request) });
+        if (job) settle({ status: 'unavailable' });
       };
       worker = created;
       return worker;
@@ -106,10 +106,7 @@ export function createRegexRunner(
 
       const active = ensureWorker();
       if (!active) {
-        return Promise.resolve({
-          status: 'done',
-          response: runRegexJob(full),
-        });
+        return Promise.resolve({ status: 'unavailable' });
       }
 
       return new Promise<RegexRunOutcome>((resolve) => {

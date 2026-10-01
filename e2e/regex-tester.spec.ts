@@ -90,5 +90,31 @@ for (const [locale, base, matchText, timeoutText] of [
       );
       await expect(page.locator('#regex-highlight mark')).toHaveCount(1);
     });
+
+    test('Worker が使えない環境ではエラーメッセージが表示され、固まらない', async ({
+      page,
+    }) => {
+      const noWorkerText = locale === 'ja' ? 'Web Worker' : 'Web Worker';
+
+      // Worker コンストラクタを削除して、Worker が使えない環境をシミュレート
+      await page.addInitScript(() => {
+        (window as unknown as Record<string, unknown>).Worker = undefined;
+      });
+
+      await page.goto(base);
+      await page.locator('#regex-test-input').fill('test');
+      await page.locator('#regex-pattern-input').fill('t');
+
+      // エラーメッセージが表示される
+      const errorEl = page.locator('#regex-error');
+      await expect(errorEl).toBeVisible({ timeout: 5000 });
+      await expect(errorEl).toContainText(noWorkerText);
+
+      // 画面は固まらず、操作可能
+      await page.locator('#regex-pattern-input').fill('s');
+      await expect(errorEl).toBeVisible();
+      // ハイライトはしない（エラー状態なので）
+      await expect(page.locator('#regex-highlight')).toContainText('test');
+    });
   });
 }

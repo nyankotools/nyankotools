@@ -57,21 +57,45 @@
         // template で解析（スクリプトは実行されない）してから許可する要素・属性だけを残す
         const tpl = document.createElement('template');
         tpl.innerHTML = cached;
+        // 許可する要素・属性は favorites-ui.ts が実際に出力するものだけ（id・on*・style などは落とす）
+        const allowedTags = ['li', 'a', 'svg', 'path', 'button'];
+        const allowedAttrs = [
+          'class',
+          'href',
+          'type',
+          'disabled',
+          'aria-label',
+          'aria-hidden',
+          'aria-current',
+          'data-move-slug',
+          'data-move-direction',
+          'viewbox',
+          'fill',
+          'stroke',
+          'stroke-width',
+          'stroke-linecap',
+          'stroke-linejoin',
+          'd',
+        ];
         tpl.content.querySelectorAll('*').forEach((el) => {
           const tag = el.tagName.toLowerCase();
-          if (
-            !['li', 'a', 'span', 'svg', 'path', 'button', 'div'].includes(tag)
-          ) {
+          if (!allowedTags.includes(tag)) {
             el.remove();
             return;
           }
           Array.from(el.attributes).forEach((attr) => {
             const name = attr.name.toLowerCase();
-            const unsafeHref =
-              (name === 'href' || name === 'xlink:href') &&
-              !/^(\/(?!\/)|#)/.test(attr.value.trim());
-            if (name.startsWith('on') || unsafeHref)
-              el.removeAttribute(attr.name);
+            let keep = allowedAttrs.includes(name);
+            if (keep && name === 'href') {
+              // URL として解析し、同一オリジンのときだけ残す（タブ・バックスラッシュ・javascript: 等の回避を吸収）
+              try {
+                keep =
+                  new URL(attr.value, location.href).origin === location.origin;
+              } catch {
+                keep = false;
+              }
+            }
+            if (!keep) el.removeAttribute(attr.name);
           });
         });
         section.replaceChildren(tpl.content);

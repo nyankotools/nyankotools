@@ -86,12 +86,12 @@ describe('createRegexRunner', () => {
     expect((await second).status).toBe('done');
   });
 
-  it('Worker を作れない環境ではメインスレッドで同期実行する', async () => {
+  it('Worker を作れない環境では同期実行せず unavailable を返す', async () => {
     const runner = createRegexRunner(() => {
       throw new Error('Worker is not defined');
     });
-    const outcome = await runner.run(request('c'));
-    expect(outcome.status).toBe('done');
+    expect(await runner.run(request('c'))).toEqual({ status: 'unavailable' });
+    expect(await runner.run(request('c'))).toEqual({ status: 'unavailable' });
   });
 
   it('一度応答した Worker が実行時エラーになっても同期実行には切り替えない', async () => {
@@ -109,13 +109,13 @@ describe('createRegexRunner', () => {
     expect(workers).toHaveLength(2);
   });
 
-  it('Worker がエラーになったら、処理中の依頼を同期実行で完了させる', async () => {
+  it('Worker の読み込み失敗時は、処理中の依頼も同期実行せず unavailable にする', async () => {
     let failing: HangingWorker | undefined;
     const runner = createRegexRunner(() => (failing = new HangingWorker()));
     const pending = runner.run(request('a'));
     failing!.onerror?.(new Error('load failed'));
-    const outcome = await pending;
-    expect(outcome.status).toBe('done');
+    expect(await pending).toEqual({ status: 'unavailable' });
+    expect(await runner.run(request('b'))).toEqual({ status: 'unavailable' });
   });
 });
 

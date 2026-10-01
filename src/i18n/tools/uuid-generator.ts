@@ -62,7 +62,7 @@ export const uuidGeneratorContent: Record<Locale, UuidGeneratorPageContent> = {
     ],
   },
   en: {
-    title: 'UUID Generator',
+    title: 'Free UUID Generator',
     description:
       'Generate 1 to 100 random UUIDs (v4) at once, with optional hyphen removal and uppercase. Runs in your browser; nothing is sent to a server.',
     h1: 'UUID Generator (v4)',

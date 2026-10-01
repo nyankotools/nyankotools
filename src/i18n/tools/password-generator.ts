@@ -94,7 +94,7 @@ export const passwordGeneratorContent: Record<
     ],
   },
   en: {
-    title: 'Password Generator',
+    title: 'Free Password Generator',
     description:
       'Generate strong random passwords by choosing character types and length, with a strength estimate. Runs in your browser; nothing is sent to a server.',
     h1: 'Password Generator',

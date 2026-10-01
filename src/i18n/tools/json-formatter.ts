@@ -116,7 +116,7 @@ export const jsonFormatterContent: Record<Locale, JsonFormatterPageContent> = {
     ],
   },
   en: {
-    title: 'JSON Formatter',
+    title: 'Free JSON Formatter',
     description:
       'Format, minify, and validate JSON with clear syntax error messages. Runs in your browser; nothing is sent to a server.',
     h1: 'JSON Formatter & Validator',

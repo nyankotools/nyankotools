@@ -85,7 +85,7 @@ export const qrGeneratorContent: Record<Locale, QrGeneratorPageContent> = {
     ],
   },
   en: {
-    title: 'QR Code Generator',
+    title: 'Free QR Code Generator',
     description:
       'Create a QR code from a URL or text, choose error correction and size, and download a PNG. Runs in your browser; nothing is sent to a server.',
     h1: 'QR Code Generator',

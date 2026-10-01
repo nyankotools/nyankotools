@@ -125,7 +125,7 @@ export const mortgageCalculatorContent: Record<
     ],
   },
   en: {
-    title: 'Mortgage Prepayment Calculator (Shorten vs. Reduce)',
+    title: 'Mortgage Prepayment Calculator (Shorten Term or Cut Payment)',
     description:
       'Compare mortgage prepayment by shortening the term or reducing the payment, with interest saved. Runs in your browser; nothing is sent to a server.',
     h1: 'Mortgage Prepayment Comparison Calculator',

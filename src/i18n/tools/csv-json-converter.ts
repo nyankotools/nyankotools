@@ -106,7 +106,7 @@ export const csvJsonConverterContent: Record<
     ],
   },
   en: {
-    title: 'CSV to JSON Converter',
+    title: 'Free CSV to JSON Converter',
     description:
       'Convert between CSV and JSON with comma/tab delimiters and quoted fields, handy for spreadsheet exports. Runs in your browser; nothing is sent to a server.',
     h1: 'CSV ⇔ JSON Converter',

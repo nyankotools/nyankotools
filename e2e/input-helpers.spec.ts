@@ -1,4 +1,5 @@
 import { test, expect } from './helpers/test';
+import { blockAnalytics } from './helpers/block-analytics';
 
 // Step 5: 入力欄まわり共通機能（No.169）・入力状態の保持（No.176）・印刷CSS（No.178）
 
@@ -416,6 +417,7 @@ test.describe('入力状態の保持（QA再指摘）', () => {
     browser,
   }) => {
     const context = await browser.newContext({ colorScheme: 'dark' });
+    await blockAnalytics(context);
     const page = await context.newPage();
     await page.goto('/tools/tax-calculator/');
     await page.emulateMedia({ media: 'print' });

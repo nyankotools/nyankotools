@@ -62,7 +62,7 @@ export const base64Content: Record<Locale, Base64PageContent> = {
     ],
   },
   en: {
-    title: 'Base64 Encoder/Decoder',
+    title: 'Free Base64 Encoder/Decoder',
     description:
       'Encode text to Base64 or decode Base64 back to text, with full multibyte character support. Runs in your browser; nothing is sent to a server.',
     h1: 'Base64 Encoder / Decoder',

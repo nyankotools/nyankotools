@@ -90,6 +90,7 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
     browser,
   }) => {
     const context = await browser.newContext({ baseURL: BASE_URL });
+    await blockAnalytics(context);
     const page = await context.newPage();
     await page.goto('/tools/char-counter/');
 
@@ -227,6 +228,7 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
       baseURL: BASE_URL,
       viewport: { width: 375, height: 700 },
     });
+    await blockAnalytics(context);
     const page = await context.newPage();
     await page.goto('/tools/char-counter/');
 

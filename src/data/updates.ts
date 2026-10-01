@@ -248,13 +248,15 @@ export const updates: UpdateEntry[] = [
   },
   {
     date: '2026-10-01',
-    toolSlugs: ['curl-converter'],
+    toolSlugs: ['curl-converter', 'json-to-typescript', 'json-diff'],
     translations: {
       ja: {
-        summary: 'cURL→Fetch/Axios変換を追加しました。',
+        summary:
+          'cURL→Fetch/Axios変換、JSON→TypeScript型生成、JSON差分比較を追加しました。',
       },
       en: {
-        summary: 'Added the cURL to Fetch / Axios Converter.',
+        summary:
+          'Added the cURL to Fetch / Axios Converter, JSON to TypeScript Converter, and JSON Diff.',
       },
     },
   },

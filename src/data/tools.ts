@@ -2185,6 +2185,64 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'json-to-typescript',
+    category: 'data',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['json-formatter', 'json-path-tester', 'yaml-json-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'JSON→TypeScript型生成',
+        keywords: [
+          'json',
+          'typescript',
+          'interface',
+          'type',
+          '型定義',
+          'APIレスポンス',
+        ],
+        description:
+          'JSONからTypeScriptのinterface・type定義を自動生成します。ネストしたオブジェクト・配列・省略可能なプロパティ・ユニオン型に対応。',
+      },
+      en: {
+        name: 'JSON to TypeScript Converter',
+        keywords: [
+          'json',
+          'typescript',
+          'interface',
+          'type',
+          'quicktype',
+          'api response',
+        ],
+        description:
+          'Generates TypeScript interfaces or type aliases from JSON, handling nested objects, arrays, optional properties, and union types.',
+      },
+    },
+  },
+  {
+    slug: 'json-diff',
+    category: 'data',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['json-formatter', 'text-diff', 'json-path-tester'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'JSON差分比較',
+        keywords: ['json', 'diff', '差分', '比較', 'JSON比較'],
+        description:
+          '2つのJSONを構造的に比較し、追加・削除・変更された箇所をパスつきで一覧表示します。キー順序は無視、配列の並び順を無視する比較にも対応。',
+      },
+      en: {
+        name: 'JSON Diff',
+        keywords: ['json', 'diff', 'compare', 'json compare', 'difference'],
+        description:
+          'Compares two JSON documents structurally and lists added, removed, and changed values with their paths. Ignores key order, with an option to ignore array order.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

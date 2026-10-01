@@ -111,10 +111,11 @@ if (built && slugs.length) {
   for (const s of slugs) {
     if (existsSync(`e2e/${s}.spec.ts`)) specs.push(`e2e/${s}.spec.ts`);
   }
-  // 共通specは全ツール分あるため、対象ツールのテスト名（"<slug>:"）だけに絞る。
+  // 共通specは全ツール分あるため、対象ツールのテスト名（"<slug>:"）と、
+  // 全ツール横断の "sidebar:" テスト（軽量・数件）だけに絞る。
   // 固有specのテスト名は slug で始まるとは限らないので、-g は共通specにだけ効かせる。
   const escaped = slugs.map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-  const common = `pnpm exec playwright test e2e/tools-common.spec.ts --reporter=dot -g "\\s(${escaped.join('|')}):"`;
+  const common = `pnpm exec playwright test e2e/tools-common.spec.ts --reporter=dot -g "\\s(${escaped.join('|')}|sidebar):"`;
   const env = { E2E_SKIP_BUILD: '1' };
   step('e2e-common', common, env);
   const own = specs.slice(1);

@@ -6,7 +6,7 @@ import { tools, type Locale } from '../src/data/tools';
 //   - ページが表示される（h1が1つだけ表示される）
 //   - 375px幅（FAQ展開時を含む）でも横スクロールが発生しない（growth.md のレスポンシブ要件）
 //   - フッターが main の最後の子である
-//   - サイドバーのリンクからツールページへ遷移できる
+//   - サイドバーに全ツールへのリンクがあり、各カテゴリの先頭ツールへ遷移できる
 //   - axe（WCAG 2.x A/AA）でコントラスト・ラベル欠落などの違反がない
 // 日本語版・英語版の両方を対象にする。ツール固有の操作や表示は各ツールのspecで検証する。
 // 新しいツールを src/data/tools.ts に登録すれば、この検証は自動的に対象に含まれる。
@@ -72,8 +72,51 @@ for (const { locale, prefix } of locales) {
         );
         expect.soft(summary).toEqual([]);
       });
+    }
 
-      test(`${tool.slug}: サイドバーからツールページへ遷移できる`, async ({
+    // サイドバーはツール共通のコンポーネントなので、全ツールを毎回クリックして遷移はしない。
+    //   - 全ツールのリンク（href・表示名）が存在することは、1回の読み込みで一括検証する
+    //   - 実際のクリック遷移は、各カテゴリの先頭ツール1件で検証する
+    test('sidebar: 全ツールへのリンクが正しいhrefと表示名で存在する', async ({
+      page,
+    }) => {
+      await page.goto(`${prefix}/`);
+
+      // 閉じた<details>内のリンクも textContent / href では取得できる
+      const links = await page.evaluate(() =>
+        Array.from(document.querySelectorAll('#sidebar a')).map((a) => ({
+          href: a.getAttribute('href'),
+          text: (a.textContent ?? '').trim(),
+        })),
+      );
+
+      const problems: string[] = [];
+      for (const tool of tools) {
+        const toolPath = `${prefix}/tools/${tool.slug}/`;
+        const name = tool.translations[locale].name;
+        const matched = links.filter((l) => l.href === toolPath);
+        if (matched.length !== 1) {
+          problems.push(`${tool.slug}: リンク数 ${matched.length}（期待値 1）`);
+        } else if (!matched[0].text.includes(name)) {
+          problems.push(
+            `${tool.slug}: 表示名 "${matched[0].text}" に "${name}" がない`,
+          );
+        }
+      }
+      expect(problems).toEqual([]);
+    });
+
+    const firstToolOfCategory = new Map<string, (typeof tools)[number]>();
+    for (const tool of tools) {
+      if (!firstToolOfCategory.has(tool.category)) {
+        firstToolOfCategory.set(tool.category, tool);
+      }
+    }
+
+    for (const [category, tool] of firstToolOfCategory) {
+      const toolPath = `${prefix}/tools/${tool.slug}/`;
+
+      test(`sidebar: ${category}カテゴリの先頭ツール(${tool.slug})へサイドバーから遷移できる`, async ({
         page,
       }) => {
         await page.goto(`${prefix}/`);

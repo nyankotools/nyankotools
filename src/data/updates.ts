@@ -246,6 +246,18 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-01',
+    toolSlugs: ['curl-converter'],
+    translations: {
+      ja: {
+        summary: 'cURL→Fetch/Axios変換を追加しました。',
+      },
+      en: {
+        summary: 'Added the cURL to Fetch / Axios Converter.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

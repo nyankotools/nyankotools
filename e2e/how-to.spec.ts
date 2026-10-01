@@ -15,6 +15,7 @@ const slugs = [
   'favicon-generator',
   'image-palette-extractor',
   'exif-viewer',
+  'curl-converter',
 ];
 
 const locales = [

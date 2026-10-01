@@ -2163,6 +2163,28 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'curl-converter',
+    category: 'dev',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['json-formatter', 'url-encode', 'base64'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'cURL→Fetch/Axios変換',
+        keywords: ['curl', 'fetch', 'axios', 'API', 'cURLとしてコピー'],
+        description:
+          'curlコマンドをfetch・axiosのJavaScriptコードに変換します。ヘッダー・JSONボディ・フォーム・Basic認証に対応し、通信は行わず解析のみ。',
+      },
+      en: {
+        name: 'cURL to Fetch / Axios Converter',
+        keywords: ['curl', 'fetch', 'axios', 'API', 'copy as cURL'],
+        description:
+          'Converts a curl command to JavaScript fetch or axios code. Handles headers, JSON bodies, form data, and basic auth; it only parses the command and never sends a request.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

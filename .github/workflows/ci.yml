@@ -51,6 +51,17 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # ブラウザ本体のダウンロードを省くため、Playwrightのバージョンをキーにキャッシュする。
+      # OS依存パッケージ（--with-deps）はキャッシュ対象外なので、下のinstallは毎回実行する
+      # （キャッシュがヒットすればブラウザのダウンロードだけがスキップされる）。
+      - id: playwright-version
+        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
       - run: pnpm exec playwright install --with-deps chromium
 
       # webServer（pnpm build && pnpm preview --port 4322）と、CSP/サイドバー永続化specのwrangler devは

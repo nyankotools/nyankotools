@@ -16,6 +16,7 @@ const slugs = [
   'image-palette-extractor',
   'exif-viewer',
   'curl-converter',
+  'file-hash-calculator',
 ];
 
 const locales = [

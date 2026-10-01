@@ -12,6 +12,8 @@ export const categoryIds = [
   'dev',
   'generate',
   'camera',
+  'security',
+  'file',
 ] as const;
 
 export type CategoryId = (typeof categoryIds)[number];
@@ -28,6 +30,8 @@ export const categories: Record<CategoryId, Record<Locale, string>> = {
   dev: { ja: '開発', en: 'Development' },
   generate: { ja: '生成', en: 'Generate' },
   camera: { ja: 'カメラ', en: 'Camera' },
+  security: { ja: 'セキュリティ', en: 'Security' },
+  file: { ja: 'ファイル', en: 'File' },
 };
 
 export interface ToolTranslation {
@@ -2282,6 +2286,56 @@ export const tools: Tool[] = [
         keywords: ['ULID', 'NanoID', 'random id', 'unique id', 'sortable id'],
         description:
           'Generates 1 to 100 time-sortable ULIDs or compact, URL-friendly NanoIDs at once, with custom length and alphabet for NanoID.',
+      },
+    },
+  },
+  {
+    slug: 'password-strength-checker',
+    category: 'security',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['password-generator', 'hash-generator', 'ulid-nanoid-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'パスワード強度チェッカー',
+        keywords: ['パスワード', '強度', 'エントロピー', '安全性', '解読時間'],
+        description:
+          'パスワードの強さを文字種・長さ・連番やキーボード配列などのパターンから判定し、解読にかかる目安時間を表示します。',
+      },
+      en: {
+        name: 'Password Strength Checker',
+        keywords: ['password', 'strength', 'entropy', 'crack time', 'security'],
+        description:
+          'Rates a password by length, character types, and weak patterns like sequences and keyboard runs, and estimates how long it would take to crack.',
+      },
+    },
+  },
+  {
+    slug: 'file-hash-calculator',
+    category: 'file',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['hash-generator', 'password-strength-checker'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ファイルハッシュ計算',
+        keywords: [
+          'ハッシュ',
+          'チェックサム',
+          'MD5',
+          'SHA-256',
+          'ファイル照合',
+        ],
+        description:
+          'ファイルをドラッグ＆ドロップして、MD5・SHA-1・SHA-256・SHA-384・SHA-512のハッシュ値を計算します。配布元のハッシュ値との照合もできます。',
+      },
+      en: {
+        name: 'File Hash Calculator',
+        keywords: ['hash', 'checksum', 'MD5', 'SHA-256', 'file verify'],
+        description:
+          'Drag and drop files to calculate MD5, SHA-1, SHA-256, SHA-384, and SHA-512 hashes, and compare them with a published checksum.',
       },
     },
   },

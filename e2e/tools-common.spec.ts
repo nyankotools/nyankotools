@@ -4,7 +4,8 @@ import { tools, type Locale } from '../src/data/tools';
 
 // 全ツール共通の定型検証を、ツール登録簿（src/data/tools.ts）から自動生成する。
 //   - ページが表示される（h1が1つだけ表示される）
-//   - 375px幅でも横スクロールが発生しない（growth.md のレスポンシブ要件）
+//   - 375px幅（FAQ展開時を含む）でも横スクロールが発生しない（growth.md のレスポンシブ要件）
+//   - フッターが main の最後の子である
 //   - サイドバーのリンクからツールページへ遷移できる
 //   - axe（WCAG 2.x A/AA）でコントラスト・ラベル欠落などの違反がない
 // 日本語版・英語版の両方を対象にする。ツール固有の操作や表示は各ツールのspecで検証する。
@@ -20,25 +21,21 @@ for (const { locale, prefix } of locales) {
     for (const tool of tools) {
       const toolPath = `${prefix}/tools/${tool.slug}/`;
 
-      test(`${tool.slug}: 375px幅で表示され、横スクロールが発生しない`, async ({
+      // ページ読み込みを減らすため、同じ条件（viewport）で確認できる検証を1テストにまとめる。
+      // 独立した検証は expect.soft にして、1件失敗しても残りの結果を同時に報告する。
+      test(`${tool.slug}: 375px幅で表示され、FAQ展開時も横スクロールが発生しない`, async ({
         page,
       }) => {
         await page.setViewportSize({ width: 375, height: 800 });
         await page.goto(toolPath);
 
-        await expect(page.locator('main h1')).toBeVisible();
+        await expect.soft(page.locator('main h1')).toBeVisible();
 
-        const hasHorizontalOverflow = await page.evaluate(
-          () => document.documentElement.scrollWidth > window.innerWidth + 1,
-        );
-        expect(hasHorizontalOverflow).toBe(false);
-      });
-
-      test(`${tool.slug}: FAQを展開した375px幅でも横スクロールが発生しない`, async ({
-        page,
-      }) => {
-        await page.setViewportSize({ width: 375, height: 800 });
-        await page.goto(toolPath);
+        const hasOverflow = () =>
+          page.evaluate(
+            () => document.documentElement.scrollWidth > window.innerWidth + 1,
+          );
+        expect.soft(await hasOverflow(), '375px幅で横スクロール').toBe(false);
 
         // FAQを持たないツールでも失敗させない（開くのは存在するものだけ）
         await page.evaluate(() => {
@@ -46,28 +43,20 @@ for (const { locale, prefix } of locales) {
             .querySelectorAll('[data-faq] details')
             .forEach((d) => d.setAttribute('open', ''));
         });
-
-        const hasHorizontalOverflow = await page.evaluate(
-          () => document.documentElement.scrollWidth > window.innerWidth + 1,
-        );
-        expect(hasHorizontalOverflow).toBe(false);
+        expect
+          .soft(await hasOverflow(), 'FAQ展開後の375px幅で横スクロール')
+          .toBe(false);
       });
 
-      test(`${tool.slug}: フッターがmainの最後の子で、ツール本体より下にある`, async ({
-        page,
-      }) => {
-        await page.goto(toolPath);
-        await expect(page.locator('main > *').last()).toHaveJSProperty(
-          'tagName',
-          'FOOTER',
-        );
-      });
-
-      test(`${tool.slug}: axeでアクセシビリティ違反（WCAG 2.x A/AA）がない`, async ({
+      test(`${tool.slug}: フッターがmainの最後の子で、axeでアクセシビリティ違反（WCAG 2.x A/AA）がない`, async ({
         page,
       }) => {
         await page.goto(toolPath);
         await expect(page.locator('main h1')).toBeVisible();
+
+        await expect
+          .soft(page.locator('main > *').last())
+          .toHaveJSProperty('tagName', 'FOOTER');
 
         const results = await new AxeBuilder({ page })
           .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -81,7 +70,7 @@ for (const { locale, prefix } of locales) {
               .map((n) => n.target.join(' '))
               .join(' | ')}`,
         );
-        expect(summary).toEqual([]);
+        expect.soft(summary).toEqual([]);
       });
 
       test(`${tool.slug}: サイドバーからツールページへ遷移できる`, async ({

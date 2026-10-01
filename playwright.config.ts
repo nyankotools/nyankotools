@@ -5,9 +5,15 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  // ローカルは出力が短い line（成功時は1行進捗、失敗時のみ詳細）。
+  // ローカルは出力が短いレポーター（失敗時のみ詳細）。TTYなら1行で上書きされる line、
+  // 非TTY（エージェント実行・リダイレクト）では line が1テスト1行を出力して肥大するため dot にする
+  // （共通E2E310件で line 約61KB / dot 約0.7KB）。
   // CIはログ確認用の list に加え、失敗時にartifactとして取得できるHTMLレポートも残す
-  reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'line',
+  reporter: process.env.CI
+    ? [['list'], ['html', { open: 'never' }]]
+    : process.stdout.isTTY
+      ? 'line'
+      : 'dot',
   // デフォルト5000msだと、favicon-generator等のCanvas処理が重いツールで
   // CI実行時の並列負荷下ではギリギリ足りず稀に失敗することを実測で確認したため延長する。
   expect: { timeout: 10000 },

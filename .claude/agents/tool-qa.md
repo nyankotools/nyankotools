@@ -56,7 +56,7 @@ Run `pnpm qa <slug>` first (omit the slug to infer it from the git changes). It 
 - The per-tool spec must exercise the tool's real processing (not just check that elements exist). E2E runs against the production build (`pnpm preview --ignore-lock`, port 4322; `webServer` starts it automatically, and the flag is required when run from an agent) which enforces the CSP; a tool that loads wasm or fetches files will fail there if the CSP in `astro.config.mjs` blocks it. If the change touches the CSP, also run `e2e/csp-headers.spec.ts`.
 - If the browser is missing on first run, run `pnpm exec playwright install chromium`.
 - Limit runs to the target tool's spec file only (e.g. `pnpm exec playwright test e2e/<slug>.spec.ts`). `pnpm run test:e2e` (the full suite over all tools) burns a lot of tokens, so run it only when the caller explicitly instructs.
-- Playwright's default reporter output is verbose even on success; prefer `pnpm exec playwright test e2e/<slug>.spec.ts --reporter=line` (or redirect to a log and only read it on failure) to keep passing runs from flooding your context.
+- Playwright's default reporter output is verbose even on success; prefer `pnpm exec playwright test e2e/<slug>.spec.ts --reporter=dot` (the `line` reporter prints one line per test when not on a TTY, ~100x more than `dot`; or redirect to a log and only read it on failure) to keep passing runs from flooding your context.
 
 ## Check the `adding-a-tool.md` checklist (for new tools)
 
@@ -71,7 +71,7 @@ Run `pnpm qa <slug>` first (omit the slug to infer it from the git changes). It 
 - If you start a process such as `pnpm dev`, don't stop it without the user's instruction (Playwright's `webServer` is managed automatically after the test run, so normally ignore this).
 - Changes to files other than tests/implementation (docs, CI config, etc.) are out of scope.
 - Make no major design changes to the implementation logic. Report bugs and concerns instead of fixing them.
-- **Never end your turn with a check still pending.** Prefer running commands synchronously (e.g. `pnpm exec playwright test ... --reporter=line`) rather than backgrounding them; if a command must run in the background, wait for it to finish and fold its result into the same report. Ending your turn (or handing back) while a command you started is still running leaves the caller with no report and no way to know what you're waiting on — they can't ask you "is it done?" after the fact.
+- **Never end your turn with a check still pending.** Prefer running commands synchronously (e.g. `pnpm exec playwright test ... --reporter=dot`) rather than backgrounding them; if a command must run in the background, wait for it to finish and fold its result into the same report. Ending your turn (or handing back) while a command you started is still running leaves the caller with no report and no way to know what you're waiting on — they can't ask you "is it done?" after the fact.
 
 ## Report
 

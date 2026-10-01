@@ -2243,6 +2243,48 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'barcode-generator',
+    category: 'generate',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['qr-generator', 'uuid-generator', 'image-converter'],
+    translations: {
+      ja: {
+        name: 'バーコード生成',
+        keywords: ['バーコード', 'CODE128', 'JAN', 'EAN-13', 'UPC', 'CODE39'],
+        description:
+          'CODE128・EAN-13・EAN-8・UPC・CODE39・ITFのバーコードを生成し、PNG画像でダウンロードできます。',
+      },
+      en: {
+        name: 'Barcode Generator',
+        keywords: ['barcode', 'CODE128', 'EAN-13', 'JAN', 'UPC', 'CODE39'],
+        description:
+          'Generates CODE128, EAN-13, EAN-8, UPC, CODE39, and ITF barcodes and lets you download them as PNG images.',
+      },
+    },
+  },
+  {
+    slug: 'ulid-nanoid-generator',
+    category: 'generate',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['uuid-generator', 'password-generator', 'hash-generator'],
+    translations: {
+      ja: {
+        name: 'ULID・NanoID生成',
+        keywords: ['ULID', 'NanoID', 'ランダムID', '一意ID', '時刻順ID'],
+        description:
+          '時刻順に並ぶULIDと、短くURLに使いやすいNanoIDを1件〜100件まとめて生成します。NanoIDは長さ・文字セットも指定可能。',
+      },
+      en: {
+        name: 'ULID & NanoID Generator',
+        keywords: ['ULID', 'NanoID', 'random id', 'unique id', 'sortable id'],
+        description:
+          'Generates 1 to 100 time-sortable ULIDs or compact, URL-friendly NanoIDs at once, with custom length and alphabet for NanoID.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

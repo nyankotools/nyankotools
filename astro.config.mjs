@@ -97,6 +97,7 @@ export default defineConfig({
         'csso',
         'dompurify',
         'exifr',
+        'jsbarcode',
         'jsonpath-plus',
         'marked',
         'pdf-lib',

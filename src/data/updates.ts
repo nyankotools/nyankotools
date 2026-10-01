@@ -248,15 +248,21 @@ export const updates: UpdateEntry[] = [
   },
   {
     date: '2026-10-01',
-    toolSlugs: ['curl-converter', 'json-to-typescript', 'json-diff'],
+    toolSlugs: [
+      'curl-converter',
+      'json-to-typescript',
+      'json-diff',
+      'barcode-generator',
+      'ulid-nanoid-generator',
+    ],
     translations: {
       ja: {
         summary:
-          'cURL→Fetch/Axios変換、JSON→TypeScript型生成、JSON差分比較を追加しました。',
+          'cURL→Fetch/Axios変換、JSON→TypeScript型生成、JSON差分比較、バーコード生成、ULID・NanoID生成を追加しました。',
       },
       en: {
         summary:
-          'Added the cURL to Fetch / Axios Converter, JSON to TypeScript Converter, and JSON Diff.',
+          'Added the cURL to Fetch / Axios Converter, JSON to TypeScript Converter, JSON Diff, Barcode Generator, and ULID & NanoID Generator.',
       },
     },
   },

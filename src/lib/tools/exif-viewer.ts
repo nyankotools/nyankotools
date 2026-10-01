@@ -224,6 +224,7 @@ const ascii = (text: string): number[] =>
 const XMP_IDENTIFIER = ascii('http://ns.adobe.com/xap/1.0/\0');
 const XMP_EXTENSION_IDENTIFIER = ascii('http://ns.adobe.com/xmp/extension/\0');
 const PHOTOSHOP_IDENTIFIER = ascii('Photoshop 3.0\0');
+const MPF_IDENTIFIER = ascii('MPF\0');
 
 function startsWithAt(
   bytes: Uint8Array,
@@ -234,7 +235,7 @@ function startsWithAt(
   return identifier.every((b, i) => bytes[contentStart + i] === b);
 }
 
-/** 削除対象のメタデータセグメント（Exif / XMP / 拡張XMP / IPTC を含む APP13）か */
+/** 削除対象のメタデータセグメント（Exif / XMP / 拡張XMP / IPTC を含む APP13 / マルチピクチャ情報 MPF の APP2）か */
 function isMetadataSegment(
   bytes: Uint8Array,
   marker: number,
@@ -247,6 +248,9 @@ function isMetadataSegment(
       startsWithAt(bytes, contentStart, XMP_EXTENSION_IDENTIFIER)
     );
   }
+  if (marker === 0xe2) {
+    return startsWithAt(bytes, contentStart, MPF_IDENTIFIER);
+  }
   if (marker === 0xed) {
     return startsWithAt(bytes, contentStart, PHOTOSHOP_IDENTIFIER);
   }
@@ -254,9 +258,28 @@ function isMetadataSegment(
 }
 
 /**
+ * エントロピー符号化データ内で、次の本物のマーカー（0xFF の後が 0x00・RSTn(D0-D7)・0xFF 以外）の位置を返す。
+ * 見つからなければ -1。
+ */
+function findNextMarker(bytes: Uint8Array, from: number): number {
+  for (let i = from; i + 1 < bytes.length; i++) {
+    if (bytes[i] !== 0xff) continue;
+    const next = bytes[i + 1];
+    if (next === 0x00 || (next >= 0xd0 && next <= 0xd7)) {
+      i += 1;
+      continue;
+    }
+    if (next === 0xff) continue; // 0xFF 埋め。次の位置から再判定する
+    return i;
+  }
+  return -1;
+}
+
+/**
  * JPEGのバイト列から、撮影情報・位置情報を含みうるメタデータ
  * （APP1 の Exif・XMP、APP13 の IPTC）を取り除く。ICCプロファイル等は残す。
  * マーカーセグメントを走査して対象セグメントを飛ばすだけで、画像データの再圧縮は行わないため画質は劣化しない。
+ * 主画像の EOI より後ろに連結されたデータ（MPF の副画像・Motion Photo の動画など）は取り除く。
  * JPEGとして解釈できないバイト列を渡した場合は、そのまま返す。
  */
 export function removeExifFromJpegBytes(
@@ -279,10 +302,27 @@ export function removeExifFromJpegBytes(
     }
     const marker = bytes[offset + 1];
 
-    // SOS（スキャン開始）以降は画像本体データなので、そのままコピーして終了する
+    // SOS（スキャン開始）: ヘッダーに続くエントロピー符号化データを次の本物のマーカー（EOI など）の手前までコピーして走査を続ける
     if (marker === 0xda) {
-      keepRest();
-      break;
+      if (offset + 3 >= bytes.length) {
+        keepRest();
+        break;
+      }
+      const sosLength = (bytes[offset + 2] << 8) | bytes[offset + 3];
+      if (sosLength < 2) {
+        keepRest();
+        break;
+      }
+      const scanStart = Math.min(offset + 2 + sosLength, bytes.length);
+      const scanEnd = findNextMarker(bytes, scanStart);
+      if (scanEnd === -1) {
+        // EOI などが見つからない壊れた入力は、従来どおり末尾までそのまま保持する
+        keepRest();
+        break;
+      }
+      kept.push(bytes.subarray(offset, scanEnd));
+      offset = scanEnd;
+      continue;
     }
     // 0xFF埋めのパディング、およびTEM(0x01)・RSTn(0xD0-0xD9)等の長さフィールドを持たないマーカー
     if (marker === 0xff) {

@@ -2,6 +2,36 @@ import { describe, expect, it } from 'vitest';
 import { csvToJson, jsonToCsv } from './csv-json-converter';
 
 describe('csvToJson', () => {
+  it('1列CSVの "" （引用符つき空値）の行は読み飛ばさずレコードにする', () => {
+    for (const input of ['name\nA\n""\nB', 'name\nA\n""\nB\n']) {
+      const result = csvToJson(input);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(JSON.parse(result.output)).toEqual([
+          { name: 'A' },
+          { name: '' },
+          { name: 'B' },
+        ]);
+      }
+    }
+  });
+
+  it('末尾が改行なしの "" 行もレコードにする', () => {
+    const result = csvToJson('name\nA\n""');
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(JSON.parse(result.output)).toEqual([{ name: 'A' }, { name: '' }]);
+    }
+  });
+
+  it('引用符なしの空行は1列CSVでも従来どおり無視する', () => {
+    const result = csvToJson('name\nA\n\nB\n\n');
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(JSON.parse(result.output)).toEqual([{ name: 'A' }, { name: 'B' }]);
+    }
+  });
+
   it('末尾や途中の空行は読み飛ばす', () => {
     const result = csvToJson('a,b\n1,2\n\n3,4\n\n');
     expect(result.success).toBe(true);

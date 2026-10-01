@@ -131,7 +131,7 @@ export const exifViewerContent: Record<Locale, ExifViewerPageContent> = {
     clearButton: 'クリア',
     notesHeading: '注意点',
     notes: [
-      'Exifの削除はJPEGのマーカーセグメントを走査して、撮影情報・位置情報を含みうるメタデータ（Exif、XMP、IPTCなどのPhotoshop形式メタデータ）の部分だけを取り除く方式のため、Canvas等での再エンコードは行われず、画質・解像度は完全に維持されます。ICCプロファイル（色の情報）は残ります。',
+      'Exifの削除はJPEGのマーカーセグメントを走査して、撮影情報・位置情報を含みうるメタデータ（Exif、XMP、IPTCなどのPhotoshop形式メタデータ）の部分だけを取り除く方式のため、Canvas等での再エンコードは行われず、画質・解像度は完全に維持されます。ICCプロファイル（色の情報）は残ります。また、主画像の後ろに連結された副画像（マルチピクチャ形式）や動画データ（Motion Photo など）も取り除かれます。',
       'Exifを削除すると、回転情報（Orientation）も一緒に失われます。Orientationタグに依存して向きを表示しているビューア・アプリでは、削除後の画像が横向き・上下逆に表示される場合があります（多くのブラウザやスマートフォンは撮影時に画素データ自体を正しい向きで保存するため、影響が出るのは一部のカメラ・アプリのみです）。',
       '対応形式はJPEG（.jpg/.jpeg）のみです。PNG・WebP等はExifを持たないか扱いが異なるため対象外です。',
       'カメラのモデルによっては、Exifの一部（メーカー独自のMakerNote等）が正しく解釈できない場合があります。その場合も一覧表示から除外されるだけで、削除処理自体には影響しません。',
@@ -223,7 +223,7 @@ export const exifViewerContent: Record<Locale, ExifViewerPageContent> = {
     clearButton: 'Clear',
     notesHeading: 'Notes',
     notes: [
-      'Exif removal works by scanning JPEG marker segments and dropping only the metadata segments that can carry shooting or location data (Exif, XMP, and IPTC / Photoshop-format metadata), so the image is never re-encoded via canvas — quality and resolution stay exactly the same. The ICC color profile is kept.',
+      'Exif removal works by scanning JPEG marker segments and dropping only the metadata segments that can carry shooting or location data (Exif, XMP, and IPTC / Photoshop-format metadata), so the image is never re-encoded via canvas — quality and resolution stay exactly the same. The ICC color profile is kept. Data appended after the main image (secondary images in multi-picture files, Motion Photo video, etc.) is also removed.',
       'Removing Exif also removes the Orientation tag. If a viewer or app relies on that tag to display the image right-side up, the exported copy may appear sideways or upside down (most browsers and phones already save the pixel data itself in the correct orientation, so this only affects certain cameras and apps).',
       'Only JPEG (.jpg/.jpeg) is supported. PNG and WebP either lack Exif or handle it differently, so they are out of scope.',
       'Some camera-specific Exif fields (proprietary MakerNote data) may not be parsed correctly depending on the model. This only affects what is shown in the list — it has no effect on the removal process.',

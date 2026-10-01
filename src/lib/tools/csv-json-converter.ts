@@ -38,11 +38,19 @@ class NotObjectError extends Error {
   }
 }
 
+interface CsvRow {
+  fields: string[];
+  /** 物理的な空行（引用符なしの空フィールド1つだけ）。`""` の空値は含まない */
+  blank: boolean;
+}
+
 /** CSVテキストを行×列の文字列配列に分解する（引用符・改行を含むフィールドに対応） */
-function parseCsvRows(text: string, delimiter: string): string[][] {
-  const rows: string[][] = [];
+function parseCsvRows(text: string, delimiter: string): CsvRow[] {
+  const rows: CsvRow[] = [];
   let row: string[] = [];
   let field = '';
+  let fieldQuoted = false;
+  let rowQuoted = false;
   let inQuotes = false;
   let i = 0;
   const len = text.length;
@@ -68,18 +76,23 @@ function parseCsvRows(text: string, delimiter: string): string[][] {
 
     if (char === '"') {
       inQuotes = true;
+      fieldQuoted = true;
+      rowQuoted = true;
       i += 1;
     } else if (char === delimiter) {
       row.push(field);
       field = '';
+      fieldQuoted = false;
       i += 1;
     } else if (char === '\r') {
       i += 1;
     } else if (char === '\n') {
       row.push(field);
-      rows.push(row);
+      rows.push({ fields: row, blank: !rowQuoted && isBlankFields(row) });
       row = [];
       field = '';
+      fieldQuoted = false;
+      rowQuoted = false;
       i += 1;
     } else {
       field += char;
@@ -91,12 +104,16 @@ function parseCsvRows(text: string, delimiter: string): string[][] {
     throw new UnterminatedQuoteError();
   }
 
-  if (field.length > 0 || row.length > 0) {
+  if (field.length > 0 || fieldQuoted || row.length > 0) {
     row.push(field);
-    rows.push(row);
+    rows.push({ fields: row, blank: !rowQuoted && isBlankFields(row) });
   }
 
   return rows;
+}
+
+function isBlankFields(fields: string[]): boolean {
+  return fields.length === 1 && fields[0] === '';
 }
 
 function escapeCsvField(value: string, delimiter: string): string {
@@ -145,10 +162,14 @@ function toFailure(error: unknown): ConvertFailure {
 
 export function csvToJson(input: string, delimiter = ','): ConvertOutcome {
   try {
-    // 空行（空フィールド1つだけの行）は読み飛ばす。エラー表示の行番号は元の行位置のまま保つ
+    // 物理的な空行（引用符なし）は読み飛ばす。`""` の空値行は残す。エラー表示の行番号は元の行位置のまま保つ
     const rows = parseCsvRows(input, delimiter)
-      .map((row, index) => ({ row, line: index + 1 }))
-      .filter(({ row }) => !(row.length === 1 && row[0] === ''));
+      .map(({ fields, blank }, index) => ({
+        row: fields,
+        blank,
+        line: index + 1,
+      }))
+      .filter(({ blank }) => !blank);
     if (rows.length === 0) {
       return { success: true, output: '[]' };
     }

@@ -51,6 +51,11 @@ export function createCronDescriber(locale: CronDescriptionLocale) {
     type: 'conjunction',
   });
 
+  const listFormatterEnOr = new Intl.ListFormat('en', {
+    style: 'long',
+    type: 'disjunction',
+  });
+
   function describeItemJa(
     item: CronFieldItem,
     unit: string,
@@ -109,6 +114,12 @@ export function createCronDescriber(locale: CronDescriptionLocale) {
         );
   }
 
+  // フィールドが単一の間隔指定（ステップ付き。例: 毎15分や 1-10 の2刻み）だけで、それ自体で完結した表現になるか
+  function isInterval(raw: string, range: readonly [number, number]): boolean {
+    const items = parseFieldItems(raw, ...range);
+    return items?.length === 1 && items[0].step !== undefined;
+  }
+
   function describeWeekdayItem(item: CronFieldItem): string {
     if (item.isWildcard) return isJa ? '毎日' : 'every day';
     if (item.end !== item.start) {
@@ -119,7 +130,8 @@ export function createCronDescriber(locale: CronDescriptionLocale) {
     return WEEKDAY_NAMES[item.start];
   }
 
-  function describeWeekdays(raw: string): string {
+  /** disjunction=true のとき英語は "A or B" で連結する（日と曜日を組み合わせる文で使う） */
+  function describeWeekdays(raw: string, disjunction = false): string {
     const items = parseFieldItems(raw, 0, 7);
     if (!items) return raw;
     const mapped = items
@@ -129,8 +141,13 @@ export function createCronDescriber(locale: CronDescriptionLocale) {
         end: item.end % 7,
       }))
       .map((item) => describeWeekdayItem(item));
-    return isJa ? mapped.join('、') : listFormatterEn.format(mapped);
+    if (isJa) return mapped.join('、');
+    return (disjunction ? listFormatterEnOr : listFormatterEn).format(mapped);
   }
+
+  /** 単一の時刻なら "hour"、範囲・リストなら "hours" */
+  const hoursLabel = (hourDesc: string) =>
+    /^\d+$/.test(hourDesc) ? 'hour' : 'hours';
 
   function combineHourMinute(hourRaw: string, minuteRaw: string): string {
     const hourIsStar = hourRaw === '*';
@@ -147,17 +164,21 @@ export function createCronDescriber(locale: CronDescriptionLocale) {
       if (isJa) return `毎時${minuteDesc}`;
       // ステップ指定（例: */15 → "every 15 minutes"）は既に完結した文なので、
       // 「every hour at minute」で二重に囲むと "minute every 15 minutes" のように破綻する
-      return minuteDesc.includes('every')
+      return isInterval(minuteRaw, FIELD_RANGES.minute)
         ? minuteDesc
         : `every hour at minute ${minuteDesc}`;
     }
 
     const hourDesc = describeField(hourRaw, 'hour', ...FIELD_RANGES.hour);
     if (minuteIsStar) {
-      if (isJa) return `${hourDesc}の間、毎分`;
-      return hourDesc.includes('every')
+      if (isJa) {
+        return hourDesc.includes('ごと')
+          ? `${hourDesc}に毎分`
+          : `${hourDesc}の間、毎分`;
+      }
+      return isInterval(hourRaw, FIELD_RANGES.hour)
         ? `${hourDesc}, every minute`
-        : `every minute during hour ${hourDesc}`;
+        : `every minute during ${hoursLabel(hourDesc)} ${hourDesc}`;
     }
 
     const minuteDesc = describeField(
@@ -169,17 +190,20 @@ export function createCronDescriber(locale: CronDescriptionLocale) {
       const joiner =
         minuteDesc.includes('ごと') ||
         hourDesc.includes('ごと') ||
-        hourDesc.includes('から')
+        hourDesc.includes('から') ||
+        hourDesc.includes('、')
           ? 'の'
           : '';
       return `${hourDesc}${joiner}${minuteDesc}`;
     }
 
-    const hourHasEvery = hourDesc.includes('every');
-    const minuteHasEvery = minuteDesc.includes('every');
+    const hourHasEvery = isInterval(hourRaw, FIELD_RANGES.hour);
+    const minuteHasEvery = isInterval(minuteRaw, FIELD_RANGES.minute);
     if (hourHasEvery && minuteHasEvery) return `${hourDesc}, ${minuteDesc}`;
     if (hourHasEvery) return `${hourDesc}, at minute ${minuteDesc}`;
-    if (minuteHasEvery) return `during hours ${hourDesc}, ${minuteDesc}`;
+    if (minuteHasEvery) {
+      return `during ${hoursLabel(hourDesc)} ${hourDesc}, ${minuteDesc}`;
+    }
     return `at hour ${hourDesc}, minute ${minuteDesc}`;
   }
 
@@ -220,7 +244,7 @@ export function createCronDescriber(locale: CronDescriptionLocale) {
         : '';
       if (cron.dayOfMonthRestricted && cron.dayOfWeekRestricted) {
         parts.push(
-          `${dayDesc} ${cron.dayFieldsOr ? 'or' : 'and'} ${describeWeekdays(dayOfWeek)}`,
+          `${dayDesc} ${cron.dayFieldsOr ? 'or' : 'and'} ${describeWeekdays(dayOfWeek, true)}`,
         );
       } else if (cron.dayOfMonthRestricted) {
         parts.push(dayDesc);

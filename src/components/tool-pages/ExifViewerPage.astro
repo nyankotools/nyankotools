@@ -182,6 +182,7 @@ const t = exifViewerContent[locale];
     hasAnyExifField,
     isJpegFile,
     MAX_FILE_SIZE,
+    isJpegBytes,
     removeExifFromJpeg,
     type ExifSummary,
   } from '../../lib/tools/exif-viewer';
@@ -388,6 +389,12 @@ const t = exifViewerContent[locale];
       return;
     }
     if (generation !== loadGeneration) return;
+
+    // MIME（拡張子由来）が image/jpeg でも、中身が JPEG でなければ削除処理の対象外なので受け付けない
+    if (!isJpegBytes(new Uint8Array(buffer))) {
+      showError(errorEl.dataset.message ?? '');
+      return;
+    }
 
     let tags: Record<string, unknown> | undefined;
     try {

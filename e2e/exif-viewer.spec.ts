@@ -681,6 +681,20 @@ test.describe('エッジケース・追加テスト', () => {
     }
   });
 
+  test('拡張子が .jpg でも中身が JPEG でなければ受け付けない', async ({
+    page,
+  }) => {
+    await page.goto('/tools/exif-viewer/');
+    await page.locator('#ev-file-input').setInputFiles({
+      name: 'fake.jpg',
+      mimeType: 'image/jpeg',
+      buffer: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    });
+    await expect(page.locator('#ev-error')).not.toHaveAttribute('hidden');
+    await expect(page.locator('#ev-error')).toContainText('JPEG画像');
+    await expect(page.locator('#ev-result')).toHaveAttribute('hidden');
+  });
+
   test("ファイル名に $& や $' を含んでも表示が崩れない", async ({ page }) => {
     await page.goto('/tools/exif-viewer/');
     const name = "a$&$'b.jpg";

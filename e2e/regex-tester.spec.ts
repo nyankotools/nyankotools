@@ -94,8 +94,6 @@ for (const [locale, base, matchText, timeoutText] of [
     test('Worker が使えない環境ではエラーメッセージが表示され、固まらない', async ({
       page,
     }) => {
-      const noWorkerText = 'Web Worker';
-
       // Worker コンストラクタを削除して、Worker が使えない環境をシミュレート
       await page.addInitScript(() => {
         (window as unknown as Record<string, unknown>).Worker = undefined;
@@ -108,7 +106,7 @@ for (const [locale, base, matchText, timeoutText] of [
       // エラーメッセージが表示される
       const errorEl = page.locator('#regex-error');
       await expect(errorEl).toBeVisible({ timeout: 5000 });
-      await expect(errorEl).toContainText(noWorkerText);
+      await expect(errorEl).toContainText('Web Worker');
 
       // 画面は固まらず、操作可能
       await page.locator('#regex-pattern-input').fill('s');

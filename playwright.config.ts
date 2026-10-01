@@ -26,7 +26,7 @@ export default defineConfig({
     // コンパイルはルートごとに初回アクセス時の変換待ちが発生し、E2Eが遅くなるため使わない）。
     // 開発サーバー(4321)とはポートを分ける。astro devはCSPを送出しないため、4321を再利用すると
     // CSP違反（wasm/fetchのブロック等）を見逃す（pdf-password-protectorで実際に発生）。
-    command: 'pnpm build && pnpm preview --port 4322',
+    command: 'pnpm build && pnpm preview --port 4322 --ignore-lock',
     url: 'http://localhost:4322',
     reuseExistingServer: !process.env.CI,
   },

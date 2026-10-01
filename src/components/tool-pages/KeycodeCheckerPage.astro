@@ -135,8 +135,8 @@ const t = keycodeCheckerContent[locale];
     li.className =
       'rounded border border-gray-200 px-2 py-1 font-mono text-xs text-gray-700 dark:border-gray-700 dark:text-gray-300';
     li.textContent = historyItemTemplate
-      .replace('{code}', info.code)
-      .replace('{key}', displayKey(info.key));
+      .replace('{code}', () => info.code)
+      .replace('{key}', () => displayKey(info.key));
     historyEl.append(li);
     while (historyEl.children.length > MAX_HISTORY) {
       historyEl.removeChild(historyEl.firstElementChild!);

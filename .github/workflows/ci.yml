@@ -1,7 +1,7 @@
 name: CI
 
-# developのpushではCIを動かさない。ローカルでmainにマージしてpushしたときだけ
-# CI（test / e2e）を実行し、両方成功したらdeployジョブで本番へデプロイする。
+# developのpushではCIを動かさない。developからmainへのPRをマージ（マージコミット）したとき
+# だけCI（test / e2e）を実行し、両方成功したらdeployジョブで本番へデプロイする。
 on:
   push:
     branches: [main]

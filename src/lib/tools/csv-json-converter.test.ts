@@ -202,6 +202,11 @@ describe('往復変換', () => {
     if (json.success) expect(JSON.parse(json.output)).toEqual(original);
   });
 
+  it('キーを持たないオブジェクトだけの配列は空文字になる（[] と同じ）', () => {
+    expect(jsonToCsv('[{},{}]')).toEqual({ success: true, output: '' });
+    expect(jsonToCsv('[]')).toEqual({ success: true, output: '' });
+  });
+
   it('複数列の空値は引用符なしのまま（区切りで区別できる）', () => {
     const csv = jsonToCsv('[{"a":"","b":""},{"a":"x","b":""}]');
     expect(csv).toEqual({ success: true, output: 'a,b\n,\nx,\n' });

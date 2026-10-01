@@ -499,6 +499,23 @@ describe('removeExifFromJpeg', () => {
     expect(Array.from(result.bytes)).toEqual(main);
   });
 
+  it('メタデータと末尾の連結データが同時にあれば両方 true（UI はメタデータ側の文言を優先）', () => {
+    const main = [0xff, 0xd8, ...APP0, ...sos(0x12), ...EOI];
+    const exif = [0xff, 0xe1, 0x00, 0x08, 0x45, 0x78, 0x69, 0x66, 0x00, 0x00];
+    const result = removeExifFromJpeg(
+      Uint8Array.from([
+        0xff,
+        0xd8,
+        ...exif,
+        ...main.slice(2),
+        ...secondaryWithExif,
+      ]),
+    );
+    expect(result.removedMetadata).toBe(true);
+    expect(result.removedTrailing).toBe(true);
+    expect(Array.from(result.bytes)).toEqual(main);
+  });
+
   it('MPF のみ → メタデータ削除扱い', () => {
     const mpf = [0xff, 0xe2, 0x00, 0x08, 0x4d, 0x50, 0x46, 0x00, 0x01, 0x02];
     const result = removeExifFromJpeg(

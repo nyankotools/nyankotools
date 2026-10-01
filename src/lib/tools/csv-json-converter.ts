@@ -241,6 +241,9 @@ export function jsonToCsv(input: string, delimiter = ','): ConvertOutcome {
       }
     });
 
+    // キーを持たないオブジェクトだけの配列は、ヘッダーも行も作れない（`[]` と同じ扱い）
+    if (columns.length === 0) return { success: true, output: '' };
+
     const singleColumn = columns.length === 1;
     const lines: string[] = [];
     lines.push(

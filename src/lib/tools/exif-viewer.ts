@@ -275,13 +275,7 @@ function findNextMarker(bytes: Uint8Array, from: number): number {
   return -1;
 }
 
-/**
- * JPEGのバイト列から、撮影情報・位置情報を含みうるメタデータ
- * （APP1 の Exif・XMP、APP13 の IPTC）を取り除く。ICCプロファイル等は残す。
- * マーカーセグメントを走査して対象セグメントを飛ばすだけで、画像データの再圧縮は行わないため画質は劣化しない。
- * 主画像の EOI より後ろに連結されたデータ（MPF の副画像・Motion Photo の動画など）は取り除く。
- * JPEGとして解釈できないバイト列を渡した場合は、そのまま返す。
- */
+/** {@link removeExifFromJpeg} の bytes だけを返す薄いラッパー */
 export function removeExifFromJpegBytes(
   bytes: Uint8Array,
 ): Uint8Array<ArrayBuffer> {
@@ -296,7 +290,13 @@ export interface RemoveExifResult {
   removedTrailing: boolean;
 }
 
-/** メタデータ削除を行い、何を取り除いたか（メタデータ・末尾の連結データ）も合わせて返す */
+/**
+ * JPEGのバイト列から、撮影情報・位置情報を含みうるメタデータ
+ * （APP1 の Exif・XMP、APP13 の IPTC、APP2 の MPF）を取り除く。ICCプロファイル等は残す。
+ * マーカーセグメントを走査して対象セグメントを飛ばすだけで、画像データの再圧縮は行わないため画質は劣化しない。
+ * 主画像の EOI より後ろに連結されたデータ（MPF の副画像・Motion Photo の動画など）は取り除く。
+ * JPEGとして解釈できないバイト列を渡した場合は、そのまま返す（removedMetadata / removedTrailing とも false）。
+ */
 export function removeExifFromJpeg(bytes: Uint8Array): RemoveExifResult {
   if (!isJpegBytes(bytes)) {
     return {

@@ -121,7 +121,7 @@ test.describe('ホームページの検索（keywords・表記ゆれ）', () => 
     await search.fill('ＪＳＯＮ');
     await expect(card('json-formatter')).toBeVisible();
 
-    await search.fill('HMAC');
+    await search.fill('zzqxjk該当なし');
     await expect(page.locator('#no-results')).toBeVisible();
 
     await search.fill('　');

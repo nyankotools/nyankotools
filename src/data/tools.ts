@@ -2342,6 +2342,104 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'crypto-encryptor',
+    category: 'security',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['password-strength-checker', 'hmac-generator', 'base64'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'テキスト暗号化・復号',
+        keywords: ['暗号化', '復号', 'AES', 'AES-GCM', 'パスワード暗号'],
+        description:
+          'テキストをパスワードでAES-256-GCM暗号化し、Base64文字列にして共有。同じパスワードで復号もできます。',
+      },
+      en: {
+        name: 'Text Encryptor & Decryptor',
+        keywords: [
+          'encrypt',
+          'decrypt',
+          'AES',
+          'AES-GCM',
+          'password encryption',
+        ],
+        description:
+          'Encrypt text with a password using AES-256-GCM and share it as Base64, then decrypt it with the same password.',
+      },
+    },
+  },
+  {
+    slug: 'hmac-generator',
+    category: 'security',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['hash-generator', 'jwt-decoder', 'totp-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'HMAC署名生成',
+        keywords: [
+          'HMAC',
+          'HMAC-SHA256',
+          'Webhook署名',
+          '署名検証',
+          'シークレット',
+        ],
+        description:
+          'メッセージと秘密鍵からHMAC-SHA1/256/384/512の署名を計算。Webhook署名の照合やAPI認証のデバッグに。',
+      },
+      en: {
+        name: 'HMAC Generator',
+        keywords: [
+          'HMAC',
+          'HMAC-SHA256',
+          'webhook signature',
+          'signature verify',
+          'secret key',
+        ],
+        description:
+          'Compute HMAC-SHA1/256/384/512 signatures from a message and secret key, and compare them with a received signature.',
+      },
+    },
+  },
+  {
+    slug: 'totp-generator',
+    category: 'security',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['hmac-generator', 'password-generator', 'qr-code-reader'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'TOTPコード生成・検証',
+        keywords: [
+          'TOTP',
+          '2段階認証',
+          '二要素認証',
+          'OTP',
+          'ワンタイムパスワード',
+          '2FA',
+        ],
+        description:
+          'Base32の秘密鍵やotpauth://のURIから2段階認証のTOTPコードを生成・検証。実装のデバッグや動作確認に。',
+      },
+      en: {
+        name: 'TOTP Code Generator',
+        keywords: [
+          'TOTP',
+          '2FA',
+          'two-factor',
+          'OTP',
+          'one-time password',
+          'authenticator',
+        ],
+        description:
+          'Generate and verify 2FA TOTP codes from a Base32 secret or an otpauth:// URI, for debugging and testing.',
+      },
+    },
+  },
+  {
     slug: 'file-hash-calculator',
     category: 'file',
     addedAt: '2026-10-01',

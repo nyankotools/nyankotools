@@ -1,0 +1,221 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cryptoEncryptorContent } from '../../i18n/tools/crypto-encryptor';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cryptoEncryptorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-3">
+    <div
+      id="crypto-encryptor-mode"
+      class="ui-seg"
+      role="group"
+      aria-label={t.modeLabel}
+    >
+      <button
+        type="button"
+        data-mode="encrypt"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.modeEncrypt}
+      </button>
+      <button
+        type="button"
+        data-mode="decrypt"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeDecrypt}
+      </button>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <label for="crypto-encryptor-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="crypto-encryptor-input"
+      class="ui-input h-40 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      data-placeholder-encrypt={t.inputPlaceholderEncrypt}
+      data-placeholder-decrypt={t.inputPlaceholderDecrypt}
+      placeholder={t.inputPlaceholderEncrypt}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div class="mt-4">
+    <label for="crypto-encryptor-password" class="ui-label">
+      {t.passwordLabel}
+    </label>
+    <input
+      id="crypto-encryptor-password"
+      type="password"
+      autocomplete="off"
+      class="ui-input h-11 w-full max-w-md px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.passwordPlaceholder}
+    />
+    <label class="ui-check mt-2">
+      <input id="crypto-encryptor-show-password" type="checkbox" />
+      <span>{t.showPassword}</span>
+    </label>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="crypto-encryptor-run-button"
+      type="button"
+      data-label-encrypt={t.runEncrypt}
+      data-label-decrypt={t.runDecrypt}
+      data-running={t.running}
+      class="ui-btn ui-btn-primary"
+    >
+      {t.runEncrypt}
+    </button>
+  </div>
+
+  <p
+    id="crypto-encryptor-error"
+    hidden
+    data-empty-password={t.emptyPassword}
+    data-empty-input={t.emptyInput}
+    data-invalid-format={t.invalidFormat}
+    data-wrong-password={t.wrongPassword}
+    class="ui-error mt-4 max-w-2xl"
+    role="alert"
+  ></p>
+
+  <div class="mt-4">
+    <label for="crypto-encryptor-output" class="ui-label">
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="crypto-encryptor-output"
+      readonly
+      class="ui-input h-40 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+    ></textarea>
+    <div class="mt-2 flex flex-wrap items-center gap-3">
+      <button
+        id="crypto-encryptor-copy-button"
+        type="button"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="ui-btn"
+      >
+        {t.copy}
+      </button>
+      <span
+        id="crypto-encryptor-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { decryptText, encryptText } from '../../lib/tools/crypto-encryptor';
+
+  type Mode = 'encrypt' | 'decrypt';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`crypto-encryptor-${id}`) as T;
+  const input = $<HTMLTextAreaElement>('input');
+  const password = $<HTMLInputElement>('password');
+  const showPassword = $<HTMLInputElement>('show-password');
+  const runButton = $<HTMLButtonElement>('run-button');
+  const output = $<HTMLTextAreaElement>('output');
+  const errorEl = $<HTMLElement>('error');
+  const statusEl = $<HTMLElement>('status');
+  const copyButton = $<HTMLButtonElement>('copy-button');
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#crypto-encryptor-mode [data-mode]',
+  );
+
+  let mode: Mode = 'encrypt';
+
+  function showError(key: string) {
+    output.value = '';
+    errorEl.textContent = errorEl.dataset[key] ?? '';
+    errorEl.hidden = false;
+  }
+
+  function resetResult() {
+    output.value = '';
+    errorEl.hidden = true;
+    statusEl.textContent = '';
+  }
+
+  function applyMode(next: Mode) {
+    mode = next;
+    modeButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.mode === next)),
+    );
+    input.placeholder =
+      (next === 'encrypt'
+        ? input.dataset.placeholderEncrypt
+        : input.dataset.placeholderDecrypt) ?? '';
+    runButton.textContent =
+      (next === 'encrypt'
+        ? runButton.dataset.labelEncrypt
+        : runButton.dataset.labelDecrypt) ?? '';
+    resetResult();
+  }
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () =>
+      applyMode(button.dataset.mode as Mode),
+    );
+  });
+
+  showPassword.addEventListener('change', () => {
+    password.type = showPassword.checked ? 'text' : 'password';
+  });
+
+  runButton.addEventListener('click', async () => {
+    resetResult();
+    if (input.value.trim() === '') return showError('emptyInput');
+    if (password.value === '') return showError('emptyPassword');
+
+    const label = runButton.textContent;
+    runButton.disabled = true;
+    modeButtons.forEach((b) => (b.disabled = true));
+    runButton.textContent = runButton.dataset.running ?? '';
+    try {
+      if (mode === 'encrypt') {
+        output.value = await encryptText(input.value, password.value);
+      } else {
+        const result = await decryptText(input.value, password.value);
+        if (result.success) {
+          output.value = result.text;
+        } else {
+          showError(
+            result.error === 'invalid-format'
+              ? 'invalidFormat'
+              : 'wrongPassword',
+          );
+        }
+      }
+    } finally {
+      runButton.disabled = false;
+      modeButtons.forEach((b) => (b.disabled = false));
+      runButton.textContent = label;
+    }
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+</script>

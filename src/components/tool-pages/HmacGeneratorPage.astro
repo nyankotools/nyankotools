@@ -1,0 +1,223 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { hmacGeneratorContent } from '../../i18n/tools/hmac-generator';
+import { HMAC_ALGORITHMS } from '../../lib/tools/hmac-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = hmacGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="hmac-generator-message" class="ui-label">
+      {t.messageLabel}
+    </label>
+    <textarea
+      id="hmac-generator-message"
+      class="ui-input h-32 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.messagePlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div class="mt-4">
+    <label for="hmac-generator-key" class="ui-label">
+      {t.keyLabel}
+    </label>
+    <input
+      id="hmac-generator-key"
+      type="text"
+      autocomplete="off"
+      class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.keyPlaceholder}
+      spellcheck="false"
+    />
+  </div>
+
+  <div class="mt-4 flex flex-wrap gap-4">
+    <div>
+      <label for="hmac-generator-key-format" class="ui-label">
+        {t.keyFormatLabel}
+      </label>
+      <select
+        id="hmac-generator-key-format"
+        class="ui-input h-11 px-3 dark:bg-gray-900"
+      >
+        <option value="text">{t.keyFormatText}</option>
+        <option value="hex">{t.keyFormatHex}</option>
+      </select>
+    </div>
+    <div>
+      <label for="hmac-generator-algorithm" class="ui-label">
+        {t.algorithmLabel}
+      </label>
+      <select
+        id="hmac-generator-algorithm"
+        class="ui-input h-11 px-3 dark:bg-gray-900"
+      >
+        {HMAC_ALGORITHMS.map((algorithm) => (
+          <option value={algorithm} selected={algorithm === 'SHA-256'}>
+            {algorithm}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label for="hmac-generator-output-format" class="ui-label">
+        {t.outputFormatLabel}
+      </label>
+      <select
+        id="hmac-generator-output-format"
+        class="ui-input h-11 px-3 dark:bg-gray-900"
+      >
+        <option value="hex">{t.outputHex}</option>
+        <option value="base64">{t.outputBase64}</option>
+        <option value="base64url">{t.outputBase64Url}</option>
+      </select>
+    </div>
+  </div>
+
+  <p
+    id="hmac-generator-error"
+    hidden
+    data-message={t.invalidHex}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+
+  <div class="mt-4">
+    <label for="hmac-generator-result" class="ui-label">
+      {t.resultLabel}
+    </label>
+    <div class="flex gap-2">
+      <input
+        id="hmac-generator-result"
+        type="text"
+        readonly
+        class="ui-input h-11 w-full min-w-0 bg-gray-50 px-3 font-mono dark:bg-gray-900"
+      />
+      <button
+        id="hmac-generator-copy-button"
+        type="button"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="ui-btn shrink-0"
+      >
+        {t.copy}
+      </button>
+    </div>
+    <span
+      id="hmac-generator-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4">
+    <label for="hmac-generator-expected" class="ui-label">
+      {t.expectedLabel}
+    </label>
+    <input
+      id="hmac-generator-expected"
+      type="text"
+      autocomplete="off"
+      class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.expectedPlaceholder}
+      spellcheck="false"
+    />
+    <p
+      id="hmac-generator-match"
+      hidden
+      data-ok={t.matchOk}
+      data-ng={t.matchNg}
+      class="mt-2 text-sm font-medium"
+      aria-live="polite"
+    ></p>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    computeHmac,
+    formatBytes,
+    matchesExpected,
+    type HmacAlgorithm,
+    type KeyFormat,
+    type OutputFormat,
+  } from '../../lib/tools/hmac-generator';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`hmac-generator-${id}`) as T;
+  const message = $<HTMLTextAreaElement>('message');
+  const key = $<HTMLInputElement>('key');
+  const keyFormat = $<HTMLSelectElement>('key-format');
+  const algorithm = $<HTMLSelectElement>('algorithm');
+  const outputFormat = $<HTMLSelectElement>('output-format');
+  const result = $<HTMLInputElement>('result');
+  const expected = $<HTMLInputElement>('expected');
+  const matchEl = $<HTMLElement>('match');
+  const errorEl = $<HTMLElement>('error');
+  const statusEl = $<HTMLElement>('status');
+  const copyButton = $<HTMLButtonElement>('copy-button');
+
+  let generation = 0;
+
+  async function update() {
+    const current = ++generation;
+    statusEl.textContent = '';
+    const computed = await computeHmac(
+      message.value,
+      key.value,
+      keyFormat.value as KeyFormat,
+      algorithm.value as HmacAlgorithm,
+    );
+    if (current !== generation) return;
+
+    matchEl.hidden = true;
+    if (!computed.success) {
+      result.value = '';
+      errorEl.textContent = errorEl.dataset.message ?? '';
+      errorEl.hidden = false;
+      return;
+    }
+    errorEl.hidden = true;
+    result.value = formatBytes(
+      computed.bytes,
+      outputFormat.value as OutputFormat,
+    );
+
+    if (expected.value.trim() !== '') {
+      const ok = matchesExpected(computed.bytes, expected.value) !== null;
+      matchEl.textContent =
+        (ok ? matchEl.dataset.ok : matchEl.dataset.ng) ?? '';
+      matchEl.className = `mt-2 text-sm font-medium ${
+        ok
+          ? 'text-green-600 dark:text-green-400'
+          : 'text-red-600 dark:text-red-400'
+      }`;
+      matchEl.hidden = false;
+    }
+  }
+
+  onTextInput(message, update);
+  onTextInput(key, update);
+  onTextInput(expected, update);
+  for (const el of [keyFormat, algorithm, outputFormat]) {
+    el.addEventListener('change', update);
+  }
+
+  copyButton.addEventListener('click', async () => {
+    if (!result.value) return;
+    statusEl.textContent = (await copyText(result.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  update();
+</script>

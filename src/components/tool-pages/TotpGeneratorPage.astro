@@ -1,0 +1,309 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { totpGeneratorContent } from '../../i18n/tools/totp-generator';
+import { TOTP_ALGORITHMS } from '../../lib/tools/totp-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = totpGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="totp-generator-secret" class="ui-label">
+      {t.secretLabel}
+    </label>
+    <div class="flex flex-wrap gap-2">
+      <input
+        id="totp-generator-secret"
+        type="text"
+        autocomplete="off"
+        class="ui-input h-11 min-w-0 flex-1 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.secretPlaceholder}
+        spellcheck="false"
+      />
+      <button
+        id="totp-generator-generate-button"
+        type="button"
+        class="ui-btn shrink-0"
+      >
+        {t.generateSecret}
+      </button>
+    </div>
+  </div>
+
+  <div class="mt-4 flex flex-wrap gap-4">
+    <div>
+      <label for="totp-generator-algorithm" class="ui-label">
+        {t.algorithmLabel}
+      </label>
+      <select
+        id="totp-generator-algorithm"
+        class="ui-input h-11 px-3 dark:bg-gray-900"
+      >
+        {TOTP_ALGORITHMS.map((algorithm) => (
+          <option>{algorithm}</option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label for="totp-generator-digits" class="ui-label">
+        {t.digitsLabel}
+      </label>
+      <select
+        id="totp-generator-digits"
+        class="ui-input h-11 px-3 dark:bg-gray-900"
+      >
+        <option value="6" selected>
+          6
+        </option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+      </select>
+    </div>
+    <div>
+      <label for="totp-generator-period" class="ui-label">
+        {t.periodLabel}
+      </label>
+      <input
+        id="totp-generator-period"
+        type="number"
+        min="1"
+        max="300"
+        value="30"
+        class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+      />
+    </div>
+  </div>
+
+  <p
+    id="totp-generator-error"
+    hidden
+    data-message={t.invalidSecret}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+
+  <div class="mt-6" id="totp-generator-result" hidden>
+    <p class="ui-label">{t.codeLabel}</p>
+    <div class="flex flex-wrap items-center gap-3">
+      <output
+        id="totp-generator-code"
+        class="font-mono text-4xl font-bold tracking-widest"
+        aria-live="off"
+      ></output>
+      <button
+        id="totp-generator-copy-button"
+        type="button"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="ui-btn"
+      >
+        {t.copy}
+      </button>
+      <span
+        id="totp-generator-remaining"
+        data-template={t.remaining}
+        class="text-sm text-gray-600 dark:text-gray-400"
+      ></span>
+    </div>
+    <span
+      id="totp-generator-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+    <div class="mt-2 h-1.5 w-full max-w-xs overflow-hidden rounded bg-gray-200 dark:bg-gray-700">
+      <div
+        id="totp-generator-bar"
+        class="h-full bg-blue-600 dark:bg-blue-400"
+        style="width: 100%"
+      ></div>
+    </div>
+    <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+      {t.nextCodeLabel}:
+      <output id="totp-generator-next" class="font-mono"></output>
+    </p>
+  </div>
+
+  <div class="mt-6">
+    <label for="totp-generator-verify" class="ui-label">
+      {t.verifyLabel}
+    </label>
+    <input
+      id="totp-generator-verify"
+      type="text"
+      inputmode="numeric"
+      autocomplete="off"
+      class="ui-input h-11 w-full max-w-xs px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.verifyPlaceholder}
+    />
+    <p
+      id="totp-generator-verify-result"
+      hidden
+      data-current={t.verifyCurrent}
+      data-previous={t.verifyPrevious}
+      data-next={t.verifyNext}
+      data-invalid={t.verifyInvalid}
+      class="mt-2 text-sm font-medium"
+      aria-live="polite"
+    ></p>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    DEFAULT_TOTP_OPTIONS,
+    decodeBase32,
+    generateSecret,
+    parseOtpauthUri,
+    secondsRemaining,
+    timeStep,
+    totp,
+    verifyTotp,
+    type TotpAlgorithm,
+    type TotpOptions,
+  } from '../../lib/tools/totp-generator';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`totp-generator-${id}`) as T;
+  const secretInput = $<HTMLInputElement>('secret');
+  const algorithmSelect = $<HTMLSelectElement>('algorithm');
+  const digitsSelect = $<HTMLSelectElement>('digits');
+  const periodInput = $<HTMLInputElement>('period');
+  const generateButton = $<HTMLButtonElement>('generate-button');
+  const errorEl = $<HTMLElement>('error');
+  const resultEl = $<HTMLElement>('result');
+  const codeEl = $<HTMLOutputElement>('code');
+  const nextEl = $<HTMLOutputElement>('next');
+  const remainingEl = $<HTMLElement>('remaining');
+  const barEl = $<HTMLElement>('bar');
+  const copyButton = $<HTMLButtonElement>('copy-button');
+  const statusEl = $<HTMLElement>('status');
+  const verifyInput = $<HTMLInputElement>('verify');
+  const verifyResult = $<HTMLElement>('verify-result');
+
+  let lastStep = -1;
+  let lastKey = '';
+  let generation = 0;
+
+  function readOptions(): TotpOptions {
+    const period = Number(periodInput.value);
+    return {
+      algorithm: algorithmSelect.value as TotpAlgorithm,
+      digits: Number(digitsSelect.value) || DEFAULT_TOTP_OPTIONS.digits,
+      period:
+        Number.isInteger(period) && period >= 1 && period <= 300
+          ? period
+          : DEFAULT_TOTP_OPTIONS.period,
+    };
+  }
+
+  /** otpauth:// URIが貼り付けられたら、鍵と設定を取り込む */
+  function applyUri() {
+    const params = parseOtpauthUri(secretInput.value);
+    if (!params) return;
+    secretInput.value = params.secret;
+    if (params.algorithm) algorithmSelect.value = params.algorithm;
+    if (params.digits) digitsSelect.value = String(params.digits);
+    if (params.period) periodInput.value = String(params.period);
+  }
+
+  async function refreshVerify(
+    secret: Uint8Array,
+    options: TotpOptions,
+    now: number,
+    current: number,
+  ) {
+    if (verifyInput.value.trim() === '') {
+      verifyResult.hidden = true;
+      return;
+    }
+    const offset = await verifyTotp(secret, verifyInput.value, now, options);
+    if (current !== generation) return;
+    const d = verifyResult.dataset;
+    verifyResult.textContent =
+      (offset === null
+        ? d.invalid
+        : offset === 0
+          ? d.current
+          : offset < 0
+            ? d.previous
+            : d.next) ?? '';
+    verifyResult.className = `mt-2 text-sm font-medium ${
+      offset === null
+        ? 'text-red-600 dark:text-red-400'
+        : 'text-green-600 dark:text-green-400'
+    }`;
+    verifyResult.hidden = false;
+  }
+
+  /** 秒の経過表示は毎回更新し、コードの再計算はステップ・設定が変わったときだけ行う */
+  async function tick(force = false) {
+    const options = readOptions();
+    const now = Date.now();
+    const secret = decodeBase32(secretInput.value);
+    if (secretInput.value.trim() === '' || !secret) {
+      generation++;
+      resultEl.hidden = true;
+      verifyResult.hidden = true;
+      errorEl.hidden = secretInput.value.trim() === '' || secret !== null;
+      errorEl.textContent = errorEl.dataset.message ?? '';
+      lastKey = '';
+      return;
+    }
+    errorEl.hidden = true;
+    resultEl.hidden = false;
+
+    const remaining = secondsRemaining(now, options.period);
+    remainingEl.textContent = (remainingEl.dataset.template ?? '').replace(
+      '{n}',
+      String(remaining),
+    );
+    barEl.style.width = `${((options.period * 1000 - (now % (options.period * 1000))) / (options.period * 1000)) * 100}%`;
+
+    const step = timeStep(now, options.period);
+    const key = `${secretInput.value}|${options.algorithm}|${options.digits}|${options.period}`;
+    if (!force && step === lastStep && key === lastKey) return;
+    const current = ++generation;
+    lastStep = step;
+    lastKey = key;
+    const [code, next] = await Promise.all([
+      totp(secret, now, options),
+      totp(secret, now + options.period * 1000, options),
+    ]);
+    if (current !== generation) return;
+    codeEl.value = code;
+    nextEl.value = next;
+    await refreshVerify(secret, options, now, current);
+  }
+
+  onTextInput(secretInput, () => {
+    applyUri();
+    void tick(true);
+  });
+  for (const el of [algorithmSelect, digitsSelect]) {
+    el.addEventListener('change', () => void tick(true));
+  }
+  periodInput.addEventListener('input', () => void tick(true));
+  onTextInput(verifyInput, () => void tick(true));
+
+  generateButton.addEventListener('click', () => {
+    secretInput.value = generateSecret();
+    void tick(true);
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!codeEl.value) return;
+    statusEl.textContent = (await copyText(codeEl.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  setInterval(() => void tick(), 250);
+  void tick(true);
+</script>

@@ -2870,6 +2870,119 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'kanji-number-converter',
+    category: 'text',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: [
+      'japanese-era-converter',
+      'zenkaku-hankaku',
+      'kyujitai-converter',
+    ],
+    translations: {
+      ja: {
+        name: '漢数字⇔算用数字・大字変換',
+        keywords: [
+          '漢数字',
+          '算用数字',
+          '大字',
+          '壱弐参',
+          '金額',
+          'アラビア数字',
+        ],
+        description:
+          '漢数字と算用数字を相互に変換します。千二百三十四・二〇二四・壱萬弐千円のような単位記法・位取り記法・大字に対応し、文章中の数をまとめて変換できます。',
+      },
+      en: {
+        name: 'Kanji Numeral Converter',
+        keywords: [
+          'kanji numbers',
+          'japanese numerals',
+          'daiji',
+          'arabic numerals',
+          'formal numerals',
+        ],
+        description:
+          'Converts Japanese kanji numerals to Arabic digits and back, including formal daiji numerals (壱弐参) used on contracts, and converts every number in a block of text at once.',
+      },
+    },
+  },
+  {
+    slug: 'kyujitai-converter',
+    category: 'text',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['kana-converter', 'zenkaku-hankaku', 'kanji-number-converter'],
+    translations: {
+      ja: {
+        name: '旧字体⇔新字体変換',
+        keywords: [
+          '旧字体',
+          '新字体',
+          '旧漢字',
+          '異体字',
+          '髙',
+          '﨑',
+          '康熙字典体',
+        ],
+        description:
+          '旧字体と新字体を相互に変換します。國→国・學→学・體→体や、髙→高・﨑→崎などの異体字に対応し、変換した文字の一覧も確認できます。',
+      },
+      en: {
+        name: 'Kyujitai ⇔ Shinjitai Converter',
+        keywords: [
+          'kyujitai',
+          'shinjitai',
+          'old kanji',
+          'new kanji',
+          'variant kanji',
+          'traditional kanji',
+        ],
+        description:
+          'Converts between old kanji forms (國 學 體) and modern forms (国 学 体), including name variants like 髙 and 﨑, and lists the characters it changed.',
+      },
+    },
+  },
+  {
+    slug: 'my-number-checker',
+    category: 'calc',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: [
+      'salary-take-home-calculator',
+      'tax-calculator',
+      'freelance-income-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'マイナンバー・法人番号チェックデジット検証',
+        keywords: [
+          'マイナンバー',
+          '個人番号',
+          '法人番号',
+          'インボイス',
+          '登録番号',
+          '検査用数字',
+        ],
+        description:
+          'マイナンバー（12桁）と法人番号（13桁・インボイス登録番号のT＋13桁）の検査用数字を検証・計算します。入力した番号はサーバーに送信されません。',
+      },
+      en: {
+        name: 'My Number & Corporate Number Validator',
+        keywords: [
+          'my number',
+          'corporate number',
+          'check digit',
+          'invoice number',
+          'japan tax id',
+        ],
+        description:
+          'Validates or calculates the check digit of a Japanese My Number (12 digits) or Corporate Number (13 digits, incl. the invoice registration number). Nothing is sent to a server.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

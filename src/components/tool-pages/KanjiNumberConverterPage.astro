@@ -1,0 +1,207 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { kanjiNumberConverterContent } from '../../i18n/tools/kanji-number-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = kanjiNumberConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="kanji-number-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-summary={t.summary}
+    data-summary-skipped={t.summarySkipped}
+    data-placeholder-to-arabic={t.inputPlaceholderToArabic}
+    data-placeholder-to-kanji={t.inputPlaceholderToKanji}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <div
+        id="kanji-number-mode"
+        class="ui-seg"
+        role="group"
+        aria-label={t.directionLabel}
+      >
+        <button
+          type="button"
+          data-mode="toArabic"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.modeToArabic}
+        </button>
+        <button
+          type="button"
+          data-mode="toKanji"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.modeToKanji}
+        </button>
+      </div>
+      <button id="kanji-number-copy-button" type="button" class="ui-btn">
+        {t.copy}
+      </button>
+      <span
+        id="kanji-number-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+
+    <div class="mt-3">
+      <div id="kanji-number-style-wrap" class="hidden">
+        <label for="kanji-number-style" class="ui-label">
+          {t.styleLabel}
+        </label>
+        <select
+          id="kanji-number-style"
+          class="ui-input h-11 w-full max-w-72 px-3 dark:bg-gray-900"
+        >
+          <option value="unit">{t.styleUnit}</option>
+          <option value="plain">{t.stylePlain}</option>
+          <option value="daiji">{t.styleDaiji}</option>
+        </select>
+      </div>
+      <label id="kanji-number-comma-wrap" class="ui-check">
+        <input id="kanji-number-comma" type="checkbox" />
+        {t.commaLabel}
+      </label>
+    </div>
+
+    <div class="mt-4 grid gap-4 lg:grid-cols-2">
+      <div>
+        <label for="kanji-number-input" class="ui-label">
+          {t.inputLabel}
+        </label>
+        <textarea
+          id="kanji-number-input"
+          data-query-target="text"
+          data-sample={t.sampleText}
+          class="ui-input h-64 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.inputPlaceholderToArabic}
+          spellcheck="false"
+        ></textarea>
+      </div>
+      <div>
+        <label for="kanji-number-output" class="ui-label">
+          {t.outputLabel}
+        </label>
+        <textarea
+          id="kanji-number-output"
+          readonly
+          class="ui-input h-64 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+        ></textarea>
+      </div>
+    </div>
+    <p
+      id="kanji-number-summary"
+      class="mt-2 min-h-5 text-sm text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    convertKanjiNumbers,
+    type KanjiDirection,
+    type KanjiStyle,
+  } from '../../lib/tools/kanji-number-converter';
+
+  const root = document.getElementById('kanji-number-root')!;
+  const input = document.getElementById(
+    'kanji-number-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'kanji-number-output',
+  ) as HTMLTextAreaElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#kanji-number-mode [data-mode]',
+  );
+  const styleWrap = document.getElementById('kanji-number-style-wrap')!;
+  const styleSelect = document.getElementById(
+    'kanji-number-style',
+  ) as HTMLSelectElement;
+  const commaWrap = document.getElementById('kanji-number-comma-wrap')!;
+  const commaCheck = document.getElementById(
+    'kanji-number-comma',
+  ) as HTMLInputElement;
+  const copyButton = document.getElementById(
+    'kanji-number-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('kanji-number-status')!;
+  const summaryEl = document.getElementById('kanji-number-summary')!;
+
+  let direction: KanjiDirection = 'toArabic';
+
+  function applyMode() {
+    const toKanji = direction === 'toKanji';
+    styleWrap.classList.toggle('hidden', !toKanji);
+    commaWrap.classList.toggle('hidden', toKanji);
+    input.placeholder =
+      (toKanji
+        ? root.dataset.placeholderToKanji
+        : root.dataset.placeholderToArabic) ?? '';
+    modeButtons.forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.mode === direction));
+    });
+  }
+
+  function convert() {
+    statusEl.textContent = '';
+    const result = convertKanjiNumbers(input.value, {
+      direction,
+      style: styleSelect.value as KanjiStyle,
+      comma: commaCheck.checked,
+    });
+    output.value = result.output;
+
+    let summary = '';
+    if (input.value !== '') {
+      summary = (root.dataset.summary ?? '').replace(
+        '{converted}',
+        String(result.converted),
+      );
+      if (result.skipped > 0) {
+        summary +=
+          ' ' +
+          (root.dataset.summarySkipped ?? '').replace(
+            '{skipped}',
+            String(result.skipped),
+          );
+      }
+    }
+    summaryEl.textContent = summary;
+  }
+
+  onTextInput(input, convert);
+  styleSelect.addEventListener('change', convert);
+  commaCheck.addEventListener('change', convert);
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      direction = button.dataset.mode as KanjiDirection;
+      applyMode();
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (root.dataset.copied ?? '')
+      : (root.dataset.copyFailed ?? '');
+  });
+
+  applyMode();
+  convert();
+</script>

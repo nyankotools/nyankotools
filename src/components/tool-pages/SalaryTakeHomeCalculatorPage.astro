@@ -1,0 +1,190 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { salaryTakeHomeCalculatorContent } from '../../i18n/tools/salary-take-home-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = salaryTakeHomeCalculatorContent[locale];
+
+const results = [
+  { id: 'annual', label: t.resultAnnualLabel },
+  { id: 'monthly', label: t.resultMonthlyLabel },
+  { id: 'ratio', label: t.resultRatioLabel },
+  { id: 'social-insurance', label: t.resultSocialInsuranceLabel },
+  { id: 'total-tax', label: t.resultTotalTaxLabel },
+  { id: 'salary-income', label: t.resultSalaryIncomeLabel },
+  { id: 'income-tax', label: t.resultIncomeTaxLabel },
+  { id: 'reconstruction-tax', label: t.resultReconstructionTaxLabel },
+  { id: 'resident-tax', label: t.resultResidentTaxLabel },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label for="salary-calc-gross" class="ui-label">
+          {t.grossLabel}
+        </label>
+        <input
+          id="salary-calc-gross"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.grossPlaceholder}
+          class="ui-input h-11 w-40 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <label class="flex h-11 items-center gap-2 text-sm">
+        <input id="salary-calc-age40" type="checkbox" />
+        {t.age40Label}
+      </label>
+    </div>
+
+    <div class="mb-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label for="salary-calc-social-insurance" class="ui-label">
+          {t.socialInsuranceLabel}
+        </label>
+        <input
+          id="salary-calc-social-insurance"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.socialInsurancePlaceholder}
+          class="ui-input h-11 w-40 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+        <p class="mt-1 max-w-md text-xs text-gray-600 dark:text-gray-400">
+          {t.socialInsuranceHint}
+        </p>
+      </div>
+      <div>
+        <label for="salary-calc-other-deductions" class="ui-label">
+          {t.otherDeductionsLabel}
+        </label>
+        <input
+          id="salary-calc-other-deductions"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.otherDeductionsPlaceholder}
+          class="ui-input h-11 w-40 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+    </div>
+
+    <p
+      id="salary-calc-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl
+      id="salary-calc-results"
+      class="mt-4 hidden grid grid-cols-2 gap-3 sm:grid-cols-3"
+      aria-live="polite"
+    >
+      {results.map((r) => (
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">{r.label}</dt>
+          <dd class="text-lg font-semibold" id={`salary-calc-result-${r.id}`} />
+        </div>
+      ))}
+    </dl>
+  </section>
+</ToolShell>
+
+<script>
+  import { calculateSalaryTakeHome } from '../../lib/tools/salary-take-home-calculator';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
+  const errorMessage = configEl.dataset.error ?? '';
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const percent = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 1,
+  });
+
+  const grossInput = document.getElementById(
+    'salary-calc-gross',
+  ) as HTMLInputElement;
+  const age40Input = document.getElementById(
+    'salary-calc-age40',
+  ) as HTMLInputElement;
+  const socialInsuranceInput = document.getElementById(
+    'salary-calc-social-insurance',
+  ) as HTMLInputElement;
+  const otherDeductionsInput = document.getElementById(
+    'salary-calc-other-deductions',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('salary-calc-error')!;
+  const resultsEl = document.getElementById('salary-calc-results')!;
+
+  function setResult(id: string, text: string) {
+    document.getElementById(`salary-calc-result-${id}`)!.textContent = text;
+  }
+
+  attachCommaFormatting(grossInput);
+  attachCommaFormatting(socialInsuranceInput);
+  attachCommaFormatting(otherDeductionsInput);
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    if (grossInput.value.trim() === '') return;
+
+    const socialInsuranceText = stripCommas(socialInsuranceInput.value).trim();
+    const result = calculateSalaryTakeHome({
+      grossSalary: Number(stripCommas(grossInput.value)),
+      age40OrOver: age40Input.checked,
+      socialInsuranceOverride:
+        socialInsuranceText === '' ? null : Number(socialInsuranceText),
+      otherDeductions: Number(stripCommas(otherDeductionsInput.value) || '0'),
+    });
+
+    if (result === null) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    setResult('annual', yen.format(result.annualTakeHome));
+    setResult('monthly', yen.format(result.monthlyTakeHome));
+    setResult('ratio', `${percent.format(result.takeHomeRatio)}%`);
+    setResult('social-insurance', yen.format(result.socialInsurance));
+    setResult('total-tax', yen.format(result.totalTax));
+    setResult('salary-income', yen.format(result.salaryIncome));
+    setResult('income-tax', yen.format(result.incomeTax));
+    setResult('reconstruction-tax', yen.format(result.reconstructionTax));
+    setResult('resident-tax', yen.format(result.residentTax));
+    resultsEl.classList.remove('hidden');
+  }
+
+  grossInput.addEventListener('input', render);
+  age40Input.addEventListener('change', render);
+  socialInsuranceInput.addEventListener('input', render);
+  otherDeductionsInput.addEventListener('input', render);
+
+  grossInput.value = formatNumberWithCommas('5000000');
+  otherDeductionsInput.value = '0';
+  render();
+</script>

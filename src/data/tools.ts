@@ -2681,6 +2681,83 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'salary-take-home-calculator',
+    category: 'calc',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: [
+      'freelance-income-calculator',
+      'furusato-nozei-calculator',
+      'tax-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '会社員の手取り計算機（年収から手取りを試算）',
+        keywords: [
+          '手取り',
+          '年収',
+          '額面',
+          '月収',
+          '給与',
+          '社会保険料',
+          '所得税',
+          '住民税',
+        ],
+        description:
+          '額面の年収から、社会保険料・所得税・住民税を差し引いた会社員の手取り額（年間・月間）を簡易試算します。令和7・8年分の税制に対応。',
+      },
+      en: {
+        name: 'Japan Salary Take-Home Pay Calculator',
+        keywords: [
+          'take-home pay',
+          'gross to net',
+          'salary after tax',
+          'Japan income tax',
+          'social insurance',
+          'resident tax',
+        ],
+        description:
+          'Estimate annual and monthly take-home pay in Japan from gross salary after social insurance, income tax, and resident tax, using 2025-2026 rules.',
+      },
+    },
+  },
+  {
+    slug: 'furusato-nozei-calculator',
+    category: 'calc',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['salary-take-home-calculator', 'freelance-income-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ふるさと納税の上限額シミュレーション',
+        keywords: [
+          'ふるさと納税',
+          '控除上限',
+          '寄付上限',
+          '上限額',
+          '自己負担2000円',
+          'ワンストップ特例',
+        ],
+        description:
+          '年収と所得控除から、ふるさと納税で自己負担2,000円で寄付できる上限額の目安を試算します。会社員向け・令和7・8年分の税制に対応。',
+      },
+      en: {
+        name: 'Furusato Nozei Donation Limit Calculator',
+        keywords: [
+          'furusato nozei',
+          'hometown tax',
+          'donation limit',
+          'Japan tax deduction',
+          'one-stop exception',
+        ],
+        description:
+          'Estimate the furusato nozei (hometown tax) donation limit for a ¥2,000 out-of-pocket cost from your salary and deductions, using 2025-2026 rules.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

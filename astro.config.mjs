@@ -54,6 +54,9 @@ export default defineConfig({
         // Cloudflare Web Analyticsの計測ビーコン（beacon.min.jsがcloudflareinsights.comへ送信）
         // のため cloudflareinsights.com も許可する。
         "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://cloudflareinsights.com",
+        // heic-to（libheif wasm）が変換用のWeb Workerを blob: URLから生成するため（CSPは全ページ共通のため、サイト全体に適用される。connect-src は変えていないので外部送信は引き続きブロックされる）。
+        // worker-src を省略すると script-src にフォールバックして blob: が拒否される。
+        "worker-src 'self' blob:",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",
@@ -100,6 +103,7 @@ export default defineConfig({
         'csso',
         'dompurify',
         'exifr',
+        'heic-to/csp',
         'jsbarcode',
         'jsqr',
         'jsonpath-plus',

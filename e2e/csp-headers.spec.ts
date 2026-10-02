@@ -111,6 +111,7 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
     expect(metaCsp).toContain("default-src 'self'");
     expect(metaCsp).toContain("object-src 'none'");
     expect(metaCsp).toContain("media-src 'self' blob:");
+    expect(metaCsp).toContain("worker-src 'self' blob:");
     expect(metaCsp).toMatch(
       /script-src 'self' 'wasm-unsafe-eval'(?: https:\/\/www\.googletagmanager\.com)?(?: https:\/\/static\.cloudflareinsights\.com)?(?: 'sha256-[^']+')+/,
     );

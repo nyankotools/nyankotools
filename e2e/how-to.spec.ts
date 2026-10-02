@@ -26,6 +26,7 @@ const slugs = [
   'timezone-converter',
   'business-day-calculator',
   'qr-code-reader',
+  'heic-converter',
 ];
 
 const locales = [

@@ -341,7 +341,7 @@ const selectClass =
           canvas.width = Math.round(video.videoWidth * scale);
           canvas.height = Math.round(video.videoHeight * scale);
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          found = decodeQrFromImageData(
+          found = await decodeQrFromImageData(
             ctx.getImageData(0, 0, canvas.width, canvas.height),
           );
         }
@@ -454,7 +454,7 @@ const selectClass =
         canvas.width = Math.max(1, Math.round(bitmap.width * scale));
         canvas.height = Math.max(1, Math.round(bitmap.height * scale));
         ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-        const text = decodeQrFromImageData(
+        const text = await decodeQrFromImageData(
           ctx.getImageData(0, 0, canvas.width, canvas.height),
         );
         if (text !== null) found.push(text);

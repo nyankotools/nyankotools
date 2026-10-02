@@ -3204,6 +3204,29 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'heic-converter',
+    category: 'image',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['image-converter', 'image-resizer', 'exif-viewer'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: 'HEIC→JPEG変換',
+        keywords: ['HEIC', 'HEIF', 'iPhone', 'JPG', 'HEIC 変換', 'iPhone 写真'],
+        description:
+          'iPhoneのHEIC・HEIF写真をJPEG・PNG・WebPに変換します。複数枚の一括変換と画質の指定に対応。',
+      },
+      en: {
+        name: 'HEIC to JPG Converter',
+        keywords: ['HEIC', 'HEIF', 'iPhone photo', 'JPG', 'HEIC to JPEG'],
+        description:
+          'Converts iPhone HEIC and HEIF photos to JPEG, PNG, or WebP, with batch conversion and adjustable quality.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

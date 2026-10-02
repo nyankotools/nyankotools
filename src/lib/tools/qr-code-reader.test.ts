@@ -35,27 +35,29 @@ function renderQr(text: string, scale = 4, invert = false) {
 }
 
 describe('decodeQrFromImageData', () => {
-  it('生成したQRコードを読み取れる', () => {
-    expect(decodeQrFromImageData(renderQr('https://example.com/'))).toBe(
+  it('生成したQRコードを読み取れる', async () => {
+    expect(await decodeQrFromImageData(renderQr('https://example.com/'))).toBe(
       'https://example.com/',
     );
   });
 
-  it('日本語（UTF-8）も読み取れる', () => {
-    expect(decodeQrFromImageData(renderQr('にゃんこツール'))).toBe(
+  it('日本語（UTF-8）も読み取れる', async () => {
+    expect(await decodeQrFromImageData(renderQr('にゃんこツール'))).toBe(
       'にゃんこツール',
     );
   });
 
-  it('白黒反転したQRコードも読み取れる', () => {
-    expect(decodeQrFromImageData(renderQr('invert', 4, true))).toBe('invert');
+  it('白黒反転したQRコードも読み取れる', async () => {
+    expect(await decodeQrFromImageData(renderQr('invert', 4, true))).toBe(
+      'invert',
+    );
   });
 
-  it('QRコードが無い画像は null', () => {
+  it('QRコードが無い画像は null', async () => {
     const size = 100;
     const data = new Uint8ClampedArray(size * size * 4).fill(255);
     expect(
-      decodeQrFromImageData({ data, width: size, height: size }),
+      await decodeQrFromImageData({ data, width: size, height: size }),
     ).toBeNull();
   });
 });

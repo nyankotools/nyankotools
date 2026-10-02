@@ -1,5 +1,3 @@
-import jsQR from 'jsqr';
-
 export type QrContentKind =
   'url' | 'wifi' | 'email' | 'tel' | 'sms' | 'geo' | 'vcard' | 'text';
 
@@ -84,8 +82,12 @@ export interface DecodeSource {
   height: number;
 }
 
-/** 画像のピクセルデータからQRコードを読み取る（jsQR。QRコードのみ対応）。読み取れなければ null。 */
-export function decodeQrFromImageData(source: DecodeSource): string | null {
+/** 画像のピクセルデータからQRコードを読み取る（jsQR。QRコードのみ対応）。読み取れなければ null。
+ * jsQR は初期バンドルを増やさないよう、初回の読み取り時に遅延読み込みする。 */
+export async function decodeQrFromImageData(
+  source: DecodeSource,
+): Promise<string | null> {
+  const { default: jsQR } = await import('jsqr');
   const result = jsQR(source.data, source.width, source.height, {
     inversionAttempts: 'attemptBoth',
   });

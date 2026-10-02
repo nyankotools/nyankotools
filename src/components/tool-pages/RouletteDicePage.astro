@@ -1,0 +1,784 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { rouletteDiceContent } from '../../i18n/tools/roulette-dice';
+import {
+  MAX_DICE_COUNT,
+  MAX_DICE_SIDES,
+  MAX_ITEMS,
+} from '../../lib/tools/roulette-dice';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = rouletteDiceContent[locale];
+const modes = [
+  { id: 'roulette', label: t.modeRoulette },
+  { id: 'lots', label: t.modeLots },
+  { id: 'dice', label: t.modeDice },
+];
+const dicePresets = [4, 6, 8, 10, 12, 20, 100];
+---
+
+<ToolShell t={t}>
+  <section
+    id="rd-root"
+    data-max-items={MAX_ITEMS}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-items-info={t.itemsInfo}
+    data-too-many={t.tooManyItems.replace('{max}', String(MAX_ITEMS))}
+    data-need-items={t.needItems}
+    data-roulette-result={t.rouletteResult}
+    data-all-removed={t.allRemoved}
+    data-lots-result={t.lotsResult}
+    data-dice-result={t.diceResult}
+    data-dice-count-error={t.diceCountError}
+    data-dice-sides-error={t.diceSidesError}
+    data-dice-modifier-error={t.diceModifierError}
+  >
+    <span class="ui-label">{t.modeLabel}</span>
+    <div
+      id="rd-mode"
+      class="ui-seg flex-wrap"
+      role="group"
+      aria-label={t.modeLabel}
+    >
+      {modes.map((mode, i) => (
+        <button
+          type="button"
+          data-mode={mode.id}
+          aria-pressed={i === 0 ? 'true' : 'false'}
+          class="ui-seg-btn"
+        >
+          {mode.label}
+        </button>
+      ))}
+    </div>
+
+    <div
+      id="rd-items-block"
+      class="mt-4"
+      data-name-placeholder={t.itemNamePlaceholder}
+      data-weight-label={t.weightLabel}
+      data-remove={t.removeItem}
+    >
+      <span class="ui-label">{t.itemsLabel}</span>
+      <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+        {t.weightHint}
+      </p>
+      <div
+        class="mb-1 grid grid-cols-[1fr_5rem_2.75rem] gap-2 text-xs text-gray-500 dark:text-gray-400"
+        aria-hidden="true"
+      >
+        <span>{t.itemNameHeader}</span>
+        <span>{t.weightHeader}</span>
+        <span></span>
+      </div>
+      <ul id="rd-rows" class="space-y-2"></ul>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <button id="rd-add-button" type="button" class="ui-btn">
+          ＋ {t.addItem}
+        </button>
+        <button id="rd-reset-weights" type="button" class="ui-btn">
+          {t.resetWeights}
+        </button>
+      </div>
+      <p
+        id="rd-items-info"
+        class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+      ></p>
+      <details class="mt-2">
+        <summary
+          id="rd-bulk-summary"
+          class="cursor-pointer text-sm text-blue-700 dark:text-blue-400"
+        >
+          {t.bulkSummary}
+        </summary>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          {t.bulkHint}
+        </p>
+        <textarea
+          id="rd-items"
+          aria-label={t.bulkSummary}
+          class="ui-input mt-1 h-36 w-full p-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.itemsPlaceholder}
+          spellcheck="false"
+          data-no-count
+        >{t.defaultItems}</textarea>
+      </details>
+    </div>
+
+    <div id="rd-panel-roulette" class="mt-4">
+      <div class="relative mx-auto aspect-square w-full max-w-sm">
+        <div
+          class="absolute -top-3 left-1/2 z-10 -translate-x-1/2 text-3xl leading-none text-red-600"
+          aria-hidden="true"
+        >
+          ▼
+        </div>
+        <svg
+          id="rd-wheel"
+          viewBox="0 0 200 200"
+          class="h-full w-full"
+          role="img"
+          aria-hidden="true"
+        >
+          <g id="rd-rotor" style="transform-origin: 100px 100px">
+            <g id="rd-segments" transform="translate(100 100)"></g>
+          </g>
+        </svg>
+      </div>
+      <div id="rd-result-slot-roulette"></div>
+      <label class="ui-check mt-3">
+        <input id="rd-remove" type="checkbox" />
+        {t.removeWinnerLabel}
+      </label>
+      <button id="rd-spin-button" type="button" class="ui-btn-primary mt-2">
+        {t.spin}
+      </button>
+    </div>
+
+    <div id="rd-panel-lots" class="mt-4" hidden>
+      <label for="rd-lots-count" class="ui-label">
+        {t.lotsCountLabel}
+      </label>
+      <input
+        id="rd-lots-count"
+        type="number"
+        min="1"
+        step="1"
+        value="1"
+        inputmode="numeric"
+        class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+      />
+      <div class="mt-3">
+        <button id="rd-lots-button" type="button" class="ui-btn-primary">
+          {t.lotsDraw}
+        </button>
+      </div>
+    </div>
+
+    <div id="rd-panel-dice" class="mt-4" hidden>
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="rd-dice-count" class="ui-label">
+            {t.diceCountLabel}
+          </label>
+          <input
+            id="rd-dice-count"
+            type="number"
+            min="1"
+            max={MAX_DICE_COUNT}
+            step="1"
+            value="1"
+            inputmode="numeric"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="rd-dice-sides" class="ui-label">
+            {t.diceSidesLabel}
+          </label>
+          <input
+            id="rd-dice-sides"
+            type="number"
+            min="2"
+            max={MAX_DICE_SIDES}
+            step="1"
+            value="6"
+            inputmode="numeric"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="rd-dice-modifier" class="ui-label">
+            {t.diceModifierLabel}
+          </label>
+          <input
+            id="rd-dice-modifier"
+            type="number"
+            step="1"
+            value="0"
+            inputmode="numeric"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+      <div id="rd-dice-presets" class="mt-3 flex flex-wrap gap-2">
+        {dicePresets.map((sides) => (
+          <button type="button" class="ui-btn min-h-9 px-3" data-sides={sides}>
+            D{sides}
+          </button>
+        ))}
+      </div>
+      <div class="mt-3">
+        <button id="rd-roll-button" type="button" class="ui-btn-primary">
+          {t.diceRoll}
+        </button>
+      </div>
+    </div>
+
+    <div id="rd-error" class="ui-error empty:hidden mt-4" role="alert"></div>
+
+    <div id="rd-result-slot-other"></div>
+    <div id="rd-result" class="mt-4" aria-live="polite" hidden>
+      <p
+        id="rd-result-title"
+        class="text-xl font-bold break-all text-gray-900 dark:text-gray-100"
+      ></p>
+      <ol
+        id="rd-result-list"
+        class="mt-2 list-inside list-decimal space-y-1 break-all"
+      ></ol>
+      <div id="rd-dice-faces" class="mt-2 flex flex-wrap gap-2"></div>
+      <div id="rd-result-actions" class="mt-3 flex items-center gap-3">
+        <button id="rd-copy-button" type="button" class="ui-btn">
+          {t.copy}
+        </button>
+        <span
+          id="rd-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    MAX_ITEMS,
+    MAX_WEIGHT,
+    MIN_WEIGHT,
+    drawWeightedLots,
+    formatItemLine,
+    parseWeightedItems,
+    pickWeightedIndex,
+    probabilities,
+    segmentSpan,
+    weightedTargetRotation,
+    rollDice,
+    secureRandomInt,
+    validateDice,
+  } from '../../lib/tools/roulette-dice';
+  import type { WeightedItem } from '../../lib/tools/roulette-dice';
+
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const SPIN_MS = 4000;
+
+  const root = document.getElementById('rd-root')!;
+  const msg = root.dataset as Record<string, string | undefined>;
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#rd-mode [data-mode]',
+  );
+  const itemsBlock = $('rd-items-block');
+  const itemsInput = $<HTMLTextAreaElement>('rd-items');
+  const itemsInfo = $('rd-items-info');
+  const rowsEl = $('rd-rows');
+  const addButton = $<HTMLButtonElement>('rd-add-button');
+  const resetWeightsButton = $<HTMLButtonElement>('rd-reset-weights');
+  const panels: Record<string, HTMLElement> = {
+    roulette: $('rd-panel-roulette'),
+    lots: $('rd-panel-lots'),
+    dice: $('rd-panel-dice'),
+  };
+  const rotor = document.getElementById('rd-rotor') as unknown as SVGGElement;
+  const segmentsGroup = document.getElementById('rd-segments')!;
+  const removeCheck = $<HTMLInputElement>('rd-remove');
+  const spinButton = $<HTMLButtonElement>('rd-spin-button');
+  const lotsCount = $<HTMLInputElement>('rd-lots-count');
+  const lotsButton = $<HTMLButtonElement>('rd-lots-button');
+  const diceCount = $<HTMLInputElement>('rd-dice-count');
+  const diceSides = $<HTMLInputElement>('rd-dice-sides');
+  const diceModifier = $<HTMLInputElement>('rd-dice-modifier');
+  const rollButton = $<HTMLButtonElement>('rd-roll-button');
+  const errorEl = $('rd-error');
+  const resultEl = $('rd-result');
+  const resultTitle = $('rd-result-title');
+  const resultList = $('rd-result-list');
+  const diceFaces = $('rd-dice-faces');
+  const copyButton = $<HTMLButtonElement>('rd-copy-button');
+  const statusEl = $('rd-status');
+
+  let mode = 'roulette';
+  let rotation = 0;
+  let spinning = false;
+  let lastResultText = '';
+
+  const reducedMotion = () =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ルーレットでは結果をホイールの真下に、他のモードでは操作部の下に表示する
+  function placeResult() {
+    const slot = $(
+      mode === 'roulette' ? 'rd-result-slot-roulette' : 'rd-result-slot-other',
+    );
+    slot.append(resultEl);
+    // ホイールは中央寄せなので、結果も中央に揃える
+    const centered = mode === 'roulette';
+    resultEl.classList.toggle('text-center', centered);
+    $('rd-result-actions').classList.toggle('justify-center', centered);
+  }
+
+  function clearResult() {
+    resultEl.hidden = true;
+    resultTitle.textContent = '';
+    resultList.replaceChildren();
+    diceFaces.replaceChildren();
+    statusEl.textContent = '';
+    errorEl.textContent = '';
+    lastResultText = '';
+  }
+
+  function showResult(title: string, text: string) {
+    resultTitle.textContent = title;
+    lastResultText = text;
+    statusEl.textContent = '';
+    resultEl.hidden = false;
+  }
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return Object.entries(values).reduce(
+      (acc, [key, value]) => acc.replaceAll(`{${key}}`, value),
+      template ?? '',
+    );
+  }
+
+  function currentItems(): WeightedItem[] {
+    return parseWeightedItems(itemsInput.value);
+  }
+
+  function polar(radius: number, degrees: number): [number, number] {
+    const rad = (degrees * Math.PI) / 180;
+    return [radius * Math.sin(rad), -radius * Math.cos(rad)];
+  }
+
+  function drawWheel() {
+    segmentsGroup.replaceChildren();
+    const items = currentItems().slice(0, MAX_ITEMS);
+    const n = items.length;
+    const R = 96;
+    if (n === 0) {
+      const circle = document.createElementNS(SVG_NS, 'circle');
+      circle.setAttribute('r', String(R));
+      circle.setAttribute('class', 'fill-gray-200 dark:fill-gray-700');
+      segmentsGroup.append(circle);
+      return;
+    }
+    const weights = items.map((item) => item.weight);
+    items.forEach((item, i) => {
+      const { start, width } = segmentSpan(weights, i);
+      // 扇形の弧の長さに合わせて、文字の大きさと長さを決める
+      const arc = ((Math.PI * 2 * 60) / 360) * width;
+      const fontSize = Math.min(9, arc * 0.55);
+      const maxChars = Math.max(2, Math.floor(62 / Math.max(fontSize, 3)));
+      const hue = (i * 137.5) % 360;
+      const fill = `hsl(${hue.toFixed(1)} 70% 82%)`;
+      let shape: SVGElement;
+      // ほぼ全周の扇形は、始点と終点が重なって円弧が消えるので円で描く
+      if (n === 1 || width >= 359.99) {
+        shape = document.createElementNS(SVG_NS, 'circle');
+        shape.setAttribute('r', String(R));
+      } else {
+        const [x0, y0] = polar(R, start);
+        const [x1, y1] = polar(R, start + width);
+        shape = document.createElementNS(SVG_NS, 'path');
+        shape.setAttribute(
+          'd',
+          `M0 0 L${x0.toFixed(3)} ${y0.toFixed(3)} A${R} ${R} 0 ${width > 180 ? 1 : 0} 1 ${x1.toFixed(3)} ${y1.toFixed(3)} Z`,
+        );
+      }
+      shape.setAttribute('fill', fill);
+      shape.setAttribute('stroke', '#ffffff');
+      shape.setAttribute('stroke-width', '0.6');
+      segmentsGroup.append(shape);
+
+      // 細すぎて読めない扇形には文字を付けない
+      if (fontSize < 2.5) return;
+      const chars = Array.from(item.label);
+      const label =
+        chars.length > maxChars
+          ? chars.slice(0, maxChars - 1).join('') + '…'
+          : item.label;
+      const text = document.createElementNS(SVG_NS, 'text');
+      text.setAttribute(
+        'transform',
+        `rotate(${(start + width / 2 - 90).toFixed(3)})`,
+      );
+      text.setAttribute('x', String(R - 6));
+      text.setAttribute('y', '0');
+      text.setAttribute('dy', '0.35em');
+      text.setAttribute('text-anchor', 'end');
+      text.setAttribute('font-size', Math.max(fontSize, 3).toFixed(2));
+      text.setAttribute('fill', '#1f2937');
+      text.textContent = label;
+      segmentsGroup.append(text);
+    });
+  }
+
+  function setRotation(degrees: number, animate: boolean) {
+    rotation = degrees;
+    rotor.style.transition = animate
+      ? `transform ${SPIN_MS}ms cubic-bezier(0.12, 0.6, 0.1, 1)`
+      : 'none';
+    rotor.style.transform = `rotate(${degrees}deg)`;
+  }
+
+  const itemsMsg = itemsBlock.dataset as Record<string, string | undefined>;
+  // 行の編集で書き換えた入力欄の input イベントでは、行を作り直さない（入力中のフォーカスを保つ）
+  let syncing = false;
+
+  /** 0.1%未満でも「0%」とは表示しない（当たらない項目に見えるため） */
+  function formatShare(share: number): string {
+    const percent = Math.round(share * 1000) / 10;
+    return percent === 0 && share > 0 ? '<0.1%' : `${percent}%`;
+  }
+
+  function rowList(): HTMLElement[] {
+    return Array.from(rowsEl.querySelectorAll<HTMLElement>('li'));
+  }
+
+  function rowParts(row: HTMLElement) {
+    return {
+      name: row.querySelector<HTMLInputElement>('.rd-name')!,
+      weight: row.querySelector<HTMLInputElement>('.rd-weight')!,
+      prob: row.querySelector<HTMLElement>('.rd-prob')!,
+    };
+  }
+
+  /** 重み欄の値を数値にする。空・範囲外は null（1として扱い、欄を赤くする） */
+  function readWeight(input: HTMLInputElement): number | null {
+    const value = Number(input.value);
+    return input.value.trim() !== '' &&
+      Number.isFinite(value) &&
+      value >= MIN_WEIGHT &&
+      value <= MAX_WEIGHT
+      ? value
+      : null;
+  }
+
+  function createRow(label: string, weight: number): HTMLElement {
+    const li = document.createElement('li');
+    li.className = 'grid grid-cols-[1fr_5rem_2.75rem] items-start gap-2';
+
+    const name = document.createElement('input');
+    name.type = 'text';
+    name.value = label;
+    name.className =
+      'rd-name ui-input h-11 min-w-0 px-3 dark:bg-gray-900 dark:placeholder-gray-500';
+    name.placeholder = itemsMsg.namePlaceholder ?? '';
+    name.setAttribute('aria-label', itemsMsg.namePlaceholder ?? '');
+    name.autocomplete = 'off';
+    name.spellcheck = false;
+
+    const weightCell = document.createElement('div');
+    const weightInput = document.createElement('input');
+    weightInput.type = 'number';
+    weightInput.min = String(MIN_WEIGHT);
+    weightInput.max = String(MAX_WEIGHT);
+    weightInput.step = 'any';
+    weightInput.inputMode = 'decimal';
+    weightInput.value = String(weight);
+    weightInput.className =
+      'rd-weight ui-input h-11 w-full px-2 text-right dark:bg-gray-900';
+    weightInput.setAttribute('aria-label', itemsMsg.weightLabel ?? '');
+    const prob = document.createElement('span');
+    prob.className =
+      'rd-prob mt-0.5 block text-right text-xs text-gray-500 dark:text-gray-400';
+    weightCell.append(weightInput, prob);
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'rd-remove ui-btn h-11 w-11 px-0 text-lg';
+    remove.textContent = '×';
+    remove.setAttribute('aria-label', itemsMsg.remove ?? '');
+    remove.title = itemsMsg.remove ?? '';
+
+    li.append(name, weightCell, remove);
+    return li;
+  }
+
+  /** 入力欄の内容から行を作り直す（まとめて入力・復元・除外のとき） */
+  function renderRows() {
+    const items = currentItems();
+    rowsEl.replaceChildren(
+      ...(items.length === 0
+        ? [createRow('', 1)]
+        : items.map((item) => createRow(item.label, item.weight))),
+    );
+    updateRowState();
+  }
+
+  /** 行の内容を入力欄へ書き戻す */
+  function commitRows() {
+    const lines = rowList().flatMap((row) => {
+      const { name, weight } = rowParts(row);
+      const label = name.value.trim();
+      return label ? [formatItemLine(label, readWeight(weight) ?? 1)] : [];
+    });
+    itemsInput.value = lines.join('\n');
+    syncing = true;
+    itemsInput.dispatchEvent(new Event('input', { bubbles: true }));
+    syncing = false;
+  }
+
+  /** 各行の確率表示・重み欄の入力エラー・追加ボタンの状態を更新する */
+  function updateRowState() {
+    const rows = rowList().map((row) => ({ row, ...rowParts(row) }));
+    const named = rows.filter((r) => r.name.value.trim() !== '');
+    const weights = named.map((r) => readWeight(r.weight) ?? 1);
+    const shares = probabilities(weights);
+    rows.forEach((r, rowIndex) => {
+      // スクリーンリーダーで行を区別できるよう、行番号を付ける
+      r.name.setAttribute(
+        'aria-label',
+        `${itemsMsg.namePlaceholder ?? ''} ${rowIndex + 1}`,
+      );
+      r.weight.setAttribute(
+        'aria-label',
+        `${itemsMsg.weightLabel ?? ''} ${rowIndex + 1}`,
+      );
+      const invalid = readWeight(r.weight) === null;
+      r.weight.setAttribute('aria-invalid', String(invalid));
+      r.weight.classList.toggle('border-red-500', invalid);
+      const index = named.indexOf(r);
+      r.prob.textContent = index < 0 ? '' : formatShare(shares[index]);
+    });
+    addButton.disabled = spinning || rows.length >= MAX_ITEMS;
+  }
+
+  function addRow() {
+    if (rowList().length >= MAX_ITEMS) return;
+    const row = createRow('', 1);
+    rowsEl.append(row);
+    updateRowState();
+    rowParts(row).name.focus();
+  }
+
+  rowsEl.addEventListener('input', () => {
+    updateRowState();
+    commitRows();
+  });
+  rowsEl.addEventListener('click', (event) => {
+    const button = (event.target as HTMLElement).closest('.rd-remove');
+    if (!button) return;
+    const row = button.closest('li')!;
+    const rows = rowList();
+    const next = rows[rows.indexOf(row) + 1] ?? rows[rows.indexOf(row) - 1];
+    row.remove();
+    if (rowList().length === 0) rowsEl.append(createRow('', 1));
+    updateRowState();
+    commitRows();
+    (next && next.isConnected ? rowParts(next).name : addButton).focus();
+  });
+  rowsEl.addEventListener('keydown', (event) => {
+    const target = event.target as HTMLElement;
+    // 日本語入力の変換確定の Enter では行を追加しない
+    if (event.isComposing) return;
+    if (event.key === 'Enter' && target.classList.contains('rd-name')) {
+      event.preventDefault();
+      addRow();
+    }
+  });
+  addButton.addEventListener('click', addRow);
+  resetWeightsButton.addEventListener('click', () => {
+    rowList().forEach((row) => {
+      rowParts(row).weight.value = '1';
+    });
+    updateRowState();
+    commitRows();
+  });
+
+  function updateItems() {
+    const items = currentItems();
+    itemsInfo.textContent = fill(msg.itemsInfo, {
+      count: String(items.length),
+    });
+    if (!spinning) {
+      setRotation(0, false);
+      drawWheel();
+    }
+  }
+
+  function setSpinning(value: boolean) {
+    spinning = value;
+    spinButton.disabled = value;
+    itemsBlock
+      .querySelectorAll<
+        HTMLInputElement | HTMLButtonElement | HTMLTextAreaElement
+      >('input, button, textarea')
+      .forEach((el) => {
+        el.disabled = value;
+      });
+    updateRowState();
+    removeCheck.disabled = value;
+  }
+
+  function validItems(): WeightedItem[] | null {
+    const items = currentItems();
+    errorEl.textContent = '';
+    if (items.length === 0) {
+      errorEl.textContent = msg.needItems ?? '';
+      return null;
+    }
+    if (items.length > MAX_ITEMS) {
+      errorEl.textContent = msg.tooMany ?? '';
+      return null;
+    }
+    return items;
+  }
+
+  function finishSpin(items: WeightedItem[], index: number) {
+    const item = items[index].label;
+    setSpinning(false);
+    showResult(fill(msg.rouletteResult, { item }), item);
+    if (removeCheck.checked) {
+      const rest = items.filter((_, i) => i !== index);
+      itemsInput.value = rest.map((r) => r.raw).join('\n');
+      itemsInput.dispatchEvent(new Event('input', { bubbles: true }));
+      if (rest.length === 0) errorEl.textContent = msg.allRemoved ?? '';
+    }
+  }
+
+  spinButton.addEventListener('click', () => {
+    if (spinning) return;
+    clearResult();
+    const items = validItems();
+    if (!items) return;
+    const weights = items.map((item) => item.weight);
+    const index = pickWeightedIndex(weights);
+    const jitter = (secureRandomInt(801) - 400) / 1000;
+    setSpinning(true);
+    if (reducedMotion()) {
+      setRotation(weightedTargetRotation(0, weights, index, 0, jitter), false);
+      finishSpin(items, index);
+      return;
+    }
+    // 直前の回転角を確定させてから、次の回転をアニメーションさせる
+    void rotor.getBoundingClientRect();
+    setRotation(
+      weightedTargetRotation(rotation, weights, index, 5, jitter),
+      true,
+    );
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      finishSpin(items, index);
+    };
+    rotor.addEventListener('transitionend', finish, { once: true });
+    window.setTimeout(finish, SPIN_MS + 300);
+  });
+
+  lotsButton.addEventListener('click', () => {
+    clearResult();
+    const items = validItems();
+    if (!items) return;
+    const requested = Math.floor(Number(lotsCount.value));
+    const count = Math.min(
+      items.length,
+      Math.max(1, Number.isFinite(requested) ? requested : 1),
+    );
+    lotsCount.value = String(count);
+    const winners = drawWeightedLots(
+      items.map((item) => item.label),
+      items.map((item) => item.weight),
+      count,
+    );
+    winners.forEach((winner) => {
+      const li = document.createElement('li');
+      li.textContent = winner;
+      resultList.append(li);
+    });
+    showResult(
+      fill(msg.lotsResult, { count: String(winners.length) }),
+      winners.join('\n'),
+    );
+  });
+
+  rollButton.addEventListener('click', () => {
+    clearResult();
+    const spec = {
+      count: diceCount.value === '' ? NaN : Number(diceCount.value),
+      sides: diceSides.value === '' ? NaN : Number(diceSides.value),
+      modifier: diceModifier.value === '' ? NaN : Number(diceModifier.value),
+    };
+    const error = validateDice(spec);
+    if (error) {
+      errorEl.textContent =
+        (error === 'count'
+          ? msg.diceCountError
+          : error === 'sides'
+            ? msg.diceSidesError
+            : msg.diceModifierError) ?? '';
+      return;
+    }
+    const result = rollDice(spec);
+    result.rolls.forEach((roll) => {
+      const face = document.createElement('span');
+      face.className =
+        'inline-flex h-11 min-w-11 items-center justify-center rounded-lg border-2 border-gray-300 px-2 text-lg font-bold dark:border-gray-600';
+      face.textContent = String(roll);
+      diceFaces.append(face);
+    });
+    const modifier =
+      spec.modifier === 0
+        ? ''
+        : spec.modifier > 0
+          ? ` +${spec.modifier}`
+          : ` −${Math.abs(spec.modifier)}`;
+    const title = fill(msg.diceResult, {
+      total: String(result.total),
+      sum: String(result.sum),
+      modifier,
+    });
+    showResult(title, `${title}\n${result.rolls.join(', ')}`);
+  });
+
+  document.getElementById('rd-dice-presets')!.addEventListener('click', (e) => {
+    const button = (e.target as HTMLElement).closest<HTMLElement>(
+      '[data-sides]',
+    );
+    if (!button) return;
+    diceSides.value = button.dataset.sides ?? '6';
+    diceSides.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      if (spinning) return;
+      mode = button.dataset.mode ?? 'roulette';
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      Object.entries(panels).forEach(([id, panel]) => {
+        panel.hidden = id !== mode;
+      });
+      itemsBlock.hidden = mode === 'dice';
+      placeResult();
+      clearResult();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!lastResultText) return;
+    statusEl.textContent = (await copyText(lastResultText))
+      ? (msg.copied ?? '')
+      : (msg.copyFailed ?? '');
+  });
+
+  itemsInput.addEventListener('input', () => {
+    updateItems();
+    if (!syncing) renderRows();
+  });
+  placeResult();
+  renderRows();
+  updateItems();
+</script>

@@ -1,0 +1,146 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { specialCharListContent } from '../../i18n/tools/special-char-list';
+import { charGroups, codePointLabel } from '../../lib/tools/special-char-list';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = specialCharListContent[locale];
+---
+
+<ToolShell t={t}>
+  <section id="sc-root" data-copied={t.copied} data-copy-failed={t.copyFailed}>
+    <div class="flex items-end gap-3">
+      <div class="min-w-0 flex-1">
+        <label for="sc-basket" class="ui-label">
+          {t.basketLabel}
+        </label>
+        <textarea
+          id="sc-basket"
+          class="ui-input h-20 w-full p-3 text-lg dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.basketPlaceholder}
+          spellcheck="false"
+          data-no-count
+        ></textarea>
+      </div>
+      <div class="flex shrink-0 flex-col gap-2">
+        <button id="sc-copy-button" type="button" class="ui-btn ui-btn-primary">
+          {t.copy}
+        </button>
+        <button id="sc-clear-button" type="button" class="ui-btn">
+          {t.clear}
+        </button>
+      </div>
+    </div>
+    <p
+      id="sc-status"
+      class="mt-1 min-h-5 text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></p>
+
+    <label for="sc-search" class="ui-label mt-3">
+      {t.searchLabel}
+    </label>
+    <input
+      id="sc-search"
+      type="search"
+      class="ui-input w-full max-w-md px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.searchPlaceholder}
+      autocomplete="off"
+      spellcheck="false"
+    />
+
+    <div id="sc-groups" class="mt-4 space-y-5">
+      {charGroups.map((group) => (
+        <section
+          data-group={group.id}
+          data-keywords={[
+            t.groupNames[group.id],
+            ...group.keywords,
+            ...group.items,
+          ].join(' ')}
+        >
+          <h2 class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+            {t.groupNames[group.id]}
+          </h2>
+          <div class="flex flex-wrap gap-1.5">
+            {group.items.map((item) => (
+              <button
+                type="button"
+                class="sc-char h-10 min-w-10 rounded-md border border-gray-200 px-2 text-xl leading-none hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-800"
+                title={codePointLabel(item)}
+                data-char={item}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+    <p
+      id="sc-empty"
+      class="mt-4 text-sm text-gray-600 dark:text-gray-400"
+      hidden
+    >
+      {t.noResults}
+    </p>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { matchesQuery } from '../../lib/tools/special-char-list';
+
+  const root = document.getElementById('sc-root')!;
+  const basket = document.getElementById('sc-basket') as HTMLTextAreaElement;
+  const search = document.getElementById('sc-search') as HTMLInputElement;
+  const statusEl = document.getElementById('sc-status')!;
+  const emptyEl = document.getElementById('sc-empty')!;
+  const sections = document.querySelectorAll<HTMLElement>(
+    '#sc-groups [data-group]',
+  );
+
+  document.getElementById('sc-groups')!.addEventListener('click', (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLElement>(
+      '.sc-char',
+    );
+    if (!button) return;
+    basket.value += button.dataset.char ?? '';
+    basket.dispatchEvent(new Event('input', { bubbles: true }));
+    statusEl.textContent = '';
+  });
+
+  document
+    .getElementById('sc-copy-button')!
+    .addEventListener('click', async () => {
+      if (!basket.value) return;
+      statusEl.textContent = (await copyText(basket.value))
+        ? (root.dataset.copied ?? '')
+        : (root.dataset.copyFailed ?? '');
+    });
+
+  document.getElementById('sc-clear-button')!.addEventListener('click', () => {
+    basket.value = '';
+    basket.dispatchEvent(new Event('input', { bubbles: true }));
+    statusEl.textContent = '';
+    basket.focus();
+  });
+
+  function filter() {
+    let visible = 0;
+    sections.forEach((section) => {
+      const show = matchesQuery(section.dataset.keywords ?? '', search.value);
+      section.hidden = !show;
+      if (show) visible++;
+    });
+    emptyEl.hidden = visible > 0;
+  }
+
+  search.addEventListener('input', filter);
+  filter();
+</script>

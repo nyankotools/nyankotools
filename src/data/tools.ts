@@ -3058,6 +3058,117 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'unicode-decorator',
+    category: 'text',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['special-char-list', 'zenkaku-hankaku', 'text-case-converter'],
+    translations: {
+      ja: {
+        name: 'Unicode装飾文字変換',
+        keywords: [
+          'おしゃれ文字',
+          '装飾文字',
+          '太字',
+          '丸文字',
+          '筆記体',
+          '取り消し線',
+          'プロフィール 文字',
+        ],
+        description:
+          '英数字を太字・斜体・筆記体・丸文字・全角・取り消し線などのUnicode装飾文字に変換します。SNSのプロフィールやゲーム名にコピペできます。',
+      },
+      en: {
+        name: 'Unicode Text Decorator',
+        keywords: [
+          'fancy text',
+          'fancy font',
+          'bold text',
+          'bubble text',
+          'cursive text',
+          'strikethrough text',
+          'text generator',
+        ],
+        description:
+          'Converts letters and numbers into fancy Unicode text such as bold, italic, script, circled, fullwidth and strikethrough, ready to paste into bios and usernames.',
+      },
+    },
+  },
+  {
+    slug: 'special-char-list',
+    category: 'text',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['unicode-decorator', 'zenkaku-hankaku', 'html-escape'],
+    translations: {
+      ja: {
+        name: '特殊文字・絵文字一覧',
+        keywords: [
+          '特殊文字',
+          '記号',
+          '絵文字',
+          '顔文字',
+          '丸数字',
+          '星 ハート 矢印',
+          '機種依存文字',
+        ],
+        description:
+          '星・ハート・矢印・丸数字・単位記号・顔文字・絵文字などの特殊文字を、クリックしてまとめてコピーできる一覧です。キーワード検索に対応。',
+      },
+      en: {
+        name: 'Special Characters & Emoji List',
+        keywords: [
+          'special characters',
+          'symbols',
+          'emoji',
+          'kaomoji',
+          'unicode symbols',
+          'copy paste symbols',
+          'arrows hearts stars',
+        ],
+        description:
+          'A click-to-copy list of stars, hearts, arrows, circled numbers, unit symbols, kaomoji and emoji, with keyword search.',
+      },
+    },
+  },
+  {
+    slug: 'roulette-dice',
+    category: 'generate',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['password-generator', 'uuid-generator', 'text-list-tools'],
+    translations: {
+      ja: {
+        name: 'ルーレット・抽選・サイコロ',
+        keywords: [
+          'ルーレット',
+          '抽選',
+          'くじ引き',
+          'サイコロ',
+          'ダイス',
+          'ランダム',
+          'TRPG',
+        ],
+        description:
+          '項目を入力して回すルーレット、重複なしで当選者を選ぶ抽選、1D6や2D6+3などのダイスロールができます。ランチ決めや順番決めに。',
+      },
+      en: {
+        name: 'Roulette, Random Picker & Dice',
+        keywords: [
+          'roulette',
+          'random picker',
+          'wheel spinner',
+          'dice roller',
+          'raffle',
+          'random name picker',
+          'd20',
+        ],
+        description:
+          'Spin a roulette wheel from your own list, draw several winners without repeats, or roll dice like 1d6 and 2d6+3 using cryptographic randomness.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

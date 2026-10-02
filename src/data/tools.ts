@@ -1824,6 +1824,34 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'pdf-redactor',
+    category: 'pdf',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['pdf-page-editor', 'pdf-compressor', 'pdf-password-protector'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: 'PDF黒塗り',
+        keywords: ['PDF黒塗り', 'PDF墨消し', 'PDFマスキング', '個人情報を隠す'],
+        description:
+          'PDFの氏名・住所・金額などをドラッグで黒塗り。元の文字を復元できない形で書き出せます。',
+      },
+      en: {
+        name: 'PDF Redactor',
+        keywords: [
+          'redact PDF',
+          'black out PDF',
+          'PDF censor',
+          'hide text in PDF',
+        ],
+        description:
+          'Black out names, addresses and amounts in a PDF by dragging, and export a file where the hidden text cannot be recovered.',
+      },
+    },
+  },
+  {
     slug: 'cat-logo-text-generator',
     category: 'image',
     addedAt: '2026-09-25',

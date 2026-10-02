@@ -6,7 +6,7 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 describe('tools registry', () => {
   it('all tools count should be 101', () => {
-    expect(tools.length).toBe(101);
+    expect(tools.length).toBe(102);
   });
 
   it('slug が重複していない', () => {
@@ -175,6 +175,7 @@ describe('tools registry - flags', () => {
       'pdf-page-editor',
       'pdf-password-protector',
       'pdf-to-markdown',
+      'pdf-redactor',
     ]) {
       expect(tools.find((t) => t.slug === slug)?.sensitive, slug).toBe(true);
     }

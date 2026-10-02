@@ -27,6 +27,7 @@ const slugs = [
   'business-day-calculator',
   'qr-code-reader',
   'heic-converter',
+  'pdf-redactor',
 ];
 
 const locales = [

@@ -27,6 +27,7 @@
     "@neslinesli93/qpdf-wasm": "^0.3.0",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.3",
+    "bcryptjs": "^3.0.3",
     "csso": "^5.0.5",
     "dompurify": "^3.4.15",
     "exifr": "^7.1.3",

@@ -99,6 +99,7 @@ export default defineConfig({
     // 追加したらここにも追記すること。
     optimizeDeps: {
       include: [
+        'bcryptjs',
         '@neslinesli93/qpdf-wasm',
         'csso',
         'dompurify',

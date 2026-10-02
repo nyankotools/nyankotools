@@ -1,0 +1,172 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { x509DecoderContent } from '../../i18n/tools/x509-decoder';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = x509DecoderContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="x509-decoder-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="x509-decoder-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      class="ui-input h-48 w-full p-4 font-mono text-sm dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <p
+    id="x509-decoder-error"
+    hidden
+    data-message={t.invalidCertificate}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+
+  <div
+    id="x509-decoder-results"
+    data-labels={JSON.stringify(t.labels)}
+    class="mt-6 space-y-6"
+    aria-live="polite"
+  ></div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import {
+    decodeCertificates,
+    validityStatus,
+    type CertificateInfo,
+    type NameAttribute,
+  } from '../../lib/tools/x509-decoder';
+  import type { X509Labels } from '../../i18n/tools/x509-decoder';
+
+  const input = document.getElementById(
+    'x509-decoder-input',
+  ) as HTMLTextAreaElement;
+  const errorEl = document.getElementById('x509-decoder-error') as HTMLElement;
+  const resultsEl = document.getElementById(
+    'x509-decoder-results',
+  ) as HTMLElement;
+  const labels = JSON.parse(resultsEl.dataset.labels ?? '{}') as X509Labels;
+
+  const nameText = (name: NameAttribute[]) =>
+    name.map((a) => `${a.name}=${a.value}`).join(', ');
+
+  function formatDate(date: Date): string {
+    return date
+      .toISOString()
+      .replace('T', ' ')
+      .replace(/\.\d+Z$/, ' UTC');
+  }
+
+  /** 見出し＋行（ラベル・値）のカードを作る */
+  function card(title: string, rows: [string, string[]][]): HTMLElement {
+    const section = document.createElement('section');
+    section.className =
+      'rounded-lg border border-gray-200 p-4 dark:border-gray-700';
+    const heading = document.createElement('h2');
+    heading.className = 'mb-3 text-lg font-semibold';
+    heading.textContent = title;
+    const dl = document.createElement('dl');
+    dl.className =
+      'grid grid-cols-1 gap-x-4 gap-y-1 text-sm sm:grid-cols-[11rem_minmax(0,1fr)]';
+    for (const [label, values] of rows) {
+      const dt = document.createElement('dt');
+      dt.className = 'mt-2 text-gray-600 sm:mt-0 dark:text-gray-400';
+      dt.textContent = label;
+      const dd = document.createElement('dd');
+      dd.className = 'font-mono break-all';
+      values.forEach((value, i) => {
+        if (i > 0) dd.append(document.createElement('br'));
+        dd.append(value);
+      });
+      dl.append(dt, dd);
+    }
+    section.append(heading, dl);
+    return section;
+  }
+
+  function statusRow(cert: CertificateInfo): [string, string[]] {
+    const { status, daysLeft } = validityStatus(cert, new Date());
+    const text =
+      status === 'valid'
+        ? `${labels.statusValid} (${labels.daysLeft.replace('{n}', String(daysLeft))})`
+        : status === 'expired'
+          ? `${labels.statusExpired} (${labels.daysAgo.replace('{n}', String(-daysLeft))})`
+          : labels.statusNotYetValid;
+    return [labels.notAfter, [`${formatDate(cert.notAfter)} — ${text}`]];
+  }
+
+  function render(cert: CertificateInfo, index: number, total: number) {
+    const key = [
+      cert.publicKeyAlgorithm,
+      cert.publicKeyBits !== null ? `${cert.publicKeyBits} ${labels.bits}` : '',
+      cert.publicKeyDetail ?? '',
+    ]
+      .filter(Boolean)
+      .join(' / ');
+    const rows: [string, string[]][] = [
+      [labels.subject, [nameText(cert.subject)]],
+      [labels.issuer, [nameText(cert.issuer)]],
+      [labels.notBefore, [formatDate(cert.notBefore)]],
+      statusRow(cert),
+      [labels.serialNumber, [cert.serialNumber]],
+      [labels.version, [`v${cert.version}`]],
+      [labels.signatureAlgorithm, [cert.signatureAlgorithm]],
+      [labels.publicKey, [key]],
+      [
+        labels.fingerprints,
+        [
+          `SHA-256: ${cert.sha256Fingerprint}`,
+          `SHA-1: ${cert.sha1Fingerprint}`,
+        ],
+      ],
+    ];
+    for (const ext of cert.extensions) {
+      const name = ext.critical ? `${ext.name} (${labels.critical})` : ext.name;
+      rows.push([
+        name,
+        ext.values && ext.values.length > 0 ? ext.values : [ext.oid],
+      ]);
+    }
+    const title =
+      total > 1 ? `${labels.certificate} ${index + 1}` : labels.certificate;
+    return card(title, rows);
+  }
+
+  async function update() {
+    const text = input.value;
+    const result = await decodeCertificates(text);
+    // 非同期の完了を待つ間に入力が変わっていたら、古い結果は捨てる
+    if (text !== input.value) return;
+    resultsEl.replaceChildren();
+    if (!result.success) {
+      if (result.error === 'invalid-certificate') {
+        errorEl.textContent = errorEl.dataset.message ?? '';
+        errorEl.hidden = false;
+      } else {
+        errorEl.hidden = true;
+      }
+      return;
+    }
+    errorEl.hidden = true;
+    const total = result.certificates.length;
+    result.certificates.forEach((cert, i) =>
+      resultsEl.append(render(cert, i, total)),
+    );
+  }
+
+  onTextInput(input, update);
+  void update();
+</script>

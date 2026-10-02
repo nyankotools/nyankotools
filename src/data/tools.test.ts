@@ -5,8 +5,8 @@ import { updates } from './updates';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 describe('tools registry', () => {
-  it('all tools count should be 105', () => {
-    expect(tools.length).toBe(105);
+  it('all tools count should be 108', () => {
+    expect(tools.length).toBe(108);
   });
 
   it('slug が重複していない', () => {
@@ -179,6 +179,7 @@ describe('tools registry - flags', () => {
       'crypto-encryptor',
       'hmac-generator',
       'totp-generator',
+      'bcrypt-generator',
     ]) {
       expect(tools.find((t) => t.slug === slug)?.sensitive, slug).toBe(true);
     }

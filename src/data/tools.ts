@@ -2440,6 +2440,116 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'bcrypt-generator',
+    category: 'security',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: [
+      'hash-generator',
+      'password-generator',
+      'password-strength-checker',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'bcryptハッシュ生成・照合',
+        keywords: [
+          'bcrypt',
+          'パスワードハッシュ',
+          'ハッシュ化',
+          'ソルト',
+          'コスト',
+        ],
+        description:
+          'パスワードからbcryptハッシュを生成し、既存のハッシュと照合。コスト（ラウンド数）も選べます。',
+      },
+      en: {
+        name: 'Bcrypt Hash Generator & Verifier',
+        keywords: [
+          'bcrypt',
+          'password hash',
+          'hash password',
+          'salt',
+          'cost factor',
+        ],
+        description:
+          'Generate a bcrypt hash from a password and verify it against an existing hash, with an adjustable cost factor.',
+      },
+    },
+  },
+  {
+    slug: 'x509-decoder',
+    category: 'security',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['ssh-fingerprint', 'jwt-decoder', 'base64'],
+    translations: {
+      ja: {
+        name: 'X.509証明書デコーダー',
+        keywords: [
+          'X.509',
+          'SSL証明書',
+          'TLS証明書',
+          'PEM',
+          'SAN',
+          '有効期限',
+          'フィンガープリント',
+        ],
+        description:
+          'PEM形式のSSL/TLS証明書を貼り付けて、発行者・有効期限・SAN・公開鍵・フィンガープリントを確認。',
+      },
+      en: {
+        name: 'X.509 Certificate Decoder',
+        keywords: [
+          'X.509',
+          'SSL certificate',
+          'TLS certificate',
+          'PEM',
+          'SAN',
+          'expiry',
+          'fingerprint',
+        ],
+        description:
+          'Paste a PEM SSL/TLS certificate to read its issuer, validity dates, SANs, public key, and fingerprints.',
+      },
+    },
+  },
+  {
+    slug: 'ssh-fingerprint',
+    category: 'security',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['x509-decoder', 'hash-generator', 'base64'],
+    translations: {
+      ja: {
+        name: 'SSH鍵フィンガープリント表示',
+        keywords: [
+          'SSH',
+          'フィンガープリント',
+          '公開鍵',
+          'authorized_keys',
+          'ssh-keygen',
+          'ED25519',
+        ],
+        description:
+          'SSH公開鍵からSHA256・MD5のフィンガープリントを計算。authorized_keysの複数行にも対応。',
+      },
+      en: {
+        name: 'SSH Key Fingerprint Viewer',
+        keywords: [
+          'SSH',
+          'fingerprint',
+          'public key',
+          'authorized_keys',
+          'ssh-keygen',
+          'ED25519',
+        ],
+        description:
+          'Compute the SHA256 and MD5 fingerprint of an SSH public key, including multi-line authorized_keys.',
+      },
+    },
+  },
+  {
     slug: 'file-hash-calculator',
     category: 'file',
     addedAt: '2026-10-01',

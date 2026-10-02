@@ -1,0 +1,174 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { sshFingerprintContent } from '../../i18n/tools/ssh-fingerprint';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = sshFingerprintContent[locale];
+const labels = {
+  keyType: t.keyTypeLabel,
+  bits: t.bitsLabel,
+  comment: t.commentLabel,
+  sha256: t.sha256Label,
+  md5: t.md5Label,
+  copy: t.copy,
+  copied: t.copied,
+  copyFailed: t.copyFailed,
+  line: t.lineLabel,
+  invalidFormat: t.invalidFormat,
+  unsupportedType: t.unsupportedType,
+};
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="ssh-fingerprint-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="ssh-fingerprint-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      class="ui-input h-40 w-full p-4 font-mono text-sm dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div
+    id="ssh-fingerprint-results"
+    data-labels={JSON.stringify(labels)}
+    class="mt-6 space-y-4"
+    aria-live="polite"
+  ></div>
+  <span
+    id="ssh-fingerprint-status"
+    class="text-sm text-green-600 dark:text-green-400"
+    aria-live="polite"
+  ></span>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { onTextInput } from '../../lib/input-scheduler';
+  import {
+    computeSshFingerprints,
+    type SshFingerprint,
+    type SshFingerprintError,
+  } from '../../lib/tools/ssh-fingerprint';
+
+  interface Labels {
+    keyType: string;
+    bits: string;
+    comment: string;
+    sha256: string;
+    md5: string;
+    copy: string;
+    copied: string;
+    copyFailed: string;
+    line: string;
+    invalidFormat: string;
+    unsupportedType: string;
+  }
+
+  const input = document.getElementById(
+    'ssh-fingerprint-input',
+  ) as HTMLTextAreaElement;
+  const resultsEl = document.getElementById(
+    'ssh-fingerprint-results',
+  ) as HTMLElement;
+  const statusEl = document.getElementById(
+    'ssh-fingerprint-status',
+  ) as HTMLElement;
+  const labels = JSON.parse(resultsEl.dataset.labels ?? '{}') as Labels;
+
+  let copyButtonCount = 0;
+
+  function fingerprintRow(label: string, value: string): HTMLElement {
+    const row = document.createElement('div');
+    const labelEl = document.createElement('div');
+    labelEl.className = 'ui-label';
+    labelEl.textContent = label;
+    const line = document.createElement('div');
+    line.className = 'flex gap-2';
+    const field = document.createElement('input');
+    field.type = 'text';
+    field.readOnly = true;
+    field.value = value;
+    field.setAttribute('aria-label', label);
+    field.className =
+      'ui-input h-11 w-full min-w-0 bg-gray-50 px-3 font-mono text-sm dark:bg-gray-900';
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.id = `ssh-fingerprint-copy-button-${++copyButtonCount}`;
+    button.className = 'ui-btn shrink-0';
+    button.textContent = labels.copy;
+    button.addEventListener('click', async () => {
+      statusEl.textContent = (await copyText(value))
+        ? labels.copied
+        : labels.copyFailed;
+    });
+    line.append(field, button);
+    row.append(labelEl, line);
+    return row;
+  }
+
+  function resultCard(title: string, fp: SshFingerprint): HTMLElement {
+    const section = document.createElement('section');
+    section.className =
+      'rounded-lg border border-gray-200 p-4 dark:border-gray-700';
+    const heading = document.createElement('h2');
+    heading.className = 'mb-2 text-sm font-semibold';
+    heading.textContent = title;
+    const meta = document.createElement('p');
+    meta.className = 'mb-3 text-sm text-gray-600 dark:text-gray-400';
+    const parts = [`${labels.keyType}: ${fp.algorithm} (${fp.keyType})`];
+    if (fp.bits !== null) parts.push(`${labels.bits}: ${fp.bits}`);
+    if (fp.comment) parts.push(`${labels.comment}: ${fp.comment}`);
+    meta.textContent = parts.join(' / ');
+    const rows = document.createElement('div');
+    rows.className = 'space-y-3';
+    rows.append(
+      fingerprintRow(labels.sha256, fp.sha256),
+      fingerprintRow(labels.md5, fp.md5),
+    );
+    section.append(heading, meta, rows);
+    return section;
+  }
+
+  function errorCard(title: string, error: SshFingerprintError): HTMLElement {
+    const box = document.createElement('p');
+    box.className = 'ui-error max-w-2xl';
+    const message =
+      error === 'unsupported-type'
+        ? labels.unsupportedType
+        : labels.invalidFormat;
+    box.textContent = `${title}: ${message}`;
+    return box;
+  }
+
+  async function update() {
+    const text = input.value;
+    const results = await computeSshFingerprints(text);
+    // 非同期の完了を待つ間に入力が変わっていたら、古い結果は捨てる
+    if (text !== input.value) return;
+    statusEl.textContent = '';
+    copyButtonCount = 0;
+    resultsEl.replaceChildren();
+    for (const r of results) {
+      const title = labels.line.replace('{n}', String(r.line));
+      resultsEl.append(
+        r.success
+          ? resultCard(title, r.fingerprint)
+          : errorCard(title, r.error),
+      );
+    }
+  }
+
+  onTextInput(input, update);
+  void update();
+</script>

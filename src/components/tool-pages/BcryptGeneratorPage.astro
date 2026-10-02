@@ -1,0 +1,281 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { bcryptGeneratorContent } from '../../i18n/tools/bcrypt-generator';
+import {
+  DEFAULT_COST,
+  MAX_COST,
+  MIN_COST,
+} from '../../lib/tools/bcrypt-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = bcryptGeneratorContent[locale];
+const costs = Array.from(
+  { length: MAX_COST - MIN_COST + 1 },
+  (_, i) => MIN_COST + i,
+);
+---
+
+<ToolShell t={t}>
+  <section>
+    <h2 class="mb-3 text-lg font-semibold">{t.generateHeading}</h2>
+    <label for="bcrypt-generator-password" class="ui-label">
+      {t.passwordLabel}
+    </label>
+    <input
+      id="bcrypt-generator-password"
+      type="text"
+      autocomplete="off"
+      class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.passwordPlaceholder}
+      spellcheck="false"
+    />
+
+    <div class="mt-4">
+      <label for="bcrypt-generator-cost" class="ui-label">
+        {t.costLabel}
+      </label>
+      <select
+        id="bcrypt-generator-cost"
+        class="ui-input h-11 px-3 dark:bg-gray-900"
+      >
+        {costs.map((cost) => (
+          <option value={cost} selected={cost === DEFAULT_COST}>
+            {cost}
+          </option>
+        ))}
+      </select>
+      <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{t.costHint}</p>
+    </div>
+
+    <button
+      id="bcrypt-generator-generate-button"
+      type="button"
+      data-label={t.generateButton}
+      data-working={t.working}
+      class="ui-btn ui-btn-primary mt-4"
+    >
+      {t.generateButton}
+    </button>
+
+    <p
+      id="bcrypt-generator-error"
+      hidden
+      data-too-long={t.passwordTooLong}
+      class="ui-error mt-4 max-w-2xl"
+    ></p>
+
+    <div id="bcrypt-generator-result-area" hidden class="mt-4">
+      <label for="bcrypt-generator-result" class="ui-label">
+        {t.resultLabel}
+      </label>
+      <div class="flex gap-2">
+        <input
+          id="bcrypt-generator-result"
+          type="text"
+          readonly
+          class="ui-input h-11 w-full min-w-0 bg-gray-50 px-3 font-mono dark:bg-gray-900"
+        />
+        <button
+          id="bcrypt-generator-copy-button"
+          type="button"
+          data-copied={t.copied}
+          data-copy-failed={t.copyFailed}
+          class="ui-btn shrink-0"
+        >
+          {t.copy}
+        </button>
+      </div>
+      <span
+        id="bcrypt-generator-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </section>
+
+  <section class="mt-10">
+    <h2 class="mb-3 text-lg font-semibold">{t.verifyHeading}</h2>
+    <label for="bcrypt-generator-verify-password" class="ui-label">
+      {t.verifyPasswordLabel}
+    </label>
+    <input
+      id="bcrypt-generator-verify-password"
+      type="text"
+      autocomplete="off"
+      class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      spellcheck="false"
+    />
+
+    <div class="mt-4">
+      <label for="bcrypt-generator-hash" class="ui-label">
+        {t.hashLabel}
+      </label>
+      <input
+        id="bcrypt-generator-hash"
+        type="text"
+        autocomplete="off"
+        class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.hashPlaceholder}
+        spellcheck="false"
+      />
+    </div>
+
+    <button
+      id="bcrypt-generator-verify-button"
+      type="button"
+      data-label={t.verifyButton}
+      data-working={t.working}
+      class="ui-btn ui-btn-primary mt-4"
+    >
+      {t.verifyButton}
+    </button>
+
+    <p
+      id="bcrypt-generator-hash-error"
+      hidden
+      class="ui-error mt-4 max-w-2xl"
+      data-message={t.invalidHash}
+    ></p>
+    <p
+      id="bcrypt-generator-match"
+      hidden
+      data-ok={t.matchOk}
+      data-ng={t.matchNg}
+      class="mt-4 text-sm font-medium"
+      aria-live="polite"
+    ></p>
+    <dl
+      id="bcrypt-generator-info"
+      hidden
+      data-version={t.infoVersion}
+      data-cost={t.infoCost}
+      data-salt={t.infoSalt}
+      class="mt-2 grid max-w-2xl grid-cols-[6rem_1fr] gap-x-4 gap-y-1 text-sm"
+    ></dl>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    hashPassword,
+    parseBcryptHash,
+    verifyPassword,
+  } from '../../lib/tools/bcrypt-generator';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`bcrypt-generator-${id}`) as T;
+  const password = $<HTMLInputElement>('password');
+  const cost = $<HTMLSelectElement>('cost');
+  const generateButton = $<HTMLButtonElement>('generate-button');
+  const errorEl = $<HTMLElement>('error');
+  const resultArea = $<HTMLElement>('result-area');
+  const result = $<HTMLInputElement>('result');
+  const copyButton = $<HTMLButtonElement>('copy-button');
+  const statusEl = $<HTMLElement>('status');
+  const verifyPasswordInput = $<HTMLInputElement>('verify-password');
+  const hash = $<HTMLInputElement>('hash');
+  const verifyButton = $<HTMLButtonElement>('verify-button');
+  const hashError = $<HTMLElement>('hash-error');
+  const matchEl = $<HTMLElement>('match');
+  const info = $<HTMLElement>('info');
+
+  /** ボタンを計算中表示にして処理を実行し、終わったら元に戻す */
+  async function withBusy(
+    button: HTMLButtonElement,
+    task: () => Promise<void>,
+  ) {
+    button.disabled = true;
+    button.textContent = button.dataset.working ?? '';
+    try {
+      await task();
+    } finally {
+      button.disabled = false;
+      button.textContent = button.dataset.label ?? '';
+    }
+  }
+
+  generateButton.addEventListener('click', () => {
+    void withBusy(generateButton, async () => {
+      statusEl.textContent = '';
+      const hashed = await hashPassword(password.value, Number(cost.value));
+      if (!hashed.success) {
+        resultArea.hidden = true;
+        errorEl.textContent = errorEl.dataset.tooLong ?? '';
+        errorEl.hidden = false;
+        return;
+      }
+      errorEl.hidden = true;
+      result.value = hashed.hash;
+      resultArea.hidden = false;
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!result.value) return;
+    statusEl.textContent = (await copyText(result.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  function clearVerifyResult() {
+    hashError.hidden = true;
+    matchEl.hidden = true;
+    info.hidden = true;
+  }
+
+  function showInfo(value: string) {
+    const parsed = parseBcryptHash(value);
+    if (!parsed) return;
+    info.replaceChildren();
+    const rows: [string | undefined, string][] = [
+      [info.dataset.version, `$${parsed.version}$`],
+      [info.dataset.cost, String(parsed.cost)],
+      [info.dataset.salt, parsed.salt],
+    ];
+    for (const [label, value] of rows) {
+      const dt = document.createElement('dt');
+      dt.className = 'text-gray-600 dark:text-gray-400';
+      dt.textContent = label ?? '';
+      const dd = document.createElement('dd');
+      dd.className = 'font-mono break-all';
+      dd.textContent = value;
+      info.append(dt, dd);
+    }
+    info.hidden = false;
+  }
+
+  verifyButton.addEventListener('click', () => {
+    void withBusy(verifyButton, async () => {
+      clearVerifyResult();
+      const verified = await verifyPassword(
+        verifyPasswordInput.value,
+        hash.value,
+      );
+      if (!verified.success) {
+        hashError.textContent = hashError.dataset.message ?? '';
+        hashError.hidden = false;
+        return;
+      }
+      matchEl.textContent =
+        (verified.match ? matchEl.dataset.ok : matchEl.dataset.ng) ?? '';
+      matchEl.className = `mt-4 text-sm font-medium ${
+        verified.match
+          ? 'text-green-600 dark:text-green-400'
+          : 'text-red-600 dark:text-red-400'
+      }`;
+      matchEl.hidden = false;
+      showInfo(hash.value.trim());
+    });
+  });
+
+  // 入力が変わったら古い照合結果は消す
+  for (const el of [verifyPasswordInput, hash]) {
+    el.addEventListener('input', clearVerifyResult);
+  }
+</script>

@@ -1,0 +1,173 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { csvMarkdownTableContent } from '../../i18n/tools/csv-markdown-table';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = csvMarkdownTableContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-3">
+    <label
+      for="csv-markdown-table-delimiter"
+      class="text-sm text-gray-700 dark:text-gray-300"
+    >
+      {t.delimiterLabel}
+    </label>
+    <select
+      id="csv-markdown-table-delimiter"
+      class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+    >
+      <option value="auto">{t.delimiterAuto}</option>
+      <option value=",">{t.delimiterComma}</option>
+      <option value={'\t'}>{t.delimiterTab}</option>
+      <option value=";">{t.delimiterSemicolon}</option>
+    </select>
+    <label
+      for="csv-markdown-table-align"
+      class="text-sm text-gray-700 dark:text-gray-300"
+    >
+      {t.alignLabel}
+    </label>
+    <select
+      id="csv-markdown-table-align"
+      class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+    >
+      <option value="none">{t.alignNone}</option>
+      <option value="left">{t.alignLeft}</option>
+      <option value="center">{t.alignCenter}</option>
+      <option value="right">{t.alignRight}</option>
+    </select>
+    <label class="ui-check">
+      <input type="checkbox" id="csv-markdown-table-header" checked />
+      {t.headerLabel}
+    </label>
+    <label class="ui-check">
+      <input type="checkbox" id="csv-markdown-table-pad" checked />
+      {t.padLabel}
+    </label>
+    <button
+      id="csv-markdown-table-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="csv-markdown-table-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="csv-markdown-table-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="csv-markdown-table-input"
+        class="ui-input h-80 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label for="csv-markdown-table-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="csv-markdown-table-output"
+        readonly
+        wrap="off"
+        class="ui-input h-80 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="csv-markdown-table-error"
+    hidden
+    data-unterminated-quote={t.unterminatedQuoteError}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    csvToMarkdownTable,
+    type Align,
+    type DelimiterOption,
+  } from '../../lib/tools/csv-markdown-table';
+
+  const input = document.getElementById(
+    'csv-markdown-table-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'csv-markdown-table-output',
+  ) as HTMLTextAreaElement;
+  const delimiterSelect = document.getElementById(
+    'csv-markdown-table-delimiter',
+  ) as HTMLSelectElement;
+  const alignSelect = document.getElementById(
+    'csv-markdown-table-align',
+  ) as HTMLSelectElement;
+  const headerCheck = document.getElementById(
+    'csv-markdown-table-header',
+  ) as HTMLInputElement;
+  const padCheck = document.getElementById(
+    'csv-markdown-table-pad',
+  ) as HTMLInputElement;
+  const copyButton = document.getElementById(
+    'csv-markdown-table-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('csv-markdown-table-status')!;
+  const errorEl = document.getElementById('csv-markdown-table-error')!;
+
+  function convert() {
+    statusEl.textContent = '';
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    if (input.value.trim() === '') {
+      output.value = '';
+      return;
+    }
+    const result = csvToMarkdownTable(input.value, {
+      delimiter: delimiterSelect.value as DelimiterOption,
+      align: alignSelect.value as Align,
+      header: headerCheck.checked,
+      pad: padCheck.checked,
+    });
+    if (result.success) {
+      output.value = result.output;
+    } else {
+      output.value = '';
+      errorEl.textContent = errorEl.dataset.unterminatedQuote ?? '';
+      errorEl.hidden = false;
+    }
+  }
+
+  onTextInput(input, convert);
+  delimiterSelect.addEventListener('change', convert);
+  alignSelect.addEventListener('change', convert);
+  headerCheck.addEventListener('change', convert);
+  padCheck.addEventListener('change', convert);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  convert();
+</script>

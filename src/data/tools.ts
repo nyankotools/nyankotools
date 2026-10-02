@@ -3520,6 +3520,66 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'csv-markdown-table',
+    category: 'data',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['csv-json-converter', 'markdown-preview', 'text-list-tools'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'CSV/TSV→Markdownテーブル変換',
+        keywords: [
+          'CSV',
+          'TSV',
+          'Markdown',
+          'テーブル',
+          '表',
+          'Excel',
+          'README',
+        ],
+        description:
+          'CSV・TSV（Excelからコピーした表）をMarkdownのテーブルに変換します。列揃えや列幅の整形、見出し行の有無を指定できます。',
+      },
+      en: {
+        name: 'CSV/TSV to Markdown Table Converter',
+        keywords: ['CSV', 'TSV', 'Markdown', 'table', 'Excel', 'GitHub README'],
+        description:
+          'Converts CSV or TSV (including tables copied from Excel) into a Markdown table, with column alignment, padding, and optional header row.',
+      },
+    },
+  },
+  {
+    slug: 'html-table-to-csv',
+    category: 'data',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['csv-json-converter', 'csv-markdown-table', 'html-escape'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'HTMLテーブル→CSV変換',
+        keywords: [
+          'HTML',
+          'table',
+          'テーブル',
+          'CSV',
+          'TSV',
+          '表',
+          'スクレイピング',
+        ],
+        description:
+          'HTMLの<table>をCSV・TSVに変換します。結合セルの展開、複数テーブルの選択、Excel向けのBOM付きダウンロードに対応。',
+      },
+      en: {
+        name: 'HTML Table to CSV Converter',
+        keywords: ['HTML', 'table', 'CSV', 'TSV', 'scrape', 'extract table'],
+        description:
+          'Converts an HTML <table> to CSV or TSV, expanding merged cells, choosing among multiple tables, and adding a BOM for Excel.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -18,7 +18,7 @@ export type ConvertFailure =
 
 export type ConvertOutcome = ConvertSuccess | ConvertFailure;
 
-class UnterminatedQuoteError extends Error {}
+export class UnterminatedQuoteError extends Error {}
 
 class ColumnMismatchError extends Error {
   constructor(
@@ -38,14 +38,14 @@ class NotObjectError extends Error {
   }
 }
 
-interface CsvRow {
+export interface CsvRow {
   fields: string[];
   /** 物理的な空行（引用符なしの空フィールド1つだけ）。`""` の空値は含まない */
   blank: boolean;
 }
 
 /** CSVテキストを行×列の文字列配列に分解する（引用符・改行を含むフィールドに対応） */
-function parseCsvRows(text: string, delimiter: string): CsvRow[] {
+export function parseCsvRows(text: string, delimiter: string): CsvRow[] {
   const rows: CsvRow[] = [];
   let row: string[] = [];
   let field = '';
@@ -116,7 +116,7 @@ function isBlankFields(fields: string[]): boolean {
   return fields.length === 1 && fields[0] === '';
 }
 
-function escapeCsvField(
+export function escapeCsvField(
   value: string,
   delimiter: string,
   singleColumn = false,

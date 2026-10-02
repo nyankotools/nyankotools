@@ -101,6 +101,7 @@ export default defineConfig({
         'dompurify',
         'exifr',
         'jsbarcode',
+        'jsqr',
         'jsonpath-plus',
         'marked',
         'pdf-lib',

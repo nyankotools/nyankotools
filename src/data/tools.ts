@@ -3169,6 +3169,41 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'qr-code-reader',
+    category: 'camera',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['qr-generator', 'webcam-tester', 'barcode-generator'],
+    sensitive: true,
+    needsCamera: true,
+    translations: {
+      ja: {
+        name: 'QRコードリーダー（カメラ・画像）',
+        keywords: [
+          'QRコード読み取り',
+          'QRリーダー',
+          'QRスキャン',
+          'バーコード読み取り',
+          'QRコード 画像',
+        ],
+        description:
+          'カメラまたは画像ファイルからQRコードを読み取り、URL・Wi-Fiなどの種類を自動判別。対応ブラウザではバーコードも読み取れます。',
+      },
+      en: {
+        name: 'QR Code Reader (Camera & Image)',
+        keywords: [
+          'QR scanner',
+          'QR code reader',
+          'scan QR code',
+          'barcode scanner',
+          'read QR from image',
+        ],
+        description:
+          'Scan QR codes with your camera or from an image file, with URLs and Wi-Fi details recognized automatically. Reads common barcodes too in supporting browsers.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

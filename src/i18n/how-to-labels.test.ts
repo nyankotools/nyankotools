@@ -70,7 +70,7 @@ for (const [file, mod] of Object.entries(modules)) {
 
 describe('使い方の手順文が引用するラベル', () => {
   it('手順を持つ辞書が検出できる（検査が空振りしていない）', () => {
-    expect(cases.length).toBe(44);
+    expect(cases.length).toBe(46);
   });
 
   const findMissing = (

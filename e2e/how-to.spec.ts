@@ -25,6 +25,7 @@ const slugs = [
   'dead-pixel-checker',
   'timezone-converter',
   'business-day-calculator',
+  'qr-code-reader',
 ];
 
 const locales = [

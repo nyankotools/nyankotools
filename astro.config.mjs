@@ -100,6 +100,7 @@ export default defineConfig({
     optimizeDeps: {
       include: [
         'bcryptjs',
+        'fast-xml-parser',
         '@neslinesli93/qpdf-wasm',
         'csso',
         'dompurify',

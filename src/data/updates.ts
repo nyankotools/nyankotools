@@ -303,15 +303,17 @@ export const updates: UpdateEntry[] = [
       'bcrypt-generator',
       'x509-decoder',
       'ssh-fingerprint',
+      'xml-json-converter',
+      'env-json-converter',
     ],
     translations: {
       ja: {
         summary:
-          'マイクテスト（入力レベル・録音）、キーボードテスト（全キー押下判定）、ドット抜けチェック（色ムラ確認）を追加し、新カテゴリ「ハードウェア」を設けました。あわせて、単位変換、割り勘計算機（端数処理・傾斜割り勘）、基礎代謝・消費カロリー計算機、会社員の手取り計算機、ふるさと納税の上限額シミュレーション、タイムゾーン変換・世界時計、営業日計算（日本の祝日対応）、タイマー・ストップウォッチ・ポモドーロ、漢数字⇔算用数字・大字変換、旧字体⇔新字体変換、マイナンバー・法人番号チェックデジット検証、ローマ字⇔ひらがな変換、英単語カタカナ変換、Unicode装飾文字変換、特殊文字・絵文字一覧、ルーレット・抽選・サイコロ、QRコードリーダー（カメラ・画像）、HEIC→JPEG変換、PDF黒塗り、テキスト暗号化・復号（AES-256-GCM）、HMAC署名生成、TOTPコード生成・検証、bcryptハッシュ生成・照合、X.509証明書デコーダー、SSH鍵フィンガープリント表示も追加しました。',
+          'マイクテスト（入力レベル・録音）、キーボードテスト（全キー押下判定）、ドット抜けチェック（色ムラ確認）を追加し、新カテゴリ「ハードウェア」を設けました。あわせて、単位変換、割り勘計算機（端数処理・傾斜割り勘）、基礎代謝・消費カロリー計算機、会社員の手取り計算機、ふるさと納税の上限額シミュレーション、タイムゾーン変換・世界時計、営業日計算（日本の祝日対応）、タイマー・ストップウォッチ・ポモドーロ、漢数字⇔算用数字・大字変換、旧字体⇔新字体変換、マイナンバー・法人番号チェックデジット検証、ローマ字⇔ひらがな変換、英単語カタカナ変換、Unicode装飾文字変換、特殊文字・絵文字一覧、ルーレット・抽選・サイコロ、QRコードリーダー（カメラ・画像）、HEIC→JPEG変換、PDF黒塗り、テキスト暗号化・復号（AES-256-GCM）、HMAC署名生成、TOTPコード生成・検証、bcryptハッシュ生成・照合、X.509証明書デコーダー、SSH鍵フィンガープリント表示、XML⇔JSON変換、.env⇔JSON変換も追加しました。',
       },
       en: {
         summary:
-          'Added the Microphone Test (level & recording), Keyboard Tester, and Dead Pixel Test, plus a new Hardware category. Also added the Unit Converter, Split Bill Calculator, BMR & Calorie Calculator, Salary Take-Home Pay Calculator, Furusato Nozei Donation Limit Calculator, Time Zone Converter, Japan Business Day Calculator, Timer, Stopwatch & Pomodoro, Kanji Numeral Converter, Kyujitai ⇔ Shinjitai Converter, My Number & Corporate Number Validator, Romaji ⇔ Hiragana Converter, English to Katakana Converter, Unicode Text Decorator, Special Characters & Emoji List, Roulette, Random Picker & Dice, QR Code Reader (Camera & Image), HEIC to JPG Converter, PDF Redactor, Text Encryptor & Decryptor (AES-256-GCM), HMAC Generator, TOTP Code Generator, Bcrypt Hash Generator & Verifier, X.509 Certificate Decoder, and SSH Key Fingerprint Viewer.',
+          'Added the Microphone Test (level & recording), Keyboard Tester, and Dead Pixel Test, plus a new Hardware category. Also added the Unit Converter, Split Bill Calculator, BMR & Calorie Calculator, Salary Take-Home Pay Calculator, Furusato Nozei Donation Limit Calculator, Time Zone Converter, Japan Business Day Calculator, Timer, Stopwatch & Pomodoro, Kanji Numeral Converter, Kyujitai ⇔ Shinjitai Converter, My Number & Corporate Number Validator, Romaji ⇔ Hiragana Converter, English to Katakana Converter, Unicode Text Decorator, Special Characters & Emoji List, Roulette, Random Picker & Dice, QR Code Reader (Camera & Image), HEIC to JPG Converter, PDF Redactor, Text Encryptor & Decryptor (AES-256-GCM), HMAC Generator, TOTP Code Generator, Bcrypt Hash Generator & Verifier, X.509 Certificate Decoder, SSH Key Fingerprint Viewer, XML to JSON Converter, and .env to JSON Converter.',
       },
     },
   },

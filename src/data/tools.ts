@@ -3463,6 +3463,63 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'xml-json-converter',
+    category: 'data',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['json-formatter', 'yaml-json-converter', 'csv-json-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'XML⇔JSON変換',
+        keywords: ['XML', 'JSON', '変換', 'RSS', 'XML 変換', 'XML パース'],
+        description:
+          'XMLとJSONを相互に変換します。属性やテキストも扱え、タグの閉じ忘れなどの構文エラーは行・列つきで表示。',
+      },
+      en: {
+        name: 'XML to JSON Converter',
+        keywords: [
+          'XML',
+          'JSON',
+          'convert',
+          'RSS',
+          'XML parser',
+          'XML to JSON',
+        ],
+        description:
+          'Converts between XML and JSON, handling attributes and text, and reports syntax errors such as unclosed tags with line and column.',
+      },
+    },
+  },
+  {
+    slug: 'env-json-converter',
+    category: 'data',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['json-formatter', 'yaml-json-converter', 'toml-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '.env⇔JSON変換',
+        keywords: ['.env', 'dotenv', '環境変数', 'JSON', 'env 変換'],
+        description:
+          '.env（環境変数ファイル）とJSONを相互に変換します。コメント・export・引用符つきの値に対応。',
+      },
+      en: {
+        name: '.env to JSON Converter',
+        keywords: [
+          '.env',
+          'dotenv',
+          'environment variables',
+          'JSON',
+          'env to json',
+        ],
+        description:
+          'Converts between .env files and JSON, handling comments, export prefixes, and quoted values.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -76,7 +76,7 @@
   }
 
   .ui-check {
-    @apply flex h-11 items-center gap-2 text-sm text-gray-700 dark:text-gray-300;
+    @apply flex h-11 items-center gap-2 text-sm text-gray-700 has-[:disabled]:opacity-50 dark:text-gray-300;
   }
 }
 

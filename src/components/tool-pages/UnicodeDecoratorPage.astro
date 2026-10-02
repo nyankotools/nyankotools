@@ -1,0 +1,108 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { unicodeDecoratorContent } from '../../i18n/tools/unicode-decorator';
+import { decoratorStyleIds } from '../../lib/tools/unicode-decorator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = unicodeDecoratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="ud-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-preview={t.previewText}
+  >
+    <label for="ud-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="ud-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      class="ui-input h-28 w-full p-4 dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+      autocapitalize="off"
+      autocomplete="off"
+    ></textarea>
+
+    <div class="mt-4 flex items-center gap-3">
+      <h2 class="ui-label !mb-0">{t.resultsLabel}</h2>
+      <span
+        id="ud-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+
+    <ul class="mt-2 grid gap-2 md:grid-cols-2" id="ud-list">
+      {decoratorStyleIds.map((id) => (
+        <li
+          class="flex items-center gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+          data-style={id}
+        >
+          <div class="min-w-0 flex-1">
+            <div class="text-xs text-gray-500 dark:text-gray-400">
+              {t.styleNames[id]}
+            </div>
+            <div
+              class="ud-output mt-0.5 text-lg break-all whitespace-pre-wrap"
+              translate="no"
+            />
+          </div>
+          <button type="button" class="ui-btn ud-copy shrink-0">
+            {t.copy}
+          </button>
+        </li>
+      ))}
+    </ul>
+  </section>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { decorate } from '../../lib/tools/unicode-decorator';
+  import type { DecoratorStyleId } from '../../lib/tools/unicode-decorator';
+
+  const root = document.getElementById('ud-root')!;
+  const input = document.getElementById('ud-input') as HTMLTextAreaElement;
+  const statusEl = document.getElementById('ud-status')!;
+  const rows = document.querySelectorAll<HTMLElement>('#ud-list [data-style]');
+
+  function render() {
+    statusEl.textContent = '';
+    const empty = input.value === '';
+    const text = empty ? (root.dataset.preview ?? '') : input.value;
+    rows.forEach((row) => {
+      const out = row.querySelector<HTMLElement>('.ud-output')!;
+      const button = row.querySelector<HTMLButtonElement>('.ud-copy')!;
+      out.textContent = decorate(text, row.dataset.style as DecoratorStyleId);
+      out.classList.toggle('text-gray-600', empty);
+      out.classList.toggle('dark:text-gray-400', empty);
+      button.disabled = empty;
+    });
+  }
+
+  onTextInput(input, render);
+
+  rows.forEach((row) => {
+    const button = row.querySelector<HTMLButtonElement>('.ud-copy')!;
+    button.addEventListener('click', async () => {
+      const value = row.querySelector<HTMLElement>('.ud-output')!.textContent;
+      if (!value) return;
+      statusEl.textContent = (await copyText(value))
+        ? (root.dataset.copied ?? '')
+        : (root.dataset.copyFailed ?? '');
+    });
+  });
+
+  render();
+</script>

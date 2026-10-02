@@ -1,0 +1,248 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { myNumberCheckerContent } from '../../i18n/tools/my-number-checker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = myNumberCheckerContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="mn-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-label-my-number={t.inputLabelMyNumber}
+    data-label-corporate={t.inputLabelCorporate}
+    data-hint-my-number={t.inputHintMyNumber}
+    data-hint-corporate={t.inputHintCorporate}
+    data-placeholder-my-number={t.placeholderMyNumber}
+    data-placeholder-corporate={t.placeholderCorporate}
+    data-result-empty={t.resultEmpty}
+    data-result-valid={t.resultValid}
+    data-result-invalid={t.resultInvalid}
+    data-result-invalid-detail={t.resultInvalidDetail}
+    data-result-computed={t.resultComputed}
+    data-result-computed-detail={t.resultComputedDetail}
+    data-result-invalid-chars={t.resultInvalidChars}
+    data-result-wrong-length={t.resultWrongLength}
+    data-invoice-label={t.invoiceLabel}
+  >
+    <div id="mn-kind" class="ui-seg" role="group" aria-label={t.kindLabel}>
+      <button
+        type="button"
+        data-kind="myNumber"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.kindMyNumber}
+      </button>
+      <button
+        type="button"
+        data-kind="corporate"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.kindCorporate}
+      </button>
+    </div>
+
+    <div class="mt-4">
+      <label id="mn-input-label" for="mn-input" class="ui-label">
+        {t.inputLabelMyNumber}
+      </label>
+      <input
+        id="mn-input"
+        type="text"
+        inputmode="numeric"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        data-no-persist
+        aria-describedby="mn-hint"
+        class="ui-input h-11 w-full max-w-md px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.placeholderMyNumber}
+      />
+      <p id="mn-hint" class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        {t.inputHintMyNumber}
+      </p>
+      <button id="mn-dummy-button" type="button" class="ui-btn mt-3">
+        {t.dummyButton}
+      </button>
+    </div>
+
+    <div class="mt-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="ui-label">{t.resultLabel}</h2>
+      <p
+        id="mn-result"
+        data-state="empty"
+        class="mt-1 font-medium"
+        aria-live="polite"
+      ></p>
+      <p
+        id="mn-detail"
+        class="mt-1 font-mono text-sm break-all text-gray-700 dark:text-gray-300"
+      ></p>
+      <p
+        id="mn-invoice"
+        class="mt-1 hidden font-mono text-sm break-all text-gray-700 dark:text-gray-300"
+      ></p>
+      <div class="mt-3 flex flex-wrap items-center gap-3">
+        <button id="mn-copy-button" type="button" class="ui-btn hidden">
+          {t.copyFull}
+        </button>
+        <span
+          id="mn-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    checkNumber,
+    type NumberKind,
+  } from '../../lib/tools/my-number-checker';
+
+  const root = document.getElementById('mn-root')!;
+  const input = document.getElementById('mn-input') as HTMLInputElement;
+  const inputLabel = document.getElementById('mn-input-label')!;
+  const hint = document.getElementById('mn-hint')!;
+  const kindButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#mn-kind [data-kind]',
+  );
+  const dummyButton = document.getElementById('mn-dummy-button')!;
+  const resultEl = document.getElementById('mn-result')!;
+  const detailEl = document.getElementById('mn-detail')!;
+  const invoiceEl = document.getElementById('mn-invoice')!;
+  const copyButton = document.getElementById(
+    'mn-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('mn-status')!;
+
+  // 動作確認用のダミー（個人番号は一般に例示される番号、法人番号は国税庁の法人番号）
+  const DUMMY: Record<NumberKind, string> = {
+    myNumber: '123456789018',
+    corporate: '7000012050002',
+  };
+
+  let kind: NumberKind = 'myNumber';
+  let completeNumber = '';
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return Object.entries(values).reduce(
+      (text, [key, value]) => text.replaceAll(`{${key}}`, value),
+      template ?? '',
+    );
+  }
+
+  function applyKind() {
+    const my = kind === 'myNumber';
+    inputLabel.textContent =
+      (my ? root.dataset.labelMyNumber : root.dataset.labelCorporate) ?? '';
+    hint.textContent =
+      (my ? root.dataset.hintMyNumber : root.dataset.hintCorporate) ?? '';
+    input.placeholder =
+      (my
+        ? root.dataset.placeholderMyNumber
+        : root.dataset.placeholderCorporate) ?? '';
+    kindButtons.forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.kind === kind));
+    });
+  }
+
+  function render() {
+    statusEl.textContent = '';
+    completeNumber = '';
+    invoiceEl.classList.add('hidden');
+    detailEl.textContent = '';
+    resultEl.className = 'mt-1 font-medium';
+
+    const result = checkNumber(input.value, kind);
+    switch (result.kind) {
+      case 'empty':
+        resultEl.textContent = root.dataset.resultEmpty ?? '';
+        resultEl.className = 'mt-1 text-gray-600 dark:text-gray-400';
+        break;
+      case 'invalidChars':
+        resultEl.textContent = root.dataset.resultInvalidChars ?? '';
+        resultEl.className = 'mt-1 font-medium text-red-600 dark:text-red-400';
+        break;
+      case 'wrongLength':
+        resultEl.textContent = fill(root.dataset.resultWrongLength, {
+          length: String(result.length),
+          expected: String(result.expected),
+        });
+        resultEl.className = 'mt-1 font-medium text-red-600 dark:text-red-400';
+        break;
+      case 'verified':
+        if (result.valid) {
+          resultEl.textContent = fill(root.dataset.resultValid, {
+            digit: String(result.actualCheckDigit),
+          });
+          resultEl.className =
+            'mt-1 font-medium text-green-700 dark:text-green-400';
+          completeNumber = result.digits;
+        } else {
+          resultEl.textContent = root.dataset.resultInvalid ?? '';
+          resultEl.className =
+            'mt-1 font-medium text-red-600 dark:text-red-400';
+          detailEl.textContent = fill(root.dataset.resultInvalidDetail, {
+            actual: String(result.actualCheckDigit),
+            expected: String(result.expectedCheckDigit),
+          });
+        }
+        break;
+      case 'computed':
+        resultEl.textContent = fill(root.dataset.resultComputed, {
+          digit: String(result.checkDigit),
+        });
+        resultEl.className =
+          'mt-1 font-medium text-green-700 dark:text-green-400';
+        detailEl.textContent = fill(root.dataset.resultComputedDetail, {
+          digits: result.digits,
+        });
+        completeNumber = result.digits;
+        break;
+    }
+
+    if (completeNumber && kind === 'corporate') {
+      invoiceEl.textContent = `${root.dataset.invoiceLabel ?? ''}T${completeNumber}`;
+      invoiceEl.classList.remove('hidden');
+    }
+    copyButton.classList.toggle('hidden', completeNumber === '');
+  }
+
+  input.addEventListener('input', render);
+
+  kindButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      kind = button.dataset.kind as NumberKind;
+      applyKind();
+      render();
+    });
+  });
+
+  dummyButton.addEventListener('click', () => {
+    input.value = DUMMY[kind];
+    render();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!completeNumber) return;
+    statusEl.textContent = (await copyText(completeNumber))
+      ? (root.dataset.copied ?? '')
+      : (root.dataset.copyFailed ?? '');
+  });
+
+  applyKind();
+  render();
+</script>

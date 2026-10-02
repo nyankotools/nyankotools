@@ -1,0 +1,213 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { ulidNanoidGeneratorContent } from '../../i18n/tools/ulid-nanoid-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = ulidNanoidGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-end gap-4">
+    <div>
+      <label for="ulid-nanoid-kind" class="ui-label">
+        {t.kindLabel}
+      </label>
+      <select id="ulid-nanoid-kind" class="ui-input h-11 px-3 dark:bg-gray-900">
+        <option value="ulid" selected>
+          {t.kindUlid}
+        </option>
+        <option value="nanoid">{t.kindNanoid}</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="ulid-nanoid-count" class="ui-label">
+        {t.countLabel}
+      </label>
+      <input
+        id="ulid-nanoid-count"
+        type="number"
+        min="1"
+        max="100"
+        value="5"
+        class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+      />
+    </div>
+
+    <div data-kind-field="nanoid" class="hidden">
+      <label for="ulid-nanoid-size" class="ui-label">
+        {t.sizeLabel}
+      </label>
+      <input
+        id="ulid-nanoid-size"
+        type="number"
+        min="1"
+        max="128"
+        value="21"
+        class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+      />
+    </div>
+
+    <label data-kind-field="ulid" class="ui-check">
+      <input id="ulid-nanoid-lowercase" type="checkbox" class="h-4 w-4" />
+      {t.lowercase}
+    </label>
+
+    <button
+      id="ulid-nanoid-generate-button"
+      type="button"
+      class="min-h-11 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+    >
+      {t.generate}
+    </button>
+
+    <button
+      id="ulid-nanoid-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="ulid-nanoid-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div data-kind-field="nanoid" class="mt-4 hidden">
+    <label for="ulid-nanoid-alphabet" class="ui-label">
+      {t.alphabetLabel}
+    </label>
+    <input
+      id="ulid-nanoid-alphabet"
+      type="text"
+      class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+      spellcheck="false"
+      autocomplete="off"
+    />
+    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+      {t.alphabetHint}
+    </p>
+    <p
+      id="ulid-nanoid-error"
+      data-error-alphabet={t.errorAlphabet}
+      class="mt-1 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+  </div>
+
+  <div class="mt-4">
+    <label for="ulid-nanoid-output" class="ui-label">
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="ulid-nanoid-output"
+      readonly
+      class="ui-input h-64 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+    ></textarea>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    clampIdCount,
+    clampNanoidSize,
+    generateNanoids,
+    generateUlids,
+  } from '../../lib/tools/ulid-nanoid-generator';
+
+  const kindSelect = document.getElementById(
+    'ulid-nanoid-kind',
+  ) as HTMLSelectElement;
+  const countInput = document.getElementById(
+    'ulid-nanoid-count',
+  ) as HTMLInputElement;
+  const sizeInput = document.getElementById(
+    'ulid-nanoid-size',
+  ) as HTMLInputElement;
+  const alphabetInput = document.getElementById(
+    'ulid-nanoid-alphabet',
+  ) as HTMLInputElement;
+  const lowercaseCheckbox = document.getElementById(
+    'ulid-nanoid-lowercase',
+  ) as HTMLInputElement;
+  const generateButton = document.getElementById(
+    'ulid-nanoid-generate-button',
+  )!;
+  const copyButton = document.getElementById(
+    'ulid-nanoid-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('ulid-nanoid-status')!;
+  const errorEl = document.getElementById('ulid-nanoid-error')!;
+  const output = document.getElementById(
+    'ulid-nanoid-output',
+  ) as HTMLTextAreaElement;
+  const kindFields =
+    document.querySelectorAll<HTMLElement>('[data-kind-field]');
+
+  const errorAlphabet = errorEl.dataset.errorAlphabet ?? '';
+
+  function updateVisibility() {
+    for (const el of kindFields) {
+      el.classList.toggle('hidden', el.dataset.kindField !== kindSelect.value);
+    }
+  }
+
+  function generate() {
+    statusEl.textContent = '';
+    errorEl.textContent = '';
+    updateVisibility();
+
+    const count = Number(countInput.value);
+    if (kindSelect.value === 'ulid') {
+      output.value = generateUlids({
+        count,
+        lowercase: lowercaseCheckbox.checked,
+      }).join('\n');
+      return;
+    }
+
+    const result = generateNanoids({
+      count,
+      size: Number(sizeInput.value),
+      alphabet: alphabetInput.value,
+    });
+    if (!result.ok) {
+      output.value = '';
+      errorEl.textContent = errorAlphabet;
+      return;
+    }
+    output.value = result.ids.join('\n');
+  }
+
+  generateButton.addEventListener('click', generate);
+  kindSelect.addEventListener('change', generate);
+  lowercaseCheckbox.addEventListener('change', generate);
+  alphabetInput.addEventListener('change', generate);
+  countInput.addEventListener('change', () => {
+    countInput.value = String(clampIdCount(Number(countInput.value)));
+    generate();
+  });
+  sizeInput.addEventListener('change', () => {
+    sizeInput.value = String(clampNanoidSize(Number(sizeInput.value)));
+    generate();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  generate();
+</script>

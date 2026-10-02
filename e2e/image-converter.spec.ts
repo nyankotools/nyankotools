@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -120,9 +120,8 @@ test('品質スライダーの変更が反映される（WebP/JPEG）', async ({
 
     // 品質値を50に変更
     await qualityInput.fill('50');
-    await page.waitForTimeout(300); // デバウンス時間を待機
 
-    // 品質表示が更新されていることを確認
+    // 品質表示が更新されていることを確認（自動リトライ）
     const qualityValue = page.locator('#ic-quality-value');
     await expect(qualityValue).toContainText('50');
 
@@ -156,10 +155,7 @@ test('対応外ファイル形式を選択するとエラーが表示される',
     await fileInput.setInputFiles(txtPath);
 
     // エラーメッセージが表示される（対応外ファイル形式）
-    // wait for the error to appear
-    await page.waitForTimeout(100);
-    // The error element might not be visible if no files were added
-    // Just check that the file count didn't increase
+    // ファイル数がリセットされるまで待つ（自動リトライ）
     const fileCountEl = page.locator('#ic-file-count');
     await expect(fileCountEl).toHaveText('');
   } finally {

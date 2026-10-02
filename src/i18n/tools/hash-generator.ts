@@ -67,7 +67,7 @@ export const hashGeneratorContent: Record<Locale, HashGeneratorPageContent> = {
   en: {
     title: 'Hash Generator (MD5/SHA-1/SHA-256)',
     description:
-      'A free tool to compute MD5, SHA-1, and SHA-256 hashes from text. Useful for checking file integrity or verifying a hashed password. Your data is processed in the browser and never sent to a server.',
+      'Compute MD5, SHA-1, and SHA-256 hashes from text to check integrity or verify a hash. Runs in your browser; nothing is sent to a server.',
     h1: 'Hash Generator (MD5/SHA-1/SHA-256)',
     introHtml:
       'Computes the MD5, SHA-1, and SHA-256 hash of your text in real time. All processing happens in your browser, and nothing you type is ever sent to a server. Need a random string instead? Try the <a href="/en/tools/password-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Password Generator</a> as well.',

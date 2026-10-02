@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 // astro.config.mjs の prefetch: { prefetchAll: true, defaultStrategy: 'hover' } の
 // 動作確認。同一オリジンのリンクをホバーすると <link rel="prefetch"> がhead内に
@@ -51,6 +51,7 @@ test('外部リンク（フッターの公式X）をホバーしても prefetch 
   await footerXLink.hover();
 
   // デバウンス（80ms）+ 余裕を見て待機してもprefetchされていないことを確認する。
+  // 外部リンクは prefetch されないことを確認するため、待機時間は必要
   await page.waitForTimeout(500);
   await expect(
     page.locator('link[rel="prefetch"][href="https://x.com/nyankotools"]'),

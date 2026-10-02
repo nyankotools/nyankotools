@@ -91,6 +91,11 @@ function md5(message: Uint8Array): Uint8Array {
   return result;
 }
 
+/** バイト列のMD5ハッシュ値（16進数文字列）を計算する */
+export function md5Hex(bytes: Uint8Array): string {
+  return bytesToHex(md5(bytes));
+}
+
 /** 指定したアルゴリズムでテキストのハッシュ値（16進数文字列）を計算する */
 export async function computeHash(
   text: string,

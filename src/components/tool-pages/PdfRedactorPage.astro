@@ -1,0 +1,614 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { pdfRedactorContent } from '../../i18n/tools/pdf-redactor';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = pdfRedactorContent[locale];
+const buttonClass = 'ui-btn';
+const selectClass =
+  'min-h-11 rounded-lg border border-gray-300 px-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="rd-file" class="ui-label">
+      {t.fileLabel}
+    </label>
+    <div id="rd-drop" class="ui-dropzone">
+      <input
+        id="rd-file"
+        type="file"
+        accept=".pdf,application/pdf"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
+    </div>
+    <p
+      id="rd-info"
+      hidden
+      data-template={t.pagesTemplate}
+      data-separator={t.infoSeparator}
+      class="mt-2 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+  </div>
+
+  <section
+    id="rd-editor"
+    hidden
+    class="mt-4 max-w-3xl"
+    data-indicator={t.pageIndicatorTemplate}
+    data-summary={t.summaryTemplate}
+    data-summary-none={t.summaryNone}
+    data-canvas-label={t.canvasLabelTemplate}
+  >
+    <h2 class="mb-1 text-lg font-semibold">{t.editorHeading}</h2>
+    <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">{t.editorHint}</p>
+
+    <div class="mb-3 flex flex-wrap items-center gap-2">
+      <button id="rd-prev" type="button" class={buttonClass}>
+        {t.prevPage}
+      </button>
+      <span
+        id="rd-indicator"
+        class="px-1 text-sm text-gray-700 dark:text-gray-300"
+        aria-live="polite"
+      ></span>
+      <button id="rd-next" type="button" class={buttonClass}>
+        {t.nextPage}
+      </button>
+      <button id="rd-undo" type="button" class={buttonClass}>
+        {t.undo}
+      </button>
+      <button id="rd-clear-page" type="button" class={buttonClass}>
+        {t.clearPage}
+      </button>
+    </div>
+
+    <div
+      id="rd-stage"
+      class="relative w-full cursor-crosshair touch-none overflow-hidden rounded-lg border border-gray-300 bg-white select-none dark:border-gray-700"
+    >
+      <canvas id="rd-canvas" class="block h-auto w-full" role="img"></canvas>
+      <div id="rd-boxes" class="pointer-events-none absolute inset-0"></div>
+    </div>
+
+    <p
+      id="rd-summary"
+      aria-live="polite"
+      class="mt-2 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+  </section>
+
+  <div class="mt-4">
+    <label class="flex max-w-xs flex-col gap-1 text-sm text-gray-700 dark:text-gray-300">
+      {t.qualityLabel}
+      <select id="rd-quality" class={selectClass}>
+        <option value="standard" selected>
+          {t.qualityStandard}
+        </option>
+        <option value="high">{t.qualityHigh}</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="rd-run"
+      type="button"
+      data-run={t.run}
+      data-processing={t.processing}
+      data-progress={t.progressTemplate}
+      class="ui-btn-primary"
+    >
+      {t.run}
+    </button>
+    <button id="rd-clear" type="button" class={buttonClass}>
+      {t.clear}
+    </button>
+  </div>
+
+  <p
+    id="rd-error"
+    role="alert"
+    hidden
+    data-no-file={t.errorNoFile}
+    data-not-pdf={t.errorNotPdf}
+    data-invalid={t.errorInvalid}
+    data-encrypted={t.errorEncrypted}
+    data-no-redaction={t.errorNoRedaction}
+    data-failed={t.errorFailed}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+
+  <section
+    id="rd-result"
+    hidden
+    class="mt-6"
+    data-summary={t.resultSummaryTemplate}
+    data-download={t.downloadTemplate}
+  >
+    <h2 class="mb-2 text-lg font-semibold">{t.resultHeading}</h2>
+    <p
+      id="rd-result-summary"
+      class="mb-3 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+    <ul id="rd-result-list" class="flex flex-col gap-3"></ul>
+  </section>
+</ToolShell>
+
+<script>
+  import { fill } from '../../lib/format-template';
+  import { paren } from '../../lib/paren';
+  import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
+  import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
+  import { getPageCount, PdfToolError } from '../../lib/tools/pdf-merge-split';
+  import {
+    clampScale,
+    ImageToPdfError,
+  } from '../../lib/tools/pdf-image-converter';
+  import {
+    rasterPagesToPdf,
+    type RasterPage,
+  } from '../../lib/tools/pdf-compressor';
+  import {
+    countRects,
+    countRedactedPages,
+    REDACT_QUALITIES,
+    rectFromPoints,
+    rectToPixels,
+    redactedFileName,
+    type RedactQuality,
+    type RedactRect,
+  } from '../../lib/tools/pdf-redactor';
+  import { enableFileDrop } from '../../lib/file-drop';
+
+  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const fileInput = $<HTMLInputElement>('rd-file');
+  const info = $('rd-info');
+  const editor = $('rd-editor');
+  const prevButton = $<HTMLButtonElement>('rd-prev');
+  const nextButton = $<HTMLButtonElement>('rd-next');
+  const undoButton = $<HTMLButtonElement>('rd-undo');
+  const clearPageButton = $<HTMLButtonElement>('rd-clear-page');
+  const indicator = $('rd-indicator');
+  const stage = $('rd-stage');
+  const canvas = $<HTMLCanvasElement>('rd-canvas');
+  const boxesEl = $('rd-boxes');
+  const summaryEl = $('rd-summary');
+  const qualitySelect = $<HTMLSelectElement>('rd-quality');
+  const runButton = $<HTMLButtonElement>('rd-run');
+  const clearButton = $<HTMLButtonElement>('rd-clear');
+  const errorEl = $('rd-error');
+  const resultEl = $('rd-result');
+  const resultSummary = $('rd-result-summary');
+  const resultList = $('rd-result-list');
+
+  enableFileDrop($('rd-drop'), fileInput);
+
+  const BOX_CLASS =
+    'absolute border border-red-500 bg-black/80 dark:border-red-400';
+  const DRAFT_CLASS =
+    'absolute border border-dashed border-red-500 bg-black/50 dark:border-red-400';
+
+  let pdfBytes: Uint8Array | null = null;
+  let pdfName = '';
+  let pdfDoc: Awaited<ReturnType<typeof openPdf>>['doc'] | null = null;
+  let pdfTask: Awaited<ReturnType<typeof openPdf>>['task'] | null = null;
+  /** ページごとの黒塗り範囲 */
+  let rects: RedactRect[][] = [];
+  let current = 0;
+  let urls: string[] = [];
+  /** 古い描画結果が新しいページを上書きしないための世代番号 */
+  let renderToken = 0;
+  let renderTask: { cancel(): void } | null = null;
+  let busy = false;
+
+  function showError(key: string) {
+    hideResult();
+    errorEl.textContent = errorEl.dataset[key] ?? '';
+    errorEl.hidden = false;
+  }
+
+  function hideError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function hideResult() {
+    urls.forEach((u) => URL.revokeObjectURL(u));
+    urls = [];
+    resultList.replaceChildren();
+    resultSummary.textContent = '';
+    resultEl.hidden = true;
+  }
+
+  function formatBytes(bytes: number): string {
+    return bytes < 1024
+      ? `${bytes} B`
+      : bytes < 1048576
+        ? `${(bytes / 1024).toFixed(1)} KB`
+        : `${(bytes / 1048576).toFixed(2)} MB`;
+  }
+
+  /** pdf.js の例外を tool のエラーキーに変換する */
+  function pdfErrorKey(e: unknown): string {
+    const name = (e as { name?: string } | null)?.name ?? '';
+    const message = (e as { message?: string } | null)?.message ?? '';
+    if (name === 'PasswordException' || /password/i.test(message))
+      return 'encrypted';
+    if (name === 'InvalidPDFException' || name === 'FormatError')
+      return 'invalid';
+    console.error(e);
+    return 'failed';
+  }
+
+  async function openPdf(bytes: Uint8Array) {
+    // pdf.js は渡したバッファを worker に転送（detach）するためコピーを渡す
+    const task = pdfjs.getDocument({ data: bytes.slice() });
+    try {
+      return { doc: await task.promise, task };
+    } catch (e) {
+      void task.destroy();
+      if (pdfErrorKey(e) !== 'failed') throw e;
+      // 一部の暗号化PDFは pdf.js が UnknownErrorException で失敗するため、pdf-lib の判定で原因を補う
+      try {
+        await getPageCount(bytes);
+      } catch (fallback) {
+        if (fallback instanceof PdfToolError) throw fallback;
+      }
+      throw e;
+    }
+  }
+
+  function closeDocument() {
+    renderToken++;
+    renderTask?.cancel();
+    renderTask = null;
+    void pdfTask?.destroy();
+    pdfDoc = null;
+    pdfTask = null;
+  }
+
+  function resetDocument() {
+    closeDocument();
+    pdfBytes = null;
+    rects = [];
+    current = 0;
+    info.hidden = true;
+    editor.hidden = true;
+    boxesEl.replaceChildren();
+    canvas.width = canvas.height = 0;
+  }
+
+  function setBoxStyle(el: HTMLElement, r: RedactRect) {
+    el.style.left = `${r.x * 100}%`;
+    el.style.top = `${r.y * 100}%`;
+    el.style.width = `${r.w * 100}%`;
+    el.style.height = `${r.h * 100}%`;
+  }
+
+  function updateControls() {
+    const total = rects.length;
+    indicator.textContent = fill(editor.dataset.indicator ?? '', {
+      n: String(current + 1),
+      total: String(total),
+    });
+    prevButton.disabled = current <= 0;
+    nextButton.disabled = current >= total - 1;
+    const here = rects[current]?.length ?? 0;
+    undoButton.disabled = here === 0;
+    clearPageButton.disabled = here === 0;
+    const all = countRects(rects);
+    summaryEl.textContent =
+      all === 0
+        ? (editor.dataset.summaryNone ?? '')
+        : fill(editor.dataset.summary ?? '', {
+            count: String(all),
+            pages: String(countRedactedPages(rects)),
+          });
+  }
+
+  function renderBoxes() {
+    boxesEl.replaceChildren();
+    for (const r of rects[current] ?? []) {
+      const div = document.createElement('div');
+      div.className = BOX_CLASS;
+      setBoxStyle(div, r);
+      boxesEl.append(div);
+    }
+    updateControls();
+  }
+
+  async function renderPage() {
+    if (!pdfDoc) return;
+    const token = ++renderToken;
+    renderTask?.cancel();
+    renderTask = null;
+    renderBoxes();
+    canvas.setAttribute(
+      'aria-label',
+      fill(editor.dataset.canvasLabel ?? '', { n: String(current + 1) }),
+    );
+    const page = await pdfDoc.getPage(current + 1);
+    try {
+      if (token !== renderToken) return;
+      const base = page.getViewport({ scale: 1 });
+      const cssWidth = Math.max(1, stage.clientWidth);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const scale = clampScale(
+        base.width,
+        base.height,
+        (cssWidth / base.width) * dpr,
+      );
+      const viewport = page.getViewport({ scale });
+      // 描画中のキャンバスを直接いじると切り替え時にちらつくため、オフスクリーンに描いて差し替える
+      const off = document.createElement('canvas');
+      off.width = Math.max(1, Math.round(viewport.width));
+      off.height = Math.max(1, Math.round(viewport.height));
+      const ctx = off.getContext('2d')!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, off.width, off.height);
+      const task = page.render({ canvas: off, canvasContext: ctx, viewport });
+      renderTask = task;
+      await task.promise;
+      if (token !== renderToken) return;
+      canvas.width = off.width;
+      canvas.height = off.height;
+      canvas.getContext('2d')!.drawImage(off, 0, 0);
+    } catch (e) {
+      const name = (e as { name?: string } | null)?.name ?? '';
+      // 次のページへ切り替えたときのキャンセルは正常動作
+      if (name !== 'RenderingCancelledException') {
+        console.error(e);
+        if (token === renderToken) showError('failed');
+      }
+    } finally {
+      page.cleanup();
+    }
+  }
+
+  function goTo(index: number) {
+    if (dragStart || index < 0 || index >= rects.length) return;
+    current = index;
+    void renderPage();
+  }
+
+  prevButton.addEventListener('click', () => goTo(current - 1));
+  nextButton.addEventListener('click', () => goTo(current + 1));
+  undoButton.addEventListener('click', () => {
+    rects[current]?.pop();
+    hideResult();
+    renderBoxes();
+  });
+  clearPageButton.addEventListener('click', () => {
+    if (rects[current]) rects[current] = [];
+    hideResult();
+    renderBoxes();
+  });
+  qualitySelect.addEventListener('change', hideResult);
+
+  // ドラッグで範囲を指定する
+  let dragStart: { x: number; y: number } | null = null;
+  let draft: HTMLElement | null = null;
+
+  function pointerPos(e: PointerEvent) {
+    const box = canvas.getBoundingClientRect();
+    return {
+      x: (e.clientX - box.left) / box.width,
+      y: (e.clientY - box.top) / box.height,
+    };
+  }
+
+  function endDrag() {
+    dragStart = null;
+    draft?.remove();
+    draft = null;
+  }
+
+  stage.addEventListener('pointerdown', (e) => {
+    if (
+      busy ||
+      dragStart ||
+      !e.isPrimary ||
+      !pdfDoc ||
+      e.button !== 0 ||
+      canvas.width === 0
+    )
+      return;
+    e.preventDefault();
+    stage.setPointerCapture(e.pointerId);
+    dragStart = pointerPos(e);
+    draft = document.createElement('div');
+    draft.className = DRAFT_CLASS;
+    boxesEl.append(draft);
+  });
+
+  stage.addEventListener('pointermove', (e) => {
+    if (!dragStart || !draft) return;
+    const p = pointerPos(e);
+    const r = rectFromPoints(dragStart.x, dragStart.y, p.x, p.y);
+    if (r) {
+      draft.hidden = false;
+      setBoxStyle(draft, r);
+    } else {
+      draft.hidden = true;
+    }
+  });
+
+  stage.addEventListener('pointerup', (e) => {
+    if (!dragStart) return;
+    const p = pointerPos(e);
+    const r = rectFromPoints(dragStart.x, dragStart.y, p.x, p.y);
+    endDrag();
+    if (!r) return;
+    rects[current].push(r);
+    hideResult();
+    hideError();
+    renderBoxes();
+  });
+
+  stage.addEventListener('pointercancel', endDrag);
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    // 書き出し中のドロップで黒塗り範囲が差し替わらないようにする
+    if (busy || !file) return;
+    resetDocument();
+    hideResult();
+    hideError();
+    if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+      showError('notPdf');
+      return;
+    }
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const { doc, task } = await openPdf(bytes);
+      pdfDoc = doc;
+      pdfTask = task;
+      pdfBytes = bytes;
+      pdfName = file.name;
+      rects = Array.from({ length: doc.numPages }, () => []);
+      current = 0;
+      info.textContent = `${file.name}${paren(`${fill(info.dataset.template ?? '', { pages: String(doc.numPages) })}${info.dataset.separator ?? ''}${formatBytes(bytes.length)}`)}`;
+      info.hidden = false;
+      editor.hidden = false;
+      await renderPage();
+    } catch (e) {
+      resetDocument();
+      showError(e instanceof PdfToolError ? e.code : pdfErrorKey(e));
+    }
+  });
+
+  // 画面幅が変わったらプレビューの解像度を合わせ直す
+  let lastWidth = 0;
+  new ResizeObserver(() => {
+    const w = stage.clientWidth;
+    if (!pdfDoc || w === 0 || w === lastWidth) return;
+    const first = lastWidth === 0;
+    lastWidth = w;
+    if (!first) void renderPage();
+  }).observe(stage);
+
+  /** 黒塗りを適用したうえで全ページを画像化し、PDFに組み立てる */
+  async function redact(
+    bytes: Uint8Array,
+    redactions: RedactRect[][],
+  ): Promise<Uint8Array> {
+    const preset = REDACT_QUALITIES[qualitySelect.value as RedactQuality];
+    const { doc, task } = await openPdf(bytes);
+    const pages: RasterPage[] = [];
+    try {
+      for (let n = 1; n <= doc.numPages; n++) {
+        runButton.textContent = fill(runButton.dataset.progress ?? '', {
+          done: String(n),
+          total: String(doc.numPages),
+        });
+        const page = await doc.getPage(n);
+        try {
+          const base = page.getViewport({ scale: 1 });
+          const viewport = page.getViewport({
+            scale: clampScale(base.width, base.height, preset.scale),
+          });
+          const out = document.createElement('canvas');
+          out.width = Math.max(1, Math.round(viewport.width));
+          out.height = Math.max(1, Math.round(viewport.height));
+          const ctx = out.getContext('2d')!;
+          // JPEG は透過を持てず黒くなるため白で下地を塗る
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, out.width, out.height);
+          await page.render({ canvas: out, canvasContext: ctx, viewport })
+            .promise;
+          // 描画後に不透明な黒で塗りつぶす（元の文字は画像のこの領域から消える）
+          ctx.fillStyle = '#000000';
+          for (const r of redactions[n - 1] ?? []) {
+            const px = rectToPixels(r, out.width, out.height);
+            ctx.fillRect(px.x, px.y, px.w, px.h);
+          }
+          const blob = await new Promise<Blob | null>((resolve) =>
+            out.toBlob(resolve, 'image/jpeg', preset.quality),
+          );
+          out.width = out.height = 0;
+          if (!blob) throw new Error('toBlob failed');
+          pages.push({
+            bytes: new Uint8Array(await blob.arrayBuffer()),
+            widthPt: base.width,
+            heightPt: base.height,
+          });
+        } finally {
+          page.cleanup();
+        }
+      }
+    } finally {
+      void task.destroy();
+    }
+    return rasterPagesToPdf(pages);
+  }
+
+  function setBusy(value: boolean) {
+    busy = value;
+    runButton.disabled = value;
+    clearButton.disabled = value;
+    fileInput.disabled = value;
+    qualitySelect.disabled = value;
+    if (value) {
+      prevButton.disabled = nextButton.disabled = true;
+      undoButton.disabled = clearPageButton.disabled = true;
+    } else if (pdfDoc) {
+      updateControls();
+    }
+  }
+
+  runButton.addEventListener('click', async () => {
+    hideError();
+    hideResult();
+    if (!pdfBytes) return showError('noFile');
+    const total = countRects(rects);
+    if (total === 0) return showError('noRedaction');
+    setBusy(true);
+    runButton.textContent = runButton.dataset.processing ?? '';
+    try {
+      const out = await redact(pdfBytes, structuredClone(rects));
+      const blob = new Blob([out as BlobPart], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      urls.push(url);
+      const name = redactedFileName(pdfName);
+      resultSummary.textContent = fill(resultEl.dataset.summary ?? '', {
+        count: String(total),
+        pages: String(countRedactedPages(rects)),
+      });
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      a.className =
+        'inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-blue-700 hover:bg-gray-100 dark:border-gray-700 dark:text-blue-400 dark:hover:bg-gray-800';
+      a.textContent = `${(resultEl.dataset.download ?? '').replace('{name}', () => name)} (${formatBytes(blob.size)})`;
+      li.append(a);
+      resultList.append(li);
+      resultEl.hidden = false;
+    } catch (e) {
+      if (e instanceof PdfToolError) showError(e.code);
+      else if (e instanceof ImageToPdfError) showError('failed');
+      else showError(pdfErrorKey(e));
+    } finally {
+      setBusy(false);
+      runButton.textContent = runButton.dataset.run ?? '';
+    }
+  });
+
+  clearButton.addEventListener('click', () => {
+    resetDocument();
+    hideError();
+    hideResult();
+  });
+</script>

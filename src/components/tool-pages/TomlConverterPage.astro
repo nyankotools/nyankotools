@@ -18,6 +18,7 @@ const t = tomlConverterContent[locale];
     data-copied={t.copied}
     data-copy-failed={t.copyFailed}
     data-error-template={t.errorTemplate}
+    data-error-top-level={t.errorTopLevelTable}
   >
     <div>
       <label for="toml-converter-from" class="ui-label">
@@ -149,6 +150,7 @@ const t = tomlConverterContent[locale];
   const copied = controls.dataset.copied ?? '';
   const copyFailed = controls.dataset.copyFailed ?? '';
   const errorTemplate = controls.dataset.errorTemplate ?? '';
+  const errorTopLevel = controls.dataset.errorTopLevel ?? '';
 
   const input = document.getElementById(
     'toml-converter-input',
@@ -208,7 +210,11 @@ const t = tomlConverterContent[locale];
     if (result.success) {
       showOutput(result.output);
     } else {
-      showError(errorTemplate.replace('{message}', result.message));
+      showError(
+        result.reason === 'toml-top-level'
+          ? errorTopLevel
+          : errorTemplate.replace('{message}', () => result.message),
+      );
     }
   }
 

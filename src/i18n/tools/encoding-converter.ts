@@ -141,10 +141,9 @@ export const encodingConverterContent: Record<
     ],
   },
   en: {
-    title:
-      'Character Encoding Converter & Mojibake Fixer (Shift-JIS/EUC-JP/UTF-8)',
+    title: 'Encoding Converter & Mojibake Fixer (Shift-JIS/EUC-JP/UTF-8)',
     description:
-      'A free tool that detects the encoding of a text file and converts it between Shift_JIS, EUC-JP, UTF-8, ISO-2022-JP and UTF-16. It can also diagnose and repair garbled Japanese text (mojibake). Your data is processed in the browser and never sent to a server.',
+      'Detect and convert text encoding between Shift_JIS, EUC-JP, UTF-8, ISO-2022-JP and UTF-16, and diagnose mojibake. Runs in your browser; nothing is uploaded.',
     h1: 'Character Encoding Converter & Mojibake Fixer',
     introHtml: `Choose a text file to auto-detect its encoding, preview the contents, and download it converted to Shift_JIS, EUC-JP, UTF-8 and more. Use "Mojibake fixer" to paste garbled Japanese text and see whether it can be restored. To normalize newlines, try the <a href="/en/tools/line-ending-converter/" ${linkClass}>Line Ending Converter</a>; for percent-encoding, see the <a href="/en/tools/url-encode/" ${linkClass}>URL Encoder/Decoder</a>.`,
     modeLabel: 'Mode',

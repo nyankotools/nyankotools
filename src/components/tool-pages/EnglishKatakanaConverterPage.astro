@@ -1,0 +1,166 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { englishKatakanaConverterContent } from '../../i18n/tools/english-katakana-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = englishKatakanaConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="ek-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-summary={t.summary}
+    data-summary-none={t.summaryNone}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <div>
+        <span class="ui-label">{t.vSoundLabel}</span>
+        <div
+          id="ek-vsound"
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-label={t.vSoundLabel}
+        >
+          <button
+            type="button"
+            data-value="b"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            {t.vSoundBa}
+          </button>
+          <button
+            type="button"
+            data-value="vu"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.vSoundVu}
+          </button>
+        </div>
+      </div>
+      <button id="ek-copy-button" type="button" class="ui-btn self-end">
+        {t.copy}
+      </button>
+      <span
+        id="ek-status"
+        class="self-end text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+
+    <label class="ui-check mt-3">
+      <input id="ek-acronym" type="checkbox" checked />
+      {t.acronymLabel}
+    </label>
+
+    <div class="mt-4 grid gap-4 lg:grid-cols-2">
+      <div>
+        <label for="ek-input" class="ui-label">
+          {t.inputLabel}
+        </label>
+        <textarea
+          id="ek-input"
+          data-query-target="text"
+          data-sample={t.sampleText}
+          class="ui-input h-64 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.inputPlaceholder}
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+        ></textarea>
+      </div>
+      <div>
+        <label for="ek-output" class="ui-label">
+          {t.outputLabel}
+        </label>
+        <textarea
+          id="ek-output"
+          readonly
+          class="ui-input h-64 w-full bg-gray-50 p-4 dark:bg-gray-900"
+        ></textarea>
+      </div>
+    </div>
+
+    <p
+      id="ek-summary"
+      class="mt-2 min-h-5 text-sm text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { convertEnglishToKatakana } from '../../lib/tools/english-katakana-converter';
+
+  const root = document.getElementById('ek-root')!;
+  const input = document.getElementById('ek-input') as HTMLTextAreaElement;
+  const output = document.getElementById('ek-output') as HTMLTextAreaElement;
+  const acronym = document.getElementById('ek-acronym') as HTMLInputElement;
+  const vButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#ek-vsound [data-value]',
+  );
+  const copyButton = document.getElementById(
+    'ek-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('ek-status')!;
+  const summaryEl = document.getElementById('ek-summary')!;
+
+  let vSound: 'b' | 'vu' = 'b';
+
+  function convert() {
+    statusEl.textContent = '';
+    const result = convertEnglishToKatakana(input.value, {
+      vSound,
+      spellAcronyms: acronym.checked,
+    });
+    output.value = result.output;
+
+    if (input.value === '') {
+      summaryEl.textContent = '';
+      return;
+    }
+    if (result.words.length === 0) {
+      summaryEl.textContent = root.dataset.summaryNone ?? '';
+      return;
+    }
+    const count = (method: string) =>
+      String(result.words.filter((w) => w.method === method).length);
+    summaryEl.textContent = (root.dataset.summary ?? '')
+      .replace('{total}', String(result.words.length))
+      .replace('{dictionary}', count('dictionary'))
+      .replace('{rules}', count('rules'))
+      .replace('{acronym}', count('acronym'));
+  }
+
+  onTextInput(input, convert);
+  acronym.addEventListener('change', convert);
+
+  vButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      vSound = button.dataset.value === 'vu' ? 'vu' : 'b';
+      vButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (root.dataset.copied ?? '')
+      : (root.dataset.copyFailed ?? '');
+  });
+
+  convert();
+</script>

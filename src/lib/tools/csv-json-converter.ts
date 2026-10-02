@@ -18,7 +18,7 @@ export type ConvertFailure =
 
 export type ConvertOutcome = ConvertSuccess | ConvertFailure;
 
-class UnterminatedQuoteError extends Error {}
+export class UnterminatedQuoteError extends Error {}
 
 class ColumnMismatchError extends Error {
   constructor(
@@ -38,11 +38,19 @@ class NotObjectError extends Error {
   }
 }
 
+export interface CsvRow {
+  fields: string[];
+  /** 物理的な空行（引用符なしの空フィールド1つだけ）。`""` の空値は含まない */
+  blank: boolean;
+}
+
 /** CSVテキストを行×列の文字列配列に分解する（引用符・改行を含むフィールドに対応） */
-function parseCsvRows(text: string, delimiter: string): string[][] {
-  const rows: string[][] = [];
+export function parseCsvRows(text: string, delimiter: string): CsvRow[] {
+  const rows: CsvRow[] = [];
   let row: string[] = [];
   let field = '';
+  let fieldQuoted = false;
+  let rowQuoted = false;
   let inQuotes = false;
   let i = 0;
   const len = text.length;
@@ -68,18 +76,23 @@ function parseCsvRows(text: string, delimiter: string): string[][] {
 
     if (char === '"') {
       inQuotes = true;
+      fieldQuoted = true;
+      rowQuoted = true;
       i += 1;
     } else if (char === delimiter) {
       row.push(field);
       field = '';
+      fieldQuoted = false;
       i += 1;
     } else if (char === '\r') {
       i += 1;
     } else if (char === '\n') {
       row.push(field);
-      rows.push(row);
+      rows.push({ fields: row, blank: !rowQuoted && isBlankFields(row) });
       row = [];
       field = '';
+      fieldQuoted = false;
+      rowQuoted = false;
       i += 1;
     } else {
       field += char;
@@ -91,15 +104,25 @@ function parseCsvRows(text: string, delimiter: string): string[][] {
     throw new UnterminatedQuoteError();
   }
 
-  if (field.length > 0 || row.length > 0) {
+  if (field.length > 0 || fieldQuoted || row.length > 0) {
     row.push(field);
-    rows.push(row);
+    rows.push({ fields: row, blank: !rowQuoted && isBlankFields(row) });
   }
 
   return rows;
 }
 
-function escapeCsvField(value: string, delimiter: string): string {
+function isBlankFields(fields: string[]): boolean {
+  return fields.length === 1 && fields[0] === '';
+}
+
+export function escapeCsvField(
+  value: string,
+  delimiter: string,
+  singleColumn = false,
+): string {
+  // 1列だけの空値は、そのままだと空行になって読み戻し時に消えるので `""` にする
+  if (singleColumn && value === '') return '""';
   if (
     value.includes(delimiter) ||
     value.includes('"') ||
@@ -145,21 +168,34 @@ function toFailure(error: unknown): ConvertFailure {
 
 export function csvToJson(input: string, delimiter = ','): ConvertOutcome {
   try {
-    const rows = parseCsvRows(input, delimiter);
+    // 物理的な空行（引用符なし）は読み飛ばす。`""` の空値行は残す。エラー表示の行番号は元の行位置のまま保つ
+    const rows = parseCsvRows(input, delimiter)
+      .map(({ fields, blank }, index) => ({
+        row: fields,
+        blank,
+        line: index + 1,
+      }))
+      .filter(({ blank }) => !blank);
     if (rows.length === 0) {
       return { success: true, output: '[]' };
     }
 
-    const header = rows[0];
+    const header = rows[0].row;
     const dataRows = rows.slice(1);
 
-    const records = dataRows.map((row, index) => {
+    const records = dataRows.map(({ row, line }) => {
       if (row.length !== header.length) {
-        throw new ColumnMismatchError(index + 2, header.length, row.length);
+        throw new ColumnMismatchError(line, header.length, row.length);
       }
+      // "__proto__" 列が黙って消えないよう、代入ではなく定義で追加する
       const record: Record<string, string> = {};
       header.forEach((key, columnIndex) => {
-        record[key] = row[columnIndex];
+        Object.defineProperty(record, key, {
+          value: row[columnIndex],
+          enumerable: true,
+          writable: true,
+          configurable: true,
+        });
       });
       return record;
     });
@@ -205,10 +241,14 @@ export function jsonToCsv(input: string, delimiter = ','): ConvertOutcome {
       }
     });
 
+    // キーを持たないオブジェクトだけの配列は、ヘッダーも行も作れない（`[]` と同じ扱い）
+    if (columns.length === 0) return { success: true, output: '' };
+
+    const singleColumn = columns.length === 1;
     const lines: string[] = [];
     lines.push(
       columns
-        .map((column) => escapeCsvField(column, delimiter))
+        .map((column) => escapeCsvField(column, delimiter, singleColumn))
         .join(delimiter),
     );
 
@@ -216,7 +256,11 @@ export function jsonToCsv(input: string, delimiter = ','): ConvertOutcome {
       const record = item as Record<string, unknown>;
       const line = columns
         .map((column) =>
-          escapeCsvField(stringifyCsvValue(record[column]), delimiter),
+          escapeCsvField(
+            stringifyCsvValue(record[column]),
+            delimiter,
+            singleColumn,
+          ),
         )
         .join(delimiter);
       lines.push(line);

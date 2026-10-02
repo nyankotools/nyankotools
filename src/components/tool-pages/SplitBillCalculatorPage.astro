@@ -1,0 +1,318 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { splitBillCalculatorContent } from '../../i18n/tools/split-bill-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = splitBillCalculatorContent[locale];
+
+const unitFormat = new Intl.NumberFormat(t.numberLocale, {
+  style: 'currency',
+  currency: t.currency,
+  maximumFractionDigits: 2,
+});
+const roundingModeKeys = ['up', 'down', 'nearest'] as const;
+---
+
+<ToolShell t={t}>
+  <section
+    id="split-bill"
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-currency={t.currency}
+    data-errors={JSON.stringify(t.errors)}
+    data-group-higher-label={t.groupHigherLabel}
+    data-group-regular-label={t.groupRegularLabel}
+    data-group-all-label={t.groupAllLabel}
+    data-surplus-text={t.surplusText}
+    data-shortage-text={t.shortageText}
+    data-no-difference-text={t.noDifferenceText}
+    data-copy-template={t.copyTemplate}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="split-total-input" class="ui-label">
+          {t.totalLabel}
+        </label>
+        <input
+          id="split-total-input"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          placeholder={t.totalPlaceholder}
+          class="ui-input h-11 w-36 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label for="split-people-input" class="ui-label">
+          {t.peopleLabel}
+        </label>
+        <input
+          id="split-people-input"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="1000"
+          step="1"
+          placeholder={t.peoplePlaceholder}
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label for="split-unit-select" class="ui-label">
+          {t.roundingUnitLabel}
+        </label>
+        <select
+          id="split-unit-select"
+          class="ui-input h-11 w-32 px-3 dark:bg-gray-900"
+        >
+          {t.roundingUnits.map((unit) => (
+            <option
+              value={String(unit)}
+              selected={unit === t.defaultRoundingUnit}
+            >
+              {unitFormat.format(unit)}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="split-mode-select" class="ui-label">
+          {t.roundingModeLabel}
+        </label>
+        <select
+          id="split-mode-select"
+          class="ui-input h-11 w-full max-w-60 px-3 dark:bg-gray-900"
+        >
+          {roundingModeKeys.map((mode) => (
+            <option value={mode}>{t.roundingModes[mode]}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <fieldset class="mt-4 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+      <legend class="px-1 text-sm font-medium">{t.higherLegend}</legend>
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="split-higher-count-input" class="ui-label">
+            {t.higherCountLabel}
+          </label>
+          <input
+            id="split-higher-count-input"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            value="0"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="split-higher-ratio-input" class="ui-label">
+            {t.higherRatioLabel}
+          </label>
+          <input
+            id="split-higher-ratio-input"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="any"
+            value="1.5"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+      <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+        {t.higherHint}
+      </p>
+    </fieldset>
+
+    <p
+      id="split-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="split-results" class="mt-4 hidden" aria-live="polite">
+      <h2 class="mb-1 text-sm text-gray-600 dark:text-gray-400">
+        {t.perPersonLabel}
+      </h2>
+      <ul id="split-groups" class="mb-3 space-y-1 text-lg font-semibold"></ul>
+      <dl class="space-y-2">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.collectedLabel}
+          </dt>
+          <dd id="split-collected" class="text-lg font-semibold"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.differenceLabel}
+          </dt>
+          <dd id="split-difference" class="text-lg font-semibold"></dd>
+        </div>
+      </dl>
+      <div class="mt-3 flex items-center gap-3">
+        <button type="button" id="split-copy-button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <span
+          id="split-copy-status"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    splitBill,
+    type RoundingMode,
+    type SplitBillError,
+  } from '../../lib/tools/split-bill-calculator';
+
+  const section = document.getElementById('split-bill')!;
+  const numberLocale = section.dataset.numberLocale ?? 'en-US';
+  const currency = section.dataset.currency ?? 'USD';
+  const errors: Record<SplitBillError, string> = JSON.parse(
+    section.dataset.errors ?? '{}',
+  );
+  const groupHigherLabel = section.dataset.groupHigherLabel ?? '';
+  const groupRegularLabel = section.dataset.groupRegularLabel ?? '';
+  const groupAllLabel = section.dataset.groupAllLabel ?? '';
+  const surplusText = section.dataset.surplusText ?? '';
+  const shortageText = section.dataset.shortageText ?? '';
+  const noDifferenceText = section.dataset.noDifferenceText ?? '';
+  const copyTemplate = section.dataset.copyTemplate ?? '';
+  const copiedMessage = section.dataset.copied ?? '';
+  const copyFailedMessage = section.dataset.copyFailed ?? '';
+
+  const money = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 2,
+  });
+
+  const totalInput = document.getElementById(
+    'split-total-input',
+  ) as HTMLInputElement;
+  const peopleInput = document.getElementById(
+    'split-people-input',
+  ) as HTMLInputElement;
+  const unitSelect = document.getElementById(
+    'split-unit-select',
+  ) as HTMLSelectElement;
+  const modeSelect = document.getElementById(
+    'split-mode-select',
+  ) as HTMLSelectElement;
+  const higherCountInput = document.getElementById(
+    'split-higher-count-input',
+  ) as HTMLInputElement;
+  const higherRatioInput = document.getElementById(
+    'split-higher-ratio-input',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('split-error')!;
+  const resultsEl = document.getElementById('split-results')!;
+  const groupsEl = document.getElementById('split-groups')!;
+  const collectedEl = document.getElementById('split-collected')!;
+  const differenceEl = document.getElementById('split-difference')!;
+  const copyButton = document.getElementById('split-copy-button')!;
+  const copyStatus = document.getElementById('split-copy-status')!;
+
+  let copyTextValue = '';
+
+  function render() {
+    errorEl.textContent = '';
+    copyStatus.textContent = '';
+    resultsEl.classList.add('hidden');
+    groupsEl.replaceChildren();
+
+    if (totalInput.value.trim() === '' || peopleInput.value.trim() === '')
+      return;
+
+    const result = splitBill({
+      total: Number(totalInput.value),
+      people: Number(peopleInput.value),
+      higherCount:
+        higherCountInput.value.trim() === ''
+          ? 0
+          : Number(higherCountInput.value),
+      higherRatio: Number(higherRatioInput.value),
+      roundingUnit: Number(unitSelect.value),
+      roundingMode: modeSelect.value as RoundingMode,
+    });
+    if ('error' in result) {
+      errorEl.textContent = errors[result.error];
+      return;
+    }
+
+    const hasHigher = result.groups.length === 2;
+    const people = result.groups.reduce((sum, g) => sum + g.count, 0);
+    result.groups.forEach((group, index) => {
+      const template = !hasHigher
+        ? groupAllLabel
+        : index === 0
+          ? groupHigherLabel
+          : groupRegularLabel;
+      const li = document.createElement('li');
+      li.textContent = `${template.replace('{count}', String(group.count))}: ${money.format(group.amountEach)}`;
+      groupsEl.append(li);
+    });
+
+    collectedEl.textContent = money.format(result.collected);
+    const diff = result.difference;
+    if (diff === 0) {
+      differenceEl.textContent = noDifferenceText;
+    } else {
+      const template = diff > 0 ? surplusText : shortageText;
+      differenceEl.textContent = template.replace(
+        '{amount}',
+        money.format(Math.abs(diff)),
+      );
+    }
+
+    copyTextValue = copyTemplate
+      .replace(
+        '{each}',
+        money.format(result.groups[result.groups.length - 1].amountEach),
+      )
+      .replace('{people}', String(people))
+      .replace('{collected}', money.format(result.collected));
+    if (hasHigher) {
+      copyTextValue = result.groups
+        .map((g) => `${money.format(g.amountEach)} × ${g.count}`)
+        .join(' + ')
+        .concat(` = ${money.format(result.collected)}`);
+    }
+    resultsEl.classList.remove('hidden');
+  }
+
+  [totalInput, peopleInput, higherCountInput, higherRatioInput].forEach((el) =>
+    el.addEventListener('input', render),
+  );
+  unitSelect.addEventListener('change', render);
+  modeSelect.addEventListener('change', render);
+
+  copyButton.addEventListener('click', async () => {
+    if (copyTextValue === '') return;
+    copyStatus.textContent = (await copyText(copyTextValue))
+      ? copiedMessage
+      : copyFailedMessage;
+  });
+
+  // 初期値（プレースホルダーと同じ例）
+  totalInput.value = totalInput.placeholder;
+  peopleInput.value = peopleInput.placeholder;
+  render();
+</script>

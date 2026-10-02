@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('JSON整形ツール（日本語版）', () => {
   test('直接アクセスして正しく表示され、入力するとJSONが整形される', async ({
@@ -150,17 +150,15 @@ test.describe('JSON Formatter (English)', () => {
     await expect(page.locator('#json-formatter-status')).toHaveText('Copied');
   });
 
-  test('英語版はエラー種別ごとの補足説明を表示せず、メッセージのみを表示する', async ({
-    page,
-  }) => {
+  test('英語版はエラー種別ごとの英語の補足説明を表示する', async ({ page }) => {
     await page.goto('/en/tools/json-formatter/');
     const input = page.locator('#json-formatter-input');
     const errorEl = page.locator('#json-formatter-error');
 
     for (const broken of ['[1,2,', '{"a":1}{"b":2}', '{"a":1,}', '"abc', '}']) {
       await input.fill(broken);
-      await expect(errorEl).toHaveText(/^Syntax error: [^\n]+$/);
-      // ja版のような（内容: …）という補足説明が付いていないこと
+      await expect(errorEl).toHaveText(/^Syntax error: [^\n]+\n\(Hint: /);
+      // ja版の日本語の補足説明（内容: …）が混ざらないこと
       await expect(errorEl).not.toContainText('（内容:');
     }
   });

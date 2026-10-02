@@ -78,10 +78,9 @@ export const placeholderImageGeneratorContent: Record<
     ],
   },
   en: {
-    title:
-      'Placeholder Image Generator – Create Dummy Images of Any Size and Color',
+    title: 'Placeholder Image Generator – Dummy Images of Any Size',
     description:
-      'A free placeholder image generator. Set the width, height, background color, and text, then download a dummy image as PNG, JPEG, or WebP. Everything runs in your browser and nothing is sent to a server.',
+      'Create a dummy image of any size, color, and text and download it as PNG, JPEG, or WebP. Runs in your browser; nothing is sent to a server.',
     h1: 'Placeholder Image Generator',
     introHtml:
       'Set a size and colors to create a dummy image for mockups and testing. To convert an existing image, use the <a href="/en/tools/image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Converter</a>; to look up color codes, try the <a href="/en/tools/color-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Color Converter</a>.',

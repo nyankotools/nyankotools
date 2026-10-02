@@ -1,0 +1,228 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { barcodeGeneratorContent } from '../../i18n/tools/barcode-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = barcodeGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="grid gap-6 md:grid-cols-2">
+    <div>
+      <label for="barcode-generator-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <input
+        id="barcode-generator-input"
+        type="text"
+        data-query-target="text"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+        autocomplete="off"
+      />
+
+      <div class="mt-4 flex flex-wrap gap-4">
+        <div>
+          <label for="barcode-generator-format" class="ui-label">
+            {t.formatLabel}
+          </label>
+          <select
+            id="barcode-generator-format"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+          >
+            {t.formatOptions.map(({ value, label, selected }) => (
+              <option value={value} selected={selected}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label for="barcode-generator-width" class="ui-label">
+            {t.widthLabel}
+          </label>
+          <input
+            id="barcode-generator-width"
+            type="number"
+            min="1"
+            max="4"
+            value="2"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+
+        <div>
+          <label for="barcode-generator-height" class="ui-label">
+            {t.heightLabel}
+          </label>
+          <input
+            id="barcode-generator-height"
+            type="number"
+            min="20"
+            max="300"
+            value="100"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+
+      <label class="ui-check mt-4">
+        <input
+          id="barcode-generator-display-value"
+          type="checkbox"
+          checked
+          class="h-4 w-4"
+        />
+        {t.displayValue}
+      </label>
+
+      <p
+        id="barcode-generator-hint"
+        data-hints={JSON.stringify(t.formatHints)}
+        class="mt-3 text-sm text-gray-600 dark:text-gray-400"
+      ></p>
+      <p
+        id="barcode-generator-error"
+        data-error-invalid={t.errorInvalid}
+        class="mt-2 text-sm text-red-600 dark:text-red-400"
+        aria-live="polite"
+      ></p>
+    </div>
+
+    <div class="flex flex-col items-center gap-3">
+      <div class="flex min-h-40 w-full items-center justify-center">
+        <canvas
+          id="barcode-generator-canvas"
+          role="img"
+          aria-label={t.title}
+          data-default-label={t.title}
+          class="max-w-full rounded-lg border border-gray-300 bg-white dark:border-gray-700"
+        ></canvas>
+      </div>
+      <button
+        id="barcode-generator-download-button"
+        type="button"
+        disabled
+        data-downloaded={t.downloaded}
+        class="min-h-11 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-700 dark:disabled:text-gray-400"
+      >
+        {t.downloadButton}
+      </button>
+      <span
+        id="barcode-generator-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import {
+    isBarcodeFormat,
+    renderBarcode,
+  } from '../../lib/tools/barcode-generator';
+
+  const input = document.getElementById(
+    'barcode-generator-input',
+  ) as HTMLInputElement;
+  const formatSelect = document.getElementById(
+    'barcode-generator-format',
+  ) as HTMLSelectElement;
+  const widthInput = document.getElementById(
+    'barcode-generator-width',
+  ) as HTMLInputElement;
+  const heightInput = document.getElementById(
+    'barcode-generator-height',
+  ) as HTMLInputElement;
+  const displayValueCheckbox = document.getElementById(
+    'barcode-generator-display-value',
+  ) as HTMLInputElement;
+  const canvas = document.getElementById(
+    'barcode-generator-canvas',
+  ) as HTMLCanvasElement;
+  const hintEl = document.getElementById('barcode-generator-hint')!;
+  const errorEl = document.getElementById('barcode-generator-error')!;
+  const statusEl = document.getElementById('barcode-generator-status')!;
+  const downloadButton = document.getElementById(
+    'barcode-generator-download-button',
+  ) as HTMLButtonElement;
+
+  const hints = JSON.parse(hintEl.dataset.hints ?? '{}') as Record<
+    string,
+    string
+  >;
+  const errorInvalid = errorEl.dataset.errorInvalid ?? '';
+  const downloaded = downloadButton.dataset.downloaded ?? '';
+
+  function clamp(value: number, min: number, max: number, fallback: number) {
+    if (!Number.isFinite(value)) return fallback;
+    return Math.min(Math.max(Math.trunc(value), min), max);
+  }
+
+  function clearCanvas() {
+    canvas.width = 0;
+    canvas.height = 0;
+  }
+
+  function generate() {
+    statusEl.textContent = '';
+    errorEl.textContent = '';
+    canvas.setAttribute('role', 'img');
+    const defaultLabel = canvas.dataset.defaultLabel ?? '';
+    canvas.setAttribute('aria-label', input.value || defaultLabel);
+    const format = formatSelect.value;
+    hintEl.textContent = hints[format] ?? '';
+
+    if (!isBarcodeFormat(format) || input.value === '') {
+      clearCanvas();
+      downloadButton.disabled = true;
+      return;
+    }
+
+    const ok = renderBarcode(canvas, input.value, {
+      format,
+      width: clamp(Number(widthInput.value), 1, 4, 2),
+      height: clamp(Number(heightInput.value), 20, 300, 100),
+      displayValue: displayValueCheckbox.checked,
+    });
+    if (!ok) {
+      clearCanvas();
+      errorEl.textContent = errorInvalid;
+    }
+    downloadButton.disabled = !ok;
+  }
+
+  input.addEventListener('input', generate);
+  formatSelect.addEventListener('change', generate);
+  widthInput.addEventListener('change', () => {
+    widthInput.value = String(clamp(Number(widthInput.value), 1, 4, 2));
+    generate();
+  });
+  heightInput.addEventListener('change', () => {
+    heightInput.value = String(clamp(Number(heightInput.value), 20, 300, 100));
+    generate();
+  });
+  displayValueCheckbox.addEventListener('change', generate);
+
+  downloadButton.addEventListener('click', () => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        errorEl.textContent = errorInvalid;
+        return;
+      }
+      downloadBlob(blob, 'barcode.png');
+      statusEl.textContent = downloaded;
+    }, 'image/png');
+  });
+
+  generate();
+</script>

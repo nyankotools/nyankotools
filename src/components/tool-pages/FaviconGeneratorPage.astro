@@ -138,6 +138,7 @@ const t = faviconGeneratorContent[locale];
 </ToolShell>
 
 <script>
+  import { paren } from '../../lib/paren';
   import { enableFileDrop } from '../../lib/file-drop';
   import { copyText } from '../../lib/clipboard';
   import {
@@ -313,7 +314,7 @@ const t = faviconGeneratorContent[locale];
 
     thumb.src = options.thumbUrl;
     filenameEl.textContent = options.filename;
-    sizeEl.textContent = `${options.dimensionsLabel}（${formatFileSize(options.fileSize)}）`;
+    sizeEl.textContent = `${options.dimensionsLabel}${paren(formatFileSize(options.fileSize))}`;
     downloadEl.href = options.downloadUrl;
     downloadEl.download = options.filename;
     downloadEl.textContent = resultsSection.dataset.downloadLabel ?? 'Download';

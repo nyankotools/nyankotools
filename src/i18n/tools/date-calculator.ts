@@ -5,7 +5,28 @@ interface GlossaryTerm {
   description: string;
 }
 
+/** 結果表示の文言。[単数形, 複数形] の組は、件数が1のとき前者を使う（日本語は同じ文言） */
+export interface DateResultFormat {
+  /** 日曜始まりの7要素 */
+  weekdayLabels: string[];
+  days: [string, string];
+  weeks: [string, string];
+  /** {n} = 日数（終了日を含める場合の表記） */
+  inclusivePeriod: string;
+  sameDay: string;
+  /** {days} */
+  endAfter: string;
+  endBefore: string;
+  /** {weeks} {days} */
+  weeksAndDays: string;
+  /** {y} {m} {d}（{mm} {dd} は0埋め） */
+  date: string;
+  /** {w} */
+  addWeekday: string;
+}
+
 export interface DateCalculatorPageContent {
+  resultFormat: DateResultFormat;
   title: string;
   description: string;
   h1: string;
@@ -48,6 +69,18 @@ export interface DateCalculatorPageContent {
 export const dateCalculatorContent: Record<Locale, DateCalculatorPageContent> =
   {
     ja: {
+      resultFormat: {
+        weekdayLabels: ['日', '月', '火', '水', '木', '金', '土'],
+        days: ['{n}日', '{n}日'],
+        weeks: ['{n}週間', '{n}週間'],
+        inclusivePeriod: '{n}日間',
+        sameDay: '開始日と終了日は同じ日です',
+        endAfter: '終了日は開始日の{days}後です',
+        endBefore: '終了日は開始日の{days}前です',
+        weeksAndDays: '＝ {weeks}{days}',
+        date: '{y}年{m}月{d}日',
+        addWeekday: '（{w}）',
+      },
       title: '日数計算機（二つの日付の差・N日後の日付）',
       description:
         '二つの日付の差（日数）や、指定した日から○日後・○日前の日付を計算できる無料ツールです。初日を含めて数えるかどうかも選択可能。データはブラウザ内で処理され、サーバーには送信されません。',
@@ -105,9 +138,21 @@ export const dateCalculatorContent: Record<Locale, DateCalculatorPageContent> =
       ],
     },
     en: {
+      resultFormat: {
+        weekdayLabels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+        days: ['{n} day', '{n} days'],
+        weeks: ['{n} week', '{n} weeks'],
+        inclusivePeriod: '{n}-day period',
+        sameDay: 'The start date and end date are the same day',
+        endAfter: 'The end date is {days} after the start date',
+        endBefore: 'The end date is {days} before the start date',
+        weeksAndDays: '= {weeks} {days}',
+        date: '{y}-{mm}-{dd}',
+        addWeekday: ' ({w})',
+      },
       title: 'Date Calculator (Difference Between Dates, Days From a Date)',
       description:
-        'A free tool to calculate the difference in days between two dates, or the date a set number of days before or after a given date. Choose whether to count both endpoints. Your data is processed in the browser and never sent to a server.',
+        'Calculate the days between two dates, or the date N days before or after a date. Runs in your browser; nothing is sent to a server.',
       h1: 'Date Calculator',
       introHtml:
         'Calculates the difference in days between two dates, or the date a set number of days before or after a given date, in real time. Handy for checking contract periods or working out deadlines. Everything happens in your browser, and nothing you type is ever sent to a server. If you need to convert a date to the Japanese era calendar, check out the <a href="/en/tools/japanese-era-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Japanese Era Converter</a> as well.',

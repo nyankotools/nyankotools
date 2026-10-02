@@ -17,6 +17,7 @@ const t = ageCalculatorContent[locale];
     data-locale={locale}
     data-error-invalid-date={t.errorInvalidDate}
     data-weekday-labels={JSON.stringify(t.weekdayLabels)}
+    data-result-format={JSON.stringify(t.resultFormat)}
   >
     <div class="flex flex-wrap items-end gap-3">
       <div>
@@ -177,12 +178,16 @@ const t = ageCalculatorContent[locale];
     calculateNextBirthday,
     calculatePreciseAge,
   } from '../../lib/tools/age-calculator';
+  import { count, fill } from '../../lib/format-template';
+  import type { AgeResultFormat } from '../../i18n/tools/age-calculator';
   import { getWeekday, type DateParts } from '../../lib/tools/date-calculator';
 
   const container = document.querySelector<HTMLElement>(
     'section[data-locale]',
   )!;
-  const isJa = container.dataset.locale === 'ja';
+  const format: AgeResultFormat = JSON.parse(
+    container.dataset.resultFormat ?? '{}',
+  );
   const errorInvalidDate = container.dataset.errorInvalidDate ?? '';
   const WEEKDAY_LABELS: string[] = JSON.parse(
     container.dataset.weekdayLabels ?? '[]',
@@ -235,10 +240,6 @@ const t = ageCalculatorContent[locale];
   const weekdayEl = document.getElementById('age-calc-weekday')!;
   const nextBirthdayEl = document.getElementById('age-calc-next-birthday')!;
 
-  function pluralize(count: number, unit: string): string {
-    return `${count} ${unit}${count === 1 ? '' : 's'}`;
-  }
-
   function render() {
     errorEl.textContent = '';
     resultsEl.classList.add('hidden');
@@ -267,36 +268,38 @@ const t = ageCalculatorContent[locale];
     const weekday = getWeekday(birth.year, birth.month, birth.day)!;
     const next = calculateNextBirthday(birth, reference)!;
 
-    if (isJa) {
-      fullAgeEl.textContent = `${fullAge}歳`;
-      preciseAgeEl.textContent = `（${precise.years}歳${precise.months}ヶ月${precise.days}日）`;
-      kazoedoshiEl.textContent = `${kazoedoshi}歳`;
-      daysLivedEl.textContent = `${daysLived.toLocaleString('ja-JP')}日`;
-      weekdayEl.textContent = `${WEEKDAY_LABELS[weekday]}曜日`;
-      if (next.daysUntil === 0) {
-        nextBirthdayEl.textContent = `本日${next.ageAtNextBirthday}歳の誕生日です`;
-      } else {
-        nextBirthdayEl.textContent = `${next.date.year}年${next.date.month}月${next.date.day}日（あと${next.daysUntil}日、${next.ageAtNextBirthday}歳になります）`;
-      }
+    const pad2 = (n: number) => String(n).padStart(2, '0');
+    fullAgeEl.textContent = count(format.fullAge, fullAge);
+    preciseAgeEl.textContent = fill(format.precise, {
+      years: count(format.preciseYears, precise.years),
+      months: count(format.preciseMonths, precise.months),
+      days: count(format.preciseDays, precise.days),
+    });
+    kazoedoshiEl.textContent = count(format.kazoedoshi, kazoedoshi);
+    daysLivedEl.textContent = count(
+      format.daysLived,
+      daysLived,
+      daysLived.toLocaleString(format.numberLocale),
+    );
+    weekdayEl.textContent = fill(format.weekday, {
+      w: WEEKDAY_LABELS[weekday],
+    });
+    if (next.daysUntil === 0) {
+      nextBirthdayEl.textContent = fill(format.nextBirthdayToday, {
+        age: String(next.ageAtNextBirthday),
+      });
     } else {
-      fullAgeEl.textContent = pluralize(fullAge, 'year old');
-      preciseAgeEl.textContent = `(${pluralize(precise.years, 'year')}, ${pluralize(
-        precise.months,
-        'month',
-      )}, ${pluralize(precise.days, 'day')})`;
-      kazoedoshiEl.textContent = pluralize(kazoedoshi, 'year old');
-      daysLivedEl.textContent = `${daysLived.toLocaleString('en-US')} days`;
-      weekdayEl.textContent = WEEKDAY_LABELS[weekday];
-      if (next.daysUntil === 0) {
-        nextBirthdayEl.textContent = `Today is the birthday — turning ${next.ageAtNextBirthday}!`;
-      } else {
-        nextBirthdayEl.textContent = `${next.date.year}-${String(next.date.month).padStart(2, '0')}-${String(
-          next.date.day,
-        ).padStart(
-          2,
-          '0',
-        )} (in ${pluralize(next.daysUntil, 'day')}, turning ${next.ageAtNextBirthday})`;
-      }
+      nextBirthdayEl.textContent = fill(format.nextBirthday, {
+        date: fill(format.nextBirthdayDate, {
+          y: String(next.date.year),
+          m: String(next.date.month),
+          d: String(next.date.day),
+          mm: pad2(next.date.month),
+          dd: pad2(next.date.day),
+        }),
+        days: count(format.nextBirthdayDays, next.daysUntil),
+        age: String(next.ageAtNextBirthday),
+      });
     }
 
     resultsEl.classList.remove('hidden');

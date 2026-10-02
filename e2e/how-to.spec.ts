@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import { tools } from '../src/data/tools';
 
 // 複数ステップの操作が必要なツールに「使い方」セクション（HowTo.astro）が表示されること。
@@ -15,6 +15,19 @@ const slugs = [
   'favicon-generator',
   'image-palette-extractor',
   'exif-viewer',
+  'curl-converter',
+  'file-hash-calculator',
+  'svg-to-png',
+  'ogp-image-generator',
+  'image-cropper',
+  'image-background-remover',
+  'mic-tester',
+  'dead-pixel-checker',
+  'timezone-converter',
+  'business-day-calculator',
+  'qr-code-reader',
+  'heic-converter',
+  'pdf-redactor',
 ];
 
 const locales = [

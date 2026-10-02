@@ -1,0 +1,13 @@
+{
+  // E2E（csp-headers.spec.ts・sidebar-category-persistence.spec.ts）専用。本番の wrangler.jsonc から `build` だけを除いたもの。
+  // `wrangler dev` は起動時に build.command を実行して dist/ を作り直すため、同じ dist/ を
+  // 配信している他の spec が一時的に 404 になる。ビルドは Playwright の webServer が済ませている。
+  // assets など配信に効く設定は wrangler.jsonc と揃えること。
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "nyankotools",
+  "compatibility_date": "2026-09-15",
+  "assets": {
+    "directory": "../dist",
+    "not_found_handling": "404-page",
+  },
+}

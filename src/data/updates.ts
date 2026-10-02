@@ -246,6 +246,81 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-01',
+    toolSlugs: [
+      'curl-converter',
+      'json-to-typescript',
+      'json-diff',
+      'barcode-generator',
+      'ulid-nanoid-generator',
+      'password-strength-checker',
+      'file-hash-calculator',
+      'svg-to-png',
+      'ogp-image-generator',
+      'image-cropper',
+      'image-background-remover',
+    ],
+    translations: {
+      ja: {
+        summary:
+          'cURL→Fetch/Axios変換、JSON→TypeScript型生成、JSON差分比較、バーコード生成、ULID・NanoID生成、パスワード強度チェッカー、ファイルハッシュ計算、SVG→PNG変換、OGP画像ジェネレーター、画像トリミング・回転・反転、画像の背景透過（輪郭付き）を追加しました。',
+      },
+      en: {
+        summary:
+          'Added the cURL to Fetch / Axios Converter, JSON to TypeScript Converter, JSON Diff, Barcode Generator, ULID & NanoID Generator, Password Strength Checker, File Hash Calculator, SVG to PNG Converter, OGP Image Generator, Image Cropper, Rotator & Flipper, and Image Background Remover.',
+      },
+    },
+  },
+  {
+    date: '2026-10-02',
+    toolSlugs: [
+      'mic-tester',
+      'keyboard-tester',
+      'dead-pixel-checker',
+      'unit-converter',
+      'split-bill-calculator',
+      'bmr-calorie-calculator',
+      'salary-take-home-calculator',
+      'furusato-nozei-calculator',
+      'timezone-converter',
+      'business-day-calculator',
+      'timer-stopwatch',
+      'kanji-number-converter',
+      'kyujitai-converter',
+      'my-number-checker',
+      'romaji-kana-converter',
+      'english-katakana-converter',
+      'unicode-decorator',
+      'special-char-list',
+      'roulette-dice',
+      'qr-code-reader',
+      'heic-converter',
+      'pdf-redactor',
+      'crypto-encryptor',
+      'hmac-generator',
+      'totp-generator',
+      'bcrypt-generator',
+      'x509-decoder',
+      'ssh-fingerprint',
+      'xml-json-converter',
+      'env-json-converter',
+      'csv-markdown-table',
+      'html-table-to-csv',
+      'json-tree-viewer',
+      'json-schema-generator',
+    ],
+    translations: {
+      ja: {
+        summary:
+          'マイクテスト（入力レベル・録音）、キーボードテスト（全キー押下判定）、ドット抜けチェック（色ムラ確認）を追加し、新カテゴリ「ハードウェア」を設けました。あわせて、単位変換、割り勘計算機（端数処理・傾斜割り勘）、基礎代謝・消費カロリー計算機、会社員の手取り計算機、ふるさと納税の上限額シミュレーション、タイムゾーン変換・世界時計、営業日計算（日本の祝日対応）、タイマー・ストップウォッチ・ポモドーロ、漢数字⇔算用数字・大字変換、旧字体⇔新字体変換、マイナンバー・法人番号チェックデジット検証、ローマ字⇔ひらがな変換、英単語カタカナ変換、Unicode装飾文字変換、特殊文字・絵文字一覧、ルーレット・抽選・サイコロ、QRコードリーダー（カメラ・画像）、HEIC→JPEG変換、PDF黒塗り、テキスト暗号化・復号（AES-256-GCM）、HMAC署名生成、TOTPコード生成・検証、bcryptハッシュ生成・照合、X.509証明書デコーダー、SSH鍵フィンガープリント表示、XML⇔JSON変換、.env⇔JSON変換、CSV/TSV→Markdownテーブル変換、HTMLテーブル→CSV変換、JSONツリービューア、JSON Schema生成も追加しました。',
+      },
+      en: {
+        summary:
+          'Added the Microphone Test (level & recording), Keyboard Tester, and Dead Pixel Test, plus a new Hardware category. Also added the Unit Converter, Split Bill Calculator, BMR & Calorie Calculator, Salary Take-Home Pay Calculator, Furusato Nozei Donation Limit Calculator, Time Zone Converter, Japan Business Day Calculator, Timer, Stopwatch & Pomodoro, Kanji Numeral Converter, Kyujitai ⇔ Shinjitai Converter, My Number & Corporate Number Validator, Romaji ⇔ Hiragana Converter, English to Katakana Converter, Unicode Text Decorator, Special Characters & Emoji List, Roulette, Random Picker & Dice, QR Code Reader (Camera & Image), HEIC to JPG Converter, PDF Redactor, Text Encryptor & Decryptor (AES-256-GCM), HMAC Generator, TOTP Code Generator, Bcrypt Hash Generator & Verifier, X.509 Certificate Decoder, SSH Key Fingerprint Viewer, XML to JSON Converter, .env to JSON Converter, CSV/TSV to Markdown Table Converter, HTML Table to CSV Converter, JSON Tree Viewer, and JSON Schema Generator.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

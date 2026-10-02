@@ -1,0 +1,460 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { jsonTreeViewerContent } from '../../i18n/tools/json-tree-viewer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = jsonTreeViewerContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="jtv-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="jtv-input"
+      class="ui-input h-48 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      data-sample={t.sampleText}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <p id="jtv-error" hidden role="alert" class="ui-error mt-4 max-w-2xl"></p>
+
+  <div
+    id="jtv-controls"
+    class="mt-4 flex flex-wrap items-end gap-x-4 gap-y-3"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-error-invalid-json={t.errorInvalidJson}
+    data-search-count={t.searchCount}
+    data-search-truncated={t.searchTruncated}
+    data-search-none={t.searchNone}
+    data-empty={t.emptyTree}
+    data-show-more={t.showMore}
+  >
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.searchLabel}</span>
+      <input
+        id="jtv-search"
+        type="search"
+        placeholder={t.searchPlaceholder}
+        class="ui-input h-11 w-56 px-3 dark:bg-gray-900"
+        spellcheck="false"
+        autocomplete="off"
+      />
+    </label>
+    <button id="jtv-expand-all" type="button" class="ui-btn">
+      {t.expandAll}
+    </button>
+    <button id="jtv-collapse-all" type="button" class="ui-btn">
+      {t.collapseAll}
+    </button>
+    <span
+      id="jtv-search-status"
+      class="text-sm text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></span>
+  </div>
+  <p
+    id="jtv-expand-note"
+    hidden
+    class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+  >
+    {t.expandTruncated}
+  </p>
+
+  <div class="mt-4">
+    <span class="ui-label">{t.treeLabel}</span>
+    <div
+      id="jtv-tree"
+      class="max-h-[32rem] overflow-auto rounded-lg border border-gray-300 bg-white p-2 font-mono text-sm dark:border-gray-700 dark:bg-gray-900"
+    ></div>
+  </div>
+
+  <div class="mt-4">
+    <div class="mb-2">
+      <span class="mb-1 block text-sm text-gray-700 dark:text-gray-300">
+        {t.pathStyleLabel}
+      </span>
+      <div
+        id="jtv-path-style"
+        class="ui-seg"
+        role="group"
+        aria-label={t.pathStyleLabel}
+      >
+        <button
+          type="button"
+          data-style="jsonpath"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.pathStyleJsonPath}
+        </button>
+        <button
+          type="button"
+          data-style="pointer"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.pathStylePointer}
+        </button>
+        <button
+          type="button"
+          data-style="javascript"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.pathStyleJavascript}
+        </button>
+      </div>
+    </div>
+    <label for="jtv-path" class="ui-label">
+      {t.selectedLabel}
+    </label>
+    <input
+      id="jtv-path"
+      type="text"
+      readonly
+      placeholder={t.selectedHint}
+      class="ui-input h-11 w-full bg-gray-50 px-3 font-mono dark:bg-gray-900"
+      spellcheck="false"
+    />
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button id="jtv-copy-path-button" type="button" class="ui-btn">
+        {t.copyPath}
+      </button>
+      <button id="jtv-copy-value-button" type="button" class="ui-btn">
+        {t.copyValue}
+      </button>
+      <span
+        id="jtv-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { onTextInput } from '../../lib/input-scheduler';
+  import {
+    formatPath,
+    formatPrimitive,
+    getEntries,
+    getKind,
+    getValueAtPath,
+    parseJsonTree,
+    searchTree,
+    summarize,
+    type JsonPathSegment,
+    type JsonPathStyle,
+  } from '../../lib/tools/json-tree-viewer';
+
+  /** 1つの親で一度に描画する子要素数の上限（超える分は「残りを表示」で追加） */
+  const CHILD_CHUNK = 500;
+
+  /** 「すべて展開」で描画する要素数の上限 */
+  const EXPAND_BUDGET = 2000;
+
+  const controls = document.getElementById('jtv-controls')!;
+  const input = document.getElementById('jtv-input') as HTMLTextAreaElement;
+  const errorEl = document.getElementById('jtv-error')!;
+  const treeEl = document.getElementById('jtv-tree')!;
+  const searchInput = document.getElementById('jtv-search') as HTMLInputElement;
+  const searchStatus = document.getElementById('jtv-search-status')!;
+  const expandNote = document.getElementById('jtv-expand-note')!;
+  const pathInput = document.getElementById('jtv-path') as HTMLInputElement;
+  const styleButtons = document
+    .getElementById('jtv-path-style')!
+    .querySelectorAll<HTMLButtonElement>('[data-style]');
+  const statusEl = document.getElementById('jtv-status')!;
+  const d = controls.dataset;
+
+  interface TreeNode {
+    path: JsonPathSegment[];
+    row: HTMLButtonElement;
+    expanded: boolean;
+    expandable: boolean;
+    setExpanded: (expanded: boolean) => void;
+    /** 子ノード（描画済みの場合のみ） */
+    children: TreeNode[] | null;
+  }
+
+  let rootValue: unknown;
+  let hasTree = false;
+  let nodes = new Map<string, TreeNode>();
+  let selected: TreeNode | null = null;
+  let style: JsonPathStyle = 'jsonpath';
+
+  const VALUE_COLORS: Record<string, string> = {
+    string: 'text-green-700 dark:text-green-400',
+    number: 'text-blue-700 dark:text-blue-400',
+    boolean: 'text-purple-700 dark:text-purple-400',
+    null: 'text-gray-500 dark:text-gray-400',
+  };
+
+  function pathKey(path: JsonPathSegment[]): string {
+    return JSON.stringify(path);
+  }
+
+  function span(text: string, className: string): HTMLSpanElement {
+    const el = document.createElement('span');
+    el.className = className;
+    el.textContent = text;
+    return el;
+  }
+
+  function createNode(
+    key: JsonPathSegment | null,
+    value: unknown,
+    path: JsonPathSegment[],
+  ): { li: HTMLLIElement; node: TreeNode } {
+    const kind = getKind(value);
+    const expandable = kind === 'object' || kind === 'array';
+    const li = document.createElement('li');
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className =
+      'flex w-full items-baseline gap-1 rounded px-1 py-1.5 text-left break-all hover:bg-gray-100 dark:hover:bg-gray-800';
+    if (expandable) row.setAttribute('aria-expanded', 'false');
+
+    const caret = span(
+      expandable ? '▸' : '',
+      'w-4 shrink-0 text-gray-500 select-none',
+    );
+    row.appendChild(caret);
+    // ルート行のラベルは JSONPath のルート記号
+    const label = key === null ? '$' : String(key);
+    row.appendChild(
+      span(
+        label,
+        key === null || typeof key === 'number'
+          ? 'text-gray-500 dark:text-gray-400'
+          : 'text-red-700 dark:text-red-400',
+      ),
+    );
+    row.appendChild(span(':', 'text-gray-500'));
+    if (expandable) {
+      row.appendChild(span(summarize(value), 'text-gray-500'));
+    } else {
+      row.appendChild(span(formatPrimitive(value), VALUE_COLORS[kind] ?? ''));
+    }
+    li.appendChild(row);
+
+    const node: TreeNode = {
+      path,
+      row,
+      expanded: false,
+      expandable,
+      children: null,
+      setExpanded() {},
+    };
+
+    if (expandable) {
+      let childList: HTMLUListElement | null = null;
+      node.setExpanded = (expanded) => {
+        node.expanded = expanded;
+        row.setAttribute('aria-expanded', String(expanded));
+        caret.textContent = expanded ? '▾' : '▸';
+        if (expanded && !childList) {
+          childList = document.createElement('ul');
+          childList.className =
+            'ml-3 border-l border-gray-200 pl-1 dark:border-gray-700';
+          node.children = [];
+          const entries = getEntries(value);
+          const list = childList;
+          const renderChunk = (from: number) => {
+            const to = Math.min(from + CHILD_CHUNK, entries.length);
+            for (const entry of entries.slice(from, to)) {
+              const child = createNode(entry.key, entry.value, [
+                ...path,
+                entry.key,
+              ]);
+              node.children!.push(child.node);
+              list.appendChild(child.li);
+            }
+            if (to < entries.length) {
+              const more = document.createElement('li');
+              const button = document.createElement('button');
+              button.type = 'button';
+              button.className = 'ui-btn my-1 ml-5 text-xs';
+              button.textContent = (d.showMore ?? '').replace(
+                '{n}',
+                String(entries.length - to),
+              );
+              button.addEventListener('click', () => {
+                more.remove();
+                renderChunk(to);
+              });
+              more.appendChild(button);
+              list.appendChild(more);
+            }
+          };
+          renderChunk(0);
+          li.appendChild(childList);
+        }
+        if (childList) childList.hidden = !expanded;
+      };
+    }
+    nodes.set(pathKey(path), node);
+
+    row.addEventListener('click', () => {
+      select(node);
+      if (node.expandable) node.setExpanded(!node.expanded);
+    });
+    return { li, node };
+  }
+
+  function select(node: TreeNode) {
+    selected?.row.classList.remove('bg-blue-100', 'dark:bg-blue-900/40');
+    selected = node;
+    node.row.classList.add('bg-blue-100', 'dark:bg-blue-900/40');
+    updatePath();
+  }
+
+  function updatePath() {
+    pathInput.value = selected ? formatPath(selected.path, style) : '';
+  }
+
+  function expandRecursive(node: TreeNode, budget: { left: number }) {
+    if (!node.expandable || budget.left <= 0) return;
+    node.setExpanded(true);
+    for (const child of node.children ?? []) {
+      budget.left--;
+      expandRecursive(child, budget);
+    }
+  }
+
+  function collapseAll() {
+    for (const node of nodes.values()) {
+      if (node.expandable && node.expanded) node.setExpanded(false);
+    }
+    expandNote.hidden = true;
+    nodes.get(pathKey([]))?.setExpanded(true);
+  }
+
+  function clearHighlights() {
+    treeEl.querySelectorAll('[data-match]').forEach((el) => {
+      el.removeAttribute('data-match');
+      el.classList.remove('bg-yellow-200', 'dark:bg-yellow-700/50');
+    });
+  }
+
+  function runSearch() {
+    clearHighlights();
+    searchStatus.textContent = '';
+    if (!hasTree || searchInput.value === '') return;
+    const { matches, truncated } = searchTree(rootValue, searchInput.value);
+    if (matches.length === 0) {
+      searchStatus.textContent = d.searchNone ?? '';
+      return;
+    }
+    searchStatus.textContent = (
+      (truncated ? d.searchTruncated : d.searchCount) ?? ''
+    ).replace('{n}', String(matches.length));
+    for (const match of matches) {
+      // 一致した要素までの祖先を開いてから目印を付ける
+      for (let i = 0; i < match.path.length; i++) {
+        nodes.get(pathKey(match.path.slice(0, i)))?.setExpanded(true);
+      }
+      const row = nodes.get(pathKey(match.path))?.row;
+      if (row) {
+        row.dataset.match = '';
+        row.classList.add('bg-yellow-200', 'dark:bg-yellow-700/50');
+      }
+    }
+    nodes
+      .get(pathKey(matches[0].path))
+      ?.row.scrollIntoView({ block: 'nearest' });
+  }
+
+  function renderTree() {
+    statusEl.textContent = '';
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    expandNote.hidden = true;
+    searchStatus.textContent = '';
+    treeEl.replaceChildren();
+    nodes = new Map();
+    selected = null;
+    hasTree = false;
+    updatePath();
+
+    const result = parseJsonTree(input.value);
+    if (!result.success) {
+      if (result.reason === 'invalid-json') {
+        errorEl.textContent = d.errorInvalidJson ?? '';
+        errorEl.hidden = false;
+      } else {
+        treeEl.appendChild(
+          span(d.empty ?? '', 'block p-2 text-gray-500 dark:text-gray-400'),
+        );
+      }
+      return;
+    }
+    rootValue = result.value;
+    hasTree = true;
+    const list = document.createElement('ul');
+    const root = createNode(null, rootValue, []);
+    list.appendChild(root.li);
+    treeEl.appendChild(list);
+    root.node.setExpanded(true);
+    runSearch();
+  }
+
+  styleButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      style = button.dataset.style as JsonPathStyle;
+      styleButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === button)),
+      );
+      updatePath();
+    });
+  });
+
+  document.getElementById('jtv-expand-all')!.addEventListener('click', () => {
+    const root = nodes.get(pathKey([]));
+    if (!root) return;
+    const budget = { left: EXPAND_BUDGET };
+    expandRecursive(root, budget);
+    expandNote.hidden = budget.left > 0;
+  });
+  document
+    .getElementById('jtv-collapse-all')!
+    .addEventListener('click', collapseAll);
+
+  async function copyWithStatus(text: string) {
+    statusEl.textContent = (await copyText(text))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+  }
+
+  document
+    .getElementById('jtv-copy-path-button')!
+    .addEventListener('click', () => {
+      if (selected && pathInput.value) void copyWithStatus(pathInput.value);
+    });
+  document
+    .getElementById('jtv-copy-value-button')!
+    .addEventListener('click', () => {
+      if (!selected) return;
+      const value = getValueAtPath(rootValue, selected.path);
+      void copyWithStatus(
+        typeof value === 'string' ? value : JSON.stringify(value, null, 2),
+      );
+    });
+
+  onTextInput(input, renderTree);
+  searchInput.addEventListener('input', runSearch);
+
+  input.value = input.dataset.sample ?? '';
+  renderTree();
+</script>

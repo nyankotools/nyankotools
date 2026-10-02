@@ -10,8 +10,13 @@ export interface ConvertSuccess {
 
 export interface ConvertFailure {
   success: false;
+  /** ライブラリが返す構文エラーのメッセージ。reason が指定されている場合は空文字 */
   message: string;
+  /** 文言を辞書から引くためのエラー種別（UIコピーはロジック層に持たない） */
+  reason?: 'toml-top-level';
 }
+
+class TomlTopLevelError extends Error {}
 
 export type ConvertOutcome = ConvertSuccess | ConvertFailure;
 
@@ -28,9 +33,7 @@ function stringifyByFormat(
 ): string {
   if (format === 'toml') {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-      throw new Error(
-        'TOMLはトップレベルがオブジェクト（テーブル）である必要があります。配列や文字列などの単一の値はTOMLとして出力できません。',
-      );
+      throw new TomlTopLevelError();
     }
     return stringifyToml(value);
   }
@@ -49,6 +52,9 @@ export function convert(
     const output = stringifyByFormat(to, value, indent);
     return { success: true, output };
   } catch (error) {
+    if (error instanceof TomlTopLevelError) {
+      return { success: false, message: '', reason: 'toml-top-level' };
+    }
     return {
       success: false,
       message: error instanceof Error ? error.message : String(error),

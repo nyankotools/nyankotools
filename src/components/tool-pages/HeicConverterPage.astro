@@ -1,0 +1,455 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { heicConverterContent } from '../../i18n/tools/heic-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = heicConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="hc-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="hc-dropzone" class="ui-dropzone">
+      <input
+        id="hc-file-input"
+        type="file"
+        multiple
+        accept=".heic,.heif,image/heic,image/heif"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="hc-file-count"
+      data-selected-template={t.filesSelectedTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="hc-error"
+      role="alert"
+      hidden
+      data-message={t.errorUnsupportedFile}
+      data-load-failed={t.errorLoadFailed}
+      data-too-many-template={t.errorTooManyFilesTemplate}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-6">
+    <div>
+      <span class="ui-label">{t.formatLabel}</span>
+      <div
+        id="hc-format"
+        class="ui-seg"
+        role="group"
+        aria-label={t.formatLabel}
+      >
+        <button
+          type="button"
+          data-format="jpeg"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.formatJpeg}
+        </button>
+        <button
+          type="button"
+          data-format="png"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.formatPng}
+        </button>
+        <button
+          type="button"
+          data-format="webp"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.formatWebp}
+        </button>
+      </div>
+    </div>
+
+    <div class="min-w-48 flex-1">
+      <label for="hc-quality" class="ui-label">
+        {t.qualityLabel}
+        <span
+          id="hc-quality-value"
+          data-value-template={t.qualityValueTemplate}
+        ></span>
+      </label>
+      <input
+        id="hc-quality"
+        type="range"
+        min="1"
+        max="100"
+        value="90"
+        class="h-11 w-full"
+      />
+      <p
+        id="hc-quality-note"
+        hidden
+        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+      >
+        {t.qualityPngNote}
+      </p>
+    </div>
+
+    <button
+      id="hc-clear-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.clearButton}
+    </button>
+  </div>
+
+  <div
+    id="hc-results-section"
+    hidden
+    class="mt-6"
+    data-original-label={t.originalSizeLabel}
+    data-converted-label={t.convertedSizeLabel}
+    data-download-label={t.downloadButton}
+    data-remove-label={t.removeButton}
+    data-error-conversion-failed={t.errorConversionFailed}
+  >
+    <h2 class="mb-2 text-lg font-bold">{t.resultsHeading}</h2>
+    <p
+      id="hc-status"
+      hidden
+      role="status"
+      class="mb-2 text-sm text-gray-600 dark:text-gray-300"
+    >
+      {t.loading}
+    </p>
+    <ul id="hc-results-list" class="space-y-3"></ul>
+  </div>
+
+  <template id="hc-result-template">
+    <li class="flex flex-wrap items-center gap-3 rounded-lg border border-gray-300 p-3 dark:border-gray-700">
+      <img
+        data-thumb
+        alt=""
+        class="h-14 w-14 flex-shrink-0 rounded bg-gray-100 object-cover dark:bg-gray-800"
+      />
+      <div class="min-w-0 flex-1">
+        <p
+          data-filename
+          class="truncate text-sm font-medium text-gray-800 dark:text-gray-200"
+        ></p>
+        <p data-size class="text-xs text-gray-500 dark:text-gray-400"></p>
+        <p data-error hidden class="text-xs text-red-600 dark:text-red-400"></p>
+      </div>
+      <a
+        data-download
+        download
+        class="inline-flex min-h-11 items-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 aria-disabled:pointer-events-none aria-disabled:bg-gray-300 aria-disabled:text-gray-500 dark:aria-disabled:bg-gray-700 dark:aria-disabled:text-gray-400"
+      ></a>
+      <button data-remove type="button" class="ui-btn px-3"></button>
+    </li>
+  </template>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { formatFileSize } from '../../lib/tools/image-converter';
+  import {
+    buildHeicOutputFileName,
+    getHeicOutputOption,
+    hasHeifSignature,
+    type HeicOutputFormat,
+  } from '../../lib/tools/heic-converter';
+
+  const MAX_FILES = 20;
+  const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
+  interface HeicItem {
+    id: number;
+    file: File;
+    bitmap: ImageBitmap;
+    convertedUrl: string | null;
+  }
+
+  const dropzone = document.getElementById('hc-dropzone')!;
+  const fileInput = document.getElementById(
+    'hc-file-input',
+  ) as HTMLInputElement;
+  const fileCountEl = document.getElementById('hc-file-count')!;
+  const errorEl = document.getElementById('hc-error')!;
+  const statusEl = document.getElementById('hc-status')!;
+  const formatButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#hc-format [data-format]',
+  );
+  const qualityInput = document.getElementById(
+    'hc-quality',
+  ) as HTMLInputElement;
+  const qualityValueEl = document.getElementById('hc-quality-value')!;
+  const qualityNoteEl = document.getElementById('hc-quality-note')!;
+  const clearButton = document.getElementById(
+    'hc-clear-button',
+  ) as HTMLButtonElement;
+  const resultsSection = document.getElementById('hc-results-section')!;
+  const resultsList = document.getElementById('hc-results-list')!;
+  const resultTemplate = document.getElementById(
+    'hc-result-template',
+  ) as HTMLTemplateElement;
+
+  const selectedTemplate = fileCountEl.dataset.selectedTemplate ?? '';
+  const qualityValueTemplate = qualityValueEl.dataset.valueTemplate ?? '';
+  const originalLabel = resultsSection.dataset.originalLabel ?? '';
+  const convertedLabel = resultsSection.dataset.convertedLabel ?? '';
+  const downloadLabel = resultsSection.dataset.downloadLabel ?? '';
+  const removeLabel = resultsSection.dataset.removeLabel ?? '';
+  const errorConversionFailed =
+    resultsSection.dataset.errorConversionFailed ?? '';
+  const errorUnsupportedFile = errorEl.dataset.message ?? '';
+  const errorLoadFailed = errorEl.dataset.loadFailed ?? '';
+
+  let items: HeicItem[] = [];
+  let nextId = 0;
+  let format: HeicOutputFormat = 'jpeg';
+  // 同時に複数のaddFilesが走っても、デコードは1つずつ順番に行う（メモリ消費を抑える）
+  let pending: Promise<void> = Promise.resolve();
+  // 「すべてクリア」が押されたら増やし、デコード中だったファイルを結果に戻さないための世代番号
+  let clearGeneration = 0;
+
+  function updateQualityUi() {
+    qualityValueEl.textContent = qualityValueTemplate.replace(
+      '{value}',
+      qualityInput.value,
+    );
+    const supportsQuality = getHeicOutputOption(format).supportsQuality;
+    qualityInput.disabled = !supportsQuality;
+    qualityNoteEl.hidden = supportsQuality;
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearErrorBanner() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function refreshSummary() {
+    fileCountEl.textContent =
+      items.length === 0
+        ? ''
+        : selectedTemplate.replace('{count}', String(items.length));
+    clearButton.disabled = items.length === 0;
+    resultsSection.hidden = items.length === 0 && statusEl.hidden;
+  }
+
+  type HeicTo = typeof import('heic-to/csp');
+  let heicModule: Promise<HeicTo> | null = null;
+  // 変換エンジン（libheif wasm を含む大きなJS）は、HEICを選んだときに初めて読み込む
+  function loadHeicTo(): Promise<HeicTo> {
+    heicModule ??= import('heic-to/csp').catch((e: unknown) => {
+      heicModule = null;
+      throw e;
+    });
+    return heicModule;
+  }
+
+  async function addFiles(incoming: File[]) {
+    clearErrorBanner();
+    const myClearGeneration = clearGeneration;
+
+    if (items.length + incoming.length > MAX_FILES) {
+      showError(
+        (errorEl.dataset.tooManyTemplate ?? '').replace(
+          '{max}',
+          String(MAX_FILES),
+        ),
+      );
+      return;
+    }
+
+    statusEl.hidden = false;
+    resultsSection.hidden = false;
+    try {
+      for (const file of incoming) {
+        if (file.size > MAX_FILE_SIZE) {
+          showError(
+            (errorEl.dataset.tooLargeTemplate ?? '').replace(
+              '{max}',
+              formatFileSize(MAX_FILE_SIZE),
+            ),
+          );
+          continue;
+        }
+        const head = new Uint8Array(await file.slice(0, 12).arrayBuffer());
+        if (!hasHeifSignature(head)) {
+          showError(errorUnsupportedFile);
+          continue;
+        }
+        let heicTo: HeicTo['heicTo'];
+        try {
+          heicTo = (await loadHeicTo()).heicTo;
+        } catch {
+          showError(errorLoadFailed);
+          break;
+        }
+        try {
+          const bitmap = await heicTo({ blob: file, type: 'bitmap' });
+          if (myClearGeneration !== clearGeneration) {
+            bitmap.close();
+            break;
+          }
+          items.push({ id: nextId++, file, bitmap, convertedUrl: null });
+        } catch {
+          showError(errorConversionFailed);
+        }
+      }
+    } finally {
+      statusEl.hidden = true;
+    }
+    refreshSummary();
+    await renderResults();
+  }
+
+  function encodeItem(item: HeicItem, quality: number): Promise<Blob | null> {
+    return new Promise((resolve) => {
+      try {
+        const option = getHeicOutputOption(format);
+        const canvas = document.createElement('canvas');
+        canvas.width = item.bitmap.width;
+        canvas.height = item.bitmap.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(null);
+          return;
+        }
+        if (format === 'jpeg') {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.drawImage(item.bitmap, 0, 0);
+        canvas.toBlob(
+          (blob) =>
+            resolve(blob && blob.type === option.mimeType ? blob : null),
+          option.mimeType,
+          option.supportsQuality ? quality / 100 : undefined,
+        );
+      } catch {
+        resolve(null);
+      }
+    });
+  }
+
+  // 複数の呼び出しが並行して走った場合に、後から来た呼び出しの結果だけを反映させるための世代番号
+  let renderGeneration = 0;
+
+  async function renderResults() {
+    const generation = ++renderGeneration;
+    const quality = Number(qualityInput.value);
+    resultsList.innerHTML = '';
+
+    for (const item of items) {
+      if (item.convertedUrl) {
+        URL.revokeObjectURL(item.convertedUrl);
+        item.convertedUrl = null;
+      }
+
+      const blob = await encodeItem(item, quality);
+      if (generation !== renderGeneration) return;
+
+      const li = resultTemplate.content.firstElementChild!.cloneNode(
+        true,
+      ) as HTMLElement;
+      const thumb = li.querySelector('[data-thumb]') as HTMLImageElement;
+      const sizeEl = li.querySelector('[data-size]')!;
+      const errorLineEl = li.querySelector('[data-error]') as HTMLElement;
+      const downloadEl = li.querySelector(
+        '[data-download]',
+      ) as HTMLAnchorElement;
+      const removeEl = li.querySelector('[data-remove]') as HTMLButtonElement;
+
+      li.querySelector('[data-filename]')!.textContent = item.file.name;
+      downloadEl.textContent = downloadLabel;
+      removeEl.textContent = removeLabel;
+      removeEl.addEventListener('click', () => {
+        if (item.convertedUrl) URL.revokeObjectURL(item.convertedUrl);
+        item.bitmap.close();
+        items = items.filter((i) => i.id !== item.id);
+        refreshSummary();
+        void renderResults();
+      });
+
+      if (!blob) {
+        errorLineEl.textContent = errorConversionFailed;
+        errorLineEl.hidden = false;
+        downloadEl.setAttribute('aria-disabled', 'true');
+        downloadEl.removeAttribute('href');
+        thumb.remove();
+        resultsList.appendChild(li);
+        continue;
+      }
+
+      const url = URL.createObjectURL(blob);
+      item.convertedUrl = url;
+      thumb.src = url;
+      downloadEl.href = url;
+      downloadEl.download = buildHeicOutputFileName(item.file.name, format);
+      downloadEl.removeAttribute('aria-disabled');
+      sizeEl.textContent = `${originalLabel}: ${formatFileSize(item.file.size)} → ${convertedLabel}: ${formatFileSize(blob.size)}`;
+
+      resultsList.appendChild(li);
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    if (!fileInput.files || fileInput.files.length === 0) return;
+    const files = Array.from(fileInput.files);
+    fileInput.value = '';
+    pending = pending.then(() => addFiles(files));
+  });
+
+  enableFileDrop(dropzone, fileInput);
+
+  formatButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      format = button.dataset.format as HeicOutputFormat;
+      formatButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      updateQualityUi();
+      void renderResults();
+    });
+  });
+
+  let qualityDebounce: ReturnType<typeof setTimeout> | undefined;
+  qualityInput.addEventListener('input', () => {
+    updateQualityUi();
+    clearTimeout(qualityDebounce);
+    qualityDebounce = setTimeout(() => void renderResults(), 200);
+  });
+
+  clearButton.addEventListener('click', () => {
+    renderGeneration++;
+    clearGeneration++;
+    items.forEach((item) => {
+      if (item.convertedUrl) URL.revokeObjectURL(item.convertedUrl);
+      item.bitmap.close();
+    });
+    items = [];
+    resultsList.innerHTML = '';
+    clearErrorBanner();
+    refreshSummary();
+  });
+
+  updateQualityUi();
+</script>

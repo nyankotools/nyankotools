@@ -106,7 +106,7 @@ export const imagePaletteExtractorContent: Record<
   en: {
     title: 'Image Color Palette Extractor (Dominant Colors) — Free Tool',
     description:
-      'Free tool that automatically extracts the dominant colors from an image. Lists each color as a HEX/RGB code with its usage percentage, and lets you copy any color with one click. Your image is processed in the browser and never sent to a server.',
+      'Extract dominant colors from an image as HEX/RGB codes with usage percentages and copy any color in one click. Runs in your browser; nothing is uploaded.',
     h1: 'Image Color Palette Extractor',
     introHtml:
       'Select an image and this tool automatically detects its main colors and lists them as a palette. Useful for picking a design color scheme, extracting the palette of a website or banner, or checking the dominant colors of a photo. Need to convert an extracted color further? Try the <a href="/en/tools/color-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Color Converter</a> for HEX, RGB, and HSL.',

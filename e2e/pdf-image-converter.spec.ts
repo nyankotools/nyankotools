@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import { PDFDocument } from 'pdf-lib';
 
 async function createTestPdf(pageCount: number): Promise<Buffer> {
@@ -201,12 +201,17 @@ test.describe('PDF⇔画像変換 - ドラッグ&ドロップ', () => {
       dropZone.dispatchEvent(dragoverEvent);
     });
 
-    await page.waitForTimeout(100);
-
-    // ドロップ領域に active クラスが追加される
-    const hasActiveClass = await page.evaluate(() => {
-      const dropZone = document.getElementById('conv-pdf-drop')!;
-      return dropZone.classList.contains('border-blue-400!');
+    // ドロップ領域に active クラスが追加されるまで待つ（自動リトライ）
+    const hasActiveClass = await page.evaluate(async () => {
+      // 複数回チェックして、クラスが追加されるのを待つ
+      for (let i = 0; i < 10; i++) {
+        const dropZone = document.getElementById('conv-pdf-drop')!;
+        if (dropZone.classList.contains('border-blue-400!')) {
+          return true;
+        }
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      return false;
     });
 
     expect(hasActiveClass).toBe(true);
@@ -240,12 +245,17 @@ test.describe('PDF⇔画像変換 - ドラッグ&ドロップ', () => {
       dropZone.dispatchEvent(dragoverEvent);
     });
 
-    await page.waitForTimeout(100);
-
-    // ドロップ領域に active クラスが追加される
-    const hasActiveClass = await page.evaluate(() => {
-      const dropZone = document.getElementById('conv-image-drop')!;
-      return dropZone.classList.contains('border-blue-400!');
+    // ドロップ領域に active クラスが追加されるまで待つ（自動リトライ）
+    const hasActiveClass = await page.evaluate(async () => {
+      // 複数回チェックして、クラスが追加されるのを待つ
+      for (let i = 0; i < 10; i++) {
+        const dropZone = document.getElementById('conv-image-drop')!;
+        if (dropZone.classList.contains('border-blue-400!')) {
+          return true;
+        }
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      return false;
     });
 
     expect(hasActiveClass).toBe(true);

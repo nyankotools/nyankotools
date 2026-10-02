@@ -21,6 +21,10 @@ export interface RegexTesterPageContent {
   testInputPlaceholder: string;
   /** `{message}` を置換して使うテンプレート */
   errorInvalidPatternTemplate: string;
+  /** 正規表現の実行が制限時間内に終わらなかったときのメッセージ */
+  errorTimeout: string;
+  /** Web Worker を使えず、フリーズから保護できないため実行しなかったときのメッセージ */
+  errorNoWorker: string;
   /** `{count}` を置換して使うテンプレート（1件の場合） */
   statusMatchSingularTemplate: string;
   /** `{count}` を置換して使うテンプレート（複数件の場合） */
@@ -64,6 +68,10 @@ export const regexTesterContent: Record<Locale, RegexTesterPageContent> = {
     testInputLabel: 'テスト対象の文字列',
     testInputPlaceholder: 'マッチを確認したいテキストを入力',
     errorInvalidPatternTemplate: '正規表現が不正です: {message}',
+    errorTimeout:
+      '処理に時間がかかりすぎたため中断しました。パターンが重い（バックトラッキングが多発する）可能性があります。(a+)+ のような入れ子の繰り返しを見直してください。',
+    errorNoWorker:
+      'Web Worker を利用できないため、画面のフリーズを防げず、実行できませんでした。ページを再読み込みするか、最新のブラウザでお試しください。',
     statusMatchSingularTemplate: '{count}件マッチしました。',
     statusMatchPluralTemplate: '{count}件マッチしました。',
     highlightHeading: 'マッチ箇所のハイライト表示',
@@ -113,7 +121,7 @@ export const regexTesterContent: Record<Locale, RegexTesterPageContent> = {
   en: {
     title: 'Regex Tester (Match Checker & Replace Preview)',
     description:
-      'A free tool for testing regular expression patterns live in your browser. Highlights every match, lists capture groups, and previews the result of a replacement pattern. Your data is processed in the browser and never sent to a server.',
+      'Test regular expressions live: highlight matches, list capture groups, and preview replacements. Runs in your browser; nothing is sent to a server.',
     h1: 'Regex Tester',
     introHtml:
       'Enter a regular expression pattern and some test text to see every match highlighted, along with a list of any capture groups. Add a replacement pattern to preview the result of a replace operation instantly. This tool follows JavaScript (ECMAScript) regular expression syntax. For plain string transformations, also try the <a href="/en/tools/html-escape/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">HTML/JS String Escape & Unescape</a> tool.',
@@ -128,6 +136,10 @@ export const regexTesterContent: Record<Locale, RegexTesterPageContent> = {
     testInputLabel: 'Test string',
     testInputPlaceholder: 'Enter the text you want to test matches against',
     errorInvalidPatternTemplate: 'Invalid regular expression: {message}',
+    errorTimeout:
+      'The match took too long and was stopped. The pattern may cause heavy backtracking; try avoiding nested repetition such as (a+)+.',
+    errorNoWorker:
+      'Web Workers are unavailable, so the page could not be protected from freezing and the pattern was not run. Please reload the page or try a current browser.',
     statusMatchSingularTemplate: '{count} match found.',
     statusMatchPluralTemplate: '{count} matches found.',
     highlightHeading: 'Highlighted matches',

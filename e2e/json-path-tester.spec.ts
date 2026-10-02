@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('JSON Path / JSON Pointerテスター（日本語版）', () => {
   test('直接アクセスして正しく表示され、サンプルデータで結果が表示される', async ({

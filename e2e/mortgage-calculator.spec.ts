@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test('住宅ローン繰り上げ返済比較シミュレーション: 日本語版が表示される', async ({
   page,
@@ -25,10 +25,10 @@ test('住宅ローン繰り上げ返済比較シミュレーション: 期間短
   const afterText = await afterMonthlyEl.textContent();
   expect(beforeText).toBe(afterText);
 
-  // 短縮月数が表示される
+  // 短縮月数が「N年Mヶ月」形式で表示される
   const monthsShortenedText = await monthsShortenedEl.textContent();
   expect(monthsShortenedText).toBeTruthy();
-  expect(monthsShortenedText).toContain('年');
+  expect(monthsShortenedText).toMatch(/\d+年\d+ヶ月/);
 });
 
 test('住宅ローン繰り上げ返済比較シミュレーション: 返済額軽減型に切り替えると表示が切り替わる', async ({
@@ -220,6 +220,7 @@ test('住宅ローン繰り上げ返済比較シミュレーション: 英語版
   // 初期値が既に入力されているので、結果が表示されているはず
   const beforeMonthlyEl = page.locator('#mortgage-calc-before-monthly');
   const afterMonthlyEl = page.locator('#mortgage-calc-after-monthly');
+  const monthsShortenedEl = page.locator('#mortgage-calc-months-shortened');
 
   const beforeText = await beforeMonthlyEl.textContent();
   const afterText = await afterMonthlyEl.textContent();
@@ -227,6 +228,11 @@ test('住宅ローン繰り上げ返済比較シミュレーション: 英語版
   // どちらも表示されている（JPY記号が含まれる）
   expect(beforeText).toBeTruthy();
   expect(afterText).toBeTruthy();
+
+  // 短縮月数が「Nyr Mmo」形式で表示される
+  const monthsShortenedText = await monthsShortenedEl.textContent();
+  expect(monthsShortenedText).toBeTruthy();
+  expect(monthsShortenedText).toMatch(/\d+yr \d+mo/);
 });
 
 test('住宅ローン繰り上げ返済比較シミュレーション: 英語版で返済額軽減型に切り替え可能', async ({

@@ -1,12 +1,12 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { blockAnalytics } from './helpers/block-analytics';
 
-// public/_headers に定義した Content-Security-Policy は Cloudflare Workers Static
-// Assets（本番配信）でのみ適用され、`pnpm dev`（Astro dev server）では送出されない。
+// Content-Security-Policy は astro.config.mjs の security.csp により <meta> タグで配信される
+// （public/_headers には frame-ancestors のみ）。`pnpm dev`（Astro dev server）では適用されない。
 // そのため、このスペックだけは `pnpm build` 済みの dist を `wrangler dev` で実配信し、
-// 実際にCSPヘッダーが送出されること、および connect-src を同一オリジンのみに絞ったCSPによって
-// 既存機能（QRコード生成・ダウンロード、Markdownプレビュー、共有ボタンのコピー等）が
+// CSPが実際に出力されること、および connect-src（同一オリジン＋GA/Cloudflare計測のみ許可）の
+// CSPによって既存機能（QRコード生成・ダウンロード、Markdownプレビュー、共有ボタンのコピー等）が
 // 壊れていないことを確認する。
 
 const PORT = 18787;
@@ -61,7 +61,15 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
   test.beforeAll(async () => {
     serverProcess = spawn(
       'pnpm',
-      ['exec', 'wrangler', 'dev', '--port', String(PORT)],
+      [
+        'exec',
+        'wrangler',
+        'dev',
+        '-c',
+        'e2e/wrangler.e2e.jsonc',
+        '--port',
+        String(PORT),
+      ],
       {
         shell: true,
         stdio: 'ignore',
@@ -90,6 +98,7 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
     browser,
   }) => {
     const context = await browser.newContext({ baseURL: BASE_URL });
+    await blockAnalytics(context);
     const page = await context.newPage();
     await page.goto('/tools/char-counter/');
 
@@ -101,6 +110,8 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
     expect(metaCsp).toContain("connect-src 'self'");
     expect(metaCsp).toContain("default-src 'self'");
     expect(metaCsp).toContain("object-src 'none'");
+    expect(metaCsp).toContain("media-src 'self' blob:");
+    expect(metaCsp).toContain("worker-src 'self' blob:");
     expect(metaCsp).toMatch(
       /script-src 'self' 'wasm-unsafe-eval'(?: https:\/\/www\.googletagmanager\.com)?(?: https:\/\/static\.cloudflareinsights\.com)?(?: 'sha256-[^']+')+/,
     );
@@ -227,6 +238,7 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
       baseURL: BASE_URL,
       viewport: { width: 375, height: 700 },
     });
+    await blockAnalytics(context);
     const page = await context.newPage();
     await page.goto('/tools/char-counter/');
 

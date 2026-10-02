@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('Chmodパーミッション計算機（日本語版）', () => {
   test('直接アクセスして正しく表示され、デフォルトで755が表示される', async ({

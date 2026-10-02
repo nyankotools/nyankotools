@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page } from './helpers/test';
 
 /** ブラウザのCanvas APIで指定サイズのテスト用PNGを生成し、Bufferとして返す */
 async function createTestPng(

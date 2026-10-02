@@ -84,7 +84,7 @@ export const yamlJsonConverterContent: Record<
   en: {
     title: 'YAML to JSON Converter',
     description:
-      'Free online tool to convert between YAML and JSON, handy for checking Docker Compose or GitHub Actions config files in JSON form. Syntax errors are shown with a clear message. Your data is processed in the browser and never sent to a server.',
+      'Convert between YAML and JSON, handy for Docker Compose or GitHub Actions files, with clear syntax errors. Runs in your browser; nothing is sent to a server.',
     h1: 'YAML ⇔ JSON Converter',
     introHtml:
       'Paste YAML to convert it to JSON, or paste JSON to convert it to YAML — useful when you want to inspect a Docker Compose, GitHub Actions, or Kubernetes manifest file in the other format. To further format or validate the resulting JSON, try the <a href="/en/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON Formatter</a> as well.',

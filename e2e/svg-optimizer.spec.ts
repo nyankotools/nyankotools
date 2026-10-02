@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 const validSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
   <!-- comment -->
@@ -21,10 +21,11 @@ test.describe('SVG最適化ツール（日本語版）', () => {
     const input = page.locator('#svgo-input');
     await input.fill(validSvg);
 
-    // 200msのデバウンスの後に実行されるのを待つ
-    await page.waitForTimeout(300);
-
+    // 200msのデバウンスの後に実行されるのを待つ（自動リトライ）
     const output = page.locator('#svgo-output');
+    const resultEl = page.locator('#svgo-result');
+    await expect(resultEl).toBeVisible();
+
     const outputValue = await output.inputValue();
 
     // コメントとメタデータが削除されていることを確認
@@ -34,7 +35,6 @@ test.describe('SVG最適化ツール（日本語版）', () => {
     expect(outputValue).toContain('<svg');
 
     // 結果表示エリアが表示される
-    const resultEl = page.locator('#svgo-result');
     await expect(resultEl).toBeVisible();
   });
 
@@ -46,13 +46,21 @@ test.describe('SVG最適化ツール（日本語版）', () => {
     const input = page.locator('#svgo-input');
     const multipassCheckbox = page.locator('#svgo-multipass');
     const output = page.locator('#svgo-output');
+    const resultEl = page.locator('#svgo-result');
 
     await input.fill(validSvg);
-    await page.waitForTimeout(300);
+
+    // 最適化が実行されるまで待つ（自動リトライ）
+    await expect(resultEl).toBeVisible();
 
     // マルチパスを無効にして再実行
     await multipassCheckbox.uncheck();
-    await page.waitForTimeout(300);
+
+    // 出力が更新されるまで待つ（自動リトライ）
+    const initialValue = await output.inputValue();
+    await expect(output).toHaveValue(
+      new RegExp(`.*${initialValue.substring(0, 10)}.*`, 's'),
+    );
 
     const outputValue2 = await output.inputValue();
 
@@ -61,7 +69,11 @@ test.describe('SVG最適化ツール（日本語版）', () => {
 
     // 再度有効にする
     await multipassCheckbox.check();
-    await page.waitForTimeout(300);
+
+    // 出力が更新されるまで待つ（自動リトライ）
+    await expect(output).toHaveValue(
+      new RegExp(`.*${outputValue2.substring(0, 10)}.*`, 's'),
+    );
 
     const outputValue3 = await output.inputValue();
     expect(outputValue3).toContain('<svg');
@@ -75,13 +87,18 @@ test.describe('SVG最適化ツール（日本語版）', () => {
     const input = page.locator('#svgo-input');
     const prettyCheckbox = page.locator('#svgo-pretty');
     const output = page.locator('#svgo-output');
+    const resultEl = page.locator('#svgo-result');
 
     await input.fill(validSvg);
-    await page.waitForTimeout(300);
+
+    // 最適化が実行されるまで待つ（自動リトライ）
+    await expect(resultEl).toBeVisible();
 
     // prettyを有効にする
     await prettyCheckbox.check();
-    await page.waitForTimeout(300);
+
+    // 出力に改行が含まれるまで待つ（自動リトライ）
+    await expect(output).toHaveValue(new RegExp('.*\\n.*', 's'));
 
     const outputValue = await output.inputValue();
     // 改行を含む（prettyで整形されている）
@@ -96,19 +113,19 @@ test.describe('SVG最適化ツール（日本語版）', () => {
     const input = page.locator('#svgo-input');
     const removeDimensionsCheckbox = page.locator('#svgo-remove-dimensions');
     const output = page.locator('#svgo-output');
+    const resultEl = page.locator('#svgo-result');
 
     await input.fill(validSvg);
-    await page.waitForTimeout(300);
+
+    // 最適化が実行されるまで待つ（自動リトライ）
+    await expect(resultEl).toBeVisible();
 
     // removeDimensionsを有効にする
     await removeDimensionsCheckbox.check();
-    await page.waitForTimeout(300);
 
-    const outputValue = await output.inputValue();
-    // width属性がないことを確認
-    expect(outputValue).not.toMatch(/<svg[^>]* width=/);
-    // viewBoxは存在する
-    expect(outputValue).toContain('viewBox');
+    // width 属性が消えるまで待つ（自動リトライ）。viewBox は最初から残る
+    await expect(output).not.toHaveValue(/<svg[^>]* width=/);
+    await expect(output).toHaveValue(/viewBox/);
   });
 
   test('precision値を変更すると最適化が再実行される', async ({ page }) => {
@@ -117,13 +134,23 @@ test.describe('SVG最適化ツール（日本語版）', () => {
     const input = page.locator('#svgo-input');
     const precisionInput = page.locator('#svgo-precision');
     const output = page.locator('#svgo-output');
+    const resultEl = page.locator('#svgo-result');
 
     await input.fill(validSvg);
-    await page.waitForTimeout(300);
+
+    // 最適化が実行されるまで待つ（自動リトライ）
+    await expect(resultEl).toBeVisible();
+
+    // 最初の出力を取得
+    const initialValue = await output.inputValue();
 
     // precisionを変更
     await precisionInput.fill('1');
-    await page.waitForTimeout(300);
+
+    // 出力が更新されるまで待つ（自動リトライ）
+    await expect(output).toHaveValue(
+      new RegExp(`.*${initialValue.substring(0, 10)}.*`, 's'),
+    );
 
     const outputValue2 = await output.inputValue();
 
@@ -140,9 +167,8 @@ test.describe('SVG最適化ツール（日本語版）', () => {
     const errorEl = page.locator('#svgo-error');
 
     await input.fill(invalidSvg);
-    await page.waitForTimeout(300);
 
-    // エラーが表示される
+    // エラーが表示されるまで待つ（自動リトライ）
     await expect(errorEl).toBeVisible();
     // 空の結果エリアは表示されない
     const resultEl = page.locator('#svgo-result');
@@ -158,12 +184,15 @@ test.describe('SVG最適化ツール（日本語版）', () => {
 
     // 最初に有効なSVGを入力
     await input.fill(validSvg);
-    await page.waitForTimeout(300);
+
+    // 結果が表示されるまで待つ（自動リトライ）
     await expect(resultEl).toBeVisible();
 
     // 入力をクリア
     await input.fill('');
-    await page.waitForTimeout(300);
+
+    // 結果が隠れるまで待つ（自動リトライ）
+    await expect(resultEl).toBeHidden();
 
     // 結果とエラーが表示されない
     await expect(resultEl).toBeHidden();
@@ -180,12 +209,16 @@ test.describe('SVG最適化ツール（日本語版）', () => {
     const input = page.locator('#svgo-input');
     const copyButton = page.locator('#svgo-copy');
     const statusEl = page.locator('#svgo-status');
+    const resultEl = page.locator('#svgo-result');
 
     await input.fill(validSvg);
-    await page.waitForTimeout(300);
+
+    // 最適化が実行されるまで待つ（自動リトライ）
+    await expect(resultEl).toBeVisible();
 
     await copyButton.click();
 
+    // コピー成功メッセージが表示されるまで待つ（自動リトライ）
     await expect(statusEl).toHaveText('コピーしました');
 
     const clipboardText = await page.evaluate(() =>
@@ -199,9 +232,15 @@ test.describe('SVG最適化ツール（日本語版）', () => {
 
     const input = page.locator('#svgo-input');
     const downloadLink = page.locator('#svgo-download');
+    const resultEl = page.locator('#svgo-result');
 
     await input.fill(validSvg);
-    await page.waitForTimeout(300);
+
+    // 最適化が実行されるまで待つ（自動リトライ）
+    await expect(resultEl).toBeVisible();
+
+    // href属性が blob: で始まるまで待つ
+    await expect(downloadLink).toHaveAttribute('href', /^blob:/);
 
     const href = await downloadLink.getAttribute('href');
     expect(href).toMatch(/^blob:/);
@@ -217,16 +256,17 @@ test.describe('SVG最適化ツール（日本語版）', () => {
 
     // 入力を設定
     await input.fill(validSvg);
-    await page.waitForTimeout(300);
+
+    // 結果が表示されるまで待つ（自動リトライ）
     await expect(resultEl).toBeVisible();
 
     // クリア実行
     await clearButton.click();
 
-    // 入力と出力が空になる
+    // 入力と出力が空になるまで待つ（自動リトライ）
     await expect(input).toHaveValue('');
     await expect(output).toHaveValue('');
-    // 結果が隠れる
+    // 結果が隠れるまで待つ（自動リトライ）
     await expect(resultEl).toBeHidden();
   });
 
@@ -253,16 +293,17 @@ test.describe('SVG Optimizer (English)', () => {
     const input = page.locator('#svgo-input');
     await input.fill(validSvg);
 
-    await page.waitForTimeout(300);
-
+    // 最適化が実行されるまで待つ（自動リトライ）
     const output = page.locator('#svgo-output');
+    const resultEl = page.locator('#svgo-result');
+    await expect(resultEl).toBeVisible();
+
     const outputValue = await output.inputValue();
 
     expect(outputValue).not.toContain('comment');
     expect(outputValue).not.toContain('metadata');
     expect(outputValue).toContain('<svg');
 
-    const resultEl = page.locator('#svgo-result');
     await expect(resultEl).toBeVisible();
   });
 
@@ -273,8 +314,8 @@ test.describe('SVG Optimizer (English)', () => {
     const errorEl = page.locator('#svgo-error');
 
     await input.fill(invalidSvg);
-    await page.waitForTimeout(300);
 
+    // エラーが表示されるまで待つ（自動リトライ）
     await expect(errorEl).toBeVisible();
   });
 
@@ -285,12 +326,16 @@ test.describe('SVG Optimizer (English)', () => {
     const input = page.locator('#svgo-input');
     const copyButton = page.locator('#svgo-copy');
     const statusEl = page.locator('#svgo-status');
+    const resultEl = page.locator('#svgo-result');
 
     await input.fill(validSvg);
-    await page.waitForTimeout(300);
+
+    // 最適化が実行されるまで待つ（自動リトライ）
+    await expect(resultEl).toBeVisible();
 
     await copyButton.click();
 
+    // コピー成功メッセージが表示されるまで待つ（自動リトライ）
     await expect(statusEl).toHaveText('Copied');
   });
 
@@ -333,10 +378,7 @@ test.describe('SVG最適化ツール - ドラッグ&ドロップ', () => {
       { svgContent: validSvg },
     );
 
-    await page.waitForTimeout(300);
-
-    // ファイルがドロップ処理されたことを確認（入力欄が空でなくなる）
-    // または結果表示エリアが表示されることを確認
+    // ファイルがドロップ処理されたことを確認（結果表示エリアが表示されるまで待つ、自動リトライ）
     const resultEl = page.locator('#svgo-result');
     await expect(resultEl).toBeVisible();
   });
@@ -365,8 +407,7 @@ test.describe('SVG最適化ツール - ドラッグ&ドロップ', () => {
       dropZone.dispatchEvent(dropEvent);
     });
 
-    await page.waitForTimeout(300);
-
+    // エラーが表示されるまで待つ（自動リトライ）
     await expect(page.locator('#svgo-error')).toBeVisible();
     await expect(page.locator('#svgo-input')).toHaveValue('');
   });
@@ -394,12 +435,17 @@ test.describe('SVG最適化ツール - ドラッグ&ドロップ', () => {
       dropZone.dispatchEvent(dragoverEvent);
     });
 
-    await page.waitForTimeout(100);
-
-    // ドロップ領域に active クラスが追加される（border-blue-400 など）
-    const hasActiveClass = await page.evaluate(() => {
-      const dropZone = document.getElementById('svgo-drop')!;
-      return dropZone.classList.contains('border-blue-400!');
+    // ドロップ領域に active クラスが追加されるまで待つ（自動リトライ）
+    const hasActiveClass = await page.evaluate(async () => {
+      // 複数回チェックして、クラスが追加されるのを待つ
+      for (let i = 0; i < 10; i++) {
+        const dropZone = document.getElementById('svgo-drop')!;
+        if (dropZone.classList.contains('border-blue-400!')) {
+          return true;
+        }
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      return false;
     });
 
     expect(hasActiveClass).toBe(true);

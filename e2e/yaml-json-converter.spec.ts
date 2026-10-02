@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('YAML⇔JSON変換（日本語版）', () => {
   test('直接アクセスして正しく表示され、YAMLを入力するとJSONに変換される', async ({

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 // 404ページは別言語版の同一ページが存在しないため、言語切替リンクは各言語のトップへ向ける
 // （以前は存在しない /404/ /en/404/ を指していた）。

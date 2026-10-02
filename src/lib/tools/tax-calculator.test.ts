@@ -81,8 +81,8 @@ describe('calculateTax', () => {
     ).toBe(100); // 991 * 0.1 = 99.1 -> 100
   });
 
-  it('税込金額からの逆算でも端数処理が税抜金額に適用される', () => {
-    // 999 / 1.1 = 908.18... -> floorなら908、消費税額は差分の91
+  it('税込金額からの逆算でも端数処理が消費税額に適用される', () => {
+    // 999 * 10 / 110 = 90.81... -> floorなら消費税額90、税抜は差分の909
     const result = calculateTax({
       amount: 999,
       taxRatePercent: 10,
@@ -90,8 +90,8 @@ describe('calculateTax', () => {
       rounding: 'floor',
     });
     expect(result).toEqual({
-      taxExcludedAmount: 908,
-      taxAmount: 91,
+      taxExcludedAmount: 909,
+      taxAmount: 90,
       taxIncludedAmount: 999,
     });
   });
@@ -207,7 +207,7 @@ describe('calculateTax', () => {
   });
 
   it('税込金額からの逆算で端数処理が切り上げの場合も正しく計算される', () => {
-    // 999 / 1.1 = 908.1818... -> ceilなら909、消費税額は差分の90
+    // 999 * 10 / 110 = 90.81... -> ceilなら消費税額91、税抜は差分の908
     expect(
       calculateTax({
         amount: 999,
@@ -216,8 +216,8 @@ describe('calculateTax', () => {
         rounding: 'ceil',
       }),
     ).toEqual({
-      taxExcludedAmount: 909,
-      taxAmount: 90,
+      taxExcludedAmount: 908,
+      taxAmount: 91,
       taxIncludedAmount: 999,
     });
   });

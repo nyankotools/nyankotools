@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('UNIXタイムスタンプ変換', () => {
   test('日本語版が表示される', async ({ page }) => {

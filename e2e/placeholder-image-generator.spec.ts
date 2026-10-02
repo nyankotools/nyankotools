@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test('ダミー画像生成ツール：デフォルト値（600x400）で画像が生成される', async ({
   page,
@@ -52,9 +52,9 @@ test('ダミー画像生成ツール：サイズを変更すると新しい画�
   await expect(canvas).toHaveAttribute('height', '600');
 
   // href が新しくなっていることを確認
-  const newHref = await downloadBtn.getAttribute('href');
-  expect(newHref).not.toBe(initialHref1);
-  expect(newHref).toMatch(/^blob:/);
+  // （再生成は非同期のため、自動リトライする assertion で待つ）
+  await expect(downloadBtn).toHaveAttribute('href', /^blob:/);
+  await expect(downloadBtn).not.toHaveAttribute('href', initialHref1 ?? '');
 });
 
 test('ダミー画像生成ツール：不正なサイズ入力でエラーが表示される', async ({
@@ -98,8 +98,8 @@ test('ダミー画像生成ツール：背景色を変更すると画像が更�
   // 背景色を赤（#ff0000）に変更
   await bgInput.fill('#ff0000');
 
-  // href が新しくなっていることを確認
-  await page.waitForTimeout(100); // レンダリング完了を待つ
+  // href が新しくなっていることを確認（自動リトライ）
+  await expect(downloadBtn).toHaveAttribute('href', new RegExp(`.+`));
   const newHref = await downloadBtn.getAttribute('href');
   expect(newHref).not.toBe(initialHref);
 
@@ -173,8 +173,8 @@ test('ダミー画像生成ツール：テキストを入力すると画像に�
   // テキストを入力
   await textInput.fill('Custom Text');
 
-  // href が新しくなっていることを確認（画像が再生成されたことを示す）
-  await page.waitForTimeout(100);
+  // href が新しくなっていることを確認（自動リトライ、画像が再生成されたことを示す）
+  await expect(downloadBtn).toHaveAttribute('href', new RegExp(`.+`));
   const newHref = await downloadBtn.getAttribute('href');
   expect(newHref).not.toBe(initialHref);
 

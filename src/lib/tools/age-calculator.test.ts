@@ -132,6 +132,23 @@ describe('calculatePreciseAge', () => {
     ).toBeNull();
   });
 
+  it('月末生まれは、クランプ後の日付ではなく誕生日を起点に月数を数える', () => {
+    // 2000-01-31 → 2000-03-30: 3/31 に未到達なので 1ヶ月（1/31→2/29）+ 30日
+    expect(
+      calculatePreciseAge(
+        { year: 2000, month: 1, day: 31 },
+        { year: 2000, month: 3, day: 30 },
+      ),
+    ).toEqual({ years: 0, months: 1, days: 30 });
+    // 5/30 は 4/30 到達済み（1/31+3ヶ月=4/30）で 4ヶ月 + 0日、5/31 未到達
+    expect(
+      calculatePreciseAge(
+        { year: 2000, month: 1, day: 31 },
+        { year: 2000, month: 5, day: 30 },
+      ),
+    ).toEqual({ years: 0, months: 3, days: 30 });
+  });
+
   it('うるう年の2/29生まれは、非うるう年の2/28時点で◯歳0ヶ月0日になる', () => {
     expect(
       calculatePreciseAge(

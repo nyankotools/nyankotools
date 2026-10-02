@@ -85,9 +85,9 @@ export const qrGeneratorContent: Record<Locale, QrGeneratorPageContent> = {
     ],
   },
   en: {
-    title: 'QR Code Generator',
+    title: 'Free QR Code Generator',
     description:
-      'A free tool to create a QR code from any URL or text. Choose an error correction level and image size, then download it as a PNG. Your data is processed in the browser and never sent to a server.',
+      'Create a QR code from a URL or text, choose error correction and size, and download a PNG. Runs in your browser; nothing is sent to a server.',
     h1: 'QR Code Generator',
     introHtml:
       'Enter a URL or text and instantly preview the generated QR code. Everything happens in your browser, and nothing you type is ever sent to a server. Want to check how many characters you\'re about to enter? Try the <a href="/en/tools/char-counter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Character Counter</a> as well.',

@@ -152,7 +152,7 @@ const t = sqlFormatterContent[locale];
 
   function showError(message: string) {
     output.value = '';
-    errorEl.textContent = errorTemplate.replace('{message}', message);
+    errorEl.textContent = errorTemplate.replace('{message}', () => message);
     errorEl.hidden = false;
   }
 

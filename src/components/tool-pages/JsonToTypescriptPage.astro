@@ -1,0 +1,180 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { jsonToTypeScriptContent } from '../../i18n/tools/json-to-typescript';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = jsonToTypeScriptContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="j2ts-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="j2ts-input"
+      class="ui-input h-56 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      data-sample={t.sampleText}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div
+    id="j2ts-controls"
+    class="mt-4 flex flex-wrap items-end gap-x-6 gap-y-3"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-error-invalid-json={t.errorInvalidJson}
+    data-error-too-deep={t.errorTooDeep}
+  >
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.rootNameLabel}</span>
+      <input
+        id="j2ts-root-name"
+        type="text"
+        value="Root"
+        maxlength="60"
+        class="ui-input h-11 w-40 px-3 font-mono dark:bg-gray-900"
+        spellcheck="false"
+      />
+    </label>
+    <div>
+      <span class="mb-1 block text-sm text-gray-700 dark:text-gray-300">
+        {t.styleLabel}
+      </span>
+      <div
+        id="j2ts-style"
+        class="ui-seg"
+        role="group"
+        aria-label={t.styleLabel}
+      >
+        <button
+          type="button"
+          data-style="interface"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.styleInterfaceLabel}
+        </button>
+        <button
+          type="button"
+          data-style="type"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.styleTypeLabel}
+        </button>
+      </div>
+    </div>
+    <label class="ui-check h-11">
+      <input id="j2ts-export" type="checkbox" class="h-4 w-4" />
+      {t.exportLabel}
+    </label>
+    <button id="j2ts-copy-button" type="button" class="ui-btn">
+      {t.copyButton}
+    </button>
+    <span
+      id="j2ts-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <p id="j2ts-error" hidden role="alert" class="ui-error mt-4 max-w-2xl"></p>
+
+  <div class="mt-4">
+    <label for="j2ts-output" class="ui-label">
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="j2ts-output"
+      readonly
+      class="ui-input h-72 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      spellcheck="false"
+    ></textarea>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { onTextInput } from '../../lib/input-scheduler';
+  import {
+    jsonToTypeScript,
+    type TypeScriptDeclarationStyle,
+  } from '../../lib/tools/json-to-typescript';
+
+  const controls = document.getElementById('j2ts-controls')!;
+  const input = document.getElementById('j2ts-input') as HTMLTextAreaElement;
+  const output = document.getElementById('j2ts-output') as HTMLTextAreaElement;
+  const rootName = document.getElementById(
+    'j2ts-root-name',
+  ) as HTMLInputElement;
+  const exportCheck = document.getElementById(
+    'j2ts-export',
+  ) as HTMLInputElement;
+  const styleButtons = document
+    .getElementById('j2ts-style')!
+    .querySelectorAll<HTMLButtonElement>('[data-style]');
+  const copyButton = document.getElementById('j2ts-copy-button')!;
+  const statusEl = document.getElementById('j2ts-status')!;
+  const errorEl = document.getElementById('j2ts-error')!;
+
+  const d = controls.dataset;
+  const errorMessages = {
+    'invalid-json': d.errorInvalidJson ?? '',
+    'too-deep': d.errorTooDeep ?? '',
+  };
+
+  let style: TypeScriptDeclarationStyle = 'interface';
+
+  function render() {
+    statusEl.textContent = '';
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+
+    const result = jsonToTypeScript(input.value, {
+      rootName: rootName.value,
+      style,
+      exportDeclarations: exportCheck.checked,
+    });
+    if (!result.success) {
+      output.value = '';
+      if (result.reason !== 'empty') {
+        errorEl.textContent = errorMessages[result.reason];
+        errorEl.hidden = false;
+      }
+      return;
+    }
+    output.value = result.code;
+  }
+
+  styleButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      style = button.dataset.style as TypeScriptDeclarationStyle;
+      styleButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === button)),
+      );
+      render();
+    });
+  });
+
+  onTextInput(input, render);
+  rootName.addEventListener('input', render);
+  exportCheck.addEventListener('change', render);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+  });
+
+  input.value = input.dataset.sample ?? '';
+  render();
+</script>

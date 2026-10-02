@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
+import { blockAnalytics } from './helpers/block-analytics';
 
 test.describe('スクリーンサイズ・Viewportチェッカー（日本語版）', () => {
   test('直接アクセスするとビューポートサイズ等が即座に表示される', async ({
@@ -108,6 +109,7 @@ test.describe('スクリーンサイズ・Viewportチェッカー（日本語版
     browser,
   }) => {
     const context = await browser.newContext({ hasTouch: true });
+    await blockAnalytics(context);
     const page = await context.newPage();
     await page.goto('/tools/viewport-checker/');
 
@@ -119,6 +121,7 @@ test.describe('スクリーンサイズ・Viewportチェッカー（日本語版
     browser,
   }) => {
     const context = await browser.newContext({ hasTouch: false });
+    await blockAnalytics(context);
     const page = await context.newPage();
     await page.goto('/tools/viewport-checker/');
 

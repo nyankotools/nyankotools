@@ -1,0 +1,495 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { micTesterContent } from '../../i18n/tools/mic-tester';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = micTesterContent[locale];
+
+const selectClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+
+const options = [
+  { id: 'mic-echo', label: t.echoLabel },
+  { id: 'mic-noise', label: t.noiseLabel },
+  { id: 'mic-agc', label: t.agcLabel },
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="mic-root"
+    data-default-device={t.defaultDevice}
+    data-mic-label={t.micLabel}
+    data-none={t.none}
+    data-recording={t.recording}
+    data-record-label={t.recordLabel}
+    data-stop-record-label={t.stopRecordLabel}
+    data-start-label={t.startLabel}
+    data-stop-label={t.stopLabel}
+    data-error-permission-denied={t.errors['permission-denied']}
+    data-error-not-found={t.errors['not-found']}
+    data-error-in-use={t.errors['in-use']}
+    data-error-constraints={t.errors.constraints}
+    data-error-insecure={t.errors.insecure}
+    data-error-unsupported={t.errors.unsupported}
+    data-error-unknown={t.errors.unknown}
+  >
+    <div class="max-w-md">
+      <label for="mic-device" class="ui-label">
+        {t.micLabel}
+      </label>
+      <select id="mic-device" class={selectClass}>
+        <option value="">{t.defaultDevice}</option>
+      </select>
+    </div>
+    <div class="mt-2 flex flex-wrap gap-x-6">
+      {options.map((o) => (
+        <label class="ui-check">
+          <input id={o.id} type="checkbox" checked class="h-4 w-4" />
+          {o.label}
+        </label>
+      ))}
+    </div>
+
+    <button id="mic-toggle" type="button" class="ui-btn-primary mt-3 h-12">
+      {t.startLabel}
+    </button>
+    <p id="mic-error" hidden role="alert" class="ui-error mt-4 max-w-2xl"></p>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.levelHeading}</h2>
+    <p id="mic-idle" class="text-sm text-gray-600 dark:text-gray-400">
+      {t.idleMessage}
+    </p>
+    <div id="mic-meter-wrap" hidden class="max-w-2xl">
+      <div
+        id="mic-level"
+        role="meter"
+        aria-label={t.levelLabel}
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+        class="relative h-6 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800"
+      >
+        <div
+          id="mic-level-bar"
+          class="h-full w-0 bg-green-500 transition-[width] duration-75"
+        ></div>
+        <div
+          id="mic-peak-marker"
+          class="absolute top-0 left-0 h-full w-0.5 bg-gray-900 dark:bg-white"
+        ></div>
+      </div>
+      <p class="mt-2 flex justify-between text-sm text-gray-700 dark:text-gray-300">
+        <span>
+          <span id="mic-db">-</span>
+        </span>
+        <span>
+          {t.peakLabel}: <span id="mic-peak-db">-</span>
+        </span>
+      </p>
+      <p
+        id="mic-clipping"
+        hidden
+        role="status"
+        class="mt-2 text-sm font-medium text-red-600 dark:text-red-400"
+      >
+        {t.clipping}
+      </p>
+      <p
+        id="mic-no-signal"
+        hidden
+        role="status"
+        class="mt-2 text-sm text-amber-700 dark:text-amber-400"
+      >
+        {t.noSignal}
+      </p>
+    </div>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.infoHeading}</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[320px] border-collapse text-sm">
+        <tbody>
+          {[
+            ['device', t.rowDevice],
+            ['sample-rate', t.rowSampleRate],
+            ['channels', t.rowChannels],
+          ].map(([id, label]) => (
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                {label}
+              </td>
+              <td
+                id={`mic-info-${id}`}
+                class="py-2 text-right break-all text-gray-900 dark:text-gray-100"
+              >
+                -
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.recordHeading}</h2>
+    <div class="flex flex-wrap items-center gap-3">
+      <button id="mic-record" type="button" disabled class="ui-btn">
+        {t.recordLabel}
+      </button>
+      <span
+        id="mic-record-status"
+        hidden
+        class="text-sm font-medium text-red-600 dark:text-red-400"
+      ></span>
+    </div>
+    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.recordLimit}</p>
+    <p id="mic-record-unsupported" hidden class="ui-error mt-2 max-w-2xl">
+      {t.recorderUnsupported}
+    </p>
+    <div id="mic-playback" hidden class="mt-3 max-w-2xl">
+      <p class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+        {t.recordedLabel}
+      </p>
+      <audio
+        id="mic-audio"
+        controls
+        aria-label={t.playbackAriaLabel}
+        class="w-full"
+      ></audio>
+      <button id="mic-download" type="button" class="ui-btn mt-3">
+        {t.downloadLabel}
+      </button>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import {
+    MAX_RECORD_SECONDS,
+    calculatePeakAmplitude,
+    calculateRmsDb,
+    extensionForMime,
+    formatDuration,
+    isClipping,
+    pickRecorderMimeType,
+    updatePeakHold,
+  } from '../../lib/tools/mic-tester';
+  import {
+    calculateAudioLevel,
+    classifyMediaError,
+    type MediaErrorKind,
+  } from '../../lib/tools/webcam-tester';
+
+  const root = document.getElementById('mic-root')!;
+  const d = root.dataset;
+  const deviceSelect = document.getElementById(
+    'mic-device',
+  ) as HTMLSelectElement;
+  const echoInput = document.getElementById('mic-echo') as HTMLInputElement;
+  const noiseInput = document.getElementById('mic-noise') as HTMLInputElement;
+  const agcInput = document.getElementById('mic-agc') as HTMLInputElement;
+  const toggleButton = document.getElementById(
+    'mic-toggle',
+  ) as HTMLButtonElement;
+  const errorEl = document.getElementById('mic-error')!;
+  const idleEl = document.getElementById('mic-idle')!;
+  const meterWrap = document.getElementById('mic-meter-wrap')!;
+  const levelEl = document.getElementById('mic-level')!;
+  const levelBar = document.getElementById('mic-level-bar')!;
+  const peakMarker = document.getElementById('mic-peak-marker')!;
+  const dbEl = document.getElementById('mic-db')!;
+  const peakDbEl = document.getElementById('mic-peak-db')!;
+  const clippingEl = document.getElementById('mic-clipping')!;
+  const noSignalEl = document.getElementById('mic-no-signal')!;
+  const recordButton = document.getElementById(
+    'mic-record',
+  ) as HTMLButtonElement;
+  const recordStatus = document.getElementById('mic-record-status')!;
+  const recordUnsupported = document.getElementById('mic-record-unsupported')!;
+  const playback = document.getElementById('mic-playback')!;
+  const audioEl = document.getElementById('mic-audio') as HTMLAudioElement;
+  const downloadButton = document.getElementById(
+    'mic-download',
+  ) as HTMLButtonElement;
+
+  const ERROR_TEXT: Record<MediaErrorKind, string> = {
+    'permission-denied': d.errorPermissionDenied ?? '',
+    'not-found': d.errorNotFound ?? '',
+    'in-use': d.errorInUse ?? '',
+    constraints: d.errorConstraints ?? '',
+    insecure: d.errorInsecure ?? '',
+    unsupported: d.errorUnsupported ?? '',
+    unknown: d.errorUnknown ?? '',
+  };
+  const NONE = d.none ?? '';
+  // 無音とみなすレベル（0〜100）と、警告を出すまでの無音の長さ
+  const SILENT_LEVEL = 1;
+  const NO_SIGNAL_MS = 5000;
+  // クリッピング警告は一瞬で消えて見逃さないよう、一定時間残す
+  const CLIPPING_HOLD_MS = 1500;
+  // ピーク表示は1フレームごとにこの分だけ下がる（振幅0〜1）
+  const PEAK_DECAY = 0.004;
+
+  function info(id: string): HTMLElement {
+    return document.getElementById(`mic-info-${id}`)!;
+  }
+
+  let stream: MediaStream | null = null;
+  let active = false;
+  let audioContext: AudioContext | null = null;
+  let sessionId = 0;
+  let meterFrame = 0;
+
+  let recorder: MediaRecorder | null = null;
+  let recordChunks: Blob[] = [];
+  let recordStartedAt = 0;
+  let recordTimer = 0;
+  let recordedBlob: Blob | null = null;
+  let recordedUrl: string | null = null;
+  let recordedMime = '';
+
+  const recorderSupported = typeof MediaRecorder !== 'undefined';
+  if (!recorderSupported) recordUnsupported.hidden = false;
+
+  function showError(kind: MediaErrorKind) {
+    errorEl.textContent = ERROR_TEXT[kind];
+    errorEl.hidden = false;
+  }
+
+  function resetMeter() {
+    levelBar.style.width = '0%';
+    peakMarker.style.left = '0%';
+    levelEl.setAttribute('aria-valuenow', '0');
+    dbEl.textContent = '-';
+    peakDbEl.textContent = '-';
+    clippingEl.hidden = true;
+    noSignalEl.hidden = true;
+  }
+
+  function resetInfo() {
+    info('device').textContent = '-';
+    info('sample-rate').textContent = '-';
+    info('channels').textContent = '-';
+  }
+
+  function formatDb(db: number): string {
+    return db <= -100 ? '-∞ dBFS' : `${db.toFixed(0)} dBFS`;
+  }
+
+  function stopRecording() {
+    if (recorder && recorder.state !== 'inactive') recorder.stop();
+  }
+
+  function stopAll() {
+    sessionId++;
+    stopRecording();
+    cancelAnimationFrame(meterFrame);
+    stream?.getTracks().forEach((track) => track.stop());
+    stream = null;
+    void audioContext?.close();
+    audioContext = null;
+    active = false;
+    toggleButton.textContent = d.startLabel ?? '';
+    meterWrap.hidden = true;
+    idleEl.hidden = false;
+    recordButton.disabled = true;
+    resetMeter();
+    resetInfo();
+  }
+
+  function startMeter(mediaStream: MediaStream, id: number) {
+    meterWrap.hidden = false;
+    idleEl.hidden = true;
+    const ctx = new AudioContext();
+    void ctx.resume();
+    audioContext = ctx;
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 1024;
+    // 出力（destination）には繋がない。繋ぐとハウリングする
+    ctx.createMediaStreamSource(mediaStream).connect(analyser);
+    info('sample-rate').textContent = `${ctx.sampleRate} Hz`;
+
+    const samples = new Uint8Array(analyser.fftSize);
+    let heldPeak = 0;
+    let silentSince = performance.now();
+    let clippingUntil = 0;
+    const tick = () => {
+      if (id !== sessionId) return;
+      analyser.getByteTimeDomainData(samples);
+      const now = performance.now();
+      const level = calculateAudioLevel(samples);
+      const peak = calculatePeakAmplitude(samples);
+      heldPeak = updatePeakHold(heldPeak, peak, PEAK_DECAY);
+
+      levelBar.style.width = `${level}%`;
+      levelEl.setAttribute('aria-valuenow', String(level));
+      peakMarker.style.left = `${Math.min(99, Math.round(Math.sqrt(heldPeak) * 100))}%`;
+      dbEl.textContent = formatDb(calculateRmsDb(samples));
+      peakDbEl.textContent = formatDb(
+        heldPeak > 0 ? 20 * Math.log10(heldPeak) : -100,
+      );
+
+      if (isClipping(peak)) clippingUntil = now + CLIPPING_HOLD_MS;
+      clippingEl.hidden = now > clippingUntil;
+
+      if (level > SILENT_LEVEL) silentSince = now;
+      noSignalEl.hidden = now - silentSince < NO_SIGNAL_MS;
+
+      meterFrame = requestAnimationFrame(tick);
+    };
+    tick();
+  }
+
+  function populateDevices(
+    devices: MediaDeviceInfo[],
+    selectedId: string | undefined,
+  ) {
+    const previous = deviceSelect.value;
+    deviceSelect.replaceChildren(new Option(d.defaultDevice ?? '', ''));
+    devices
+      .filter((device) => device.kind === 'audioinput' && device.deviceId)
+      .forEach((device, index) => {
+        deviceSelect.append(
+          new Option(
+            device.label || `${d.micLabel ?? ''} ${index + 1}`,
+            device.deviceId,
+          ),
+        );
+      });
+    const wanted = selectedId ?? previous;
+    if ([...deviceSelect.options].some((o) => o.value === wanted)) {
+      deviceSelect.value = wanted;
+    }
+  }
+
+  async function start() {
+    stopAll();
+    errorEl.hidden = true;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showError(window.isSecureContext ? 'unsupported' : 'insecure');
+      return;
+    }
+    const id = sessionId;
+    const constraints: MediaTrackConstraints = {
+      echoCancellation: echoInput.checked,
+      noiseSuppression: noiseInput.checked,
+      autoGainControl: agcInput.checked,
+    };
+    if (deviceSelect.value)
+      constraints.deviceId = { exact: deviceSelect.value };
+    active = true;
+    toggleButton.textContent = d.stopLabel ?? '';
+    try {
+      const media = await navigator.mediaDevices.getUserMedia({
+        audio: constraints,
+      });
+      if (id !== sessionId) {
+        media.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      stream = media;
+      const track = media.getAudioTracks()[0];
+      const settings = track.getSettings();
+      info('device').textContent = track.label || NONE;
+      info('channels').textContent = settings.channelCount
+        ? String(settings.channelCount)
+        : NONE;
+      recordButton.disabled = !recorderSupported;
+      startMeter(media, id);
+
+      // ラベルは権限付与後にしか取得できないため、開始後にデバイス一覧を更新する
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        if (id !== sessionId) return;
+        populateDevices(devices, settings.deviceId);
+      } catch {
+        // デバイス一覧の取得失敗はテスト自体には影響しないため無視する
+      }
+    } catch (error) {
+      if (id !== sessionId) return;
+      stopAll();
+      showError(classifyMediaError((error as DOMException | undefined)?.name));
+    }
+  }
+
+  function updateRecordStatus() {
+    const seconds = (performance.now() - recordStartedAt) / 1000;
+    recordStatus.textContent = `● ${d.recording ?? ''} ${formatDuration(seconds)} / ${formatDuration(MAX_RECORD_SECONDS)}`;
+    if (seconds >= MAX_RECORD_SECONDS) stopRecording();
+  }
+
+  function startRecording() {
+    if (!stream || !recorderSupported) return;
+    const mimeType = pickRecorderMimeType((m) =>
+      MediaRecorder.isTypeSupported(m),
+    );
+    try {
+      recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+    } catch {
+      recordUnsupported.hidden = false;
+      return;
+    }
+    const current = recorder;
+    recordChunks = [];
+    current.addEventListener('dataavailable', (event) => {
+      if (event.data.size > 0) recordChunks.push(event.data);
+    });
+    current.addEventListener('stop', () => {
+      clearInterval(recordTimer);
+      recordStatus.hidden = true;
+      recordButton.textContent = d.recordLabel ?? '';
+      recordButton.disabled = !stream;
+      if (recorder === current) recorder = null;
+      if (recordChunks.length === 0) return;
+      recordedMime = current.mimeType || mimeType || 'audio/webm';
+      recordedBlob = new Blob(recordChunks, { type: recordedMime });
+      recordChunks = [];
+      if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+      recordedUrl = URL.createObjectURL(recordedBlob);
+      audioEl.src = recordedUrl;
+      playback.hidden = false;
+    });
+    current.start();
+    recordStartedAt = performance.now();
+    recordStatus.hidden = false;
+    recordButton.textContent = d.stopRecordLabel ?? '';
+    updateRecordStatus();
+    recordTimer = window.setInterval(updateRecordStatus, 500);
+  }
+
+  toggleButton.addEventListener('click', () => {
+    if (active) {
+      stopAll();
+    } else {
+      void start();
+    }
+  });
+  recordButton.addEventListener('click', () => {
+    if (recorder && recorder.state !== 'inactive') {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  });
+  downloadButton.addEventListener('click', () => {
+    if (!recordedBlob) return;
+    downloadBlob(recordedBlob, `recording.${extensionForMime(recordedMime)}`);
+  });
+
+  // 実行中に設定を変えたら、その設定で取り直す
+  [deviceSelect, echoInput, noiseInput, agcInput].forEach((el) => {
+    el.addEventListener('change', () => {
+      if (active) void start();
+    });
+  });
+
+  window.addEventListener('pagehide', () => {
+    stopAll();
+    if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+  });
+</script>

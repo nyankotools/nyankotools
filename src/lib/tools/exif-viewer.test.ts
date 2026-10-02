@@ -292,6 +292,148 @@ function buildJpegWithoutExif(): Uint8Array {
   ]);
 }
 
+/** テスト用: SOI + 指定マーカーのセグメント + APP0 + EOI のJPEG風バイト列を組み立てる */
+function buildJpegWithSegment(marker: number, identifier: string): Uint8Array {
+  const content = [
+    ...Array.from(identifier, (c) => c.charCodeAt(0)),
+    0x00,
+    0x09,
+  ];
+  const length = content.length + 2;
+  return Uint8Array.from([
+    0xff,
+    0xd8, // SOI
+    0xff,
+    marker,
+    (length >> 8) & 0xff,
+    length & 0xff,
+    ...content,
+    0xff,
+    0xe0,
+    0x00,
+    0x04,
+    0x00,
+    0x00, // APP0 は残す
+    0xff,
+    0xd9, // EOI
+  ]);
+}
+
+describe('removeExifFromJpegBytes のXMP・IPTC対応', () => {
+  const keptOnly = [0xff, 0xd8, 0xff, 0xe0, 0x00, 0x04, 0x00, 0x00, 0xff, 0xd9];
+
+  it('APP1のXMP（位置情報を含みうる）も取り除く', () => {
+    const jpeg = buildJpegWithSegment(0xe1, 'http://ns.adobe.com/xap/1.0/');
+    expect(Array.from(removeExifFromJpegBytes(jpeg))).toEqual(keptOnly);
+  });
+
+  it('APP1の拡張XMPも取り除く', () => {
+    const jpeg = buildJpegWithSegment(
+      0xe1,
+      'http://ns.adobe.com/xmp/extension/',
+    );
+    expect(Array.from(removeExifFromJpegBytes(jpeg))).toEqual(keptOnly);
+  });
+
+  it('APP13のIPTC（Photoshop 3.0）も取り除く', () => {
+    const jpeg = buildJpegWithSegment(0xed, 'Photoshop 3.0');
+    expect(Array.from(removeExifFromJpegBytes(jpeg))).toEqual(keptOnly);
+  });
+
+  it('識別子が異なるAPP1・APP13は残す', () => {
+    const app1 = buildJpegWithSegment(0xe1, 'OtherApp');
+    expect(removeExifFromJpegBytes(app1).length).toBe(app1.length);
+    const app13 = buildJpegWithSegment(0xed, 'OtherApp');
+    expect(removeExifFromJpegBytes(app13).length).toBe(app13.length);
+  });
+});
+
+/** テスト用: SOS ヘッダー（コンポーネント1つ）+ 指定のスキャンデータ */
+const sos = (...scan: number[]): number[] => [
+  0xff,
+  0xda,
+  0x00,
+  0x08,
+  0x01,
+  0x01,
+  0x00,
+  0x00,
+  0x3f,
+  0x00,
+  ...scan,
+];
+const EOI = [0xff, 0xd9];
+const APP0 = [0xff, 0xe0, 0x00, 0x04, 0x00, 0x00];
+/** GPS を含みうる Exif 付きの別 JPEG（連結される副画像役） */
+const secondaryWithExif = [
+  0xff, 0xd8, 0xff, 0xe1, 0x00, 0x0a, 0x45, 0x78, 0x69, 0x66, 0x00, 0x00, 0x47,
+  0x50, 0x53, 0xff, 0xd9,
+];
+
+describe('removeExifFromJpegBytes の末尾連結データ（MPF・Motion Photo）', () => {
+  it('主画像の EOI より後ろに連結された副画像を取り除く', () => {
+    const main = [0xff, 0xd8, ...APP0, ...sos(0x12, 0x34), ...EOI];
+    const result = removeExifFromJpegBytes(
+      Uint8Array.from([...main, ...secondaryWithExif]),
+    );
+    expect(Array.from(result)).toEqual(main);
+  });
+
+  it('スキャンデータ内の FF00・RSTn を EOI と誤認しない', () => {
+    const main = [
+      0xff,
+      0xd8,
+      ...APP0,
+      ...sos(0x12, 0xff, 0x00, 0x34, 0xff, 0xd0, 0x56, 0xff, 0xd7, 0x78),
+      ...EOI,
+    ];
+    const result = removeExifFromJpegBytes(
+      Uint8Array.from([...main, ...secondaryWithExif]),
+    );
+    expect(Array.from(result)).toEqual(main);
+  });
+
+  it('プログレッシブ（複数 SOS）でも最後の EOI まで保持し、途中のメタデータは除く', () => {
+    const exif = [0xff, 0xe1, 0x00, 0x08, 0x45, 0x78, 0x69, 0x66, 0x00, 0x00];
+    const scan1 = sos(0x11, 0x22);
+    const scan2 = sos(0x33, 0xff, 0x00);
+    const result = removeExifFromJpegBytes(
+      Uint8Array.from([
+        0xff,
+        0xd8,
+        ...scan1,
+        ...exif,
+        ...scan2,
+        ...EOI,
+        ...secondaryWithExif,
+      ]),
+    );
+    expect(Array.from(result)).toEqual([
+      0xff,
+      0xd8,
+      ...scan1,
+      ...scan2,
+      ...EOI,
+    ]);
+  });
+
+  it('APP2 の MPF セグメントを取り除く', () => {
+    const mpf = [0xff, 0xe2, 0x00, 0x08, 0x4d, 0x50, 0x46, 0x00, 0x01, 0x02];
+    const icc = [0xff, 0xe2, 0x00, 0x06, 0x49, 0x43, 0x43, 0x00];
+    const result = removeExifFromJpegBytes(
+      Uint8Array.from([0xff, 0xd8, ...mpf, ...icc, ...EOI]),
+    );
+    expect(Array.from(result)).toEqual([0xff, 0xd8, ...icc, ...EOI]);
+  });
+
+  it('EOI が無い壊れた入力は末尾までそのまま保持する', () => {
+    const broken = Uint8Array.from([0xff, 0xd8, ...APP0, ...sos(0x12, 0x34)]);
+    expect(Array.from(removeExifFromJpegBytes(broken))).toEqual(
+      Array.from(broken),
+    );
+  });
+});
+
 describe('removeExifFromJpegBytes', () => {
   it('APP1のExifセグメントのみを取り除き、他のマーカーは保持する', () => {
     const jpeg = buildJpegWithExifApp1([0x01, 0x02, 0x03]);
@@ -331,18 +473,56 @@ describe('removeExifFromJpegBytes', () => {
 });
 
 describe('removeExifFromJpeg', () => {
-  it('Exifがあれば削除してhadExif:trueを返す', () => {
+  it('Exifがあれば削除して removedMetadata:true を返す', () => {
     const jpeg = buildJpegWithExifApp1([0x01, 0x02, 0x03]);
     const result = removeExifFromJpeg(jpeg);
-    expect(result.hadExif).toBe(true);
+    expect(result.removedMetadata).toBe(true);
+    expect(result.removedTrailing).toBe(false);
     expect(result.bytes.length).toBeLessThan(jpeg.length);
   });
 
-  it('ExifがなければhadExif:falseを返す', () => {
+  it('Exifも連結データもなければ何も削除せず同じ内容を返す', () => {
     const jpeg = buildJpegWithoutExif();
     const result = removeExifFromJpeg(jpeg);
-    expect(result.hadExif).toBe(false);
+    expect(result.removedMetadata).toBe(false);
+    expect(result.removedTrailing).toBe(false);
     expect(result.bytes.length).toBe(jpeg.length);
+  });
+
+  it('Exifなし＋EOI 後にゼロ埋めのみ → 末尾の連結データだけ削除扱い', () => {
+    const main = [0xff, 0xd8, ...APP0, ...sos(0x12, 0x34), ...EOI];
+    const result = removeExifFromJpeg(
+      Uint8Array.from([...main, 0x00, 0x00, 0x00]),
+    );
+    expect(result.removedMetadata).toBe(false);
+    expect(result.removedTrailing).toBe(true);
+    expect(Array.from(result.bytes)).toEqual(main);
+  });
+
+  it('メタデータと末尾の連結データが同時にあれば両方 true（UI はメタデータ側の文言を優先）', () => {
+    const main = [0xff, 0xd8, ...APP0, ...sos(0x12), ...EOI];
+    const exif = [0xff, 0xe1, 0x00, 0x08, 0x45, 0x78, 0x69, 0x66, 0x00, 0x00];
+    const result = removeExifFromJpeg(
+      Uint8Array.from([
+        0xff,
+        0xd8,
+        ...exif,
+        ...main.slice(2),
+        ...secondaryWithExif,
+      ]),
+    );
+    expect(result.removedMetadata).toBe(true);
+    expect(result.removedTrailing).toBe(true);
+    expect(Array.from(result.bytes)).toEqual(main);
+  });
+
+  it('MPF のみ → メタデータ削除扱い', () => {
+    const mpf = [0xff, 0xe2, 0x00, 0x08, 0x4d, 0x50, 0x46, 0x00, 0x01, 0x02];
+    const result = removeExifFromJpeg(
+      Uint8Array.from([0xff, 0xd8, ...mpf, ...EOI]),
+    );
+    expect(result.removedMetadata).toBe(true);
+    expect(result.removedTrailing).toBe(false);
   });
 });
 

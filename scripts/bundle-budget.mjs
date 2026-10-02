@@ -28,6 +28,14 @@ export const budgets = {
   heavy: 520 * KB,
 };
 
+/**
+ * 個別に total の予算を上げるツール（slug → total の上限。initial は通常の予算のまま）。libheif wasm を JS に内包した
+ * heic-to（gzip後 約720KB）を遅延読み込みする heic-converter のみ。
+ */
+export const slugBudgets = {
+  'heic-converter': 800 * KB,
+};
+
 const STATIC_IMPORT = /(?:\bfrom|\bimport)\s*["'](\.[^"']+\.m?js)["']/g;
 const DYNAMIC_IMPORT = /\bimport\(\s*["'](\.[^"']+\.m?js)["']\s*\)/g;
 
@@ -154,11 +162,12 @@ function main() {
     const slug = toolSlugOf(page);
     const isHeavy = slug !== null && heavy.has(slug);
     const { initial, total } = measurePage(readFileSync(file, 'utf8'), distDir);
-    const limit = isHeavy ? budgets.heavy : budgets.normal;
+    const baseLimit = isHeavy ? budgets.heavy : budgets.normal;
+    const totalLimit = (slug !== null && slugBudgets[slug]) || baseLimit;
     rows.push({ page, initial, total, isHeavy });
-    for (const [kind, size] of [
-      ['initial', initial],
-      ['total', total],
+    for (const [kind, size, limit] of [
+      ['initial', initial, baseLimit],
+      ['total', total, totalLimit],
     ]) {
       if (size > limit)
         violations.push(

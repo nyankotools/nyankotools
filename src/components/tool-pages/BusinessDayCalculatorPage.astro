@@ -1,0 +1,324 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { businessDayCalculatorContent } from '../../i18n/tools/business-day-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = businessDayCalculatorContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="bd"
+    data-date-locale={t.dateLocale}
+    data-errors={JSON.stringify(t.errors)}
+    data-add-result={t.addResult}
+    data-count-unit={t.countUnit}
+    data-holiday-names={JSON.stringify(t.holidayNames)}
+    data-holiday-empty={t.holidayEmpty}
+    class="space-y-6"
+  >
+    <fieldset class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+      <legend class="px-1 text-sm font-medium">{t.optionsLegend}</legend>
+      <label class="ui-check">
+        <input id="bd-holidays" type="checkbox" checked />
+        {t.excludeHolidaysLabel}
+      </label>
+      <label class="ui-check">
+        <input id="bd-yearend" type="checkbox" />
+        {t.excludeYearEndLabel}
+      </label>
+    </fieldset>
+
+    <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-semibold">{t.addHeading}</h2>
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="bd-add-start" class="ui-label">
+            {t.startDateLabel}
+          </label>
+          <input
+            id="bd-add-start"
+            type="date"
+            min="2000-01-01"
+            max="2099-12-31"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="bd-add-days" class="ui-label">
+            {t.daysLabel}
+          </label>
+          <input
+            id="bd-add-days"
+            type="number"
+            inputmode="numeric"
+            step="1"
+            value="10"
+            class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+      <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+        {t.daysHint}
+        {t.addNote}
+      </p>
+      <p
+        id="bd-add-error"
+        class="ui-error empty:hidden mt-2"
+        aria-live="polite"
+      ></p>
+      <p
+        id="bd-add-result"
+        class="mt-2 text-xl font-semibold"
+        aria-live="polite"
+      ></p>
+    </div>
+
+    <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-semibold">{t.countHeading}</h2>
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="bd-count-start" class="ui-label">
+            {t.startDateLabel}
+          </label>
+          <input
+            id="bd-count-start"
+            type="date"
+            min="2000-01-01"
+            max="2099-12-31"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="bd-count-end" class="ui-label">
+            {t.endDateLabel}
+          </label>
+          <input
+            id="bd-count-end"
+            type="date"
+            min="2000-01-01"
+            max="2099-12-31"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+      <p
+        id="bd-count-error"
+        class="ui-error empty:hidden mt-2"
+        aria-live="polite"
+      ></p>
+      <dl id="bd-count-result" class="mt-3 hidden space-y-2" aria-live="polite">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.countBusinessLabel}
+          </dt>
+          <dd id="bd-count-business" class="text-xl font-semibold"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.countCalendarLabel}
+          </dt>
+          <dd id="bd-count-calendar" class="font-semibold"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.countWeekendLabel}
+          </dt>
+          <dd id="bd-count-weekend" class="font-semibold"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.countHolidayLabel}
+          </dt>
+          <dd id="bd-count-holiday" class="font-semibold"></dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-semibold">{t.holidaysHeading}</h2>
+      <div>
+        <label for="bd-year" class="ui-label">
+          {t.yearLabel}
+        </label>
+        <input
+          id="bd-year"
+          type="number"
+          inputmode="numeric"
+          min="2000"
+          max="2099"
+          step="1"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <p
+        id="bd-year-error"
+        class="ui-error empty:hidden mt-2"
+        aria-live="polite"
+      ></p>
+      <ul
+        id="bd-holiday-list"
+        class="mt-3 divide-y divide-gray-200 text-sm dark:divide-gray-700"
+      ></ul>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    addBusinessDays,
+    countBusinessDays,
+    getHolidays,
+    type BusinessDayError,
+    type BusinessDayOptions,
+    type HolidayKey,
+  } from '../../lib/tools/business-day-calculator';
+  import { fill } from '../../lib/format-template';
+
+  const root = document.getElementById('bd')!;
+  const dateLocale = root.dataset.dateLocale ?? 'en-US';
+  const errors: Record<BusinessDayError, string> = JSON.parse(
+    root.dataset.errors ?? '{}',
+  );
+  const addResultTemplate = root.dataset.addResult ?? '{date}';
+  const countUnit = root.dataset.countUnit ?? '{n}';
+  const holidayNames: Record<HolidayKey, string> = JSON.parse(
+    root.dataset.holidayNames ?? '{}',
+  );
+  const holidayEmpty = root.dataset.holidayEmpty ?? '';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const holidaysCheck = $<HTMLInputElement>('bd-holidays');
+  const yearEndCheck = $<HTMLInputElement>('bd-yearend');
+  const addStart = $<HTMLInputElement>('bd-add-start');
+  const addDays = $<HTMLInputElement>('bd-add-days');
+  const addError = $('bd-add-error');
+  const addResult = $('bd-add-result');
+  const countStart = $<HTMLInputElement>('bd-count-start');
+  const countEnd = $<HTMLInputElement>('bd-count-end');
+  const countError = $('bd-count-error');
+  const countResult = $('bd-count-result');
+  const yearInput = $<HTMLInputElement>('bd-year');
+  const yearError = $('bd-year-error');
+  const holidayList = $('bd-holiday-list');
+
+  const dateFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+  const shortDateFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    month: 'short',
+    day: 'numeric',
+  });
+  const weekdayFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    weekday: 'short',
+  });
+
+  /** YYYY-MM-DD をUTCの日付として扱う */
+  const toDate = (iso: string) => new Date(`${iso}T00:00:00Z`);
+
+  function options(): BusinessDayOptions {
+    return {
+      excludeHolidays: holidaysCheck.checked,
+      excludeYearEnd: yearEndCheck.checked,
+    };
+  }
+
+  function localToday(): string {
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  function renderAdd() {
+    addError.textContent = '';
+    addResult.textContent = '';
+    if (addStart.value === '' || addDays.value.trim() === '') return;
+    const r = addBusinessDays(addStart.value, Number(addDays.value), options());
+    if ('error' in r) {
+      addError.textContent = errors[r.error];
+      return;
+    }
+    const d = toDate(r.date);
+    addResult.textContent = fill(addResultTemplate, {
+      date: dateFormat.format(d),
+      weekday: weekdayFormat.format(d),
+    });
+  }
+
+  function renderCount() {
+    countError.textContent = '';
+    countResult.classList.add('hidden');
+    if (countStart.value === '' || countEnd.value === '') return;
+    const r = countBusinessDays(countStart.value, countEnd.value, options());
+    if ('error' in r) {
+      countError.textContent = errors[r.error];
+      return;
+    }
+    const show = (id: string, n: number) => {
+      $(id).textContent = fill(countUnit, { n: String(n) });
+    };
+    show('bd-count-business', r.businessDays);
+    show('bd-count-calendar', r.calendarDays);
+    show('bd-count-weekend', r.weekendDays);
+    show('bd-count-holiday', r.holidayDays);
+    countResult.classList.remove('hidden');
+  }
+
+  function renderHolidays() {
+    yearError.textContent = '';
+    holidayList.replaceChildren();
+    if (yearInput.value.trim() === '') return;
+    const list = getHolidays(Number(yearInput.value));
+    if (list.length === 0) {
+      yearError.textContent = holidayEmpty;
+      return;
+    }
+    for (const h of list) {
+      const d = toDate(h.date);
+      const li = document.createElement('li');
+      li.className = 'flex flex-wrap gap-x-3 py-2';
+      const date = document.createElement('span');
+      date.className = 'w-28 shrink-0 font-medium';
+      date.textContent = `${shortDateFormat.format(d)}（${weekdayFormat.format(d)}）`;
+      const name = document.createElement('span');
+      name.textContent = holidayNames[h.key];
+      li.append(date, name);
+      holidayList.append(li);
+    }
+  }
+
+  function renderAll() {
+    renderAdd();
+    renderCount();
+  }
+
+  [addStart, addDays].forEach((el) => el.addEventListener('input', renderAdd));
+  [countStart, countEnd].forEach((el) =>
+    el.addEventListener('input', renderCount),
+  );
+  yearInput.addEventListener('input', renderHolidays);
+  [holidaysCheck, yearEndCheck].forEach((el) =>
+    el.addEventListener('change', renderAll),
+  );
+
+  const today = localToday();
+  addStart.value = today;
+  countStart.value = today;
+  countEnd.value = new Date(toDate(today).getTime() + 30 * 86_400_000)
+    .toISOString()
+    .slice(0, 10);
+  yearInput.value = today.slice(0, 4);
+  renderAll();
+  renderHolidays();
+</script>

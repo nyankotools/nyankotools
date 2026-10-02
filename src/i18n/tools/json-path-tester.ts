@@ -135,7 +135,7 @@ export const jsonPathTesterContent: Record<Locale, JsonPathTesterPageContent> =
     en: {
       title: 'JSON Path / JSON Pointer Tester (Online Validator)',
       description:
-        'A free tool for testing JSONPath and JSON Pointer (RFC 6901) queries live in your browser. Enter your JSON data and a query to see every matched value and its absolute path. Your data is processed in the browser and never sent to a server.',
+        'Test JSONPath and JSON Pointer (RFC 6901) queries live and see every matched value with its path. Runs in your browser; nothing is sent to a server.',
       h1: 'JSON Path / JSON Pointer Tester',
       introHtml:
         'Enter some JSON data and a query (JSONPath or JSON Pointer) to see every matched value along with its absolute path. Handy for checking a query before pulling a value out of an API response, or for validating an expression before passing it to jq or a JSONPath library. To format or validate JSON itself, also try the <a href="/en/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON Formatter</a> tool.',

@@ -69,7 +69,7 @@ export const urlEncodeContent: Record<Locale, UrlEncodePageContent> = {
   en: {
     title: 'URL Encoder/Decoder',
     description:
-      'A free tool that percent-encodes text or URLs, or decodes an encoded string back to the original text, with full support for multibyte characters in query parameters. Your data is processed in the browser and never sent to a server.',
+      'Percent-encode text or URLs, or decode them back, with full multibyte support. Runs in your browser; nothing is sent to a server.',
     h1: 'URL Encoder / Decoder',
     introHtml:
       'Type or paste text below to automatically percent-encode it (%XX format). Switch to "Decode" to convert an encoded string back to text. Handy when you need to include non-ASCII characters or symbols in a query parameter. Need to convert to Base64 instead? Try the <a href="/en/tools/base64/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Base64 Encoder/Decoder</a>.',

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('文字列の重複削除・ソート・シャッフル（日本語版）', () => {
   test('直接アクセスして正しく表示され、入力すると結果が反映される', async ({

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 import { blockAnalytics } from './helpers/block-analytics';
 
@@ -63,7 +63,15 @@ test.describe('サイドバーのカテゴリ開閉状態の復元（wrangler de
   test.beforeAll(async () => {
     serverProcess = spawn(
       'pnpm',
-      ['exec', 'wrangler', 'dev', '--port', String(PORT)],
+      [
+        'exec',
+        'wrangler',
+        'dev',
+        '-c',
+        'e2e/wrangler.e2e.jsonc',
+        '--port',
+        String(PORT),
+      ],
       {
         shell: true,
         stdio: 'ignore',
@@ -169,6 +177,7 @@ test.describe('サイドバーのカテゴリ開閉状態の復元（wrangler de
     // 既に開閉状態が反映されていることを確認し、初回ペイント後にパッと開く
     // チラつきが起きていないことを裏付ける。
     const context = await browser.newContext({ baseURL: BASE_URL });
+    await blockAnalytics(context);
     const page = await context.newPage();
 
     await page.goto('/tools/char-counter/');

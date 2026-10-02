@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('px⇔rem変換ツール（日本語版）', () => {
   test('直接アクセスして正しく表示され、デフォルトでベースフォントサイズが16に設定される', async ({

@@ -5,8 +5,8 @@ import { updates } from './updates';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 describe('tools registry', () => {
-  it('all tools count should be 69', () => {
-    expect(tools.length).toBe(69);
+  it('all tools count should be 114', () => {
+    expect(tools.length).toBe(114);
   });
 
   it('slug が重複していない', () => {
@@ -16,9 +16,9 @@ describe('tools registry', () => {
 });
 
 describe('tools registry - category', () => {
-  it('categories は categoryIds と同じ10個のIDを持つ', () => {
+  it('categories は categoryIds と同じ13個のIDを持つ', () => {
     expect(Object.keys(categories).sort()).toEqual([...categoryIds].sort());
-    expect(categoryIds).toHaveLength(10);
+    expect(categoryIds).toHaveLength(13);
   });
 
   it('各カテゴリに ja/en の表示名があり、ロケール内で重複しない', () => {
@@ -151,7 +151,11 @@ describe('tools registry - flags', () => {
       'toml-converter',
       'url-encode',
       'json-path-tester',
+      'curl-converter',
+      'json-to-typescript',
+      'json-diff',
       'image-converter',
+      'heic-converter',
       'image-resizer',
       'image-to-base64',
       'image-pixelart-converter',
@@ -171,6 +175,17 @@ describe('tools registry - flags', () => {
       'pdf-page-editor',
       'pdf-password-protector',
       'pdf-to-markdown',
+      'pdf-redactor',
+      'crypto-encryptor',
+      'hmac-generator',
+      'totp-generator',
+      'bcrypt-generator',
+      'xml-json-converter',
+      'env-json-converter',
+      'csv-markdown-table',
+      'html-table-to-csv',
+      'json-tree-viewer',
+      'json-schema-generator',
     ]) {
       expect(tools.find((t) => t.slug === slug)?.sensitive, slug).toBe(true);
     }

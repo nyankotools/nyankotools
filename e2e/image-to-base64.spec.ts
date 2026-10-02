@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -159,10 +159,7 @@ test.describe('画像のBase64変換ツール（日本語版）', () => {
     const dataUrl = `data:image/png;base64,${pngBase64}`;
     await decodeInput.fill(dataUrl);
 
-    // デバウンス時間を待機
-    await page.waitForTimeout(300);
-
-    // プレビューが表示される
+    // プレビューが表示されるまで待つ（自動リトライ）
     const preview = page.locator('#itb-decode-preview');
     await expect(preview).toHaveAttribute('src', dataUrl);
 
@@ -194,11 +191,9 @@ test.describe('画像のBase64変換ツール（日本語版）', () => {
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
     await decodeInput.fill(pngBase64);
 
-    // デバウンス時間を待機
-    await page.waitForTimeout(300);
-
-    // プレビューが表示される（自動的にData URLに変換される）
+    // プレビューが表示されるまで待つ（自動リトライ、Data URLに変換される）
     const preview = page.locator('#itb-decode-preview');
+    await expect(preview).toHaveAttribute('src', /^data:image\/png;base64,/);
     const previewSrc = await preview.getAttribute('src');
     expect(previewSrc).toMatch(/^data:image\/png;base64,/);
 
@@ -218,10 +213,7 @@ test.describe('画像のBase64変換ツール（日本語版）', () => {
     const decodeInput = page.locator('#itb-decode-input');
     await decodeInput.fill('not-valid-base64-@@@');
 
-    // デバウンス時間を待機
-    await page.waitForTimeout(300);
-
-    // エラーメッセージが表示される
+    // エラーメッセージが表示されるまで待つ（自動リトライ）
     const error = page.locator('#itb-decode-error');
     await expect(error).not.toHaveAttribute('hidden');
     await expect(error).toContainText('画像として解釈できませんでした');
@@ -311,8 +303,7 @@ test.describe('Image to Base64 (Data URL) Converter (English)', () => {
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
     await decodeInput.fill(`data:image/png;base64,${pngBase64}`);
 
-    await page.waitForTimeout(300);
-
+    // プレビューが表示されるまで待つ（自動リトライ）
     const preview = page.locator('#itb-decode-preview');
     await expect(preview).toHaveAttribute('src');
 

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 // Chromium のフェイクデバイス（映像はテストパターン、音声はビープ音）を使い、
 // getUserMedia の実処理まで通す。

@@ -39,7 +39,7 @@ export const textCaseConverterContent: Record<
   ja: {
     title: 'テキストケース変換 - camelCase/snake_case/kebab-case/PascalCase',
     description:
-      '入力した文字列をcamelCase・PascalCase・snake_case・kebab-case・CONSTANT_CASEなど9種類の命名規則に一括変換する無料ツールです。プログラミングの変数名・関数名の書き換えに便利。データはブラウザ内で処理され、サーバーには送信されません。',
+      '文字列をcamelCase・PascalCase・snake_case・kebab-caseなど9種類の命名規則に一括変換する無料ツールです。変数名・関数名の書き換えに便利。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'テキストケース変換（camelCase / snake_case / kebab-case / PascalCase）',
     introHtml:
       '文字列を入力すると、camelCase・PascalCase・snake_case・kebab-caseなど9種類の命名規則へ自動で一括変換します。単語の区切り（スペース・ハイフン・アンダースコア）や既存のcamelCase表記も自動で認識します。文字列の重複削除やソートが必要な場合は<a href="/tools/text-list-tools/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">文字列の重複削除・ソート・シャッフル</a>、全角/半角の統一には<a href="/tools/zenkaku-hankaku/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">全角/半角変換</a>もあわせてご利用ください。',
@@ -86,10 +86,9 @@ export const textCaseConverterContent: Record<
     ],
   },
   en: {
-    title:
-      'Text Case Converter - camelCase, snake_case, kebab-case, PascalCase',
+    title: 'Text Case Converter (camelCase, snake_case, kebab-case)',
     description:
-      'A free tool that converts text into 9 naming conventions at once — camelCase, PascalCase, snake_case, kebab-case, CONSTANT_CASE and more. Handy for renaming variables and functions. Your data is processed in the browser and never sent to a server.',
+      'Convert text into 9 naming conventions at once, such as camelCase, snake_case, kebab-case, and PascalCase. Runs in your browser; nothing is sent to a server.',
     h1: 'Text Case Converter (camelCase / snake_case / kebab-case / PascalCase)',
     introHtml:
       'Type or paste text below to automatically convert it into 9 naming conventions, including camelCase, PascalCase, snake_case, and kebab-case. Word boundaries (spaces, hyphens, underscores) and existing camelCase text are detected automatically. Need to dedupe or sort a list instead? Try <a href="/en/tools/text-list-tools/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Text List Deduplicate, Sort & Shuffle</a>. To unify full-width and half-width characters, use the <a href="/en/tools/zenkaku-hankaku/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Full-width / Half-width Converter</a>.',

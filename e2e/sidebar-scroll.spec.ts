@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 // サイドバーのスクロール位置がページ遷移で先頭に戻らないことを確認する。
 // 実装は public/sidebar-category-init.js（初回復元）と layout-nav.ts の
@@ -263,6 +263,10 @@ test.describe('サイドバーのスクロール位置の保存・復元（デ�
 
     // Reload to ensure fresh state
     await page.reload();
+    // お気に入りの描画は開閉状態の保存リスナー登録のあとに行われるため、描画を待ってから操作する
+    await expect(page.locator('#sidebar-favorites-list a[href]')).toHaveCount(
+      2,
+    );
 
     const favoritesDetails = page.locator('#sidebar-favorites');
 
@@ -281,6 +285,12 @@ test.describe('サイドバーのスクロール位置の保存・復元（デ�
       (el) => el instanceof HTMLDetailsElement && el.open,
     );
     expect(isClosedAfter).toBeFalsy();
+    // toggle イベントは非同期に届くため、保存されるのを待ってから遷移する
+    await expect
+      .poll(() =>
+        page.evaluate(() => localStorage.getItem('sidebar-favorites-open')),
+      )
+      .toBe('0');
 
     // Navigate to another tool
     await page.goto('/tools/password-generator/');
@@ -311,6 +321,10 @@ test.describe('サイドバーのスクロール位置の保存・復元（デ�
 
     // Reload to ensure the closed state is applied
     await page.reload();
+    // お気に入りの描画は開閉状態の保存リスナー登録のあとに行われるため、描画を待ってから操作する
+    await expect(page.locator('#sidebar-favorites-list a[href]')).toHaveCount(
+      2,
+    );
 
     const favoritesDetails = page.locator('#sidebar-favorites');
 
@@ -329,6 +343,12 @@ test.describe('サイドバーのスクロール位置の保存・復元（デ�
       (el) => el instanceof HTMLDetailsElement && el.open,
     );
     expect(isOpenAfter).toBeTruthy();
+    // toggle イベントは非同期に届くため、保存されるのを待ってから遷移する
+    await expect
+      .poll(() =>
+        page.evaluate(() => localStorage.getItem('sidebar-favorites-open')),
+      )
+      .toBe('1');
 
     // Navigate to another tool
     await page.goto('/tools/uuid-generator/');
@@ -462,5 +482,54 @@ test.describe('サイドバーのスクロール位置の保存・復元（デ�
       '#sidebar-favorites-list a[href="/en/tools/char-counter/"]',
     );
     await expect(charCounterLinkAfter).not.toHaveAttribute('aria-current');
+  });
+});
+
+test.describe('お気に入り欄のキャッシュHTML復元時のサニタイズ', () => {
+  test('改ざんされたキャッシュのリンク先・id・on属性は復元時に除去される', async ({
+    page,
+  }) => {
+    // 描画用スクリプト（モジュールJS）が実描画で置き換える前の、復元直後のHTMLを記録する
+    await page.addInitScript(() => {
+      const evilHtml = [
+        '<li id="evil-li"><a id="evil-a" href="/\\evil.example/" onclick="window.__pwned=1">backslash</a></li>',
+        '<li><a href="/\t/evil.example/">tab</a></li>',
+        '<li><a href="javascript:window.__pwned=1">js</a></li>',
+        '<li><a href="https://evil.example/">abs</a></li>',
+        '<li><a href="/tools/char-counter/" style="color:red">ok</a></li>',
+      ].join('');
+      localStorage.setItem('favorite-tools', JSON.stringify(['char-counter']));
+      localStorage.setItem(
+        'sidebar-favorites-html:ja',
+        JSON.stringify({ key: 'char-counter', html: evilHtml }),
+      );
+      (window as unknown as { __snapshot: string | null }).__snapshot = null;
+      const observer = new MutationObserver(() => {
+        const list = document.getElementById('sidebar-favorites-list');
+        if (list && list.querySelector('li')) {
+          (window as unknown as { __snapshot: string }).__snapshot =
+            list.innerHTML;
+          observer.disconnect();
+        }
+      });
+      observer.observe(document, { childList: true, subtree: true });
+    });
+
+    await page.goto('/tools/char-counter/');
+
+    const snapshot = await page.evaluate(
+      () => (window as unknown as { __snapshot: string | null }).__snapshot,
+    );
+    expect(snapshot).not.toBeNull();
+    const hrefs = Array.from(
+      (snapshot as string).matchAll(/href="([^"]*)"/g),
+      (m) => m[1],
+    );
+    // 同一オリジン向けのリンクだけが残る（外部・javascript: は href ごと除去）
+    expect(hrefs).toEqual(['/tools/char-counter/']);
+    expect(snapshot).not.toContain('id=');
+    expect(snapshot).not.toContain('onclick');
+    expect(snapshot).not.toContain('style=');
+    expect(await page.evaluate(() => '__pwned' in window)).toBe(false);
   });
 });

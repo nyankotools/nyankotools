@@ -1,0 +1,204 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { deadPixelCheckerContent } from '../../i18n/tools/dead-pixel-checker';
+import { TEST_COLORS } from '../../lib/tools/dead-pixel-checker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = deadPixelCheckerContent[locale];
+
+// インラインstyle属性はCSPで禁止されているため、色はクラスで持つ
+const SWATCH_CLASS: Record<string, string> = {
+  white: 'bg-[#ffffff]',
+  black: 'bg-[#000000]',
+  red: 'bg-[#ff0000]',
+  green: 'bg-[#00ff00]',
+  blue: 'bg-[#0000ff]',
+  yellow: 'bg-[#ffff00]',
+  cyan: 'bg-[#00ffff]',
+  magenta: 'bg-[#ff00ff]',
+  gray: 'bg-[#808080]',
+};
+---
+
+<ToolShell t={t}>
+  <div id="dpc-root">
+    <button id="dpc-start" type="button" class="ui-btn-primary h-12">
+      {t.startLabel}
+    </button>
+    <p class="mt-3 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
+      {t.startHint}
+    </p>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.colorsHeading}</h2>
+    <div class="grid grid-cols-3 gap-2 sm:grid-cols-5 md:grid-cols-9">
+      {TEST_COLORS.map((c, index) => (
+        <button
+          type="button"
+          data-dpc-color={index}
+          class="ui-btn flex flex-col items-center gap-1 px-2 py-2"
+        >
+          <span
+            class={`block size-8 rounded border border-gray-400 ${SWATCH_CLASS[c.id]}`}
+          />
+          <span class="text-xs">{t.colorNames[c.id]}</span>
+        </button>
+      ))}
+    </div>
+
+    <div
+      id="dpc-stage"
+      role="dialog"
+      aria-label={t.stageLabel}
+      tabindex="-1"
+      hidden
+      class="fixed inset-0 z-[100] cursor-pointer outline-none"
+    >
+      <div
+        id="dpc-controls"
+        class="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center px-4"
+      >
+        <p
+          id="dpc-hint"
+          class="rounded-full bg-black/70 px-4 py-2 text-center text-xs text-white sm:text-sm"
+        >
+          <span id="dpc-color-name"></span>
+          <span class="mx-2" aria-hidden="true">
+            |
+          </span>
+          {t.stageHint}
+        </p>
+      </div>
+      <button
+        id="dpc-close"
+        type="button"
+        aria-label={t.closeLabel}
+        title={t.closeLabel}
+        class="absolute top-3 right-3 flex size-11 items-center justify-center rounded-full bg-black/40 text-xl text-white opacity-40 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-white"
+      >
+        ×
+      </button>
+    </div>
+    <p id="dpc-live" class="sr-only" aria-live="polite"></p>
+  </div>
+</ToolShell>
+
+<script>
+  import { TEST_COLORS, cycleIndex } from '../../lib/tools/dead-pixel-checker';
+
+  const root = document.getElementById('dpc-root')!;
+  const stage = document.getElementById('dpc-stage')!;
+  const hint = document.getElementById('dpc-hint')!;
+  const colorName = document.getElementById('dpc-color-name')!;
+  const live = document.getElementById('dpc-live')!;
+  const startButton = document.getElementById('dpc-start') as HTMLButtonElement;
+  const closeButton = document.getElementById('dpc-close') as HTMLButtonElement;
+
+  // 色名はDOMのラベルから引く（文言はi18n辞書側で管理するため）
+  const names = [...root.querySelectorAll<HTMLElement>('[data-dpc-color]')].map(
+    (el) => el.querySelector('span:last-child')?.textContent ?? '',
+  );
+
+  let index = 0;
+  let open = false;
+  let opener: HTMLElement | null = null;
+  let hintTimer = 0;
+
+  function showHint() {
+    hint.hidden = false;
+    clearTimeout(hintTimer);
+    // 確認の邪魔にならないよう、操作説明は数秒で消す
+    hintTimer = window.setTimeout(() => {
+      hint.hidden = true;
+    }, 3000);
+  }
+
+  function render() {
+    stage.style.backgroundColor = TEST_COLORS[index].hex;
+    colorName.textContent = names[index];
+    live.textContent = names[index];
+  }
+
+  function openStage(startIndex: number) {
+    opener = document.activeElement as HTMLElement | null;
+    index = startIndex;
+    open = true;
+    stage.hidden = false;
+    document.body.style.overflow = 'hidden';
+    render();
+    showHint();
+    stage.focus();
+    // 全画面に対応しない環境（iPhone Safari等）でも、ウィンドウ全体を覆う表示で使える
+    if (document.fullscreenEnabled) {
+      void stage
+        .requestFullscreen()
+        .then(() => {
+          // 要求の解決前に閉じられていた場合は、全画面だけが残らないよう解除する
+          if (!open && document.fullscreenElement)
+            void document.exitFullscreen();
+        })
+        .catch(() => {});
+    }
+  }
+
+  function closeStage() {
+    if (!open) return;
+    open = false;
+    stage.hidden = true;
+    document.body.style.overflow = '';
+    clearTimeout(hintTimer);
+    if (document.fullscreenElement) void document.exitFullscreen();
+    (opener ?? startButton).focus();
+  }
+
+  function step(delta: number) {
+    index = cycleIndex(index, delta, TEST_COLORS.length);
+    render();
+  }
+
+  startButton.addEventListener('click', () => openStage(0));
+  root.querySelectorAll<HTMLElement>('[data-dpc-color]').forEach((el) => {
+    el.addEventListener('click', () => openStage(Number(el.dataset.dpcColor)));
+  });
+
+  stage.addEventListener('click', (event) => {
+    if (event.target === closeButton) return;
+    step(1);
+  });
+  stage.addEventListener('mousemove', showHint);
+  closeButton.addEventListener('click', closeStage);
+
+  document.addEventListener('keydown', (event) => {
+    if (!open) return;
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+      case ' ':
+      case 'Enter':
+        // closeButtonにフォーカスがある状態のEnter/Spaceはボタン操作として扱う
+        if (document.activeElement === closeButton) return;
+        event.preventDefault();
+        step(1);
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        event.preventDefault();
+        step(-1);
+        break;
+      case 'Escape':
+        closeStage();
+        break;
+    }
+  });
+
+  // ブラウザ側のEsc等で全画面が解除されたら、表示も終了する
+  document.addEventListener('fullscreenchange', () => {
+    if (open && !document.fullscreenElement) closeStage();
+  });
+
+  window.addEventListener('pagehide', closeStage);
+</script>

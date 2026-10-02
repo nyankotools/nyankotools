@@ -94,9 +94,9 @@ export const passwordGeneratorContent: Record<
     ],
   },
   en: {
-    title: 'Password Generator',
+    title: 'Free Password Generator',
     description:
-      'A free tool to generate strong, random passwords by choosing character types (uppercase, lowercase, numbers, symbols) and length, with a strength estimate. Your data is processed in the browser and never sent to a server.',
+      'Generate strong random passwords by choosing character types and length, with a strength estimate. Runs in your browser; nothing is sent to a server.',
     h1: 'Password Generator',
     introHtml:
       'Generate hard-to-guess random passwords by choosing character types and length. It uses your browser\'s cryptographically secure random number generator (Web Crypto API), so generated passwords are never sent to a server. Need a random ID to go with it? Try the <a href="/en/tools/uuid-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">UUID Generator</a> as well.',

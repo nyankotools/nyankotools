@@ -1,0 +1,181 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { jsonSchemaGeneratorContent } from '../../i18n/tools/json-schema-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = jsonSchemaGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="jsg-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="jsg-input"
+      class="ui-input h-56 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      data-sample={t.sampleText}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div
+    id="jsg-controls"
+    class="mt-4 flex flex-wrap items-end gap-x-6 gap-y-3"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-error-invalid-json={t.errorInvalidJson}
+    data-error-too-deep={t.errorTooDeep}
+  >
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.draftLabel}</span>
+      <select
+        id="jsg-draft"
+        class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
+      >
+        <option value="2020-12">2020-12</option>
+        <option value="2019-09">2019-09</option>
+        <option value="07">draft-07</option>
+      </select>
+    </label>
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.titleLabel}</span>
+      <input
+        id="jsg-title"
+        type="text"
+        maxlength="80"
+        class="ui-input h-11 w-48 px-3 dark:bg-gray-900"
+        spellcheck="false"
+      />
+    </label>
+  </div>
+  <div class="mt-3 flex flex-wrap gap-x-6 gap-y-1">
+    <label class="ui-check h-11">
+      <input id="jsg-required" type="checkbox" class="h-4 w-4" checked />
+      {t.requiredLabel}
+    </label>
+    <label class="ui-check h-11">
+      <input id="jsg-no-additional" type="checkbox" class="h-4 w-4" />
+      {t.noAdditionalLabel}
+    </label>
+    <label class="ui-check h-11">
+      <input id="jsg-formats" type="checkbox" class="h-4 w-4" checked />
+      {t.formatLabel}
+    </label>
+  </div>
+
+  <p id="jsg-error" hidden role="alert" class="ui-error mt-4 max-w-2xl"></p>
+
+  <div class="mt-4">
+    <label for="jsg-output" class="ui-label">
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="jsg-output"
+      readonly
+      class="ui-input h-80 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div class="mt-3 flex flex-wrap items-center gap-3">
+    <button id="jsg-copy-button" type="button" class="ui-btn">
+      {t.copyButton}
+    </button>
+    <button id="jsg-download-button" type="button" class="ui-btn">
+      {t.downloadButton}
+    </button>
+    <span
+      id="jsg-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import { onTextInput } from '../../lib/input-scheduler';
+  import {
+    generateJsonSchema,
+    type JsonSchemaDraft,
+  } from '../../lib/tools/json-schema-generator';
+
+  const controls = document.getElementById('jsg-controls')!;
+  const input = document.getElementById('jsg-input') as HTMLTextAreaElement;
+  const output = document.getElementById('jsg-output') as HTMLTextAreaElement;
+  const draft = document.getElementById('jsg-draft') as HTMLSelectElement;
+  const title = document.getElementById('jsg-title') as HTMLInputElement;
+  const requiredCheck = document.getElementById(
+    'jsg-required',
+  ) as HTMLInputElement;
+  const noAdditional = document.getElementById(
+    'jsg-no-additional',
+  ) as HTMLInputElement;
+  const formats = document.getElementById('jsg-formats') as HTMLInputElement;
+  const copyButton = document.getElementById('jsg-copy-button')!;
+  const downloadButton = document.getElementById('jsg-download-button')!;
+  const statusEl = document.getElementById('jsg-status')!;
+  const errorEl = document.getElementById('jsg-error')!;
+
+  const d = controls.dataset;
+  const errorMessages = {
+    'invalid-json': d.errorInvalidJson ?? '',
+    'too-deep': d.errorTooDeep ?? '',
+  };
+
+  function render() {
+    statusEl.textContent = '';
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+
+    const result = generateJsonSchema(input.value, {
+      draft: draft.value as JsonSchemaDraft,
+      title: title.value,
+      required: requiredCheck.checked,
+      noAdditionalProperties: noAdditional.checked,
+      detectFormats: formats.checked,
+    });
+    if (!result.success) {
+      output.value = '';
+      if (result.reason !== 'empty') {
+        errorEl.textContent = errorMessages[result.reason];
+        errorEl.hidden = false;
+      }
+      return;
+    }
+    output.value = result.schema;
+  }
+
+  onTextInput(input, render);
+  title.addEventListener('input', render);
+  draft.addEventListener('change', render);
+  [requiredCheck, noAdditional, formats].forEach((el) =>
+    el.addEventListener('change', render),
+  );
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (!output.value) return;
+    downloadBlob(
+      new Blob([output.value], { type: 'application/json' }),
+      'schema.json',
+    );
+  });
+
+  input.value = input.dataset.sample ?? '';
+  render();
+</script>

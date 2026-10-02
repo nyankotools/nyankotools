@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
+import { blockAnalytics } from './helpers/block-analytics';
 import type { CDPSession } from '@playwright/test';
 
 /**
@@ -124,6 +125,7 @@ test.describe('お問い合わせページ（日本語版）', () => {
     const context = await browser.newContext({
       permissions: ['clipboard-read', 'clipboard-write'],
     });
+    await blockAnalytics(context);
     const page = await context.newPage();
     await page.goto('/contact/');
 
@@ -153,6 +155,7 @@ test.describe('お問い合わせページ（日本語版）', () => {
     const context = await browser.newContext({
       permissions: ['clipboard-read', 'clipboard-write'],
     });
+    await blockAnalytics(context);
     const page = await context.newPage();
     await page.goto('/contact/');
 

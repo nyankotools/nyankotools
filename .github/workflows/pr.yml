@@ -24,6 +24,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - run: pnpm exec prettier --check .
+
       - run: pnpm run lint
 
       - run: pnpm exec astro check
@@ -31,3 +33,5 @@ jobs:
       - run: pnpm test
 
       - run: pnpm build
+
+      - run: pnpm run check:bundle

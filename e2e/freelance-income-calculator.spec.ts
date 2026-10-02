@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('フリーランス手取り計算機', () => {
   test('直接アクセスして正しく表示される', async ({ page }) => {
@@ -14,13 +14,13 @@ test.describe('フリーランス手取り計算機', () => {
     await page.goto('/tools/freelance-income-calculator/');
 
     await expect(page.locator('#freelance-calc-result-net')).toHaveText(
-      '￥3,703,594',
+      '￥3,734,224',
     );
     await expect(
       page.locator('#freelance-calc-result-business-income'),
     ).toHaveText('￥5,000,000');
     await expect(page.locator('#freelance-calc-result-income-tax')).toHaveText(
-      '￥376,500',
+      '￥346,500',
     );
     await expect(
       page.locator('#freelance-calc-result-resident-tax'),
@@ -40,10 +40,10 @@ test.describe('フリーランス手取り計算機', () => {
       page.locator('#freelance-calc-result-business-income'),
     ).toHaveText('￥4,350,000');
     await expect(page.locator('#freelance-calc-result-income-tax')).toHaveText(
-      '￥246,500',
+      '￥219,500',
     );
     await expect(page.locator('#freelance-calc-result-net')).toHaveText(
-      '￥3,901,324',
+      '￥3,928,891',
     );
   });
 

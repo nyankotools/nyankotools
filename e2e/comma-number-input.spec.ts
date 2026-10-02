@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('カンマ区切り数値入力の共通機能', () => {
   test('時給計算機：金額入力欄に3桁区切りが適用される', async ({ page }) => {

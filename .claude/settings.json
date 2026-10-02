@@ -9,12 +9,15 @@
       "Grep",
       "Bash(pnpm test*)",
       "Bash(pnpm run test*)",
+      "Bash(pnpm qa*)",
+      "Bash(pnpm run qa*)",
       "Bash(pnpm exec vitest run*)",
       "Bash(pnpm vitest run*)",
       "Bash(pnpm exec astro check*)",
       "Bash(pnpm run lint*)",
       "Bash(pnpm exec playwright test*)",
       "PowerShell(pnpm test*)",
+      "PowerShell(pnpm qa*)",
       "PowerShell(pnpm exec astro check*)",
       "PowerShell(pnpm run lint*)"
     ]

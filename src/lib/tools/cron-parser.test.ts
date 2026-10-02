@@ -114,6 +114,22 @@ describe('cronMatchesDate', () => {
     );
   });
 
+  it('日または曜日が */2 のように*で始まる場合はANDで判定する（Vixie cron準拠）', () => {
+    const result = parseCronExpression('0 0 */2 * 1');
+    if (!result.ok) throw new Error('parse failed');
+    expect(result.cron.dayFieldsOr).toBe(false);
+    // 2024-01-01は月曜日かつ奇数日 -> マッチ
+    expect(cronMatchesDate(result.cron, new Date(2024, 0, 1, 0, 0))).toBe(true);
+    // 2024-01-08は月曜日だが偶数日 -> マッチしない
+    expect(cronMatchesDate(result.cron, new Date(2024, 0, 8, 0, 0))).toBe(
+      false,
+    );
+    // 2024-01-03は奇数日だが水曜日 -> マッチしない
+    expect(cronMatchesDate(result.cron, new Date(2024, 0, 3, 0, 0))).toBe(
+      false,
+    );
+  });
+
   it('日・曜日ともに*の場合は常にtrue', () => {
     const result = parseCronExpression('0 0 * * *');
     if (!result.ok) throw new Error('parse failed');

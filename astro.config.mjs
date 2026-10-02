@@ -39,6 +39,9 @@ export default defineConfig({
         // GA4がトラッキングピクセルをgoogletagmanager.comに送信するため許可する。
         "img-src 'self' blob: https://www.googletagmanager.com",
         "font-src 'self'",
+        // mic-testerが録音をblob: URLで<audio>に設定して再生するため。省略するとdefault-src 'self'
+        // が適用され、本番相当のCSP配信でのみ録音の再生がブロックされる。
+        "media-src 'self' blob:",
         // ツール本体はサーバーに一切データを送らない完全ローカル処理を維持しているが、
         // アクセス解析向けの通信（GA4、およびCloudflare Web Analytics）のみ例外として許可する。
         // prefetch機能は <link rel="prefetch"> 非対応ブラウザ（旧Safari等）では fetch()
@@ -51,6 +54,9 @@ export default defineConfig({
         // Cloudflare Web Analyticsの計測ビーコン（beacon.min.jsがcloudflareinsights.comへ送信）
         // のため cloudflareinsights.com も許可する。
         "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://www.googletagmanager.com https://cloudflareinsights.com",
+        // heic-to（libheif wasm）が変換用のWeb Workerを blob: URLから生成するため（CSPは全ページ共通のため、サイト全体に適用される。connect-src は変えていないので外部送信は引き続きブロックされる）。
+        // worker-src を省略すると script-src にフォールバックして blob: が拒否される。
+        "worker-src 'self' blob:",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",
@@ -93,14 +99,19 @@ export default defineConfig({
     // 追加したらここにも追記すること。
     optimizeDeps: {
       include: [
+        'bcryptjs',
+        'fast-xml-parser',
         '@neslinesli93/qpdf-wasm',
         'csso',
         'dompurify',
         'exifr',
+        'heic-to/csp',
+        'jsbarcode',
+        'jsqr',
         'jsonpath-plus',
         'marked',
         'pdf-lib',
-        'pdfjs-dist',
+        'pdfjs-dist/legacy/build/pdf.mjs',
         'prettier/standalone',
         'prettier/plugins/babel',
         'prettier/plugins/estree',

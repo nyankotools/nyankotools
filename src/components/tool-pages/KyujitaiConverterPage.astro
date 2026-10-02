@@ -1,0 +1,191 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { kyujitaiConverterContent } from '../../i18n/tools/kyujitai-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = kyujitaiConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="kyujitai-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-summary={t.summary}
+    data-summary-none={t.summaryNone}
+    data-changes-label={t.changesLabel}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <div
+        id="kyujitai-mode"
+        class="ui-seg"
+        role="group"
+        aria-label={t.directionLabel}
+      >
+        <button
+          type="button"
+          data-mode="toShinjitai"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.modeToShinjitai}
+        </button>
+        <button
+          type="button"
+          data-mode="toKyujitai"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.modeToKyujitai}
+        </button>
+      </div>
+      <button id="kyujitai-copy-button" type="button" class="ui-btn">
+        {t.copy}
+      </button>
+      <span
+        id="kyujitai-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+
+    <label id="kyujitai-variants-wrap" class="ui-check mt-3">
+      <input id="kyujitai-variants" type="checkbox" checked />
+      {t.variantsLabel}
+    </label>
+
+    <div class="mt-4 grid gap-4 lg:grid-cols-2">
+      <div>
+        <label for="kyujitai-input" class="ui-label">
+          {t.inputLabel}
+        </label>
+        <textarea
+          id="kyujitai-input"
+          data-query-target="text"
+          data-sample={t.sampleText}
+          class="ui-input h-64 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.inputPlaceholder}
+          spellcheck="false"
+        ></textarea>
+      </div>
+      <div>
+        <label for="kyujitai-output" class="ui-label">
+          {t.outputLabel}
+        </label>
+        <textarea
+          id="kyujitai-output"
+          readonly
+          class="ui-input h-64 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+        ></textarea>
+      </div>
+    </div>
+
+    <p
+      id="kyujitai-summary"
+      class="mt-2 min-h-5 text-sm text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+    <div id="kyujitai-changes-wrap" class="mt-1 hidden">
+      <h2 class="ui-label">{t.changesLabel}</h2>
+      <ul
+        id="kyujitai-changes"
+        class="flex flex-wrap gap-2 text-sm"
+        aria-label={t.changesLabel}
+      ></ul>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    convertKyujitai,
+    type KyujitaiDirection,
+  } from '../../lib/tools/kyujitai-converter';
+
+  const root = document.getElementById('kyujitai-root')!;
+  const input = document.getElementById(
+    'kyujitai-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'kyujitai-output',
+  ) as HTMLTextAreaElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#kyujitai-mode [data-mode]',
+  );
+  const variantsWrap = document.getElementById('kyujitai-variants-wrap')!;
+  const variantsCheck = document.getElementById(
+    'kyujitai-variants',
+  ) as HTMLInputElement;
+  const copyButton = document.getElementById(
+    'kyujitai-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('kyujitai-status')!;
+  const summaryEl = document.getElementById('kyujitai-summary')!;
+  const changesWrap = document.getElementById('kyujitai-changes-wrap')!;
+  const changesList = document.getElementById('kyujitai-changes')!;
+
+  let direction: KyujitaiDirection = 'toShinjitai';
+
+  function convert() {
+    statusEl.textContent = '';
+    const result = convertKyujitai(input.value, {
+      direction,
+      includeVariants: variantsCheck.checked,
+    });
+    output.value = result.output;
+
+    changesList.replaceChildren(
+      ...result.changes.map((change) => {
+        const li = document.createElement('li');
+        li.className =
+          'rounded border border-gray-200 px-2 py-0.5 dark:border-gray-700';
+        li.textContent =
+          `${change.from}→${change.to}` +
+          (change.count > 1 ? ` ×${change.count}` : '');
+        return li;
+      }),
+    );
+    changesWrap.classList.toggle('hidden', result.changes.length === 0);
+
+    if (input.value === '') {
+      summaryEl.textContent = '';
+    } else if (result.total === 0) {
+      summaryEl.textContent = root.dataset.summaryNone ?? '';
+    } else {
+      summaryEl.textContent = (root.dataset.summary ?? '').replace(
+        '{total}',
+        String(result.total),
+      );
+    }
+  }
+
+  onTextInput(input, convert);
+  variantsCheck.addEventListener('change', convert);
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      direction = button.dataset.mode as KyujitaiDirection;
+      variantsWrap.classList.toggle('hidden', direction === 'toKyujitai');
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (root.dataset.copied ?? '')
+      : (root.dataset.copyFailed ?? '');
+  });
+
+  convert();
+</script>

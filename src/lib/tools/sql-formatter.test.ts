@@ -115,6 +115,27 @@ describe('formatSqlQuery', () => {
 });
 
 describe('minifySqlQuery', () => {
+  it('MySQL の # 行コメントを除去し、後続の行を巻き込まない', () => {
+    expect(minifySqlQuery('SELECT 1 # c\nFROM t', 'mysql')).toBe(
+      'SELECT 1 FROM t',
+    );
+  });
+
+  it('PostgreSQL では # は演算子なのでコメント扱いしない', () => {
+    expect(minifySqlQuery('SELECT a # b\nFROM t', 'postgresql')).toBe(
+      'SELECT a # b FROM t',
+    );
+  });
+
+  it('PostgreSQL のドル引用符文字列の中身（空白・コメント記号）を保持する', () => {
+    expect(minifySqlQuery('SELECT $$a   b -- x$$ , 1', 'postgresql')).toBe(
+      'SELECT $$a   b -- x$$ , 1',
+    );
+    expect(
+      minifySqlQuery('SELECT $fn$ a   $$ -- b $fn$ FROM t', 'postgresql'),
+    ).toBe('SELECT $fn$ a   $$ -- b $fn$ FROM t');
+  });
+
   it('連続する空白・改行を1個のスペースにまとめる', () => {
     const input = 'SELECT\n  a,\n  b\nFROM\n  t';
     expect(minifySqlQuery(input)).toBe('SELECT a, b FROM t');

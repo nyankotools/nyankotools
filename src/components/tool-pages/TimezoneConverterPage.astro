@@ -1,0 +1,329 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { timezoneConverterContent } from '../../i18n/tools/timezone-converter';
+import { POPULAR_ZONES } from '../../lib/tools/timezone-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = timezoneConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="tz"
+    data-date-locale={t.dateLocale}
+    data-zone-labels={JSON.stringify(t.zoneLabels)}
+    data-popular-zones={JSON.stringify(POPULAR_ZONES)}
+    data-day-diff-forms={JSON.stringify(t.dayDiffForms)}
+    data-same-day={t.sameDay}
+    data-gap-note={t.gapNote}
+    data-ambiguous-note={t.ambiguousNote}
+    data-invalid-input={t.invalidInput}
+    data-invalid-zone={t.invalidZone}
+    data-remove-label={t.removeLabel}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="tz-input" class="ui-label">
+          {t.inputLabel}
+        </label>
+        <input
+          id="tz-input"
+          type="datetime-local"
+          class="ui-input h-11 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="tz-source" class="ui-label">
+          {t.sourceZoneLabel}
+        </label>
+        <select
+          id="tz-source"
+          class="ui-input h-11 w-full max-w-64 px-3 dark:bg-gray-900"
+        ></select>
+      </div>
+      <button type="button" id="tz-now-button" class="ui-btn">
+        {t.nowButton}
+      </button>
+      <label class="ui-check">
+        <input id="tz-live" type="checkbox" data-no-persist />
+        {t.liveLabel}
+      </label>
+    </div>
+    <p id="tz-error" class="ui-error empty:hidden mt-2" aria-live="polite"></p>
+    <p
+      id="tz-note"
+      class="mt-2 text-sm text-amber-700 dark:text-amber-400"
+      aria-live="polite"
+    ></p>
+
+    <h2 class="mt-6 mb-2 text-lg font-semibold">{t.targetsHeading}</h2>
+    <ul id="tz-results" class="grid gap-3 sm:grid-cols-2"></ul>
+
+    <div class="mt-4 flex flex-wrap items-end gap-3">
+      <div>
+        <label for="tz-add-input" class="ui-label">
+          {t.addZoneLabel}
+        </label>
+        <input
+          id="tz-add-input"
+          type="text"
+          list="tz-zone-list"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder={t.addZonePlaceholder}
+          data-no-persist
+          class="ui-input h-11 w-64 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+        <datalist id="tz-zone-list"></datalist>
+      </div>
+      <button type="button" id="tz-add-button" class="ui-btn">
+        {t.addZoneButton}
+      </button>
+      <button type="button" id="tz-copy-button" class="ui-btn">
+        {t.copyButton}
+      </button>
+      <span
+        id="tz-copy-status"
+        class="text-sm text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></span>
+    </div>
+    <p
+      id="tz-add-error"
+      class="ui-error empty:hidden mt-2"
+      aria-live="polite"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { count, fill } from '../../lib/format-template';
+  import {
+    getWallClock,
+    isValidTimeZone,
+    parseDateTimeLocal,
+    resolveWallClock,
+    toDateTimeLocal,
+    viewInZone,
+  } from '../../lib/tools/timezone-converter';
+
+  const root = document.getElementById('tz')!;
+  const dateLocale = root.dataset.dateLocale ?? 'en-US';
+  const zoneLabels: Record<string, string> = JSON.parse(
+    root.dataset.zoneLabels ?? '{}',
+  );
+  const popularZones: string[] = JSON.parse(root.dataset.popularZones ?? '[]');
+  const dayDiffForms: [string, string] = JSON.parse(
+    root.dataset.dayDiffForms ?? '["",""]',
+  );
+  const sameDay = root.dataset.sameDay ?? '';
+  const gapNote = root.dataset.gapNote ?? '';
+  const ambiguousNote = root.dataset.ambiguousNote ?? '';
+  const invalidInput = root.dataset.invalidInput ?? '';
+  const invalidZone = root.dataset.invalidZone ?? '';
+  const removeLabel = root.dataset.removeLabel ?? '{zone}';
+  const copiedMessage = root.dataset.copied ?? '';
+  const copyFailedMessage = root.dataset.copyFailed ?? '';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const input = $<HTMLInputElement>('tz-input');
+  const source = $<HTMLSelectElement>('tz-source');
+  const nowButton = $('tz-now-button');
+  const live = $<HTMLInputElement>('tz-live');
+  const errorEl = $('tz-error');
+  const noteEl = $('tz-note');
+  const results = $('tz-results');
+  const addInput = $<HTMLInputElement>('tz-add-input');
+  const addButton = $('tz-add-button');
+  const addError = $('tz-add-error');
+  const zoneList = $<HTMLDataListElement>('tz-zone-list');
+  const copyButton = $('tz-copy-button');
+  const copyStatus = $('tz-copy-status');
+
+  const label = (zone: string) => zoneLabels[zone] ?? zone.replace(/_/g, ' ');
+
+  const browserZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const defaultTargets = [
+    'UTC',
+    'America/Los_Angeles',
+    'America/New_York',
+    'Europe/London',
+    'Europe/Berlin',
+    'Asia/Kolkata',
+    'Asia/Tokyo',
+    'Australia/Sydney',
+  ];
+  let targets = defaultTargets.filter(isValidTimeZone);
+  let copyValue = '';
+
+  function addOption(select: HTMLSelectElement, zone: string) {
+    const option = document.createElement('option');
+    option.value = zone;
+    option.textContent = `${label(zone)} (${zone})`;
+    select.append(option);
+  }
+  const sourceZones = [...popularZones];
+  if (isValidTimeZone(browserZone) && !sourceZones.includes(browserZone))
+    sourceZones.unshift(browserZone);
+  sourceZones.forEach((zone) => addOption(source, zone));
+  source.value = sourceZones.includes(browserZone) ? browserZone : 'Asia/Tokyo';
+
+  const allZones: string[] =
+    typeof Intl.supportedValuesOf === 'function'
+      ? Intl.supportedValuesOf('timeZone')
+      : [];
+  for (const zone of new Set([...popularZones, ...allZones])) {
+    const option = document.createElement('option');
+    option.value = zone;
+    zoneList.append(option);
+  }
+
+  function setNow() {
+    input.value = toDateTimeLocal(getWallClock(Date.now(), source.value));
+  }
+
+  function renderTargets(ms: number) {
+    results.replaceChildren();
+    const lines: string[] = [];
+    for (const zone of targets) {
+      const v = viewInZone(ms, zone, source.value, dateLocale);
+      const dayText =
+        v.dayDiff === 0
+          ? sameDay
+          : count(
+              dayDiffForms,
+              Math.abs(v.dayDiff),
+              `${v.dayDiff > 0 ? '+' : '-'}${Math.abs(v.dayDiff)}`,
+            );
+      const li = document.createElement('li');
+      li.className =
+        'flex items-start justify-between gap-2 rounded-lg border border-gray-200 p-3 dark:border-gray-700';
+      const body = document.createElement('div');
+      const name = document.createElement('p');
+      name.className = 'text-sm font-medium';
+      name.textContent = label(zone);
+      const time = document.createElement('p');
+      time.className = 'text-2xl font-semibold tabular-nums';
+      time.textContent = v.time;
+      const detail = document.createElement('p');
+      detail.className = 'text-sm text-gray-600 dark:text-gray-400';
+      detail.textContent = `${v.date} ${v.weekday}・${v.offset}・${dayText}`;
+      body.append(name, time, detail);
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'ui-btn px-2';
+      remove.textContent = '×';
+      remove.setAttribute(
+        'aria-label',
+        fill(removeLabel, { zone: label(zone) }),
+      );
+      remove.addEventListener('click', () => {
+        targets = targets.filter((z) => z !== zone);
+        render();
+      });
+      li.append(body, remove);
+      results.append(li);
+      lines.push(
+        `${label(zone)}: ${v.date} (${v.weekday}) ${v.time} ${v.offset}`,
+      );
+    }
+    copyValue = lines.join('\n');
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    noteEl.textContent = '';
+    copyStatus.textContent = '';
+    results.replaceChildren();
+    copyValue = '';
+
+    let ms: number;
+    if (live.checked) {
+      ms = Date.now();
+    } else {
+      const wall = parseDateTimeLocal(input.value);
+      if (!wall) {
+        if (input.value !== '') errorEl.textContent = invalidInput;
+        return;
+      }
+      const r = resolveWallClock(wall, source.value);
+      if (r.status === 'gap') noteEl.textContent = gapNote;
+      if (r.status === 'ambiguous') noteEl.textContent = ambiguousNote;
+      ms = r.ms;
+    }
+    renderTargets(ms);
+  }
+
+  let timer: number | undefined;
+  function syncLive() {
+    window.clearInterval(timer);
+    if (!live.checked) return;
+    const tick = () => {
+      setNow();
+      render();
+    };
+    tick();
+    timer = window.setInterval(tick, 1000);
+  }
+
+  input.addEventListener('input', () => {
+    if (live.checked) {
+      live.checked = false;
+      syncLive();
+    }
+    render();
+  });
+  source.addEventListener('change', render);
+  nowButton.addEventListener('click', () => {
+    live.checked = false;
+    syncLive();
+    setNow();
+    render();
+  });
+  live.addEventListener('change', () => {
+    syncLive();
+    render();
+  });
+
+  function addZone() {
+    addError.textContent = '';
+    const raw = addInput.value.trim();
+    if (raw === '') return;
+    if (!isValidTimeZone(raw)) {
+      addError.textContent = invalidZone;
+      return;
+    }
+    const zone = new Intl.DateTimeFormat('en-US', {
+      timeZone: raw,
+    }).resolvedOptions().timeZone;
+    if (!targets.includes(zone)) targets.push(zone);
+    addInput.value = '';
+    render();
+  }
+  addButton.addEventListener('click', addZone);
+  addInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addZone();
+    }
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (copyValue === '') return;
+    copyStatus.textContent = (await copyText(copyValue))
+      ? copiedMessage
+      : copyFailedMessage;
+  });
+
+  setNow();
+  render();
+</script>

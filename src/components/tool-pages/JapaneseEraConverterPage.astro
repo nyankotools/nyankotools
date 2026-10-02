@@ -2,6 +2,7 @@
 import ToolShell from '../ToolShell.astro';
 import { ERAS } from '../../lib/tools/japanese-era-converter';
 import { japaneseEraConverterContent } from '../../i18n/tools/japanese-era-converter';
+import { fill } from '../../lib/format-template';
 import type { Locale } from '../../data/tools';
 
 interface Props {
@@ -11,12 +12,23 @@ interface Props {
 const { locale } = Astro.props;
 const t = japaneseEraConverterContent[locale];
 const reversedEras = ERAS.slice().reverse();
+type Era = (typeof ERAS)[number];
+const eraName = (era: Era) =>
+  t.resultFormat.romajiEraName ? era.romaji : era.name;
+const startDateValues = (era: Era) => ({
+  y: String(era.start.year),
+  m: String(era.start.month),
+  d: String(era.start.day),
+  mm: String(era.start.month).padStart(2, '0'),
+  dd: String(era.start.day).padStart(2, '0'),
+});
 ---
 
 <ToolShell t={t}>
   <section
     class="mb-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-locale={locale}
+    data-result-format={JSON.stringify(t.resultFormat)}
     data-error-w2j={t.errorW2J}
   >
     <h2 class="mb-3 text-lg font-bold">{t.westernToJapaneseHeading}</h2>
@@ -101,9 +113,7 @@ const reversedEras = ERAS.slice().reverse();
           class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
         >
           {reversedEras.map((era) => (
-            <option value={era.name}>
-              {locale === 'ja' ? era.name : era.romaji}
-            </option>
+            <option value={era.name}>{eraName(era)}</option>
           ))}
         </select>
       </div>
@@ -175,23 +185,12 @@ const reversedEras = ERAS.slice().reverse();
       <tbody>
         {reversedEras.map((era) => (
           <tr class="border-b border-gray-100 dark:border-gray-800">
-            <td class="py-2 pr-4 font-medium">
-              {locale === 'ja' ? era.name : era.romaji}
-            </td>
+            <td class="py-2 pr-4 font-medium">{eraName(era)}</td>
             <td class="py-2 pr-4">
-              {locale === 'ja' ? (
-                <>
-                  {era.start.year}年{era.start.month}月{era.start.day}日
-                </>
-              ) : (
-                <>
-                  {era.start.year}-{String(era.start.month).padStart(2, '0')}-
-                  {String(era.start.day).padStart(2, '0')}
-                </>
-              )}
+              {fill(t.resultFormat.tableStartDate, startDateValues(era))}
             </td>
             <td class="py-2">
-              {locale === 'ja' ? `${era.start.year}年` : era.start.year}
+              {fill(t.resultFormat.tableYear1, { y: String(era.start.year) })}
             </td>
           </tr>
         ))}
@@ -202,15 +201,18 @@ const reversedEras = ERAS.slice().reverse();
 
 <script>
   import {
-    formatEraYear,
     warekiToWestern,
     westernToWareki,
   } from '../../lib/tools/japanese-era-converter';
+  import { fill } from '../../lib/format-template';
+  import type { EraResultFormat } from '../../i18n/tools/japanese-era-converter';
 
   const w2jSection = document.querySelector<HTMLElement>(
     'section[data-locale]',
   )!;
-  const isJa = w2jSection.dataset.locale === 'ja';
+  const format: EraResultFormat = JSON.parse(
+    w2jSection.dataset.resultFormat ?? '{}',
+  );
   const errorW2J = w2jSection.dataset.errorW2j ?? '';
 
   const w2jYearInput = document.getElementById(
@@ -247,13 +249,13 @@ const reversedEras = ERAS.slice().reverse();
       return;
     }
 
-    if (isJa) {
-      w2jResultEl.textContent = `${result.era.name}${formatEraYear(result.eraYear)}`;
-    } else {
-      const yearLabel =
-        result.eraYear === 1 ? '1 (gannen)' : String(result.eraYear);
-      w2jResultEl.textContent = `${result.era.romaji} ${yearLabel}`;
-    }
+    w2jResultEl.textContent = fill(format.wareki, {
+      era: format.romajiEraName ? result.era.romaji : result.era.name,
+      year:
+        result.eraYear === 1
+          ? format.eraYearFirst
+          : fill(format.eraYear, { n: String(result.eraYear) }),
+    });
   }
 
   w2jYearInput.addEventListener('input', renderWesternToWareki);
@@ -303,11 +305,13 @@ const reversedEras = ERAS.slice().reverse();
       return;
     }
 
-    if (isJa) {
-      j2wResultEl.textContent = `西暦${year}年${j2wMonthInput.value}月${j2wDayInput.value}日`;
-    } else {
-      j2wResultEl.textContent = `${year}-${j2wMonthInput.value.padStart(2, '0')}-${j2wDayInput.value.padStart(2, '0')}`;
-    }
+    j2wResultEl.textContent = fill(format.western, {
+      y: String(year),
+      m: j2wMonthInput.value,
+      d: j2wDayInput.value,
+      mm: j2wMonthInput.value.padStart(2, '0'),
+      dd: j2wDayInput.value.padStart(2, '0'),
+    });
   }
 
   j2wEraSelect.addEventListener('change', renderWarekiToWestern);

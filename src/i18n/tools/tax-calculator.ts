@@ -119,7 +119,7 @@ export const taxCalculatorContent: Record<Locale, TaxCalculatorPageContent> = {
   en: {
     title: 'Consumption Tax & Discount Calculator',
     description:
-      "Convert between tax-included and tax-excluded prices for Japan's consumption tax, and calculate the discounted price from a discount rate or amount. Supports the 10% standard rate, 8% reduced rate, and custom rates, with a choice of rounding method. Your data is processed in the browser and never sent to a server.",
+      'Convert Japanese consumption tax between tax-included and tax-excluded prices and calculate discounts, with 10%, 8%, and custom rates. Runs in your browser.',
     h1: 'Consumption Tax & Discount Calculator',
     introHtml:
       'Enter either the tax-excluded or tax-included price and this tool calculates the tax amount and the other price for you. Switch between the 10% standard rate, 8% reduced rate, or a custom rate. You can also calculate the discounted price from a discount rate or a discount amount. Everything happens in your browser, and nothing you type is ever sent to a server. If you want to work out a price from an hourly or monthly wage, try the <a href="/en/tools/hourly-wage-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Hourly Wage Converter & Overtime Pay Calculator</a> as well.',

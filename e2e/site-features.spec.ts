@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 // サイト機能 Step 3: バッジ（No.150）・ショートカット（No.151）・コマンドパレット（No.152）・
 // URLクエリ初期値（No.153）・カテゴリ別LP（No.154）・エラー境界（No.175）
@@ -172,6 +172,7 @@ test.describe('エラー境界', () => {
     await page.locator('#error-toast-close').click();
     await expect(page.locator('#error-toast')).toBeHidden();
     await page.addScriptTag({ url: '/boom.js?again' });
+    // スクリプト読み込み後、エラーが表示されないことを確認（同一 URL では通知しない仕様）
     await page.waitForTimeout(300);
     await expect(page.locator('#error-toast')).toBeHidden();
   });
@@ -183,6 +184,7 @@ test.describe('エラー境界', () => {
     await page.evaluate(() => {
       void Promise.reject(new Error('from extension'));
     });
+    // ページ外由来の拒否ではトーストが表示されないことを確認
     await page.waitForTimeout(300);
     await expect(page.locator('#error-toast')).toBeHidden();
   });
@@ -245,7 +247,7 @@ test.describe('コマンドパレット（追加）', () => {
     const before = await page.locator('#uuid-generator-output').inputValue();
     await page.keyboard.press('Control+k');
     await page.keyboard.press('Control+Enter');
-    await page.waitForTimeout(300);
+    // ページ URL が確認されるまで待つ（自動リトライ）
     await expect(page).toHaveURL(/\/tools\/uuid-generator\/$/);
     await page.keyboard.press('Escape');
     await expect(page.locator('#uuid-generator-output')).toHaveValue(before);
@@ -288,7 +290,8 @@ test.describe('URLクエリ（全対象ツール）', () => {
       await expect(page.locator(sel)).toHaveValue(xss);
       expect(new URL(page.url()).search).toBe('?utm_source=x');
       expect(new URL(page.url()).hash).toBe('#h');
-      await page.waitForTimeout(400); // 保存のデバウンス完了を待つ
+      // 保存のデバウンス完了を待つ（debounce タイミングの確実な確認のため保持）
+      await page.waitForTimeout(400);
       await page.evaluate(() => sessionStorage.clear());
       await page.goto(`/tools/${slug}/?text=${'a'.repeat(5001)}`);
       await expect(page.locator(sel)).toHaveValue('');

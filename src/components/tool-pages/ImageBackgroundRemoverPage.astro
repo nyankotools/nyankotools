@@ -1,0 +1,455 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { imageBackgroundRemoverContent } from '../../i18n/tools/image-background-remover';
+import {
+  MAX_DEFRINGE,
+  MAX_ERODE,
+  MAX_OUTLINE,
+  MAX_PIXELS,
+} from '../../lib/tools/image-background-remover';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageBackgroundRemoverContent[locale];
+
+const sliders = [
+  { id: 'bgr-tolerance', label: t.toleranceLabel, max: 100, value: 15 },
+  { id: 'bgr-erode', label: t.erodeLabel, max: MAX_ERODE, value: 1 },
+  { id: 'bgr-defringe', label: t.defringeLabel, max: MAX_DEFRINGE, value: 1 },
+  {
+    id: 'bgr-outline-width',
+    label: t.outlineWidthLabel,
+    max: MAX_OUTLINE,
+    value: 0,
+  },
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="bgr-root"
+    data-output-info={t.outputInfo}
+    data-downloaded={t.downloaded}
+    data-error-not-image={t.errorNotImage}
+    data-error-too-large={t.errorTooLarge.replace(
+      '{max}',
+      MAX_PIXELS.toLocaleString('en-US'),
+    )}
+    data-error-load-failed={t.errorLoadFailed}
+    data-error-export-failed={t.errorExportFailed}
+  >
+    <p class="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200">
+      {t.scopeNotice}
+    </p>
+
+    <label for="bgr-file" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="bgr-dropzone" class="ui-dropzone">
+      <input id="bgr-file" type="file" accept="image/*" class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="bgr-error"
+      role="alert"
+      hidden
+      class="mt-3 text-sm text-red-600 dark:text-red-400"
+    ></p>
+
+    <div id="bgr-workspace" hidden class="mt-6 grid gap-6 md:grid-cols-2">
+      <div>
+        <div class="flex items-end gap-4">
+          <div>
+            <label for="bgr-color" class="ui-label">
+              {t.colorLabel}
+            </label>
+            <input
+              id="bgr-color"
+              type="color"
+              value="#ffffff"
+              data-no-persist
+              class="h-11 w-16 cursor-pointer rounded-lg border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900"
+            />
+          </div>
+          <code
+            id="bgr-color-hex"
+            class="mb-2.5 text-sm text-gray-600 dark:text-gray-400"
+          ></code>
+        </div>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {t.colorHint}
+        </p>
+
+        <div class="mt-4">
+          <span class="ui-label">{t.modeLabel}</span>
+          <div
+            id="bgr-mode"
+            class="ui-seg w-fit"
+            role="group"
+            aria-label={t.modeLabel}
+          >
+            <button
+              type="button"
+              data-mode="global"
+              aria-pressed="false"
+              class="ui-seg-btn"
+            >
+              {t.modeGlobalLabel}
+            </button>
+            <button
+              type="button"
+              data-mode="contiguous"
+              aria-pressed="true"
+              class="ui-seg-btn"
+            >
+              {t.modeContiguousLabel}
+            </button>
+          </div>
+        </div>
+
+        {sliders.map(({ id, label, max, value }) => (
+          <div class="mt-4">
+            <label for={id} class="ui-label">
+              {label}
+              <span id={`${id}-value`}>{value}</span>
+            </label>
+            <input
+              id={id}
+              type="range"
+              min="0"
+              max={max}
+              value={value}
+              class="h-11 w-full"
+            />
+          </div>
+        ))}
+
+        <div class="mt-4">
+          <label for="bgr-outline-color" class="ui-label">
+            {t.outlineColorLabel}
+          </label>
+          <input
+            id="bgr-outline-color"
+            type="color"
+            value="#ffffff"
+            class="h-11 w-16 cursor-pointer rounded-lg border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center gap-3">
+        <p class="ui-label self-start">{t.previewLabel}</p>
+        <div
+          class="flex flex-wrap items-center gap-2 self-start"
+          role="group"
+          aria-label={t.zoomLabel}
+        >
+          <button
+            id="bgr-undo"
+            type="button"
+            disabled
+            class="ui-btn px-3 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {t.undoButton}
+          </button>
+          <button id="bgr-zoom-out" type="button" class="ui-btn px-3">
+            {t.zoomOutButton}
+          </button>
+          <button id="bgr-zoom-in" type="button" class="ui-btn px-3">
+            {t.zoomInButton}
+          </button>
+          <button id="bgr-zoom-fit" type="button" class="ui-btn px-3">
+            {t.zoomFitButton}
+          </button>
+          <span
+            id="bgr-zoom-value"
+            class="text-sm text-gray-600 dark:text-gray-400"
+            aria-live="polite"
+          ></span>
+        </div>
+        <div
+          class="flex max-h-[75vh] w-full overflow-auto rounded-lg border border-gray-300 p-2 dark:border-gray-700"
+          style="background-image: conic-gradient(#e5e7eb 25%, #fff 0 50%, #e5e7eb 0 75%, #fff 0); background-size: 16px 16px;"
+        >
+          <canvas
+            id="bgr-canvas"
+            role="img"
+            aria-label={t.previewLabel}
+            class="m-auto block shrink-0 cursor-crosshair"
+            style="max-width: 100%; max-height: 70vh;"
+          ></canvas>
+        </div>
+        <p
+          id="bgr-size"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></p>
+        <button id="bgr-download" type="button" disabled class="ui-btn-primary">
+          {t.downloadButton}
+        </button>
+        <span
+          id="bgr-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    hexToRgb,
+    isWithinPixelLimit,
+    pixelAt,
+    removeBackground,
+    rgbToHex,
+    transparentFileName,
+    type BackgroundPick,
+    type FillMode,
+    type RemoveResult,
+    type RgbaImage,
+  } from '../../lib/tools/image-background-remover';
+
+  const root = document.getElementById('bgr-root')!;
+  const fileInput = document.getElementById('bgr-file') as HTMLInputElement;
+  const dropzone = document.getElementById('bgr-dropzone')!;
+  const errorEl = document.getElementById('bgr-error')!;
+  const workspace = document.getElementById('bgr-workspace')!;
+  const canvas = document.getElementById('bgr-canvas') as HTMLCanvasElement;
+  const colorInput = document.getElementById('bgr-color') as HTMLInputElement;
+  const colorHex = document.getElementById('bgr-color-hex')!;
+  const outlineColor = document.getElementById(
+    'bgr-outline-color',
+  ) as HTMLInputElement;
+  const tolerance = document.getElementById(
+    'bgr-tolerance',
+  ) as HTMLInputElement;
+  const erode = document.getElementById('bgr-erode') as HTMLInputElement;
+  const defringe = document.getElementById('bgr-defringe') as HTMLInputElement;
+  const outlineWidth = document.getElementById(
+    'bgr-outline-width',
+  ) as HTMLInputElement;
+  const sizeEl = document.getElementById('bgr-size')!;
+  const statusEl = document.getElementById('bgr-status')!;
+  const downloadButton = document.getElementById(
+    'bgr-download',
+  ) as HTMLButtonElement;
+  const modeButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#bgr-mode [data-mode]'),
+  );
+
+  const undoButton = document.getElementById('bgr-undo') as HTMLButtonElement;
+  const zoomValue = document.getElementById('bgr-zoom-value')!;
+  const ZOOM_LEVELS = [0.25, 0.5, 1, 2, 3, 4, 8];
+
+  const d = root.dataset;
+  let source: RgbaImage | null = null;
+  let sourceName: string | null = null;
+  let picks: BackgroundPick[] = [];
+  // null のときは画面に合わせて表示し、数値のときは元画像に対する倍率で表示する
+  let zoom: number | null = null;
+  let mode: FillMode = 'contiguous';
+  let last: RemoveResult | null = null;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  // 画像の読み込みは非同期なので、古い読み込みが新しい選択を上書きしないよう世代で管理する
+  let generation = 0;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  function process() {
+    if (!source) return;
+    statusEl.textContent = '';
+    const current = picks[picks.length - 1];
+    if (current) colorInput.value = rgbToHex(current.background);
+    colorHex.textContent = colorInput.value;
+    undoButton.disabled = picks.length <= 1;
+    last = removeBackground(source, {
+      picks,
+      tolerance: Number(tolerance.value),
+      mode,
+      erode: Number(erode.value),
+      defringe: Number(defringe.value),
+      outlineWidth: Number(outlineWidth.value),
+      outlineColor: hexToRgb(outlineColor.value) ?? { r: 255, g: 255, b: 255 },
+    });
+    canvas.width = last.width;
+    canvas.height = last.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return showError(d.errorExportFailed ?? '');
+    ctx.putImageData(
+      new ImageData(
+        last.data as Uint8ClampedArray<ArrayBuffer>,
+        last.width,
+        last.height,
+      ),
+      0,
+      0,
+    );
+    applyZoom();
+    sizeEl.textContent = (d.outputInfo ?? '')
+      .replace('{width}', String(last.width))
+      .replace('{height}', String(last.height));
+    downloadButton.disabled = false;
+  }
+
+  function displayedScale(): number {
+    return canvas.width > 0
+      ? canvas.getBoundingClientRect().width / canvas.width
+      : 1;
+  }
+
+  function applyZoom() {
+    if (zoom === null) {
+      canvas.style.width = '';
+      canvas.style.maxWidth = '100%';
+      canvas.style.maxHeight = '70vh';
+      canvas.style.imageRendering = '';
+    } else {
+      canvas.style.width = `${canvas.width * zoom}px`;
+      canvas.style.maxWidth = 'none';
+      canvas.style.maxHeight = 'none';
+      // 拡大時はピクセルが見えるようにする
+      canvas.style.imageRendering = zoom > 1 ? 'pixelated' : '';
+    }
+    zoomValue.textContent = `${Math.round(displayedScale() * 100)}%`;
+  }
+
+  function stepZoom(direction: 1 | -1) {
+    const now = displayedScale();
+    const next =
+      direction === 1
+        ? ZOOM_LEVELS.find((z) => z > now + 0.001)
+        : [...ZOOM_LEVELS].reverse().find((z) => z < now - 0.001);
+    if (next === undefined) return;
+    zoom = next;
+    applyZoom();
+  }
+
+  // スライダー操作中の連続した再計算をまとめる
+  function schedule() {
+    clearTimeout(timer);
+    timer = setTimeout(process, 60);
+  }
+
+  async function loadFile(file: File) {
+    const current = ++generation;
+    showError('');
+    statusEl.textContent = '';
+    if (!file.type.startsWith('image/'))
+      return showError(d.errorNotImage ?? '');
+    let bitmap: ImageBitmap;
+    try {
+      bitmap = await createImageBitmap(file);
+    } catch {
+      if (current === generation) showError(d.errorLoadFailed ?? '');
+      return;
+    }
+    if (current !== generation) return bitmap.close();
+    if (!isWithinPixelLimit(bitmap.width, bitmap.height)) {
+      bitmap.close();
+      return showError(d.errorTooLarge ?? '');
+    }
+    const work = document.createElement('canvas');
+    work.width = bitmap.width;
+    work.height = bitmap.height;
+    const ctx = work.getContext('2d', { willReadFrequently: true });
+    if (!ctx) {
+      bitmap.close();
+      return showError(d.errorLoadFailed ?? '');
+    }
+    ctx.drawImage(bitmap, 0, 0);
+    bitmap.close();
+    const image = ctx.getImageData(0, 0, work.width, work.height);
+    source = { data: image.data, width: image.width, height: image.height };
+    sourceName = file.name;
+    // 最初の背景色は左上のピクセル。そこを起点に、つながった領域を透過する
+    const corner = pixelAt(source, 0, 0);
+    picks = corner ? [{ background: corner, seed: { x: 0, y: 0 } }] : [];
+    zoom = null;
+    workspace.hidden = false;
+    process();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  // プレビューのクリックで、その位置の元画像の色を背景色にする（スポイト）
+  canvas.addEventListener('click', (e) => {
+    if (!source || !last) return;
+    const box = canvas.getBoundingClientRect();
+    const x =
+      Math.floor(((e.clientX - box.left) / box.width) * canvas.width) -
+      last.padding;
+    const y =
+      Math.floor(((e.clientY - box.top) / box.height) * canvas.height) -
+      last.padding;
+    const color = pixelAt(source, x, y);
+    if (!color) return;
+    // 前回までの指定は残し、クリックした色を追加で透過する
+    picks = [...picks, { background: color, seed: { x, y } }];
+    process();
+  });
+
+  colorInput.addEventListener('input', () => {
+    // 色を手で変えたときは、直近の指定の色を置き換える。起点は画像の外周から探す
+    const color = hexToRgb(colorInput.value);
+    if (!color || picks.length === 0) return;
+    picks = [...picks.slice(0, -1), { background: color, seed: null }];
+    schedule();
+  });
+  undoButton.addEventListener('click', () => {
+    if (picks.length <= 1) return;
+    picks = picks.slice(0, -1);
+    process();
+  });
+  document
+    .getElementById('bgr-zoom-in')!
+    .addEventListener('click', () => stepZoom(1));
+  document
+    .getElementById('bgr-zoom-out')!
+    .addEventListener('click', () => stepZoom(-1));
+  document.getElementById('bgr-zoom-fit')!.addEventListener('click', () => {
+    zoom = null;
+    applyZoom();
+  });
+  outlineColor.addEventListener('input', schedule);
+  for (const slider of [tolerance, erode, defringe, outlineWidth]) {
+    const value = document.getElementById(`${slider.id}-value`)!;
+    slider.addEventListener('input', () => {
+      value.textContent = slider.value;
+      schedule();
+    });
+  }
+  for (const button of modeButtons) {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as FillMode;
+      for (const b of modeButtons) {
+        b.setAttribute('aria-pressed', String(b === button));
+      }
+      schedule();
+    });
+  }
+
+  downloadButton.addEventListener('click', () => {
+    canvas.toBlob((blob) => {
+      if (!blob) return showError(d.errorExportFailed ?? '');
+      showError('');
+      downloadBlob(blob, transparentFileName(sourceName));
+      statusEl.textContent = d.downloaded ?? '';
+    }, 'image/png');
+  });
+</script>

@@ -1,0 +1,482 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { qrCodeReaderContent } from '../../i18n/tools/qr-code-reader';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = qrCodeReaderContent[locale];
+
+const selectClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+---
+
+<ToolShell t={t}>
+  <div
+    id="qrr-root"
+    data-default-camera={t.defaultCamera}
+    data-camera-label={t.cameraLabel}
+    data-start={t.startCamera}
+    data-stop={t.stopCamera}
+    data-scanning={t.scanning}
+    data-copy={t.copy}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-open-link={t.openLink}
+    data-no-code={t.noCodeFound}
+    data-result-empty={t.resultEmpty}
+    data-wifi-ssid={t.wifiSsid}
+    data-wifi-password={t.wifiPassword}
+    data-wifi-security={t.wifiSecurity}
+    data-wifi-hidden={t.wifiHidden}
+    data-yes={t.yes}
+    data-no={t.no}
+    data-kinds={JSON.stringify(t.kinds)}
+    data-error-permission-denied={t.errors['permission-denied']}
+    data-error-not-found={t.errors['not-found']}
+    data-error-in-use={t.errors['in-use']}
+    data-error-constraints={t.errors.constraints}
+    data-error-insecure={t.errors.insecure}
+    data-error-unsupported={t.errors.unsupported}
+    data-error-unknown={t.errors.unknown}
+  >
+    <h2 class="mb-2 text-lg font-bold">{t.cameraHeading}</h2>
+    <div class="grid max-w-2xl gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+      <div>
+        <label
+          for="qrr-camera"
+          class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.cameraLabel}
+        </label>
+        <select id="qrr-camera" class={selectClass} data-no-persist>
+          <option value="">{t.defaultCamera}</option>
+        </select>
+      </div>
+      <button id="qrr-toggle" type="button" class="ui-btn ui-btn-primary">
+        {t.startCamera}
+      </button>
+    </div>
+
+    <p id="qrr-error" hidden role="alert" class="ui-error mt-3 max-w-2xl"></p>
+
+    <div class="relative mt-3 aspect-video w-full max-w-2xl overflow-hidden rounded-xl bg-black">
+      <video
+        id="qrr-video"
+        muted
+        playsinline
+        aria-label={t.videoAriaLabel}
+        class="size-full object-contain"
+      ></video>
+      <p
+        id="qrr-placeholder"
+        class="absolute inset-0 flex items-center justify-center px-4 text-center text-sm text-gray-300"
+      >
+        {t.placeholder}
+      </p>
+      <p
+        id="qrr-status"
+        hidden
+        class="absolute inset-x-0 bottom-0 bg-black/60 px-3 py-2 text-center text-xs text-white"
+      >
+        {t.scanning}
+      </p>
+    </div>
+
+    <label for="qrr-file" class="mt-8 mb-2 block text-lg font-bold">
+      {t.fileHeading}
+    </label>
+    <div id="qrr-dropzone" class="ui-dropzone max-w-2xl">
+      <input
+        id="qrr-file"
+        type="file"
+        accept="image/*"
+        class="ui-file"
+        data-no-persist
+      />
+      <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{t.fileHint}</p>
+    </div>
+    <p
+      id="qrr-file-error"
+      hidden
+      role="alert"
+      class="ui-error mt-3 max-w-2xl"
+    ></p>
+
+    <h2 class="mt-8 mb-2 text-lg font-bold">{t.resultHeading}</h2>
+    <div
+      id="qrr-result"
+      aria-live="polite"
+      class="max-w-2xl rounded-xl border border-gray-200 p-4 dark:border-gray-800"
+    >
+      <p class="text-sm text-gray-500 dark:text-gray-400">{t.resultEmpty}</p>
+    </div>
+
+    <div id="qrr-history-wrap" hidden class="mt-6 max-w-2xl">
+      <h3 class="mb-2 text-base font-bold">{t.historyHeading}</h3>
+      <ul id="qrr-history" class="space-y-2"></ul>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { copyText } from '../../lib/clipboard';
+  import { classifyMediaError } from '../../lib/tools/webcam-tester';
+  import type { MediaErrorKind } from '../../lib/tools/webcam-tester';
+  import {
+    addToHistory,
+    classifyContent,
+    decodeQrFromImageData,
+    type QrContentKind,
+  } from '../../lib/tools/qr-code-reader';
+
+  interface DetectedBarcode {
+    rawValue: string;
+  }
+  interface BarcodeDetectorLike {
+    detect(source: ImageBitmapSource): Promise<DetectedBarcode[]>;
+  }
+  const BarcodeDetectorCtor = (
+    window as unknown as {
+      BarcodeDetector?: new () => BarcodeDetectorLike;
+    }
+  ).BarcodeDetector;
+  let detector: BarcodeDetectorLike | null = null;
+  try {
+    detector = BarcodeDetectorCtor ? new BarcodeDetectorCtor() : null;
+  } catch {
+    detector = null;
+  }
+
+  const root = document.getElementById('qrr-root')!;
+  const d = root.dataset;
+  const KINDS = JSON.parse(d.kinds ?? '{}') as Record<QrContentKind, string>;
+  const ERROR_TEXT: Record<MediaErrorKind, string> = {
+    'permission-denied': d.errorPermissionDenied ?? '',
+    'not-found': d.errorNotFound ?? '',
+    'in-use': d.errorInUse ?? '',
+    constraints: d.errorConstraints ?? '',
+    insecure: d.errorInsecure ?? '',
+    unsupported: d.errorUnsupported ?? '',
+    unknown: d.errorUnknown ?? '',
+  };
+
+  const toggle = document.getElementById('qrr-toggle') as HTMLButtonElement;
+  const cameraSelect = document.getElementById(
+    'qrr-camera',
+  ) as HTMLSelectElement;
+  const video = document.getElementById('qrr-video') as HTMLVideoElement;
+  const placeholder = document.getElementById('qrr-placeholder')!;
+  const statusEl = document.getElementById('qrr-status')!;
+  const errorEl = document.getElementById('qrr-error')!;
+  const fileError = document.getElementById('qrr-file-error')!;
+  const dropzone = document.getElementById('qrr-dropzone')!;
+  const fileInput = document.getElementById('qrr-file') as HTMLInputElement;
+  const resultEl = document.getElementById('qrr-result')!;
+  const historyWrap = document.getElementById('qrr-history-wrap')!;
+  const historyEl = document.getElementById('qrr-history')!;
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+
+  let history: string[] = [];
+  let stream: MediaStream | null = null;
+  let active = false;
+  let sessionId = 0;
+  let scanTimer = 0;
+
+  const linkClass =
+    'ui-btn inline-flex items-center justify-center no-underline';
+
+  function makeButton(label: string, onClick: () => void | Promise<void>) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'ui-btn';
+    button.textContent = label;
+    button.addEventListener('click', () => void onClick());
+    return button;
+  }
+
+  async function copyWithFeedback(button: HTMLButtonElement, text: string) {
+    const original = d.copy ?? '';
+    button.textContent = (await copyText(text))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+    setTimeout(() => {
+      button.textContent = original;
+    }, 1500);
+  }
+
+  function renderResult(text: string) {
+    const content = classifyContent(text);
+    resultEl.replaceChildren();
+
+    const badge = document.createElement('p');
+    badge.className =
+      'mb-2 inline-block rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-950/40 dark:text-blue-300';
+    badge.textContent = KINDS[content.kind];
+    resultEl.append(badge);
+
+    const body = document.createElement('p');
+    body.id = 'qrr-result-text';
+    body.className = 'text-sm break-all whitespace-pre-wrap';
+    body.textContent = text;
+    resultEl.append(body);
+
+    if (content.wifi) {
+      const table = document.createElement('dl');
+      table.className =
+        'mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm';
+      const rows: [string | undefined, string][] = [
+        [d.wifiSsid, content.wifi.ssid],
+        [d.wifiPassword, content.wifi.password],
+        [d.wifiSecurity, content.wifi.security],
+        [d.wifiHidden, content.wifi.hidden ? (d.yes ?? '') : (d.no ?? '')],
+      ];
+      for (const [label, value] of rows) {
+        const dt = document.createElement('dt');
+        dt.className = 'text-gray-600 dark:text-gray-400';
+        dt.textContent = label ?? '';
+        const dd = document.createElement('dd');
+        dd.className = 'break-all';
+        dd.textContent = value;
+        table.append(dt, dd);
+      }
+      resultEl.append(table);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'mt-3 flex flex-wrap gap-2';
+    const copyButton = makeButton(d.copy ?? '', () =>
+      copyWithFeedback(copyButton, text),
+    );
+    copyButton.id = 'qrr-copy-button';
+    actions.append(copyButton);
+    if (content.url) {
+      const link = document.createElement('a');
+      link.id = 'qrr-open-link';
+      link.href = content.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.className = linkClass;
+      link.textContent = d.openLink ?? '';
+      actions.append(link);
+    }
+    resultEl.append(actions);
+  }
+
+  function renderHistory() {
+    historyEl.replaceChildren();
+    historyWrap.hidden = history.length < 2;
+    for (const text of history) {
+      const li = document.createElement('li');
+      li.className =
+        'flex items-start gap-2 rounded-lg border border-gray-200 p-2 dark:border-gray-800';
+      const label = document.createElement('button');
+      label.type = 'button';
+      label.className =
+        'min-h-11 flex-1 text-left text-sm break-all hover:underline';
+      label.textContent = text;
+      label.addEventListener('click', () => renderResult(text));
+      const copyButton = makeButton(d.copy ?? '', () =>
+        copyWithFeedback(copyButton, text),
+      );
+      li.append(label, copyButton);
+      historyEl.append(li);
+    }
+  }
+
+  function addResult(text: string) {
+    const changed = addToHistory(history, text);
+    if (
+      changed === history &&
+      resultEl.querySelector('#qrr-result-text')?.textContent === text
+    ) {
+      return;
+    }
+    history = changed;
+    renderResult(text);
+    renderHistory();
+  }
+
+  function showError(kind: MediaErrorKind) {
+    errorEl.textContent = ERROR_TEXT[kind];
+    errorEl.hidden = false;
+  }
+
+  function stopCamera() {
+    sessionId++;
+    clearTimeout(scanTimer);
+    stream?.getTracks().forEach((track) => track.stop());
+    stream = null;
+    video.srcObject = null;
+    active = false;
+    placeholder.hidden = false;
+    statusEl.hidden = true;
+    toggle.textContent = d.start ?? '';
+  }
+
+  // 重い画像でも間に合うよう、解析用には最大幅を抑えて縮小したフレームを使う
+  const MAX_SCAN_SIZE = 960;
+
+  async function scanFrame(id: number) {
+    if (id !== sessionId) return;
+    try {
+      if (video.readyState >= 2 && video.videoWidth > 0) {
+        let found: string | null = null;
+        if (detector) {
+          const codes = await detector.detect(video);
+          if (codes[0]?.rawValue) found = codes[0].rawValue;
+        }
+        if (id !== sessionId) return;
+        if (found === null) {
+          const scale = Math.min(
+            1,
+            MAX_SCAN_SIZE / Math.max(video.videoWidth, video.videoHeight),
+          );
+          canvas.width = Math.round(video.videoWidth * scale);
+          canvas.height = Math.round(video.videoHeight * scale);
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          found = await decodeQrFromImageData(
+            ctx.getImageData(0, 0, canvas.width, canvas.height),
+          );
+        }
+        if (found !== null) addResult(found);
+      }
+    } catch {
+      // 1フレームの解析失敗は無視して次のフレームへ進む
+    }
+    if (id === sessionId)
+      scanTimer = window.setTimeout(() => scanFrame(id), 150);
+  }
+
+  function populateCameras(devices: MediaDeviceInfo[], selectedId?: string) {
+    const previous = cameraSelect.value;
+    cameraSelect.replaceChildren(new Option(d.defaultCamera ?? '', ''));
+    devices
+      .filter((device) => device.kind === 'videoinput' && device.deviceId)
+      .forEach((device, index) => {
+        cameraSelect.append(
+          new Option(
+            device.label || `${d.cameraLabel ?? ''} ${index + 1}`,
+            device.deviceId,
+          ),
+        );
+      });
+    const wanted = selectedId ?? previous;
+    if ([...cameraSelect.options].some((o) => o.value === wanted)) {
+      cameraSelect.value = wanted;
+    }
+  }
+
+  async function startCamera() {
+    stopCamera();
+    errorEl.hidden = true;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showError(window.isSecureContext ? 'unsupported' : 'insecure');
+      return;
+    }
+    const id = sessionId;
+    active = true;
+    toggle.textContent = d.stop ?? '';
+    const videoConstraints: MediaTrackConstraints = cameraSelect.value
+      ? { deviceId: { exact: cameraSelect.value } }
+      : { facingMode: { ideal: 'environment' } };
+    try {
+      const media = await navigator.mediaDevices.getUserMedia({
+        video: videoConstraints,
+        audio: false,
+      });
+      if (id !== sessionId) {
+        media.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      stream = media;
+      video.srcObject = media;
+      placeholder.hidden = true;
+      statusEl.hidden = false;
+      void video.play().catch(() => {});
+      scanTimer = window.setTimeout(() => scanFrame(id), 150);
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        if (id !== sessionId) return;
+        populateCameras(
+          devices,
+          media.getVideoTracks()[0]?.getSettings().deviceId,
+        );
+      } catch {
+        // デバイス一覧の取得失敗は読み取り自体には影響しないため無視する
+      }
+    } catch (error) {
+      if (id !== sessionId) return;
+      stopCamera();
+      showError(classifyMediaError((error as DOMException | undefined)?.name));
+    }
+  }
+
+  toggle.addEventListener('click', () => {
+    if (active) stopCamera();
+    else void startCamera();
+  });
+  cameraSelect.addEventListener('change', () => {
+    if (active) void startCamera();
+  });
+
+  async function scanFile(file: File) {
+    fileError.hidden = true;
+    let bitmap: ImageBitmap;
+    try {
+      bitmap = await createImageBitmap(file);
+    } catch {
+      fileError.textContent = d.noCode ?? '';
+      fileError.hidden = false;
+      return;
+    }
+    const found: string[] = [];
+    try {
+      if (detector) {
+        try {
+          for (const code of await detector.detect(bitmap)) {
+            if (code.rawValue && !found.includes(code.rawValue)) {
+              found.push(code.rawValue);
+            }
+          }
+        } catch {
+          // BarcodeDetectorが失敗してもjsQRで再試行する
+        }
+      }
+      if (found.length === 0) {
+        const scale = Math.min(1, 2000 / Math.max(bitmap.width, bitmap.height));
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        const text = await decodeQrFromImageData(
+          ctx.getImageData(0, 0, canvas.width, canvas.height),
+        );
+        if (text !== null) found.push(text);
+      }
+    } finally {
+      bitmap.close();
+    }
+    if (found.length === 0) {
+      fileError.textContent = d.noCode ?? '';
+      fileError.hidden = false;
+      return;
+    }
+    // 複数検出時は最初のものが結果欄に残るよう、逆順で履歴へ追加する
+    [...found].reverse().forEach((text) => addResult(text));
+  }
+
+  enableFileDrop(dropzone, fileInput);
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void scanFile(file);
+  });
+
+  window.addEventListener('pagehide', stopCamera);
+</script>

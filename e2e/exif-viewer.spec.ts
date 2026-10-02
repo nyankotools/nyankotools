@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -264,6 +264,38 @@ function buildJpegWithGps(
     (app1Length >> 8) & 0xff,
     app1Length & 0xff,
     ...app1Content,
+    0xff,
+    0xd9, // EOI
+  ];
+
+  return Buffer.from(jpeg);
+}
+
+/** XMP（位置情報を含みうる）データ付きのJPEGを作成 */
+function buildJpegWithXmp(): Buffer {
+  const xmpData = Buffer.from(
+    '<?xml version="1.0" encoding="UTF-8"?>' +
+      '<x:xmpmeta xmlns:x="adobe:ns:meta/">' +
+      '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">' +
+      '<rdf:Description rdf:about="" xmlns:exif="http://ns.adobe.com/exif/1.0/">' +
+      '<exif:GPSLatitude>35.658581</exif:GPSLatitude>' +
+      '</rdf:Description>' +
+      '</rdf:RDF>' +
+      '</x:xmpmeta>',
+  );
+
+  const xmpIdentifier = Buffer.from('http://ns.adobe.com/xap/1.0/\0', 'ascii');
+  const xmpContent = Buffer.concat([xmpIdentifier, xmpData]);
+  const app1Length = xmpContent.length + 2;
+
+  const jpeg = [
+    0xff,
+    0xd8, // SOI
+    0xff,
+    0xe1, // APP1
+    (app1Length >> 8) & 0xff,
+    app1Length & 0xff,
+    ...Array.from(xmpContent),
     0xff,
     0xd9, // EOI
   ];
@@ -641,7 +673,110 @@ test.describe('エッジケース・追加テスト', () => {
       // ダウンロードは発生せず、ステータスメッセージのみ表示
       const statusEl = page.locator('#ev-remove-status');
       const statusText = await statusEl.textContent();
-      expect(statusText).toContain('削除対象はありませんでした');
+      expect(statusText).toContain(
+        '削除対象のメタデータや連結データはありませんでした',
+      );
+    } finally {
+      if (fs.existsSync(jpegPath)) fs.unlinkSync(jpegPath);
+    }
+  });
+
+  test('拡張子が .jpg でも中身が JPEG でなければ受け付けない', async ({
+    page,
+  }) => {
+    await page.goto('/tools/exif-viewer/');
+    await page.locator('#ev-file-input').setInputFiles({
+      name: 'fake.jpg',
+      mimeType: 'image/jpeg',
+      buffer: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    });
+    await expect(page.locator('#ev-error')).not.toHaveAttribute('hidden');
+    await expect(page.locator('#ev-error')).toContainText('JPEG画像');
+    await expect(page.locator('#ev-result')).toHaveAttribute('hidden');
+  });
+
+  test("ファイル名に $& や $' を含んでも表示が崩れない", async ({ page }) => {
+    await page.goto('/tools/exif-viewer/');
+    const name = "a$&$'b.jpg";
+    await page.locator('#ev-file-input').setInputFiles({
+      name,
+      mimeType: 'image/jpeg',
+      buffer: Buffer.from(buildJpegWithoutExif()),
+    });
+    await expect(page.locator('#ev-result')).not.toHaveAttribute('hidden');
+    await expect(page.locator('#ev-file-info')).toContainText(name);
+  });
+
+  test('XMP（位置情報含む）削除後のダウンロード画像にXMPが残らない', async ({
+    page,
+    context,
+  }) => {
+    await page.goto('/tools/exif-viewer/');
+
+    const jpegPath = path.join(__dirname, 'temp-exif-with-xmp.jpg');
+    const jpegBuffer = buildJpegWithXmp();
+    fs.writeFileSync(jpegPath, jpegBuffer);
+
+    try {
+      await page.locator('#ev-file-input').setInputFiles(jpegPath);
+      await expect(page.locator('#ev-result')).not.toHaveAttribute('hidden');
+
+      // 削除ボタンを押下してダウンロード
+      const downloadPromise = context.waitForEvent('download');
+      await page.locator('#ev-remove-button').click();
+      const download = await downloadPromise;
+
+      const downloadedPath = path.join(
+        __dirname,
+        `temp-exif-xmp-removed-${Date.now()}.jpg`,
+      );
+      await download.saveAs(downloadedPath);
+
+      try {
+        const downloadedBuffer = fs.readFileSync(downloadedPath);
+
+        // ダウンロード画像がJPEGマジックナンバーで始まることを確認
+        expect(downloadedBuffer[0]).toBe(0xff);
+        expect(downloadedBuffer[1]).toBe(0xd8);
+
+        // ダウンロード画像がEOIで終わることを確認
+        expect(downloadedBuffer[downloadedBuffer.length - 2]).toBe(0xff);
+        expect(downloadedBuffer[downloadedBuffer.length - 1]).toBe(0xd9);
+
+        // XMP識別子が含まれていないことを確認（APP1削除）
+        const xmpIdStr = 'http://ns.adobe.com/xap/1.0/';
+        const xmpIdBytes = Buffer.from(xmpIdStr, 'ascii');
+        let hasXmp = false;
+        for (let i = 0; i < downloadedBuffer.length - xmpIdBytes.length; i++) {
+          let match = true;
+          for (let j = 0; j < xmpIdBytes.length; j++) {
+            if (downloadedBuffer[i + j] !== xmpIdBytes[j]) {
+              match = false;
+              break;
+            }
+          }
+          if (match) {
+            hasXmp = true;
+            break;
+          }
+        }
+        expect(hasXmp).toBe(false);
+
+        // APP1セグメント（0xFFE1）も含まれていないことを確認
+        let hasApp1 = false;
+        for (let i = 0; i < downloadedBuffer.length - 1; i++) {
+          if (
+            downloadedBuffer[i] === 0xff &&
+            downloadedBuffer[i + 1] === 0xe1
+          ) {
+            hasApp1 = true;
+            break;
+          }
+        }
+        expect(hasApp1).toBe(false);
+      } finally {
+        if (fs.existsSync(downloadedPath)) fs.unlinkSync(downloadedPath);
+      }
     } finally {
       if (fs.existsSync(jpegPath)) fs.unlinkSync(jpegPath);
     }

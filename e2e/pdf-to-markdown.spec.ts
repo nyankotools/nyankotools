@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 
 /** 見出し・本文・箇条書き・表を持つ1ページのPDFを作る */

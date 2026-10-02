@@ -115,9 +115,9 @@ export const pdfPasswordProtectorContent: Record<
     ],
   },
   en: {
-    title: 'Password Protect PDF – Encrypt a PDF Free (AES-256, No Upload)',
+    title: 'Password Protect PDF – Free AES-256 Encryption, No Upload',
     description:
-      'A free online tool to add a password to a PDF and encrypt it with AES-256. You can also restrict printing, copying and editing. Your file and password are processed in the browser and never uploaded to a server.',
+      'Add a password and AES-256 encryption to a PDF, and restrict printing, copying, and editing. Runs in your browser; nothing is uploaded.',
     h1: 'Password Protect PDF (Encrypt)',
     introHtml:
       'Add an open password to a PDF and save it encrypted with AES-256. Your file and password never leave your device. To remove a password instead, use the <a href="/en/tools/pdf-page-editor/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">PDF Page Editor</a>. Need a strong password? Generate one with the <a href="/en/tools/password-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Password Generator</a>.',

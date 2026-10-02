@@ -93,7 +93,7 @@ export const svgOptimizerContent: Record<Locale, SvgOptimizerPageContent> = {
   en: {
     title: 'SVG Optimizer (SVGO) – Compress and Minify SVG Online',
     description:
-      'A free online SVG optimizer powered by SVGO. Paste SVG code or upload a file to strip metadata and comments and shrink the file size, with a before/after size comparison and preview. Your data is processed in the browser and never sent to a server.',
+      'Optimize SVG with SVGO: strip metadata and comments, shrink the file, and compare before and after. Runs in your browser; nothing is sent to a server.',
     h1: 'SVG Optimizer (SVGO)',
     introHtml:
       'Choose an SVG file or paste SVG code to remove unnecessary data and make it smaller with SVGO. To resize or compress raster images, try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer</a>. To embed an SVG in CSS or HTML, use the <a href="/en/tools/image-to-base64/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image to Base64 Converter</a>.',

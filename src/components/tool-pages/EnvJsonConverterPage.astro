@@ -1,0 +1,203 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { envJsonConverterContent } from '../../i18n/tools/env-json-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = envJsonConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-3">
+    <div
+      id="env-json-converter-mode"
+      class="ui-seg"
+      role="group"
+      aria-label={t.modeAriaLabel}
+    >
+      <button
+        type="button"
+        data-mode="envToJson"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.modeEnvToJson}
+      </button>
+      <button
+        type="button"
+        data-mode="jsonToEnv"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeJsonToEnv}
+      </button>
+    </div>
+    <label
+      for="env-json-converter-indent"
+      class="text-sm text-gray-700 dark:text-gray-300"
+    >
+      {t.indentLabel}
+    </label>
+    <select
+      id="env-json-converter-indent"
+      class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+    >
+      <option value="2">{t.indentOption2}</option>
+      <option value="4">{t.indentOption4}</option>
+    </select>
+    <label class="ui-check">
+      <input type="checkbox" id="env-json-converter-parse-values" />
+      {t.parseValuesLabel}
+    </label>
+    <button
+      id="env-json-converter-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="env-json-converter-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="env-json-converter-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="env-json-converter-input"
+        data-placeholder-env-to-json={t.inputPlaceholderEnvToJson}
+        data-placeholder-json-to-env={t.inputPlaceholderJsonToEnv}
+        class="ui-input h-80 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholderEnvToJson}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label for="env-json-converter-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="env-json-converter-output"
+        readonly
+        class="ui-input h-80 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="env-json-converter-error"
+    hidden
+    data-error-prefix={t.syntaxErrorPrefix}
+    class="ui-error mt-4 max-w-2xl whitespace-pre-line"
+  ></p>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    envToJson,
+    jsonToEnv,
+    type ConvertOutcome,
+  } from '../../lib/tools/env-json-converter';
+
+  type Mode = 'envToJson' | 'jsonToEnv';
+
+  const input = document.getElementById(
+    'env-json-converter-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'env-json-converter-output',
+  ) as HTMLTextAreaElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#env-json-converter-mode [data-mode]',
+  );
+  const indentSelect = document.getElementById(
+    'env-json-converter-indent',
+  ) as HTMLSelectElement;
+  const parseValuesCheck = document.getElementById(
+    'env-json-converter-parse-values',
+  ) as HTMLInputElement;
+  const copyButton = document.getElementById(
+    'env-json-converter-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('env-json-converter-status')!;
+  const errorEl = document.getElementById('env-json-converter-error')!;
+
+  let mode: Mode = 'envToJson';
+
+  const placeholders: Record<Mode, string> = {
+    envToJson: input.dataset.placeholderEnvToJson ?? '',
+    jsonToEnv: input.dataset.placeholderJsonToEnv ?? '',
+  };
+
+  function showError(message: string) {
+    output.value = '';
+    errorEl.textContent = `${errorEl.dataset.errorPrefix ?? ''}: ${message}`;
+    errorEl.hidden = false;
+  }
+
+  function showOutput(value: string) {
+    output.value = value;
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function convert() {
+    statusEl.textContent = '';
+    if (input.value.trim() === '') {
+      showOutput('');
+      return;
+    }
+    const result: ConvertOutcome =
+      mode === 'envToJson'
+        ? envToJson(input.value, {
+            indent: Number(indentSelect.value),
+            parseValues: parseValuesCheck.checked,
+          })
+        : jsonToEnv(input.value);
+    if (result.success) {
+      showOutput(result.output);
+    } else {
+      showError(result.message);
+    }
+  }
+
+  onTextInput(input, convert);
+  indentSelect.addEventListener('change', convert);
+  parseValuesCheck.addEventListener('change', convert);
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as Mode;
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      input.placeholder = placeholders[mode];
+      const toJson = mode === 'envToJson';
+      indentSelect.disabled = !toJson;
+      parseValuesCheck.disabled = !toJson;
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  convert();
+</script>

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import { PDFDocument } from 'pdf-lib';
 
 async function createTestPdf(pageCount: number): Promise<Buffer> {
@@ -25,6 +25,13 @@ for (const [locale, base] of [
         buffer: await createTestPdf(2),
       });
       await expect(page.locator('#cmp-info')).toContainText('doc.pdf');
+      // ファイル情報に区切り文字が含まれていることを確認（ja: 「、」、en: 「, 」）
+      const infoText = await page.locator('#cmp-info').textContent();
+      if (locale === 'ja') {
+        expect(infoText).toContain('、');
+      } else {
+        expect(infoText).toContain(', ');
+      }
       await page.locator('#cmp-level').selectOption('low');
       await page.locator('#cmp-run').click();
       const link = page.locator('#cmp-result-list a');

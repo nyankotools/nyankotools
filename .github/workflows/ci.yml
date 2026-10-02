@@ -1,7 +1,7 @@
 name: CI
 
-# developのpushではCIを動かさない。ローカルでmainにマージしてpushしたときだけ
-# CI（test / e2e）を実行し、両方成功したらdeployジョブで本番へデプロイする。
+# developのpushではCIを動かさない。developからmainへのPRをマージ（マージコミット）したとき
+# だけCI（test / e2e）を実行し、両方成功したらdeployジョブで本番へデプロイする。
 on:
   push:
     branches: [main]
@@ -21,6 +21,8 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - run: pnpm exec prettier --check .
+
       - run: pnpm run lint
 
       - run: pnpm exec astro check
@@ -36,7 +38,7 @@ jobs:
   # lint/型/単体テストのジョブとは独立して並列実行し、失敗時の切り分けを容易にする。
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v7
 
@@ -48,6 +50,17 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      # ブラウザ本体のダウンロードを省くため、Playwrightのバージョンをキーにキャッシュする。
+      # OS依存パッケージ（--with-deps）はキャッシュ対象外なので、下のinstallは毎回実行する
+      # （キャッシュがヒットすればブラウザのダウンロードだけがスキップされる）。
+      - id: playwright-version
+        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
       - run: pnpm exec playwright install --with-deps chromium
 

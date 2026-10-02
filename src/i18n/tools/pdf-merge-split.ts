@@ -129,7 +129,7 @@ export const pdfMergeSplitContent: Record<Locale, PdfMergeSplitPageContent> = {
   en: {
     title: 'PDF Merge, Split & Extract Pages – Free Online, No Upload',
     description:
-      'A free online tool to merge multiple PDFs into one, split a PDF every N pages, or extract specific pages such as "1-3,5". Your PDFs are processed in the browser and never uploaded to a server.',
+      'Merge PDFs, split every N pages, or extract pages like "1-3,5". Runs in your browser; your PDFs are never uploaded.',
     h1: 'PDF Merge, Split & Extract Pages',
     introHtml:
       'Combine PDFs, or split a PDF and pull out just the pages you need. Your files never leave your device. To turn images into a PDF, try the <a href="/en/tools/pdf-image-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">PDF ⇔ Image Converter</a>. To shrink the images first, use the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer</a> (JPEG output is recommended).',

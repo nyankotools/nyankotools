@@ -116,9 +116,9 @@ export const jsonFormatterContent: Record<Locale, JsonFormatterPageContent> = {
     ],
   },
   en: {
-    title: 'JSON Formatter',
+    title: 'Free JSON Formatter',
     description:
-      'A free tool that formats, minifies, and validates JSON data in your browser, with clear syntax error messages. Your data is processed in the browser and never sent to a server.',
+      'Format, minify, and validate JSON with clear syntax error messages. Runs in your browser; nothing is sent to a server.',
     h1: 'JSON Formatter & Validator',
     introHtml:
       'Paste JSON below to automatically format it. Any syntax error is shown with a clear message. Need to count characters in text instead? Try the <a href="/en/tools/char-counter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Character Counter</a>.',
@@ -134,9 +134,41 @@ export const jsonFormatterContent: Record<Locale, JsonFormatterPageContent> = {
     copyFailed: 'Copy failed',
     inputLabel: 'Input',
     outputLabel: 'Result',
-    errorTemplate: 'Syntax error: {message}',
-    errorExplanations: [],
-    errorExplanationFallback: '',
+    errorTemplate: 'Syntax error: {message}\n{explanation}',
+    errorExplanations: [
+      {
+        pattern: 'Unexpected end of (JSON input|input)',
+        explanation:
+          '(Hint: the input ends unexpectedly. Check for a missing closing bracket (} or ]) or quotation mark.)',
+      },
+      {
+        pattern: 'Unexpected non-whitespace character',
+        explanation:
+          '(Hint: there is extra text at the end of the JSON. Check for stray characters after the closing bracket.)',
+      },
+      {
+        pattern: 'Expected double-quoted property name',
+        explanation:
+          '(Hint: property names must be wrapped in double quotes (").)',
+      },
+      {
+        pattern: 'Unterminated string',
+        explanation:
+          '(Hint: a string is not closed. Check for a missing closing quotation mark (").)',
+      },
+      {
+        pattern: 'Bad control character',
+        explanation:
+          '(Hint: a string contains a control character that is not allowed.)',
+      },
+      {
+        pattern: 'Unexpected token',
+        explanation:
+          '(Hint: there is an unexpected symbol. Check for a trailing comma or a missing bracket or quotation mark.)',
+      },
+    ],
+    errorExplanationFallback:
+      '(Hint: the JSON syntax is invalid. Check that commas, brackets, and quotes are paired correctly.)',
     notesHeading: 'Notes',
     notes: [
       'JSON does not allow trailing commas, single quotes or comments. Including any of them causes a syntax error.',

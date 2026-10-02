@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import { tools, type Locale } from '../src/data/tools';
 
 // 全ツールのFAQセクションとFAQPage構造化データを、ツール登録簿から自動検証する。

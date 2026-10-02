@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
+import { blockAnalytics } from './helpers/block-analytics';
 
 // Step 5: 入力欄まわり共通機能（No.169）・入力状態の保持（No.176）・印刷CSS（No.178）
 
@@ -76,8 +77,16 @@ test.describe('入力状態の保持（No.176）', () => {
   test('再読み込みと言語切替で入力が引き継がれる', async ({ page }) => {
     await page.goto('/tools/text-case-converter/');
     await page.locator('#text-case-input').fill('keep me');
-    // 保存はデバウンスされるので、反映を待ってから再読み込みする
-    await page.waitForTimeout(500);
+    // 保存はデバウンスされるので、反映を待ってから再読み込みする（自動リトライ）
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            sessionStorage.getItem('nyanko:input:text-case-converter'),
+          ),
+        { timeout: 5000 },
+      )
+      .toContain('keep me');
 
     await page.reload();
     await expect(page.locator('#text-case-input')).toHaveValue('keep me');
@@ -90,7 +99,16 @@ test.describe('入力状態の保持（No.176）', () => {
   test('数値入力も復元される', async ({ page }) => {
     await page.goto('/tools/px-rem-converter/');
     await page.locator('#px-rem-px-input').fill('32');
-    await page.waitForTimeout(500);
+    // 保存されるまで待つ（自動リトライ）
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            sessionStorage.getItem('nyanko:input:px-rem-converter'),
+          ),
+        { timeout: 5000 },
+      )
+      .toContain('32');
     await page.reload();
     await expect(page.locator('#px-rem-px-input')).toHaveValue('32');
   });
@@ -98,7 +116,16 @@ test.describe('入力状態の保持（No.176）', () => {
   test('?text= の初期値は保存された値より優先される', async ({ page }) => {
     await page.goto('/tools/text-case-converter/');
     await page.locator('#text-case-input').fill('saved');
-    await page.waitForTimeout(500);
+    // 保存されるまで待つ（自動リトライ）
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            sessionStorage.getItem('nyanko:input:text-case-converter'),
+          ),
+        { timeout: 5000 },
+      )
+      .toContain('saved');
 
     await page.goto('/tools/text-case-converter/?text=from-url');
     await expect(page.locator('#text-case-input')).toHaveValue('from-url');
@@ -107,6 +134,7 @@ test.describe('入力状態の保持（No.176）', () => {
   test('機微ツールの入力は保存も復元もされない', async ({ page }) => {
     await page.goto('/tools/jwt-decoder/');
     await page.locator('#jwt-input').fill('secret.token.value');
+    // デバウンス時間を待つ（保存されないことを確認）
     await page.waitForTimeout(500);
 
     const stored = await page.evaluate(() =>
@@ -160,7 +188,16 @@ test.describe('入力状態の保持（連動欄・change・選択系）', () =>
     await page.locator('#px-rem-rem-input').fill('2');
     await page.locator('#px-rem-px-input').fill('48');
     await expect(page.locator('#px-rem-rem-input')).toHaveValue('3');
-    await page.waitForTimeout(500);
+    // 保存されるまで待つ（自動リトライ）
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            sessionStorage.getItem('nyanko:input:px-rem-converter'),
+          ),
+        { timeout: 5000 },
+      )
+      .toContain('48');
 
     await page.reload();
     await expect(page.locator('#px-rem-px-input')).toHaveValue('48');
@@ -173,7 +210,16 @@ test.describe('入力状態の保持（連動欄・change・選択系）', () =>
     await page.goto('/tools/lorem-ipsum/');
     await page.locator('#lorem-count').fill('7');
     await page.locator('#lorem-count').blur();
-    await page.waitForTimeout(500);
+    // 保存されるまで待つ（自動リトライ）
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            sessionStorage.getItem('nyanko:input:lorem-ipsum'),
+          ),
+        { timeout: 5000 },
+      )
+      .toContain('7');
 
     await page.reload();
     await expect(page.locator('#lorem-count')).toHaveValue('7');
@@ -187,7 +233,16 @@ test.describe('入力状態の保持（連動欄・change・選択系）', () =>
   }) => {
     await page.goto('/tools/lorem-ipsum/');
     await page.locator('#lorem-unit-sentences').check();
-    await page.waitForTimeout(500);
+    // 保存されるまで待つ（自動リトライ）
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            sessionStorage.getItem('nyanko:input:lorem-ipsum'),
+          ),
+        { timeout: 5000 },
+      )
+      .toContain('lorem-unit-sentences');
     await page.reload();
     await expect(page.locator('#lorem-unit-sentences')).toBeChecked();
   });
@@ -197,7 +252,16 @@ test.describe('入力状態の保持（連動欄・change・選択系）', () =>
   }) => {
     await page.goto('/tools/text-case-converter/');
     await page.locator('#text-case-input').fill('boom');
-    await page.waitForTimeout(500);
+    // 保存されるまで待つ（自動リトライ）
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            sessionStorage.getItem('nyanko:input:text-case-converter'),
+          ),
+        { timeout: 5000 },
+      )
+      .toContain('boom');
     await page.evaluate(() =>
       sessionStorage.setItem('nyanko:restoring:text-case-converter', '1'),
     );
@@ -205,7 +269,16 @@ test.describe('入力状態の保持（連動欄・change・選択系）', () =>
     await expect(page.locator('#text-case-input')).toHaveValue('');
     // フラグは消え、次の読み込みからは通常どおり保存・復元される
     await page.locator('#text-case-input').fill('again');
-    await page.waitForTimeout(500);
+    // 保存されるまで待つ（自動リトライ）
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            sessionStorage.getItem('nyanko:input:text-case-converter'),
+          ),
+        { timeout: 5000 },
+      )
+      .toContain('again');
     await page.reload();
     await expect(page.locator('#text-case-input')).toHaveValue('again');
   });
@@ -213,6 +286,7 @@ test.describe('入力状態の保持（連動欄・change・選択系）', () =>
   test('QR生成の入力は保存しない', async ({ page }) => {
     await page.goto('/tools/qr-generator/');
     await page.locator('#qr-generator-input').fill('wifi-password');
+    // デバウンス時間を待つ（保存されないことを確認）
     await page.waitForTimeout(500);
     await page.reload();
     await expect(page.locator('#qr-generator-input')).toHaveValue('');
@@ -226,7 +300,16 @@ test.describe('入力状態の保持（レビュー再指摘）', () => {
     await page.goto('/tools/px-rem-converter/');
     await page.locator('#px-rem-base-input').fill('14');
     await page.locator('#px-rem-px-input').fill('13');
-    await page.waitForTimeout(500);
+    // 保存されるまで待つ（自動リトライ）
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            sessionStorage.getItem('nyanko:input:px-rem-converter'),
+          ),
+        { timeout: 5000 },
+      )
+      .toContain('13');
 
     await page.reload();
     await expect(page.locator('#px-rem-base-input')).toHaveValue('14');
@@ -240,7 +323,16 @@ test.describe('入力状態の保持（レビュー再指摘）', () => {
     const base = page.locator('#cron-base-datetime');
     const initialBase = await base.inputValue();
     await page.locator('#cron-input').fill('*/5 * * * *');
-    await page.waitForTimeout(500);
+    // 保存されるまで待つ（自動リトライ）
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            sessionStorage.getItem('nyanko:input:cron-parser'),
+          ),
+        { timeout: 5000 },
+      )
+      .toContain('cron-input');
 
     const saved = await page.evaluate(() =>
       sessionStorage.getItem('nyanko:input:cron-parser'),
@@ -259,7 +351,16 @@ test.describe('入力状態の保持（レビュー再指摘）', () => {
     await page.goto('/tools/ratio-calculator/');
     await page.locator('input[name="proportion-unknown"][value="a"]').check();
     await page.locator('#proportion-input-b').fill('2');
-    await page.waitForTimeout(500);
+    // 保存されるまで待つ（自動リトライ）
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            sessionStorage.getItem('nyanko:input:ratio-calculator'),
+          ),
+        { timeout: 5000 },
+      )
+      .toContain('2');
 
     await page.reload();
     await expect(
@@ -273,7 +374,16 @@ test.describe('入力状態の保持（レビュー再指摘）', () => {
   }) => {
     await page.goto('/tools/text-case-converter/');
     await page.locator('#text-case-input').fill('abc');
-    await page.waitForTimeout(500);
+    // 保存されるまで待つ（自動リトライ）
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            sessionStorage.getItem('nyanko:input:text-case-converter'),
+          ),
+        { timeout: 5000 },
+      )
+      .toContain('abc');
     await page.reload();
     const flag = await page.evaluate(() =>
       sessionStorage.getItem('nyanko:restoring:text-case-converter'),
@@ -289,7 +399,16 @@ test.describe('入力状態の保持（QA再指摘）', () => {
     await page.goto('/tools/px-rem-converter/');
     await page.locator('#px-rem-base-input').fill('14');
     await page.locator('#px-rem-px-input').fill('16');
-    await page.waitForTimeout(500);
+    // 保存されるまで待つ（自動リトライ）
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() =>
+            sessionStorage.getItem('nyanko:input:px-rem-converter'),
+          ),
+        { timeout: 5000 },
+      )
+      .toContain('16');
     await page.reload();
     await expect(page.locator('#px-rem-px-input')).toHaveValue('16');
   });
@@ -298,6 +417,7 @@ test.describe('入力状態の保持（QA再指摘）', () => {
     browser,
   }) => {
     const context = await browser.newContext({ colorScheme: 'dark' });
+    await blockAnalytics(context);
     const page = await context.newPage();
     await page.goto('/tools/tax-calculator/');
     await page.emulateMedia({ media: 'print' });

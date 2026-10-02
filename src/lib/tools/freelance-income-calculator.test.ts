@@ -1,6 +1,48 @@
 import { describe, expect, it } from 'vitest';
 import { calculateFreelanceIncome } from './freelance-income-calculator';
 
+const basicDeductionCase = (businessIncome: number) =>
+  calculateFreelanceIncome({
+    annualRevenue: businessIncome,
+    annualExpenses: 0,
+    blueReturnDeduction: 0,
+    socialInsurancePayments: 0,
+    otherDeductions: 0,
+  })!;
+
+describe('基礎控除（令和7・8年分）', () => {
+  it.each([
+    [1_320_000, 950_000],
+    [1_320_001, 880_000],
+    [3_360_000, 880_000],
+    [3_360_001, 680_000],
+    [4_890_000, 680_000],
+    [4_890_001, 630_000],
+    [6_550_000, 630_000],
+    [6_550_001, 580_000],
+    [23_500_000, 580_000],
+    [23_500_001, 480_000],
+    [24_000_000, 480_000],
+    [24_000_001, 320_000],
+    [24_500_000, 320_000],
+    [24_500_001, 160_000],
+    [25_000_000, 160_000],
+    [25_000_001, 0],
+  ])('事業所得%i円のとき所得税の基礎控除は%i円', (income, deduction) => {
+    const r = basicDeductionCase(income);
+    const expected = Math.floor(Math.max(0, income - deduction) / 1000) * 1000;
+    expect(r.taxableIncomeForIncomeTax).toBe(expected);
+  });
+
+  it('課税所得は1,000円未満を切り捨てる（所得税・住民税）', () => {
+    const r = basicDeductionCase(2_000_999);
+    // 所得税: 2,000,999 - 880,000 = 1,120,999 -> 1,120,000
+    expect(r.taxableIncomeForIncomeTax).toBe(1_120_000);
+    // 住民税: 2,000,999 - 430,000 = 1,570,999 -> 1,570,000
+    expect(r.taxableIncomeForResidentTax).toBe(1_570_000);
+  });
+});
+
 describe('calculateFreelanceIncome', () => {
   it('売上・経費・青色申告特別控除・社会保険料から税額と手取りを計算する', () => {
     const result = calculateFreelanceIncome({
@@ -13,17 +55,18 @@ describe('calculateFreelanceIncome', () => {
 
     expect(result).not.toBeNull();
     expect(result!.businessIncome).toBe(4_350_000);
-    expect(result!.taxableIncomeForIncomeTax).toBe(3_370_000);
-    expect(result!.incomeTax).toBe(246_500);
-    expect(result!.reconstructionTax).toBe(5_176);
-    expect(result!.totalNationalTax).toBe(251_676);
+    // 事業所得435万円は基礎控除68万円の区分: 4,350,000 - 680,000 - 500,000
+    expect(result!.taxableIncomeForIncomeTax).toBe(3_170_000);
+    expect(result!.incomeTax).toBe(219_500);
+    expect(result!.reconstructionTax).toBe(4_609);
+    expect(result!.totalNationalTax).toBe(224_109);
     expect(result!.taxableIncomeForResidentTax).toBe(3_420_000);
     expect(result!.residentTaxIncomeLevy).toBe(342_000);
     expect(result!.residentTaxPerCapitaLevy).toBe(5_000);
     expect(result!.residentTax).toBe(347_000);
-    expect(result!.totalTax).toBe(598_676);
-    expect(result!.netIncome).toBe(3_901_324);
-    expect(result!.effectiveTaxRate).toBeCloseTo(9.978, 2);
+    expect(result!.totalTax).toBe(571_109);
+    expect(result!.netIncome).toBe(3_928_891);
+    expect(result!.effectiveTaxRate).toBeCloseTo(9.518, 2);
   });
 
   it('課税所得が0円以下なら所得税・住民税ともに0円になる', () => {
@@ -82,8 +125,9 @@ describe('calculateFreelanceIncome', () => {
     });
 
     expect(result).not.toBeNull();
-    expect(result!.taxableIncomeForIncomeTax).toBe(49_520_000);
-    expect(result!.incomeTax).toBe(Math.floor(49_520_000 * 0.45 - 4_796_000));
+    // 合計所得金額2,500万円超は基礎控除が0円
+    expect(result!.taxableIncomeForIncomeTax).toBe(50_000_000);
+    expect(result!.incomeTax).toBe(Math.floor(50_000_000 * 0.45 - 4_796_000));
   });
 
   it('売上・経費・社会保険料・その他の所得控除が負の場合はnull', () => {
@@ -195,7 +239,7 @@ describe('calculateFreelanceIncome', () => {
 
   it('税率区分の境界値付近で正しく計算される（1,949,000円付近）', () => {
     const result = calculateFreelanceIncome({
-      annualRevenue: 2_500_000,
+      annualRevenue: 2_900_000,
       annualExpenses: 0,
       blueReturnDeduction: 0,
       socialInsurancePayments: 0,
@@ -203,7 +247,7 @@ describe('calculateFreelanceIncome', () => {
     });
 
     expect(result).not.toBeNull();
-    // businessIncome = 2.5M, taxableIncome = 2.5M - 480k = 2.02M
+    // businessIncome = 2.9M（基礎控除88万円の区分）, taxableIncome = 2.9M - 880k = 2.02M
     // This is above the 1.949M bracket boundary
     expect(result!.taxableIncomeForIncomeTax).toBe(2_020_000);
     // Should use 10% bracket (rate: 0.1, deduction: 97500) = 2020000 * 0.1 - 97500 = 104500

@@ -119,7 +119,7 @@ export const imageConverterContent: Record<Locale, ImageConverterPageContent> =
     en: {
       title: 'Image Format Converter (PNG/JPEG/GIF/BMP to WebP, JPEG, PNG)',
       description:
-        'Free tool that converts PNG, JPEG, GIF, and BMP images to WebP, JPEG, or PNG with an adjustable quality/compression level. Convert multiple images at once and compare file size before and after. Your images are processed in the browser and never sent to a server.',
+        'Convert PNG, JPEG, GIF, and BMP images to WebP, JPEG, or PNG with adjustable quality, in batches. Runs in your browser; nothing is uploaded.',
       h1: 'Image Format Converter (to WebP / JPEG / PNG)',
       introHtml:
         'Select PNG, JPEG, GIF, or BMP images to convert them in your browser to the format and quality you choose. Converting to WebP usually cuts file size significantly at a similar visual quality, which helps page load speed. You can convert several files at once. Need to resize as well? Try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer & Compressor</a>.',

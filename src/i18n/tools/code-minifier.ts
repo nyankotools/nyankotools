@@ -90,7 +90,7 @@ export const codeMinifierContent: Record<Locale, CodeMinifierPageContent> = {
   en: {
     title: 'CSS/JS/HTML Minifier & Formatter',
     description:
-      'Free online tool to format and minify CSS, JavaScript, and HTML code right in your browser, with a selectable indent width. Your data is processed in the browser and never sent to a server.',
+      'Format and minify CSS, JavaScript, and HTML with a selectable indent width. Runs in your browser; nothing is sent to a server.',
     h1: 'CSS/JS/HTML Minifier & Formatter',
     introHtml:
       'Paste CSS, JavaScript, or HTML code to have it automatically formatted for readability. Click "Minify" to shrink it for production. To work with JSON, try the <a href="/en/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON Formatter</a> as well.',

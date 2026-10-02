@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test('文字数カウントツールでテキストを入力すると結果が更新される', async ({
   page,

@@ -15,6 +15,8 @@ export interface ParsedCron {
   dayOfWeek: Set<number>;
   dayOfMonthRestricted: boolean;
   dayOfWeekRestricted: boolean;
+  /** 日と曜日をORで判定するか（両方が '*' で始まらない場合のみ。それ以外はAND） */
+  dayFieldsOr: boolean;
   monthRestricted: boolean;
 }
 
@@ -166,6 +168,8 @@ export function parseCronExpression(input: string): ParseCronResult {
       dayOfWeek,
       dayOfMonthRestricted: domRaw !== '*',
       dayOfWeekRestricted: dowRaw !== '*',
+      // Vixie cron / cronie は、どちらかの先頭が '*' なら（`*/2` も）OR ではなく AND で判定する
+      dayFieldsOr: !domRaw.startsWith('*') && !dowRaw.startsWith('*'),
       monthRestricted: monthRaw !== '*',
     },
   };
@@ -180,13 +184,8 @@ export function cronMatchesDate(cron: ParsedCron, date: Date): boolean {
   const domMatch = cron.dayOfMonth.has(date.getDate());
   const dowMatch = cron.dayOfWeek.has(date.getDay());
 
-  // 日と曜日の両方が指定されている場合はOR、片方だけならその条件のみ、両方*ならtrue
-  if (cron.dayOfMonthRestricted && cron.dayOfWeekRestricted) {
-    return domMatch || dowMatch;
-  }
-  if (cron.dayOfMonthRestricted) return domMatch;
-  if (cron.dayOfWeekRestricted) return dowMatch;
-  return true;
+  // 日と曜日の両方が '*' で始まらない場合のみOR。それ以外はAND（'*' は全日・全曜日なのでAND でよい）
+  return cron.dayFieldsOr ? domMatch || dowMatch : domMatch && dowMatch;
 }
 
 export interface NextRunOptions {

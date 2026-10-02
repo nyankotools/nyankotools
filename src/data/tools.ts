@@ -12,6 +12,9 @@ export const categoryIds = [
   'dev',
   'generate',
   'camera',
+  'security',
+  'file',
+  'hardware',
 ] as const;
 
 export type CategoryId = (typeof categoryIds)[number];
@@ -28,6 +31,9 @@ export const categories: Record<CategoryId, Record<Locale, string>> = {
   dev: { ja: '開発', en: 'Development' },
   generate: { ja: '生成', en: 'Generate' },
   camera: { ja: 'カメラ', en: 'Camera' },
+  security: { ja: 'セキュリティ', en: 'Security' },
+  file: { ja: 'ファイル', en: 'File' },
+  hardware: { ja: 'ハードウェア', en: 'Hardware' },
 };
 
 export interface ToolTranslation {
@@ -980,7 +986,7 @@ export const tools: Tool[] = [
     category: 'calc',
     addedAt: '2026-09-23',
     updatedAt: '2026-09-23',
-    related: ['age-calculator', 'ratio-calculator'],
+    related: ['age-calculator', 'ratio-calculator', 'bmr-calorie-calculator'],
     sensitive: true,
     translations: {
       ja: {
@@ -1818,6 +1824,34 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'pdf-redactor',
+    category: 'pdf',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['pdf-page-editor', 'pdf-compressor', 'pdf-password-protector'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: 'PDF黒塗り',
+        keywords: ['PDF黒塗り', 'PDF墨消し', 'PDFマスキング', '個人情報を隠す'],
+        description:
+          'PDFの氏名・住所・金額などをドラッグで黒塗り。元の文字を復元できない形で書き出せます。',
+      },
+      en: {
+        name: 'PDF Redactor',
+        keywords: [
+          'redact PDF',
+          'black out PDF',
+          'PDF censor',
+          'hide text in PDF',
+        ],
+        description:
+          'Black out names, addresses and amounts in a PDF by dragging, and export a file where the hidden text cannot be recovered.',
+      },
+    },
+  },
+  {
     slug: 'cat-logo-text-generator',
     category: 'image',
     addedAt: '2026-09-25',
@@ -2160,6 +2194,1453 @@ export const tools: Tool[] = [
         keywords: ['meta tags', 'OGP', 'open graph', 'Twitter Card', 'SEO'],
         description:
           'Generates basic meta tags, Open Graph (OGP), and Twitter Card tags from a page title, description, URL, and image, with a social share preview.',
+      },
+    },
+  },
+  {
+    slug: 'curl-converter',
+    category: 'dev',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['json-formatter', 'url-encode', 'base64'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'cURL→Fetch/Axios変換',
+        keywords: ['curl', 'fetch', 'axios', 'API', 'cURLとしてコピー'],
+        description:
+          'curlコマンドをfetch・axiosのJavaScriptコードに変換します。ヘッダー・JSONボディ・フォーム・Basic認証に対応し、通信は行わず解析のみ。',
+      },
+      en: {
+        name: 'cURL to Fetch / Axios Converter',
+        keywords: ['curl', 'fetch', 'axios', 'API', 'copy as cURL'],
+        description:
+          'Converts a curl command to JavaScript fetch or axios code. Handles headers, JSON bodies, form data, and basic auth; it only parses the command and never sends a request.',
+      },
+    },
+  },
+  {
+    slug: 'json-to-typescript',
+    category: 'data',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['json-formatter', 'json-path-tester', 'yaml-json-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'JSON→TypeScript型生成',
+        keywords: [
+          'json',
+          'typescript',
+          'interface',
+          'type',
+          '型定義',
+          'APIレスポンス',
+        ],
+        description:
+          'JSONからTypeScriptのinterface・type定義を自動生成します。ネストしたオブジェクト・配列・省略可能なプロパティ・ユニオン型に対応。',
+      },
+      en: {
+        name: 'JSON to TypeScript Converter',
+        keywords: [
+          'json',
+          'typescript',
+          'interface',
+          'type',
+          'quicktype',
+          'api response',
+        ],
+        description:
+          'Generates TypeScript interfaces or type aliases from JSON, handling nested objects, arrays, optional properties, and union types.',
+      },
+    },
+  },
+  {
+    slug: 'json-diff',
+    category: 'data',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['json-formatter', 'text-diff', 'json-path-tester'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'JSON差分比較',
+        keywords: ['json', 'diff', '差分', '比較', 'JSON比較'],
+        description:
+          '2つのJSONを構造的に比較し、追加・削除・変更された箇所をパスつきで一覧表示します。キー順序は無視、配列の並び順を無視する比較にも対応。',
+      },
+      en: {
+        name: 'JSON Diff',
+        keywords: ['json', 'diff', 'compare', 'json compare', 'difference'],
+        description:
+          'Compares two JSON documents structurally and lists added, removed, and changed values with their paths. Ignores key order, with an option to ignore array order.',
+      },
+    },
+  },
+  {
+    slug: 'barcode-generator',
+    category: 'generate',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['qr-generator', 'uuid-generator', 'image-converter'],
+    translations: {
+      ja: {
+        name: 'バーコード生成',
+        keywords: ['バーコード', 'CODE128', 'JAN', 'EAN-13', 'UPC', 'CODE39'],
+        description:
+          'CODE128・EAN-13・EAN-8・UPC・CODE39・ITFのバーコードを生成し、PNG画像でダウンロードできます。',
+      },
+      en: {
+        name: 'Barcode Generator',
+        keywords: ['barcode', 'CODE128', 'EAN-13', 'JAN', 'UPC', 'CODE39'],
+        description:
+          'Generates CODE128, EAN-13, EAN-8, UPC, CODE39, and ITF barcodes and lets you download them as PNG images.',
+      },
+    },
+  },
+  {
+    slug: 'ulid-nanoid-generator',
+    category: 'generate',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['uuid-generator', 'password-generator', 'hash-generator'],
+    translations: {
+      ja: {
+        name: 'ULID・NanoID生成',
+        keywords: ['ULID', 'NanoID', 'ランダムID', '一意ID', '時刻順ID'],
+        description:
+          '時刻順に並ぶULIDと、短くURLに使いやすいNanoIDを1件〜100件まとめて生成します。NanoIDは長さ・文字セットも指定可能。',
+      },
+      en: {
+        name: 'ULID & NanoID Generator',
+        keywords: ['ULID', 'NanoID', 'random id', 'unique id', 'sortable id'],
+        description:
+          'Generates 1 to 100 time-sortable ULIDs or compact, URL-friendly NanoIDs at once, with custom length and alphabet for NanoID.',
+      },
+    },
+  },
+  {
+    slug: 'password-strength-checker',
+    category: 'security',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['password-generator', 'hash-generator', 'ulid-nanoid-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'パスワード強度チェッカー',
+        keywords: ['パスワード', '強度', 'エントロピー', '安全性', '解読時間'],
+        description:
+          'パスワードの強さを文字種・長さ・連番やキーボード配列などのパターンから判定し、解読にかかる目安時間を表示します。',
+      },
+      en: {
+        name: 'Password Strength Checker',
+        keywords: ['password', 'strength', 'entropy', 'crack time', 'security'],
+        description:
+          'Rates a password by length, character types, and weak patterns like sequences and keyboard runs, and estimates how long it would take to crack.',
+      },
+    },
+  },
+  {
+    slug: 'crypto-encryptor',
+    category: 'security',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['password-strength-checker', 'hmac-generator', 'base64'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'テキスト暗号化・復号',
+        keywords: ['暗号化', '復号', 'AES', 'AES-GCM', 'パスワード暗号'],
+        description:
+          'テキストをパスワードでAES-256-GCM暗号化し、Base64文字列にして共有。同じパスワードで復号もできます。',
+      },
+      en: {
+        name: 'Text Encryptor & Decryptor',
+        keywords: [
+          'encrypt',
+          'decrypt',
+          'AES',
+          'AES-GCM',
+          'password encryption',
+        ],
+        description:
+          'Encrypt text with a password using AES-256-GCM and share it as Base64, then decrypt it with the same password.',
+      },
+    },
+  },
+  {
+    slug: 'hmac-generator',
+    category: 'security',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['hash-generator', 'jwt-decoder', 'totp-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'HMAC署名生成',
+        keywords: [
+          'HMAC',
+          'HMAC-SHA256',
+          'Webhook署名',
+          '署名検証',
+          'シークレット',
+        ],
+        description:
+          'メッセージと秘密鍵からHMAC-SHA1/256/384/512の署名を計算。Webhook署名の照合やAPI認証のデバッグに。',
+      },
+      en: {
+        name: 'HMAC Generator',
+        keywords: [
+          'HMAC',
+          'HMAC-SHA256',
+          'webhook signature',
+          'signature verify',
+          'secret key',
+        ],
+        description:
+          'Compute HMAC-SHA1/256/384/512 signatures from a message and secret key, and compare them with a received signature.',
+      },
+    },
+  },
+  {
+    slug: 'totp-generator',
+    category: 'security',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['hmac-generator', 'password-generator', 'qr-code-reader'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'TOTPコード生成・検証',
+        keywords: [
+          'TOTP',
+          '2段階認証',
+          '二要素認証',
+          'OTP',
+          'ワンタイムパスワード',
+          '2FA',
+        ],
+        description:
+          'Base32の秘密鍵やotpauth://のURIから2段階認証のTOTPコードを生成・検証。実装のデバッグや動作確認に。',
+      },
+      en: {
+        name: 'TOTP Code Generator',
+        keywords: [
+          'TOTP',
+          '2FA',
+          'two-factor',
+          'OTP',
+          'one-time password',
+          'authenticator',
+        ],
+        description:
+          'Generate and verify 2FA TOTP codes from a Base32 secret or an otpauth:// URI, for debugging and testing.',
+      },
+    },
+  },
+  {
+    slug: 'bcrypt-generator',
+    category: 'security',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: [
+      'hash-generator',
+      'password-generator',
+      'password-strength-checker',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'bcryptハッシュ生成・照合',
+        keywords: [
+          'bcrypt',
+          'パスワードハッシュ',
+          'ハッシュ化',
+          'ソルト',
+          'コスト',
+        ],
+        description:
+          'パスワードからbcryptハッシュを生成し、既存のハッシュと照合。コスト（ラウンド数）も選べます。',
+      },
+      en: {
+        name: 'Bcrypt Hash Generator & Verifier',
+        keywords: [
+          'bcrypt',
+          'password hash',
+          'hash password',
+          'salt',
+          'cost factor',
+        ],
+        description:
+          'Generate a bcrypt hash from a password and verify it against an existing hash, with an adjustable cost factor.',
+      },
+    },
+  },
+  {
+    slug: 'x509-decoder',
+    category: 'security',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['ssh-fingerprint', 'jwt-decoder', 'base64'],
+    translations: {
+      ja: {
+        name: 'X.509証明書デコーダー',
+        keywords: [
+          'X.509',
+          'SSL証明書',
+          'TLS証明書',
+          'PEM',
+          'SAN',
+          '有効期限',
+          'フィンガープリント',
+        ],
+        description:
+          'PEM形式のSSL/TLS証明書を貼り付けて、発行者・有効期限・SAN・公開鍵・フィンガープリントを確認。',
+      },
+      en: {
+        name: 'X.509 Certificate Decoder',
+        keywords: [
+          'X.509',
+          'SSL certificate',
+          'TLS certificate',
+          'PEM',
+          'SAN',
+          'expiry',
+          'fingerprint',
+        ],
+        description:
+          'Paste a PEM SSL/TLS certificate to read its issuer, validity dates, SANs, public key, and fingerprints.',
+      },
+    },
+  },
+  {
+    slug: 'ssh-fingerprint',
+    category: 'security',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['x509-decoder', 'hash-generator', 'base64'],
+    translations: {
+      ja: {
+        name: 'SSH鍵フィンガープリント表示',
+        keywords: [
+          'SSH',
+          'フィンガープリント',
+          '公開鍵',
+          'authorized_keys',
+          'ssh-keygen',
+          'ED25519',
+        ],
+        description:
+          'SSH公開鍵からSHA256・MD5のフィンガープリントを計算。authorized_keysの複数行にも対応。',
+      },
+      en: {
+        name: 'SSH Key Fingerprint Viewer',
+        keywords: [
+          'SSH',
+          'fingerprint',
+          'public key',
+          'authorized_keys',
+          'ssh-keygen',
+          'ED25519',
+        ],
+        description:
+          'Compute the SHA256 and MD5 fingerprint of an SSH public key, including multi-line authorized_keys.',
+      },
+    },
+  },
+  {
+    slug: 'file-hash-calculator',
+    category: 'file',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['hash-generator', 'password-strength-checker'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ファイルハッシュ計算',
+        keywords: [
+          'ハッシュ',
+          'チェックサム',
+          'MD5',
+          'SHA-256',
+          'ファイル照合',
+        ],
+        description:
+          'ファイルをドラッグ＆ドロップして、MD5・SHA-1・SHA-256・SHA-384・SHA-512のハッシュ値を計算します。配布元のハッシュ値との照合もできます。',
+      },
+      en: {
+        name: 'File Hash Calculator',
+        keywords: ['hash', 'checksum', 'MD5', 'SHA-256', 'file verify'],
+        description:
+          'Drag and drop files to calculate MD5, SHA-1, SHA-256, SHA-384, and SHA-512 hashes, and compare them with a published checksum.',
+      },
+    },
+  },
+  {
+    slug: 'svg-to-png',
+    category: 'image',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['svg-optimizer', 'image-converter', 'favicon-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'SVG→PNG変換',
+        keywords: ['SVG', 'PNG', '画像変換', 'ラスター化', '透過', '高解像度'],
+        description:
+          'SVGファイルやSVGコードをPNG画像に変換します。1〜4倍の高解像度出力と、透過・白・任意色の背景に対応しています。',
+      },
+      en: {
+        name: 'SVG to PNG Converter',
+        keywords: ['SVG', 'PNG', 'rasterize', 'convert', 'transparent'],
+        description:
+          'Converts SVG files or code to PNG at 1x to 4x resolution, with a transparent, white, or custom background.',
+      },
+    },
+  },
+  {
+    slug: 'ogp-image-generator',
+    category: 'image',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['meta-tag-generator', 'svg-to-png', 'image-resizer'],
+    translations: {
+      ja: {
+        name: 'OGP画像ジェネレーター',
+        keywords: [
+          'OGP',
+          'OGP画像',
+          'SNS',
+          'サムネイル',
+          'シェア画像',
+          'og:image',
+        ],
+        description:
+          'タイトルとサイト名を入力して、SNSシェア用のOGP画像（1200×630）をPNGで作成します。背景色や文字色も調整できます。',
+      },
+      en: {
+        name: 'OGP Image Generator',
+        keywords: [
+          'OGP',
+          'og:image',
+          'social image',
+          'thumbnail',
+          'share image',
+        ],
+        description:
+          'Creates a social share (OGP) image at 1200×630 as PNG from a title and site name, with adjustable background and text colors.',
+      },
+    },
+  },
+  {
+    slug: 'image-cropper',
+    category: 'image',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['image-resizer', 'image-converter', 'favicon-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像トリミング・回転・反転',
+        keywords: [
+          'トリミング',
+          '切り抜き',
+          'クロップ',
+          '画像回転',
+          '左右反転',
+          '縦横比',
+        ],
+        description:
+          '画像を好きな範囲に切り抜き、90度回転や左右・上下反転ができます。縦横比の固定に対応し、PNG・JPEG・WebPで保存できます。',
+      },
+      en: {
+        name: 'Image Cropper, Rotator & Flipper',
+        keywords: [
+          'crop image',
+          'rotate image',
+          'flip image',
+          'trim',
+          'aspect ratio',
+        ],
+        description:
+          'Crops images to any area, rotates in 90° steps, and flips horizontally or vertically, with aspect ratio locking and PNG, JPEG, or WebP output.',
+      },
+    },
+  },
+  {
+    slug: 'image-background-remover',
+    category: 'image',
+    addedAt: '2026-10-01',
+    updatedAt: '2026-10-01',
+    related: ['image-cropper', 'image-converter', 'svg-to-png'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像の背景透過（輪郭付き）',
+        keywords: [
+          '背景透過',
+          '背景削除',
+          '透過PNG',
+          '白背景',
+          '縁取り',
+          'ステッカー',
+        ],
+        description:
+          '単色の背景を指定して透過PNGにします。縁に残る背景色の除去と、好きな色・太さの輪郭（縁取り）の追加に対応しています。',
+      },
+      en: {
+        name: 'Image Background Remover (With Outline)',
+        keywords: [
+          'remove background',
+          'transparent png',
+          'background eraser',
+          'outline',
+          'sticker',
+        ],
+        description:
+          'Makes a solid-color background transparent and saves a PNG, with edge cleanup for leftover background color and an optional outline of any color and width.',
+      },
+    },
+  },
+  {
+    slug: 'mic-tester',
+    category: 'hardware',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['webcam-tester', 'keyboard-tester', 'dead-pixel-checker'],
+    sensitive: true,
+    needsCamera: true,
+    translations: {
+      ja: {
+        name: 'マイクテスト（入力レベル・録音）',
+        keywords: [
+          'マイクテスト',
+          'マイク確認',
+          '録音',
+          '音量',
+          '音割れ',
+          'マイク入力',
+        ],
+        description:
+          'マイクの入力レベルをリアルタイムで確認し、音割れを検出できます。録音して聞き返すことも可能。Web会議や配信の前のチェックに。',
+      },
+      en: {
+        name: 'Microphone Test (Level & Recording)',
+        keywords: [
+          'mic test',
+          'microphone test',
+          'mic check',
+          'record audio',
+          'input level',
+        ],
+        description:
+          'See your microphone input level live, detect clipping, and record a clip to play back. Handy before a call or stream.',
+      },
+    },
+  },
+  {
+    slug: 'keyboard-tester',
+    category: 'hardware',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['keycode-checker', 'mic-tester', 'dead-pixel-checker'],
+    translations: {
+      ja: {
+        name: 'キーボードテスト（全キー押下判定）',
+        keywords: [
+          'キーボードテスト',
+          'キーテスト',
+          '全キー',
+          'チャタリング',
+          'キーボード確認',
+        ],
+        description:
+          'キーボードの全キーを押して、反応するかを画面のキーボード図で確認します。押し忘れが一目で分かり、キー名・コードも表示。',
+      },
+      en: {
+        name: 'Keyboard Tester (Test Every Key)',
+        keywords: [
+          'keyboard test',
+          'key tester',
+          'test all keys',
+          'key chatter',
+          'keyboard checker',
+        ],
+        description:
+          'Press every key and see it light up on an on-screen keyboard so missed keys are obvious, with the key name and code shown.',
+      },
+    },
+  },
+  {
+    slug: 'dead-pixel-checker',
+    category: 'hardware',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['viewport-checker', 'keyboard-tester', 'webcam-tester'],
+    translations: {
+      ja: {
+        name: 'ドット抜けチェック（色ムラ確認）',
+        keywords: [
+          'ドット抜け',
+          '輝点',
+          '黒点',
+          '色ムラ',
+          'モニター確認',
+          '焼き付き',
+        ],
+        description:
+          '画面全体を単色で塗りつぶして、モニター・スマホのドット抜けや色ムラを確認します。白・黒・RGBなど9色をクリックやキーで切り替え。',
+      },
+      en: {
+        name: 'Dead Pixel Test (Screen Check)',
+        keywords: [
+          'dead pixel',
+          'stuck pixel',
+          'screen test',
+          'monitor test',
+          'backlight bleed',
+          'burn-in',
+        ],
+        description:
+          'Fill the screen with a solid color to check a monitor or phone for dead pixels and uneven color, cycling through 9 colors with a click or the arrow keys.',
+      },
+    },
+  },
+  {
+    slug: 'unit-converter',
+    category: 'calc',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['px-rem-converter', 'base-converter', 'ratio-calculator'],
+    translations: {
+      ja: {
+        name: '単位変換（長さ・重さ・面積・体積・温度・データ容量）',
+        keywords: [
+          '単位変換',
+          '尺貫法',
+          '坪',
+          '畳',
+          'インチ',
+          'ポンド',
+          'KB KiB',
+          '華氏',
+        ],
+        description:
+          '長さ・重さ・面積・体積・温度・データ容量の単位を相互に変換します。尺・坪・畳・合・貫などの尺貫法やインチ・ポンド、KBとKiBの違いにも対応。',
+      },
+      en: {
+        name: 'Unit Converter (Length, Weight, Area, Volume, Temperature, Data)',
+        keywords: [
+          'unit converter',
+          'metric imperial',
+          'inches to cm',
+          'pounds to kg',
+          'KB vs KiB',
+          'tsubo',
+          'fahrenheit celsius',
+        ],
+        description:
+          'Convert length, weight, area, volume, temperature, and data size, including metric, imperial, traditional Japanese units, and KB vs KiB.',
+      },
+    },
+  },
+  {
+    slug: 'split-bill-calculator',
+    category: 'calc',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['tax-calculator', 'ratio-calculator', 'mortgage-calculator'],
+    translations: {
+      ja: {
+        name: '割り勘計算機（端数処理・傾斜割り勘）',
+        keywords: [
+          '割り勘',
+          '飲み会',
+          '幹事',
+          '傾斜',
+          '端数',
+          '切り上げ',
+          '人数割り',
+        ],
+        description:
+          '合計金額と人数から1人あたりの金額を計算します。100円単位の端数処理や、上司・幹事が多めに払う傾斜割り勘にも対応。余りと不足も表示。',
+      },
+      en: {
+        name: 'Split Bill Calculator (Rounding & Uneven Shares)',
+        keywords: [
+          'split bill',
+          'bill splitter',
+          'split the check',
+          'dinner split',
+          'tip split',
+          'uneven split',
+        ],
+        description:
+          'Split a total among people with rounding up, down, or to the nearest unit, and let some people pay more. Shows the extra or shortfall.',
+      },
+    },
+  },
+  {
+    slug: 'bmr-calorie-calculator',
+    category: 'calc',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['bmi-calculator', 'age-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '基礎代謝・消費カロリー計算機',
+        keywords: [
+          '基礎代謝',
+          '消費カロリー',
+          '必要カロリー',
+          'TDEE',
+          'ダイエット',
+          '摂取カロリー',
+        ],
+        description:
+          '年齢・性別・身長・体重から基礎代謝量と、活動レベルを加味した1日の消費カロリーを計算します。ダイエット・増量の目安カロリーも表示。',
+      },
+      en: {
+        name: 'BMR & Calorie Calculator',
+        keywords: [
+          'BMR',
+          'TDEE',
+          'daily calories',
+          'calorie calculator',
+          'basal metabolic rate',
+          'Mifflin-St Jeor',
+        ],
+        description:
+          'Estimate your basal metabolic rate and daily calorie needs from age, sex, height, weight, and activity level, with calorie targets for losing or gaining weight.',
+      },
+    },
+  },
+  {
+    slug: 'salary-take-home-calculator',
+    category: 'calc',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: [
+      'freelance-income-calculator',
+      'furusato-nozei-calculator',
+      'tax-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '会社員の手取り計算機（年収から手取りを試算）',
+        keywords: [
+          '手取り',
+          '年収',
+          '額面',
+          '月収',
+          '給与',
+          '社会保険料',
+          '所得税',
+          '住民税',
+        ],
+        description:
+          '額面の年収から、社会保険料・所得税・住民税を差し引いた会社員の手取り額（年間・月間）を簡易試算します。令和7・8年分の税制に対応。',
+      },
+      en: {
+        name: 'Japan Salary Take-Home Pay Calculator',
+        keywords: [
+          'take-home pay',
+          'gross to net',
+          'salary after tax',
+          'Japan income tax',
+          'social insurance',
+          'resident tax',
+        ],
+        description:
+          'Estimate annual and monthly take-home pay in Japan from gross salary after social insurance, income tax, and resident tax, using 2025-2026 rules.',
+      },
+    },
+  },
+  {
+    slug: 'furusato-nozei-calculator',
+    category: 'calc',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['salary-take-home-calculator', 'freelance-income-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ふるさと納税の上限額シミュレーション',
+        keywords: [
+          'ふるさと納税',
+          '控除上限',
+          '寄付上限',
+          '上限額',
+          '自己負担2000円',
+          'ワンストップ特例',
+        ],
+        description:
+          '年収と所得控除から、ふるさと納税で自己負担2,000円で寄付できる上限額の目安を試算します。会社員向け・令和7・8年分の税制に対応。',
+      },
+      en: {
+        name: 'Furusato Nozei Donation Limit Calculator',
+        keywords: [
+          'furusato nozei',
+          'hometown tax',
+          'donation limit',
+          'Japan tax deduction',
+          'one-stop exception',
+        ],
+        description:
+          'Estimate the furusato nozei (hometown tax) donation limit for a ¥2,000 out-of-pocket cost from your salary and deductions, using 2025-2026 rules.',
+      },
+    },
+  },
+  {
+    slug: 'timezone-converter',
+    category: 'datetime',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['unix-timestamp', 'date-calculator', 'cron-parser'],
+    translations: {
+      ja: {
+        name: 'タイムゾーン変換・世界時計',
+        keywords: [
+          'タイムゾーン',
+          '時差',
+          '世界時計',
+          '時差変換',
+          'サマータイム',
+          'UTC',
+          'JST',
+        ],
+        description:
+          '日時を入力して、東京・ニューヨーク・ロンドンなど世界各地の現地時刻に一括変換します。サマータイム対応の世界時計としても使えます。',
+      },
+      en: {
+        name: 'Time Zone Converter & World Clock',
+        keywords: [
+          'time zone',
+          'timezone converter',
+          'time difference',
+          'world clock',
+          'daylight saving',
+          'UTC',
+          'meeting planner',
+        ],
+        description:
+          'Converts a date and time to the local time in cities around the world at once, with daylight saving support, and doubles as a world clock.',
+      },
+    },
+  },
+  {
+    slug: 'business-day-calculator',
+    category: 'datetime',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: [
+      'date-calculator',
+      'japanese-era-converter',
+      'hourly-wage-calculator',
+    ],
+    translations: {
+      ja: {
+        name: '営業日計算・祝日一覧（日本）',
+        keywords: [
+          '営業日',
+          '祝日',
+          '休日',
+          '振替休日',
+          '営業日後',
+          '納期',
+          '稼働日',
+        ],
+        description:
+          '日本の祝日・土日を除いた「◯営業日後（前）の日付」と期間内の営業日数を計算し、年ごとの祝日一覧も確認できます。振替休日・国民の休日に対応。',
+      },
+      en: {
+        name: 'Japan Business Day Calculator & Holiday List',
+        keywords: [
+          'business days',
+          'working days',
+          'Japan holidays',
+          'national holidays',
+          'substitute holiday',
+          'due date',
+        ],
+        description:
+          'Finds the date N business days away and counts business days in a range, skipping weekends and Japanese national holidays, and lists holidays by year.',
+      },
+    },
+  },
+  {
+    slug: 'timer-stopwatch',
+    category: 'datetime',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['date-calculator', 'age-calculator', 'unix-timestamp'],
+    translations: {
+      ja: {
+        name: 'タイマー・ストップウォッチ・ポモドーロ',
+        keywords: [
+          'タイマー',
+          'ストップウォッチ',
+          'ポモドーロ',
+          'カウントダウン',
+          'ラップタイム',
+          '勉強タイマー',
+        ],
+        description:
+          'ラップ記録つきのストップウォッチ、カウントダウンタイマー、ポモドーロタイマーをブラウザで使えます。終了時のアラーム音に対応しています。',
+      },
+      en: {
+        name: 'Timer, Stopwatch & Pomodoro Timer',
+        keywords: [
+          'timer',
+          'stopwatch',
+          'pomodoro',
+          'countdown',
+          'lap timer',
+          'study timer',
+        ],
+        description:
+          'A browser stopwatch with laps, a countdown timer, and a Pomodoro timer, with an alarm sound when time is up.',
+      },
+    },
+  },
+  {
+    slug: 'kanji-number-converter',
+    category: 'text',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: [
+      'japanese-era-converter',
+      'zenkaku-hankaku',
+      'kyujitai-converter',
+    ],
+    translations: {
+      ja: {
+        name: '漢数字⇔算用数字・大字変換',
+        keywords: [
+          '漢数字',
+          '算用数字',
+          '大字',
+          '壱弐参',
+          '金額',
+          'アラビア数字',
+        ],
+        description:
+          '漢数字と算用数字を相互に変換します。千二百三十四・二〇二四・壱萬弐千円のような単位記法・位取り記法・大字に対応し、文章中の数をまとめて変換できます。',
+      },
+      en: {
+        name: 'Kanji Numeral Converter',
+        keywords: [
+          'kanji numbers',
+          'japanese numerals',
+          'daiji',
+          'arabic numerals',
+          'formal numerals',
+        ],
+        description:
+          'Converts Japanese kanji numerals to Arabic digits and back, including formal daiji numerals (壱弐参) used on contracts, and converts every number in a block of text at once.',
+      },
+    },
+  },
+  {
+    slug: 'kyujitai-converter',
+    category: 'text',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['kana-converter', 'zenkaku-hankaku', 'kanji-number-converter'],
+    translations: {
+      ja: {
+        name: '旧字体⇔新字体変換',
+        keywords: [
+          '旧字体',
+          '新字体',
+          '旧漢字',
+          '異体字',
+          '髙',
+          '﨑',
+          '康熙字典体',
+        ],
+        description:
+          '旧字体と新字体を相互に変換します。國→国・學→学・體→体や、髙→高・﨑→崎などの異体字に対応し、変換した文字の一覧も確認できます。',
+      },
+      en: {
+        name: 'Kyujitai ⇔ Shinjitai Converter',
+        keywords: [
+          'kyujitai',
+          'shinjitai',
+          'old kanji',
+          'new kanji',
+          'variant kanji',
+          'traditional kanji',
+        ],
+        description:
+          'Converts between old kanji forms (國 學 體) and modern forms (国 学 体), including name variants like 髙 and 﨑, and lists the characters it changed.',
+      },
+    },
+  },
+  {
+    slug: 'my-number-checker',
+    category: 'calc',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: [
+      'salary-take-home-calculator',
+      'tax-calculator',
+      'freelance-income-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'マイナンバー・法人番号チェックデジット検証',
+        keywords: [
+          'マイナンバー',
+          '個人番号',
+          '法人番号',
+          'インボイス',
+          '登録番号',
+          '検査用数字',
+        ],
+        description:
+          'マイナンバー（12桁）と法人番号（13桁・インボイス登録番号のT＋13桁）の検査用数字を検証・計算します。入力した番号はサーバーに送信されません。',
+      },
+      en: {
+        name: 'My Number & Corporate Number Validator',
+        keywords: [
+          'my number',
+          'corporate number',
+          'check digit',
+          'invoice number',
+          'japan tax id',
+        ],
+        description:
+          'Validates or calculates the check digit of a Japanese My Number (12 digits) or Corporate Number (13 digits, incl. the invoice registration number). Nothing is sent to a server.',
+      },
+    },
+  },
+  {
+    slug: 'romaji-kana-converter',
+    category: 'text',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: [
+      'kana-converter',
+      'english-katakana-converter',
+      'zenkaku-hankaku',
+    ],
+    translations: {
+      ja: {
+        name: 'ローマ字⇔ひらがな変換',
+        keywords: [
+          'ローマ字',
+          'ひらがな',
+          'カタカナ',
+          'ヘボン式',
+          '訓令式',
+          'ローマ字入力',
+          '名前 ローマ字',
+        ],
+        description:
+          'ローマ字をひらがな・カタカナに、かなをローマ字（ヘボン式・訓令式）に変換します。nn・促音・長音のローマ字入力や、名前のローマ字表記づくりに使えます。',
+      },
+      en: {
+        name: 'Romaji ⇔ Hiragana Converter',
+        keywords: [
+          'romaji',
+          'hiragana',
+          'katakana',
+          'hepburn',
+          'kunrei',
+          'romanization',
+          'japanese name in romaji',
+        ],
+        description:
+          'Converts romaji to hiragana or katakana, and kana to romaji in Hepburn or Kunrei-shiki style, with options for long vowels and letter case.',
+      },
+    },
+  },
+  {
+    slug: 'english-katakana-converter',
+    category: 'text',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['romaji-kana-converter', 'kana-converter', 'zenkaku-hankaku'],
+    translations: {
+      ja: {
+        name: '英単語カタカナ変換',
+        keywords: [
+          '英語 カタカナ',
+          '英単語',
+          'カタカナ表記',
+          '片仮名',
+          'ふりがな',
+          '英語 読み方',
+        ],
+        description:
+          '英単語の綴りを片仮名表記に変換する簡易ツールです。綴りのルールと頻出語の辞書で変換し、USB などの略語は文字読みにもできます。',
+      },
+      en: {
+        name: 'English to Katakana Converter',
+        keywords: [
+          'english to katakana',
+          'katakana transcription',
+          'gairaigo',
+          'katakana reading',
+          'english words in japanese',
+        ],
+        description:
+          'Converts English words to katakana from their spelling using simple rules and a small dictionary of common words, and can spell out acronyms like USB.',
+      },
+    },
+  },
+  {
+    slug: 'unicode-decorator',
+    category: 'text',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['special-char-list', 'zenkaku-hankaku', 'text-case-converter'],
+    translations: {
+      ja: {
+        name: 'Unicode装飾文字変換',
+        keywords: [
+          'おしゃれ文字',
+          '装飾文字',
+          '太字',
+          '丸文字',
+          '筆記体',
+          '取り消し線',
+          'プロフィール 文字',
+        ],
+        description:
+          '英数字を太字・斜体・筆記体・丸文字・全角・取り消し線などのUnicode装飾文字に変換します。SNSのプロフィールやゲーム名にコピペできます。',
+      },
+      en: {
+        name: 'Unicode Text Decorator',
+        keywords: [
+          'fancy text',
+          'fancy font',
+          'bold text',
+          'bubble text',
+          'cursive text',
+          'strikethrough text',
+          'text generator',
+        ],
+        description:
+          'Converts letters and numbers into fancy Unicode text such as bold, italic, script, circled, fullwidth and strikethrough, ready to paste into bios and usernames.',
+      },
+    },
+  },
+  {
+    slug: 'special-char-list',
+    category: 'text',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['unicode-decorator', 'zenkaku-hankaku', 'html-escape'],
+    translations: {
+      ja: {
+        name: '特殊文字・絵文字一覧',
+        keywords: [
+          '特殊文字',
+          '記号',
+          '絵文字',
+          '顔文字',
+          '丸数字',
+          '星 ハート 矢印',
+          '機種依存文字',
+        ],
+        description:
+          '星・ハート・矢印・丸数字・単位記号・顔文字・絵文字などの特殊文字を、クリックしてまとめてコピーできる一覧です。キーワード検索に対応。',
+      },
+      en: {
+        name: 'Special Characters & Emoji List',
+        keywords: [
+          'special characters',
+          'symbols',
+          'emoji',
+          'kaomoji',
+          'unicode symbols',
+          'copy paste symbols',
+          'arrows hearts stars',
+        ],
+        description:
+          'A click-to-copy list of stars, hearts, arrows, circled numbers, unit symbols, kaomoji and emoji, with keyword search.',
+      },
+    },
+  },
+  {
+    slug: 'roulette-dice',
+    category: 'generate',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['password-generator', 'uuid-generator', 'text-list-tools'],
+    translations: {
+      ja: {
+        name: 'ルーレット・抽選・サイコロ',
+        keywords: [
+          'ルーレット',
+          '抽選',
+          'くじ引き',
+          'サイコロ',
+          'ダイス',
+          'ランダム',
+          'TRPG',
+        ],
+        description:
+          '項目を入力して回すルーレット、重複なしで当選者を選ぶ抽選、1D6や2D6+3などのダイスロールができます。ランチ決めや順番決めに。',
+      },
+      en: {
+        name: 'Roulette, Random Picker & Dice',
+        keywords: [
+          'roulette',
+          'random picker',
+          'wheel spinner',
+          'dice roller',
+          'raffle',
+          'random name picker',
+          'd20',
+        ],
+        description:
+          'Spin a roulette wheel from your own list, draw several winners without repeats, or roll dice like 1d6 and 2d6+3 using cryptographic randomness.',
+      },
+    },
+  },
+  {
+    slug: 'qr-code-reader',
+    category: 'camera',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['qr-generator', 'webcam-tester', 'barcode-generator'],
+    sensitive: true,
+    needsCamera: true,
+    translations: {
+      ja: {
+        name: 'QRコードリーダー（カメラ・画像）',
+        keywords: [
+          'QRコード読み取り',
+          'QRリーダー',
+          'QRスキャン',
+          'バーコード読み取り',
+          'QRコード 画像',
+        ],
+        description:
+          'カメラまたは画像ファイルからQRコードを読み取り、URL・Wi-Fiなどの種類を自動判別。対応ブラウザではバーコードも読み取れます。',
+      },
+      en: {
+        name: 'QR Code Reader (Camera & Image)',
+        keywords: [
+          'QR scanner',
+          'QR code reader',
+          'scan QR code',
+          'barcode scanner',
+          'read QR from image',
+        ],
+        description:
+          'Scan QR codes with your camera or from an image file, with URLs and Wi-Fi details recognized automatically. Reads common barcodes too in supporting browsers.',
+      },
+    },
+  },
+  {
+    slug: 'heic-converter',
+    category: 'image',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['image-converter', 'image-resizer', 'exif-viewer'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: 'HEIC→JPEG変換',
+        keywords: ['HEIC', 'HEIF', 'iPhone', 'JPG', 'HEIC 変換', 'iPhone 写真'],
+        description:
+          'iPhoneのHEIC・HEIF写真をJPEG・PNG・WebPに変換します。複数枚の一括変換と画質の指定に対応。',
+      },
+      en: {
+        name: 'HEIC to JPG Converter',
+        keywords: ['HEIC', 'HEIF', 'iPhone photo', 'JPG', 'HEIC to JPEG'],
+        description:
+          'Converts iPhone HEIC and HEIF photos to JPEG, PNG, or WebP, with batch conversion and adjustable quality.',
+      },
+    },
+  },
+  {
+    slug: 'xml-json-converter',
+    category: 'data',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['json-formatter', 'yaml-json-converter', 'csv-json-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'XML⇔JSON変換',
+        keywords: ['XML', 'JSON', '変換', 'RSS', 'XML 変換', 'XML パース'],
+        description:
+          'XMLとJSONを相互に変換します。属性やテキストも扱え、タグの閉じ忘れなどの構文エラーは行・列つきで表示。',
+      },
+      en: {
+        name: 'XML to JSON Converter',
+        keywords: [
+          'XML',
+          'JSON',
+          'convert',
+          'RSS',
+          'XML parser',
+          'XML to JSON',
+        ],
+        description:
+          'Converts between XML and JSON, handling attributes and text, and reports syntax errors such as unclosed tags with line and column.',
+      },
+    },
+  },
+  {
+    slug: 'env-json-converter',
+    category: 'data',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['json-formatter', 'yaml-json-converter', 'toml-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '.env⇔JSON変換',
+        keywords: ['.env', 'dotenv', '環境変数', 'JSON', 'env 変換'],
+        description:
+          '.env（環境変数ファイル）とJSONを相互に変換します。コメント・export・引用符つきの値に対応。',
+      },
+      en: {
+        name: '.env to JSON Converter',
+        keywords: [
+          '.env',
+          'dotenv',
+          'environment variables',
+          'JSON',
+          'env to json',
+        ],
+        description:
+          'Converts between .env files and JSON, handling comments, export prefixes, and quoted values.',
+      },
+    },
+  },
+  {
+    slug: 'csv-markdown-table',
+    category: 'data',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['csv-json-converter', 'markdown-preview', 'text-list-tools'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'CSV/TSV→Markdownテーブル変換',
+        keywords: [
+          'CSV',
+          'TSV',
+          'Markdown',
+          'テーブル',
+          '表',
+          'Excel',
+          'README',
+        ],
+        description:
+          'CSV・TSV（Excelからコピーした表）をMarkdownのテーブルに変換します。列揃えや列幅の整形、見出し行の有無を指定できます。',
+      },
+      en: {
+        name: 'CSV/TSV to Markdown Table Converter',
+        keywords: ['CSV', 'TSV', 'Markdown', 'table', 'Excel', 'GitHub README'],
+        description:
+          'Converts CSV or TSV (including tables copied from Excel) into a Markdown table, with column alignment, padding, and optional header row.',
+      },
+    },
+  },
+  {
+    slug: 'html-table-to-csv',
+    category: 'data',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['csv-json-converter', 'csv-markdown-table', 'html-escape'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'HTMLテーブル→CSV変換',
+        keywords: [
+          'HTML',
+          'table',
+          'テーブル',
+          'CSV',
+          'TSV',
+          '表',
+          'スクレイピング',
+        ],
+        description:
+          'HTMLの<table>をCSV・TSVに変換します。結合セルの展開、複数テーブルの選択、Excel向けのBOM付きダウンロードに対応。',
+      },
+      en: {
+        name: 'HTML Table to CSV Converter',
+        keywords: ['HTML', 'table', 'CSV', 'TSV', 'scrape', 'extract table'],
+        description:
+          'Converts an HTML <table> to CSV or TSV, expanding merged cells, choosing among multiple tables, and adding a BOM for Excel.',
+      },
+    },
+  },
+  {
+    slug: 'json-tree-viewer',
+    category: 'data',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['json-formatter', 'json-path-tester', 'json-diff'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'JSONツリービューア',
+        keywords: [
+          'json',
+          'ツリー',
+          'viewer',
+          'ビューア',
+          '折りたたみ',
+          'JSON Hero',
+        ],
+        description:
+          'JSONを折りたたみ可能なツリーで閲覧できます。キー・値の検索、各要素のパス（JSONPath・JSON Pointer）のコピーに対応。',
+      },
+      en: {
+        name: 'JSON Tree Viewer',
+        keywords: [
+          'json',
+          'tree',
+          'viewer',
+          'explorer',
+          'collapsible',
+          'json hero',
+        ],
+        description:
+          'Browse JSON as a collapsible tree, search keys and values, and copy the path (JSONPath or JSON Pointer) of any node.',
+      },
+    },
+  },
+  {
+    slug: 'json-schema-generator',
+    category: 'data',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['json-to-typescript', 'json-formatter', 'json-diff'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'JSON Schema生成',
+        keywords: [
+          'json',
+          'schema',
+          'スキーマ',
+          'JSON Schema',
+          'バリデーション',
+        ],
+        description:
+          'JSONのサンプルからJSON Schemaを自動生成します。draft 2020-12 / 2019-09 / 07、required・additionalProperties・format推測に対応。',
+      },
+      en: {
+        name: 'JSON Schema Generator',
+        keywords: ['json', 'schema', 'json schema', 'generator', 'validation'],
+        description:
+          'Generates a JSON Schema from a JSON sample, with draft 2020-12, 2019-09, or 07, required keys, additionalProperties, and format detection.',
       },
     },
   },

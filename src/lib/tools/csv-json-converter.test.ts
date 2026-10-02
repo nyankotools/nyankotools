@@ -2,6 +2,63 @@ import { describe, expect, it } from 'vitest';
 import { csvToJson, jsonToCsv } from './csv-json-converter';
 
 describe('csvToJson', () => {
+  it('1列CSVの "" （引用符つき空値）の行は読み飛ばさずレコードにする', () => {
+    for (const input of ['name\nA\n""\nB', 'name\nA\n""\nB\n']) {
+      const result = csvToJson(input);
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(JSON.parse(result.output)).toEqual([
+          { name: 'A' },
+          { name: '' },
+          { name: 'B' },
+        ]);
+      }
+    }
+  });
+
+  it('末尾が改行なしの "" 行もレコードにする', () => {
+    const result = csvToJson('name\nA\n""');
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(JSON.parse(result.output)).toEqual([{ name: 'A' }, { name: '' }]);
+    }
+  });
+
+  it('引用符なしの空行は1列CSVでも従来どおり無視する', () => {
+    const result = csvToJson('name\nA\n\nB\n\n');
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(JSON.parse(result.output)).toEqual([{ name: 'A' }, { name: 'B' }]);
+    }
+  });
+
+  it('末尾や途中の空行は読み飛ばす', () => {
+    const result = csvToJson('a,b\n1,2\n\n3,4\n\n');
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(JSON.parse(result.output)).toEqual([
+        { a: '1', b: '2' },
+        { a: '3', b: '4' },
+      ]);
+    }
+  });
+
+  it('空行を挟んだあとの列数不一致でも、元の行番号を報告する', () => {
+    const result = csvToJson('a,b\n\n1');
+    expect(result.success).toBe(false);
+    if (!result.success && result.reason === 'column-mismatch') {
+      expect(result.line).toBe(3);
+    }
+  });
+
+  it('ヘッダーが __proto__ の列も出力から消えない', () => {
+    const result = csvToJson('__proto__,b\n1,2');
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.output).toContain('"__proto__": "1"');
+    }
+  });
+
   it('シンプルなCSVをJSONに変換する', () => {
     const result = csvToJson('name,age\nTaro,30\nHanako,25');
     expect(result.success).toBe(true);
@@ -133,5 +190,34 @@ describe('往復変換', () => {
     expect(csv.success).toBe(true);
     if (!csv.success) return;
     expect(csv.output).toBe(original);
+  });
+
+  it('1列の空値を含む JSON→CSV→JSON で件数が保たれる', () => {
+    const original = [{ name: 'A' }, { name: '' }, { name: 'B' }];
+    const csv = jsonToCsv(JSON.stringify(original));
+    expect(csv).toEqual({ success: true, output: 'name\nA\n""\nB\n' });
+    if (!csv.success) return;
+    const json = csvToJson(csv.output);
+    expect(json.success).toBe(true);
+    if (json.success) expect(JSON.parse(json.output)).toEqual(original);
+  });
+
+  it('キーを持たないオブジェクトだけの配列は空文字になる（[] と同じ）', () => {
+    expect(jsonToCsv('[{},{}]')).toEqual({ success: true, output: '' });
+    expect(jsonToCsv('[]')).toEqual({ success: true, output: '' });
+  });
+
+  it('複数列の空値は引用符なしのまま（区切りで区別できる）', () => {
+    const csv = jsonToCsv('[{"a":"","b":""},{"a":"x","b":""}]');
+    expect(csv).toEqual({ success: true, output: 'a,b\n,\nx,\n' });
+  });
+
+  it('1列で列名が空でも読み戻せる', () => {
+    const original = [{ '': 'x' }, { '': '' }];
+    const csv = jsonToCsv(JSON.stringify(original));
+    if (!csv.success) throw new Error('failed');
+    const json = csvToJson(csv.output);
+    if (!json.success) throw new Error('failed');
+    expect(JSON.parse(json.output)).toEqual(original);
   });
 });

@@ -1,0 +1,180 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { jsonDiffContent } from '../../i18n/tools/json-diff';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = jsonDiffContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="json-diff-root"
+    data-summary={t.summaryTemplate}
+    data-no-differences={t.noDifferences}
+    data-added={t.addedLabel}
+    data-removed={t.removedLabel}
+    data-changed={t.changedLabel}
+    data-error-left={t.errorInvalidLeft}
+    data-error-right={t.errorInvalidRight}
+    data-error-too-deep={t.errorTooDeep}
+  >
+    <div class="grid gap-4 md:grid-cols-2">
+      <div>
+        <label for="json-diff-left" class="ui-label">
+          {t.leftLabel}
+        </label>
+        <textarea
+          id="json-diff-left"
+          class="ui-input h-56 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.samplePlaceholder}
+          data-sample={t.sampleLeft}
+          spellcheck="false"
+        ></textarea>
+      </div>
+      <div>
+        <label for="json-diff-right" class="ui-label">
+          {t.rightLabel}
+        </label>
+        <textarea
+          id="json-diff-right"
+          class="ui-input h-56 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.samplePlaceholder}
+          data-sample={t.sampleRight}
+          spellcheck="false"
+        ></textarea>
+      </div>
+    </div>
+
+    <label class="ui-check mt-4">
+      <input id="json-diff-ignore-order" type="checkbox" class="h-4 w-4" />
+      {t.ignoreArrayOrderLabel}
+    </label>
+
+    <p
+      id="json-diff-error"
+      hidden
+      role="alert"
+      class="ui-error mt-4 max-w-2xl"
+    ></p>
+
+    <div id="json-diff-result" hidden class="mt-4">
+      <h2 class="ui-label">{t.resultLabel}</h2>
+      <p
+        id="json-diff-summary"
+        class="mb-2 text-sm text-gray-700 dark:text-gray-300"
+        aria-live="polite"
+      ></p>
+      <ul id="json-diff-list" class="space-y-2"></ul>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { diffJson, type JsonDiffType } from '../../lib/tools/json-diff';
+
+  const root = document.getElementById('json-diff-root')!;
+  const left = document.getElementById('json-diff-left') as HTMLTextAreaElement;
+  const right = document.getElementById(
+    'json-diff-right',
+  ) as HTMLTextAreaElement;
+  const ignoreOrder = document.getElementById(
+    'json-diff-ignore-order',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('json-diff-error')!;
+  const resultEl = document.getElementById('json-diff-result')!;
+  const summaryEl = document.getElementById('json-diff-summary')!;
+  const listEl = document.getElementById('json-diff-list')!;
+
+  const d = root.dataset;
+  const labels: Record<JsonDiffType, string> = {
+    added: d.added ?? '',
+    removed: d.removed ?? '',
+    changed: d.changed ?? '',
+  };
+  const badgeClass: Record<JsonDiffType, string> = {
+    added:
+      'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
+    removed: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+    changed:
+      'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+  };
+
+  /** 長い値は表示を打ち切る（全文はtitle属性で確認できる） */
+  const MAX_VALUE_LENGTH = 300;
+
+  function valueNode(text: string, sign: string): HTMLElement {
+    const code = document.createElement('code');
+    code.className =
+      'block break-all whitespace-pre-wrap rounded bg-gray-50 px-2 py-1 font-mono text-xs dark:bg-gray-900';
+    const shown =
+      text.length > MAX_VALUE_LENGTH
+        ? `${text.slice(0, MAX_VALUE_LENGTH)}…`
+        : text;
+    code.textContent = `${sign} ${shown}`;
+    if (shown !== text) code.title = text;
+    return code;
+  }
+
+  function render() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    resultEl.hidden = true;
+    listEl.replaceChildren();
+
+    const result = diffJson(left.value, right.value, {
+      ignoreArrayOrder: ignoreOrder.checked,
+    });
+    if (!result.success) {
+      if (result.reason === 'empty') return;
+      errorEl.textContent =
+        result.reason === 'too-deep'
+          ? (d.errorTooDeep ?? '')
+          : ((result.side === 'left' ? d.errorLeft : d.errorRight) ?? '');
+      errorEl.hidden = false;
+      return;
+    }
+
+    resultEl.hidden = false;
+    if (result.entries.length === 0) {
+      summaryEl.textContent = d.noDifferences ?? '';
+      return;
+    }
+    summaryEl.textContent = (d.summary ?? '')
+      .replace('{added}', () => String(result.stats.added))
+      .replace('{removed}', () => String(result.stats.removed))
+      .replace('{changed}', () => String(result.stats.changed));
+
+    for (const entry of result.entries) {
+      const li = document.createElement('li');
+      li.className =
+        'rounded-lg border border-gray-200 p-3 dark:border-gray-700';
+      const head = document.createElement('div');
+      head.className = 'mb-1 flex flex-wrap items-center gap-2';
+      const badge = document.createElement('span');
+      badge.className = `rounded px-2 py-0.5 text-xs font-bold ${badgeClass[entry.type]}`;
+      badge.textContent = labels[entry.type];
+      const path = document.createElement('code');
+      path.className = 'font-mono text-sm break-all';
+      path.textContent = entry.path;
+      head.append(badge, path);
+      li.appendChild(head);
+      if (entry.left !== null) li.appendChild(valueNode(entry.left, '−'));
+      if (entry.right !== null) li.appendChild(valueNode(entry.right, '+'));
+      listEl.appendChild(li);
+    }
+  }
+
+  onTextInput(left, render);
+  onTextInput(right, render);
+  ignoreOrder.addEventListener('change', render);
+
+  left.value = left.dataset.sample ?? '';
+  right.value = right.dataset.sample ?? '';
+  render();
+</script>

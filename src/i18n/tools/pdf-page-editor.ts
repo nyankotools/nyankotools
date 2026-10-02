@@ -128,10 +128,9 @@ export const pdfPageEditorContent: Record<Locale, PdfPageEditorPageContent> = {
     ],
   },
   en: {
-    title:
-      'Rotate, Delete & Reorder PDF Pages, Remove Password – Free, No Upload',
+    title: 'Rotate, Delete & Reorder PDF Pages – Free, No Upload',
     description:
-      'A free online tool to rotate, delete and reorder PDF pages, and to remove the password from a PDF you know the password for. Your PDFs are processed in the browser and never uploaded to a server.',
+      'Rotate, delete, and reorder PDF pages, or remove a password you know. Runs in your browser; your PDFs are never uploaded.',
     h1: 'Rotate, Delete & Reorder PDF Pages',
     introHtml:
       'Rotate pages, delete the ones you do not need, and change their order, then save a new PDF. If you know the password of a protected PDF, you can remove it too. Your files never leave your device. To combine files or pull out a page range, use the <a href="/en/tools/pdf-merge-split/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">PDF Merge, Split & Extract</a> tool.',

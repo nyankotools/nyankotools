@@ -4,20 +4,43 @@ export function initSidebar(): void {
   const overlay = document.getElementById('sidebar-overlay');
   const mql = window.matchMedia('(min-width: 768px)');
 
+  // モバイル幅で閉じている間は画面外のサイドバーにフォーカスやスクリーンリーダーが入らないよう inert にする
+  function syncInert() {
+    if (!sidebar) return;
+    const isOpen = toggle?.getAttribute('aria-expanded') === 'true';
+    sidebar.inert = !mql.matches && !isOpen;
+    // モバイルで開いている間は、背後のコンテンツ（トグル以外）にフォーカスやスクリーンリーダーが届かないようにする
+    const backgroundInert = !mql.matches && isOpen;
+    document
+      .querySelectorAll<HTMLElement>(
+        'main, body > a[href="#main-content"], header > :not(#sidebar-toggle)',
+      )
+      .forEach((el) => {
+        el.inert = backgroundInert;
+      });
+  }
+
   function openSidebar() {
     sidebar?.classList.remove('-translate-x-full');
     sidebar?.classList.add('translate-x-0');
     overlay?.classList.remove('hidden');
     toggle?.setAttribute('aria-expanded', 'true');
     document.body.classList.add('overflow-hidden');
+    syncInert();
+    sidebar?.focus({ preventScroll: true });
   }
 
   function closeSidebar() {
+    // inert 化でフォーカスが外れる前に、サイドバー内にあったかを控える
+    const hadFocus = !!sidebar?.contains(document.activeElement);
     sidebar?.classList.add('-translate-x-full');
     sidebar?.classList.remove('translate-x-0');
     overlay?.classList.add('hidden');
     toggle?.setAttribute('aria-expanded', 'false');
     document.body.classList.remove('overflow-hidden');
+    syncInert();
+    // サイドバー内にフォーカスがあった場合のみトグルボタンへ戻す
+    if (hadFocus && !mql.matches) toggle?.focus();
   }
 
   toggle?.addEventListener('click', () => {
@@ -29,19 +52,31 @@ export function initSidebar(): void {
     }
   });
 
-  overlay?.addEventListener('click', closeSidebar);
+  overlay?.addEventListener('click', () => {
+    closeSidebar();
+    toggle?.focus();
+  });
 
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
+    // 開いているときだけ閉じる（閉じているときの Escape で他の処理を邪魔しない）
+    if (
+      event.key === 'Escape' &&
+      toggle?.getAttribute('aria-expanded') === 'true'
+    ) {
       closeSidebar();
     }
   });
 
   mql.addEventListener('change', (event) => {
+    // 縮小して sidebar が inert になると、フォーカスが失われて body に落ちるため、先にトグルへ退避する
+    const hadFocus = !!sidebar?.contains(document.activeElement);
     if (event.matches) {
       closeSidebar();
     }
+    syncInert();
+    if (hadFocus && !event.matches) toggle?.focus();
   });
+  syncInert();
 }
 
 type Theme = 'light' | 'dark' | 'system';

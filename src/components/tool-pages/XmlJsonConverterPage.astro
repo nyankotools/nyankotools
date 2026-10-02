@@ -1,0 +1,202 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { xmlJsonConverterContent } from '../../i18n/tools/xml-json-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = xmlJsonConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-3">
+    <div
+      id="xml-json-converter-mode"
+      class="ui-seg"
+      role="group"
+      aria-label={t.modeAriaLabel}
+    >
+      <button
+        type="button"
+        data-mode="xmlToJson"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.modeXmlToJson}
+      </button>
+      <button
+        type="button"
+        data-mode="jsonToXml"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeJsonToXml}
+      </button>
+    </div>
+    <label
+      for="xml-json-converter-indent"
+      class="text-sm text-gray-700 dark:text-gray-300"
+    >
+      {t.indentLabel}
+    </label>
+    <select
+      id="xml-json-converter-indent"
+      class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+    >
+      <option value="2">{t.indentOption2}</option>
+      <option value="4">{t.indentOption4}</option>
+    </select>
+    <label class="ui-check">
+      <input type="checkbox" id="xml-json-converter-parse-values" />
+      {t.parseValuesLabel}
+    </label>
+    <button
+      id="xml-json-converter-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="xml-json-converter-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="xml-json-converter-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="xml-json-converter-input"
+        data-placeholder-xml-to-json={t.inputPlaceholderXmlToJson}
+        data-placeholder-json-to-xml={t.inputPlaceholderJsonToXml}
+        class="ui-input h-80 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholderXmlToJson}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label for="xml-json-converter-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="xml-json-converter-output"
+        readonly
+        class="ui-input h-80 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="xml-json-converter-error"
+    hidden
+    data-error-prefix={t.syntaxErrorPrefix}
+    class="ui-error mt-4 max-w-2xl whitespace-pre-line"
+  ></p>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    xmlToJson,
+    jsonToXml,
+    type ConvertOutcome,
+  } from '../../lib/tools/xml-json-converter';
+
+  type Mode = 'xmlToJson' | 'jsonToXml';
+
+  const input = document.getElementById(
+    'xml-json-converter-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'xml-json-converter-output',
+  ) as HTMLTextAreaElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#xml-json-converter-mode [data-mode]',
+  );
+  const indentSelect = document.getElementById(
+    'xml-json-converter-indent',
+  ) as HTMLSelectElement;
+  const parseValuesCheck = document.getElementById(
+    'xml-json-converter-parse-values',
+  ) as HTMLInputElement;
+  const copyButton = document.getElementById(
+    'xml-json-converter-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('xml-json-converter-status')!;
+  const errorEl = document.getElementById('xml-json-converter-error')!;
+
+  let mode: Mode = 'xmlToJson';
+
+  const placeholders: Record<Mode, string> = {
+    xmlToJson: input.dataset.placeholderXmlToJson ?? '',
+    jsonToXml: input.dataset.placeholderJsonToXml ?? '',
+  };
+
+  function showError(message: string) {
+    output.value = '';
+    errorEl.textContent = `${errorEl.dataset.errorPrefix ?? ''}: ${message}`;
+    errorEl.hidden = false;
+  }
+
+  function showOutput(value: string) {
+    output.value = value;
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function convert() {
+    statusEl.textContent = '';
+    if (input.value.trim() === '') {
+      showOutput('');
+      return;
+    }
+    const options = {
+      indent: Number(indentSelect.value),
+      parseValues: parseValuesCheck.checked,
+    };
+    const result: ConvertOutcome =
+      mode === 'xmlToJson'
+        ? xmlToJson(input.value, options)
+        : jsonToXml(input.value, options);
+    if (result.success) {
+      showOutput(result.output);
+    } else {
+      showError(result.message);
+    }
+  }
+
+  onTextInput(input, convert);
+  indentSelect.addEventListener('change', convert);
+  parseValuesCheck.addEventListener('change', convert);
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as Mode;
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      input.placeholder = placeholders[mode];
+      parseValuesCheck.disabled = mode !== 'xmlToJson';
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  convert();
+</script>

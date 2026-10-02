@@ -5,7 +5,22 @@ interface GlossaryTerm {
   description: string;
 }
 
+/** 変換結果の表示形式（{era}=元号名, {year}=和暦の年, {n}=年数, {y}{m}{d}=西暦の年月日, {mm}{dd}=0埋め） */
+export interface EraResultFormat {
+  /** 元号名にローマ字表記（romaji）を使うか（false なら日本語表記） */
+  romajiEraName: boolean;
+  wareki: string;
+  eraYear: string;
+  eraYearFirst: string;
+  western: string;
+  /** 元号一覧表の開始日（{y}{m}{d}{mm}{dd}） */
+  tableStartDate: string;
+  /** 元号一覧表の元年の西暦（{y}） */
+  tableYear1: string;
+}
+
 export interface JapaneseEraConverterPageContent {
+  resultFormat: EraResultFormat;
   title: string;
   description: string;
   h1: string;
@@ -44,6 +59,15 @@ export const japaneseEraConverterContent: Record<
   JapaneseEraConverterPageContent
 > = {
   ja: {
+    resultFormat: {
+      romajiEraName: false,
+      wareki: '{era}{year}',
+      eraYear: '{n}年',
+      eraYearFirst: '元年',
+      western: '西暦{y}年{m}月{d}日',
+      tableStartDate: '{y}年{m}月{d}日',
+      tableYear1: '{y}年',
+    },
     title: '和暦⇔西暦変換（元号早見表）',
     description:
       '令和・平成・昭和・大正・明治の和暦と西暦を相互に変換できる無料ツールです。改元日をまたぐ日付にも対応。データはブラウザ内で処理され、サーバーには送信されません。',
@@ -101,9 +125,18 @@ export const japaneseEraConverterContent: Record<
     ],
   },
   en: {
+    resultFormat: {
+      romajiEraName: true,
+      wareki: '{era} {year}',
+      eraYear: '{n}',
+      eraYearFirst: '1 (gannen)',
+      western: '{y}-{mm}-{dd}',
+      tableStartDate: '{y}-{mm}-{dd}',
+      tableYear1: '{y}',
+    },
     title: 'Japanese Era Converter (Wareki ⇔ Western Year)',
     description:
-      'A free tool to convert between the Japanese era calendar (Reiwa, Heisei, Showa, Taisho, Meiji) and the Western (Gregorian) year, including dates around an era transition. Your data is processed in the browser and never sent to a server.',
+      'Convert between Japanese eras (Reiwa, Heisei, Showa, Taisho, Meiji) and Western years, incl. era changes. Runs in your browser; nothing is sent to a server.',
     h1: 'Japanese Era Converter',
     introHtml:
       'Converts between the Japanese era calendar (Meiji, Taisho, Showa, Heisei, Reiwa) and the Western year in real time, correctly handling dates around an era transition (e.g. Showa 64 / January 7 → Heisei 1 / January 8). Everything happens in your browser, and nothing you type is ever sent to a server. If you need to calculate an age from a date of birth, check out the <a href="/en/tools/age-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Age Calculator</a> as well.',

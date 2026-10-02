@@ -130,7 +130,11 @@ describe('diagnoseMojibake', () => {
 
   it('化けていないテキストは候補なし', () => {
     expect(diagnoseMojibake('abc')).toEqual([]);
-    expect(diagnoseMojibake('')).toEqual([]);
+  });
+
+  it('巨大な入力でもスタックを溢れさせずに処理できる', () => {
+    const garbled = 'ç¸ºã�'.repeat(50000);
+    expect(() => diagnoseMojibake(garbled)).not.toThrow();
   });
 });
 

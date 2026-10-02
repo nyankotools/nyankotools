@@ -53,7 +53,52 @@
         // 壊れたキャッシュは無視してプレースホルダーにする
       }
       if (cached !== null) {
-        section.innerHTML = cached;
+        // localStorage は書き換えられうるため、そのまま innerHTML に入れず、
+        // template で解析（スクリプトは実行されない）してから許可する要素・属性だけを残す
+        const tpl = document.createElement('template');
+        tpl.innerHTML = cached;
+        // 許可する要素・属性は favorites-ui.ts が実際に出力するものだけ（id・on*・style などは落とす）
+        const allowedTags = ['li', 'a', 'svg', 'path', 'button'];
+        const allowedAttrs = [
+          'class',
+          'href',
+          'type',
+          'disabled',
+          'aria-label',
+          'aria-hidden',
+          'aria-current',
+          'data-move-slug',
+          'data-move-direction',
+          'viewbox',
+          'fill',
+          'stroke',
+          'stroke-width',
+          'stroke-linecap',
+          'stroke-linejoin',
+          'd',
+        ];
+        tpl.content.querySelectorAll('*').forEach((el) => {
+          const tag = el.tagName.toLowerCase();
+          if (!allowedTags.includes(tag)) {
+            el.remove();
+            return;
+          }
+          Array.from(el.attributes).forEach((attr) => {
+            const name = attr.name.toLowerCase();
+            let keep = allowedAttrs.includes(name);
+            if (keep && name === 'href') {
+              // URL として解析し、同一オリジンのときだけ残す（タブ・バックスラッシュ・javascript: 等の回避を吸収）
+              try {
+                keep =
+                  new URL(attr.value, location.href).origin === location.origin;
+              } catch {
+                keep = false;
+              }
+            }
+            if (!keep) el.removeAttribute(attr.name);
+          });
+        });
+        section.replaceChildren(tpl.content);
         // キャッシュは別ページで作られたため、現在のページに合わせて現在地表示を付け替える
         section.querySelectorAll('a[aria-current]').forEach((a) => {
           a.removeAttribute('aria-current');

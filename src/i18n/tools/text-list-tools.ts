@@ -95,7 +95,7 @@ export const textListToolsContent: Record<Locale, TextListToolsPageContent> = {
   en: {
     title: 'Text List Deduplicate, Sort & Shuffle Tool',
     description:
-      'Deduplicates lines, sorts them (alphabetical, reverse, or numeric), or shuffles them randomly for any newline-separated text. Also removes empty lines and trims whitespace. Your data is processed in the browser and never sent to a server.',
+      'Deduplicate, sort, or shuffle newline-separated lists, and remove empty lines or trim whitespace. Runs in your browser; nothing is sent to a server.',
     h1: 'Text List Deduplicate, Sort & Shuffle',
     introHtml:
       'Cleans up a list of one item per line by deduplicating lines, sorting them, or shuffling them into a random order. Handy for tidying up email lists, name rosters, or tag lists. To check the number of lines or characters, also try the <a href="/en/tools/char-counter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Character Counter</a> tool.',

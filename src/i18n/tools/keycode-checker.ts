@@ -45,7 +45,7 @@ export const keycodeCheckerContent: Record<Locale, KeycodeCheckerPageContent> =
       title:
         'キーコード（e.code/e.key）チェッカー（JavaScriptキーイベント確認）',
       description:
-        '押したキーのevent.key・event.code・keyCode・location・修飾キーなどのキーボードイベント情報をリアルタイムで確認できる無料ツールです。event.keyとevent.codeの違いやキーボード配列の違いの確認に便利。データはブラウザ内で処理され、サーバーには送信されません。',
+        '押したキーのevent.key・event.code・keyCode・修飾キーなどのキーボードイベント情報をリアルタイムで確認できる無料ツールです。データはブラウザ内で処理され、サーバーには送信されません。',
       h1: 'キーコード（e.code/e.key）チェッカー',
       introHtml:
         '下の入力エリアをクリックしてフォーカスし、任意のキーを押すと、<code class="rounded bg-gray-100 px-1 py-0.5 font-mono text-sm dark:bg-gray-800">event.key</code>・<code class="rounded bg-gray-100 px-1 py-0.5 font-mono text-sm dark:bg-gray-800">event.code</code>・keyCode・location・修飾キーの状態をリアルタイムで表示します。JavaScriptのキーボードイベント処理を実装する際の、実機での値確認やevent.keyとevent.codeの違いの確認に便利です。ブラウザ内で処理され、押したキーの情報がサーバーに送信されることはありません。入力値のパターンマッチングを試したい場合は <a href="/tools/regex-tester/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">正規表現テスター</a> もあわせてご利用ください。',
@@ -112,7 +112,7 @@ export const keycodeCheckerContent: Record<Locale, KeycodeCheckerPageContent> =
     en: {
       title: 'Keycode (e.code / e.key) Checker — Keyboard Event Inspector',
       description:
-        'Shows the event.key, event.code, keyCode, location, and modifier keys of any key you press, in real time — free, and works entirely in your browser. Handy for checking the difference between event.key and event.code, or keyboard layout quirks. Your data is processed locally and never sent to a server.',
+        'Check event.key, event.code, keyCode, and modifier keys for any key press in real time. Runs in your browser; nothing is sent to a server.',
       h1: 'Keycode (e.code / e.key) Checker',
       introHtml:
         'Click the box below to focus it, then press any key to see its <code class="rounded bg-gray-100 px-1 py-0.5 font-mono text-sm dark:bg-gray-800">event.key</code>, <code class="rounded bg-gray-100 px-1 py-0.5 font-mono text-sm dark:bg-gray-800">event.code</code>, keyCode, location, and modifier key state in real time. Handy for checking real-device values while implementing keyboard event handling in JavaScript, or for understanding the difference between event.key and event.code. Everything happens in your browser, and the keys you press are never sent to a server. If you also need to test input patterns, try the <a href="/en/tools/regex-tester/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Regex Tester</a> as well.',

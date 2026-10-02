@@ -1,0 +1,683 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { timerStopwatchContent } from '../../i18n/tools/timer-stopwatch';
+import { fill } from '../../lib/format-template';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = timerStopwatchContent[locale];
+const modes = [
+  { id: 'stopwatch', label: t.modeStopwatch },
+  { id: 'timer', label: t.modeTimer },
+  { id: 'pomodoro', label: t.modePomodoro },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    id="ts"
+    data-labels={JSON.stringify({
+      start: t.startButton,
+      pause: t.pauseButton,
+      resume: t.resumeButton,
+      lapNumber: t.lapNumber,
+      invalidDuration: t.invalidDuration,
+      finished: t.finishedText,
+      invalidPomodoro: t.invalidPomodoro,
+      phases: t.phaseLabels,
+      roundsDone: t.roundsDone,
+      phaseFinished: t.phaseFinished,
+      modes: {
+        stopwatch: t.modeStopwatch,
+        timer: t.modeTimer,
+        pomodoro: t.modePomodoro,
+      },
+    })}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <div id="ts-mode" class="ui-seg" role="group" aria-label={t.modeLabel}>
+        {modes.map((m, i) => (
+          <button
+            type="button"
+            data-mode={m.id}
+            aria-pressed={i === 0 ? 'true' : 'false'}
+            class="ui-seg-btn"
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+      <label class="ui-check">
+        <input id="ts-sound" type="checkbox" checked />
+        {t.soundLabel}
+      </label>
+    </div>
+
+    <p
+      id="ts-phase"
+      class="mt-6 text-center text-sm font-medium text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+    <p
+      id="ts-display"
+      role="timer"
+      aria-live="off"
+      class="my-2 text-center font-mono text-5xl font-bold tabular-nums sm:text-7xl"
+    >
+      00:00.00
+    </p>
+    <p
+      id="ts-message"
+      class="min-h-6 text-center text-sm text-gray-700 dark:text-gray-300"
+      aria-live="polite"
+    ></p>
+    <p
+      id="ts-error"
+      class="ui-error empty:hidden text-center"
+      aria-live="polite"
+    ></p>
+
+    <div id="ts-panel-timer" class="mt-4 hidden">
+      <div class="flex flex-wrap items-end justify-center gap-3">
+        <div>
+          <label for="ts-hours" class="ui-label">
+            {t.hoursLabel}
+          </label>
+          <input
+            id="ts-hours"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            max="99"
+            step="1"
+            value="0"
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ts-minutes" class="ui-label">
+            {t.minutesLabel}
+          </label>
+          <input
+            id="ts-minutes"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            value="5"
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ts-seconds" class="ui-label">
+            {t.secondsLabel}
+          </label>
+          <input
+            id="ts-seconds"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            value="0"
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+      <div
+        class="mt-3 flex flex-wrap items-center justify-center gap-2"
+        role="group"
+        aria-label={t.presetsLabel}
+      >
+        {t.presetMinutes.map((n) => (
+          <button type="button" class="ui-btn" data-preset={n}>
+            {fill(t.presetFormat, { n: String(n) })}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <fieldset
+      id="ts-panel-pomodoro"
+      class="mt-4 hidden rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+    >
+      <legend class="px-1 text-sm font-medium">
+        {t.pomodoroSettingsLegend}
+      </legend>
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="ts-work" class="ui-label">
+            {t.workLabel}
+          </label>
+          <input
+            id="ts-work"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="180"
+            step="1"
+            value="25"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ts-short" class="ui-label">
+            {t.shortBreakLabel}
+          </label>
+          <input
+            id="ts-short"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="60"
+            step="1"
+            value="5"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ts-long" class="ui-label">
+            {t.longBreakLabel}
+          </label>
+          <input
+            id="ts-long"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="60"
+            step="1"
+            value="15"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ts-every" class="ui-label">
+            {t.longBreakEveryLabel}
+          </label>
+          <input
+            id="ts-every"
+            type="number"
+            inputmode="numeric"
+            min="2"
+            max="12"
+            step="1"
+            value="4"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="mt-4 flex flex-wrap items-center justify-center gap-3">
+      <button
+        type="button"
+        id="ts-main-button"
+        class="ui-btn ui-btn-primary min-w-32"
+      >
+        {t.startButton}
+      </button>
+      <button type="button" id="ts-lap-button" class="ui-btn">
+        {t.lapButton}
+      </button>
+      <button type="button" id="ts-skip-button" class="ui-btn hidden">
+        {t.skipButton}
+      </button>
+      <button type="button" id="ts-reset-button" class="ui-btn">
+        {t.resetButton}
+      </button>
+    </div>
+
+    <div id="ts-laps-wrap" class="mt-6 hidden">
+      <h2 class="mb-2 text-lg font-semibold">{t.lapHeading}</h2>
+      <table class="w-full text-left text-sm tabular-nums">
+        <thead>
+          <tr class="border-b border-gray-200 dark:border-gray-700">
+            <th scope="col" class="py-1 pr-3 font-medium">
+              #
+            </th>
+            <th scope="col" class="py-1 pr-3 font-medium">
+              {t.lapSplitLabel}
+            </th>
+            <th scope="col" class="py-1 font-medium">
+              {t.lapTotalLabel}
+            </th>
+          </tr>
+        </thead>
+        <tbody id="ts-laps"></tbody>
+      </table>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { fill } from '../../lib/format-template';
+  import {
+    DEFAULT_POMODORO,
+    durationFromParts,
+    elapsedMs,
+    formatDuration,
+    nextPomodoroPhase,
+    phaseDuration,
+    remainingMs,
+    validatePomodoro,
+    type PomodoroPhase,
+    type PomodoroSettings,
+  } from '../../lib/tools/timer-stopwatch';
+
+  type Mode = 'stopwatch' | 'timer' | 'pomodoro';
+
+  const root = document.getElementById('ts')!;
+  const labels = JSON.parse(root.dataset.labels ?? '{}') as {
+    start: string;
+    pause: string;
+    resume: string;
+    lapNumber: string;
+    invalidDuration: string;
+    finished: string;
+    invalidPomodoro: string;
+    phases: Record<PomodoroPhase, string>;
+    roundsDone: string;
+    phaseFinished: string;
+    modes: Record<Mode, string>;
+  };
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const display = $('ts-display');
+  const phaseEl = $('ts-phase');
+  const messageEl = $('ts-message');
+  const errorEl = $('ts-error');
+  const mainButton = $<HTMLButtonElement>('ts-main-button');
+  const lapButton = $('ts-lap-button');
+  const skipButton = $('ts-skip-button');
+  const resetButton = $('ts-reset-button');
+  const timerPanel = $('ts-panel-timer');
+  const pomodoroPanel = $('ts-panel-pomodoro');
+  const lapsWrap = $('ts-laps-wrap');
+  const lapsBody = $('ts-laps');
+  const sound = $<HTMLInputElement>('ts-sound');
+  const hours = $<HTMLInputElement>('ts-hours');
+  const minutes = $<HTMLInputElement>('ts-minutes');
+  const seconds = $<HTMLInputElement>('ts-seconds');
+  const pomodoroInputs = {
+    work: $<HTMLInputElement>('ts-work'),
+    short: $<HTMLInputElement>('ts-short'),
+    long: $<HTMLInputElement>('ts-long'),
+    every: $<HTMLInputElement>('ts-every'),
+  };
+  const baseTitle = document.title;
+
+  const now = () => performance.now();
+
+  // --- 各モードの状態 ---
+  const stopwatch = {
+    accumulated: 0,
+    startedAt: null as number | null,
+    laps: [] as number[],
+  };
+  /** remaining は一時停止中の残り。null は未開始（入力値を表示） */
+  const timer = {
+    endAt: null as number | null,
+    remaining: null as number | null,
+  };
+  const pomodoro = {
+    phase: 'work' as PomodoroPhase,
+    completedWork: 0,
+    endAt: null as number | null,
+    remaining: null as number | null,
+  };
+
+  let mode: Mode = 'stopwatch';
+  let intervalId: number | undefined;
+  let audioContext: AudioContext | null = null;
+
+  function readTimerDuration(): number | null {
+    return durationFromParts(
+      Number(hours.value),
+      Number(minutes.value),
+      Number(seconds.value),
+    );
+  }
+
+  function readPomodoro(): PomodoroSettings | null {
+    const s: PomodoroSettings = {
+      workMinutes: Number(pomodoroInputs.work.value),
+      shortBreakMinutes: Number(pomodoroInputs.short.value),
+      longBreakMinutes: Number(pomodoroInputs.long.value),
+      longBreakEvery: Number(pomodoroInputs.every.value),
+    };
+    return validatePomodoro(s) ? s : null;
+  }
+
+  function isRunning(m: Mode): boolean {
+    return m === 'stopwatch'
+      ? stopwatch.startedAt !== null
+      : m === 'timer'
+        ? timer.endAt !== null
+        : pomodoro.endAt !== null;
+  }
+
+  // --- アラーム音 ---
+  function prepareAudio() {
+    if (!sound.checked) return;
+    try {
+      const Ctor =
+        window.AudioContext ??
+        (window as unknown as { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext;
+      if (!Ctor) return;
+      audioContext ??= new Ctor();
+      void audioContext.resume();
+    } catch {
+      audioContext = null;
+    }
+  }
+
+  function beep() {
+    if (!sound.checked || !audioContext) return;
+    try {
+      const ctx = audioContext;
+      for (let i = 0; i < 3; i++) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const start = ctx.currentTime + i * 0.35;
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(0.3, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.25);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(start);
+        osc.stop(start + 0.3);
+      }
+    } catch {
+      // 音が出せなくても動作には影響しない
+    }
+  }
+
+  // --- 現在の表示値 ---
+  function currentRemaining(
+    state: { endAt: number | null; remaining: number | null },
+    idle: number,
+  ): number {
+    if (state.endAt !== null) return remainingMs(state.endAt, now());
+    return state.remaining ?? idle;
+  }
+
+  function timerIdle(): number {
+    return readTimerDuration() ?? 0;
+  }
+  function pomodoroIdle(): number {
+    const s = readPomodoro() ?? DEFAULT_POMODORO;
+    return phaseDuration(pomodoro.phase, s);
+  }
+
+  function displayText(): string {
+    if (mode === 'stopwatch')
+      return formatDuration(
+        elapsedMs(stopwatch.accumulated, stopwatch.startedAt, now()),
+        true,
+      );
+    if (mode === 'timer')
+      return formatDuration(
+        Math.ceil(currentRemaining(timer, timerIdle()) / 1000) * 1000,
+      );
+    return formatDuration(
+      Math.ceil(currentRemaining(pomodoro, pomodoroIdle()) / 1000) * 1000,
+    );
+  }
+
+  function renderLaps() {
+    lapsBody.replaceChildren();
+    stopwatch.laps.forEach((total, i) => {
+      const tr = document.createElement('tr');
+      tr.className = 'border-b border-gray-100 dark:border-gray-800';
+      [
+        fill(labels.lapNumber, { n: String(i + 1) }),
+        formatDuration(total - (stopwatch.laps[i - 1] ?? 0), true),
+        formatDuration(total, true),
+      ].forEach((text, col) => {
+        const cell = document.createElement(col === 0 ? 'th' : 'td');
+        if (col === 0) cell.setAttribute('scope', 'row');
+        cell.className = col === 2 ? 'py-1' : 'py-1 pr-3';
+        cell.textContent = text;
+        tr.append(cell);
+      });
+      lapsBody.prepend(tr);
+    });
+    lapsWrap.classList.toggle('hidden', stopwatch.laps.length === 0);
+  }
+
+  function renderStatic() {
+    const running = isRunning(mode);
+    const paused =
+      (mode === 'stopwatch' && !running && stopwatch.accumulated > 0) ||
+      (mode === 'timer' && !running && timer.remaining !== null) ||
+      (mode === 'pomodoro' && !running && pomodoro.remaining !== null);
+    mainButton.textContent = running
+      ? labels.pause
+      : paused
+        ? labels.resume
+        : labels.start;
+    timerPanel.classList.toggle('hidden', mode !== 'timer');
+    pomodoroPanel.classList.toggle('hidden', mode !== 'pomodoro');
+    lapButton.classList.toggle('hidden', mode !== 'stopwatch');
+    lapButton.toggleAttribute('disabled', !running);
+    skipButton.classList.toggle('hidden', mode !== 'pomodoro');
+    document
+      .querySelectorAll<HTMLButtonElement>('#ts-mode button')
+      .forEach((b) =>
+        b.setAttribute('aria-pressed', String(b.dataset.mode === mode)),
+      );
+    phaseEl.textContent =
+      mode === 'pomodoro'
+        ? `${labels.phases[pomodoro.phase]} ・ ${fill(labels.roundsDone, { n: String(pomodoro.completedWork) })}`
+        : '';
+    renderLaps();
+  }
+
+  function renderDisplay() {
+    const text = displayText();
+    display.textContent = text;
+    document.title = isRunning(mode)
+      ? `${text} - ${labels.modes[mode]} | ${baseTitle}`
+      : baseTitle;
+  }
+
+  function render() {
+    renderStatic();
+    renderDisplay();
+  }
+
+  // --- 時間の経過処理 ---
+  function finishTimer() {
+    timer.endAt = null;
+    timer.remaining = null;
+    messageEl.textContent = labels.finished;
+    beep();
+    render();
+  }
+
+  function finishPomodoroPhase() {
+    const settings = readPomodoro() ?? DEFAULT_POMODORO;
+    if (pomodoro.phase === 'work') pomodoro.completedWork++;
+    pomodoro.phase = nextPomodoroPhase(
+      pomodoro.phase,
+      pomodoro.completedWork,
+      settings,
+    );
+    pomodoro.endAt = now() + phaseDuration(pomodoro.phase, settings);
+    pomodoro.remaining = null;
+    messageEl.textContent = fill(labels.phaseFinished, {
+      phase: labels.phases[pomodoro.phase],
+    });
+    beep();
+    render();
+  }
+
+  function tick() {
+    if (timer.endAt !== null && remainingMs(timer.endAt, now()) === 0)
+      finishTimer();
+    if (pomodoro.endAt !== null && remainingMs(pomodoro.endAt, now()) === 0)
+      finishPomodoroPhase();
+    renderDisplay();
+    if (
+      !isRunning('stopwatch') &&
+      !isRunning('timer') &&
+      !isRunning('pomodoro')
+    ) {
+      window.clearInterval(intervalId);
+      intervalId = undefined;
+    }
+  }
+
+  function ensureTicking() {
+    if (intervalId === undefined) intervalId = window.setInterval(tick, 50);
+  }
+
+  // --- 操作 ---
+  function start() {
+    errorEl.textContent = '';
+    messageEl.textContent = '';
+    prepareAudio();
+    const t0 = now();
+    if (mode === 'stopwatch') {
+      stopwatch.startedAt = t0;
+    } else if (mode === 'timer') {
+      const duration = timer.remaining ?? readTimerDuration();
+      if (duration === null) {
+        errorEl.textContent = labels.invalidDuration;
+        return;
+      }
+      timer.endAt = t0 + duration;
+      timer.remaining = null;
+    } else {
+      const settings = readPomodoro();
+      if (!settings) {
+        errorEl.textContent = labels.invalidPomodoro;
+        return;
+      }
+      pomodoro.endAt =
+        t0 + (pomodoro.remaining ?? phaseDuration(pomodoro.phase, settings));
+      pomodoro.remaining = null;
+    }
+    ensureTicking();
+    render();
+  }
+
+  function pause() {
+    const t0 = now();
+    if (mode === 'stopwatch') {
+      stopwatch.accumulated = elapsedMs(
+        stopwatch.accumulated,
+        stopwatch.startedAt,
+        t0,
+      );
+      stopwatch.startedAt = null;
+    } else if (mode === 'timer' && timer.endAt !== null) {
+      timer.remaining = remainingMs(timer.endAt, t0);
+      timer.endAt = null;
+    } else if (mode === 'pomodoro' && pomodoro.endAt !== null) {
+      pomodoro.remaining = remainingMs(pomodoro.endAt, t0);
+      pomodoro.endAt = null;
+    }
+    render();
+  }
+
+  function reset() {
+    errorEl.textContent = '';
+    messageEl.textContent = '';
+    if (mode === 'stopwatch') {
+      stopwatch.accumulated = 0;
+      stopwatch.startedAt = null;
+      stopwatch.laps = [];
+    } else if (mode === 'timer') {
+      timer.endAt = null;
+      timer.remaining = null;
+    } else {
+      pomodoro.endAt = null;
+      pomodoro.remaining = null;
+      pomodoro.phase = 'work';
+      pomodoro.completedWork = 0;
+    }
+    render();
+  }
+
+  mainButton.addEventListener('click', () => {
+    if (isRunning(mode)) pause();
+    else start();
+  });
+  resetButton.addEventListener('click', reset);
+  sound.addEventListener('change', () => {
+    if (isRunning(mode)) prepareAudio();
+  });
+  lapButton.addEventListener('click', () => {
+    if (stopwatch.startedAt === null) return;
+    stopwatch.laps.push(
+      elapsedMs(stopwatch.accumulated, stopwatch.startedAt, now()),
+    );
+    render();
+  });
+  skipButton.addEventListener('click', () => {
+    const settings = readPomodoro();
+    if (!settings) {
+      errorEl.textContent = labels.invalidPomodoro;
+      return;
+    }
+    errorEl.textContent = '';
+    messageEl.textContent = '';
+    const wasRunning = pomodoro.endAt !== null;
+    // 作業を途中でスキップしても完了回数には数えない
+    pomodoro.phase =
+      pomodoro.phase === 'work'
+        ? nextPomodoroPhase('work', pomodoro.completedWork + 1, settings)
+        : 'work';
+    pomodoro.remaining = null;
+    pomodoro.endAt = wasRunning
+      ? now() + phaseDuration(pomodoro.phase, settings)
+      : null;
+    if (wasRunning) ensureTicking();
+    render();
+  });
+
+  document.querySelectorAll<HTMLButtonElement>('#ts-mode button').forEach((b) =>
+    b.addEventListener('click', () => {
+      mode = b.dataset.mode as Mode;
+      errorEl.textContent = '';
+      messageEl.textContent = '';
+      render();
+    }),
+  );
+
+  document.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach((b) =>
+    b.addEventListener('click', () => {
+      hours.value = '0';
+      minutes.value = b.dataset.preset ?? '0';
+      seconds.value = '0';
+      // 一時停止中の残り時間は新しい設定で置き換える
+      if (timer.endAt === null) timer.remaining = null;
+      render();
+    }),
+  );
+
+  [hours, minutes, seconds].forEach((el) =>
+    el.addEventListener('input', () => {
+      if (timer.endAt === null) timer.remaining = null;
+      errorEl.textContent = '';
+      renderDisplay();
+      renderStatic();
+    }),
+  );
+  Object.values(pomodoroInputs).forEach((el) =>
+    el.addEventListener('input', () => {
+      if (pomodoro.endAt === null) pomodoro.remaining = null;
+      errorEl.textContent = '';
+      renderDisplay();
+    }),
+  );
+
+  render();
+</script>

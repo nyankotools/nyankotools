@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { tools, type Locale } from './tools';
+import { ui } from '../i18n/ui';
 
 // レジストリ（tools.ts）と、ページ・辞書・FAQ の整合性、および title / description / h1 の
 // 品質（AdSense「低品質・重複コンテンツ」対策）を機械的に検査する。
@@ -39,8 +40,9 @@ function loadMeta(slug: string): Record<Locale, PageMeta> | undefined {
   return undefined;
 }
 
-// 幅は「全角=2・半角=1」換算。現行の分布（title 最大76・description 最大493）を基準にした回帰ガード
-const TITLE_MAX_WIDTH = 80;
+// 幅は「全角=2・半角=1」換算。title は接尾辞（` | サイト名`）込みの実際の <title> で検査する
+// 現行の最長は92幅（約40件が70幅超）。まず回帰ガードとして95にし、title を見直す際に70へ近づける
+const TITLE_MAX_WIDTH = 95;
 const DESCRIPTION_MIN_WIDTH = 80;
 const DESCRIPTION_MAX_WIDTH = 520;
 // description の文字バイグラム類似度の上限。現行の最大（英語 0.79）を許容し、コピペ同然の酷似だけ弾く
@@ -183,9 +185,12 @@ describe('registry integrity - page meta', () => {
       if (!meta) continue;
       for (const locale of locales) {
         const { title, description } = meta[locale];
-        // 既存の最長（英語76幅）を許容しつつ、極端に長い title の混入を防ぐ回帰ガード
-        if (visualWidth(title) > TITLE_MAX_WIDTH)
-          problems.push(`${t.slug}/${locale}: title ${visualWidth(title)}幅`);
+        // Layout.astro と同じ組み立て（`${title} | ${siteName}`）の実際の <title> で検査する
+        const fullTitle = `${title} | ${ui[locale]['site.name']}`;
+        if (visualWidth(fullTitle) > TITLE_MAX_WIDTH)
+          problems.push(
+            `${t.slug}/${locale}: title ${visualWidth(fullTitle)}幅`,
+          );
         if (
           visualWidth(description) < DESCRIPTION_MIN_WIDTH ||
           visualWidth(description) > DESCRIPTION_MAX_WIDTH

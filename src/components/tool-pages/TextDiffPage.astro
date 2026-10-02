@@ -124,8 +124,8 @@ const t = textDiffContent[locale];
         const rightLabel = line.rightLine ?? '';
         const text = escapeHtml(line.text) || '&nbsp;';
         return `<tr class="${rowClass[line.type]}">
-          <td class="w-12 px-2 py-0.5 text-right text-gray-400 dark:text-gray-600 select-none">${leftLabel}</td>
-          <td class="w-12 px-2 py-0.5 text-right text-gray-400 dark:text-gray-600 select-none">${rightLabel}</td>
+          <td class="w-12 px-2 py-0.5 text-right text-gray-600 dark:text-gray-400 select-none">${leftLabel}</td>
+          <td class="w-12 px-2 py-0.5 text-right text-gray-600 dark:text-gray-400 select-none">${rightLabel}</td>
           <td class="px-3 py-0.5 whitespace-pre-wrap"><span class="mr-1 select-none">${prefix[line.type]}</span>${text}</td>
         </tr>`;
       })

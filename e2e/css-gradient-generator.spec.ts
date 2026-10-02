@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('CSSグラデーションジェネレーター（日本語版）', () => {
   test('直接アクセスして正しく表示される', async ({ page }) => {
@@ -220,6 +220,7 @@ test.describe('CSSグラデーションジェネレーター（日本語版）',
     await page.goto('/tools/css-gradient-generator/');
 
     const removeButtons = page.locator('[data-remove]');
+    await expect(removeButtons).toHaveCount(2);
 
     // ボタンは無効
     for (let i = 0; i < (await removeButtons.count()); i++) {
@@ -342,8 +343,9 @@ test.describe('CSSグラデーションジェネレーター（日本語版）',
     const colorInput = page.locator('[data-color]').first();
     await colorInput.fill('#ff0000');
 
-    // 変更が反映されるまで待つ
-    await page.waitForTimeout(100);
+    // 変更が反映されるまで待つ（自動リトライ）
+    // style 属性が変更されるまで待つ
+    await expect(preview).toHaveAttribute('style', new RegExp(`.+`));
 
     const styleAfter = await preview.getAttribute('style');
 

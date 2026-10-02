@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('機種依存文字（環境依存文字）チェッカー（日本語版）', () => {
   test('直接アクセスして正しく表示され、機種依存文字を入力すると検出結果が表示される', async ({

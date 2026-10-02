@@ -1,0 +1,258 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { fileHashCalculatorContent } from '../../i18n/tools/file-hash-calculator';
+import { MAX_FILE_SIZE } from '../../lib/tools/file-hash-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = fileHashCalculatorContent[locale];
+const maxMb = String(MAX_FILE_SIZE / 1024 / 1024);
+---
+
+<ToolShell t={t}>
+  <div
+    id="fhc-root"
+    data-max-mb={maxMb}
+    data-max-bytes={MAX_FILE_SIZE}
+    data-computing={t.computing}
+    data-error-too-large={t.errorTooLarge}
+    data-error-read-failed={t.errorReadFailed}
+    data-compare-match={t.compareMatch}
+    data-compare-mismatch={t.compareMismatch}
+    data-compare-invalid={t.compareInvalid}
+    data-copy-label={t.copy}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <label for="fhc-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="fhc-dropzone" class="ui-dropzone">
+      <input id="fhc-file-input" type="file" multiple class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="fhc-error"
+      role="alert"
+      hidden
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+    ></p>
+
+    <div class="mt-4">
+      <label for="fhc-compare" class="ui-label">
+        {t.compareLabel}
+      </label>
+      <input
+        id="fhc-compare"
+        type="text"
+        class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.comparePlaceholder}
+        spellcheck="false"
+        autocomplete="off"
+      />
+    </div>
+
+    <label class="ui-check">
+      <input id="fhc-uppercase" type="checkbox" class="h-4 w-4" />
+      {t.uppercaseLabel}
+    </label>
+
+    <p
+      id="fhc-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="fhc-results" class="mt-4 space-y-4"></div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    FILE_HASH_ALGORITHMS,
+    compareHash,
+    computeFileHashes,
+    type FileHashAlgorithm,
+  } from '../../lib/tools/file-hash-calculator';
+
+  const root = document.getElementById('fhc-root')!;
+  const dropzone = document.getElementById('fhc-dropzone')!;
+  const fileInput = document.getElementById(
+    'fhc-file-input',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('fhc-error')!;
+  const compareInput = document.getElementById(
+    'fhc-compare',
+  ) as HTMLInputElement;
+  const uppercaseCheckbox = document.getElementById(
+    'fhc-uppercase',
+  ) as HTMLInputElement;
+  const statusEl = document.getElementById('fhc-status')!;
+  const resultsEl = document.getElementById('fhc-results')!;
+
+  const maxBytes = Number(root.dataset.maxBytes);
+  const maxMb = root.dataset.maxMb ?? '';
+  const d = root.dataset;
+
+  interface Entry {
+    hashes: Record<FileHashAlgorithm, string>;
+    inputs: Record<FileHashAlgorithm, HTMLInputElement>;
+    compareEl: HTMLElement;
+  }
+  const entries: Entry[] = [];
+
+  function showError(messages: string[]) {
+    errorEl.textContent = messages.join(' ');
+    errorEl.hidden = messages.length === 0;
+  }
+
+  function applyCase() {
+    for (const entry of entries) {
+      for (const algorithm of FILE_HASH_ALGORITHMS) {
+        const value = entry.hashes[algorithm];
+        entry.inputs[algorithm].value = uppercaseCheckbox.checked
+          ? value.toUpperCase()
+          : value;
+      }
+    }
+  }
+
+  function applyCompare() {
+    for (const entry of entries) {
+      const result = compareHash(compareInput.value, entry.hashes);
+      const el = entry.compareEl;
+      if (result.status === 'empty') {
+        el.hidden = true;
+        el.textContent = '';
+        continue;
+      }
+      el.hidden = false;
+      const good = result.status === 'match';
+      el.className =
+        'mt-2 text-sm font-medium ' +
+        (good
+          ? 'text-green-700 dark:text-green-400'
+          : 'text-red-600 dark:text-red-400');
+      if (result.status === 'invalid') {
+        el.textContent = d.compareInvalid ?? '';
+      } else {
+        const template = good ? d.compareMatch : d.compareMismatch;
+        el.textContent = (template ?? '').replace(
+          '{algorithm}',
+          result.algorithm,
+        );
+      }
+    }
+  }
+
+  function renderEntry(
+    name: string,
+    hashes: Record<FileHashAlgorithm, string>,
+  ) {
+    const card = document.createElement('section');
+    card.className =
+      'rounded-lg border border-gray-200 p-4 dark:border-gray-700';
+
+    const title = document.createElement('h2');
+    title.className =
+      'break-all text-sm font-semibold text-gray-900 dark:text-gray-100';
+    title.textContent = name;
+    card.append(title);
+
+    const compareEl = document.createElement('p');
+    compareEl.hidden = true;
+    compareEl.setAttribute('role', 'status');
+    card.append(compareEl);
+
+    const inputs = {} as Record<FileHashAlgorithm, HTMLInputElement>;
+    for (const algorithm of FILE_HASH_ALGORITHMS) {
+      const row = document.createElement('div');
+      row.className = 'mt-3';
+
+      const label = document.createElement('div');
+      label.className = 'ui-label';
+      label.textContent = algorithm;
+
+      const line = document.createElement('div');
+      line.className = 'flex gap-2';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.readOnly = true;
+      input.setAttribute('aria-label', `${name} ${algorithm}`);
+      input.className =
+        'ui-input h-11 w-full min-w-0 bg-gray-50 px-3 font-mono dark:bg-gray-900';
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'ui-btn shrink-0';
+      button.textContent = d.copyLabel ?? '';
+      button.addEventListener('click', async () => {
+        statusEl.textContent = (await copyText(input.value))
+          ? (d.copied ?? '')
+          : (d.copyFailed ?? '');
+      });
+
+      line.append(input, button);
+      row.append(label, line);
+      card.append(row);
+      inputs[algorithm] = input;
+    }
+
+    resultsEl.prepend(card);
+    entries.push({ hashes, inputs, compareEl });
+    applyCase();
+    applyCompare();
+  }
+
+  let queue: Promise<void> = Promise.resolve();
+
+  async function handleFiles(files: File[]) {
+    const errors: string[] = [];
+    statusEl.textContent = '';
+    showError([]);
+
+    for (const file of files) {
+      if (file.size > maxBytes) {
+        errors.push(
+          (d.errorTooLarge ?? '')
+            .replace('{max}', maxMb)
+            .replace('{name}', () => file.name),
+        );
+        continue;
+      }
+      statusEl.textContent = `${d.computing ?? ''} ${file.name}`;
+      // 計算中の表示を先に描画させる（MD5は同期処理でメインスレッドを塞ぐため）
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      try {
+        const buffer = await file.arrayBuffer();
+        const hashes = await computeFileHashes(new Uint8Array(buffer));
+        renderEntry(file.name, hashes);
+      } catch {
+        errors.push(
+          (d.errorReadFailed ?? '').replace('{name}', () => file.name),
+        );
+      }
+    }
+
+    statusEl.textContent = '';
+    showError(errors);
+  }
+
+  fileInput.addEventListener('change', () => {
+    const files = Array.from(fileInput.files ?? []);
+    fileInput.value = '';
+    // 計算中に次のファイルが選ばれても、表示が混ざらないよう順番に処理する
+    if (files.length > 0) queue = queue.then(() => handleFiles(files));
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  compareInput.addEventListener('input', applyCompare);
+  uppercaseCheckbox.addEventListener('change', applyCase);
+</script>

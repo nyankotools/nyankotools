@@ -124,7 +124,7 @@ export const cidrCalculatorContent: Record<Locale, CidrCalculatorPageContent> =
     en: {
       title: 'CIDR / Subnet Calculator (Network Address & Host Count)',
       description:
-        'Calculates the network address, broadcast address, subnet mask, and usable host count from CIDR notation (e.g. 192.168.1.0/24) or an IP address plus subnet mask — free, and works entirely in your browser. Your data is processed locally and never sent to a server.',
+        'Calculate network and broadcast addresses, subnet mask, and usable hosts from CIDR (192.168.1.0/24). Runs in your browser; nothing is sent to a server.',
       h1: 'CIDR / Subnet Calculator',
       introHtml:
         'Enter an IPv4 address with a CIDR prefix (e.g. 192.168.1.10/24) or a subnet mask (e.g. 192.168.1.10/255.255.255.0), and this tool calculates the network address, broadcast address, subnet mask, wildcard mask, and the range and count of usable hosts in real time. Handy for network design and checking subnet splits. Everything happens in your browser, and nothing you type is ever sent to a server. If you need to check file permissions, try the <a href="/en/tools/chmod-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Chmod Permission Calculator</a> as well.',

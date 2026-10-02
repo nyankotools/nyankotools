@@ -16,6 +16,7 @@ const t = dateCalculatorContent[locale];
     class="mb-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
     data-locale={locale}
     data-error-nonexistent={t.errorNonexistentDate}
+    data-result-format={JSON.stringify(t.resultFormat)}
   >
     <h2 class="mb-3 text-lg font-bold">{t.diffHeading}</h2>
     <div class="flex flex-wrap items-end gap-3">
@@ -260,16 +261,18 @@ const t = dateCalculatorContent[locale];
     toWeeksAndDays,
     type DateParts,
   } from '../../lib/tools/date-calculator';
+  import { count, fill } from '../../lib/format-template';
+  import type { DateResultFormat } from '../../i18n/tools/date-calculator';
 
   const diffSection = document.querySelector<HTMLElement>(
     'section[data-locale]',
   )!;
-  const isJa = diffSection.dataset.locale === 'ja';
+  const format: DateResultFormat = JSON.parse(
+    diffSection.dataset.resultFormat ?? '{}',
+  );
   const errorNonexistent = diffSection.dataset.errorNonexistent ?? '';
 
-  const WEEKDAY_LABELS = isJa
-    ? ['日', '月', '火', '水', '木', '金', '土']
-    : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const WEEKDAY_LABELS = format.weekdayLabels;
 
   function readDateInputs(
     yearInput: HTMLInputElement,
@@ -327,10 +330,14 @@ const t = dateCalculatorContent[locale];
   const diffNoteEl = document.getElementById('date-calc-diff-note')!;
   const diffWeeksEl = document.getElementById('date-calc-diff-weeks')!;
 
-  function plural(count: number, unit: string): string {
-    return isJa
-      ? `${count}${unit}`
-      : `${count} ${unit}${count === 1 ? '' : 's'}`;
+  function formatDate(parts: { year: number; month: number; day: number }) {
+    return fill(format.date, {
+      y: String(parts.year),
+      m: String(parts.month),
+      d: String(parts.day),
+      mm: String(parts.month).padStart(2, '0'),
+      dd: String(parts.day).padStart(2, '0'),
+    });
   }
 
   function renderDiff() {
@@ -366,36 +373,26 @@ const t = dateCalculatorContent[locale];
       return;
     }
 
-    if (isJa) {
-      diffResultEl.textContent = inclusive ? `${diff}日間` : `${diff}日`;
-      if (calendarDiff === 0) {
-        diffNoteEl.textContent = '開始日と終了日は同じ日です';
-      } else if (calendarDiff > 0) {
-        diffNoteEl.textContent = `終了日は開始日の${calendarDiff}日後です`;
-      } else {
-        diffNoteEl.textContent = `終了日は開始日の${Math.abs(calendarDiff)}日前です`;
-      }
-      if (Math.abs(diff) >= 7) {
-        const { weeks, remainderDays } = toWeeksAndDays(diff);
-        diffWeeksEl.textContent = `＝ ${Math.abs(weeks)}週間${Math.abs(remainderDays)}日`;
-      }
+    diffResultEl.textContent = inclusive
+      ? fill(format.inclusivePeriod, { n: String(diff) })
+      : count(format.days, diff);
+    if (calendarDiff === 0) {
+      diffNoteEl.textContent = format.sameDay;
+    } else if (calendarDiff > 0) {
+      diffNoteEl.textContent = fill(format.endAfter, {
+        days: count(format.days, calendarDiff),
+      });
     } else {
-      diffResultEl.textContent = inclusive
-        ? `${diff}-day period`
-        : plural(diff, 'day');
-      if (calendarDiff === 0) {
-        diffNoteEl.textContent = 'The start date and end date are the same day';
-      } else if (calendarDiff > 0) {
-        diffNoteEl.textContent = `The end date is ${plural(calendarDiff, 'day')} after the start date`;
-      } else {
-        diffNoteEl.textContent = `The end date is ${plural(Math.abs(calendarDiff), 'day')} before the start date`;
-      }
-      if (Math.abs(diff) >= 7) {
-        const { weeks, remainderDays } = toWeeksAndDays(diff);
-        const absWeeks = Math.abs(weeks);
-        const absRemainder = Math.abs(remainderDays);
-        diffWeeksEl.textContent = `= ${plural(absWeeks, 'week')} ${plural(absRemainder, 'day')}`;
-      }
+      diffNoteEl.textContent = fill(format.endBefore, {
+        days: count(format.days, Math.abs(calendarDiff)),
+      });
+    }
+    if (Math.abs(diff) >= 7) {
+      const { weeks, remainderDays } = toWeeksAndDays(diff);
+      diffWeeksEl.textContent = fill(format.weeksAndDays, {
+        weeks: count(format.weeks, Math.abs(weeks)),
+        days: count(format.days, Math.abs(remainderDays)),
+      });
     }
   }
 
@@ -458,17 +455,11 @@ const t = dateCalculatorContent[locale];
 
     const weekday = getWeekday(result.year, result.month, result.day);
 
-    if (isJa) {
-      const weekdayLabel =
-        weekday === null ? '' : `（${WEEKDAY_LABELS[weekday]}）`;
-      addResultEl.textContent = `${result.year}年${result.month}月${result.day}日${weekdayLabel}`;
-    } else {
-      const weekdayLabel =
-        weekday === null ? '' : ` (${WEEKDAY_LABELS[weekday]})`;
-      addResultEl.textContent = `${result.year}-${String(result.month).padStart(2, '0')}-${String(
-        result.day,
-      ).padStart(2, '0')}${weekdayLabel}`;
-    }
+    const weekdayLabel =
+      weekday === null
+        ? ''
+        : fill(format.addWeekday, { w: WEEKDAY_LABELS[weekday] });
+    addResultEl.textContent = `${formatDate(result)}${weekdayLabel}`;
   }
 
   addBaseYearInput.addEventListener('input', renderAddDays);

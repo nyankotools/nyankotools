@@ -1,0 +1,334 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { ogpImageGeneratorContent } from '../../i18n/tools/ogp-image-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = ogpImageGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="ogp-root"
+    data-error-export-failed={t.errorExportFailed}
+    data-downloaded={t.downloaded}
+  >
+    <div class="grid gap-6 md:grid-cols-2">
+      <div>
+        <label for="ogp-title" class="ui-label">
+          {t.titleLabel}
+        </label>
+        <textarea
+          id="ogp-title"
+          rows="3"
+          maxlength="200"
+          class="ui-input w-full p-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.titlePlaceholder}
+          autocomplete="off"
+          set:text={t.defaultTitle}
+        ></textarea>
+
+        <label for="ogp-subtitle" class="ui-label mt-4">
+          {t.subtitleLabel}
+        </label>
+        <input
+          id="ogp-subtitle"
+          type="text"
+          maxlength="200"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.subtitlePlaceholder}
+          autocomplete="off"
+        />
+
+        <label for="ogp-site" class="ui-label mt-4">
+          {t.siteLabel}
+        </label>
+        <input
+          id="ogp-site"
+          type="text"
+          maxlength="100"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.sitePlaceholder}
+          autocomplete="off"
+        />
+
+        <div class="mt-4 flex flex-wrap gap-4">
+          <div>
+            <label for="ogp-size" class="ui-label">
+              {t.sizeLabel}
+            </label>
+            <select id="ogp-size" class="ui-input h-11 px-3 dark:bg-gray-900">
+              {t.sizeOptions.map(({ value, label, selected }) => (
+                <option value={value} selected={selected}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label for="ogp-bg" class="ui-label">
+              {t.backgroundLabel}
+            </label>
+            <select id="ogp-bg" class="ui-input h-11 px-3 dark:bg-gray-900">
+              {t.backgroundOptions.map(({ value, label, selected }) => (
+                <option value={value} selected={selected}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label for="ogp-font" class="ui-label">
+              {t.fontLabel}
+            </label>
+            <select id="ogp-font" class="ui-input h-11 px-3 dark:bg-gray-900">
+              {t.fontOptions.map(({ value, label, selected }) => (
+                <option value={value} selected={selected}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label for="ogp-align" class="ui-label">
+              {t.alignLabel}
+            </label>
+            <select id="ogp-align" class="ui-input h-11 px-3 dark:bg-gray-900">
+              {t.alignOptions.map(({ value, label, selected }) => (
+                <option value={value} selected={selected}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap gap-4">
+          <div>
+            <label for="ogp-color1" class="ui-label">
+              {t.color1Label}
+            </label>
+            <input
+              id="ogp-color1"
+              type="color"
+              value="#2563eb"
+              class="h-11 w-16 cursor-pointer rounded-lg border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900"
+            />
+          </div>
+          <div id="ogp-color2-wrap">
+            <label for="ogp-color2" class="ui-label">
+              {t.color2Label}
+            </label>
+            <input
+              id="ogp-color2"
+              type="color"
+              value="#7c3aed"
+              class="h-11 w-16 cursor-pointer rounded-lg border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900"
+            />
+          </div>
+          <div>
+            <label for="ogp-text-color" class="ui-label">
+              {t.textColorLabel}
+            </label>
+            <input
+              id="ogp-text-color"
+              type="color"
+              value="#ffffff"
+              class="h-11 w-16 cursor-pointer rounded-lg border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center gap-3">
+        <p class="ui-label self-start">{t.previewLabel}</p>
+        <canvas
+          id="ogp-canvas"
+          role="img"
+          aria-label={t.previewLabel}
+          class="h-auto max-w-full rounded-lg border border-gray-300 dark:border-gray-700"
+        ></canvas>
+        <button
+          id="ogp-download"
+          type="button"
+          class="min-h-11 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          {t.downloadButton}
+        </button>
+        <span
+          id="ogp-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+        <p
+          id="ogp-error"
+          role="alert"
+          hidden
+          class="text-sm text-red-600 dark:text-red-400"
+        ></p>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import {
+    findSizePreset,
+    layoutTitle,
+    ogpFileName,
+    wrapText,
+  } from '../../lib/tools/ogp-image-generator';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('ogp-root');
+  const titleInput = $<HTMLTextAreaElement>('ogp-title');
+  const subtitleInput = $<HTMLInputElement>('ogp-subtitle');
+  const siteInput = $<HTMLInputElement>('ogp-site');
+  const sizeSelect = $<HTMLSelectElement>('ogp-size');
+  const bgSelect = $<HTMLSelectElement>('ogp-bg');
+  const fontSelect = $<HTMLSelectElement>('ogp-font');
+  const alignSelect = $<HTMLSelectElement>('ogp-align');
+  const color1 = $<HTMLInputElement>('ogp-color1');
+  const color2 = $<HTMLInputElement>('ogp-color2');
+  const color2Wrap = $('ogp-color2-wrap');
+  const textColor = $<HTMLInputElement>('ogp-text-color');
+  const canvas = $<HTMLCanvasElement>('ogp-canvas');
+  const downloadButton = $<HTMLButtonElement>('ogp-download');
+  const statusEl = $('ogp-status');
+  const errorEl = $('ogp-error');
+
+  const FONTS: Record<string, string> = {
+    sans: '"Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans JP", "Segoe UI", Roboto, Arial, sans-serif',
+    serif:
+      '"Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", "Times New Roman", Georgia, serif',
+  };
+  const LINE_HEIGHT = 1.3;
+
+  function render() {
+    statusEl.textContent = '';
+    errorEl.hidden = true;
+    color2Wrap.hidden = bgSelect.value !== 'gradient';
+
+    const preset = findSizePreset(sizeSelect.value);
+    const { width, height } = preset;
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // 背景
+    if (bgSelect.value === 'gradient') {
+      const gradient = ctx.createLinearGradient(0, 0, width, height);
+      gradient.addColorStop(0, color1.value);
+      gradient.addColorStop(1, color2.value);
+      ctx.fillStyle = gradient;
+    } else {
+      ctx.fillStyle = color1.value;
+    }
+    ctx.fillRect(0, 0, width, height);
+
+    const family = FONTS[fontSelect.value] ?? FONTS.sans;
+    const measureAt = (text: string, size: number, weight = 700) => {
+      ctx.font = `${weight} ${size}px ${family}`;
+      return ctx.measureText(text).width;
+    };
+
+    const pad = Math.round(width * 0.08);
+    const maxWidth = width - pad * 2;
+    const center = alignSelect.value === 'center';
+    const subtitle = subtitleInput.value.trim();
+    const site = siteInput.value.trim();
+    const siteSize = Math.round(width * 0.028);
+    const footerHeight = site ? siteSize * 1.6 : 0;
+    const available = height - pad * 2 - footerHeight;
+
+    const subSize = Math.round(width * 0.03);
+    const subLines = subtitle
+      ? wrapText(subtitle, maxWidth, (s) => measureAt(s, subSize, 400)).slice(
+          0,
+          2,
+        )
+      : [];
+    const subHeight = subLines.length * subSize * LINE_HEIGHT;
+    const gap = subLines.length > 0 ? subSize * 0.8 : 0;
+
+    const title = titleInput.value.trim();
+    const titleLayout = title
+      ? layoutTitle(title, {
+          maxWidth,
+          maxHeight: available - subHeight - gap,
+          maxFontSize: Math.round(width * 0.08),
+          minFontSize: Math.round(width * 0.03),
+          lineHeight: LINE_HEIGHT,
+          measureAt: (s, size) => measureAt(s, size),
+        })
+      : { fontSize: 0, lines: [] as string[], truncated: false };
+    const titleHeight =
+      titleLayout.lines.length * titleLayout.fontSize * LINE_HEIGHT;
+
+    ctx.fillStyle = textColor.value;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = center ? 'center' : 'left';
+    const x = center ? width / 2 : pad;
+
+    let y = pad + (available - (titleHeight + gap + subHeight)) / 2;
+    ctx.font = `700 ${titleLayout.fontSize}px ${family}`;
+    for (const line of titleLayout.lines) {
+      ctx.fillText(
+        line,
+        x,
+        y + (titleLayout.fontSize * LINE_HEIGHT) / 2,
+        maxWidth,
+      );
+      y += titleLayout.fontSize * LINE_HEIGHT;
+    }
+
+    y += gap;
+    ctx.globalAlpha = 0.85;
+    ctx.font = `400 ${subSize}px ${family}`;
+    for (const line of subLines) {
+      ctx.fillText(line, x, y + (subSize * LINE_HEIGHT) / 2, maxWidth);
+      y += subSize * LINE_HEIGHT;
+    }
+
+    if (site) {
+      ctx.globalAlpha = 0.7;
+      ctx.font = `600 ${siteSize}px ${family}`;
+      ctx.fillText(site, x, height - pad - siteSize / 2, maxWidth);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  for (const el of [titleInput, subtitleInput, siteInput]) {
+    el.addEventListener('input', render);
+  }
+  for (const el of [sizeSelect, bgSelect, fontSelect, alignSelect]) {
+    el.addEventListener('change', render);
+  }
+  for (const el of [color1, color2, textColor]) {
+    el.addEventListener('input', render);
+  }
+
+  downloadButton.addEventListener('click', () => {
+    const fail = () => {
+      errorEl.textContent = root.dataset.errorExportFailed ?? '';
+      errorEl.hidden = false;
+    };
+    canvas.toBlob((blob) => {
+      if (!blob) return fail();
+      downloadBlob(blob, ogpFileName(findSizePreset(sizeSelect.value)));
+      statusEl.textContent = root.dataset.downloaded ?? '';
+    }, 'image/png');
+  });
+
+  render();
+</script>

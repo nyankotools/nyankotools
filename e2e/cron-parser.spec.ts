@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('Cron式スケジュールシミュレーター（日本語版）', () => {
   test('直接アクセスして正しく表示され、デフォルト値で説明・次回実行一覧が表示される', async ({
@@ -35,7 +35,7 @@ test.describe('Cron式スケジュールシミュレーター（日本語版）'
 
     await page.locator('#cron-input').fill('30 */2 * * *');
     await expect(page.locator('#cron-description')).toHaveText(
-      '毎日2時間ごと30分に実行されます',
+      '毎日2時間ごとの30分に実行されます',
     );
   });
 
@@ -47,6 +47,28 @@ test.describe('Cron式スケジュールシミュレーター（日本語版）'
     await page.locator('#cron-input').fill('0 0 1 */3 *');
     await expect(page.locator('#cron-description')).toHaveText(
       '毎年3ヶ月ごとの1日の0時0分に実行されます',
+    );
+  });
+
+  test('日と曜日が両方指定されている場合、「または」で接続される', async ({
+    page,
+  }) => {
+    await page.goto('/tools/cron-parser/');
+
+    await page.locator('#cron-input').fill('0 0 1 * 1');
+    await expect(page.locator('#cron-description')).toHaveText(
+      '1日または月曜日の0時0分に実行されます',
+    );
+  });
+
+  test('日がステップ指定で曜日が指定されている場合、「かつ」で接続される', async ({
+    page,
+  }) => {
+    await page.goto('/tools/cron-parser/');
+
+    await page.locator('#cron-input').fill('0 0 */2 * 1');
+    await expect(page.locator('#cron-description')).toHaveText(
+      '2日ごとかつ月曜日の0時0分に実行されます',
     );
   });
 

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test('資産運用シミュレーション: 日本語版が表示される', async ({ page }) => {
   await page.goto('/tools/investment-simulator/');
@@ -71,8 +71,7 @@ test('資産運用シミュレーション: 「積立期間を計算する」で
   await page.locator('#investment-sim-target').fill('5000000');
 
   const primaryValue = page.locator('#investment-sim-primary-value');
-  await expect(primaryValue).toContainText('年');
-  await expect(primaryValue).toContainText('ヶ月');
+  await expect(primaryValue).toContainText(/\d+年\d+ヶ月/);
 });
 
 test('資産運用シミュレーション: 「初期投資額を計算する」で初期投資額入力が隠れる', async ({
@@ -789,12 +788,10 @@ test('資産運用シミュレーション: グラフのSVG要素のfill色がCS
     document.documentElement.classList.add('dark');
   });
 
-  // フォーマッターがレンダリングされるまで待機
-  await page.waitForTimeout(100);
-
-  // トレンドチャートのパス要素を取得
+  // トレンドチャートのパス要素が描画されるまで待つ（自動リトライ）
   const trendChartEl = page.locator('#investment-sim-trend-chart');
   const paths = trendChartEl.locator('path');
+  await expect(paths.first()).toBeVisible();
   const pathCount = await paths.count();
   expect(pathCount).toBeGreaterThan(0);
 
@@ -820,4 +817,21 @@ test('資産運用シミュレーション: グラフのSVG要素のfill色がCS
     // 円形要素も黒以外の色を持つことを確認
     expect(circleFill).not.toBe('rgb(0, 0, 0)');
   }
+});
+
+test('資産運用シミュレーション: 英語版で期間が「yr」「mo」形式で表示される', async ({
+  page,
+}) => {
+  await page.goto('/en/tools/investment-simulator/');
+
+  await page
+    .locator('input[name="investment-sim-mode"][value="months"]')
+    .click();
+  await expect(page.locator('[data-field="years"]')).toHaveClass(/hidden/);
+  await expect(page.locator('[data-field="target"]')).not.toHaveClass(/hidden/);
+
+  await page.locator('#investment-sim-target').fill('5000000');
+
+  const primaryValue = page.locator('#investment-sim-primary-value');
+  await expect(primaryValue).toContainText(/\d+yr \d+mo/);
 });

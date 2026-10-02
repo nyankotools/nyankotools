@@ -38,7 +38,7 @@ export const cssBoxShadowGeneratorContent: Record<
   ja: {
     title: 'CSS box-shadowジェネレーター（プレビュー付き・複数レイヤー対応）',
     description:
-      'X/Yオフセット・ぼかし・広がり・色・inset（内側影）を調整するだけで、CSSの`box-shadow`をリアルタイムプレビューしながら生成できる無料ツールです。シャドウレイヤーは複数重ねて追加でき、生成したCSSはワンクリックでコピーできます。データはブラウザ内で処理され、サーバーには送信されません。',
+      'X/Yオフセット・ぼかし・広がり・色・insetを調整して、CSSのbox-shadowをプレビューしながら生成できる無料ツールです。複数レイヤー対応。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'CSS box-shadowジェネレーター',
     introHtml:
       'X/Yオフセット・ぼかし半径・広がり半径・色・内側影（inset）を調整すると、プレビューと生成されるCSSがリアルタイムに更新されます。シャドウレイヤーは1〜6個まで追加・削除でき、「シャドウを追加」ボタンを押すたびにオフセットとぼかしが段階的に広がるレイヤーが挿入されるため、影を重ねた立体的な表現も作れます。生成された<code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">box-shadow</code>宣言はコピーボタンでそのままクリップボードにコピーできます。角丸との組み合わせには <a href="/tools/css-border-radius-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">CSS border-radiusジェネレーター</a> もあわせてご利用ください。',
@@ -96,7 +96,7 @@ export const cssBoxShadowGeneratorContent: Record<
   en: {
     title: 'CSS Box-Shadow Generator with Live Preview (Multi-Layer)',
     description:
-      'Build a CSS box-shadow with a live preview — adjust the X/Y offset, blur, spread, color, and inset for each shadow layer and copy the generated CSS instantly. Stack multiple shadow layers to create depth. Your data is processed in the browser and never sent to a server.',
+      'Build a CSS box-shadow with live preview: adjust offset, blur, spread, color, and inset across multiple layers, then copy the CSS. Runs in your browser.',
     h1: 'CSS Box-Shadow Generator',
     introHtml:
       'Adjust the X/Y offset, blur radius, spread radius, color, and inset for each shadow layer — the preview and the generated CSS update instantly. You can add or remove between 1 and 6 shadow layers; clicking "Add shadow" inserts a new layer with progressively larger offset and blur, making it easy to build a layered, dimensional shadow. The generated <code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">box-shadow</code> declaration can be copied to the clipboard with one click. Pairs well with the <a href="/en/tools/css-border-radius-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">CSS Border-Radius Generator</a> for rounded, shadowed cards.',

@@ -155,6 +155,7 @@ const t = imageConverterContent[locale];
 </ToolShell>
 
 <script>
+  import { paren } from '../../lib/paren';
   import { enableFileDrop } from '../../lib/file-drop';
   import {
     buildOutputFileName,
@@ -396,7 +397,7 @@ const t = imageConverterContent[locale];
               '{percent}',
               String(Math.abs(reduction)),
             );
-      sizeEl.textContent = `${originalLabel}: ${formatFileSize(item.file.size)} → ${convertedLabel}: ${formatFileSize(blob.size)}（${reductionText}）`;
+      sizeEl.textContent = `${originalLabel}: ${formatFileSize(item.file.size)} → ${convertedLabel}: ${formatFileSize(blob.size)}${paren(reductionText)}`;
 
       resultsList.appendChild(li);
     }

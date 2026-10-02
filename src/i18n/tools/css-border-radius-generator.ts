@@ -35,7 +35,7 @@ export const cssBorderRadiusGeneratorContent: Record<
   ja: {
     title: 'CSS border-radiusジェネレーター（プレビュー付き）',
     description:
-      '4つの角の丸みをそれぞれ調整するだけで、CSSの`border-radius`をリアルタイムプレビューしながら生成できる無料ツールです。単位はpx/%を切り替えでき、4隅をまとめて操作する連動モードにも対応しています。生成したCSSはワンクリックでコピーできます。データはブラウザ内で処理され、サーバーには送信されません。',
+      '4つの角の丸みを調整して、CSSのborder-radiusをプレビューしながら生成できる無料ツールです。px/%切替・連動モード対応で、ワンクリックでコピーできます。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'CSS border-radiusジェネレーター',
     introHtml:
       '左上・右上・右下・左下の4つの角の丸みを調整すると、プレビューと生成されるCSSがリアルタイムに更新されます。「4隅を連動させる」を有効にすると1つの数値で4隅すべてをまとめて操作でき、無効にすると角ごとに個別の値を指定できます。単位はpx（ピクセル）と%（要素サイズに対する割合、正円・楕円のボタンやアイコンに便利）を切り替えられます。生成された<code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">border-radius</code>宣言はコピーボタンでそのままクリップボードにコピーできます。影を付けたい場合は <a href="/tools/css-box-shadow-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">CSS box-shadowジェネレーター</a> もあわせてご利用ください。',
@@ -79,7 +79,7 @@ export const cssBorderRadiusGeneratorContent: Record<
   en: {
     title: 'CSS Border-Radius Generator with Live Preview',
     description:
-      'Build a CSS border-radius with a live preview — adjust each of the four corners independently or linked together, switch between px and % units, and copy the generated CSS instantly. Your data is processed in the browser and never sent to a server.',
+      'Build a CSS border-radius with live preview: adjust each corner or link them, switch px/%, and copy the CSS. Runs in your browser; nothing is sent to a server.',
     h1: 'CSS Border-Radius Generator',
     introHtml:
       'Adjust the top-left, top-right, bottom-right, and bottom-left corner radius — the preview and the generated CSS update instantly. Enable "Link corners" to control all four corners with a single value, or disable it to set each corner independently. Switch the unit between px (pixels) and % (relative to the element size, handy for circular or pill-shaped buttons and icons). The generated <code class="rounded bg-gray-100 px-1 py-0.5 text-xs dark:bg-gray-800">border-radius</code> declaration can be copied to the clipboard with one click. Pairs well with the <a href="/en/tools/css-box-shadow-generator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">CSS Box-Shadow Generator</a> for rounded, shadowed cards.',

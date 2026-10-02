@@ -153,14 +153,14 @@ export const cronParserContent: Record<Locale, CronParserPageContent> = {
       {
         term: 'AND/OR判定（日・曜日フィールド）',
         description:
-          '「日」と「曜日」の両方に*以外の値を指定した場合、cronの仕様上はどちらか一方が一致すればマッチするOR判定になります（AND判定ではありません）。片方だけ指定した場合はその条件のみで判定します。',
+          '「日」と「曜日」の両方に*以外の値を指定した場合、cronの仕様上はどちらか一方が一致すればマッチするOR判定になります（AND判定ではありません）。ただし、どちらかが*で始まる場合（*/2 など）は、Vixie cron / cronie と同様にAND判定（両方一致）になります。片方だけ指定した場合はその条件のみで判定します。',
       },
     ],
   },
   en: {
     title: 'Cron Expression Simulator (Next Run Time & Meaning)',
     description:
-      'Enter a cron expression to get a plain-English explanation and a list of upcoming run times. Useful for checking crontab, GitHub Actions, and Kubernetes CronJob schedules. Your data is processed in the browser and never sent to a server.',
+      'Enter a cron expression to get a plain-English explanation and upcoming run times for crontab, GitHub Actions, or Kubernetes CronJob. Runs in your browser.',
     h1: 'Cron Expression Simulator',
     introHtml:
       'Enter a cron expression (e.g. <code class="rounded bg-gray-100 px-1 py-0.5 dark:bg-gray-800">*/15 9-18 * * 1-5</code>) to get a plain-English explanation and a list of upcoming run times. Handy for checking a crontab entry or validating a GitHub Actions or Kubernetes CronJob schedule. Everything happens in your browser, and nothing you type is ever sent to a server. Need to convert a date/time as well? Check out the <a href="/en/tools/unix-timestamp/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Unix Timestamp Converter</a> too.',
@@ -252,7 +252,7 @@ export const cronParserContent: Record<Locale, CronParserPageContent> = {
       {
         term: 'AND/OR logic for day-of-month and day-of-week',
         description:
-          "When both the day-of-month and day-of-week fields are restricted (not *), cron matches a date if EITHER field matches (an OR condition, not AND). If only one is restricted, only that field's condition applies.",
+          "When both the day-of-month and day-of-week fields are restricted (not *), cron matches a date if EITHER field matches (an OR condition, not AND). If either field starts with * (such as */2), Vixie cron / cronie uses AND instead (both must match). If only one is restricted, only that field's condition applies.",
       },
     ],
   },

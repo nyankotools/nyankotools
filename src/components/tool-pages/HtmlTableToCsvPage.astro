@@ -1,0 +1,229 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { htmlTableToCsvContent } from '../../i18n/tools/html-table-to-csv';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = htmlTableToCsvContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-3">
+    <label
+      for="html-table-to-csv-delimiter"
+      class="text-sm text-gray-700 dark:text-gray-300"
+    >
+      {t.delimiterLabel}
+    </label>
+    <select
+      id="html-table-to-csv-delimiter"
+      class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+    >
+      <option value=",">{t.delimiterComma}</option>
+      <option value={'\t'}>{t.delimiterTab}</option>
+      <option value=";">{t.delimiterSemicolon}</option>
+    </select>
+    <label class="ui-check">
+      <input type="checkbox" id="html-table-to-csv-repeat" />
+      {t.repeatMergedLabel}
+    </label>
+    <label class="ui-check">
+      <input type="checkbox" id="html-table-to-csv-bom" />
+      {t.bomLabel}
+    </label>
+  </div>
+
+  <div
+    id="html-table-to-csv-table-row"
+    hidden
+    class="mt-3 flex items-center gap-3"
+  >
+    <label
+      for="html-table-to-csv-table"
+      class="text-sm text-gray-700 dark:text-gray-300"
+    >
+      {t.tableLabel}
+    </label>
+    <select
+      id="html-table-to-csv-table"
+      data-option-template={t.tableOption}
+      class="ui-input min-w-0 bg-white px-3 py-2 dark:bg-gray-900"
+    ></select>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="html-table-to-csv-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="html-table-to-csv-input"
+        class="ui-input h-80 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label for="html-table-to-csv-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="html-table-to-csv-output"
+        readonly
+        wrap="off"
+        class="ui-input h-80 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="html-table-to-csv-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <button
+      id="html-table-to-csv-download-button"
+      type="button"
+      class="ui-btn ui-btn-primary"
+    >
+      {t.download}
+    </button>
+    <span
+      id="html-table-to-csv-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <p
+    id="html-table-to-csv-error"
+    hidden
+    data-no-table={t.noTableError}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    buildGrid,
+    readTables,
+    rowsToCsv,
+    type RawTable,
+  } from '../../lib/tools/html-table-to-csv';
+
+  const input = document.getElementById(
+    'html-table-to-csv-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'html-table-to-csv-output',
+  ) as HTMLTextAreaElement;
+  const delimiterSelect = document.getElementById(
+    'html-table-to-csv-delimiter',
+  ) as HTMLSelectElement;
+  const repeatCheck = document.getElementById(
+    'html-table-to-csv-repeat',
+  ) as HTMLInputElement;
+  const bomCheck = document.getElementById(
+    'html-table-to-csv-bom',
+  ) as HTMLInputElement;
+  const tableRow = document.getElementById('html-table-to-csv-table-row')!;
+  const tableSelect = document.getElementById(
+    'html-table-to-csv-table',
+  ) as HTMLSelectElement;
+  const copyButton = document.getElementById(
+    'html-table-to-csv-copy-button',
+  ) as HTMLButtonElement;
+  const downloadButton = document.getElementById(
+    'html-table-to-csv-download-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('html-table-to-csv-status')!;
+  const errorEl = document.getElementById('html-table-to-csv-error')!;
+
+  let tables: RawTable[] = [];
+
+  function optionLabel(index: number): string {
+    const grid = buildGrid(tables[index], false);
+    return (tableSelect.dataset.optionTemplate ?? '')
+      .replace('{n}', String(index + 1))
+      .replace('{rows}', String(grid.length))
+      .replace('{cols}', String(grid[0]?.length ?? 0));
+  }
+
+  /** 入力HTMLを読み直し、表の選択肢を作り直す（選択中の表はできるだけ維持する） */
+  function parseInput() {
+    const previous = tableSelect.selectedIndex;
+    tables = input.value.trim() === '' ? [] : readTables(input.value);
+    tableSelect.replaceChildren(
+      ...tables.map((_, index) => {
+        const option = document.createElement('option');
+        option.value = String(index);
+        option.textContent = optionLabel(index);
+        return option;
+      }),
+    );
+    if (previous >= 0 && previous < tables.length) {
+      tableSelect.selectedIndex = previous;
+    }
+    tableRow.hidden = tables.length < 2;
+    render();
+  }
+
+  function render() {
+    statusEl.textContent = '';
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    output.value = '';
+    if (input.value.trim() === '') return;
+    if (tables.length === 0) {
+      errorEl.textContent = errorEl.dataset.noTable ?? '';
+      errorEl.hidden = false;
+      return;
+    }
+    const grid = buildGrid(
+      tables[tableSelect.selectedIndex],
+      repeatCheck.checked,
+    );
+    output.value = rowsToCsv(grid, delimiterSelect.value);
+  }
+
+  onTextInput(input, parseInput);
+  tableSelect.addEventListener('change', render);
+  delimiterSelect.addEventListener('change', render);
+  repeatCheck.addEventListener('change', render);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (!output.value) return;
+    const type =
+      delimiterSelect.value === '\t' ? 'text/tab-separated-values' : 'text/csv';
+    const extension = delimiterSelect.value === '\t' ? 'tsv' : 'csv';
+    // BOM は Excel が UTF-8 と判定するための目印。コピーする文字列には含めない
+    const parts = bomCheck.checked
+      ? [String.fromCharCode(0xfeff), output.value]
+      : [output.value];
+    downloadBlob(
+      new Blob(parts, { type: `${type};charset=utf-8` }),
+      `table.${extension}`,
+    );
+  });
+
+  parseInput();
+</script>

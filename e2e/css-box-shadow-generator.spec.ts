@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('CSS box-shadowジェネレーター（日本語版）', () => {
   test('直接アクセスして正しく表示される', async ({ page }) => {
@@ -14,8 +14,9 @@ test.describe('CSS box-shadowジェネレーター（日本語版）', () => {
   test('初期状態で正しいCSSが生成される', async ({ page }) => {
     await page.goto('/tools/css-box-shadow-generator/');
 
-    const cssOutput = await page.locator('#bs-css-output').inputValue();
-    expect(cssOutput).toBe('box-shadow: 0px 4px 8px 0px #000000;');
+    await expect(page.locator('#bs-css-output')).toHaveValue(
+      'box-shadow: 0px 4px 8px 0px #000000;',
+    );
   });
 
   test('オフセットを変更すると出力CSSが更新される', async ({ page }) => {
@@ -24,8 +25,7 @@ test.describe('CSS box-shadowジェネレーター（日本語版）', () => {
     await page.locator('[data-offset-x]').first().fill('10');
     await page.locator('[data-offset-y]').first().fill('20');
 
-    const cssOutput = await page.locator('#bs-css-output').inputValue();
-    expect(cssOutput).toContain('10px 20px');
+    await expect(page.locator('#bs-css-output')).toHaveValue(/10px 20px/);
   });
 
   test('ぼかし・広がりを変更すると出力CSSが更新される', async ({ page }) => {
@@ -34,8 +34,7 @@ test.describe('CSS box-shadowジェネレーター（日本語版）', () => {
     await page.locator('[data-blur]').first().fill('16');
     await page.locator('[data-spread]').first().fill('-4');
 
-    const cssOutput = await page.locator('#bs-css-output').inputValue();
-    expect(cssOutput).toContain('16px -4px');
+    await expect(page.locator('#bs-css-output')).toHaveValue(/16px -4px/);
   });
 
   test('色を変更すると出力CSSが更新される', async ({ page }) => {
@@ -43,8 +42,7 @@ test.describe('CSS box-shadowジェネレーター（日本語版）', () => {
 
     await page.locator('[data-color]').first().fill('#ff0000');
 
-    const cssOutput = await page.locator('#bs-css-output').inputValue();
-    expect(cssOutput).toContain('#ff0000');
+    await expect(page.locator('#bs-css-output')).toHaveValue(/#ff0000/);
   });
 
   test('insetを有効にすると出力CSSに`inset`が付与される', async ({ page }) => {
@@ -52,8 +50,9 @@ test.describe('CSS box-shadowジェネレーター（日本語版）', () => {
 
     await page.locator('[data-inset]').first().check();
 
-    const cssOutput = await page.locator('#bs-css-output').inputValue();
-    expect(cssOutput).toContain('inset 0px 4px 8px 0px #000000');
+    await expect(page.locator('#bs-css-output')).toHaveValue(
+      /inset 0px 4px 8px 0px #000000/,
+    );
   });
 
   test('範囲外のオフセット値は自動的にクランプされる', async ({ page }) => {
@@ -89,8 +88,12 @@ test.describe('CSS box-shadowジェネレーター（日本語版）', () => {
       await expect(removeButtons.nth(i)).not.toBeDisabled();
     }
 
-    const cssOutput = await page.locator('#bs-css-output').inputValue();
-    expect(cssOutput.split(',').length).toBe(2);
+    await expect
+      .poll(
+        async () =>
+          (await page.locator('#bs-css-output').inputValue()).split(',').length,
+      )
+      .toBe(2);
   });
 
   test('シャドウレイヤーを6個まで追加できるが、それ以上は追加ボタンが無効になる', async ({
@@ -115,8 +118,12 @@ test.describe('CSS box-shadowジェネレーター（日本語版）', () => {
     await page.locator('#bs-add-shadow-button').click();
     await page.locator('[data-remove]').last().click();
 
-    const cssOutput = await page.locator('#bs-css-output').inputValue();
-    expect(cssOutput.split(',').length).toBe(1);
+    await expect
+      .poll(
+        async () =>
+          (await page.locator('#bs-css-output').inputValue()).split(',').length,
+      )
+      .toBe(1);
     await expect(page.locator('[data-remove]')).toBeDisabled();
   });
 
@@ -251,8 +258,7 @@ test.describe('CSS Box-Shadow Generator (Dark mode)', () => {
 
     // オフセット変更してプレビューが更新されることを確認
     await page.locator('[data-offset-x]').first().fill('10');
-    const cssOutput = await page.locator('#bs-css-output').inputValue();
-    expect(cssOutput).toContain('10px');
+    await expect(page.locator('#bs-css-output')).toHaveValue(/10px/);
   });
 
   test('ダークモード時のテキストが見える', async ({ page }) => {
@@ -281,8 +287,9 @@ test.describe('CSS Box-Shadow Generator (English)', () => {
   test('initial CSS output in English', async ({ page }) => {
     await page.goto('/en/tools/css-box-shadow-generator/');
 
-    const cssOutput = await page.locator('#bs-css-output').inputValue();
-    expect(cssOutput).toBe('box-shadow: 0px 4px 8px 0px #000000;');
+    await expect(page.locator('#bs-css-output')).toHaveValue(
+      'box-shadow: 0px 4px 8px 0px #000000;',
+    );
   });
 
   test('add shadow button in English', async ({ page }) => {

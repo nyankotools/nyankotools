@@ -131,9 +131,9 @@ export const imagePixelartConverterContent: Record<
     ],
   },
   en: {
-    title: 'Pixelate, Mosaic & Color Reduction Tool (Pixel Art Converter)',
+    title: 'Pixelate, Mosaic & Color Reduction (Pixel Art Converter)',
     description:
-      'Free tool that turns a photo into retro pixel art. Adjust the block size to control the pixelate/mosaic strength and the color count to control posterization, then export as WebP, JPEG, or PNG. Your image is processed in the browser and never sent to a server.',
+      'Turn a photo into pixel art: set block size and color count, then export as WebP, JPEG, or PNG. Runs in your browser; nothing is uploaded.',
     h1: 'Image Pixelate, Mosaic & Color Reduction Tool',
     introHtml:
       'Select an image, then adjust the "Block size" to control how chunky the pixelate/mosaic effect is and the "Color levels" to control how much the palette is reduced, turning your photo into retro pixel art. Useful for stylizing social media icons and thumbnails, or for mosaic-blurring faces and license plates. If you just need to change the image dimensions, try the <a href="/en/tools/image-resizer/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image Resizer & Compressor</a> instead.',

@@ -1,0 +1,311 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { keyboardTesterContent } from '../../i18n/tools/keyboard-tester';
+import {
+  KEYBOARD_LAYOUT,
+  isSpacer,
+  layoutCodes,
+  type KeyDef,
+} from '../../lib/tools/keyboard-tester';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = keyboardTesterContent[locale];
+const total = layoutCodes().length;
+
+// インラインstyle属性はCSPで禁止されているため、幅は静的なクラスで持つ（標準キー=2.5rem）
+const WIDTH_CLASS: Record<number, string> = {
+  0.5: 'w-5',
+  1: 'w-10',
+  1.25: 'w-[3.125rem]',
+  1.5: 'w-[3.75rem]',
+  1.75: 'w-[4.375rem]',
+  2: 'w-20',
+  2.25: 'w-[5.625rem]',
+  2.75: 'w-[6.875rem]',
+  6.25: 'w-[15.625rem]',
+};
+
+const keyClass =
+  'flex size-full items-center justify-center rounded border border-gray-300 bg-white text-[10px] text-gray-700 select-none sm:text-xs dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 data-[state=pressed]:border-green-600 data-[state=pressed]:bg-green-100 data-[state=pressed]:text-green-900 dark:data-[state=pressed]:bg-green-900 dark:data-[state=pressed]:text-green-100 data-[state=down]:border-blue-600 data-[state=down]:bg-blue-600 data-[state=down]:text-white dark:data-[state=down]:bg-blue-600 dark:data-[state=down]:text-white';
+
+function cellClass(key: KeyDef): string {
+  return [
+    key.colSpan ? 'col-span-2' : '',
+    key.rowSpan ? 'row-span-2' : '',
+  ].join(' ');
+}
+
+const legend = [
+  {
+    label: t.legendUntouched,
+    cls: 'border-gray-300 bg-white dark:border-gray-700 dark:bg-gray-900',
+  },
+  {
+    label: t.legendPressed,
+    cls: 'border-green-600 bg-green-100 dark:bg-green-900',
+  },
+  { label: t.legendHeld, cls: 'border-blue-600 bg-blue-600' },
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="kbd-root"
+    data-total={total}
+    data-status-idle={t.statusIdle}
+    data-status-active={t.statusActive}
+    data-none={t.none}
+    data-location-standard={t.locations.standard}
+    data-location-left={t.locations.left}
+    data-location-right={t.locations.right}
+    data-location-numpad={t.locations.numpad}
+    data-other-empty={t.otherEmpty}
+  >
+    <div
+      id="kbd-area"
+      tabindex="0"
+      role="group"
+      aria-label={t.areaLabel}
+      class="max-w-full rounded-xl border-2 border-dashed border-gray-300 p-3 focus:border-blue-600 focus:outline-none dark:border-gray-700 dark:focus:border-blue-400"
+    >
+      <p
+        id="kbd-status"
+        role="status"
+        class="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.statusIdle}
+      </p>
+      <div class="overflow-x-auto pb-2">
+        <div class="flex w-max gap-x-4">
+          <div>
+            {KEYBOARD_LAYOUT.main.map((row, i) => (
+              <>
+                <div class="flex h-10">
+                  {row.map((item) =>
+                    isSpacer(item) ? (
+                      <div class={WIDTH_CLASS[item.spacer]} />
+                    ) : (
+                      <div class={`${WIDTH_CLASS[item.w ?? 1]} h-10 p-0.5`}>
+                        <div data-kbd-key={item.code} class={keyClass}>
+                          {item.label}
+                        </div>
+                      </div>
+                    ),
+                  )}
+                </div>
+                {i === 0 && <div class="h-3" />}
+              </>
+            ))}
+          </div>
+          <div>
+            {KEYBOARD_LAYOUT.nav.map((row, i) => (
+              <>
+                <div class="flex h-10">
+                  {row.map((item) =>
+                    isSpacer(item) ? (
+                      <div class={WIDTH_CLASS[item.spacer]} />
+                    ) : (
+                      <div class={`${WIDTH_CLASS[item.w ?? 1]} h-10 p-0.5`}>
+                        <div data-kbd-key={item.code} class={keyClass}>
+                          {item.label}
+                        </div>
+                      </div>
+                    ),
+                  )}
+                </div>
+                {i === 0 && <div class="h-3" />}
+              </>
+            ))}
+          </div>
+          <div>
+            <div class="h-13"></div>
+            <div class="grid grid-cols-[repeat(4,2.5rem)] auto-rows-[2.5rem]">
+              {KEYBOARD_LAYOUT.numpad.map((key) => (
+                <div class={`p-0.5 ${cellClass(key)}`}>
+                  <div data-kbd-key={key.code} class={keyClass}>
+                    {key.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ul class="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
+      {legend.map((l) => (
+        <li class="flex items-center gap-1.5">
+          <span class={`inline-block size-3.5 rounded border ${l.cls}`} />
+          {l.label}
+        </li>
+      ))}
+    </ul>
+
+    <div class="mt-4 flex flex-wrap items-center gap-4">
+      <p class="text-sm text-gray-700 dark:text-gray-300">
+        {t.progressLabel}: <strong id="kbd-progress">0 / {total}</strong>
+      </p>
+      <button id="kbd-reset" type="button" class="ui-btn">
+        {t.resetLabel}
+      </button>
+    </div>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.lastKeyHeading}</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[320px] max-w-2xl border-collapse text-sm">
+        <tbody>
+          {[
+            ['key', t.rowKey],
+            ['code', t.rowCode],
+            ['location', t.rowLocation],
+          ].map(([id, label]) => (
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                {label}
+              </td>
+              <td
+                id={`kbd-info-${id}`}
+                class="py-2 text-right break-all text-gray-900 dark:text-gray-100"
+              >
+                -
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.otherHeading}</h2>
+    <p id="kbd-other-empty" class="text-sm text-gray-600 dark:text-gray-400">
+      {t.otherEmpty}
+    </p>
+    <ul id="kbd-other" class="flex flex-wrap gap-2"></ul>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    countCoverage,
+    isLayoutKey,
+    locationName,
+    otherKeyLabel,
+  } from '../../lib/tools/keyboard-tester';
+
+  const root = document.getElementById('kbd-root')!;
+  const d = root.dataset;
+  const area = document.getElementById('kbd-area')!;
+  const status = document.getElementById('kbd-status')!;
+  const progress = document.getElementById('kbd-progress')!;
+  const resetButton = document.getElementById('kbd-reset') as HTMLButtonElement;
+  const otherList = document.getElementById('kbd-other')!;
+  const otherEmpty = document.getElementById('kbd-other-empty')!;
+  const infoKey = document.getElementById('kbd-info-key')!;
+  const infoCode = document.getElementById('kbd-info-code')!;
+  const infoLocation = document.getElementById('kbd-info-location')!;
+
+  const total = Number(d.total);
+  const locationText: Record<string, string> = {
+    standard: d.locationStandard ?? '',
+    left: d.locationLeft ?? '',
+    right: d.locationRight ?? '',
+    numpad: d.locationNumpad ?? '',
+  };
+
+  const keyEls = new Map<string, HTMLElement>();
+  area.querySelectorAll<HTMLElement>('[data-kbd-key]').forEach((el) => {
+    keyEls.set(el.dataset.kbdKey!, el);
+  });
+
+  const pressed = new Set<string>();
+  const held = new Set<string>();
+  const otherCodes = new Set<string>();
+
+  function paint(code: string) {
+    const el = keyEls.get(code);
+    if (!el) return;
+    el.dataset.state = held.has(code)
+      ? 'down'
+      : pressed.has(code)
+        ? 'pressed'
+        : '';
+  }
+
+  function updateProgress() {
+    progress.textContent = `${countCoverage(pressed).pressed} / ${total}`;
+  }
+
+  function record(event: KeyboardEvent, isDown: boolean) {
+    const code = event.code || event.key;
+    pressed.add(code);
+    if (isDown) held.add(code);
+    else held.delete(code);
+
+    if (isLayoutKey(code)) {
+      paint(code);
+    } else if (!otherCodes.has(code)) {
+      otherCodes.add(code);
+      const li = document.createElement('li');
+      li.className =
+        'rounded border border-green-600 bg-green-100 px-2 py-1 text-xs text-green-900 dark:bg-green-900 dark:text-green-100';
+      li.textContent = otherKeyLabel(event.code, event.key);
+      otherList.append(li);
+      otherEmpty.hidden = true;
+    }
+
+    if (isDown) {
+      infoKey.textContent = event.key === ' ' ? 'Space' : event.key;
+      infoCode.textContent = event.code || '-';
+      infoLocation.textContent = locationText[locationName(event.location)];
+    }
+    updateProgress();
+  }
+
+  function handleKey(event: KeyboardEvent, isDown: boolean) {
+    // Tabはフォーカス移動に使うため無効にしない（キーボード操作者がテスト領域に閉じ込められないように）。
+    // 記録は先に行うので、Tabキー自体もテスト結果には反映される
+    if (isDown && event.key !== 'Tab') {
+      event.preventDefault();
+      // Ctrl+Kのコマンドパレットなど、サイト共通のショートカットが反応しないようにする
+      event.stopPropagation();
+    }
+    record(event, isDown);
+  }
+
+  area.addEventListener('keydown', (event) => handleKey(event, true));
+  area.addEventListener('keyup', (event) => handleKey(event, false));
+
+  area.addEventListener('focus', () => {
+    status.textContent = d.statusActive ?? '';
+    area.classList.add('border-solid');
+  });
+  area.addEventListener('blur', () => {
+    status.textContent = d.statusIdle ?? '';
+    area.classList.remove('border-solid');
+    // フォーカスを失うとkeyupが届かないため、押下中の表示は「押した」に戻す
+    const stillHeld = [...held];
+    held.clear();
+    stillHeld.forEach(paint);
+  });
+
+  resetButton.addEventListener('click', () => {
+    pressed.clear();
+    held.clear();
+    keyEls.forEach((el) => {
+      el.dataset.state = '';
+    });
+    otherCodes.clear();
+    otherList.replaceChildren();
+    otherEmpty.hidden = false;
+    infoKey.textContent = '-';
+    infoCode.textContent = '-';
+    infoLocation.textContent = '-';
+    updateProgress();
+    area.focus();
+  });
+</script>

@@ -62,9 +62,9 @@ export const uuidGeneratorContent: Record<Locale, UuidGeneratorPageContent> = {
     ],
   },
   en: {
-    title: 'UUID Generator',
+    title: 'Free UUID Generator',
     description:
-      'A free tool that generates 1 to 100 random UUIDs (v4) at once, with optional hyphen removal and uppercase formatting. Your data is processed in the browser and never sent to a server.',
+      'Generate 1 to 100 random UUIDs (v4) at once, with optional hyphen removal and uppercase. Runs in your browser; nothing is sent to a server.',
     h1: 'UUID Generator (v4)',
     introHtml:
       'Generates random, RFC 4122-compliant version 4 UUIDs in bulk. Useful for database primary keys, test fixtures, and dummy IDs. To format or validate JSON that uses the generated UUIDs, try the <a href="/en/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON Formatter</a> as well.',

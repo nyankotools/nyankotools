@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 
 test.describe('お気に入り機能', () => {
   test('トップページのツールカードでお気に入りボタンをクリックするとトグルされ、サイドバーに表示される', async ({

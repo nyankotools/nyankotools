@@ -104,7 +104,7 @@ export const sqlFormatterContent: Record<Locale, SqlFormatterPageContent> = {
   en: {
     title: 'SQL Formatter',
     description:
-      'Free online tool to format and minify SQL queries right in your browser. Supports MySQL, PostgreSQL, SQLite, BigQuery and other dialects, plus indent width and keyword case options. Your data is processed in the browser and never sent to a server.',
+      'Format and minify SQL for MySQL, PostgreSQL, SQLite, BigQuery and more, with indent and keyword case options. Runs in your browser; nothing is sent to a server.',
     h1: 'SQL Formatter & Minifier',
     introHtml:
       'Paste a SQL query to have it automatically formatted for readability. Choose the dialect, indent width, and keyword case. Click "Minify" to collapse it back to a single line. To format JSON query results, try the <a href="/en/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON Formatter</a> as well.',

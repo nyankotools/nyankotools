@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './helpers/test';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -520,12 +520,17 @@ test.describe('PDF結合・分割・ページ抽出 - ドラッグ&ドロップ'
       dropZone.dispatchEvent(dragoverEvent);
     });
 
-    await page.waitForTimeout(100);
-
-    // ドロップ領域に active クラスが追加される
-    const hasActiveClass = await page.evaluate(() => {
-      const dropZone = document.getElementById('pdf-drop')!;
-      return dropZone.classList.contains('border-blue-400!');
+    // ドロップ領域に active クラスが追加されるまで待つ（自動リトライ）
+    const hasActiveClass = await page.evaluate(async () => {
+      // 複数回チェックして、クラスが追加されるのを待つ
+      for (let i = 0; i < 10; i++) {
+        const dropZone = document.getElementById('pdf-drop')!;
+        if (dropZone.classList.contains('border-blue-400!')) {
+          return true;
+        }
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      return false;
     });
 
     expect(hasActiveClass).toBe(true);
@@ -547,9 +552,7 @@ test.describe('PDF結合・分割・ページ抽出 - ドラッグ&ドロップ'
       // ファイルを選択
       await page.locator('#pdf-file').setInputFiles([pdfPath]);
 
-      await page.waitForTimeout(300);
-
-      // リストに1つのファイルが追加される
+      // リストに1つのファイルが追加されるまで待つ（自動リトライ）
       const listItems = page.locator('#pdf-list li');
       await expect(listItems).toHaveCount(1);
       const itemText = await listItems.first().textContent();

@@ -142,7 +142,7 @@ export const hourlyWageCalculatorContent: Record<
   en: {
     title: 'Hourly Wage Converter & Overtime Pay Calculator',
     description:
-      'Enter an hourly wage to instantly convert it to a daily, monthly, or annual wage, and simulate premium pay (overtime pay) for statutory overtime, holiday work, and late-night work. Your data is processed in the browser and never sent to a server.',
+      'Convert an hourly wage to daily, monthly, and annual pay, and simulate overtime and late-night premium pay. Runs in your browser; nothing is sent to a server.',
     h1: 'Hourly Wage Converter & Overtime Pay Calculator',
     introHtml:
       'Enter just one of hourly, daily, monthly, or annual wage and the rest are calculated automatically. You can also enter hours and premium rates for each overtime pay category to simulate premium pay (overtime pay) for statutory overtime, statutory holiday work, and late-night work. Everything happens in your browser, and nothing you type is ever sent to a server.',

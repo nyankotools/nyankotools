@@ -5,7 +5,31 @@ interface GlossaryTerm {
   description: string;
 }
 
+/** 結果表示の文言。[単数形, 複数形] の組は、件数が1のとき前者を使う（日本語は同じ文言） */
+export interface AgeResultFormat {
+  /** toLocaleString に渡すロケール */
+  numberLocale: string;
+  fullAge: [string, string];
+  kazoedoshi: [string, string];
+  daysLived: [string, string];
+  /** {years} {months} {days} を含む */
+  precise: string;
+  preciseYears: [string, string];
+  preciseMonths: [string, string];
+  preciseDays: [string, string];
+  /** {w} = 曜日名 */
+  weekday: string;
+  /** {age} */
+  nextBirthdayToday: string;
+  /** {date} {days} {age} */
+  nextBirthday: string;
+  /** {y} {m} {d}（{mm} {dd} は0埋め） */
+  nextBirthdayDate: string;
+  nextBirthdayDays: [string, string];
+}
+
 export interface AgeCalculatorPageContent {
+  resultFormat: AgeResultFormat;
   title: string;
   description: string;
   h1: string;
@@ -40,6 +64,21 @@ export interface AgeCalculatorPageContent {
 
 export const ageCalculatorContent: Record<Locale, AgeCalculatorPageContent> = {
   ja: {
+    resultFormat: {
+      numberLocale: 'ja-JP',
+      fullAge: ['{n}歳', '{n}歳'],
+      kazoedoshi: ['{n}歳', '{n}歳'],
+      daysLived: ['{n}日', '{n}日'],
+      precise: '（{years}{months}{days}）',
+      preciseYears: ['{n}歳', '{n}歳'],
+      preciseMonths: ['{n}ヶ月', '{n}ヶ月'],
+      preciseDays: ['{n}日', '{n}日'],
+      weekday: '{w}曜日',
+      nextBirthdayToday: '本日{age}歳の誕生日です',
+      nextBirthday: '{date}（あと{days}、{age}歳になります）',
+      nextBirthdayDate: '{y}年{m}月{d}日',
+      nextBirthdayDays: ['{n}日', '{n}日'],
+    },
     title: '年齢計算機（満年齢・数え年・生まれてからの日数）',
     description:
       '生年月日と基準日を入力するだけで、満年齢・数え年・生まれてから経過した日数・次の誕生日までの日数を無料で計算できるツールです。データはブラウザ内で処理され、サーバーには送信されません。',
@@ -95,9 +134,24 @@ export const ageCalculatorContent: Record<Locale, AgeCalculatorPageContent> = {
     ],
   },
   en: {
+    resultFormat: {
+      numberLocale: 'en-US',
+      fullAge: ['{n} year old', '{n} years old'],
+      kazoedoshi: ['{n} year old', '{n} years old'],
+      daysLived: ['{n} day', '{n} days'],
+      precise: '({years}, {months}, {days})',
+      preciseYears: ['{n} year', '{n} years'],
+      preciseMonths: ['{n} month', '{n} months'],
+      preciseDays: ['{n} day', '{n} days'],
+      weekday: '{w}',
+      nextBirthdayToday: 'Today is the birthday — turning {age}!',
+      nextBirthday: '{date} (in {days}, turning {age})',
+      nextBirthdayDate: '{y}-{mm}-{dd}',
+      nextBirthdayDays: ['{n} day', '{n} days'],
+    },
     title: 'Age Calculator (Exact Age, Days Since Birth, Next Birthday)',
     description:
-      'A free tool to calculate your exact age, the traditional East Asian age, the number of days since birth, and the days remaining until your next birthday, just from your date of birth. Your data is processed in the browser and never sent to a server.',
+      'Calculate your exact age, East Asian age, days since birth, and days until your next birthday. Runs in your browser; nothing is sent to a server.',
     h1: 'Age Calculator',
     introHtml:
       'Enter a date of birth to instantly calculate the exact age, the traditional East Asian age (kazoedoshi), the number of days lived since birth, and the days remaining until the next birthday. The reference date defaults to today, but you can change it to check "how old will this person be on such-and-such date". Everything happens in your browser, and nothing you type is ever sent to a server. To calculate the difference between two arbitrary dates, check out the <a href="/en/tools/date-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Date Calculator</a>, or to convert a date to the Japanese era calendar, the <a href="/en/tools/japanese-era-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Japanese Era Converter</a>.',

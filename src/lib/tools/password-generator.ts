@@ -69,7 +69,9 @@ export class EmptyCharPoolError extends Error {}
 export function generatePassword(options: PasswordGeneratorOptions): string {
   const pool = buildCharPool(options);
   if (pool.length === 0) {
-    throw new EmptyCharPoolError('少なくとも1つの文字種を選択してください');
+    throw new EmptyCharPoolError(
+      'At least one character type must be selected',
+    );
   }
 
   const length = clampPasswordLength(options.length);

@@ -62,9 +62,9 @@ export const base64Content: Record<Locale, Base64PageContent> = {
     ],
   },
   en: {
-    title: 'Base64 Encoder/Decoder',
+    title: 'Free Base64 Encoder/Decoder',
     description:
-      'A free tool that encodes text to Base64 or decodes Base64 back to the original text, with full support for multibyte characters. Your data is processed in the browser and never sent to a server.',
+      'Encode text to Base64 or decode Base64 back to text, with full multibyte character support. Runs in your browser; nothing is sent to a server.',
     h1: 'Base64 Encoder / Decoder',
     introHtml:
       'Type or paste text below to automatically encode it to Base64. Switch to "Decode" to convert a Base64 string back to text. Need to format JSON instead? Try the <a href="/en/tools/json-formatter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON Formatter</a>. For converting query parameters, check out the <a href="/en/tools/url-encode/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">URL Encoder/Decoder</a>.',

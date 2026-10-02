@@ -2758,6 +2758,118 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'timezone-converter',
+    category: 'datetime',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['unix-timestamp', 'date-calculator', 'cron-parser'],
+    translations: {
+      ja: {
+        name: 'タイムゾーン変換・世界時計',
+        keywords: [
+          'タイムゾーン',
+          '時差',
+          '世界時計',
+          '時差変換',
+          'サマータイム',
+          'UTC',
+          'JST',
+        ],
+        description:
+          '日時を入力して、東京・ニューヨーク・ロンドンなど世界各地の現地時刻に一括変換します。サマータイム対応の世界時計としても使えます。',
+      },
+      en: {
+        name: 'Time Zone Converter & World Clock',
+        keywords: [
+          'time zone',
+          'timezone converter',
+          'time difference',
+          'world clock',
+          'daylight saving',
+          'UTC',
+          'meeting planner',
+        ],
+        description:
+          'Converts a date and time to the local time in cities around the world at once, with daylight saving support, and doubles as a world clock.',
+      },
+    },
+  },
+  {
+    slug: 'business-day-calculator',
+    category: 'datetime',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: [
+      'date-calculator',
+      'japanese-era-converter',
+      'hourly-wage-calculator',
+    ],
+    translations: {
+      ja: {
+        name: '営業日計算・祝日一覧（日本）',
+        keywords: [
+          '営業日',
+          '祝日',
+          '休日',
+          '振替休日',
+          '営業日後',
+          '納期',
+          '稼働日',
+        ],
+        description:
+          '日本の祝日・土日を除いた「◯営業日後（前）の日付」と期間内の営業日数を計算し、年ごとの祝日一覧も確認できます。振替休日・国民の休日に対応。',
+      },
+      en: {
+        name: 'Japan Business Day Calculator & Holiday List',
+        keywords: [
+          'business days',
+          'working days',
+          'Japan holidays',
+          'national holidays',
+          'substitute holiday',
+          'due date',
+        ],
+        description:
+          'Finds the date N business days away and counts business days in a range, skipping weekends and Japanese national holidays, and lists holidays by year.',
+      },
+    },
+  },
+  {
+    slug: 'timer-stopwatch',
+    category: 'datetime',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['date-calculator', 'age-calculator', 'unix-timestamp'],
+    translations: {
+      ja: {
+        name: 'タイマー・ストップウォッチ・ポモドーロ',
+        keywords: [
+          'タイマー',
+          'ストップウォッチ',
+          'ポモドーロ',
+          'カウントダウン',
+          'ラップタイム',
+          '勉強タイマー',
+        ],
+        description:
+          'ラップ記録つきのストップウォッチ、カウントダウンタイマー、ポモドーロタイマーをブラウザで使えます。終了時のアラーム音に対応しています。',
+      },
+      en: {
+        name: 'Timer, Stopwatch & Pomodoro Timer',
+        keywords: [
+          'timer',
+          'stopwatch',
+          'pomodoro',
+          'countdown',
+          'lap timer',
+          'study timer',
+        ],
+        description:
+          'A browser stopwatch with laps, a countdown timer, and a Pomodoro timer, with an alarm sound when time is up.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

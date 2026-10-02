@@ -23,6 +23,8 @@ const slugs = [
   'image-background-remover',
   'mic-tester',
   'dead-pixel-checker',
+  'timezone-converter',
+  'business-day-calculator',
 ];
 
 const locales = [

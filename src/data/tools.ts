@@ -2983,6 +2983,81 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'romaji-kana-converter',
+    category: 'text',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: [
+      'kana-converter',
+      'english-katakana-converter',
+      'zenkaku-hankaku',
+    ],
+    translations: {
+      ja: {
+        name: 'ローマ字⇔ひらがな変換',
+        keywords: [
+          'ローマ字',
+          'ひらがな',
+          'カタカナ',
+          'ヘボン式',
+          '訓令式',
+          'ローマ字入力',
+          '名前 ローマ字',
+        ],
+        description:
+          'ローマ字をひらがな・カタカナに、かなをローマ字（ヘボン式・訓令式）に変換します。nn・促音・長音のローマ字入力や、名前のローマ字表記づくりに使えます。',
+      },
+      en: {
+        name: 'Romaji ⇔ Hiragana Converter',
+        keywords: [
+          'romaji',
+          'hiragana',
+          'katakana',
+          'hepburn',
+          'kunrei',
+          'romanization',
+          'japanese name in romaji',
+        ],
+        description:
+          'Converts romaji to hiragana or katakana, and kana to romaji in Hepburn or Kunrei-shiki style, with options for long vowels and letter case.',
+      },
+    },
+  },
+  {
+    slug: 'english-katakana-converter',
+    category: 'text',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['romaji-kana-converter', 'kana-converter', 'zenkaku-hankaku'],
+    translations: {
+      ja: {
+        name: '英単語カタカナ変換',
+        keywords: [
+          '英語 カタカナ',
+          '英単語',
+          'カタカナ表記',
+          '片仮名',
+          'ふりがな',
+          '英語 読み方',
+        ],
+        description:
+          '英単語の綴りを片仮名表記に変換する簡易ツールです。綴りのルールと頻出語の辞書で変換し、USB などの略語は文字読みにもできます。',
+      },
+      en: {
+        name: 'English to Katakana Converter',
+        keywords: [
+          'english to katakana',
+          'katakana transcription',
+          'gairaigo',
+          'katakana reading',
+          'english words in japanese',
+        ],
+        description:
+          'Converts English words to katakana from their spelling using simple rules and a small dictionary of common words, and can spell out acronyms like USB.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

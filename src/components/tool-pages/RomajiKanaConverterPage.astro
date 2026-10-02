@@ -1,0 +1,247 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { romajiKanaConverterContent } from '../../i18n/tools/romaji-kana-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = romajiKanaConverterContent[locale];
+
+const groups = [
+  {
+    id: 'script',
+    label: t.scriptLabel,
+    kana: true,
+    items: [
+      ['hiragana', t.scriptHiragana],
+      ['katakana', t.scriptKatakana],
+    ],
+  },
+  {
+    id: 'style',
+    label: t.styleLabel,
+    kana: false,
+    items: [
+      ['hepburn', t.styleHepburn],
+      ['kunrei', t.styleKunrei],
+    ],
+  },
+  {
+    id: 'long-vowel',
+    label: t.longVowelLabel,
+    kana: false,
+    items: [
+      ['macron', t.longVowelMacron],
+      ['double', t.longVowelDouble],
+      ['dash', t.longVowelDash],
+      ['omit', t.longVowelOmit],
+    ],
+  },
+  {
+    id: 'case',
+    label: t.caseLabel,
+    kana: false,
+    items: [
+      ['lower', t.caseLower],
+      ['capitalize', t.caseCapitalize],
+      ['upper', t.caseUpper],
+    ],
+  },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    id="romaji-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-placeholder-to-kana={t.inputPlaceholderToKana}
+    data-placeholder-to-romaji={t.inputPlaceholderToRomaji}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <div
+        id="romaji-mode"
+        class="ui-seg"
+        role="group"
+        aria-label={t.directionLabel}
+      >
+        <button
+          type="button"
+          data-value="toKana"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.modeToKana}
+        </button>
+        <button
+          type="button"
+          data-value="toRomaji"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.modeToRomaji}
+        </button>
+      </div>
+      <button id="romaji-copy-button" type="button" class="ui-btn">
+        {t.copy}
+      </button>
+      <span
+        id="romaji-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+
+    <div class="mt-3 flex flex-wrap gap-x-6 gap-y-3">
+      {groups.map((group) => (
+        <div
+          data-group={group.id}
+          data-kana={group.kana ? 'true' : 'false'}
+          class={group.kana ? '' : 'hidden'}
+        >
+          <span class="ui-label">{group.label}</span>
+          <div
+            id={`romaji-${group.id}`}
+            class="ui-seg flex-wrap"
+            role="group"
+            aria-label={group.label}
+          >
+            {group.items.map(([value, label], index) => (
+              <button
+                type="button"
+                data-value={value}
+                aria-pressed={index === 0 ? 'true' : 'false'}
+                class="ui-seg-btn"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <div class="mt-4 grid gap-4 lg:grid-cols-2">
+      <div>
+        <label for="romaji-input" class="ui-label">
+          {t.inputLabel}
+        </label>
+        <textarea
+          id="romaji-input"
+          data-query-target="text"
+          data-sample={t.sampleText}
+          class="ui-input h-64 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.inputPlaceholderToKana}
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+        ></textarea>
+      </div>
+      <div>
+        <label for="romaji-output" class="ui-label">
+          {t.outputLabel}
+        </label>
+        <textarea
+          id="romaji-output"
+          readonly
+          class="ui-input h-64 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+        ></textarea>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    kanaToRomaji,
+    romajiToKana,
+    type KanaScript,
+    type LongVowelStyle,
+    type RomajiCase,
+    type RomajiStyle,
+  } from '../../lib/tools/romaji-kana-converter';
+
+  const root = document.getElementById('romaji-root')!;
+  const input = document.getElementById('romaji-input') as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'romaji-output',
+  ) as HTMLTextAreaElement;
+  const copyButton = document.getElementById(
+    'romaji-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('romaji-status')!;
+
+  const state = {
+    mode: 'toKana' as 'toKana' | 'toRomaji',
+    script: 'hiragana' as KanaScript,
+    style: 'hepburn' as RomajiStyle,
+    longVowel: 'macron' as LongVowelStyle,
+    letterCase: 'lower' as RomajiCase,
+  };
+
+  function convert() {
+    statusEl.textContent = '';
+    output.value =
+      state.mode === 'toKana'
+        ? romajiToKana(input.value, { script: state.script })
+        : kanaToRomaji(input.value, {
+            style: state.style,
+            longVowel: state.longVowel,
+            letterCase: state.letterCase,
+          });
+  }
+
+  // 選択ボタン群を共通処理で結び付ける
+  function bindGroup(id: string, apply: (value: string) => void) {
+    const buttons = document.querySelectorAll<HTMLButtonElement>(
+      `#${id} [data-value]`,
+    );
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        apply(button.dataset.value ?? '');
+        buttons.forEach((b) => {
+          b.setAttribute('aria-pressed', String(b === button));
+        });
+        convert();
+      });
+    });
+  }
+
+  bindGroup('romaji-mode', (value) => {
+    state.mode = value as typeof state.mode;
+    const toKana = state.mode === 'toKana';
+    document.querySelectorAll<HTMLElement>('[data-group]').forEach((group) => {
+      group.classList.toggle(
+        'hidden',
+        (group.dataset.kana === 'true') !== toKana,
+      );
+    });
+    input.placeholder =
+      (toKana
+        ? root.dataset.placeholderToKana
+        : root.dataset.placeholderToRomaji) ?? '';
+  });
+  bindGroup('romaji-script', (v) => (state.script = v as KanaScript));
+  bindGroup('romaji-style', (v) => (state.style = v as RomajiStyle));
+  bindGroup(
+    'romaji-long-vowel',
+    (v) => (state.longVowel = v as LongVowelStyle),
+  );
+  bindGroup('romaji-case', (v) => (state.letterCase = v as RomajiCase));
+
+  onTextInput(input, convert);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (root.dataset.copied ?? '')
+      : (root.dataset.copyFailed ?? '');
+  });
+
+  convert();
+</script>

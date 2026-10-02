@@ -289,15 +289,17 @@ export const updates: UpdateEntry[] = [
       'kanji-number-converter',
       'kyujitai-converter',
       'my-number-checker',
+      'romaji-kana-converter',
+      'english-katakana-converter',
     ],
     translations: {
       ja: {
         summary:
-          'マイクテスト（入力レベル・録音）、キーボードテスト（全キー押下判定）、ドット抜けチェック（色ムラ確認）を追加し、新カテゴリ「ハードウェア」を設けました。あわせて、単位変換、割り勘計算機（端数処理・傾斜割り勘）、基礎代謝・消費カロリー計算機、会社員の手取り計算機、ふるさと納税の上限額シミュレーション、タイムゾーン変換・世界時計、営業日計算（日本の祝日対応）、タイマー・ストップウォッチ・ポモドーロ、漢数字⇔算用数字・大字変換、旧字体⇔新字体変換、マイナンバー・法人番号チェックデジット検証も追加しました。',
+          'マイクテスト（入力レベル・録音）、キーボードテスト（全キー押下判定）、ドット抜けチェック（色ムラ確認）を追加し、新カテゴリ「ハードウェア」を設けました。あわせて、単位変換、割り勘計算機（端数処理・傾斜割り勘）、基礎代謝・消費カロリー計算機、会社員の手取り計算機、ふるさと納税の上限額シミュレーション、タイムゾーン変換・世界時計、営業日計算（日本の祝日対応）、タイマー・ストップウォッチ・ポモドーロ、漢数字⇔算用数字・大字変換、旧字体⇔新字体変換、マイナンバー・法人番号チェックデジット検証、ローマ字⇔ひらがな変換、英単語カタカナ変換も追加しました。',
       },
       en: {
         summary:
-          'Added the Microphone Test (level & recording), Keyboard Tester, and Dead Pixel Test, plus a new Hardware category. Also added the Unit Converter, Split Bill Calculator, BMR & Calorie Calculator, Salary Take-Home Pay Calculator, Furusato Nozei Donation Limit Calculator, Time Zone Converter, Japan Business Day Calculator, Timer, Stopwatch & Pomodoro, Kanji Numeral Converter, Kyujitai ⇔ Shinjitai Converter, and My Number & Corporate Number Validator.',
+          'Added the Microphone Test (level & recording), Keyboard Tester, and Dead Pixel Test, plus a new Hardware category. Also added the Unit Converter, Split Bill Calculator, BMR & Calorie Calculator, Salary Take-Home Pay Calculator, Furusato Nozei Donation Limit Calculator, Time Zone Converter, Japan Business Day Calculator, Timer, Stopwatch & Pomodoro, Kanji Numeral Converter, Kyujitai ⇔ Shinjitai Converter, My Number & Corporate Number Validator, Romaji ⇔ Hiragana Converter, and English to Katakana Converter.',
       },
     },
   },

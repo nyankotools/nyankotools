@@ -455,7 +455,10 @@ const jsonLd: Record<string, unknown> | null = noindex
                 />
               </svg>
             </summary>
-            <ul id="sidebar-favorites-list" class="ml-3 space-y-1 border-l border-gray-200 pb-1 dark:border-gray-800"></ul>
+            <ul
+              id="sidebar-favorites-list"
+              class="ml-3 space-y-1 border-l border-gray-200 pb-1 dark:border-gray-800"
+            ></ul>
           </details>
           {toolsByCategory.map((category) => {
             const hasActiveTool = category.tools.some((tool) => {

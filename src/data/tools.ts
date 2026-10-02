@@ -3580,6 +3580,70 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'json-tree-viewer',
+    category: 'data',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['json-formatter', 'json-path-tester', 'json-diff'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'JSONツリービューア',
+        keywords: [
+          'json',
+          'ツリー',
+          'viewer',
+          'ビューア',
+          '折りたたみ',
+          'JSON Hero',
+        ],
+        description:
+          'JSONを折りたたみ可能なツリーで閲覧できます。キー・値の検索、各要素のパス（JSONPath・JSON Pointer）のコピーに対応。',
+      },
+      en: {
+        name: 'JSON Tree Viewer',
+        keywords: [
+          'json',
+          'tree',
+          'viewer',
+          'explorer',
+          'collapsible',
+          'json hero',
+        ],
+        description:
+          'Browse JSON as a collapsible tree, search keys and values, and copy the path (JSONPath or JSON Pointer) of any node.',
+      },
+    },
+  },
+  {
+    slug: 'json-schema-generator',
+    category: 'data',
+    addedAt: '2026-10-02',
+    updatedAt: '2026-10-02',
+    related: ['json-to-typescript', 'json-formatter', 'json-diff'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'JSON Schema生成',
+        keywords: [
+          'json',
+          'schema',
+          'スキーマ',
+          'JSON Schema',
+          'バリデーション',
+        ],
+        description:
+          'JSONのサンプルからJSON Schemaを自動生成します。draft 2020-12 / 2019-09 / 07、required・additionalProperties・format推測に対応。',
+      },
+      en: {
+        name: 'JSON Schema Generator',
+        keywords: ['json', 'schema', 'json schema', 'generator', 'validation'],
+        description:
+          'Generates a JSON Schema from a JSON sample, with draft 2020-12, 2019-09, or 07, required keys, additionalProperties, and format detection.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

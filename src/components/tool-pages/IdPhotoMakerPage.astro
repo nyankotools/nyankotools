@@ -1,0 +1,559 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { idPhotoMakerContent } from '../../i18n/tools/id-photo-maker';
+import { ID_PHOTO_PRESETS } from '../../lib/tools/id-photo-maker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = idPhotoMakerContent[locale];
+
+const selectClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+const labelClass =
+  'mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300';
+const DPIS = ['200', '300', '600'];
+---
+
+<ToolShell t={t}>
+  <div
+    id="idp-root"
+    data-default-camera={t.defaultCamera}
+    data-camera-label={t.cameraLabel}
+    data-start={t.startCamera}
+    data-stop={t.stopCamera}
+    data-file-error={t.fileError}
+    data-size-error={t.sizeError}
+    data-output-info={t.outputInfo}
+    data-error-permission-denied={t.errors['permission-denied']}
+    data-error-not-found={t.errors['not-found']}
+    data-error-in-use={t.errors['in-use']}
+    data-error-constraints={t.errors.constraints}
+    data-error-insecure={t.errors.insecure}
+    data-error-unsupported={t.errors.unsupported}
+    data-error-unknown={t.errors.unknown}
+  >
+    <h2 class="mb-2 text-lg font-bold">{t.cameraHeading}</h2>
+    <div class="grid max-w-2xl gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-end">
+      <div>
+        <label for="idp-camera" class={labelClass}>
+          {t.cameraLabel}
+        </label>
+        <select id="idp-camera" class={selectClass} data-no-persist>
+          <option value="">{t.defaultCamera}</option>
+        </select>
+      </div>
+      <button id="idp-toggle" type="button" class="ui-btn ui-btn-primary">
+        {t.startCamera}
+      </button>
+      <button id="idp-capture" type="button" class="ui-btn" disabled>
+        {t.capture}
+      </button>
+    </div>
+    <label class="ui-check mt-3 max-w-2xl">
+      <input id="idp-mirror" type="checkbox" checked />
+      <span>{t.mirrorPreview}</span>
+    </label>
+
+    <p id="idp-error" hidden role="alert" class="ui-error mt-3 max-w-2xl"></p>
+
+    <div class="relative mt-3 aspect-video w-full max-w-2xl overflow-hidden rounded-xl bg-black">
+      <video
+        id="idp-video"
+        muted
+        playsinline
+        aria-label={t.videoAriaLabel}
+        class="size-full -scale-x-100 object-contain"
+      ></video>
+      <p
+        id="idp-placeholder"
+        class="pointer-events-none absolute inset-0 flex items-center justify-center px-4 text-center text-sm text-gray-300"
+      >
+        {t.placeholder}
+      </p>
+    </div>
+
+    <label for="idp-file" class="mt-6 mb-2 block text-base font-bold">
+      {t.fileHeading}
+    </label>
+    <div id="idp-dropzone" class="ui-dropzone max-w-2xl">
+      <input
+        id="idp-file"
+        type="file"
+        accept="image/*"
+        class="ui-file"
+        data-no-persist
+      />
+      <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{t.fileHint}</p>
+    </div>
+    <p
+      id="idp-file-error"
+      hidden
+      role="alert"
+      class="ui-error mt-3 max-w-2xl"
+    ></p>
+
+    <h2 class="mt-8 mb-2 text-lg font-bold">{t.editorHeading}</h2>
+    <p id="idp-empty" class="text-sm text-gray-500 dark:text-gray-400">
+      {t.editorEmpty}
+    </p>
+    <div id="idp-editor" hidden class="grid gap-6 md:grid-cols-[auto_1fr]">
+      <div class="relative mx-auto h-fit w-fit max-w-full md:mx-0">
+        <canvas
+          id="idp-canvas"
+          role="img"
+          aria-label={t.previewAriaLabel}
+          class="h-auto max-h-[28rem] w-auto max-w-full rounded border border-gray-300 dark:border-gray-700"
+        ></canvas>
+        <div
+          aria-hidden="true"
+          class="pointer-events-none absolute inset-x-[20%] top-[12%] bottom-[22%] rounded-[50%] border-2 border-dashed border-white/80 mix-blend-difference"
+        ></div>
+      </div>
+
+      <div class="grid max-w-lg gap-4">
+        <div>
+          <label for="idp-preset" class={labelClass}>
+            {t.sizeLabel}
+          </label>
+          <select id="idp-preset" class={selectClass}>
+            {ID_PHOTO_PRESETS.map((p) => (
+              <option
+                value={p.id}
+                data-width={p.widthMm}
+                data-height={p.heightMm}
+                selected={p.id === 'resume'}
+              >
+                {t.presetLabels[p.id]}
+              </option>
+            ))}
+            <option value="custom">{t.customLabel}</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="idp-width" class={labelClass}>
+              {t.widthLabel}
+            </label>
+            <input
+              id="idp-width"
+              type="number"
+              inputmode="decimal"
+              min="10"
+              max="100"
+              step="0.1"
+              value="30"
+              readonly
+              class="ui-input"
+            />
+          </div>
+          <div>
+            <label for="idp-height" class={labelClass}>
+              {t.heightLabel}
+            </label>
+            <input
+              id="idp-height"
+              type="number"
+              inputmode="decimal"
+              min="10"
+              max="100"
+              step="0.1"
+              value="40"
+              readonly
+              class="ui-input"
+            />
+          </div>
+        </div>
+        <p id="idp-size-error" hidden role="alert" class="ui-error"></p>
+
+        <div>
+          <label for="idp-zoom" class={labelClass}>
+            {t.zoomLabel}
+          </label>
+          <input
+            id="idp-zoom"
+            type="range"
+            min="0.5"
+            max="3"
+            step="0.01"
+            value="1"
+            class="h-11 w-full"
+          />
+        </div>
+        <div>
+          <label for="idp-offset-x" class={labelClass}>
+            {t.offsetXLabel}
+          </label>
+          <input
+            id="idp-offset-x"
+            type="range"
+            min="-1"
+            max="1"
+            step="0.01"
+            value="0"
+            class="h-11 w-full"
+          />
+        </div>
+        <div>
+          <label for="idp-offset-y" class={labelClass}>
+            {t.offsetYLabel}
+          </label>
+          <input
+            id="idp-offset-y"
+            type="range"
+            min="-1"
+            max="1"
+            step="0.01"
+            value="0"
+            class="h-11 w-full"
+          />
+        </div>
+        <div>
+          <button id="idp-reset" type="button" class="ui-btn">
+            {t.resetPosition}
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="idp-bg" class={labelClass}>
+              {t.backgroundLabel}
+            </label>
+            <input
+              id="idp-bg"
+              type="color"
+              value="#ffffff"
+              class="h-11 w-full rounded-lg border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900"
+            />
+          </div>
+          <div>
+            <label for="idp-dpi" class={labelClass}>
+              {t.dpiLabel}
+            </label>
+            <select id="idp-dpi" class={selectClass}>
+              {DPIS.map((v) => (
+                <option value={v} selected={v === '300'}>
+                  {v} dpi
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <p
+          id="idp-gap-note"
+          hidden
+          class="text-xs text-gray-600 dark:text-gray-400"
+        >
+          {t.gapNote}
+        </p>
+
+        <div>
+          <label for="idp-format" class={labelClass}>
+            {t.formatLabel}
+          </label>
+          <select id="idp-format" class={selectClass}>
+            <option value="jpeg" selected>
+              JPEG
+            </option>
+            <option value="png">PNG</option>
+          </select>
+        </div>
+
+        <p id="idp-info" class="text-sm text-gray-600 dark:text-gray-400"></p>
+        <div>
+          <button
+            id="idp-download-button"
+            type="button"
+            class="ui-btn ui-btn-primary"
+          >
+            {t.download}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import { classifyMediaError } from '../../lib/tools/webcam-tester';
+  import type { MediaErrorKind } from '../../lib/tools/webcam-tester';
+  import { normalizeHex } from '../../lib/tools/color-converter';
+  import {
+    buildFilename,
+    computeDrawRect,
+    computeOutputSize,
+    hasBackgroundGap,
+    parseSizeMm,
+  } from '../../lib/tools/id-photo-maker';
+
+  const root = document.getElementById('idp-root')!;
+  const d = root.dataset;
+  const ERROR_TEXT: Record<MediaErrorKind, string> = {
+    'permission-denied': d.errorPermissionDenied ?? '',
+    'not-found': d.errorNotFound ?? '',
+    'in-use': d.errorInUse ?? '',
+    constraints: d.errorConstraints ?? '',
+    insecure: d.errorInsecure ?? '',
+    unsupported: d.errorUnsupported ?? '',
+    unknown: d.errorUnknown ?? '',
+  };
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const toggle = $<HTMLButtonElement>('idp-toggle');
+  const captureButton = $<HTMLButtonElement>('idp-capture');
+  const cameraSelect = $<HTMLSelectElement>('idp-camera');
+  const mirror = $<HTMLInputElement>('idp-mirror');
+  const errorEl = $('idp-error');
+  const video = $<HTMLVideoElement>('idp-video');
+  const placeholder = $('idp-placeholder');
+  const dropzone = $('idp-dropzone');
+  const fileInput = $<HTMLInputElement>('idp-file');
+  const fileError = $('idp-file-error');
+  const emptyEl = $('idp-empty');
+  const editor = $('idp-editor');
+  const canvas = $<HTMLCanvasElement>('idp-canvas');
+  const preset = $<HTMLSelectElement>('idp-preset');
+  const widthInput = $<HTMLInputElement>('idp-width');
+  const heightInput = $<HTMLInputElement>('idp-height');
+  const sizeError = $('idp-size-error');
+  const zoom = $<HTMLInputElement>('idp-zoom');
+  const offsetX = $<HTMLInputElement>('idp-offset-x');
+  const offsetY = $<HTMLInputElement>('idp-offset-y');
+  const resetButton = $<HTMLButtonElement>('idp-reset');
+  const bg = $<HTMLInputElement>('idp-bg');
+  const dpi = $<HTMLSelectElement>('idp-dpi');
+  const gapNote = $('idp-gap-note');
+  const format = $<HTMLSelectElement>('idp-format');
+  const info = $('idp-info');
+  const downloadButton = $<HTMLButtonElement>('idp-download-button');
+
+  const ctx = canvas.getContext('2d')!;
+
+  let stream: MediaStream | null = null;
+  let active = false;
+  let sessionId = 0;
+  let source: {
+    image: CanvasImageSource;
+    width: number;
+    height: number;
+  } | null = null;
+
+  function showError(kind: MediaErrorKind) {
+    errorEl.textContent = ERROR_TEXT[kind];
+    errorEl.hidden = false;
+  }
+
+  function currentSizeMm(): { width: number; height: number } | null {
+    const width = parseSizeMm(widthInput.value);
+    const height = parseSizeMm(heightInput.value);
+    return width === null || height === null ? null : { width, height };
+  }
+
+  function render() {
+    if (!source) return;
+    const size = currentSizeMm();
+    sizeError.hidden = size !== null;
+    if (!size) {
+      sizeError.textContent = d.sizeError ?? '';
+      return;
+    }
+    const out = computeOutputSize(size.width, size.height, Number(dpi.value));
+    canvas.width = out.width;
+    canvas.height = out.height;
+    ctx.fillStyle = normalizeHex(bg.value) ?? '#ffffff';
+    ctx.fillRect(0, 0, out.width, out.height);
+    const rect = computeDrawRect(
+      source.width,
+      source.height,
+      out.width,
+      out.height,
+      Number(zoom.value),
+      Number(offsetX.value),
+      Number(offsetY.value),
+    );
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(source.image, rect.dx, rect.dy, rect.dw, rect.dh);
+    gapNote.hidden = !hasBackgroundGap(rect, out.width, out.height);
+    info.textContent = `${d.outputInfo ?? ''}: ${out.width} × ${out.height} px（${size.width} × ${size.height} mm）`;
+  }
+
+  function resetPosition() {
+    zoom.value = '1';
+    offsetX.value = '0';
+    offsetY.value = '0';
+  }
+
+  function setSource(image: CanvasImageSource, width: number, height: number) {
+    if (source && source.image instanceof ImageBitmap) source.image.close();
+    source = { image, width, height };
+    resetPosition();
+    emptyEl.hidden = true;
+    editor.hidden = false;
+    render();
+  }
+
+  function applyPreset() {
+    const custom = preset.value === 'custom';
+    widthInput.readOnly = !custom;
+    heightInput.readOnly = !custom;
+    if (!custom) {
+      const option = preset.selectedOptions[0];
+      widthInput.value = option.dataset.width ?? '';
+      heightInput.value = option.dataset.height ?? '';
+    }
+    render();
+  }
+
+  function stopCamera() {
+    sessionId++;
+    stream?.getTracks().forEach((track) => track.stop());
+    stream = null;
+    video.srcObject = null;
+    active = false;
+    placeholder.hidden = false;
+    captureButton.disabled = true;
+    toggle.textContent = d.start ?? '';
+  }
+
+  function populateCameras(devices: MediaDeviceInfo[], selectedId?: string) {
+    const previous = cameraSelect.value;
+    cameraSelect.replaceChildren(new Option(d.defaultCamera ?? '', ''));
+    devices
+      .filter((device) => device.kind === 'videoinput' && device.deviceId)
+      .forEach((device, index) => {
+        cameraSelect.append(
+          new Option(
+            device.label || `${d.cameraLabel ?? ''} ${index + 1}`,
+            device.deviceId,
+          ),
+        );
+      });
+    const wanted = selectedId ?? previous;
+    if ([...cameraSelect.options].some((o) => o.value === wanted)) {
+      cameraSelect.value = wanted;
+    }
+  }
+
+  async function startCamera() {
+    stopCamera();
+    errorEl.hidden = true;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showError(window.isSecureContext ? 'unsupported' : 'insecure');
+      return;
+    }
+    const id = sessionId;
+    active = true;
+    toggle.textContent = d.stop ?? '';
+    const videoConstraints: MediaTrackConstraints = {
+      width: { ideal: 1920 },
+      height: { ideal: 1080 },
+    };
+    if (cameraSelect.value) {
+      videoConstraints.deviceId = { exact: cameraSelect.value };
+    } else {
+      videoConstraints.facingMode = { ideal: 'user' };
+    }
+    try {
+      const media = await navigator.mediaDevices.getUserMedia({
+        video: videoConstraints,
+        audio: false,
+      });
+      if (id !== sessionId) {
+        media.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      stream = media;
+      video.srcObject = media;
+      placeholder.hidden = true;
+      captureButton.disabled = false;
+      void video.play().catch(() => {});
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        if (id !== sessionId) return;
+        populateCameras(
+          devices,
+          media.getVideoTracks()[0]?.getSettings().deviceId,
+        );
+      } catch {
+        // デバイス一覧の取得失敗は撮影自体には影響しないため無視する
+      }
+    } catch (error) {
+      if (id !== sessionId) return;
+      stopCamera();
+      showError(classifyMediaError((error as DOMException | undefined)?.name));
+    }
+  }
+
+  toggle.addEventListener('click', () => {
+    if (active) stopCamera();
+    else void startCamera();
+  });
+  cameraSelect.addEventListener('change', () => {
+    if (active) void startCamera();
+  });
+  mirror.addEventListener('change', () => {
+    video.classList.toggle('-scale-x-100', mirror.checked);
+  });
+  video.classList.toggle('-scale-x-100', mirror.checked);
+
+  captureButton.addEventListener('click', () => {
+    if (!active || video.readyState < 2 || video.videoWidth === 0) return;
+    // 後から映像が変わっても影響しないよう、撮影した瞬間のフレームを別キャンバスに固定する
+    const frame = document.createElement('canvas');
+    frame.width = video.videoWidth;
+    frame.height = video.videoHeight;
+    frame.getContext('2d')!.drawImage(video, 0, 0);
+    setSource(frame, frame.width, frame.height);
+  });
+
+  async function loadFile(file: File) {
+    fileError.hidden = true;
+    try {
+      const bitmap = await createImageBitmap(file);
+      setSource(bitmap, bitmap.width, bitmap.height);
+    } catch {
+      fileError.textContent = d.fileError ?? '';
+      fileError.hidden = false;
+    }
+  }
+
+  enableFileDrop(dropzone, fileInput);
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+
+  preset.addEventListener('change', applyPreset);
+  [widthInput, heightInput, zoom, offsetX, offsetY, bg, dpi].forEach((el) => {
+    el.addEventListener('input', render);
+  });
+  resetButton.addEventListener('click', () => {
+    resetPosition();
+    render();
+  });
+
+  downloadButton.addEventListener('click', () => {
+    const size = currentSizeMm();
+    if (!source || !size) return;
+    const type = format.value === 'png' ? 'png' : 'jpeg';
+    canvas.toBlob(
+      (blob) => {
+        if (blob)
+          downloadBlob(blob, buildFilename(size.width, size.height, type));
+      },
+      `image/${type}`,
+      0.95,
+    );
+  });
+
+  applyPreset();
+
+  window.addEventListener('pagehide', stopCamera);
+</script>

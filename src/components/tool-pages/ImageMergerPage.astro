@@ -1,0 +1,529 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { imageMergerContent } from '../../i18n/tools/image-merger';
+import { MAX_DIMENSION } from '../../lib/tools/image-cropper';
+import { MAX_COLUMNS, MAX_GAP, MAX_IMAGES } from '../../lib/tools/image-merger';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageMergerContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="merge-root"
+    data-output-info={t.outputInfo}
+    data-downloaded={t.downloaded}
+    data-move-up-aria={t.moveUpAria}
+    data-move-down-aria={t.moveDownAria}
+    data-remove-aria={t.removeAria}
+    data-move-up={t.moveUpButton}
+    data-move-down={t.moveDownButton}
+    data-remove={t.removeButton}
+    data-max-images={MAX_IMAGES}
+    data-error-not-image={t.errorNotImage}
+    data-error-load-failed={t.errorLoadFailed}
+    data-error-too-large={t.errorTooLarge.replace(
+      '{max}',
+      String(MAX_DIMENSION),
+    )}
+    data-error-too-many={t.errorTooMany.replace('{max}', String(MAX_IMAGES))}
+    data-error-layout-too-large={t.errorLayoutTooLarge.replace(
+      '{max}',
+      String(MAX_DIMENSION),
+    )}
+    data-error-export-failed={t.errorExportFailed}
+  >
+    <label for="merge-file" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="merge-dropzone" class="ui-dropzone">
+      <input
+        id="merge-file"
+        type="file"
+        accept="image/*"
+        multiple
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="merge-error"
+      role="alert"
+      hidden
+      class="mt-3 text-sm whitespace-pre-line text-red-600 dark:text-red-400"
+    ></p>
+
+    <div id="merge-workspace" hidden class="mt-6 grid gap-6 md:grid-cols-2">
+      <div>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="ui-label mb-0">{t.listLabel}</span>
+          <button id="merge-clear" type="button" class="ui-btn px-3">
+            {t.clearButton}
+          </button>
+        </div>
+        <ol id="merge-list" class="mt-2 grid gap-2"></ol>
+
+        <div class="mt-4 grid grid-cols-2 gap-3">
+          <div class="col-span-2">
+            <label for="merge-direction" class="ui-label">
+              {t.directionLabel}
+            </label>
+            <select
+              id="merge-direction"
+              class="ui-input h-11 px-3 dark:bg-gray-900"
+            >
+              {t.directionOptions.map(({ value, label, selected }) => (
+                <option value={value} selected={selected}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div id="merge-columns-wrap" hidden>
+            <label for="merge-columns" class="ui-label">
+              {t.columnsLabel}
+            </label>
+            <input
+              id="merge-columns"
+              type="number"
+              min="1"
+              max={MAX_COLUMNS}
+              step="1"
+              value="2"
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            />
+          </div>
+          <div>
+            <label for="merge-align" class="ui-label">
+              {t.alignLabel}
+            </label>
+            <select
+              id="merge-align"
+              class="ui-input h-11 px-3 dark:bg-gray-900"
+            >
+              {t.alignOptions.map(({ value, label, selected }) => (
+                <option value={value} selected={selected}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label for="merge-gap" class="ui-label">
+              {t.gapLabel}
+            </label>
+            <input
+              id="merge-gap"
+              type="number"
+              min="0"
+              max={MAX_GAP}
+              step="1"
+              value="0"
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            />
+          </div>
+          <div>
+            <label for="merge-margin" class="ui-label">
+              {t.marginLabel}
+            </label>
+            <input
+              id="merge-margin"
+              type="number"
+              min="0"
+              max={MAX_GAP}
+              step="1"
+              value="0"
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            />
+          </div>
+        </div>
+
+        <label class="mt-4 flex items-center gap-2 text-sm">
+          <input id="merge-fit" type="checkbox" class="ui-check" />
+          {t.fitLabel}
+        </label>
+
+        <div class="mt-4 flex flex-wrap items-end gap-4">
+          <div>
+            <label for="merge-bg" class="ui-label">
+              {t.backgroundLabel}
+            </label>
+            <input
+              id="merge-bg"
+              type="color"
+              value="#ffffff"
+              class="h-11 w-16 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+            />
+          </div>
+          <label class="flex items-center gap-2 pb-3 text-sm">
+            <input id="merge-transparent" type="checkbox" class="ui-check" />
+            {t.transparentLabel}
+          </label>
+        </div>
+
+        <div class="mt-4 flex flex-wrap items-end gap-4">
+          <div>
+            <span class="ui-label">{t.formatLabel}</span>
+            <div
+              id="merge-format"
+              class="ui-seg"
+              role="group"
+              aria-label={t.formatLabel}
+            >
+              <button
+                type="button"
+                data-format="png"
+                aria-pressed="true"
+                class="ui-seg-btn"
+              >
+                PNG
+              </button>
+              <button
+                type="button"
+                data-format="jpeg"
+                aria-pressed="false"
+                class="ui-seg-btn"
+              >
+                JPEG
+              </button>
+              <button
+                type="button"
+                data-format="webp"
+                aria-pressed="false"
+                class="ui-seg-btn"
+              >
+                WebP
+              </button>
+            </div>
+          </div>
+          <div id="merge-quality-wrap" hidden class="min-w-40 flex-1">
+            <label for="merge-quality" class="ui-label">
+              {t.qualityLabel}
+              <span id="merge-quality-value">90</span>
+            </label>
+            <input
+              id="merge-quality"
+              type="range"
+              min="10"
+              max="100"
+              value="90"
+              class="h-11 w-full"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center gap-3">
+        <p class="ui-label self-start">{t.previewLabel}</p>
+        <div
+          class="w-fit max-w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700"
+          style="background-image: conic-gradient(#e5e7eb 25%, #fff 0 50%, #e5e7eb 0 75%, #fff 0); background-size: 16px 16px;"
+        >
+          <canvas
+            id="merge-canvas"
+            role="img"
+            aria-label={t.previewLabel}
+            class="block max-h-[70vh] max-w-full"
+          ></canvas>
+        </div>
+        <p
+          id="merge-size"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></p>
+        <button
+          id="merge-download"
+          type="button"
+          disabled
+          class="ui-btn-primary"
+        >
+          {t.downloadButton}
+        </button>
+        <span
+          id="merge-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    isWithinSourceLimit,
+    outputFormat,
+    type OutputFormat,
+  } from '../../lib/tools/image-cropper';
+  import {
+    isLayoutWithinLimit,
+    layoutImages,
+    mergedFileName,
+    moveItem,
+    type MergeAlign,
+    type MergeDirection,
+  } from '../../lib/tools/image-merger';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('merge-root');
+  const fileInput = $<HTMLInputElement>('merge-file');
+  const errorEl = $('merge-error');
+  const workspace = $('merge-workspace');
+  const listEl = $('merge-list');
+  const canvas = $<HTMLCanvasElement>('merge-canvas');
+  const sizeEl = $('merge-size');
+  const statusEl = $('merge-status');
+  const downloadButton = $<HTMLButtonElement>('merge-download');
+  const directionSelect = $<HTMLSelectElement>('merge-direction');
+  const alignSelect = $<HTMLSelectElement>('merge-align');
+  const columnsWrap = $('merge-columns-wrap');
+  const columnsInput = $<HTMLInputElement>('merge-columns');
+  const gapInput = $<HTMLInputElement>('merge-gap');
+  const marginInput = $<HTMLInputElement>('merge-margin');
+  const fitInput = $<HTMLInputElement>('merge-fit');
+  const bgInput = $<HTMLInputElement>('merge-bg');
+  const transparentInput = $<HTMLInputElement>('merge-transparent');
+  const qualityWrap = $('merge-quality-wrap');
+  const qualityInput = $<HTMLInputElement>('merge-quality');
+  const qualityValue = $('merge-quality-value');
+  const formatButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#merge-format [data-format]'),
+  );
+
+  const d = root.dataset;
+  const maxImages = Number(d.maxImages);
+  interface Item {
+    name: string;
+    bitmap: ImageBitmap;
+  }
+  let items: Item[] = [];
+  let format: OutputFormat = 'png';
+  let renderable = false;
+  // 読み込みで出たエラー（レイアウトの超過エラーとは別に保持する）
+  let loadMessage = '';
+  let loading = 0;
+  // 読み込みは順番に1回ずつ行う（上限の判定が競合しないように）
+  let queue: Promise<void> = Promise.resolve();
+
+  const fill = (template: string | undefined, values: Record<string, string>) =>
+    Object.entries(values).reduce(
+      (s, [k, v]) => s.split(`{${k}}`).join(v),
+      template ?? '',
+    );
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  function render() {
+    statusEl.textContent = '';
+    workspace.hidden = items.length === 0;
+    if (items.length === 0) {
+      downloadButton.disabled = true;
+      showError(loadMessage);
+      return;
+    }
+    columnsWrap.hidden = directionSelect.value !== 'grid';
+    const layout = layoutImages(
+      items.map((i) => ({ width: i.bitmap.width, height: i.bitmap.height })),
+      {
+        direction: directionSelect.value as MergeDirection,
+        columns: Number(columnsInput.value),
+        gap: Number(gapInput.value),
+        margin: Number(marginInput.value),
+        fit: fitInput.checked,
+        align: alignSelect.value as MergeAlign,
+      },
+    );
+    renderable = isLayoutWithinLimit(layout);
+    downloadButton.disabled = !renderable;
+    if (!renderable) {
+      showError(d.errorLayoutTooLarge ?? '');
+      sizeEl.textContent = '';
+      canvas.width = 1;
+      canvas.height = 1;
+      return;
+    }
+    showError(loadMessage);
+    canvas.width = layout.width;
+    canvas.height = layout.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return showError(d.errorExportFailed ?? '');
+    // 透明にできるのはPNG・WebPだけ。JPEGでは背景色（白）で塗る
+    const transparent = transparentInput.checked && format !== 'jpeg';
+    if (!transparent) {
+      ctx.fillStyle =
+        format === 'jpeg' && transparentInput.checked
+          ? '#ffffff'
+          : bgInput.value;
+      ctx.fillRect(0, 0, layout.width, layout.height);
+    }
+    ctx.imageSmoothingQuality = 'high';
+    for (const p of layout.items) {
+      ctx.drawImage(items[p.index].bitmap, p.x, p.y, p.width, p.height);
+    }
+    sizeEl.textContent = fill(d.outputInfo, {
+      width: String(layout.width),
+      height: String(layout.height),
+      count: String(items.length),
+    });
+  }
+
+  function renderList() {
+    listEl.replaceChildren();
+    items.forEach((item, i) => {
+      const li = document.createElement('li');
+      li.className =
+        'flex flex-wrap items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700';
+      const label = document.createElement('span');
+      label.className = 'min-w-0 flex-1 break-all';
+      label.textContent = `${i + 1}. ${item.name} (${item.bitmap.width}×${item.bitmap.height})`;
+      li.append(label);
+      const actions: [string, string, () => void, boolean][] = [
+        [d.moveUp ?? '', d.moveUpAria ?? '', () => move(i, i - 1), i === 0],
+        [
+          d.moveDown ?? '',
+          d.moveDownAria ?? '',
+          () => move(i, i + 1),
+          i === items.length - 1,
+        ],
+        [d.remove ?? '', d.removeAria ?? '', () => remove(i), false],
+      ];
+      for (const [text, aria, onClick, disabled] of actions) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'ui-btn px-3';
+        b.textContent = text;
+        b.setAttribute('aria-label', fill(aria, { name: item.name }));
+        b.disabled = disabled;
+        b.addEventListener('click', onClick);
+        li.append(b);
+      }
+      listEl.append(li);
+    });
+  }
+
+  function refresh() {
+    renderList();
+    render();
+  }
+
+  function move(from: number, to: number) {
+    if (loading > 0) return;
+    items = moveItem(items, from, to);
+    refresh();
+  }
+
+  function remove(index: number) {
+    if (loading > 0) return;
+    items[index].bitmap.close();
+    items = items.filter((_, i) => i !== index);
+    refresh();
+  }
+
+  async function addFiles(files: File[]) {
+    const messages: string[] = [];
+    loading++;
+    for (const file of files) {
+      if (items.length >= maxImages) {
+        messages.push(fill(d.errorTooMany, {}));
+        break;
+      }
+      if (!file.type.startsWith('image/')) {
+        messages.push(fill(d.errorNotImage, { name: file.name }));
+        continue;
+      }
+      let bitmap: ImageBitmap;
+      try {
+        bitmap = await createImageBitmap(file);
+      } catch {
+        messages.push(fill(d.errorLoadFailed, { name: file.name }));
+        continue;
+      }
+      if (
+        !isWithinSourceLimit({ width: bitmap.width, height: bitmap.height })
+      ) {
+        bitmap.close();
+        messages.push(fill(d.errorTooLarge, { name: file.name }));
+        continue;
+      }
+      items.push({ name: file.name, bitmap });
+    }
+    loading--;
+    loadMessage = messages.join('\n');
+    refresh();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const files = Array.from(fileInput.files ?? []);
+    fileInput.value = '';
+    if (files.length > 0) queue = queue.then(() => addFiles(files));
+  });
+  enableFileDrop($('merge-dropzone'), fileInput);
+
+  $('merge-clear').addEventListener('click', () => {
+    if (loading > 0) return;
+    for (const item of items) item.bitmap.close();
+    items = [];
+    loadMessage = '';
+    refresh();
+  });
+
+  for (const el of [
+    directionSelect,
+    alignSelect,
+    columnsInput,
+    gapInput,
+    marginInput,
+    fitInput,
+    bgInput,
+    transparentInput,
+  ]) {
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  }
+
+  function applyFormat(next: OutputFormat) {
+    format = next;
+    for (const b of formatButtons) {
+      b.setAttribute('aria-pressed', String(b.dataset.format === next));
+    }
+    qualityWrap.hidden = next === 'png';
+    render();
+  }
+  for (const b of formatButtons) {
+    b.addEventListener('click', () =>
+      applyFormat(b.dataset.format as OutputFormat),
+    );
+  }
+  qualityInput.addEventListener('input', () => {
+    qualityValue.textContent = qualityInput.value;
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (items.length === 0 || !renderable) return;
+    const { mime } = outputFormat(format);
+    canvas.toBlob(
+      (blob) => {
+        // 非対応の形式はブラウザがPNGで返すため、種類が違えば失敗として扱う
+        if (!blob || blob.type !== mime) {
+          return showError(d.errorExportFailed ?? '');
+        }
+        showError('');
+        downloadBlob(blob, mergedFileName(format));
+        statusEl.textContent = d.downloaded ?? '';
+      },
+      mime,
+      format === 'png' ? undefined : Number(qualityInput.value) / 100,
+    );
+  });
+</script>

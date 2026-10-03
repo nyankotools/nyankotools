@@ -28,6 +28,13 @@ const slugs = [
   'qr-code-reader',
   'heic-converter',
   'pdf-redactor',
+  'image-merger',
+  'image-text-overlay',
+  'gif-maker',
+  'pdf-page-number-watermark',
+  'pdf-metadata-editor',
+  'id-photo-maker',
+  'camera-color-picker',
 ];
 
 const locales = [

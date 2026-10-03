@@ -1852,6 +1852,77 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'pdf-page-number-watermark',
+    category: 'pdf',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['pdf-page-editor', 'pdf-metadata-editor', 'pdf-merge-split'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: 'PDFページ番号・透かし追加',
+        keywords: [
+          'PDFページ番号',
+          'PDF透かし',
+          'ウォーターマーク',
+          '社外秘',
+          'DRAFT',
+          'ページ番号を振る',
+        ],
+        description:
+          'PDFの各ページにページ番号や「社外秘」などの透かし文字を追加。位置・サイズ・濃さ・角度を指定できます。',
+      },
+      en: {
+        name: 'PDF Page Numbers & Watermark',
+        keywords: [
+          'PDF page numbers',
+          'PDF watermark',
+          'number PDF pages',
+          'confidential stamp',
+          'draft watermark',
+        ],
+        description:
+          'Add page numbers and watermark text such as CONFIDENTIAL or DRAFT to every page of a PDF, with position, size, opacity and angle controls.',
+      },
+    },
+  },
+  {
+    slug: 'pdf-metadata-editor',
+    category: 'pdf',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['pdf-page-number-watermark', 'pdf-redactor', 'pdf-page-editor'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: 'PDFメタデータ編集',
+        keywords: [
+          'PDFプロパティ',
+          'PDF作成者',
+          'PDFタイトル',
+          '文書情報',
+          'メタデータ削除',
+        ],
+        description:
+          'PDFのタイトル・作成者・キーワード・作成日時などの文書情報を確認・編集・削除。公開前の個人情報消去に。',
+      },
+      en: {
+        name: 'PDF Metadata Editor',
+        keywords: [
+          'PDF properties',
+          'PDF author',
+          'PDF title',
+          'remove PDF metadata',
+          'document info',
+        ],
+        description:
+          'View, edit or remove a PDF’s title, author, keywords and dates. Handy for clearing personal details before sharing.',
+      },
+    },
+  },
+  {
     slug: 'cat-logo-text-generator',
     category: 'image',
     addedAt: '2026-09-25',
@@ -3641,6 +3712,297 @@ export const tools: Tool[] = [
         keywords: ['json', 'schema', 'json schema', 'generator', 'validation'],
         description:
           'Generates a JSON Schema from a JSON sample, with draft 2020-12, 2019-09, or 07, required keys, additionalProperties, and format detection.',
+      },
+    },
+  },
+  {
+    slug: 'image-merger',
+    category: 'image',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['image-resizer', 'image-cropper', 'gif-maker'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像結合',
+        keywords: [
+          '画像結合',
+          '画像連結',
+          '画像を並べる',
+          'スクリーンショット結合',
+          'グリッド',
+          'コラージュ',
+        ],
+        description:
+          '複数の画像を横・縦・グリッド状に並べて1枚にまとめます。順番の入れ替え、間隔・余白・背景色の指定、大きさをそろえる設定に対応し、PNG・JPEG・WebPで保存できます。',
+      },
+      en: {
+        name: 'Image Merger',
+        keywords: [
+          'merge images',
+          'combine images',
+          'stitch images',
+          'join images',
+          'collage',
+          'grid',
+        ],
+        description:
+          'Combines multiple images into one, side by side, stacked, or in a grid, with reordering, spacing, margin, background color, and size matching, saved as PNG, JPEG, or WebP.',
+      },
+    },
+  },
+  {
+    slug: 'image-text-overlay',
+    category: 'image',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['image-cropper', 'image-converter', 'exif-viewer'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像への文字入れ・透かし',
+        keywords: [
+          '文字入れ',
+          '透かし',
+          'ウォーターマーク',
+          'テキスト追加',
+          'キャプション',
+          'コピーライト',
+        ],
+        description:
+          '画像に好きな文字を入れたり、全体に透かし（ウォーターマーク）を敷き詰めたりします。位置・サイズ・色・透明度・縁取り・角度を指定でき、PNG・JPEG・WebPで保存できます。',
+      },
+      en: {
+        name: 'Add Text or Watermark to Image',
+        keywords: [
+          'watermark',
+          'add text to image',
+          'text overlay',
+          'caption',
+          'copyright',
+          'image annotation',
+        ],
+        description:
+          'Adds text to an image or tiles a watermark across it, with position, size, color, opacity, outline, and angle controls, saved as PNG, JPEG, or WebP.',
+      },
+    },
+  },
+  {
+    slug: 'gif-maker',
+    category: 'image',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['image-merger', 'image-resizer', 'image-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'GIF作成（連番画像から）',
+        keywords: [
+          'GIF作成',
+          'アニメーションGIF',
+          'パラパラ漫画',
+          '連番画像',
+          'GIFアニメ',
+          '画像をGIFに',
+        ],
+        description:
+          '複数の画像を順番につなげてアニメーションGIFを作ります。表示時間・幅・背景色・くり返し・往復再生に対応し、画像はブラウザ内で処理されます。',
+      },
+      en: {
+        name: 'GIF Maker',
+        keywords: [
+          'gif maker',
+          'animated gif',
+          'images to gif',
+          'flip book',
+          'frame animation',
+          'create gif',
+        ],
+        description:
+          'Creates an animated GIF from several images in order, with frame delay, width, background color, looping, and ping-pong playback, all processed in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'unicode-escape',
+    category: 'text',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['html-escape', 'url-encode', 'special-char-list'],
+    translations: {
+      ja: {
+        name: 'Unicodeエスケープ変換',
+        keywords: [
+          'Unicodeエスケープ',
+          '\\u',
+          'ユニコードエスケープ',
+          'サロゲートペア',
+          'コードポイント',
+          'U+',
+          '数値参照',
+        ],
+        description:
+          '文字を \\u3042 のようなUnicodeエスケープに変換、または文字に戻します。JavaScript・ES6・Python・U+表記・HTML数値参照に対応し、絵文字も正しく処理します。',
+      },
+      en: {
+        name: 'Unicode Escape / Unescape',
+        keywords: [
+          'unicode escape',
+          'unicode unescape',
+          '\\u',
+          'surrogate pair',
+          'code point',
+          'U+',
+          'numeric character reference',
+        ],
+        description:
+          'Converts text to Unicode escapes like \\u3042 and back. Supports JavaScript, ES6, Python, U+ notation and HTML numeric references, with correct emoji handling.',
+      },
+    },
+  },
+  {
+    slug: 'zero-width-char-remover',
+    category: 'text',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['char-counter', 'kishu-izon-checker', 'unicode-escape'],
+    translations: {
+      ja: {
+        name: 'ゼロ幅文字の検出・除去',
+        keywords: [
+          'ゼロ幅スペース',
+          '見えない文字',
+          '不可視文字',
+          'BOM',
+          'U+200B',
+          'ゼロ幅接合子',
+          '制御文字',
+        ],
+        description:
+          'テキストに混ざったゼロ幅スペース・BOM・方向制御文字などの見えない文字を検出し、種類と個数を確認しながら除去します。コピペ後の不具合対策に。',
+      },
+      en: {
+        name: 'Zero-Width Character Remover',
+        keywords: [
+          'zero width space',
+          'invisible characters',
+          'hidden characters',
+          'BOM',
+          'U+200B',
+          'zero width joiner',
+          'remove invisible text',
+        ],
+        description:
+          'Detects and removes invisible characters such as zero-width spaces, BOM and bidi controls, showing each type and count before cleaning your text.',
+      },
+    },
+  },
+  {
+    slug: 'reading-time-calculator',
+    category: 'text',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['char-counter', 'text-diff', 'zero-width-char-remover'],
+    translations: {
+      ja: {
+        name: '読了時間・原稿用紙換算',
+        keywords: [
+          '読了時間',
+          '原稿用紙',
+          '400字詰め',
+          '文字数',
+          '朗読時間',
+          'スピーチ',
+          '読む時間',
+        ],
+        description:
+          '文章を貼り付けて、読了時間・朗読にかかる時間・原稿用紙（400字詰め・200字詰め）の枚数を計算します。日本語と英語の混在文にも対応。',
+      },
+      en: {
+        name: 'Reading Time Calculator',
+        keywords: [
+          'reading time',
+          'speaking time',
+          'manuscript paper',
+          'genkoyoshi',
+          'word count',
+          'estimated read time',
+        ],
+        description:
+          'Paste text to estimate reading time, speaking time and Japanese manuscript paper sheets (400 or 200 characters). Handles mixed Japanese and English.',
+      },
+    },
+  },
+  {
+    slug: 'id-photo-maker',
+    category: 'camera',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['image-cropper', 'image-resizer', 'webcam-tester'],
+    sensitive: true,
+    needsCamera: true,
+    translations: {
+      ja: {
+        name: '証明写真作成（履歴書・パスポート）',
+        keywords: [
+          '証明写真',
+          '履歴書 写真',
+          'パスポート 写真',
+          'マイナンバー 写真',
+          '証明写真 サイズ',
+          'エントリーシート',
+        ],
+        description:
+          'Webカメラやスマホの写真を、履歴書（30×40mm）・パスポート（35×45mm）などの証明写真サイズにトリミングして保存。余白の背景色も指定できます。',
+      },
+      en: {
+        name: 'ID Photo Maker (Passport & Resume)',
+        keywords: [
+          'id photo',
+          'passport photo',
+          'resume photo',
+          'photo booth',
+          'crop to 35x45',
+          'webcam photo',
+        ],
+        description:
+          'Take a photo with your webcam or phone, or pick one, and crop it to ID photo sizes like 35×45mm or 30×40mm. Fill the margins with any color.',
+      },
+    },
+  },
+  {
+    slug: 'camera-color-picker',
+    category: 'camera',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['color-converter', 'image-palette-extractor', 'webcam-tester'],
+    sensitive: true,
+    needsCamera: true,
+    translations: {
+      ja: {
+        name: 'カメラ映像からカラーコード抽出',
+        keywords: [
+          'スポイト',
+          'カラーピッカー',
+          'カメラ 色',
+          '色 調べる',
+          'カラーコード 取得',
+          'HEX',
+        ],
+        description:
+          'カメラに映したものの色を、映像をなぞるだけでHEX・RGB・HSLのカラーコードとして取得するリアルタイムスポイト。壁紙や服の色合わせに。',
+      },
+      en: {
+        name: 'Camera Color Picker (Live Eyedropper)',
+        keywords: [
+          'color picker',
+          'eyedropper',
+          'camera color',
+          'color from camera',
+          'hex color finder',
+        ],
+        description:
+          'Point your camera at anything and pick its color as HEX, RGB or HSL by moving over the live video. Handy for matching paint, clothes and products.',
       },
     },
   },

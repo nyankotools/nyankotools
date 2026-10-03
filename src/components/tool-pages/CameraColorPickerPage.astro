@@ -1,0 +1,461 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cameraColorPickerContent } from '../../i18n/tools/camera-color-picker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cameraColorPickerContent[locale];
+
+const selectClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+const labelClass =
+  'mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300';
+const FORMATS = ['hex', 'rgb', 'hsl'] as const;
+---
+
+<ToolShell t={t}>
+  <div
+    id="ccp-root"
+    data-default-camera={t.defaultCamera}
+    data-camera-label={t.cameraLabel}
+    data-start={t.startCamera}
+    data-stop={t.stopCamera}
+    data-freeze={t.freeze}
+    data-unfreeze={t.unfreeze}
+    data-copy={t.copy}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-history-item-label={t.historyItemLabel}
+    data-error-permission-denied={t.errors['permission-denied']}
+    data-error-not-found={t.errors['not-found']}
+    data-error-in-use={t.errors['in-use']}
+    data-error-constraints={t.errors.constraints}
+    data-error-insecure={t.errors.insecure}
+    data-error-unsupported={t.errors.unsupported}
+    data-error-unknown={t.errors.unknown}
+  >
+    <div class="grid max-w-2xl gap-3 sm:grid-cols-2">
+      <div>
+        <label for="ccp-camera" class={labelClass}>
+          {t.cameraLabel}
+        </label>
+        <select id="ccp-camera" class={selectClass} data-no-persist>
+          <option value="">{t.defaultCamera}</option>
+        </select>
+      </div>
+      <div>
+        <label for="ccp-radius" class={labelClass}>
+          {t.radiusLabel}
+        </label>
+        <select id="ccp-radius" class={selectClass}>
+          {t.radiusOptions.map((o) => (
+            <option value={o.value} selected={o.value === '2'}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+    <div class="mt-3 flex flex-wrap gap-2">
+      <button id="ccp-toggle" type="button" class="ui-btn ui-btn-primary">
+        {t.startCamera}
+      </button>
+      <button id="ccp-freeze" type="button" class="ui-btn" disabled>
+        {t.freeze}
+      </button>
+    </div>
+
+    <p id="ccp-error" hidden role="alert" class="ui-error mt-3 max-w-2xl"></p>
+
+    <div
+      id="ccp-stage"
+      class="relative mt-3 aspect-video w-full max-w-2xl touch-none overflow-hidden rounded-xl bg-black"
+    >
+      <video
+        id="ccp-video"
+        muted
+        playsinline
+        aria-label={t.videoAriaLabel}
+        class="size-full cursor-crosshair object-contain"
+      ></video>
+      <p
+        id="ccp-placeholder"
+        class="pointer-events-none absolute inset-0 flex items-center justify-center px-4 text-center text-sm text-gray-300"
+      >
+        {t.placeholder}
+      </p>
+      <div
+        id="ccp-marker"
+        hidden
+        class="pointer-events-none absolute size-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-[0_0_0_1px_rgba(0,0,0,0.8)]"
+      ></div>
+    </div>
+
+    <div class="mt-6 grid max-w-2xl gap-4 sm:grid-cols-2">
+      <section aria-labelledby="ccp-live-heading">
+        <h2 id="ccp-live-heading" class="mb-2 text-lg font-bold">
+          {t.liveHeading}
+        </h2>
+        <div class="flex items-center gap-3 rounded-xl border border-gray-200 p-3 dark:border-gray-800">
+          <div
+            id="ccp-live-swatch"
+            class="size-12 shrink-0 rounded-lg border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
+          ></div>
+          <p
+            id="ccp-live-text"
+            class="text-sm text-gray-600 dark:text-gray-400"
+          >
+            {t.liveHint}
+          </p>
+        </div>
+      </section>
+
+      <section aria-labelledby="ccp-result-heading">
+        <h2 id="ccp-result-heading" class="mb-2 text-lg font-bold">
+          {t.resultHeading}
+        </h2>
+        <div class="rounded-xl border border-gray-200 p-3 dark:border-gray-800">
+          <p
+            id="ccp-result-empty"
+            class="text-sm text-gray-500 dark:text-gray-400"
+          >
+            {t.resultEmpty}
+          </p>
+          <div id="ccp-result" hidden>
+            <div
+              id="ccp-swatch"
+              role="img"
+              aria-label={t.swatchLabel}
+              class="mb-3 h-16 w-full rounded-lg border border-gray-300 dark:border-gray-700"
+            ></div>
+            <ul class="space-y-2">
+              {FORMATS.map((f) => (
+                <li class="flex items-center gap-2">
+                  <span class="w-10 shrink-0 text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                    {f}
+                  </span>
+                  <code
+                    id={`ccp-value-${f}`}
+                    class="min-w-0 flex-1 text-sm break-all"
+                  ></code>
+                  <button
+                    id={`ccp-copy-${f}-button`}
+                    type="button"
+                    class="ui-btn"
+                    data-format={f}
+                  >
+                    {t.copy}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="ccp-history-wrap" hidden class="mt-6 max-w-2xl">
+      <h2 class="mb-2 text-lg font-bold">{t.historyHeading}</h2>
+      <ul id="ccp-history" class="flex flex-wrap gap-2"></ul>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { classifyMediaError } from '../../lib/tools/webcam-tester';
+  import type { MediaErrorKind } from '../../lib/tools/webcam-tester';
+  import {
+    addColorToHistory,
+    averageColor,
+    describeColor,
+    mapPointToSource,
+    readableTextColor,
+    sampleRegion,
+  } from '../../lib/tools/camera-color-picker';
+  import { hexToRgb, type RgbColor } from '../../lib/tools/color-converter';
+
+  const root = document.getElementById('ccp-root')!;
+  const d = root.dataset;
+  const ERROR_TEXT: Record<MediaErrorKind, string> = {
+    'permission-denied': d.errorPermissionDenied ?? '',
+    'not-found': d.errorNotFound ?? '',
+    'in-use': d.errorInUse ?? '',
+    constraints: d.errorConstraints ?? '',
+    insecure: d.errorInsecure ?? '',
+    unsupported: d.errorUnsupported ?? '',
+    unknown: d.errorUnknown ?? '',
+  };
+
+  const toggle = document.getElementById('ccp-toggle') as HTMLButtonElement;
+  const freezeButton = document.getElementById(
+    'ccp-freeze',
+  ) as HTMLButtonElement;
+  const cameraSelect = document.getElementById(
+    'ccp-camera',
+  ) as HTMLSelectElement;
+  const radiusSelect = document.getElementById(
+    'ccp-radius',
+  ) as HTMLSelectElement;
+  const errorEl = document.getElementById('ccp-error')!;
+  const stage = document.getElementById('ccp-stage')!;
+  const video = document.getElementById('ccp-video') as HTMLVideoElement;
+  const placeholder = document.getElementById('ccp-placeholder')!;
+  const marker = document.getElementById('ccp-marker')!;
+  const liveSwatch = document.getElementById('ccp-live-swatch')!;
+  const liveText = document.getElementById('ccp-live-text')!;
+  const resultEmpty = document.getElementById('ccp-result-empty')!;
+  const resultEl = document.getElementById('ccp-result')!;
+  const swatch = document.getElementById('ccp-swatch')!;
+  const historyWrap = document.getElementById('ccp-history-wrap')!;
+  const historyEl = document.getElementById('ccp-history')!;
+
+  // 取得範囲だけを小さなキャンバスへ描いて読むので、高解像度の映像でも軽い
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+
+  let stream: MediaStream | null = null;
+  let active = false;
+  let frozen = false;
+  let sessionId = 0;
+  let history: string[] = [];
+  let pendingFrame = 0;
+
+  function showError(kind: MediaErrorKind) {
+    errorEl.textContent = ERROR_TEXT[kind];
+    errorEl.hidden = false;
+  }
+
+  function sampleAt(clientX: number, clientY: number) {
+    const rect = video.getBoundingClientRect();
+    const point = mapPointToSource(
+      clientX - rect.left,
+      clientY - rect.top,
+      rect.width,
+      rect.height,
+      video.videoWidth,
+      video.videoHeight,
+    );
+    if (!point) return null;
+    const region = sampleRegion(
+      point.x,
+      point.y,
+      Number(radiusSelect.value),
+      video.videoWidth,
+      video.videoHeight,
+    );
+    canvas.width = region.sw;
+    canvas.height = region.sh;
+    ctx.drawImage(
+      video,
+      region.sx,
+      region.sy,
+      region.sw,
+      region.sh,
+      0,
+      0,
+      region.sw,
+      region.sh,
+    );
+    const rgb = averageColor(ctx.getImageData(0, 0, region.sw, region.sh).data);
+    return { rgb, x: clientX - rect.left, y: clientY - rect.top };
+  }
+
+  function showLive(clientX: number, clientY: number) {
+    if (!active || video.readyState < 2) return;
+    const sample = sampleAt(clientX, clientY);
+    if (!sample) {
+      marker.hidden = true;
+      return;
+    }
+    const color = describeColor(sample.rgb);
+    liveSwatch.style.backgroundColor = color.hex;
+    liveText.textContent = `${color.hex}  ${color.rgb}`;
+    // マーカーはステージ（video と同じ位置・大きさ）基準の座標で置く
+    marker.style.left = `${sample.x}px`;
+    marker.style.top = `${sample.y}px`;
+    marker.hidden = false;
+  }
+
+  function showResult(hex: string) {
+    const rgb = hexToRgb(hex);
+    if (!rgb) return;
+    const color = describeColor(rgb);
+    swatch.style.backgroundColor = color.hex;
+    swatch.style.color = readableTextColor(rgb);
+    document.getElementById('ccp-value-hex')!.textContent = color.hex;
+    document.getElementById('ccp-value-rgb')!.textContent = color.rgb;
+    document.getElementById('ccp-value-hsl')!.textContent = color.hsl;
+    resultEmpty.hidden = true;
+    resultEl.hidden = false;
+  }
+
+  function renderHistory() {
+    historyEl.replaceChildren();
+    historyWrap.hidden = history.length < 2;
+    for (const hex of history) {
+      const li = document.createElement('li');
+      const button = document.createElement('button');
+      button.type = 'button';
+      const rgb: RgbColor = hexToRgb(hex) ?? { r: 0, g: 0, b: 0 };
+      button.className =
+        'flex min-h-11 items-center gap-2 rounded-lg border border-gray-200 px-2 text-xs hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900';
+      button.title = `${d.historyItemLabel ?? ''}: ${hex}`;
+      const chip = document.createElement('span');
+      chip.className =
+        'size-6 rounded border border-gray-300 dark:border-gray-700';
+      chip.style.backgroundColor = hex;
+      chip.style.color = readableTextColor(rgb);
+      const label = document.createElement('span');
+      label.textContent = hex;
+      button.append(chip, label);
+      button.addEventListener('click', () => showResult(hex));
+      li.append(button);
+      historyEl.append(li);
+    }
+  }
+
+  function commit(clientX: number, clientY: number) {
+    if (!active || video.readyState < 2) return;
+    const sample = sampleAt(clientX, clientY);
+    if (!sample) return;
+    const hex = describeColor(sample.rgb).hex;
+    history = addColorToHistory(history, hex);
+    showResult(hex);
+    renderHistory();
+  }
+
+  function stopCamera() {
+    sessionId++;
+    cancelAnimationFrame(pendingFrame);
+    stream?.getTracks().forEach((track) => track.stop());
+    stream = null;
+    video.srcObject = null;
+    active = false;
+    frozen = false;
+    placeholder.hidden = false;
+    marker.hidden = true;
+    liveSwatch.style.backgroundColor = '';
+    liveText.textContent = '';
+    freezeButton.disabled = true;
+    freezeButton.textContent = d.freeze ?? '';
+    toggle.textContent = d.start ?? '';
+  }
+
+  function populateCameras(devices: MediaDeviceInfo[], selectedId?: string) {
+    const previous = cameraSelect.value;
+    cameraSelect.replaceChildren(new Option(d.defaultCamera ?? '', ''));
+    devices
+      .filter((device) => device.kind === 'videoinput' && device.deviceId)
+      .forEach((device, index) => {
+        cameraSelect.append(
+          new Option(
+            device.label || `${d.cameraLabel ?? ''} ${index + 1}`,
+            device.deviceId,
+          ),
+        );
+      });
+    const wanted = selectedId ?? previous;
+    if ([...cameraSelect.options].some((o) => o.value === wanted)) {
+      cameraSelect.value = wanted;
+    }
+  }
+
+  async function startCamera() {
+    stopCamera();
+    errorEl.hidden = true;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showError(window.isSecureContext ? 'unsupported' : 'insecure');
+      return;
+    }
+    const id = sessionId;
+    active = true;
+    toggle.textContent = d.stop ?? '';
+    const videoConstraints: MediaTrackConstraints = cameraSelect.value
+      ? { deviceId: { exact: cameraSelect.value } }
+      : { facingMode: { ideal: 'environment' } };
+    try {
+      const media = await navigator.mediaDevices.getUserMedia({
+        video: videoConstraints,
+        audio: false,
+      });
+      if (id !== sessionId) {
+        media.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      stream = media;
+      video.srcObject = media;
+      placeholder.hidden = true;
+      freezeButton.disabled = false;
+      void video.play().catch(() => {});
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        if (id !== sessionId) return;
+        populateCameras(
+          devices,
+          media.getVideoTracks()[0]?.getSettings().deviceId,
+        );
+      } catch {
+        // デバイス一覧の取得失敗はスポイト自体には影響しないため無視する
+      }
+    } catch (error) {
+      if (id !== sessionId) return;
+      stopCamera();
+      showError(classifyMediaError((error as DOMException | undefined)?.name));
+    }
+  }
+
+  toggle.addEventListener('click', () => {
+    if (active) stopCamera();
+    else void startCamera();
+  });
+  cameraSelect.addEventListener('change', () => {
+    if (active) void startCamera();
+  });
+
+  freezeButton.addEventListener('click', () => {
+    if (!active) return;
+    frozen = !frozen;
+    if (frozen) video.pause();
+    else void video.play().catch(() => {});
+    freezeButton.textContent = frozen ? (d.unfreeze ?? '') : (d.freeze ?? '');
+  });
+
+  // 移動イベントは描画フレームごとにまとめて処理する
+  video.addEventListener('pointermove', (e) => {
+    const { clientX, clientY } = e;
+    cancelAnimationFrame(pendingFrame);
+    pendingFrame = requestAnimationFrame(() => showLive(clientX, clientY));
+  });
+  video.addEventListener('pointerdown', (e) => showLive(e.clientX, e.clientY));
+  video.addEventListener('pointerleave', (e) => {
+    // タッチでは指を離した時にも発火するため、マウスのときだけマーカーを隠す
+    if (e.pointerType === 'mouse') marker.hidden = true;
+  });
+  video.addEventListener('click', (e) => commit(e.clientX, e.clientY));
+  stage.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  window.addEventListener('pagehide', stopCamera);
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>(
+    '[id^="ccp-copy-"]',
+  )) {
+    button.addEventListener('click', async () => {
+      const value =
+        document.getElementById(`ccp-value-${button.dataset.format}`)
+          ?.textContent ?? '';
+      if (!value) return;
+      const original = d.copy ?? '';
+      button.textContent = (await copyText(value))
+        ? (d.copied ?? '')
+        : (d.copyFailed ?? '');
+      setTimeout(() => {
+        button.textContent = original;
+      }, 1500);
+    });
+  }
+</script>

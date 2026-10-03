@@ -321,6 +321,31 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-03',
+    toolSlugs: [
+      'image-merger',
+      'image-text-overlay',
+      'gif-maker',
+      'pdf-page-number-watermark',
+      'pdf-metadata-editor',
+      'unicode-escape',
+      'zero-width-char-remover',
+      'reading-time-calculator',
+      'id-photo-maker',
+      'camera-color-picker',
+    ],
+    translations: {
+      ja: {
+        summary:
+          '画像結合（縦・横・グリッド）、画像への文字入れ・透かし、GIF作成（連番画像から）、PDFへのページ番号・透かし追加、PDFメタデータ編集、Unicodeエスケープ変換、ゼロ幅文字の検出・除去、読了時間・原稿用紙換算、証明写真作成、カメラ映像からのカラーコード抽出を追加しました。',
+      },
+      en: {
+        summary:
+          'Added the Image Merger, Add Text or Watermark to Image, GIF Maker, PDF Page Numbers & Watermark, PDF Metadata Editor, Unicode Escape / Unescape, Zero-Width Character Remover, Reading Time Calculator, ID Photo Maker, and Camera Color Picker.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

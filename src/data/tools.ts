@@ -3933,6 +3933,79 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'id-photo-maker',
+    category: 'camera',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['image-cropper', 'image-resizer', 'webcam-tester'],
+    sensitive: true,
+    needsCamera: true,
+    translations: {
+      ja: {
+        name: '証明写真作成（履歴書・パスポート）',
+        keywords: [
+          '証明写真',
+          '履歴書 写真',
+          'パスポート 写真',
+          'マイナンバー 写真',
+          '証明写真 サイズ',
+          'エントリーシート',
+        ],
+        description:
+          'Webカメラやスマホの写真を、履歴書（30×40mm）・パスポート（35×45mm）などの証明写真サイズにトリミングして保存。余白の背景色も指定できます。',
+      },
+      en: {
+        name: 'ID Photo Maker (Passport & Resume)',
+        keywords: [
+          'id photo',
+          'passport photo',
+          'resume photo',
+          'photo booth',
+          'crop to 35x45',
+          'webcam photo',
+        ],
+        description:
+          'Take a photo with your webcam or phone, or pick one, and crop it to ID photo sizes like 35×45mm or 30×40mm. Fill the margins with any color.',
+      },
+    },
+  },
+  {
+    slug: 'camera-color-picker',
+    category: 'camera',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['color-converter', 'image-palette-extractor', 'webcam-tester'],
+    sensitive: true,
+    needsCamera: true,
+    translations: {
+      ja: {
+        name: 'カメラ映像からカラーコード抽出',
+        keywords: [
+          'スポイト',
+          'カラーピッカー',
+          'カメラ 色',
+          '色 調べる',
+          'カラーコード 取得',
+          'HEX',
+        ],
+        description:
+          'カメラに映したものの色を、映像をなぞるだけでHEX・RGB・HSLのカラーコードとして取得するリアルタイムスポイト。壁紙や服の色合わせに。',
+      },
+      en: {
+        name: 'Camera Color Picker (Live Eyedropper)',
+        keywords: [
+          'color picker',
+          'eyedropper',
+          'camera color',
+          'color from camera',
+          'hex color finder',
+        ],
+        description:
+          'Point your camera at anything and pick its color as HEX, RGB or HSL by moving over the live video. Handy for matching paint, clothes and products.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

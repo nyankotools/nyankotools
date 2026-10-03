@@ -33,6 +33,8 @@ const slugs = [
   'gif-maker',
   'pdf-page-number-watermark',
   'pdf-metadata-editor',
+  'id-photo-maker',
+  'camera-color-picker',
 ];
 
 const locales = [

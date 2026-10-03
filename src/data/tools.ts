@@ -3823,6 +3823,116 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'unicode-escape',
+    category: 'text',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['html-escape', 'url-encode', 'special-char-list'],
+    translations: {
+      ja: {
+        name: 'Unicodeエスケープ変換',
+        keywords: [
+          'Unicodeエスケープ',
+          '\\u',
+          'ユニコードエスケープ',
+          'サロゲートペア',
+          'コードポイント',
+          'U+',
+          '数値参照',
+        ],
+        description:
+          '文字を \\u3042 のようなUnicodeエスケープに変換、または文字に戻します。JavaScript・ES6・Python・U+表記・HTML数値参照に対応し、絵文字も正しく処理します。',
+      },
+      en: {
+        name: 'Unicode Escape / Unescape',
+        keywords: [
+          'unicode escape',
+          'unicode unescape',
+          '\\u',
+          'surrogate pair',
+          'code point',
+          'U+',
+          'numeric character reference',
+        ],
+        description:
+          'Converts text to Unicode escapes like \\u3042 and back. Supports JavaScript, ES6, Python, U+ notation and HTML numeric references, with correct emoji handling.',
+      },
+    },
+  },
+  {
+    slug: 'zero-width-char-remover',
+    category: 'text',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['char-counter', 'kishu-izon-checker', 'unicode-escape'],
+    translations: {
+      ja: {
+        name: 'ゼロ幅文字の検出・除去',
+        keywords: [
+          'ゼロ幅スペース',
+          '見えない文字',
+          '不可視文字',
+          'BOM',
+          'U+200B',
+          'ゼロ幅接合子',
+          '制御文字',
+        ],
+        description:
+          'テキストに混ざったゼロ幅スペース・BOM・方向制御文字などの見えない文字を検出し、種類と個数を確認しながら除去します。コピペ後の不具合対策に。',
+      },
+      en: {
+        name: 'Zero-Width Character Remover',
+        keywords: [
+          'zero width space',
+          'invisible characters',
+          'hidden characters',
+          'BOM',
+          'U+200B',
+          'zero width joiner',
+          'remove invisible text',
+        ],
+        description:
+          'Detects and removes invisible characters such as zero-width spaces, BOM and bidi controls, showing each type and count before cleaning your text.',
+      },
+    },
+  },
+  {
+    slug: 'reading-time-calculator',
+    category: 'text',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['char-counter', 'text-diff', 'zero-width-char-remover'],
+    translations: {
+      ja: {
+        name: '読了時間・原稿用紙換算',
+        keywords: [
+          '読了時間',
+          '原稿用紙',
+          '400字詰め',
+          '文字数',
+          '朗読時間',
+          'スピーチ',
+          '読む時間',
+        ],
+        description:
+          '文章を貼り付けて、読了時間・朗読にかかる時間・原稿用紙（400字詰め・200字詰め）の枚数を計算します。日本語と英語の混在文にも対応。',
+      },
+      en: {
+        name: 'Reading Time Calculator',
+        keywords: [
+          'reading time',
+          'speaking time',
+          'manuscript paper',
+          'genkoyoshi',
+          'word count',
+          'estimated read time',
+        ],
+        description:
+          'Paste text to estimate reading time, speaking time and Japanese manuscript paper sheets (400 or 200 characters). Handles mixed Japanese and English.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

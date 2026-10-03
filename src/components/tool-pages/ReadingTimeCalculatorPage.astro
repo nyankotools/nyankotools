@@ -1,0 +1,187 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { readingTimeCalculatorContent } from '../../i18n/tools/reading-time-calculator';
+import {
+  DEFAULT_EN_WORDS_PER_MIN,
+  DEFAULT_JA_CHARS_PER_MIN,
+} from '../../lib/tools/reading-time-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = readingTimeCalculatorContent[locale];
+
+const stats = [
+  { id: 'non-space', label: t.statNonSpaceChars },
+  { id: 'ja-chars', label: t.statJaChars },
+  { id: 'en-words', label: t.statEnWords },
+  { id: 'reading', label: t.statReadingTime },
+  { id: 'speaking', label: t.statSpeakingTime },
+];
+---
+
+<ToolShell t={t}>
+  <label for="rtc-input" class="ui-label">
+    {t.inputLabel}
+  </label>
+  <textarea
+    id="rtc-input"
+    data-query-target="text"
+    data-sample={t.sampleText}
+    data-no-count
+    class="ui-input h-56 w-full max-w-3xl p-4 dark:bg-gray-900 dark:placeholder-gray-500"
+    placeholder={t.inputPlaceholder}
+  ></textarea>
+
+  <fieldset class="mt-4 flex max-w-3xl flex-wrap items-end gap-x-6 gap-y-2">
+    <legend class="ui-label">{t.settingsLabel}</legend>
+    <div>
+      <label for="rtc-ja-speed" class="ui-label">
+        {t.jaSpeedLabel}
+      </label>
+      <div class="flex items-center gap-1">
+        <input
+          id="rtc-ja-speed"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          step="50"
+          value={DEFAULT_JA_CHARS_PER_MIN}
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+        />
+        <span class="text-sm text-gray-600 dark:text-gray-400">
+          {t.jaSpeedUnit}
+        </span>
+      </div>
+    </div>
+    <div>
+      <label for="rtc-en-speed" class="ui-label">
+        {t.enSpeedLabel}
+      </label>
+      <div class="flex items-center gap-1">
+        <input
+          id="rtc-en-speed"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          step="10"
+          value={DEFAULT_EN_WORDS_PER_MIN}
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+        />
+        <span class="text-sm text-gray-600 dark:text-gray-400">
+          {t.enSpeedUnit}
+        </span>
+      </div>
+    </div>
+    <div>
+      <label for="rtc-manuscript" class="ui-label">
+        {t.manuscriptLabel}
+      </label>
+      <select
+        id="rtc-manuscript"
+        class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
+      >
+        {t.manuscriptOptions.map((o) => (
+          <option value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </div>
+    <label class="ui-check">
+      <input id="rtc-line-breaks" type="checkbox" />
+      {t.lineBreakLabel}
+    </label>
+  </fieldset>
+
+  <dl
+    id="rtc-results"
+    class="mt-4 grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-3"
+    data-time-min-sec={t.timeMinSec}
+    data-time-sec-only={t.timeSecOnly}
+    data-manuscript-value={t.manuscriptValue}
+    data-manuscript-sub={t.manuscriptSub}
+  >
+    {stats.map((s) => (
+      <div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900">
+        <dt class="text-xs text-gray-500 dark:text-gray-400">{s.label}</dt>
+        <dd id={`rtc-${s.id}`} class="text-xl font-semibold">
+          0
+        </dd>
+      </div>
+    ))}
+    <div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900">
+      <dt class="text-xs text-gray-500 dark:text-gray-400">
+        {t.statManuscript}
+      </dt>
+      <dd id="rtc-manuscript-value" class="text-xl font-semibold">
+        0
+      </dd>
+      <dd
+        id="rtc-manuscript-sub"
+        class="text-xs text-gray-500 dark:text-gray-400"
+      ></dd>
+    </div>
+  </dl>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import {
+    calculateReading,
+    splitSeconds,
+    type ManuscriptSize,
+  } from '../../lib/tools/reading-time-calculator';
+
+  const input = document.getElementById('rtc-input') as HTMLTextAreaElement;
+  const jaSpeed = document.getElementById('rtc-ja-speed') as HTMLInputElement;
+  const enSpeed = document.getElementById('rtc-en-speed') as HTMLInputElement;
+  const manuscript = document.getElementById(
+    'rtc-manuscript',
+  ) as HTMLSelectElement;
+  const lineBreaks = document.getElementById(
+    'rtc-line-breaks',
+  ) as HTMLInputElement;
+  const results = document.getElementById('rtc-results')!;
+
+  const el = (id: string) => document.getElementById(`rtc-${id}`)!;
+
+  function formatTime(seconds: number): string {
+    const { minutes, seconds: s } = splitSeconds(seconds);
+    const template =
+      minutes === 0
+        ? (results.dataset.timeSecOnly ?? '')
+        : (results.dataset.timeMinSec ?? '');
+    return template.replace('{m}', String(minutes)).replace('{s}', String(s));
+  }
+
+  function update() {
+    const r = calculateReading(input.value, {
+      jaCharsPerMin: Number(jaSpeed.value),
+      enWordsPerMin: Number(enSpeed.value),
+      manuscriptSize: Number(manuscript.value) as ManuscriptSize,
+      respectLineBreaks: lineBreaks.checked,
+    });
+    el('non-space').textContent = String(r.nonSpaceChars);
+    el('ja-chars').textContent = String(r.jaChars);
+    el('en-words').textContent = String(r.enWords);
+    el('reading').textContent = formatTime(r.readingSeconds);
+    el('speaking').textContent = formatTime(r.speakingSeconds);
+    el('manuscript-value').textContent = (
+      results.dataset.manuscriptValue ?? ''
+    ).replace('{sheets}', String(Math.round(r.manuscriptSheets * 10) / 10));
+    el('manuscript-sub').textContent = (results.dataset.manuscriptSub ?? '')
+      .replace('{rows}', String(r.manuscriptRows))
+      .replace('{ceil}', String(r.manuscriptSheetsCeil));
+  }
+
+  onTextInput(input, update);
+  for (const control of [jaSpeed, enSpeed]) {
+    control.addEventListener('input', update);
+  }
+  manuscript.addEventListener('change', update);
+  lineBreaks.addEventListener('change', update);
+
+  update();
+</script>

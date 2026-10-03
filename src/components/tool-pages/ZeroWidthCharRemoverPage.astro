@@ -1,0 +1,232 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { zeroWidthCharRemoverContent } from '../../i18n/tools/zero-width-char-remover';
+import { invisibleGroups } from '../../lib/tools/zero-width-char-remover';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = zeroWidthCharRemoverContent[locale];
+// 初期設定: 絵文字の合成に使われるゼロ幅接合子だけは除去しない
+const defaultOff = new Set(['joiner']);
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="zwr-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="zwr-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      class="ui-input h-48 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <fieldset class="mt-4">
+    <legend class="ui-label">{t.groupsLabel}</legend>
+    <div class="grid gap-x-6 sm:grid-cols-2">
+      {invisibleGroups.map((group) => (
+        <label class="flex items-start gap-2 py-2 text-sm text-gray-700 dark:text-gray-300">
+          <input
+            id={`zwr-group-${group}`}
+            type="checkbox"
+            data-group={group}
+            checked={!defaultOff.has(group)}
+            class="mt-1 h-4 w-4"
+          />
+          <span>
+            <span class="font-medium">{t.groups[group].label}</span>
+            <span class="block text-xs text-gray-500 dark:text-gray-400">
+              {t.groups[group].description}
+            </span>
+          </span>
+        </label>
+      ))}
+    </div>
+  </fieldset>
+
+  <p
+    id="zwr-summary"
+    class="mt-4 text-sm font-medium"
+    aria-live="polite"
+    data-found={t.summaryFound}
+    data-none={t.summaryNone}
+    data-status-removed={t.statusRemoved}
+    data-status-kept={t.statusKept}
+    data-tag-name={t.tagCharName}
+    data-names={JSON.stringify(t.charNames)}
+    data-group-labels={JSON.stringify(
+      Object.fromEntries(invisibleGroups.map((g) => [g, t.groups[g].label])),
+    )}
+  ></p>
+
+  <div id="zwr-findings" class="mt-2 hidden">
+    <h2 class="mb-1 text-sm font-medium">{t.findingsLabel}</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-96 text-left text-sm">
+        <thead>
+          <tr class="border-b border-gray-300 dark:border-gray-700">
+            <th class="py-2 pr-3 font-medium">{t.colCode}</th>
+            <th class="py-2 pr-3 font-medium">{t.colName}</th>
+            <th class="py-2 pr-3 font-medium">{t.colGroup}</th>
+            <th class="py-2 pr-3 text-right font-medium">{t.colCount}</th>
+            <th class="py-2 font-medium">{t.colStatus}</th>
+          </tr>
+        </thead>
+        <tbody id="zwr-findings-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <div class="mb-1 flex flex-wrap items-center gap-3">
+        <label for="zwr-output" class="ui-label mb-0">
+          {t.outputLabel}
+        </label>
+        <button
+          id="zwr-copy-button"
+          type="button"
+          data-copied={t.copied}
+          data-copy-failed={t.copyFailed}
+          class="ui-btn"
+        >
+          {t.copy}
+        </button>
+        <span
+          id="zwr-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+      <textarea
+        id="zwr-output"
+        readonly
+        class="ui-input h-48 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+    <div>
+      <label for="zwr-visualized" class="ui-label">
+        {t.visualizeLabel}
+      </label>
+      <textarea
+        id="zwr-visualized"
+        readonly
+        class="ui-input h-48 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    formatCodePoint,
+    removeInvisible,
+    scanInvisible,
+    visualizeInvisible,
+    type InvisibleGroup,
+  } from '../../lib/tools/zero-width-char-remover';
+
+  const input = document.getElementById('zwr-input') as HTMLTextAreaElement;
+  const output = document.getElementById('zwr-output') as HTMLTextAreaElement;
+  const visualized = document.getElementById(
+    'zwr-visualized',
+  ) as HTMLTextAreaElement;
+  const summaryEl = document.getElementById('zwr-summary')!;
+  const findingsEl = document.getElementById('zwr-findings')!;
+  const findingsBody = document.getElementById('zwr-findings-body')!;
+  const copyButton = document.getElementById(
+    'zwr-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('zwr-status')!;
+  const checks = document.querySelectorAll<HTMLInputElement>('[data-group]');
+
+  const names = JSON.parse(summaryEl.dataset.names ?? '{}') as Record<
+    string,
+    string
+  >;
+  const groupLabels = JSON.parse(
+    summaryEl.dataset.groupLabels ?? '{}',
+  ) as Record<string, string>;
+
+  function selectedGroups(): InvisibleGroup[] {
+    return [...checks]
+      .filter((c) => c.checked)
+      .map((c) => c.dataset.group as InvisibleGroup);
+  }
+
+  function addCell(
+    row: HTMLTableRowElement,
+    text: string,
+    className: string,
+    mono = false,
+  ) {
+    const td = row.insertCell();
+    td.textContent = text;
+    td.className = className + (mono ? ' font-mono' : '');
+  }
+
+  function update() {
+    statusEl.textContent = '';
+    const groups = selectedGroups();
+    const scan = scanInvisible(input.value);
+    const removedGroups = new Set(groups);
+    const result = removeInvisible(input.value, groups);
+
+    output.value = result.text;
+    visualized.value = visualizeInvisible(input.value);
+
+    summaryEl.textContent =
+      scan.total === 0
+        ? (summaryEl.dataset.none ?? '')
+        : (summaryEl.dataset.found ?? '')
+            .replace('{total}', String(scan.total))
+            .replace('{removed}', String(result.removed));
+
+    findingsBody.replaceChildren();
+    findingsEl.classList.toggle('hidden', scan.findings.length === 0);
+    for (const f of scan.findings) {
+      const code = formatCodePoint(f.code);
+      const row = findingsBody.appendChild(document.createElement('tr'));
+      row.className = 'border-b border-gray-200 dark:border-gray-800';
+      addCell(row, code, 'py-2 pr-3 whitespace-nowrap', true);
+      addCell(
+        row,
+        f.group === 'tag'
+          ? (summaryEl.dataset.tagName ?? '')
+          : (names[code] ?? ''),
+        'py-2 pr-3',
+      );
+      addCell(row, groupLabels[f.group] ?? '', 'py-2 pr-3');
+      addCell(row, String(f.count), 'py-2 pr-3 text-right');
+      addCell(
+        row,
+        removedGroups.has(f.group)
+          ? (summaryEl.dataset.statusRemoved ?? '')
+          : (summaryEl.dataset.statusKept ?? ''),
+        'py-2 whitespace-nowrap',
+      );
+    }
+  }
+
+  onTextInput(input, update);
+  checks.forEach((c) => c.addEventListener('change', update));
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  update();
+</script>

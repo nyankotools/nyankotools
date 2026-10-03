@@ -1,0 +1,191 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { unicodeEscapeContent } from '../../i18n/tools/unicode-escape';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = unicodeEscapeContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-3">
+    <div
+      id="unicode-escape-mode"
+      class="ui-seg flex-wrap gap-1"
+      role="group"
+      aria-label={t.modeLabel}
+    >
+      <button
+        type="button"
+        data-mode="escape"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.modeEscape}
+      </button>
+      <button
+        type="button"
+        data-mode="unescape"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeUnescape}
+      </button>
+    </div>
+    <button
+      id="unicode-escape-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="unicode-escape-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div id="unicode-escape-options" class="mt-4 flex flex-wrap items-end gap-4">
+    <div>
+      <label for="unicode-escape-format" class="ui-label">
+        {t.formatLabel}
+      </label>
+      <select
+        id="unicode-escape-format"
+        class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
+      >
+        {t.formatOptions.map((o) => (
+          <option value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label for="unicode-escape-scope" class="ui-label">
+        {t.scopeLabel}
+      </label>
+      <select
+        id="unicode-escape-scope"
+        class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
+      >
+        {t.scopeOptions.map((o) => (
+          <option value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </div>
+    <label class="ui-check">
+      <input id="unicode-escape-uppercase" type="checkbox" />
+      {t.uppercaseLabel}
+    </label>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="unicode-escape-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="unicode-escape-input"
+        data-query-target="text"
+        data-sample={t.sampleText}
+        class="ui-input h-64 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label for="unicode-escape-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="unicode-escape-output"
+        readonly
+        class="ui-input h-64 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    escapeUnicode,
+    unescapeUnicode,
+    type UnicodeEscapeFormat,
+    type UnicodeEscapeScope,
+  } from '../../lib/tools/unicode-escape';
+
+  const input = document.getElementById(
+    'unicode-escape-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'unicode-escape-output',
+  ) as HTMLTextAreaElement;
+  const formatSelect = document.getElementById(
+    'unicode-escape-format',
+  ) as HTMLSelectElement;
+  const scopeSelect = document.getElementById(
+    'unicode-escape-scope',
+  ) as HTMLSelectElement;
+  const uppercaseCheck = document.getElementById(
+    'unicode-escape-uppercase',
+  ) as HTMLInputElement;
+  const optionsEl = document.getElementById('unicode-escape-options')!;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#unicode-escape-mode [data-mode]',
+  );
+  const copyButton = document.getElementById(
+    'unicode-escape-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('unicode-escape-status')!;
+
+  let mode: 'escape' | 'unescape' = 'escape';
+
+  function convert() {
+    statusEl.textContent = '';
+    optionsEl.hidden = mode === 'unescape';
+    if (input.value === '') {
+      output.value = '';
+      return;
+    }
+    output.value =
+      mode === 'escape'
+        ? escapeUnicode(input.value, {
+            format: formatSelect.value as UnicodeEscapeFormat,
+            scope: scopeSelect.value as UnicodeEscapeScope,
+            uppercase: uppercaseCheck.checked,
+          })
+        : unescapeUnicode(input.value);
+  }
+
+  onTextInput(input, convert);
+  formatSelect.addEventListener('change', convert);
+  scopeSelect.addEventListener('change', convert);
+  uppercaseCheck.addEventListener('change', convert);
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as 'escape' | 'unescape';
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  convert();
+</script>

@@ -28,6 +28,9 @@ const slugs = [
   'qr-code-reader',
   'heic-converter',
   'pdf-redactor',
+  'image-merger',
+  'image-text-overlay',
+  'gif-maker',
 ];
 
 const locales = [

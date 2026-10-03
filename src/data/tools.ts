@@ -3644,6 +3644,114 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'image-merger',
+    category: 'image',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['image-resizer', 'image-cropper', 'gif-maker'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像結合',
+        keywords: [
+          '画像結合',
+          '画像連結',
+          '画像を並べる',
+          'スクリーンショット結合',
+          'グリッド',
+          'コラージュ',
+        ],
+        description:
+          '複数の画像を横・縦・グリッド状に並べて1枚にまとめます。順番の入れ替え、間隔・余白・背景色の指定、大きさをそろえる設定に対応し、PNG・JPEG・WebPで保存できます。',
+      },
+      en: {
+        name: 'Image Merger',
+        keywords: [
+          'merge images',
+          'combine images',
+          'stitch images',
+          'join images',
+          'collage',
+          'grid',
+        ],
+        description:
+          'Combines multiple images into one, side by side, stacked, or in a grid, with reordering, spacing, margin, background color, and size matching, saved as PNG, JPEG, or WebP.',
+      },
+    },
+  },
+  {
+    slug: 'image-text-overlay',
+    category: 'image',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['image-cropper', 'image-converter', 'exif-viewer'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像への文字入れ・透かし',
+        keywords: [
+          '文字入れ',
+          '透かし',
+          'ウォーターマーク',
+          'テキスト追加',
+          'キャプション',
+          'コピーライト',
+        ],
+        description:
+          '画像に好きな文字を入れたり、全体に透かし（ウォーターマーク）を敷き詰めたりします。位置・サイズ・色・透明度・縁取り・角度を指定でき、PNG・JPEG・WebPで保存できます。',
+      },
+      en: {
+        name: 'Add Text or Watermark to Image',
+        keywords: [
+          'watermark',
+          'add text to image',
+          'text overlay',
+          'caption',
+          'copyright',
+          'image annotation',
+        ],
+        description:
+          'Adds text to an image or tiles a watermark across it, with position, size, color, opacity, outline, and angle controls, saved as PNG, JPEG, or WebP.',
+      },
+    },
+  },
+  {
+    slug: 'gif-maker',
+    category: 'image',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['image-merger', 'image-resizer', 'image-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'GIF作成（連番画像から）',
+        keywords: [
+          'GIF作成',
+          'アニメーションGIF',
+          'パラパラ漫画',
+          '連番画像',
+          'GIFアニメ',
+          '画像をGIFに',
+        ],
+        description:
+          '複数の画像を順番につなげてアニメーションGIFを作ります。表示時間・幅・背景色・くり返し・往復再生に対応し、画像はブラウザ内で処理されます。',
+      },
+      en: {
+        name: 'GIF Maker',
+        keywords: [
+          'gif maker',
+          'animated gif',
+          'images to gif',
+          'flip book',
+          'frame animation',
+          'create gif',
+        ],
+        description:
+          'Creates an animated GIF from several images in order, with frame delay, width, background color, looping, and ping-pong playback, all processed in your browser.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

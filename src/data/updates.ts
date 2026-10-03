@@ -321,6 +321,20 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-03',
+    toolSlugs: ['image-merger', 'image-text-overlay', 'gif-maker'],
+    translations: {
+      ja: {
+        summary:
+          '画像結合（縦・横・グリッド）、画像への文字入れ・透かし、GIF作成（連番画像から）を追加しました。',
+      },
+      en: {
+        summary:
+          'Added the Image Merger, Add Text or Watermark to Image, and GIF Maker.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

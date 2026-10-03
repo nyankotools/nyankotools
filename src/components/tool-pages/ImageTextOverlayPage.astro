@@ -1,0 +1,544 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { imageTextOverlayContent } from '../../i18n/tools/image-text-overlay';
+import { MAX_DIMENSION } from '../../lib/tools/image-cropper';
+import { MAX_FONT_SIZE, MAX_STROKE } from '../../lib/tools/image-text-overlay';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageTextOverlayContent[locale];
+
+const numberInput = 'ui-input h-11 w-full px-3 dark:bg-gray-900';
+const colorInput =
+  'h-11 w-16 cursor-pointer rounded border border-gray-300 dark:border-gray-700';
+---
+
+<ToolShell t={t}>
+  <div
+    id="overlay-root"
+    data-output-info={t.outputInfo}
+    data-downloaded={t.downloaded}
+    data-default-text={t.defaultText}
+    data-error-not-image={t.errorNotImage}
+    data-error-too-large={t.errorTooLarge.replace(
+      '{max}',
+      String(MAX_DIMENSION),
+    )}
+    data-error-load-failed={t.errorLoadFailed}
+    data-error-export-failed={t.errorExportFailed}
+  >
+    <label for="overlay-file" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="overlay-dropzone" class="ui-dropzone">
+      <input id="overlay-file" type="file" accept="image/*" class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="overlay-error"
+      role="alert"
+      hidden
+      class="mt-3 text-sm text-red-600 dark:text-red-400"
+    ></p>
+
+    <div id="overlay-workspace" hidden class="mt-6 grid gap-6 md:grid-cols-2">
+      <div>
+        <label for="overlay-text" class="ui-label">
+          {t.textLabel}
+        </label>
+        <textarea
+          id="overlay-text"
+          rows="3"
+          placeholder={t.textPlaceholder}
+          data-no-persist
+          data-no-count
+          class="ui-input w-full px-3 py-2 dark:bg-gray-900"
+        ></textarea>
+
+        <div class="mt-4 grid grid-cols-2 gap-3">
+          <div class="col-span-2">
+            <label for="overlay-position" class="ui-label">
+              {t.positionLabel}
+            </label>
+            <select
+              id="overlay-position"
+              class="ui-input h-11 px-3 dark:bg-gray-900"
+            >
+              {t.positionOptions.map(({ value, label, selected }) => (
+                <option value={value} selected={selected}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label for="overlay-font" class="ui-label">
+              {t.fontLabel}
+            </label>
+            <select
+              id="overlay-font"
+              class="ui-input h-11 px-3 dark:bg-gray-900"
+            >
+              {t.fontOptions.map(({ value, label, selected }) => (
+                <option value={value} selected={selected}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label for="overlay-size" class="ui-label">
+              {t.sizeLabel}
+            </label>
+            <input
+              id="overlay-size"
+              type="number"
+              min="1"
+              max={MAX_FONT_SIZE}
+              step="1"
+              value="32"
+              data-no-persist
+              class={numberInput}
+            />
+          </div>
+          <div>
+            <label for="overlay-color" class="ui-label">
+              {t.colorLabel}
+            </label>
+            <input
+              id="overlay-color"
+              type="color"
+              value="#ffffff"
+              class={colorInput}
+            />
+          </div>
+          <div>
+            <label for="overlay-stroke-color" class="ui-label">
+              {t.strokeColorLabel}
+            </label>
+            <input
+              id="overlay-stroke-color"
+              type="color"
+              value="#000000"
+              class={colorInput}
+            />
+          </div>
+          <div>
+            <label for="overlay-stroke" class="ui-label">
+              {t.strokeWidthLabel}
+            </label>
+            <input
+              id="overlay-stroke"
+              type="number"
+              min="0"
+              max={MAX_STROKE}
+              step="1"
+              value="3"
+              class={numberInput}
+            />
+          </div>
+          <div>
+            <label for="overlay-angle" class="ui-label">
+              {t.angleLabel}
+            </label>
+            <input
+              id="overlay-angle"
+              type="number"
+              min="-180"
+              max="180"
+              step="1"
+              value="0"
+              class={numberInput}
+            />
+          </div>
+          <div id="overlay-margin-wrap">
+            <label for="overlay-margin" class="ui-label">
+              {t.marginLabel}
+            </label>
+            <input
+              id="overlay-margin"
+              type="number"
+              min="0"
+              step="1"
+              value="20"
+              class={numberInput}
+            />
+          </div>
+          <div id="overlay-gap-wrap" hidden>
+            <label for="overlay-gap" class="ui-label">
+              {t.tileGapLabel}
+            </label>
+            <input
+              id="overlay-gap"
+              type="number"
+              min="0"
+              step="1"
+              value="60"
+              class={numberInput}
+            />
+          </div>
+          <div class="col-span-2">
+            <label for="overlay-opacity" class="ui-label">
+              {t.opacityLabel}
+              <span id="overlay-opacity-value">100</span>%
+            </label>
+            <input
+              id="overlay-opacity"
+              type="range"
+              min="5"
+              max="100"
+              value="100"
+              class="h-11 w-full"
+            />
+          </div>
+        </div>
+        <label class="mt-3 flex items-center gap-2 text-sm">
+          <input id="overlay-bold" type="checkbox" class="ui-check" />
+          {t.boldLabel}
+        </label>
+
+        <div class="mt-4 flex flex-wrap items-end gap-4">
+          <div>
+            <span class="ui-label">{t.formatLabel}</span>
+            <div
+              id="overlay-format"
+              class="ui-seg"
+              role="group"
+              aria-label={t.formatLabel}
+            >
+              <button
+                type="button"
+                data-format="png"
+                aria-pressed="true"
+                class="ui-seg-btn"
+              >
+                PNG
+              </button>
+              <button
+                type="button"
+                data-format="jpeg"
+                aria-pressed="false"
+                class="ui-seg-btn"
+              >
+                JPEG
+              </button>
+              <button
+                type="button"
+                data-format="webp"
+                aria-pressed="false"
+                class="ui-seg-btn"
+              >
+                WebP
+              </button>
+            </div>
+          </div>
+          <div id="overlay-quality-wrap" hidden class="min-w-40 flex-1">
+            <label for="overlay-quality" class="ui-label">
+              {t.qualityLabel}
+              <span id="overlay-quality-value">90</span>
+            </label>
+            <input
+              id="overlay-quality"
+              type="range"
+              min="10"
+              max="100"
+              value="90"
+              class="h-11 w-full"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center gap-3">
+        <p class="ui-label self-start">{t.previewLabel}</p>
+        <div
+          class="w-fit max-w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700"
+          style="background-image: conic-gradient(#e5e7eb 25%, #fff 0 50%, #e5e7eb 0 75%, #fff 0); background-size: 16px 16px;"
+        >
+          <canvas
+            id="overlay-canvas"
+            role="img"
+            aria-label={t.previewLabel}
+            class="block max-h-[70vh] max-w-full"
+          ></canvas>
+        </div>
+        <p
+          id="overlay-size-info"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></p>
+        <button
+          id="overlay-download"
+          type="button"
+          disabled
+          class="ui-btn-primary"
+        >
+          {t.downloadButton}
+        </button>
+        <span
+          id="overlay-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    isWithinSourceLimit,
+    outputFormat,
+    type OutputFormat,
+  } from '../../lib/tools/image-cropper';
+  import {
+    anchorPosition,
+    buildFont,
+    clampNumber,
+    MAX_FONT_SIZE,
+    MAX_STROKE,
+    overlayFileName,
+    textLines,
+    tileCenters,
+    type FontFamilyKey,
+    type TextPosition,
+  } from '../../lib/tools/image-text-overlay';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('overlay-root');
+  const fileInput = $<HTMLInputElement>('overlay-file');
+  const errorEl = $('overlay-error');
+  const workspace = $('overlay-workspace');
+  const canvas = $<HTMLCanvasElement>('overlay-canvas');
+  const infoEl = $('overlay-size-info');
+  const statusEl = $('overlay-status');
+  const downloadButton = $<HTMLButtonElement>('overlay-download');
+  const textInput = $<HTMLTextAreaElement>('overlay-text');
+  const positionSelect = $<HTMLSelectElement>('overlay-position');
+  const fontSelect = $<HTMLSelectElement>('overlay-font');
+  const sizeInput = $<HTMLInputElement>('overlay-size');
+  const colorInput = $<HTMLInputElement>('overlay-color');
+  const strokeColorInput = $<HTMLInputElement>('overlay-stroke-color');
+  const strokeInput = $<HTMLInputElement>('overlay-stroke');
+  const angleInput = $<HTMLInputElement>('overlay-angle');
+  const marginInput = $<HTMLInputElement>('overlay-margin');
+  const gapInput = $<HTMLInputElement>('overlay-gap');
+  const marginWrap = $('overlay-margin-wrap');
+  const gapWrap = $('overlay-gap-wrap');
+  const opacityInput = $<HTMLInputElement>('overlay-opacity');
+  const opacityValue = $('overlay-opacity-value');
+  const boldInput = $<HTMLInputElement>('overlay-bold');
+  const qualityWrap = $('overlay-quality-wrap');
+  const qualityInput = $<HTMLInputElement>('overlay-quality');
+  const qualityValue = $('overlay-quality-value');
+  const formatButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>(
+      '#overlay-format [data-format]',
+    ),
+  );
+
+  const d = root.dataset;
+  let bitmap: ImageBitmap | null = null;
+  let sourceName: string | null = null;
+  let format: OutputFormat = 'png';
+  // 画像の読み込みは非同期なので、古い読み込みが新しい選択を上書きしないよう世代で管理する
+  let generation = 0;
+  let textLayer: HTMLCanvasElement | null = null;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  /** 文字だけを透明な層に描く（不透明度は層ごとにかけるため、縁取りと文字が重なっても濃くならない） */
+  function drawTextLayer(width: number, height: number): HTMLCanvasElement {
+    // 大きな画像で毎回作り直さないよう使い回す（幅の再設定で内容も消える）
+    const layer = (textLayer ??= document.createElement('canvas'));
+    layer.width = width;
+    layer.height = height;
+    const lines = textLines(textInput.value);
+    const ctx = layer.getContext('2d');
+    if (!ctx || lines.length === 0) return layer;
+
+    const size = clampNumber(Number(sizeInput.value), 1, MAX_FONT_SIZE, 32);
+    const stroke = clampNumber(Number(strokeInput.value), 0, MAX_STROKE, 0);
+    const angle =
+      (clampNumber(Number(angleInput.value), -180, 180, 0) * Math.PI) / 180;
+    const position = positionSelect.value as TextPosition;
+    ctx.font = buildFont(
+      size,
+      boldInput.checked,
+      fontSelect.value as FontFamilyKey,
+    );
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = stroke;
+    ctx.fillStyle = colorInput.value;
+    ctx.strokeStyle = strokeColorInput.value;
+
+    const lineHeight = Math.round(size * 1.25);
+    const box = {
+      width:
+        Math.ceil(Math.max(...lines.map((l) => ctx.measureText(l).width))) +
+        stroke,
+      height: lines.length * lineHeight + stroke,
+    };
+    const drawBlock = () => {
+      lines.forEach((line, i) => {
+        const y = (i - (lines.length - 1) / 2) * lineHeight;
+        if (stroke > 0) ctx.strokeText(line, 0, y);
+        ctx.fillText(line, 0, y);
+      });
+    };
+
+    if (position === 'tile') {
+      const gap = Math.max(0, Number(gapInput.value) || 0);
+      const { points } = tileCenters({ width, height }, box, gap);
+      ctx.translate(width / 2, height / 2);
+      ctx.rotate(angle);
+      for (const p of points) {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        drawBlock();
+        ctx.restore();
+      }
+    } else {
+      const pos = anchorPosition(
+        position,
+        { width, height },
+        box,
+        Number(marginInput.value) || 0,
+      );
+      ctx.translate(pos.x + box.width / 2, pos.y + box.height / 2);
+      ctx.rotate(angle);
+      drawBlock();
+    }
+    return layer;
+  }
+
+  function render() {
+    if (!bitmap) return;
+    statusEl.textContent = '';
+    const tile = positionSelect.value === 'tile';
+    marginWrap.hidden = tile;
+    gapWrap.hidden = !tile;
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return showError(d.errorExportFailed ?? '');
+    if (format === 'jpeg') {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    ctx.drawImage(bitmap, 0, 0);
+    ctx.globalAlpha =
+      clampNumber(Number(opacityInput.value), 5, 100, 100) / 100;
+    ctx.drawImage(drawTextLayer(canvas.width, canvas.height), 0, 0);
+    ctx.globalAlpha = 1;
+    infoEl.textContent = (d.outputInfo ?? '')
+      .replace('{width}', String(canvas.width))
+      .replace('{height}', String(canvas.height));
+  }
+
+  async function loadFile(file: File) {
+    const current = ++generation;
+    showError('');
+    statusEl.textContent = '';
+    if (!file.type.startsWith('image/'))
+      return showError(d.errorNotImage ?? '');
+    let loaded: ImageBitmap;
+    try {
+      loaded = await createImageBitmap(file);
+    } catch {
+      if (current === generation) showError(d.errorLoadFailed ?? '');
+      return;
+    }
+    if (current !== generation) return loaded.close();
+    if (!isWithinSourceLimit({ width: loaded.width, height: loaded.height })) {
+      loaded.close();
+      return showError(d.errorTooLarge ?? '');
+    }
+    bitmap?.close();
+    bitmap = loaded;
+    sourceName = file.name;
+    // 文字サイズは画像の大きさに合わせた初期値にする
+    sizeInput.value = String(
+      Math.max(12, Math.round(Math.min(loaded.width, loaded.height) / 12)),
+    );
+    if (textInput.value === '') textInput.value = d.defaultText ?? '';
+    workspace.hidden = false;
+    downloadButton.disabled = false;
+    render();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop($('overlay-dropzone'), fileInput);
+
+  for (const el of [
+    textInput,
+    positionSelect,
+    fontSelect,
+    sizeInput,
+    colorInput,
+    strokeColorInput,
+    strokeInput,
+    angleInput,
+    marginInput,
+    gapInput,
+    boldInput,
+  ]) {
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  }
+  opacityInput.addEventListener('input', () => {
+    opacityValue.textContent = opacityInput.value;
+    render();
+  });
+
+  function applyFormat(next: OutputFormat) {
+    format = next;
+    for (const b of formatButtons) {
+      b.setAttribute('aria-pressed', String(b.dataset.format === next));
+    }
+    qualityWrap.hidden = next === 'png';
+    render();
+  }
+  for (const b of formatButtons) {
+    b.addEventListener('click', () =>
+      applyFormat(b.dataset.format as OutputFormat),
+    );
+  }
+  qualityInput.addEventListener('input', () => {
+    qualityValue.textContent = qualityInput.value;
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (!bitmap) return;
+    const { mime } = outputFormat(format);
+    canvas.toBlob(
+      (blob) => {
+        // 非対応の形式はブラウザがPNGで返すため、種類が違えば失敗として扱う
+        if (!blob || blob.type !== mime) {
+          return showError(d.errorExportFailed ?? '');
+        }
+        showError('');
+        downloadBlob(blob, overlayFileName(sourceName, format));
+        statusEl.textContent = d.downloaded ?? '';
+      },
+      mime,
+      format === 'png' ? undefined : Number(qualityInput.value) / 100,
+    );
+  });
+</script>

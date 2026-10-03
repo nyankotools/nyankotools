@@ -1,0 +1,450 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { pdfPageNumberWatermarkContent } from '../../i18n/tools/pdf-page-number-watermark';
+import { PAGE_NUMBER_POSITIONS } from '../../lib/tools/pdf-page-number-watermark';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = pdfPageNumberWatermarkContent[locale];
+const inputClass = 'ui-input min-h-11 w-full px-3 dark:bg-gray-900';
+const colorClass =
+  'h-11 w-16 cursor-pointer rounded-lg border border-gray-300 bg-transparent p-1 dark:border-gray-700';
+---
+
+<ToolShell t={t}>
+  <label for="pw-file" class="ui-label">
+    {t.fileLabel}
+  </label>
+  <div id="pw-drop" class="ui-dropzone">
+    <input
+      id="pw-file"
+      type="file"
+      accept=".pdf,application/pdf"
+      class="ui-file"
+    />
+    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
+  </div>
+  <p
+    id="pw-info"
+    hidden
+    data-template={t.infoTemplate}
+    class="mt-2 text-sm text-gray-700 dark:text-gray-300"
+  ></p>
+
+  <fieldset class="mt-6 max-w-2xl rounded-lg border border-gray-300 p-4 dark:border-gray-700">
+    <legend class="px-1">
+      <label class="ui-check h-auto font-semibold">
+        <input id="pw-number-on" type="checkbox" checked class="h-4 w-4" />
+        {t.pageNumberEnable}
+      </label>
+    </legend>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="pw-position" class="ui-label">
+          {t.positionLabel}
+        </label>
+        <select id="pw-position" class={inputClass}>
+          {PAGE_NUMBER_POSITIONS.map((p) => (
+            <option value={p}>{t.positions[p]}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="pw-template" class="ui-label">
+          {t.templateLabel}
+        </label>
+        <input
+          id="pw-template"
+          type="text"
+          value="{n} / {total}"
+          autocomplete="off"
+          class={inputClass}
+        />
+      </div>
+      <div>
+        <label for="pw-start" class="ui-label">
+          {t.startLabel}
+        </label>
+        <input
+          id="pw-start"
+          type="number"
+          value="1"
+          min="0"
+          max="999999"
+          step="1"
+          inputmode="numeric"
+          class={inputClass}
+        />
+      </div>
+      <div>
+        <label for="pw-font-size" class="ui-label">
+          {t.fontSizeLabel}
+        </label>
+        <input
+          id="pw-font-size"
+          type="number"
+          value="12"
+          min="6"
+          max="72"
+          step="1"
+          inputmode="numeric"
+          class={inputClass}
+        />
+      </div>
+      <div>
+        <label for="pw-margin" class="ui-label">
+          {t.marginLabel}
+        </label>
+        <input
+          id="pw-margin"
+          type="number"
+          value="24"
+          min="0"
+          max="200"
+          step="1"
+          inputmode="numeric"
+          class={inputClass}
+        />
+      </div>
+      <div>
+        <label for="pw-number-color" class="ui-label">
+          {t.numberColorLabel}
+        </label>
+        <input
+          id="pw-number-color"
+          type="color"
+          value="#000000"
+          class={colorClass}
+        />
+      </div>
+    </div>
+    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+      {t.templateHint}
+    </p>
+    <label class="ui-check mt-1 h-auto min-h-11">
+      <input id="pw-skip-first" type="checkbox" class="h-4 w-4" />
+      {t.skipFirstLabel}
+    </label>
+  </fieldset>
+
+  <fieldset class="mt-4 max-w-2xl rounded-lg border border-gray-300 p-4 dark:border-gray-700">
+    <legend class="px-1">
+      <label class="ui-check h-auto font-semibold">
+        <input id="pw-mark-on" type="checkbox" class="h-4 w-4" />
+        {t.watermarkEnable}
+      </label>
+    </legend>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div class="sm:col-span-2">
+        <label for="pw-mark-text" class="ui-label">
+          {t.watermarkTextLabel}
+        </label>
+        <input
+          id="pw-mark-text"
+          type="text"
+          maxlength="60"
+          autocomplete="off"
+          placeholder={t.watermarkTextPlaceholder}
+          class={inputClass}
+        />
+      </div>
+      <div>
+        <label for="pw-mark-color" class="ui-label">
+          {t.watermarkColorLabel}
+        </label>
+        <input
+          id="pw-mark-color"
+          type="color"
+          value="#808080"
+          class={colorClass}
+        />
+      </div>
+      <div>
+        <label for="pw-mark-width" class="ui-label">
+          {t.widthLabel}
+        </label>
+        <input
+          id="pw-mark-width"
+          type="number"
+          value="60"
+          min="10"
+          max="100"
+          step="1"
+          inputmode="numeric"
+          class={inputClass}
+        />
+      </div>
+      <div>
+        <label for="pw-mark-opacity" class="ui-label">
+          {t.opacityLabel}
+        </label>
+        <input
+          id="pw-mark-opacity"
+          type="number"
+          value="30"
+          min="2"
+          max="100"
+          step="1"
+          inputmode="numeric"
+          class={inputClass}
+        />
+      </div>
+      <div>
+        <label for="pw-mark-angle" class="ui-label">
+          {t.angleLabel}
+        </label>
+        <input
+          id="pw-mark-angle"
+          type="number"
+          value="45"
+          min="-180"
+          max="180"
+          step="1"
+          inputmode="numeric"
+          class={inputClass}
+        />
+      </div>
+    </div>
+    <label class="ui-check mt-2 h-auto min-h-11">
+      <input id="pw-mark-tiled" type="checkbox" class="h-4 w-4" />
+      {t.tiledLabel}
+    </label>
+  </fieldset>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="pw-run"
+      type="button"
+      data-run={t.run}
+      data-processing={t.processing}
+      class="ui-btn-primary"
+    >
+      {t.run}
+    </button>
+    <button id="pw-clear" type="button" class="ui-btn">
+      {t.clear}
+    </button>
+  </div>
+
+  <p
+    id="pw-error"
+    role="alert"
+    hidden
+    data-no-file={t.errorNoFile}
+    data-not-pdf={t.errorNotPdf}
+    data-invalid={t.errorInvalid}
+    data-encrypted={t.errorEncrypted}
+    data-no-operation={t.errorNoOperation}
+    data-no-watermark-text={t.errorNoWatermarkText}
+    data-bad-option={t.errorBadOption}
+    data-unsupported-char={t.errorUnsupportedChar}
+    data-failed={t.errorFailed}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+
+  <section
+    id="pw-result"
+    hidden
+    class="mt-6"
+    data-download={t.downloadTemplate}
+  >
+    <h2 class="mb-2 text-lg font-semibold">{t.resultHeading}</h2>
+    <ul id="pw-result-list" class="flex flex-col gap-2"></ul>
+  </section>
+</ToolShell>
+
+<script>
+  import { paren } from '../../lib/paren';
+  import { getPageCount, PdfToolError } from '../../lib/tools/pdf-merge-split';
+  import {
+    parseHexColor,
+    stampedFileName,
+    stampPdf,
+    type PageNumberPosition,
+  } from '../../lib/tools/pdf-page-number-watermark';
+  import { enableFileDrop } from '../../lib/file-drop';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const fileInput = $<HTMLInputElement>('pw-file');
+  const info = $('pw-info');
+  const numberOn = $<HTMLInputElement>('pw-number-on');
+  const position = $<HTMLSelectElement>('pw-position');
+  const template = $<HTMLInputElement>('pw-template');
+  const start = $<HTMLInputElement>('pw-start');
+  const fontSize = $<HTMLInputElement>('pw-font-size');
+  const margin = $<HTMLInputElement>('pw-margin');
+  const numberColor = $<HTMLInputElement>('pw-number-color');
+  const skipFirst = $<HTMLInputElement>('pw-skip-first');
+  const markOn = $<HTMLInputElement>('pw-mark-on');
+  const markText = $<HTMLInputElement>('pw-mark-text');
+  const markColor = $<HTMLInputElement>('pw-mark-color');
+  const markWidth = $<HTMLInputElement>('pw-mark-width');
+  const markOpacity = $<HTMLInputElement>('pw-mark-opacity');
+  const markAngle = $<HTMLInputElement>('pw-mark-angle');
+  const markTiled = $<HTMLInputElement>('pw-mark-tiled');
+  const runButton = $<HTMLButtonElement>('pw-run');
+  const clearButton = $<HTMLButtonElement>('pw-clear');
+  const errorEl = $('pw-error');
+  const resultEl = $('pw-result');
+  const resultList = $('pw-result-list');
+
+  enableFileDrop($('pw-drop'), fileInput);
+
+  let pdfBytes: Uint8Array | null = null;
+  let pdfName = '';
+  let urls: string[] = [];
+
+  function showError(key: string) {
+    hideResult();
+    errorEl.textContent = errorEl.dataset[key] ?? '';
+    errorEl.hidden = false;
+  }
+
+  function hideError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function hideResult() {
+    urls.forEach((u) => URL.revokeObjectURL(u));
+    urls = [];
+    resultList.replaceChildren();
+    resultEl.hidden = true;
+  }
+
+  /** 透かし文字を、文字ぴったりの透過PNGにする（日本語は端末のフォントで描く） */
+  async function renderWatermarkPng(
+    text: string,
+    color: string,
+  ): Promise<Uint8Array> {
+    const fontPx = 160;
+    const font = `700 ${fontPx}px "Hiragino Sans", "Yu Gothic", "Meiryo", "Noto Sans CJK JP", sans-serif`;
+    const measure = document.createElement('canvas').getContext('2d')!;
+    measure.font = font;
+    const textWidth = Math.ceil(measure.measureText(text).width);
+    const pad = Math.round(fontPx * 0.15);
+    // canvas の上限（辺 16384px 程度）に収める
+    const maxWidth = 8000;
+    const scale =
+      textWidth + pad * 2 > maxWidth ? maxWidth / (textWidth + pad * 2) : 1;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round((textWidth + pad * 2) * scale));
+    canvas.height = Math.max(1, Math.round(fontPx * 1.4 * scale));
+    const ctx = canvas.getContext('2d')!;
+    ctx.scale(scale, scale);
+    ctx.font = font;
+    ctx.fillStyle = color;
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, pad, (fontPx * 1.4) / 2);
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/png'),
+    );
+    canvas.width = canvas.height = 0;
+    if (!blob) throw new Error('toBlob failed');
+    return new Uint8Array(await blob.arrayBuffer());
+  }
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (!file) return;
+    pdfBytes = null;
+    info.hidden = true;
+    hideResult();
+    hideError();
+    if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+      showError('notPdf');
+      return;
+    }
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const pages = await getPageCount(bytes);
+      pdfBytes = bytes;
+      pdfName = file.name;
+      info.textContent = `${file.name}${paren((info.dataset.template ?? '').replace('{pages}', String(pages)))}`;
+      info.hidden = false;
+    } catch (e) {
+      showError(e instanceof PdfToolError ? e.code : 'failed');
+    }
+  });
+
+  runButton.addEventListener('click', async () => {
+    hideError();
+    hideResult();
+    if (!pdfBytes) return showError('noFile');
+    if (!numberOn.checked && !markOn.checked) return showError('noOperation');
+    const text = markText.value.trim();
+    if (markOn.checked && text === '') return showError('noWatermarkText');
+    runButton.disabled = true;
+    clearButton.disabled = true;
+    fileInput.disabled = true;
+    runButton.textContent = runButton.dataset.processing ?? '';
+    try {
+      const out = await stampPdf(pdfBytes, {
+        pageNumber: numberOn.checked
+          ? {
+              position: position.value as PageNumberPosition,
+              template: template.value,
+              startNumber: Number(start.value),
+              fontSize: Number(fontSize.value),
+              margin: Number(margin.value),
+              color: parseHexColor(numberColor.value) ?? { r: 0, g: 0, b: 0 },
+              skipFirstPage: skipFirst.checked,
+            }
+          : null,
+        watermark: markOn.checked
+          ? {
+              png: await renderWatermarkPng(text, markColor.value),
+              widthRatio: Number(markWidth.value) / 100,
+              opacity: Number(markOpacity.value) / 100,
+              angle: Number(markAngle.value),
+              tiled: markTiled.checked,
+            }
+          : null,
+      });
+      const url = URL.createObjectURL(
+        new Blob([out as BlobPart], { type: 'application/pdf' }),
+      );
+      urls.push(url);
+      const name = stampedFileName(pdfName);
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      a.className =
+        'inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-blue-700 hover:bg-gray-100 dark:border-gray-700 dark:text-blue-400 dark:hover:bg-gray-800';
+      a.textContent = (resultEl.dataset.download ?? '').replace(
+        '{name}',
+        () => name,
+      );
+      li.append(a);
+      resultList.append(li);
+      resultEl.hidden = false;
+    } catch (e) {
+      if (e instanceof PdfToolError) showError(e.code);
+      else {
+        console.error(e);
+        showError('failed');
+      }
+    } finally {
+      runButton.disabled = false;
+      clearButton.disabled = false;
+      fileInput.disabled = false;
+      runButton.textContent = runButton.dataset.run ?? '';
+    }
+  });
+
+  clearButton.addEventListener('click', () => {
+    pdfBytes = null;
+    info.hidden = true;
+    fileInput.value = '';
+    hideError();
+    hideResult();
+  });
+</script>

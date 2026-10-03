@@ -1,0 +1,277 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { pdfMetadataEditorContent } from '../../i18n/tools/pdf-metadata-editor';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = pdfMetadataEditorContent[locale];
+const inputClass = 'ui-input min-h-11 w-full px-3 dark:bg-gray-900';
+const textFields = [
+  ['title', t.titleLabel],
+  ['author', t.authorLabel],
+  ['subject', t.subjectLabel],
+  ['keywords', t.keywordsLabel],
+  ['creator', t.creatorLabel],
+  ['producer', t.producerLabel],
+] as const;
+const dateFields = [
+  ['creationDate', t.creationDateLabel],
+  ['modificationDate', t.modificationDateLabel],
+] as const;
+---
+
+<ToolShell t={t}>
+  <label for="md-file" class="ui-label">
+    {t.fileLabel}
+  </label>
+  <div id="md-drop" class="ui-dropzone">
+    <input
+      id="md-file"
+      type="file"
+      accept=".pdf,application/pdf"
+      class="ui-file"
+    />
+    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
+  </div>
+  <p
+    id="md-info"
+    hidden
+    data-template={t.infoTemplate}
+    class="mt-2 text-sm text-gray-700 dark:text-gray-300"
+  ></p>
+
+  <section id="md-editor" hidden class="mt-6 max-w-2xl">
+    <h2 class="mb-1 text-lg font-semibold">{t.editorHeading}</h2>
+    <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">{t.editorHint}</p>
+    <div class="grid gap-4 sm:grid-cols-2">
+      {textFields.map(([field, label]) => (
+        <div>
+          <label for={`md-${field}`} class="ui-label">
+            {label}
+          </label>
+          <input
+            id={`md-${field}`}
+            type="text"
+            autocomplete="off"
+            class={inputClass}
+          />
+        </div>
+      ))}
+      {dateFields.map(([field, label]) => (
+        <div>
+          <label for={`md-${field}`} class="ui-label">
+            {label}
+          </label>
+          <input id={`md-${field}`} type="datetime-local" class={inputClass} />
+        </div>
+      ))}
+    </div>
+    <label class="ui-check mt-3 h-auto min-h-11">
+      <input id="md-remove-xmp" type="checkbox" checked class="h-4 w-4" />
+      {t.removeXmpLabel}
+    </label>
+    <button id="md-empty" type="button" class="ui-btn mt-2">
+      {t.clearFields}
+    </button>
+  </section>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="md-run"
+      type="button"
+      data-run={t.run}
+      data-processing={t.processing}
+      class="ui-btn-primary"
+    >
+      {t.run}
+    </button>
+    <button id="md-clear" type="button" class="ui-btn">
+      {t.clear}
+    </button>
+  </div>
+
+  <p
+    id="md-error"
+    role="alert"
+    hidden
+    data-no-file={t.errorNoFile}
+    data-not-pdf={t.errorNotPdf}
+    data-invalid={t.errorInvalid}
+    data-encrypted={t.errorEncrypted}
+    data-bad-date={t.errorBadDate}
+    data-failed={t.errorFailed}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+
+  <section
+    id="md-result"
+    hidden
+    class="mt-6"
+    data-download={t.downloadTemplate}
+  >
+    <h2 class="mb-2 text-lg font-semibold">{t.resultHeading}</h2>
+    <ul id="md-result-list" class="flex flex-col gap-2"></ul>
+  </section>
+</ToolShell>
+
+<script>
+  import { paren } from '../../lib/paren';
+  import { PdfToolError } from '../../lib/tools/pdf-merge-split';
+  import {
+    DATE_FIELDS,
+    emptyMetadata,
+    metadataFileName,
+    readMetadata,
+    TEXT_FIELDS,
+    writeMetadata,
+    type PdfMetadata,
+  } from '../../lib/tools/pdf-metadata-editor';
+  import { enableFileDrop } from '../../lib/file-drop';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const fileInput = $<HTMLInputElement>('md-file');
+  const info = $('md-info');
+  const editor = $('md-editor');
+  const removeXmp = $<HTMLInputElement>('md-remove-xmp');
+  const emptyButton = $<HTMLButtonElement>('md-empty');
+  const runButton = $<HTMLButtonElement>('md-run');
+  const clearButton = $<HTMLButtonElement>('md-clear');
+  const errorEl = $('md-error');
+  const resultEl = $('md-result');
+  const resultList = $('md-result-list');
+  const fieldNames = [
+    ...TEXT_FIELDS.map(([f]) => f),
+    ...DATE_FIELDS.map(([f]) => f),
+  ] as (keyof PdfMetadata)[];
+  const fields = Object.fromEntries(
+    fieldNames.map((f) => [f, $<HTMLInputElement>(`md-${f}`)]),
+  ) as Record<keyof PdfMetadata, HTMLInputElement>;
+
+  enableFileDrop($('md-drop'), fileInput);
+
+  let pdfBytes: Uint8Array | null = null;
+  let pdfName = '';
+  let urls: string[] = [];
+
+  function showError(key: string) {
+    hideResult();
+    errorEl.textContent = errorEl.dataset[key] ?? '';
+    errorEl.hidden = false;
+  }
+
+  function hideError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function hideResult() {
+    urls.forEach((u) => URL.revokeObjectURL(u));
+    urls = [];
+    resultList.replaceChildren();
+    resultEl.hidden = true;
+  }
+
+  function fillFields(meta: PdfMetadata) {
+    for (const f of fieldNames) fields[f].value = meta[f];
+  }
+
+  function collectFields(): PdfMetadata {
+    const meta = emptyMetadata();
+    for (const f of fieldNames) meta[f] = fields[f].value.trim();
+    return meta;
+  }
+
+  function resetDocument() {
+    pdfBytes = null;
+    info.hidden = true;
+    editor.hidden = true;
+    fillFields(emptyMetadata());
+  }
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (!file) return;
+    resetDocument();
+    hideResult();
+    hideError();
+    if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+      showError('notPdf');
+      return;
+    }
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const { metadata, pageCount } = await readMetadata(bytes);
+      pdfBytes = bytes;
+      pdfName = file.name;
+      fillFields(metadata);
+      info.textContent = `${file.name}${paren((info.dataset.template ?? '').replace('{pages}', String(pageCount)))}`;
+      info.hidden = false;
+      editor.hidden = false;
+    } catch (e) {
+      showError(e instanceof PdfToolError ? e.code : 'failed');
+    }
+  });
+
+  emptyButton.addEventListener('click', () => {
+    fillFields(emptyMetadata());
+    hideResult();
+  });
+
+  runButton.addEventListener('click', async () => {
+    hideError();
+    hideResult();
+    if (!pdfBytes) return showError('noFile');
+    runButton.disabled = true;
+    clearButton.disabled = true;
+    fileInput.disabled = true;
+    runButton.textContent = runButton.dataset.processing ?? '';
+    try {
+      const out = await writeMetadata(pdfBytes, collectFields(), {
+        removeXmp: removeXmp.checked,
+      });
+      const url = URL.createObjectURL(
+        new Blob([out as BlobPart], { type: 'application/pdf' }),
+      );
+      urls.push(url);
+      const name = metadataFileName(pdfName);
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      a.className =
+        'inline-flex min-h-11 items-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-blue-700 hover:bg-gray-100 dark:border-gray-700 dark:text-blue-400 dark:hover:bg-gray-800';
+      a.textContent = (resultEl.dataset.download ?? '').replace(
+        '{name}',
+        () => name,
+      );
+      li.append(a);
+      resultList.append(li);
+      resultEl.hidden = false;
+    } catch (e) {
+      if (e instanceof PdfToolError) showError(e.code);
+      else {
+        console.error(e);
+        showError('failed');
+      }
+    } finally {
+      runButton.disabled = false;
+      clearButton.disabled = false;
+      fileInput.disabled = false;
+      runButton.textContent = runButton.dataset.run ?? '';
+    }
+  });
+
+  clearButton.addEventListener('click', () => {
+    resetDocument();
+    fileInput.value = '';
+    hideError();
+    hideResult();
+  });
+</script>

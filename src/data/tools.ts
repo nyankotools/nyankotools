@@ -1852,6 +1852,77 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'pdf-page-number-watermark',
+    category: 'pdf',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['pdf-page-editor', 'pdf-metadata-editor', 'pdf-merge-split'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: 'PDFページ番号・透かし追加',
+        keywords: [
+          'PDFページ番号',
+          'PDF透かし',
+          'ウォーターマーク',
+          '社外秘',
+          'DRAFT',
+          'ページ番号を振る',
+        ],
+        description:
+          'PDFの各ページにページ番号や「社外秘」などの透かし文字を追加。位置・サイズ・濃さ・角度を指定できます。',
+      },
+      en: {
+        name: 'PDF Page Numbers & Watermark',
+        keywords: [
+          'PDF page numbers',
+          'PDF watermark',
+          'number PDF pages',
+          'confidential stamp',
+          'draft watermark',
+        ],
+        description:
+          'Add page numbers and watermark text such as CONFIDENTIAL or DRAFT to every page of a PDF, with position, size, opacity and angle controls.',
+      },
+    },
+  },
+  {
+    slug: 'pdf-metadata-editor',
+    category: 'pdf',
+    addedAt: '2026-10-03',
+    updatedAt: '2026-10-03',
+    related: ['pdf-page-number-watermark', 'pdf-redactor', 'pdf-page-editor'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: 'PDFメタデータ編集',
+        keywords: [
+          'PDFプロパティ',
+          'PDF作成者',
+          'PDFタイトル',
+          '文書情報',
+          'メタデータ削除',
+        ],
+        description:
+          'PDFのタイトル・作成者・キーワード・作成日時などの文書情報を確認・編集・削除。公開前の個人情報消去に。',
+      },
+      en: {
+        name: 'PDF Metadata Editor',
+        keywords: [
+          'PDF properties',
+          'PDF author',
+          'PDF title',
+          'remove PDF metadata',
+          'document info',
+        ],
+        description:
+          'View, edit or remove a PDF’s title, author, keywords and dates. Handy for clearing personal details before sharing.',
+      },
+    },
+  },
+  {
     slug: 'cat-logo-text-generator',
     category: 'image',
     addedAt: '2026-09-25',

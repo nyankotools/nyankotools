@@ -31,6 +31,8 @@ const slugs = [
   'image-merger',
   'image-text-overlay',
   'gif-maker',
+  'pdf-page-number-watermark',
+  'pdf-metadata-editor',
 ];
 
 const locales = [

@@ -323,15 +323,21 @@ export const updates: UpdateEntry[] = [
   },
   {
     date: '2026-10-03',
-    toolSlugs: ['image-merger', 'image-text-overlay', 'gif-maker'],
+    toolSlugs: [
+      'image-merger',
+      'image-text-overlay',
+      'gif-maker',
+      'pdf-page-number-watermark',
+      'pdf-metadata-editor',
+    ],
     translations: {
       ja: {
         summary:
-          '画像結合（縦・横・グリッド）、画像への文字入れ・透かし、GIF作成（連番画像から）を追加しました。',
+          '画像結合（縦・横・グリッド）、画像への文字入れ・透かし、GIF作成（連番画像から）、PDFへのページ番号・透かし追加、PDFメタデータ編集を追加しました。',
       },
       en: {
         summary:
-          'Added the Image Merger, Add Text or Watermark to Image, and GIF Maker.',
+          'Added the Image Merger, Add Text or Watermark to Image, GIF Maker, PDF Page Numbers & Watermark, and PDF Metadata Editor.',
       },
     },
   },

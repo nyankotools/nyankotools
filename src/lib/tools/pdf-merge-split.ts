@@ -6,7 +6,11 @@ export type PdfErrorCode =
   | 'emptyRange'
   | 'badRange'
   | 'outOfRange'
-  | 'badCount';
+  | 'badCount'
+  | 'badOption'
+  | 'noOperation'
+  | 'unsupportedChar'
+  | 'badDate';
 
 export class PdfToolError extends Error {
   code: PdfErrorCode;
@@ -17,9 +21,12 @@ export class PdfToolError extends Error {
 }
 
 /** PDFを読み込む。暗号化・破損は PdfToolError にする */
-async function load(bytes: Uint8Array): Promise<PDFDocument> {
+export async function load(
+  bytes: Uint8Array,
+  options?: { updateMetadata?: boolean },
+): Promise<PDFDocument> {
   try {
-    const doc = await PDFDocument.load(bytes);
+    const doc = await PDFDocument.load(bytes, options);
     // 破損PDFは load が成功しても、カタログが読めず getPageCount で TypeError になることがある
     doc.getPageCount();
     return doc;

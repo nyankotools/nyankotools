@@ -1,0 +1,384 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { speakerTesterContent } from '../../i18n/tools/speaker-tester';
+import {
+  MAX_FREQUENCY,
+  MIN_FREQUENCY,
+  formatFrequency,
+} from '../../lib/tools/speaker-tester';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = speakerTesterContent[locale];
+
+const selectClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+const toggleClass =
+  'ui-btn h-12 aria-pressed:border-blue-600 aria-pressed:bg-blue-600 aria-pressed:text-white dark:aria-pressed:bg-blue-600 dark:aria-pressed:text-white';
+
+const channels = ['left', 'right', 'both'] as const;
+const waves = ['sine', 'square', 'triangle', 'sawtooth', 'noise'] as const;
+const presets = [50, 100, 440, 1000, 5000, 10000, 15000, 20000];
+---
+
+<ToolShell t={t}>
+  <div
+    id="spk-root"
+    data-playing={t.playing}
+    data-stopped={t.stopped}
+    data-sweep-label={t.sweepLabel}
+    data-sweep-stop-label={t.sweepStopLabel}
+  >
+    <p class="mb-4 max-w-2xl rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+      {t.warning}
+    </p>
+
+    <div class="max-w-md">
+      <label for="spk-volume" class="ui-label">
+        {t.volumeLabel}: <span id="spk-volume-value">20</span>%
+      </label>
+      <input
+        id="spk-volume"
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value="20"
+        class="w-full"
+      />
+    </div>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.channelHeading}</h2>
+    <div
+      id="spk-channels"
+      role="group"
+      aria-label={t.channelLabel}
+      class="flex flex-wrap gap-3"
+    >
+      {channels.map((c) => (
+        <button
+          type="button"
+          data-channel={c}
+          aria-pressed="false"
+          class={toggleClass}
+        >
+          {t.channels[c]}
+        </button>
+      ))}
+      <button id="spk-stop" type="button" class="ui-btn h-12">
+        {t.stopLabel}
+      </button>
+    </div>
+    <p
+      id="spk-status"
+      role="status"
+      class="mt-3 text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.stopped}
+    </p>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.toneHeading}</h2>
+    <div class="grid max-w-2xl gap-4 sm:grid-cols-2">
+      <div>
+        <label for="spk-wave" class="ui-label">
+          {t.waveLabel}
+        </label>
+        <select id="spk-wave" class={selectClass}>
+          {waves.map((w) => (
+            <option value={w}>{t.waves[w]}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="spk-frequency" class="ui-label">
+          {t.frequencyLabel}
+        </label>
+        <input
+          id="spk-frequency"
+          type="number"
+          inputmode="decimal"
+          min={MIN_FREQUENCY}
+          max={MAX_FREQUENCY}
+          step="1"
+          value="440"
+          class="ui-input h-11 w-full px-3"
+        />
+      </div>
+    </div>
+    <div class="mt-3 max-w-2xl">
+      <label for="spk-frequency-slider" class="ui-label">
+        {t.frequencySliderLabel}: <span id="spk-frequency-text">440 Hz</span>(
+        <span id="spk-note">A4</span>)
+      </label>
+      <input
+        id="spk-frequency-slider"
+        type="range"
+        min="0"
+        max="1000"
+        step="1"
+        value="0"
+        class="w-full"
+      />
+    </div>
+    <div class="mt-3">
+      <p class="ui-label">{t.presetsLabel}</p>
+      <div class="flex flex-wrap gap-2">
+        {presets.map((f) => (
+          <button type="button" data-preset={f} class="ui-btn">
+            {formatFrequency(f)}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.sweepHeading}</h2>
+    <p class="mb-3 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
+      {t.sweepHint}
+    </p>
+    <button id="spk-sweep" type="button" class="ui-btn h-12">
+      {t.sweepLabel}
+    </button>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    SWEEP_SECONDS,
+    MAX_FREQUENCY,
+    MIN_FREQUENCY,
+    channelPan,
+    clampFrequency,
+    formatFrequency,
+    frequencyToSlider,
+    nearestNote,
+    sliderToFrequency,
+    volumeToGain,
+    type Channel,
+    type WaveType,
+  } from '../../lib/tools/speaker-tester';
+
+  const root = document.getElementById('spk-root')!;
+  const d = root.dataset;
+  const volume = document.getElementById('spk-volume') as HTMLInputElement;
+  const volumeValue = document.getElementById('spk-volume-value')!;
+  const wave = document.getElementById('spk-wave') as HTMLSelectElement;
+  const frequency = document.getElementById(
+    'spk-frequency',
+  ) as HTMLInputElement;
+  const slider = document.getElementById(
+    'spk-frequency-slider',
+  ) as HTMLInputElement;
+  const frequencyText = document.getElementById('spk-frequency-text')!;
+  const noteText = document.getElementById('spk-note')!;
+  const status = document.getElementById('spk-status')!;
+  const stopButton = document.getElementById('spk-stop') as HTMLButtonElement;
+  const sweepButton = document.getElementById('spk-sweep') as HTMLButtonElement;
+  const channelButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-channel]'),
+  );
+
+  let context: AudioContext | null = null;
+  let gain: GainNode | null = null;
+  let panner: StereoPannerNode | null = null;
+  let source: OscillatorNode | AudioBufferSourceNode | null = null;
+  let channel: Channel = 'both';
+  let sweeping = false;
+  let sweepFrame = 0;
+  let sweepStart = 0;
+  let noiseBuffer: AudioBuffer | null = null;
+
+  function ensureContext(): AudioContext {
+    if (!context) {
+      context = new AudioContext();
+      gain = context.createGain();
+      gain.gain.value = 0;
+      panner = context.createStereoPanner();
+      gain.connect(panner).connect(context.destination);
+    }
+    if (context.state === 'suspended') void context.resume();
+    return context;
+  }
+
+  function currentFrequency(): number {
+    return clampFrequency(Number(frequency.value));
+  }
+
+  function showFrequency(hz: number) {
+    frequencyText.textContent = formatFrequency(hz);
+    noteText.textContent = nearestNote(hz);
+  }
+
+  function applyVolume() {
+    volumeValue.textContent = volume.value;
+    if (context && gain) {
+      gain.gain.setTargetAtTime(
+        volumeToGain(Number(volume.value)),
+        context.currentTime,
+        0.02,
+      );
+    }
+  }
+
+  function createNoise(ctx: AudioContext): AudioBufferSourceNode {
+    if (!noiseBuffer) {
+      noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    }
+    const node = ctx.createBufferSource();
+    node.buffer = noiseBuffer;
+    node.loop = true;
+    return node;
+  }
+
+  function updateButtons() {
+    const playing = source !== null;
+    channelButtons.forEach((b) => {
+      b.setAttribute(
+        'aria-pressed',
+        String(playing && !sweeping && b.dataset.channel === channel),
+      );
+    });
+    sweepButton.textContent = sweeping ? d.sweepStopLabel! : d.sweepLabel!;
+    sweepButton.setAttribute('aria-pressed', String(sweeping));
+    status.textContent = playing ? d.playing! : d.stopped!;
+  }
+
+  function stop() {
+    cancelAnimationFrame(sweepFrame);
+    sweeping = false;
+    if (source && context && gain) {
+      const old = source;
+      source = null;
+      gain.gain.setTargetAtTime(0, context.currentTime, 0.015);
+      window.setTimeout(() => {
+        try {
+          old.stop();
+        } catch {
+          // すでに停止している場合は無視する
+        }
+        old.disconnect();
+      }, 120);
+    }
+    updateButtons();
+  }
+
+  function begin(sweep: boolean) {
+    const ctx = ensureContext();
+    // 直前の音を止める（停止処理の完了を待たず、新しい音源を作り直す）
+    if (source) {
+      const old = source;
+      source = null;
+      try {
+        old.stop();
+      } catch {
+        // すでに停止している場合は無視する
+      }
+      old.disconnect();
+    }
+    cancelAnimationFrame(sweepFrame);
+    sweeping = sweep;
+    panner!.pan.value = channelPan(channel);
+
+    if (wave.value === 'noise' && !sweep) {
+      source = createNoise(ctx);
+    } else {
+      const osc = ctx.createOscillator();
+      osc.type = (wave.value === 'noise' ? 'sine' : wave.value) as WaveType;
+      if (sweep) {
+        osc.frequency.setValueAtTime(MIN_FREQUENCY, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(
+          MAX_FREQUENCY,
+          ctx.currentTime + SWEEP_SECONDS,
+        );
+        sweepStart = ctx.currentTime;
+      } else {
+        osc.frequency.value = currentFrequency();
+      }
+      source = osc;
+    }
+    source.connect(gain!);
+    source.start();
+    gain!.gain.setTargetAtTime(
+      volumeToGain(Number(volume.value)),
+      ctx.currentTime,
+      0.02,
+    );
+    updateButtons();
+    if (sweep) tickSweep();
+  }
+
+  function tickSweep() {
+    if (!sweeping || !context) return;
+    const progress = (context.currentTime - sweepStart) / SWEEP_SECONDS;
+    if (progress >= 1) {
+      showFrequency(MAX_FREQUENCY);
+      stop();
+      return;
+    }
+    const hz =
+      MIN_FREQUENCY * Math.pow(MAX_FREQUENCY / MIN_FREQUENCY, progress);
+    showFrequency(hz);
+    slider.value = String(frequencyToSlider(hz));
+    frequency.value = String(Math.round(hz));
+    sweepFrame = requestAnimationFrame(tickSweep);
+  }
+
+  function setFrequency(hz: number, fromSlider = false) {
+    const f = clampFrequency(hz);
+    if (!fromSlider) slider.value = String(frequencyToSlider(f));
+    showFrequency(f);
+    if (source && !sweeping && source instanceof OscillatorNode && context) {
+      source.frequency.setTargetAtTime(f, context.currentTime, 0.01);
+    }
+  }
+
+  channelButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      channel = button.dataset.channel as Channel;
+      begin(false);
+    });
+  });
+  stopButton.addEventListener('click', stop);
+  sweepButton.addEventListener('click', () => {
+    if (sweeping) stop();
+    else begin(true);
+  });
+  volume.addEventListener('input', applyVolume);
+  wave.addEventListener('change', () => {
+    if (source && !sweeping) begin(false);
+  });
+  frequency.addEventListener('input', () => {
+    if (frequency.value === '') return;
+    setFrequency(Number(frequency.value));
+  });
+  frequency.addEventListener('change', () => {
+    frequency.value = String(currentFrequency());
+  });
+  slider.addEventListener('input', () => {
+    const hz = Math.round(sliderToFrequency(Number(slider.value)));
+    frequency.value = String(hz);
+    setFrequency(hz, true);
+  });
+  document.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const hz = Number(b.dataset.preset);
+      frequency.value = String(hz);
+      setFrequency(hz);
+    });
+  });
+
+  // 他のタブへ移ったら鳴らし続けない
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stop();
+  });
+  window.addEventListener('pagehide', stop);
+
+  slider.value = String(frequencyToSlider(currentFrequency()));
+  showFrequency(currentFrequency());
+  volumeValue.textContent = volume.value;
+</script>

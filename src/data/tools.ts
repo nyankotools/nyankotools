@@ -4006,6 +4006,113 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'gamepad-tester',
+    category: 'hardware',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: ['keyboard-tester', 'mouse-tester', 'speaker-tester'],
+    translations: {
+      ja: {
+        name: 'ゲームパッドテスト（ボタン・スティック確認）',
+        keywords: [
+          'ゲームパッド',
+          'コントローラー',
+          'ドリフト',
+          'スティック',
+          'PS5',
+          'Xbox',
+        ],
+        description:
+          'ゲームパッドの全ボタン・スティック・トリガーの反応を確認します。スティックのドリフト確認や振動テストにも対応。',
+      },
+      en: {
+        name: 'Gamepad Tester (Buttons, Sticks & Drift)',
+        keywords: [
+          'gamepad test',
+          'controller test',
+          'stick drift',
+          'joystick test',
+          'PS5 controller',
+          'Xbox controller',
+        ],
+        description:
+          'Check every button, stick and trigger on your controller. Spot stick drift and try the rumble motors.',
+      },
+    },
+  },
+  {
+    slug: 'speaker-tester',
+    category: 'hardware',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: ['mic-tester', 'gamepad-tester', 'keyboard-tester'],
+    translations: {
+      ja: {
+        name: 'スピーカーテスト（左右確認・周波数ジェネレーター）',
+        keywords: [
+          'スピーカーテスト',
+          'ステレオ',
+          '左右',
+          'イヤホン',
+          '周波数',
+          'テスト音',
+          '低音',
+        ],
+        description:
+          'スピーカーやイヤホンの左右が正しく鳴るかを確認し、20Hz〜20kHzの音やスイープを再生できます。',
+      },
+      en: {
+        name: 'Speaker Test (Stereo Check & Tone Generator)',
+        keywords: [
+          'speaker test',
+          'stereo test',
+          'left right test',
+          'headphone test',
+          'tone generator',
+          'frequency generator',
+          'sine wave',
+        ],
+        description:
+          'Check left and right channels on speakers or headphones, and play tones from 20 Hz to 20 kHz or a frequency sweep.',
+      },
+    },
+  },
+  {
+    slug: 'mouse-tester',
+    category: 'hardware',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: ['keyboard-tester', 'gamepad-tester', 'dead-pixel-checker'],
+    translations: {
+      ja: {
+        name: 'マウステスト（クリック速度・ポーリングレート）',
+        keywords: [
+          'マウステスト',
+          'クリック速度',
+          'CPS',
+          'ポーリングレート',
+          'チャタリング',
+          '連打',
+        ],
+        description:
+          'クリック速度（CPS）の測定、全ボタンの反応確認、ダブルクリック誤作動の検出、ポーリングレートの目安確認ができます。',
+      },
+      en: {
+        name: 'Mouse Tester (Click Speed & Polling Rate)',
+        keywords: [
+          'mouse test',
+          'click speed test',
+          'CPS test',
+          'polling rate test',
+          'double click test',
+          'mouse button test',
+        ],
+        description:
+          'Measure click speed (CPS), check every mouse button, detect double-click chatter and estimate the polling rate.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

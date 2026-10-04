@@ -346,6 +346,20 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-04',
+    toolSlugs: ['gamepad-tester', 'speaker-tester', 'mouse-tester'],
+    translations: {
+      ja: {
+        summary:
+          'ゲームパッドテスト（ボタン・スティック・ドリフト確認）、スピーカーテスト（左右確認・周波数ジェネレーター）、マウステスト（クリック速度・ポーリングレート）を追加しました。',
+      },
+      en: {
+        summary:
+          'Added the Gamepad Tester, Speaker Test (stereo check & tone generator), and Mouse Tester (click speed & polling rate).',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

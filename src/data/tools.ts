@@ -4260,6 +4260,79 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'http-header-analyzer',
+    category: 'dev',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: ['curl-converter', 'jwt-decoder', 'meta-tag-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'HTTPヘッダー解析・セキュリティ診断',
+        keywords: [
+          'HTTPヘッダー',
+          'レスポンスヘッダー',
+          'セキュリティヘッダー',
+          'CSP',
+          'HSTS',
+          'X-Frame-Options',
+          'Cookie属性',
+        ],
+        description:
+          '貼り付けたレスポンスヘッダーから、HSTS・CSP・Cookie属性などの不足や弱い設定を診断。nginx・Apache・_headers 形式の推奨設定も生成します。',
+      },
+      en: {
+        name: 'HTTP Header Analyzer & Security Check',
+        keywords: [
+          'security headers',
+          'response headers',
+          'CSP',
+          'HSTS',
+          'X-Frame-Options',
+          'cookie flags',
+          'CORS',
+        ],
+        description:
+          'Check pasted response headers for missing or weak HSTS, CSP, and cookie flags, and copy recommended nginx, Apache, or _headers config.',
+      },
+    },
+  },
+  {
+    slug: 'dummy-data-generator',
+    category: 'generate',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: ['uuid-generator', 'lorem-ipsum', 'csv-json-converter'],
+    translations: {
+      ja: {
+        name: 'ダミー個人データ生成（JSON・CSV）',
+        keywords: [
+          'ダミーデータ',
+          'テストデータ',
+          'ダミー個人情報',
+          '架空の氏名',
+          '架空の住所',
+          'モックデータ',
+        ],
+        description:
+          'テストやデモ用の架空の氏名・メール・電話番号・住所・生年月日などを最大1,000件まとめて生成。JSON・CSV・TSVで出力でき、シード指定で再現も可能です。',
+      },
+      en: {
+        name: 'Dummy Personal Data Generator (JSON, CSV)',
+        keywords: [
+          'fake data generator',
+          'mock data',
+          'test data',
+          'fake names',
+          'fake addresses',
+          'sample users',
+        ],
+        description:
+          'Generate up to 1,000 fake people with names, emails, phones, addresses, and birthdays as JSON, CSV, or TSV, with a seed for repeatable output.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -1,0 +1,342 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { httpHeaderAnalyzerContent } from '../../i18n/tools/http-header-analyzer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = httpHeaderAnalyzerContent[locale];
+
+const formats = ['raw', 'nginx', 'apache', 'headers-file'] as const;
+
+const clientText = {
+  findings: t.findings,
+  issues: t.issues,
+  statusLabels: t.statusLabels,
+  notSet: t.notSet,
+  summaryTemplate: t.summaryTemplate,
+  invalidNotice: t.invalidNotice,
+  emptyError: t.emptyError,
+  recommendNone: t.recommendNone,
+  copied: t.copied,
+  copyFailed: t.copyFailed,
+};
+---
+
+<ToolShell t={t}>
+  <section id="hha" data-text={JSON.stringify(clientText)}>
+    <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
+      <label for="hha-input" class="ui-label mb-0">
+        {t.inputLabel}
+      </label>
+      <button type="button" id="hha-sample-button" class="ui-btn">
+        {t.sampleButton}
+      </button>
+    </div>
+    <textarea
+      id="hha-input"
+      rows="9"
+      placeholder={t.inputPlaceholder}
+      class="ui-input w-full p-3 font-mono text-sm dark:bg-gray-900"
+      spellcheck="false"
+      autocomplete="off"
+      data-sample-text={t.sampleText}
+    ></textarea>
+    <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{t.inputHint}</p>
+
+    <div class="mt-3">
+      <button
+        type="button"
+        id="hha-analyze-button"
+        class="ui-btn ui-btn-primary"
+      >
+        {t.analyzeButton}
+      </button>
+    </div>
+    <p
+      id="hha-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+    <p
+      id="hha-invalid"
+      class="mt-1 text-xs text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="hha-results" class="mt-5 hidden">
+      <h2 class="mb-1 text-sm text-gray-600 dark:text-gray-400">
+        {t.summaryHeading}
+      </h2>
+      <p id="hha-summary" class="mb-4 text-base font-semibold"></p>
+
+      <h2 class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+        {t.findingsHeading}
+      </h2>
+      <ul id="hha-findings" class="space-y-2"></ul>
+
+      <h2 class="mt-6 mb-2 text-sm text-gray-600 dark:text-gray-400">
+        {t.recommendHeading}
+      </h2>
+      <div class="flex flex-wrap items-center gap-3">
+        <div
+          id="hha-format"
+          class="ui-seg"
+          role="group"
+          aria-label={t.recommendFormatLabel}
+        >
+          {formats.map((format, i) => (
+            <button
+              type="button"
+              data-format={format}
+              aria-pressed={i === 0 ? 'true' : 'false'}
+              class="ui-seg-btn"
+            >
+              {t.formatLabels[format]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <textarea
+        id="hha-recommend"
+        readonly
+        rows="7"
+        aria-label={t.recommendHeading}
+        class="ui-input mt-3 w-full bg-gray-50 p-3 font-mono text-sm dark:bg-gray-900"
+        spellcheck="false"
+      ></textarea>
+      <div class="mt-2 flex items-center gap-3">
+        <button type="button" id="hha-copy-button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <span
+          id="hha-copy-status"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></span>
+      </div>
+
+      <h2 class="mt-6 mb-2 text-sm text-gray-600 dark:text-gray-400">
+        {t.parsedHeading}
+      </h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th scope="col" class="py-2 pr-3 font-medium">
+                {t.parsedNameLabel}
+              </th>
+              <th scope="col" class="py-2 font-medium">
+                {t.parsedValueLabel}
+              </th>
+            </tr>
+          </thead>
+          <tbody id="hha-parsed"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    analyzeHeaders,
+    formatRecommendations,
+    parseHeaders,
+    type Finding,
+    type FindingId,
+    type FindingStatus,
+    type IssueCode,
+    type Recommendation,
+    type RecommendationFormat,
+  } from '../../lib/tools/http-header-analyzer';
+
+  interface ClientText {
+    findings: Record<FindingId, { label: string; description: string }>;
+    issues: Record<IssueCode, string>;
+    statusLabels: Record<FindingStatus, string>;
+    notSet: string;
+    summaryTemplate: string;
+    invalidNotice: string;
+    emptyError: string;
+    recommendNone: string;
+    copied: string;
+    copyFailed: string;
+  }
+
+  const section = document.getElementById('hha')!;
+  const text: ClientText = JSON.parse(section.dataset.text ?? '{}');
+
+  const input = document.getElementById('hha-input') as HTMLTextAreaElement;
+  const sampleButton = document.getElementById('hha-sample-button')!;
+  const analyzeButton = document.getElementById('hha-analyze-button')!;
+  const errorEl = document.getElementById('hha-error')!;
+  const invalidEl = document.getElementById('hha-invalid')!;
+  const resultsEl = document.getElementById('hha-results')!;
+  const summaryEl = document.getElementById('hha-summary')!;
+  const findingsEl = document.getElementById('hha-findings')!;
+  const parsedEl = document.getElementById('hha-parsed')!;
+  const recommendEl = document.getElementById(
+    'hha-recommend',
+  ) as HTMLTextAreaElement;
+  const copyButton = document.getElementById('hha-copy-button')!;
+  const copyStatus = document.getElementById('hha-copy-status')!;
+  const formatButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#hha-format [data-format]',
+  );
+
+  const badgeClass: Record<FindingStatus, string> = {
+    good: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
+    warn: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+    missing: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+    info: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+  };
+
+  let format: RecommendationFormat = 'raw';
+  let recommendations: Recommendation[] = [];
+
+  function renderRecommendations() {
+    recommendEl.value =
+      recommendations.length === 0
+        ? text.recommendNone
+        : formatRecommendations(recommendations, format);
+  }
+
+  function renderFinding(finding: Finding): HTMLLIElement {
+    const info = text.findings[finding.id];
+    const li = document.createElement('li');
+    li.className = 'rounded-lg border border-gray-200 p-3 dark:border-gray-700';
+
+    const head = document.createElement('div');
+    head.className = 'flex flex-wrap items-center gap-2';
+    const badge = document.createElement('span');
+    badge.className = `rounded px-2 py-0.5 text-xs font-medium ${badgeClass[finding.status]}`;
+    badge.textContent = text.statusLabels[finding.status];
+    const name = document.createElement('span');
+    name.className = 'text-sm font-semibold break-all';
+    name.textContent =
+      finding.id === 'cookie' && finding.value !== undefined
+        ? `${info.label}: ${finding.value}`
+        : info.label;
+    head.append(badge, name);
+    li.append(head);
+
+    const desc = document.createElement('p');
+    desc.className = 'mt-1 text-xs text-gray-600 dark:text-gray-400';
+    desc.textContent = info.description;
+    li.append(desc);
+
+    if (finding.value !== undefined && finding.id !== 'cookie') {
+      const value = document.createElement('code');
+      value.className =
+        'mt-2 block rounded bg-gray-50 p-2 text-xs break-all dark:bg-gray-900';
+      value.textContent = finding.value;
+      li.append(value);
+    } else if (finding.status === 'missing') {
+      const value = document.createElement('p');
+      value.className = 'mt-2 text-xs text-gray-600 dark:text-gray-400';
+      value.textContent = text.notSet;
+      li.append(value);
+    }
+
+    if (finding.issues.length > 0) {
+      const ul = document.createElement('ul');
+      ul.className = 'mt-2 list-disc space-y-1 pl-5 text-sm';
+      for (const issue of finding.issues) {
+        const item = document.createElement('li');
+        item.textContent = text.issues[issue];
+        ul.append(item);
+      }
+      li.append(ul);
+    }
+    return li;
+  }
+
+  function analyze() {
+    errorEl.textContent = '';
+    invalidEl.textContent = '';
+    copyStatus.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    const parsed = parseHeaders(input.value);
+    if (parsed.headers.length === 0) {
+      errorEl.textContent = text.emptyError;
+      return;
+    }
+    if (parsed.invalidCount > 0) {
+      invalidEl.textContent = text.invalidNotice.replace(
+        '{count}',
+        String(parsed.invalidCount),
+      );
+    }
+
+    const analysis = analyzeHeaders(parsed.headers);
+    const counts = { good: 0, warn: 0, missing: 0 };
+    for (const f of analysis.findings) {
+      if (
+        f.status === 'good' ||
+        f.status === 'warn' ||
+        f.status === 'missing'
+      ) {
+        counts[f.status]++;
+      }
+    }
+    summaryEl.textContent = text.summaryTemplate
+      .replace('{good}', String(counts.good))
+      .replace('{warn}', String(counts.warn))
+      .replace('{missing}', String(counts.missing));
+
+    findingsEl.replaceChildren(...analysis.findings.map(renderFinding));
+
+    parsedEl.replaceChildren(
+      ...parsed.headers.map((h) => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-gray-100 dark:border-gray-800';
+        const th = document.createElement('th');
+        th.scope = 'row';
+        th.className = 'py-2 pr-3 align-top font-normal break-all';
+        th.textContent = h.name;
+        const td = document.createElement('td');
+        td.className = 'py-2 break-all';
+        // Cookie の値（セッションIDなど）は画面に残さない
+        td.textContent =
+          h.name.toLowerCase() === 'set-cookie'
+            ? h.value.split(';')[0].split('=')[0] + '=…'
+            : h.value;
+        tr.append(th, td);
+        return tr;
+      }),
+    );
+
+    recommendations = analysis.recommendations;
+    renderRecommendations();
+    resultsEl.classList.remove('hidden');
+  }
+
+  analyzeButton.addEventListener('click', analyze);
+  sampleButton.addEventListener('click', () => {
+    input.value = input.dataset.sampleText ?? '';
+    analyze();
+  });
+
+  formatButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      format = button.dataset.format as RecommendationFormat;
+      formatButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      renderRecommendations();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (recommendations.length === 0) return;
+    copyStatus.textContent = (await copyText(recommendEl.value))
+      ? text.copied
+      : text.copyFailed;
+  });
+</script>

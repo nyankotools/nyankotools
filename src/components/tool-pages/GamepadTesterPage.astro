@@ -1,0 +1,316 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { gamepadTesterContent } from '../../i18n/tools/gamepad-tester';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = gamepadTesterContent[locale];
+
+const selectClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+---
+
+<ToolShell t={t}>
+  <div
+    id="gp-root"
+    data-mapping-standard={t.mappingStandard}
+    data-mapping-other={t.mappingOther}
+    data-stick-label={t.stickLabel}
+    data-axis-label={t.axisLabel}
+    data-vibration-unsupported={t.vibrationUnsupported}
+    data-unsupported={t.unsupported}
+  >
+    <p
+      id="gp-waiting"
+      role="status"
+      class="max-w-2xl rounded-lg border border-gray-300 p-4 text-sm text-gray-700 dark:border-gray-700 dark:text-gray-300"
+    >
+      {t.waitingMessage}
+    </p>
+
+    <div id="gp-main" hidden>
+      <div class="max-w-md">
+        <label for="gp-select" class="ui-label">
+          {t.padLabel}
+        </label>
+        <select id="gp-select" class={selectClass}></select>
+      </div>
+
+      <h2 class="mt-6 mb-2 text-lg font-bold">{t.infoHeading}</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[320px] max-w-2xl border-collapse text-sm">
+          <tbody>
+            {[
+              ['id', t.rowId],
+              ['mapping', t.rowMapping],
+              ['buttons', t.rowButtons],
+              ['axes', t.rowAxes],
+            ].map(([id, label]) => (
+              <tr class="border-b border-gray-100 dark:border-gray-800">
+                <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                  {label}
+                </td>
+                <td
+                  id={`gp-info-${id}`}
+                  class="py-2 text-right break-all text-gray-900 dark:text-gray-100"
+                >
+                  -
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h2 class="mt-6 mb-2 text-lg font-bold">{t.buttonsHeading}</h2>
+      <div
+        id="gp-buttons"
+        class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4"
+      ></div>
+
+      <h2 class="mt-6 mb-2 text-lg font-bold">{t.axesHeading}</h2>
+      <div class="mb-3 max-w-md">
+        <label for="gp-deadzone" class="ui-label">
+          {t.deadzoneLabel}: <span id="gp-deadzone-value">0.15</span>
+        </label>
+        <input
+          id="gp-deadzone"
+          type="range"
+          min="0.05"
+          max="0.5"
+          step="0.01"
+          value="0.15"
+          class="w-full"
+        />
+      </div>
+      <div id="gp-axes" class="flex flex-wrap gap-6"></div>
+      <p
+        id="gp-drift"
+        hidden
+        role="status"
+        class="mt-3 max-w-2xl text-sm font-medium text-amber-700 dark:text-amber-400"
+      >
+        {t.driftWarning}
+      </p>
+
+      <h2 class="mt-6 mb-2 text-lg font-bold">{t.vibrationHeading}</h2>
+      <button id="gp-vibrate" type="button" class="ui-btn">
+        {t.vibrateLabel}
+      </button>
+      <p
+        id="gp-vibrate-error"
+        hidden
+        class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+      >
+        {t.vibrationUnsupported}
+      </p>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    buttonLabel,
+    buttonPercent,
+    formatAxis,
+    groupAxes,
+    isDrifting,
+  } from '../../lib/tools/gamepad-tester';
+
+  interface Haptic {
+    playEffect?: (
+      type: string,
+      params: {
+        duration: number;
+        strongMagnitude: number;
+        weakMagnitude: number;
+      },
+    ) => Promise<unknown>;
+  }
+
+  const root = document.getElementById('gp-root')!;
+  const d = root.dataset;
+  const waiting = document.getElementById('gp-waiting')!;
+  const main = document.getElementById('gp-main')!;
+  const select = document.getElementById('gp-select') as HTMLSelectElement;
+  const buttonsEl = document.getElementById('gp-buttons')!;
+  const axesEl = document.getElementById('gp-axes')!;
+  const driftEl = document.getElementById('gp-drift')!;
+  const deadzone = document.getElementById('gp-deadzone') as HTMLInputElement;
+  const deadzoneValue = document.getElementById('gp-deadzone-value')!;
+  const vibrateButton = document.getElementById(
+    'gp-vibrate',
+  ) as HTMLButtonElement;
+  const vibrateError = document.getElementById('gp-vibrate-error')!;
+  const info = (id: string) => document.getElementById(`gp-info-${id}`)!;
+
+  if (!('getGamepads' in navigator)) {
+    waiting.textContent = d.unsupported ?? '';
+  }
+
+  let selectedIndex = -1;
+  let builtKey = '';
+  let buttonCells: {
+    fill: HTMLElement;
+    value: HTMLElement;
+    box: HTMLElement;
+  }[] = [];
+  let sticks: { dot: HTMLElement; text: HTMLElement; box: HTMLElement }[] = [];
+
+  function connectedPads(): Gamepad[] {
+    return Array.from(navigator.getGamepads?.() ?? []).filter(
+      (p): p is Gamepad => !!p && p.connected,
+    );
+  }
+
+  function syncSelect(pads: Gamepad[]) {
+    const signature = pads.map((p) => `${p.index}:${p.id}`).join('|');
+    if (select.dataset.signature === signature) return;
+    select.dataset.signature = signature;
+    select.replaceChildren(
+      ...pads.map((p) => {
+        const option = document.createElement('option');
+        option.value = String(p.index);
+        option.textContent = `${p.index + 1}: ${p.id}`;
+        return option;
+      }),
+    );
+    if (!pads.some((p) => p.index === selectedIndex)) {
+      selectedIndex = pads[0]?.index ?? -1;
+    }
+    select.value = String(selectedIndex);
+  }
+
+  function build(pad: Gamepad) {
+    const key = `${pad.index}:${pad.id}:${pad.buttons.length}:${pad.axes.length}`;
+    if (key === builtKey) return;
+    builtKey = key;
+
+    info('id').textContent = pad.id;
+    info('mapping').textContent =
+      pad.mapping === 'standard' ? d.mappingStandard! : d.mappingOther!;
+    info('buttons').textContent = String(pad.buttons.length);
+    info('axes').textContent = String(pad.axes.length);
+
+    buttonCells = pad.buttons.map((_, i) => {
+      const box = document.createElement('div');
+      box.className =
+        'relative overflow-hidden rounded-lg border border-gray-300 p-2 text-xs data-[pressed=true]:border-blue-600 dark:border-gray-700 dark:data-[pressed=true]:border-blue-400';
+      const fill = document.createElement('div');
+      fill.className =
+        'absolute inset-y-0 left-0 w-0 bg-blue-200 dark:bg-blue-900';
+      const label = document.createElement('div');
+      label.className = 'relative font-medium text-gray-900 dark:text-gray-100';
+      label.textContent = buttonLabel(i, pad.mapping);
+      const value = document.createElement('div');
+      value.className = 'relative text-gray-600 dark:text-gray-400';
+      value.textContent = '0%';
+      box.append(fill, label, value);
+      return { box, fill, value };
+    });
+    buttonsEl.replaceChildren(...buttonCells.map((c) => c.box));
+
+    const groups = groupAxes(Array.from(pad.axes));
+    sticks = groups.map((_, i) => {
+      const box = document.createElement('div');
+      const title = document.createElement('div');
+      title.className = 'mb-1 text-sm font-medium';
+      title.textContent =
+        groups[i][1] === undefined
+          ? `${d.axisLabel} ${i * 2}`
+          : `${d.stickLabel} ${i + 1}`;
+      const pad2d = document.createElement('div');
+      pad2d.className =
+        'relative size-24 rounded-full border border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900';
+      const dot = document.createElement('div');
+      dot.className =
+        'absolute top-1/2 left-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-blue-600 dark:bg-blue-400';
+      pad2d.append(dot);
+      const text = document.createElement('div');
+      text.className =
+        'mt-1 text-xs text-gray-600 tabular-nums dark:text-gray-400';
+      box.append(title, pad2d, text);
+      return { box, dot, text };
+    });
+    axesEl.replaceChildren(...sticks.map((s) => s.box));
+  }
+
+  function render(pad: Gamepad) {
+    build(pad);
+    pad.buttons.forEach((button, i) => {
+      const cell = buttonCells[i];
+      if (!cell) return;
+      const percent = buttonPercent(button.value);
+      cell.fill.style.width = `${percent}%`;
+      cell.value.textContent = `${percent}%`;
+      cell.box.dataset.pressed = String(button.pressed);
+    });
+
+    const threshold = Number(deadzone.value);
+    let drifting = false;
+    groupAxes(Array.from(pad.axes)).forEach(([x, y], i) => {
+      const stick = sticks[i];
+      if (!stick) return;
+      const yy = y ?? 0;
+      // 軸の範囲は -1〜1。ボックス（96px）の半径 40px 分だけ動かす
+      stick.dot.style.translate = `${x * 40}px ${yy * 40}px`;
+      stick.text.textContent =
+        y === undefined
+          ? `${formatAxis(x)}`
+          : `X ${formatAxis(x)} / Y ${formatAxis(y)}`;
+      if (isDrifting(x, yy, threshold)) drifting = true;
+    });
+    driftEl.hidden = !drifting;
+  }
+
+  function frame() {
+    const pads = connectedPads();
+    if (pads.length === 0) {
+      waiting.hidden = false;
+      main.hidden = true;
+      builtKey = '';
+      select.dataset.signature = '';
+    } else {
+      waiting.hidden = true;
+      main.hidden = false;
+      syncSelect(pads);
+      const pad = pads.find((p) => p.index === selectedIndex) ?? pads[0];
+      render(pad);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  select.addEventListener('change', () => {
+    selectedIndex = Number(select.value);
+  });
+  deadzone.addEventListener('input', () => {
+    deadzoneValue.textContent = Number(deadzone.value).toFixed(2);
+  });
+  deadzoneValue.textContent = Number(deadzone.value).toFixed(2);
+
+  vibrateButton.addEventListener('click', async () => {
+    const pad = connectedPads().find((p) => p.index === selectedIndex);
+    const actuator = (pad as unknown as { vibrationActuator?: Haptic })
+      ?.vibrationActuator;
+    vibrateError.hidden = true;
+    if (!actuator?.playEffect) {
+      vibrateError.hidden = false;
+      return;
+    }
+    try {
+      await actuator.playEffect('dual-rumble', {
+        duration: 600,
+        strongMagnitude: 1,
+        weakMagnitude: 1,
+      });
+    } catch {
+      vibrateError.hidden = false;
+    }
+  });
+
+  if ('getGamepads' in navigator) requestAnimationFrame(frame);
+</script>

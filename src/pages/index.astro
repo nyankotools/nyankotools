@@ -8,6 +8,9 @@ import FavoriteToggle from '../components/FavoriteToggle.astro';
 const t = useTranslations('ja');
 const tools = getLocalizedTools('ja');
 const categories = groupByCategory(tools);
+// "{count}" の前後で分割し、件数だけ大きく表示する（[前, 件数, 後]）
+const [countBefore, countAfter] = t('home.toolCount').split('{count}');
+const toolCountParts = [countBefore, '', countAfter];
 ---
 
 <Layout
@@ -15,7 +18,16 @@ const categories = groupByCategory(tools);
   description={t('home.meta.description')}
 >
   <h1 class="mb-2 text-2xl font-bold">{t('home.title')}</h1>
-  <p class="mb-8 text-gray-600 dark:text-gray-400">{t('home.lead')}</p>
+  <p class="mb-4 text-gray-600 dark:text-gray-400">{t('home.lead')}</p>
+  <p class="mb-8 inline-flex items-baseline gap-1 rounded-full border border-blue-200 bg-blue-50 px-5 py-2 text-blue-800 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-200">
+    {toolCountParts.map((part, i) =>
+      i === 1 ? (
+        <span class="text-3xl font-extrabold tabular-nums">{tools.length}</span>
+      ) : (
+        <span class="text-sm font-semibold">{part}</span>
+      ),
+    )}
+  </p>
 
   <div class="mb-6 space-y-4">
     <div>

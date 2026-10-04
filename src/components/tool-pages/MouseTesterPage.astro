@@ -1,0 +1,328 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { mouseTesterContent } from '../../i18n/tools/mouse-tester';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = mouseTesterContent[locale];
+
+const selectClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+const padClass =
+  'flex min-h-40 items-center justify-center rounded-xl border-2 border-dashed border-gray-300 p-4 text-center text-sm font-medium text-gray-700 select-none dark:border-gray-700 dark:text-gray-300';
+
+const durations = [5, 10, 30];
+const buttonIds = ['left', 'middle', 'right', 'back', 'forward'] as const;
+
+const stats = [
+  ['time', t.timeLeftLabel],
+  ['clicks', t.clicksLabel],
+  ['average', t.averageLabel],
+  ['peak', t.peakLabel],
+  ['chatter', t.chatterLabel],
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="ms-root"
+    data-pad-idle={t.cpsPadIdle}
+    data-pad-running={t.cpsPadRunning}
+    data-pad-done={t.cpsPadDone}
+    data-polling-estimate={t.pollingEstimate}
+    data-polling-none={t.pollingNone}
+    data-polling-unsupported={t.pollingUnsupported}
+  >
+    <h2 class="mb-2 text-lg font-bold">{t.cpsHeading}</h2>
+    <div class="max-w-xs">
+      <label for="ms-duration" class="ui-label">
+        {t.durationLabel}
+      </label>
+      <select id="ms-duration" class={selectClass}>
+        {durations.map((n) => (
+          <option value={n} selected={n === 10}>
+            {t.durationOption.replace('{n}', String(n))}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div
+      id="ms-cps-pad"
+      tabindex="0"
+      role="button"
+      class={`${padClass} mt-3 max-w-2xl cursor-pointer touch-none focus:border-blue-600 focus:outline-none`}
+    >
+      <span id="ms-cps-pad-text">{t.cpsPadIdle}</span>
+    </div>
+    <div class="mt-3 overflow-x-auto">
+      <table class="w-full min-w-[320px] max-w-2xl border-collapse text-sm">
+        <tbody>
+          {stats.map(([id, label]) => (
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                {label}
+              </td>
+              <td
+                id={`ms-stat-${id}`}
+                class="py-2 text-right text-gray-900 tabular-nums dark:text-gray-100"
+              >
+                -
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p
+      id="ms-chatter-warning"
+      hidden
+      role="status"
+      class="mt-2 max-w-2xl text-sm font-medium text-amber-700 dark:text-amber-400"
+    >
+      {t.chatterWarning}
+    </p>
+    <button id="ms-reset" type="button" class="ui-btn mt-3">
+      {t.resetLabel}
+    </button>
+
+    <h2 class="mt-8 mb-2 text-lg font-bold">{t.buttonsHeading}</h2>
+    <div id="ms-buttons-pad" class={`${padClass} max-w-2xl`}>
+      {t.buttonsPad}
+    </div>
+    <ul class="mt-3 grid max-w-2xl gap-2 sm:grid-cols-2">
+      {buttonIds.map((id) => (
+        <li
+          data-ms-button={id}
+          class="flex items-center justify-between rounded-lg border border-gray-300 px-3 py-2 text-sm data-[down=true]:border-blue-600 data-[down=true]:bg-blue-100 data-[tested=true]:border-green-600 dark:border-gray-700 dark:data-[down=true]:bg-blue-900"
+        >
+          <span>{t.buttons[id]}</span>
+          <span class="tabular-nums" data-count>
+            0
+          </span>
+        </li>
+      ))}
+      <li
+        data-ms-wheel="up"
+        class="flex items-center justify-between rounded-lg border border-gray-300 px-3 py-2 text-sm data-[tested=true]:border-green-600 dark:border-gray-700"
+      >
+        <span>{t.wheelUp}</span>
+        <span class="tabular-nums" data-count>
+          0
+        </span>
+      </li>
+      <li
+        data-ms-wheel="down"
+        class="flex items-center justify-between rounded-lg border border-gray-300 px-3 py-2 text-sm data-[tested=true]:border-green-600 dark:border-gray-700"
+      >
+        <span>{t.wheelDown}</span>
+        <span class="tabular-nums" data-count>
+          0
+        </span>
+      </li>
+    </ul>
+
+    <h2 class="mt-8 mb-2 text-lg font-bold">{t.pollingHeading}</h2>
+    <div id="ms-polling-pad" class={`${padClass} max-w-2xl`}>
+      {t.pollingPad}
+    </div>
+    <p class="mt-3 text-sm text-gray-700 dark:text-gray-300">
+      {t.pollingResult}:
+      <strong id="ms-polling-result" class="tabular-nums">
+        -
+      </strong>
+    </p>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.pollingHint}</p>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    buttonId,
+    calculateCps,
+    countChatter,
+    estimatePollingRate,
+    recentCps,
+    snapPollingRate,
+  } from '../../lib/tools/mouse-tester';
+
+  const CHATTER_MS = 30;
+  const MAX_POLL_SAMPLES = 400;
+
+  const root = document.getElementById('ms-root')!;
+  const d = root.dataset;
+
+  // ---- CPS ----
+  const duration = document.getElementById('ms-duration') as HTMLSelectElement;
+  const cpsPad = document.getElementById('ms-cps-pad')!;
+  const cpsPadText = document.getElementById('ms-cps-pad-text')!;
+  const stat = (id: string) => document.getElementById(`ms-stat-${id}`)!;
+  const chatterWarning = document.getElementById('ms-chatter-warning')!;
+  const resetButton = document.getElementById('ms-reset') as HTMLButtonElement;
+
+  type Phase = 'idle' | 'running' | 'done';
+  let phase: Phase = 'idle';
+  let times: number[] = [];
+  let startedAt = 0;
+  let timer = 0;
+  let finishedAt = 0;
+
+  const limitMs = () => Number(duration.value) * 1000;
+
+  function setPad(next: Phase) {
+    phase = next;
+    cpsPadText.textContent =
+      next === 'idle'
+        ? d.padIdle!
+        : next === 'running'
+          ? d.padRunning!
+          : d.padDone!;
+    cpsPad.classList.toggle('border-solid', next === 'running');
+  }
+
+  function resetCps() {
+    window.clearInterval(timer);
+    times = [];
+    ['time', 'clicks', 'average', 'peak', 'chatter'].forEach((id) => {
+      stat(id).textContent = '-';
+    });
+    chatterWarning.hidden = true;
+    setPad('idle');
+  }
+
+  function finish() {
+    window.clearInterval(timer);
+    const peak = times.reduce(
+      (max, t) => Math.max(max, recentCps(times, t)),
+      0,
+    );
+    const chatter = countChatter(times, CHATTER_MS);
+    stat('time').textContent = '0.0 s';
+    stat('clicks').textContent = String(times.length);
+    stat('average').textContent = calculateCps(times.length, limitMs()).toFixed(
+      2,
+    );
+    stat('peak').textContent = String(peak);
+    stat('chatter').textContent = String(chatter);
+    chatterWarning.hidden = chatter === 0;
+    finishedAt = performance.now();
+    setPad('done');
+  }
+
+  function tick() {
+    const left = limitMs() - (performance.now() - startedAt);
+    if (left <= 0) {
+      finish();
+      return;
+    }
+    stat('time').textContent = `${(left / 1000).toFixed(1)} s`;
+  }
+
+  cpsPad.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    // 連打の勢いで、終了直後のクリックが結果を消さないようにする
+    if (phase === 'done' && event.timeStamp - finishedAt < 500) return;
+    if (phase === 'done') resetCps();
+    if (phase === 'idle') {
+      phase = 'running';
+      setPad('running');
+      startedAt = event.timeStamp;
+      chatterWarning.hidden = true;
+      timer = window.setInterval(tick, 50);
+    }
+    if (event.timeStamp - startedAt > limitMs()) return;
+    times.push(event.timeStamp);
+    stat('clicks').textContent = String(times.length);
+    stat('average').textContent = '-';
+  });
+  cpsPad.addEventListener('contextmenu', (event) => event.preventDefault());
+  duration.addEventListener('change', resetCps);
+  resetButton.addEventListener('click', resetCps);
+
+  // ---- ボタン・ホイール ----
+  const buttonsPad = document.getElementById('ms-buttons-pad')!;
+  const buttonItems = new Map<string, HTMLElement>();
+  document
+    .querySelectorAll<HTMLElement>('[data-ms-button]')
+    .forEach((el) => buttonItems.set(el.dataset.msButton!, el));
+  const wheelItems = new Map<string, HTMLElement>();
+  document
+    .querySelectorAll<HTMLElement>('[data-ms-wheel]')
+    .forEach((el) => wheelItems.set(el.dataset.msWheel!, el));
+
+  function bump(el: HTMLElement) {
+    const count = el.querySelector('[data-count]')!;
+    count.textContent = String(Number(count.textContent) + 1);
+    el.dataset.tested = 'true';
+  }
+
+  buttonsPad.addEventListener('pointerdown', (event) => {
+    const el = buttonItems.get(buttonId(event.button));
+    if (!el) return;
+    el.dataset.down = 'true';
+    bump(el);
+  });
+  const release = (event: PointerEvent) => {
+    const el = buttonItems.get(buttonId(event.button));
+    if (el) el.dataset.down = 'false';
+  };
+  // パッドの外で離しても押下表示が残らないよう、window で受ける
+  window.addEventListener('pointerup', release);
+  buttonsPad.addEventListener('pointercancel', () => {
+    buttonItems.forEach((el) => {
+      el.dataset.down = 'false';
+    });
+  });
+  // 戻る・進むボタンでブラウザの履歴移動が起きないようにする
+  for (const type of ['mousedown', 'mouseup', 'auxclick', 'contextmenu']) {
+    buttonsPad.addEventListener(type, (event) => event.preventDefault());
+  }
+  buttonsPad.addEventListener(
+    'wheel',
+    (event) => {
+      event.preventDefault();
+      if (event.deltaY === 0) return;
+      const el = wheelItems.get(event.deltaY < 0 ? 'up' : 'down');
+      if (el) bump(el);
+    },
+    { passive: false },
+  );
+
+  // ---- ポーリングレート ----
+  const pollingPad = document.getElementById('ms-polling-pad')!;
+  const pollingResult = document.getElementById('ms-polling-result')!;
+  let samples: number[] = [];
+
+  pollingPad.addEventListener('pointermove', (event) => {
+    if (event.pointerType !== 'mouse') return;
+    // 高頻度イベントが得られないと、画面の更新周期（60〜144Hz）を測ってしまう
+    if (typeof event.getCoalescedEvents !== 'function') {
+      pollingResult.textContent = d.pollingUnsupported!;
+      return;
+    }
+    const events =
+      typeof event.getCoalescedEvents === 'function'
+        ? event.getCoalescedEvents()
+        : [];
+    for (const e of events.length > 0 ? events : [event]) {
+      samples.push(e.timeStamp);
+    }
+    if (samples.length > MAX_POLL_SAMPLES) {
+      samples = samples.slice(-MAX_POLL_SAMPLES);
+    }
+    const raw = estimatePollingRate(samples);
+    pollingResult.textContent =
+      raw === null
+        ? d.pollingNone!
+        : d
+            .pollingEstimate!.replace('{hz}', String(snapPollingRate(raw)))
+            .replace('{raw}', String(Math.round(raw)));
+  });
+  pollingPad.addEventListener('pointerleave', () => {
+    samples = [];
+  });
+</script>

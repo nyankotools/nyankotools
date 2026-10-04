@@ -83,6 +83,7 @@ export const ui = {
     'home.category.all': 'すべて',
     'home.category.groupLabel': 'カテゴリで絞り込み',
     'home.noResults': '条件に一致するツールが見つかりませんでした。',
+    'home.toolCount': '全{count}ツール',
     'home.meta.description':
       'にゃんこツールは、JSON整形やBase64変換などの定番ツールから、かな変換・全角半角変換など日本語処理まで揃った、ブラウザ完結・登録不要の無料Webツール集です。',
     '404.title': '404 - ページが見つかりません',
@@ -160,6 +161,7 @@ export const ui = {
     'home.category.all': 'All',
     'home.category.groupLabel': 'Filter by category',
     'home.noResults': 'No tools match your search.',
+    'home.toolCount': '{count} tools',
     'home.meta.description':
       'NyankoTools is a free, browser-only toolkit covering everyday developer tools like JSON formatting and Base64 conversion, plus careful support for Japanese text processing such as kana and full-width/half-width conversion.',
     '404.title': '404 - Page Not Found',

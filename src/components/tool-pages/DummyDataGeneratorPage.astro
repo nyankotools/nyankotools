@@ -1,0 +1,307 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { dummyDataGeneratorContent } from '../../i18n/tools/dummy-data-generator';
+import {
+  DUMMY_FIELDS,
+  MAX_COUNT,
+  type DummyFormat,
+  type DummyLocale,
+} from '../../lib/tools/dummy-data-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = dummyDataGeneratorContent[locale];
+
+const dataLocales: DummyLocale[] = ['ja', 'en'];
+const formats: DummyFormat[] = ['json', 'csv', 'tsv'];
+const defaultFields = ['name', 'email', 'phone', 'address', 'birthday'];
+---
+
+<ToolShell t={t}>
+  <section
+    id="ddg"
+    data-no-field-error={t.noFieldError}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-default-locale={locale}
+  >
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <span id="ddg-locale-label" class="ui-label">
+          {t.dataLocaleLabel}
+        </span>
+        <div
+          id="ddg-locale"
+          class="ui-seg"
+          role="group"
+          aria-labelledby="ddg-locale-label"
+        >
+          {dataLocales.map((l) => (
+            <button
+              type="button"
+              data-locale={l}
+              aria-pressed={l === locale ? 'true' : 'false'}
+              class="ui-seg-btn"
+            >
+              {t.dataLocaleOptions[l]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label for="ddg-count" class="ui-label">
+          {t.countLabel}
+        </label>
+        <input
+          id="ddg-count"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max={MAX_COUNT}
+          value="10"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+
+      <div>
+        <label for="ddg-seed" class="ui-label">
+          {t.seedLabel}
+        </label>
+        <input
+          id="ddg-seed"
+          type="text"
+          placeholder={t.seedPlaceholder}
+          autocomplete="off"
+          class="ui-input h-11 w-40 px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+    <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{t.seedHint}</p>
+
+    <fieldset class="mt-4">
+      <legend class="ui-label">{t.fieldsLabel}</legend>
+      <div class="flex flex-wrap gap-x-5 gap-y-2">
+        {DUMMY_FIELDS.map((field) => (
+          <label class="ui-check" data-field-row={field}>
+            <input
+              id={`ddg-field-${field}`}
+              type="checkbox"
+              data-field={field}
+              checked={defaultFields.includes(field)}
+              class="h-4 w-4"
+            />
+            {t.fieldLabels[field]}
+          </label>
+        ))}
+      </div>
+      <p
+        id="ddg-kana-note"
+        class="mt-1 hidden text-xs text-gray-600 dark:text-gray-400"
+      >
+        {t.kanaJaOnly}
+      </p>
+    </fieldset>
+
+    <div class="mt-4 flex flex-wrap items-end gap-4">
+      <div>
+        <span id="ddg-format-label" class="ui-label">
+          {t.formatLabel}
+        </span>
+        <div
+          id="ddg-format"
+          class="ui-seg"
+          role="group"
+          aria-labelledby="ddg-format-label"
+        >
+          {formats.map((f, i) => (
+            <button
+              type="button"
+              data-format={f}
+              aria-pressed={i === 0 ? 'true' : 'false'}
+              class="ui-seg-btn"
+            >
+              {t.formatOptions[f]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <button
+        type="button"
+        id="ddg-generate-button"
+        class="ui-btn ui-btn-primary"
+      >
+        {t.generateButton}
+      </button>
+    </div>
+
+    <p
+      id="ddg-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div class="mt-4">
+      <label for="ddg-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="ddg-output"
+        readonly
+        rows="14"
+        class="ui-input w-full bg-gray-50 p-3 font-mono text-sm dark:bg-gray-900"
+        spellcheck="false"
+      ></textarea>
+      <div class="mt-2 flex flex-wrap items-center gap-3">
+        <button type="button" id="ddg-copy-button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <button type="button" id="ddg-download-button" class="ui-btn">
+          {t.downloadButton}
+        </button>
+        <span
+          id="ddg-copy-status"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    DUMMY_FIELDS,
+    clampCount,
+    createRng,
+    formatRecords,
+    generateRecords,
+    type DummyField,
+    type DummyFormat,
+    type DummyLocale,
+  } from '../../lib/tools/dummy-data-generator';
+
+  const section = document.getElementById('ddg')!;
+  const noFieldError = section.dataset.noFieldError ?? '';
+  const copiedMessage = section.dataset.copied ?? '';
+  const copyFailedMessage = section.dataset.copyFailed ?? '';
+
+  const countInput = document.getElementById('ddg-count') as HTMLInputElement;
+  const seedInput = document.getElementById('ddg-seed') as HTMLInputElement;
+  const errorEl = document.getElementById('ddg-error')!;
+  const output = document.getElementById('ddg-output') as HTMLTextAreaElement;
+  const copyStatus = document.getElementById('ddg-copy-status')!;
+  const kanaNote = document.getElementById('ddg-kana-note')!;
+  const kanaRow = document.querySelector<HTMLElement>(
+    '[data-field-row="kana"]',
+  )!;
+  const kanaCheckbox = document.getElementById(
+    'ddg-field-kana',
+  ) as HTMLInputElement;
+  const localeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#ddg-locale [data-locale]',
+  );
+  const formatButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#ddg-format [data-format]',
+  );
+
+  let dataLocale = (section.dataset.defaultLocale ?? 'ja') as DummyLocale;
+  let format: DummyFormat = 'json';
+
+  function selectedFields(): DummyField[] {
+    return DUMMY_FIELDS.filter(
+      (f) =>
+        (document.getElementById(`ddg-field-${f}`) as HTMLInputElement).checked,
+    );
+  }
+
+  function generate() {
+    errorEl.textContent = '';
+    copyStatus.textContent = '';
+    kanaRow.classList.toggle('opacity-50', dataLocale === 'en');
+    kanaCheckbox.disabled = dataLocale === 'en';
+    kanaNote.classList.toggle('hidden', dataLocale !== 'en');
+
+    const fields = selectedFields().filter(
+      (f) => !(f === 'kana' && dataLocale === 'en'),
+    );
+    if (fields.length === 0) {
+      errorEl.textContent = noFieldError;
+      output.value = '';
+      return;
+    }
+    const records = generateRecords({
+      locale: dataLocale,
+      count: clampCount(Number(countInput.value)),
+      fields,
+      rng: createRng(seedInput.value),
+    });
+    output.value = formatRecords(records, format);
+  }
+
+  document
+    .getElementById('ddg-generate-button')!
+    .addEventListener('click', generate);
+  countInput.addEventListener('change', () => {
+    countInput.value = String(clampCount(Number(countInput.value)));
+    generate();
+  });
+  seedInput.addEventListener('change', generate);
+  document
+    .querySelectorAll<HTMLInputElement>('input[data-field]')
+    .forEach((el) => el.addEventListener('change', generate));
+
+  localeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      dataLocale = button.dataset.locale as DummyLocale;
+      localeButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === button)),
+      );
+      generate();
+    });
+  });
+  formatButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      format = button.dataset.format as DummyFormat;
+      formatButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === button)),
+      );
+      generate();
+    });
+  });
+
+  document
+    .getElementById('ddg-copy-button')!
+    .addEventListener('click', async () => {
+      if (!output.value) return;
+      copyStatus.textContent = (await copyText(output.value))
+        ? copiedMessage
+        : copyFailedMessage;
+    });
+
+  document
+    .getElementById('ddg-download-button')!
+    .addEventListener('click', () => {
+      if (!output.value) return;
+      const mime = {
+        json: 'application/json',
+        csv: 'text/csv',
+        tsv: 'text/tab-separated-values',
+      }[format];
+      // CSV/TSV は Excel での文字化けを避けるため BOM を付ける
+      const bom = String.fromCharCode(0xfeff);
+      const body = format === 'json' ? output.value : bom + output.value;
+      downloadBlob(
+        new Blob([body], { type: `${mime};charset=utf-8` }),
+        `dummy-data.${format}`,
+      );
+    });
+
+  generate();
+</script>

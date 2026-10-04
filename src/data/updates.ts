@@ -346,6 +346,30 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-04',
+    toolSlugs: [
+      'gamepad-tester',
+      'speaker-tester',
+      'mouse-tester',
+      'electricity-cost-calculator',
+      'download-time-calculator',
+      'statistics-calculator',
+      'break-even-calculator',
+      'http-header-analyzer',
+      'dummy-data-generator',
+    ],
+    translations: {
+      ja: {
+        summary:
+          'ゲームパッドテスト（ボタン・スティック・ドリフト確認）、スピーカーテスト（左右確認・周波数ジェネレーター）、マウステスト（クリック速度・ポーリングレート）、電気代計算機、ダウンロード時間計算機、偏差値・平均・標準偏差計算機、損益分岐点計算機、HTTPヘッダー解析・セキュリティ診断、ダミー個人データ生成を追加しました。',
+      },
+      en: {
+        summary:
+          'Added the Gamepad Tester, Speaker Test (stereo check & tone generator), Mouse Tester (click speed & polling rate), Electricity Cost Calculator, Download Time Calculator, Statistics Calculator, Break-Even Calculator, HTTP Header Analyzer, and Dummy Personal Data Generator.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

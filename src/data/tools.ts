@@ -4006,6 +4006,333 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'gamepad-tester',
+    category: 'hardware',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: ['keyboard-tester', 'mouse-tester', 'speaker-tester'],
+    translations: {
+      ja: {
+        name: 'ゲームパッドテスト（ボタン・スティック確認）',
+        keywords: [
+          'ゲームパッド',
+          'コントローラー',
+          'ドリフト',
+          'スティック',
+          'PS5',
+          'Xbox',
+        ],
+        description:
+          'ゲームパッドの全ボタン・スティック・トリガーの反応を確認します。スティックのドリフト確認や振動テストにも対応。',
+      },
+      en: {
+        name: 'Gamepad Tester (Buttons, Sticks & Drift)',
+        keywords: [
+          'gamepad test',
+          'controller test',
+          'stick drift',
+          'joystick test',
+          'PS5 controller',
+          'Xbox controller',
+        ],
+        description:
+          'Check every button, stick and trigger on your controller. Spot stick drift and try the rumble motors.',
+      },
+    },
+  },
+  {
+    slug: 'speaker-tester',
+    category: 'hardware',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: ['mic-tester', 'gamepad-tester', 'keyboard-tester'],
+    translations: {
+      ja: {
+        name: 'スピーカーテスト（左右確認・周波数ジェネレーター）',
+        keywords: [
+          'スピーカーテスト',
+          'ステレオ',
+          '左右',
+          'イヤホン',
+          '周波数',
+          'テスト音',
+          '低音',
+        ],
+        description:
+          'スピーカーやイヤホンの左右が正しく鳴るかを確認し、20Hz〜20kHzの音やスイープを再生できます。',
+      },
+      en: {
+        name: 'Speaker Test (Stereo Check & Tone Generator)',
+        keywords: [
+          'speaker test',
+          'stereo test',
+          'left right test',
+          'headphone test',
+          'tone generator',
+          'frequency generator',
+          'sine wave',
+        ],
+        description:
+          'Check left and right channels on speakers or headphones, and play tones from 20 Hz to 20 kHz or a frequency sweep.',
+      },
+    },
+  },
+  {
+    slug: 'mouse-tester',
+    category: 'hardware',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: ['keyboard-tester', 'gamepad-tester', 'dead-pixel-checker'],
+    translations: {
+      ja: {
+        name: 'マウステスト（クリック速度・ポーリングレート）',
+        keywords: [
+          'マウステスト',
+          'クリック速度',
+          'CPS',
+          'ポーリングレート',
+          'チャタリング',
+          '連打',
+        ],
+        description:
+          'クリック速度（CPS）の測定、全ボタンの反応確認、ダブルクリック誤作動の検出、ポーリングレートの目安確認ができます。',
+      },
+      en: {
+        name: 'Mouse Tester (Click Speed & Polling Rate)',
+        keywords: [
+          'mouse test',
+          'click speed test',
+          'CPS test',
+          'polling rate test',
+          'double click test',
+          'mouse button test',
+        ],
+        description:
+          'Measure click speed (CPS), check every mouse button, detect double-click chatter and estimate the polling rate.',
+      },
+    },
+  },
+  {
+    slug: 'electricity-cost-calculator',
+    category: 'calc',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: ['unit-converter', 'tax-calculator', 'download-time-calculator'],
+    translations: {
+      ja: {
+        name: '電気代計算機（消費電力から1日・1か月・1年を試算）',
+        keywords: [
+          '電気代',
+          '消費電力',
+          'ワット',
+          'kWh',
+          '家電',
+          'エアコン',
+          '電気料金',
+        ],
+        description:
+          '家電の消費電力（W）・使用時間・電気料金の単価から、1時間・1日・1か月・1年の電気代を計算します。エアコンやPCの目安ワット数から選べます。',
+      },
+      en: {
+        name: 'Electricity Cost Calculator (Watts to Monthly & Yearly Cost)',
+        keywords: [
+          'electricity cost',
+          'power cost',
+          'kWh calculator',
+          'watts to cost',
+          'appliance running cost',
+          'energy bill',
+        ],
+        description:
+          'Estimate what an appliance costs to run from its wattage, daily hours, and rate per kWh. See cost per hour, day, month, and year.',
+      },
+    },
+  },
+  {
+    slug: 'download-time-calculator',
+    category: 'calc',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: ['unit-converter', 'image-resizer', 'electricity-cost-calculator'],
+    translations: {
+      ja: {
+        name: 'ダウンロード時間計算機（ファイルサイズと回線速度）',
+        keywords: [
+          'ダウンロード時間',
+          '回線速度',
+          'Mbps',
+          'ファイルサイズ',
+          '転送時間',
+          'ゲーム容量',
+        ],
+        description:
+          'ファイルサイズと回線速度（Mbps・Gbps・MB/s）からダウンロードにかかる時間を計算します。実効速度の割合も指定できます。',
+      },
+      en: {
+        name: 'Download Time Calculator (File Size & Internet Speed)',
+        keywords: [
+          'download time',
+          'transfer time',
+          'Mbps to MB/s',
+          'file size',
+          'internet speed',
+          'how long to download',
+        ],
+        description:
+          'Calculate how long a download takes from the file size and your connection speed in Mbps, Gbps, or MB/s, with a real-world speed factor.',
+      },
+    },
+  },
+  {
+    slug: 'statistics-calculator',
+    category: 'calc',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: ['ratio-calculator', 'unit-converter', 'bmi-calculator'],
+    translations: {
+      ja: {
+        name: '偏差値・平均・標準偏差計算機',
+        keywords: [
+          '偏差値',
+          '平均',
+          '標準偏差',
+          '中央値',
+          '最頻値',
+          '分散',
+          '統計',
+        ],
+        description:
+          '数値を貼り付けるだけで、平均・中央値・最頻値・分散・標準偏差を一括計算。得点を入力すれば偏差値も求められます。',
+      },
+      en: {
+        name: 'Statistics Calculator (Mean, Median, Standard Deviation)',
+        keywords: [
+          'standard deviation',
+          'mean median mode',
+          'variance calculator',
+          'T-score',
+          'z-score',
+          'descriptive statistics',
+        ],
+        description:
+          'Paste numbers to get mean, median, mode, variance, and standard deviation at once, plus a T-score for any value.',
+      },
+    },
+  },
+  {
+    slug: 'break-even-calculator',
+    category: 'calc',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: [
+      'ratio-calculator',
+      'tax-calculator',
+      'freelance-income-calculator',
+    ],
+    translations: {
+      ja: {
+        name: '損益分岐点計算機（販売数量・売上高）',
+        keywords: [
+          '損益分岐点',
+          '損益分岐点売上高',
+          '限界利益',
+          '固定費',
+          '変動費',
+          '目標利益',
+          '安全余裕率',
+        ],
+        description:
+          '販売単価・変動費・固定費から損益分岐点の販売数量と売上高を計算。目標利益の達成ラインや安全余裕率も確認できます。',
+      },
+      en: {
+        name: 'Break-Even Calculator (Units, Sales & Target Profit)',
+        keywords: [
+          'break-even point',
+          'break even analysis',
+          'contribution margin',
+          'fixed costs',
+          'variable costs',
+          'margin of safety',
+        ],
+        description:
+          'Work out break-even units and sales from price, variable cost, and fixed costs, plus the volume needed for a target profit.',
+      },
+    },
+  },
+  {
+    slug: 'http-header-analyzer',
+    category: 'dev',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: ['curl-converter', 'jwt-decoder', 'meta-tag-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'HTTPヘッダー解析・セキュリティ診断',
+        keywords: [
+          'HTTPヘッダー',
+          'レスポンスヘッダー',
+          'セキュリティヘッダー',
+          'CSP',
+          'HSTS',
+          'X-Frame-Options',
+          'Cookie属性',
+        ],
+        description:
+          '貼り付けたレスポンスヘッダーから、HSTS・CSP・Cookie属性などの不足や弱い設定を診断。nginx・Apache・_headers 形式の推奨設定も生成します。',
+      },
+      en: {
+        name: 'HTTP Header Analyzer & Security Check',
+        keywords: [
+          'security headers',
+          'response headers',
+          'CSP',
+          'HSTS',
+          'X-Frame-Options',
+          'cookie flags',
+          'CORS',
+        ],
+        description:
+          'Check pasted response headers for missing or weak HSTS, CSP, and cookie flags, and copy recommended nginx, Apache, or _headers config.',
+      },
+    },
+  },
+  {
+    slug: 'dummy-data-generator',
+    category: 'generate',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: ['uuid-generator', 'lorem-ipsum', 'csv-json-converter'],
+    translations: {
+      ja: {
+        name: 'ダミー個人データ生成（JSON・CSV）',
+        keywords: [
+          'ダミーデータ',
+          'テストデータ',
+          'ダミー個人情報',
+          '架空の氏名',
+          '架空の住所',
+          'モックデータ',
+        ],
+        description:
+          'テストやデモ用の架空の氏名・メール・電話番号・住所・生年月日などを最大1,000件まとめて生成。JSON・CSV・TSVで出力でき、シード指定で再現も可能です。',
+      },
+      en: {
+        name: 'Dummy Personal Data Generator (JSON, CSV)',
+        keywords: [
+          'fake data generator',
+          'mock data',
+          'test data',
+          'fake names',
+          'fake addresses',
+          'sample users',
+        ],
+        description:
+          'Generate up to 1,000 fake people with names, emails, phones, addresses, and birthdays as JSON, CSV, or TSV, with a seed for repeatable output.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

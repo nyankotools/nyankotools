@@ -4113,6 +4113,77 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'electricity-cost-calculator',
+    category: 'calc',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: ['unit-converter', 'tax-calculator', 'download-time-calculator'],
+    translations: {
+      ja: {
+        name: '電気代計算機（消費電力から1日・1か月・1年を試算）',
+        keywords: [
+          '電気代',
+          '消費電力',
+          'ワット',
+          'kWh',
+          '家電',
+          'エアコン',
+          '電気料金',
+        ],
+        description:
+          '家電の消費電力（W）・使用時間・電気料金の単価から、1時間・1日・1か月・1年の電気代を計算します。エアコンやPCの目安ワット数から選べます。',
+      },
+      en: {
+        name: 'Electricity Cost Calculator (Watts to Monthly & Yearly Cost)',
+        keywords: [
+          'electricity cost',
+          'power cost',
+          'kWh calculator',
+          'watts to cost',
+          'appliance running cost',
+          'energy bill',
+        ],
+        description:
+          'Estimate what an appliance costs to run from its wattage, daily hours, and rate per kWh. See cost per hour, day, month, and year.',
+      },
+    },
+  },
+  {
+    slug: 'download-time-calculator',
+    category: 'calc',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: ['unit-converter', 'image-resizer', 'electricity-cost-calculator'],
+    translations: {
+      ja: {
+        name: 'ダウンロード時間計算機（ファイルサイズと回線速度）',
+        keywords: [
+          'ダウンロード時間',
+          '回線速度',
+          'Mbps',
+          'ファイルサイズ',
+          '転送時間',
+          'ゲーム容量',
+        ],
+        description:
+          'ファイルサイズと回線速度（Mbps・Gbps・MB/s）からダウンロードにかかる時間を計算します。実効速度の割合も指定できます。',
+      },
+      en: {
+        name: 'Download Time Calculator (File Size & Internet Speed)',
+        keywords: [
+          'download time',
+          'transfer time',
+          'Mbps to MB/s',
+          'file size',
+          'internet speed',
+          'how long to download',
+        ],
+        description:
+          'Calculate how long a download takes from the file size and your connection speed in Mbps, Gbps, or MB/s, with a real-world speed factor.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

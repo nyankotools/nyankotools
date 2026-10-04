@@ -1,0 +1,275 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { downloadTimeCalculatorContent } from '../../i18n/tools/download-time-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = downloadTimeCalculatorContent[locale];
+const sizeUnits = ['KB', 'MB', 'GB', 'TB'] as const;
+const speedUnitKeys = ['kbps', 'Mbps', 'Gbps', 'MBps'] as const;
+---
+
+<ToolShell t={t}>
+  <section
+    id="download-time"
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-errors={JSON.stringify(t.errors)}
+    data-effective-speed-text={t.effectiveSpeedText}
+    data-duration-separator={t.durationSeparator}
+    data-unit-days={t.unitDays}
+    data-unit-hours={t.unitHours}
+    data-unit-minutes={t.unitMinutes}
+    data-unit-seconds={t.unitSeconds}
+    data-speed-units={JSON.stringify(t.speedUnits)}
+    data-copy-template={t.copyTemplate}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="download-size-input" class="ui-label">
+          {t.sizeLabel}
+        </label>
+        <div class="flex gap-2">
+          <input
+            id="download-size-input"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="any"
+            value={t.defaultSize}
+            class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+          />
+          <select
+            id="download-size-unit"
+            aria-label={t.sizeUnitLabel}
+            class="ui-input h-11 w-20 px-2 dark:bg-gray-900"
+          >
+            {sizeUnits.map((unit) => (
+              <option value={unit} selected={unit === t.defaultSizeUnit}>
+                {unit}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div>
+        <label for="download-speed-input" class="ui-label">
+          {t.speedLabel}
+        </label>
+        <div class="flex gap-2">
+          <input
+            id="download-speed-input"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="any"
+            value={t.defaultSpeed}
+            class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+          />
+          <select
+            id="download-speed-unit"
+            aria-label={t.speedUnitLabel}
+            class="ui-input h-11 w-24 px-2 dark:bg-gray-900"
+          >
+            {speedUnitKeys.map((unit) => (
+              <option value={unit} selected={unit === t.defaultSpeedUnit}>
+                {t.speedUnits[unit]}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div>
+        <label for="download-efficiency-input" class="ui-label">
+          {t.efficiencyLabel}
+        </label>
+        <input
+          id="download-efficiency-input"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          max="100"
+          step="any"
+          value={t.defaultEfficiency}
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+    <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+      {t.efficiencyHint}
+    </p>
+
+    <p
+      id="download-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="download-results" class="mt-4 hidden" aria-live="polite">
+      <dl class="space-y-2">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.timeLabel}
+          </dt>
+          <dd id="download-time-text" class="text-2xl font-semibold"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.effectiveSpeedLabel}
+          </dt>
+          <dd id="download-effective-speed" class="text-lg font-semibold"></dd>
+        </div>
+      </dl>
+      <div class="mt-3 flex items-center gap-3">
+        <button type="button" id="download-copy-button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <span
+          id="download-copy-status"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    calculateDownloadTime,
+    splitDuration,
+    type DownloadTimeError,
+    type SizeUnit,
+    type SpeedUnit,
+  } from '../../lib/tools/download-time-calculator';
+
+  const section = document.getElementById('download-time')!;
+  const numberLocale = section.dataset.numberLocale ?? 'en-US';
+  const errors: Record<DownloadTimeError, string> = JSON.parse(
+    section.dataset.errors ?? '{}',
+  );
+  const speedUnits: Record<SpeedUnit, string> = JSON.parse(
+    section.dataset.speedUnits ?? '{}',
+  );
+  const effectiveSpeedText = section.dataset.effectiveSpeedText ?? '';
+  const unitDays = section.dataset.unitDays ?? '';
+  const unitHours = section.dataset.unitHours ?? '';
+  const unitMinutes = section.dataset.unitMinutes ?? '';
+  const unitSeconds = section.dataset.unitSeconds ?? '';
+  const durationSeparator = section.dataset.durationSeparator ?? '';
+  const copyTemplate = section.dataset.copyTemplate ?? '';
+  const copiedMessage = section.dataset.copied ?? '';
+  const copyFailedMessage = section.dataset.copyFailed ?? '';
+
+  const numberFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 2,
+  });
+  const speedFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 3,
+  });
+
+  const sizeInput = document.getElementById(
+    'download-size-input',
+  ) as HTMLInputElement;
+  const sizeUnitSelect = document.getElementById(
+    'download-size-unit',
+  ) as HTMLSelectElement;
+  const speedInput = document.getElementById(
+    'download-speed-input',
+  ) as HTMLInputElement;
+  const speedUnitSelect = document.getElementById(
+    'download-speed-unit',
+  ) as HTMLSelectElement;
+  const efficiencyInput = document.getElementById(
+    'download-efficiency-input',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('download-error')!;
+  const resultsEl = document.getElementById('download-results')!;
+  const timeEl = document.getElementById('download-time-text')!;
+  const effectiveEl = document.getElementById('download-effective-speed')!;
+  const copyButton = document.getElementById('download-copy-button')!;
+  const copyStatus = document.getElementById('download-copy-status')!;
+
+  let copyTextValue = '';
+
+  /** 1分未満は小数つきの秒、それ以上は日・時間・分・秒の組み合わせで表す */
+  function formatDuration(totalSeconds: number): string {
+    if (totalSeconds < 59.5) {
+      return `${numberFormat.format(Math.max(totalSeconds, 0.01))}${unitSeconds}`;
+    }
+    const d = splitDuration(totalSeconds);
+    const parts: string[] = [];
+    if (d.days > 0) parts.push(`${d.days}${unitDays}`);
+    if (d.hours > 0) parts.push(`${d.hours}${unitHours}`);
+    if (d.minutes > 0) parts.push(`${d.minutes}${unitMinutes}`);
+    if (d.seconds > 0) parts.push(`${d.seconds}${unitSeconds}`);
+    return parts.join(durationSeparator);
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    copyStatus.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    if (
+      [sizeInput, speedInput, efficiencyInput].some(
+        (el) => el.value.trim() === '',
+      )
+    )
+      return;
+
+    const result = calculateDownloadTime({
+      size: Number(sizeInput.value),
+      sizeUnit: sizeUnitSelect.value as SizeUnit,
+      speed: Number(speedInput.value),
+      speedUnit: speedUnitSelect.value as SpeedUnit,
+      efficiency: Number(efficiencyInput.value),
+    });
+    if ('error' in result) {
+      errorEl.textContent = errors[result.error];
+      return;
+    }
+
+    const time = formatDuration(result.totalSeconds);
+    timeEl.textContent = time;
+    effectiveEl.textContent = effectiveSpeedText.replace(
+      '{value}',
+      speedFormat.format(result.effectiveMBps),
+    );
+
+    copyTextValue = copyTemplate
+      .replace(
+        '{size}',
+        `${numberFormat.format(Number(sizeInput.value))} ${sizeUnitSelect.value}`,
+      )
+      .replace(
+        '{speed}',
+        `${numberFormat.format(Number(speedInput.value))} ${speedUnits[speedUnitSelect.value as SpeedUnit]}`,
+      )
+      .replace('{time}', time);
+    resultsEl.classList.remove('hidden');
+  }
+
+  [sizeInput, speedInput, efficiencyInput].forEach((el) =>
+    el.addEventListener('input', render),
+  );
+  [sizeUnitSelect, speedUnitSelect].forEach((el) =>
+    el.addEventListener('change', render),
+  );
+
+  copyButton.addEventListener('click', async () => {
+    if (copyTextValue === '') return;
+    copyStatus.textContent = (await copyText(copyTextValue))
+      ? copiedMessage
+      : copyFailedMessage;
+  });
+
+  render();
+</script>

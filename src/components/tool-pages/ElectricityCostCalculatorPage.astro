@@ -1,0 +1,282 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { electricityCostCalculatorContent } from '../../i18n/tools/electricity-cost-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = electricityCostCalculatorContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="electricity"
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-currency={t.currency}
+    data-errors={JSON.stringify(t.errors)}
+    data-copy-template={t.copyTemplate}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <div class="mb-3">
+      <label for="electricity-preset-select" class="ui-label">
+        {t.presetLabel}
+      </label>
+      <select
+        id="electricity-preset-select"
+        class="ui-input h-11 w-full max-w-80 px-3 dark:bg-gray-900"
+        data-no-persist
+      >
+        <option value="">{t.presetPlaceholder}</option>
+        {t.presets.map((preset) => (
+          <option value={String(preset.watts)}>
+            {preset.label}（{preset.watts}W）
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="electricity-watts-input" class="ui-label">
+          {t.wattsLabel}
+        </label>
+        <input
+          id="electricity-watts-input"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          value={t.defaultWatts}
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="electricity-quantity-input" class="ui-label">
+          {t.quantityLabel}
+        </label>
+        <input
+          id="electricity-quantity-input"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="1000"
+          step="1"
+          value="1"
+          class="ui-input h-11 w-20 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="electricity-hours-input" class="ui-label">
+          {t.hoursLabel}
+        </label>
+        <input
+          id="electricity-hours-input"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          max="24"
+          step="any"
+          value={t.defaultHours}
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="electricity-days-input" class="ui-label">
+          {t.daysLabel}
+        </label>
+        <input
+          id="electricity-days-input"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="31"
+          step="1"
+          value={t.defaultDays}
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="electricity-price-input" class="ui-label">
+          {t.priceLabel}
+        </label>
+        <input
+          id="electricity-price-input"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          value={t.defaultPrice}
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+    <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">{t.priceHint}</p>
+
+    <p
+      id="electricity-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="electricity-results" class="mt-4 hidden" aria-live="polite">
+      <h2 class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+        {t.resultHeading}
+      </h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th class="py-2 pr-3 font-medium">{t.periodHeader}</th>
+              <th class="py-2 pr-3 font-medium">{t.kwhHeader}</th>
+              <th class="py-2 font-medium">{t.costHeader}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(
+              [
+                ['hour', t.periodHour],
+                ['day', t.periodDay],
+                ['month', t.periodMonth],
+                ['year', t.periodYear],
+              ] as const
+            ).map(([key, label]) => (
+              <tr class="border-b border-gray-100 dark:border-gray-800">
+                <th scope="row" class="py-2 pr-3 font-normal">
+                  {label}
+                </th>
+                <td id={`electricity-${key}-kwh`} class="py-2 pr-3" />
+                <td
+                  id={`electricity-${key}-cost`}
+                  class="py-2 text-base font-semibold"
+                />
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-3 flex items-center gap-3">
+        <button type="button" id="electricity-copy-button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <span
+          id="electricity-copy-status"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    calculateElectricityCost,
+    type ElectricityCostError,
+  } from '../../lib/tools/electricity-cost-calculator';
+
+  const section = document.getElementById('electricity')!;
+  const numberLocale = section.dataset.numberLocale ?? 'en-US';
+  const currency = section.dataset.currency ?? 'USD';
+  const errors: Record<ElectricityCostError, string> = JSON.parse(
+    section.dataset.errors ?? '{}',
+  );
+  const copyTemplate = section.dataset.copyTemplate ?? '';
+  const copiedMessage = section.dataset.copied ?? '';
+  const copyFailedMessage = section.dataset.copyFailed ?? '';
+
+  const money = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 2,
+  });
+  const kwhFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 3,
+  });
+
+  const input = (id: string) => document.getElementById(id) as HTMLInputElement;
+  const presetSelect = document.getElementById(
+    'electricity-preset-select',
+  ) as HTMLSelectElement;
+  const wattsInput = input('electricity-watts-input');
+  const quantityInput = input('electricity-quantity-input');
+  const hoursInput = input('electricity-hours-input');
+  const daysInput = input('electricity-days-input');
+  const priceInput = input('electricity-price-input');
+  const errorEl = document.getElementById('electricity-error')!;
+  const resultsEl = document.getElementById('electricity-results')!;
+  const copyButton = document.getElementById('electricity-copy-button')!;
+  const copyStatus = document.getElementById('electricity-copy-status')!;
+
+  let copyTextValue = '';
+
+  function render() {
+    errorEl.textContent = '';
+    copyStatus.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    const fields = [
+      wattsInput,
+      quantityInput,
+      hoursInput,
+      daysInput,
+      priceInput,
+    ];
+    if (fields.some((el) => el.value.trim() === '')) return;
+
+    const result = calculateElectricityCost({
+      watts: Number(wattsInput.value),
+      quantity: Number(quantityInput.value),
+      hoursPerDay: Number(hoursInput.value),
+      daysPerMonth: Number(daysInput.value),
+      pricePerKwh: Number(priceInput.value),
+    });
+    if ('error' in result) {
+      errorEl.textContent = errors[result.error];
+      return;
+    }
+
+    const rows = {
+      hour: result.perHour,
+      day: result.perDay,
+      month: result.perMonth,
+      year: result.perYear,
+    };
+    for (const [key, period] of Object.entries(rows)) {
+      document.getElementById(`electricity-${key}-kwh`)!.textContent =
+        kwhFormat.format(period.kwh);
+      document.getElementById(`electricity-${key}-cost`)!.textContent =
+        money.format(period.cost);
+    }
+
+    copyTextValue = copyTemplate
+      .replace('{watts}', kwhFormat.format(Number(wattsInput.value)))
+      .replace('{hours}', kwhFormat.format(Number(hoursInput.value)))
+      .replace('{month}', money.format(result.perMonth.cost))
+      .replace('{year}', money.format(result.perYear.cost));
+    resultsEl.classList.remove('hidden');
+  }
+
+  [wattsInput, quantityInput, hoursInput, daysInput, priceInput].forEach((el) =>
+    el.addEventListener('input', render),
+  );
+  presetSelect.addEventListener('change', () => {
+    if (presetSelect.value === '') return;
+    wattsInput.value = presetSelect.value;
+    render();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (copyTextValue === '') return;
+    copyStatus.textContent = (await copyText(copyTextValue))
+      ? copiedMessage
+      : copyFailedMessage;
+  });
+
+  render();
+</script>

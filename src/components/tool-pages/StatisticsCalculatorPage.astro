@@ -1,0 +1,241 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { statisticsCalculatorContent } from '../../i18n/tools/statistics-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = statisticsCalculatorContent[locale];
+
+const rows = [
+  ['count', t.labelCount],
+  ['sum', t.labelSum],
+  ['mean', t.labelMean],
+  ['median', t.labelMedian],
+  ['mode', t.labelMode],
+  ['min', t.labelMin],
+  ['max', t.labelMax],
+  ['range', t.labelRange],
+  ['pop-variance', t.labelPopVariance],
+  ['pop-stddev', t.labelPopStdDev],
+  ['sample-variance', t.labelSampleVariance],
+  ['sample-stddev', t.labelSampleStdDev],
+] as const;
+---
+
+<ToolShell t={t}>
+  <section
+    id="stats"
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-errors={JSON.stringify(t.errors)}
+    data-ignored-notice={t.ignoredNotice}
+    data-no-mode={t.noMode}
+    data-not-available={t.notAvailable}
+    data-deviation-result={t.deviationResult}
+    data-deviation-undefined={t.deviationUndefined}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <label for="stats-data-input" class="ui-label">
+      {t.dataLabel}
+    </label>
+    <textarea
+      id="stats-data-input"
+      rows="5"
+      placeholder={t.dataPlaceholder}
+      class="ui-input w-full p-3 font-mono dark:bg-gray-900"
+      spellcheck="false"
+    >{t.defaultData}</textarea>
+    <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{t.dataHint}</p>
+
+    <div class="mt-3">
+      <label for="stats-score-input" class="ui-label">
+        {t.scoreLabel}
+      </label>
+      <input
+        id="stats-score-input"
+        type="number"
+        inputmode="decimal"
+        step="any"
+        class="ui-input h-11 w-36 px-3 dark:bg-gray-900"
+      />
+      <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{t.scoreHint}</p>
+    </div>
+
+    <p
+      id="stats-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+    <p
+      id="stats-ignored"
+      class="mt-1 text-xs text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="stats-results" class="mt-4 hidden" aria-live="polite">
+      <h2 class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+        {t.resultHeading}
+      </h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <tbody>
+            {rows.map(([key, label]) => (
+              <tr class="border-b border-gray-100 dark:border-gray-800">
+                <th scope="row" class="py-2 pr-3 font-normal">
+                  {label}
+                </th>
+                <td id={`stats-${key}`} class="py-2 font-semibold break-all" />
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div id="stats-deviation" class="mt-4 hidden">
+        <h2 class="mb-1 text-sm text-gray-600 dark:text-gray-400">
+          {t.deviationHeading}
+        </h2>
+        <p id="stats-deviation-text" class="text-lg font-semibold"></p>
+      </div>
+
+      <div class="mt-3 flex items-center gap-3">
+        <button type="button" id="stats-copy-button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <span
+          id="stats-copy-status"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { onTextInput } from '../../lib/input-scheduler';
+  import {
+    calculateStatistics,
+    deviationScore,
+    parseNumbers,
+    type StatisticsError,
+  } from '../../lib/tools/statistics-calculator';
+
+  const section = document.getElementById('stats')!;
+  const numberLocale = section.dataset.numberLocale ?? 'en-US';
+  const errors: Record<StatisticsError, string> = JSON.parse(
+    section.dataset.errors ?? '{}',
+  );
+  const ignoredNotice = section.dataset.ignoredNotice ?? '';
+  const noMode = section.dataset.noMode ?? '';
+  const notAvailable = section.dataset.notAvailable ?? '';
+  const deviationTemplate = section.dataset.deviationResult ?? '';
+  const deviationUndefined = section.dataset.deviationUndefined ?? '';
+  const copiedMessage = section.dataset.copied ?? '';
+  const copyFailedMessage = section.dataset.copyFailed ?? '';
+
+  const numFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 6,
+  });
+  const deviationFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 2,
+  });
+
+  const dataInput = document.getElementById(
+    'stats-data-input',
+  ) as HTMLTextAreaElement;
+  const scoreInput = document.getElementById(
+    'stats-score-input',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('stats-error')!;
+  const ignoredEl = document.getElementById('stats-ignored')!;
+  const resultsEl = document.getElementById('stats-results')!;
+  const deviationEl = document.getElementById('stats-deviation')!;
+  const deviationText = document.getElementById('stats-deviation-text')!;
+  const copyButton = document.getElementById('stats-copy-button')!;
+  const copyStatus = document.getElementById('stats-copy-status')!;
+
+  let copyTextValue = '';
+
+  function setCell(key: string, text: string) {
+    document.getElementById(`stats-${key}`)!.textContent = text;
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    ignoredEl.textContent = '';
+    copyStatus.textContent = '';
+    resultsEl.classList.add('hidden');
+    deviationEl.classList.add('hidden');
+
+    const parsed = parseNumbers(dataInput.value);
+    if (parsed.invalidCount > 0) {
+      ignoredEl.textContent = ignoredNotice.replace(
+        '{count}',
+        String(parsed.invalidCount),
+      );
+    }
+    const result = calculateStatistics(parsed.values);
+    if ('error' in result) {
+      errorEl.textContent = errors[result.error];
+      return;
+    }
+
+    const fmt = (n: number | null) =>
+      n === null ? notAvailable : numFormat.format(n);
+    setCell('count', numFormat.format(result.count));
+    setCell('sum', fmt(result.sum));
+    setCell('mean', fmt(result.mean));
+    setCell('median', fmt(result.median));
+    setCell(
+      'mode',
+      result.modes.length === 0
+        ? noMode
+        : result.modes.map((m) => numFormat.format(m)).join(', '),
+    );
+    setCell('min', fmt(result.min));
+    setCell('max', fmt(result.max));
+    setCell('range', fmt(result.range));
+    setCell('pop-variance', fmt(result.populationVariance));
+    setCell('pop-stddev', fmt(result.populationStdDev));
+    setCell('sample-variance', fmt(result.sampleVariance));
+    setCell('sample-stddev', fmt(result.sampleStdDev));
+
+    const lines = [...document.querySelectorAll('#stats-results tbody tr')].map(
+      (tr) =>
+        `${tr.querySelector('th')!.textContent!.trim()}: ${tr.querySelector('td')!.textContent}`,
+    );
+
+    if (scoreInput.value.trim() !== '') {
+      const score = Number(scoreInput.value);
+      const dev = deviationScore(score, result.mean, result.populationStdDev);
+      deviationText.textContent =
+        dev === null
+          ? deviationUndefined
+          : `${deviationTemplate.replace('{score}', numFormat.format(score))}: ${deviationFormat.format(dev)}`;
+      deviationEl.classList.remove('hidden');
+      lines.push(deviationText.textContent);
+    }
+
+    copyTextValue = lines.join('\n');
+    resultsEl.classList.remove('hidden');
+  }
+
+  onTextInput(dataInput, render);
+  scoreInput.addEventListener('input', render);
+
+  copyButton.addEventListener('click', async () => {
+    if (copyTextValue === '') return;
+    copyStatus.textContent = (await copyText(copyTextValue))
+      ? copiedMessage
+      : copyFailedMessage;
+  });
+
+  render();
+</script>

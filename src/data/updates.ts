@@ -354,15 +354,17 @@ export const updates: UpdateEntry[] = [
       'mouse-tester',
       'electricity-cost-calculator',
       'download-time-calculator',
+      'statistics-calculator',
+      'break-even-calculator',
     ],
     translations: {
       ja: {
         summary:
-          'ゲームパッドテスト（ボタン・スティック・ドリフト確認）、スピーカーテスト（左右確認・周波数ジェネレーター）、マウステスト（クリック速度・ポーリングレート）、電気代計算機、ダウンロード時間計算機を追加しました。',
+          'ゲームパッドテスト（ボタン・スティック・ドリフト確認）、スピーカーテスト（左右確認・周波数ジェネレーター）、マウステスト（クリック速度・ポーリングレート）、電気代計算機、ダウンロード時間計算機、偏差値・平均・標準偏差計算機、損益分岐点計算機を追加しました。',
       },
       en: {
         summary:
-          'Added the Gamepad Tester, Speaker Test (stereo check & tone generator), Mouse Tester (click speed & polling rate), Electricity Cost Calculator, and Download Time Calculator.',
+          'Added the Gamepad Tester, Speaker Test (stereo check & tone generator), Mouse Tester (click speed & polling rate), Electricity Cost Calculator, Download Time Calculator, Statistics Calculator, and Break-Even Calculator.',
       },
     },
   },

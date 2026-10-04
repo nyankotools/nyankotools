@@ -4184,6 +4184,82 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'statistics-calculator',
+    category: 'calc',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: ['ratio-calculator', 'unit-converter', 'bmi-calculator'],
+    translations: {
+      ja: {
+        name: '偏差値・平均・標準偏差計算機',
+        keywords: [
+          '偏差値',
+          '平均',
+          '標準偏差',
+          '中央値',
+          '最頻値',
+          '分散',
+          '統計',
+        ],
+        description:
+          '数値を貼り付けるだけで、平均・中央値・最頻値・分散・標準偏差を一括計算。得点を入力すれば偏差値も求められます。',
+      },
+      en: {
+        name: 'Statistics Calculator (Mean, Median, Standard Deviation)',
+        keywords: [
+          'standard deviation',
+          'mean median mode',
+          'variance calculator',
+          'T-score',
+          'z-score',
+          'descriptive statistics',
+        ],
+        description:
+          'Paste numbers to get mean, median, mode, variance, and standard deviation at once, plus a T-score for any value.',
+      },
+    },
+  },
+  {
+    slug: 'break-even-calculator',
+    category: 'calc',
+    addedAt: '2026-10-04',
+    updatedAt: '2026-10-04',
+    related: [
+      'ratio-calculator',
+      'tax-calculator',
+      'freelance-income-calculator',
+    ],
+    translations: {
+      ja: {
+        name: '損益分岐点計算機（販売数量・売上高）',
+        keywords: [
+          '損益分岐点',
+          '損益分岐点売上高',
+          '限界利益',
+          '固定費',
+          '変動費',
+          '目標利益',
+          '安全余裕率',
+        ],
+        description:
+          '販売単価・変動費・固定費から損益分岐点の販売数量と売上高を計算。目標利益の達成ラインや安全余裕率も確認できます。',
+      },
+      en: {
+        name: 'Break-Even Calculator (Units, Sales & Target Profit)',
+        keywords: [
+          'break-even point',
+          'break even analysis',
+          'contribution margin',
+          'fixed costs',
+          'variable costs',
+          'margin of safety',
+        ],
+        description:
+          'Work out break-even units and sales from price, variable cost, and fixed costs, plus the volume needed for a target profit.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

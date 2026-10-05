@@ -4404,6 +4404,42 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'amidakuji-generator',
+    category: 'generate',
+    addedAt: '2026-10-05',
+    updatedAt: '2026-10-05',
+    related: ['roulette-dice', 'password-generator', 'uuid-generator'],
+    translations: {
+      ja: {
+        name: 'あみだくじ生成',
+        keywords: [
+          'あみだくじ',
+          'アミダクジ',
+          'くじ引き',
+          '抽選',
+          '順番決め',
+          '役割分担',
+          '飲み会',
+        ],
+        description:
+          '参加者と結果を入力するだけで、あみだくじを自動作成。結果を隠して1人ずつ辿る・全員分を一括表示・画像保存に対応します。',
+      },
+      en: {
+        name: 'Amidakuji (Ghost Leg) Generator',
+        keywords: [
+          'amidakuji',
+          'ghost leg',
+          'ladder lottery',
+          'random assignment',
+          'lottery',
+          'chore picker',
+        ],
+        description:
+          'Create an amidakuji ghost-leg ladder from names and outcomes. Hide results and trace one player at a time, reveal everyone, or save it as an image.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

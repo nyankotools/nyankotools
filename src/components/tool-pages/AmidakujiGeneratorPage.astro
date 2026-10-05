@@ -1,0 +1,606 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { amidakujiGeneratorContent } from '../../i18n/tools/amidakuji-generator';
+import { MAX_PLAYERS, MIN_PLAYERS } from '../../lib/tools/amidakuji-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = amidakujiGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="ag-root"
+    data-min={MIN_PLAYERS}
+    data-max={MAX_PLAYERS}
+    data-count-info={t.countInfo}
+    data-range-error={t.playersRangeError}
+    data-mismatch-error={t.countMismatchError}
+    data-route-result={t.routeResult}
+    data-image-failed={t.imageFailed}
+    data-line-label={t.lineLabel}
+  >
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="ag-players" class="ui-label">
+          {t.playersLabel}
+        </label>
+        <textarea
+          id="ag-players"
+          class="ui-input h-36 w-full p-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.playersPlaceholder}
+          spellcheck="false"
+          data-no-count
+        >{t.defaultPlayers}</textarea>
+      </div>
+      <div>
+        <label for="ag-results" class="ui-label">
+          {t.resultsLabel}
+        </label>
+        <textarea
+          id="ag-results"
+          class="ui-input h-36 w-full p-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.resultsPlaceholder}
+          spellcheck="false"
+          data-no-count
+        >{t.defaultResults}</textarea>
+      </div>
+    </div>
+    <p
+      id="ag-info"
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+
+    <label class="ui-check mt-3">
+      <input id="ag-hide" type="checkbox" checked />
+      {t.hideResultsLabel}
+    </label>
+
+    <div class="mt-3">
+      <button id="ag-generate-button" type="button" class="ui-btn-primary">
+        {t.generate}
+      </button>
+    </div>
+
+    <div id="ag-error" class="ui-error empty:hidden mt-4" role="alert"></div>
+
+    <div id="ag-board" class="mt-4" hidden>
+      <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">{t.tapHint}</p>
+      <span class="ui-label">{t.chipsLabel}</span>
+      <div id="ag-chips" class="mb-3 flex flex-wrap gap-2"></div>
+      <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+        <svg
+          id="ag-svg"
+          class="mx-auto block text-gray-900 dark:text-gray-100"
+          role="group"
+          aria-label={t.ladderLabel}
+        ></svg>
+      </div>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button id="ag-reveal-button" type="button" class="ui-btn">
+          {t.revealAll}
+        </button>
+        <button id="ag-reset-button" type="button" class="ui-btn">
+          {t.reset}
+        </button>
+        <button id="ag-save-button" type="button" class="ui-btn">
+          {t.saveImage}
+        </button>
+        <button id="ag-print-button" type="button" class="ui-btn">
+          {t.savePrintImage}
+        </button>
+      </div>
+      <div id="ag-result" class="mt-4" aria-live="polite" hidden>
+        <h2 class="mb-1 text-base font-bold text-gray-900 dark:text-gray-100">
+          {t.resultsListHeading}
+        </h2>
+        <ul
+          id="ag-result-list"
+          class="space-y-1 text-gray-900 dark:text-gray-100"
+        ></ul>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import {
+    generateLadder,
+    parseLines,
+    shuffle,
+    traceRoute,
+    type Ladder,
+  } from '../../lib/tools/amidakuji-generator';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('ag-root');
+  const msg = root.dataset;
+  const playersInput = $<HTMLTextAreaElement>('ag-players');
+  const resultsInput = $<HTMLTextAreaElement>('ag-results');
+  const infoEl = $('ag-info');
+  const hideCheck = $<HTMLInputElement>('ag-hide');
+  const generateButton = $<HTMLButtonElement>('ag-generate-button');
+  const errorEl = $('ag-error');
+  const board = $('ag-board');
+  const chipsEl = $('ag-chips');
+  const svg = document.getElementById('ag-svg') as unknown as SVGSVGElement;
+  const revealButton = $<HTMLButtonElement>('ag-reveal-button');
+  const resetButton = $<HTMLButtonElement>('ag-reset-button');
+  const saveButton = $<HTMLButtonElement>('ag-save-button');
+  const printButton = $<HTMLButtonElement>('ag-print-button');
+  const resultEl = $('ag-result');
+  const resultList = $('ag-result-list');
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const COL_W = 64;
+  const TOP = 44;
+  const ROW_H = 22;
+  const BOTTOM = 44;
+  const COLORS = [
+    '#dc2626',
+    '#2563eb',
+    '#16a34a',
+    '#d97706',
+    '#9333ea',
+    '#0891b2',
+    '#db2777',
+    '#65a30d',
+  ];
+
+  let ladder: Ladder | null = null;
+  let players: string[] = [];
+  /** 列（左から）ごとのゴールの結果。作成のたびにシャッフルされる */
+  let results: string[] = [];
+  /** 列ごとに、その線を選んだ参加者の添字（未選択は null） */
+  let owner: (number | null)[] = [];
+  /** いま引こうとしている参加者の添字 */
+  let selected: number | null = null;
+  /** 辿り始めた列（二重タップ防止） */
+  const started = new Set<number>();
+  /** 辿り終えた列 */
+  const traced = new Set<number>();
+  /** 結果が公開済みのゴール列 */
+  const shownEnds = new Set<number>();
+  let routesGroup: SVGGElement;
+  let topLabels: SVGTextElement[] = [];
+  let topRects: SVGRectElement[] = [];
+  let topGroups: SVGGElement[] = [];
+  let bottomLabels: SVGTextElement[] = [];
+  let generation = 0;
+
+  const reducedMotion = () =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    // 1回の置換で済ませる（ユーザー入力中の `$&` や `{result}` を解釈させない）
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  function shorten(text: string, max: number) {
+    const chars = Array.from(text);
+    return chars.length > max ? chars.slice(0, max - 1).join('') + '…' : text;
+  }
+
+  function el<K extends keyof SVGElementTagNameMap>(
+    name: K,
+    attrs: Record<string, string | number>,
+  ): SVGElementTagNameMap[K] {
+    const node = document.createElementNS(NS, name);
+    for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, String(v));
+    return node;
+  }
+
+  function colX(col: number) {
+    return (col + 0.5) * COL_W;
+  }
+
+  function rowY(row: number) {
+    return TOP + row * ROW_H;
+  }
+
+  function colColor(col: number) {
+    return COLORS[col % COLORS.length];
+  }
+
+  function endOf(col: number) {
+    const route = traceRoute(ladder!, col);
+    return route[route.length - 1].col;
+  }
+
+  function showError(text: string) {
+    errorEl.textContent = text;
+  }
+
+  function updateInfo() {
+    infoEl.textContent = fill(msg.countInfo, {
+      count: String(parseLines(playersInput.value).length),
+    });
+  }
+
+  function bottomText(col: number) {
+    return hideCheck.checked && !shownEnds.has(col) ? '?' : results[col];
+  }
+
+  function updateBottom() {
+    bottomLabels.forEach((node, col) => {
+      node.textContent = shorten(bottomText(col), 5);
+    });
+  }
+
+  /** 線の上のラベル。選ばれた線は参加者名、未選択の線は番号 */
+  function updateTops() {
+    topLabels.forEach((node, col) => {
+      const who = owner[col];
+      node.textContent =
+        who === null ? String(col + 1) : shorten(players[who], 5);
+      const lineName = fill(msg.lineLabel, { n: String(col + 1) });
+      topGroups[col].setAttribute(
+        'aria-label',
+        who === null ? lineName : `${lineName}: ${players[who]}`,
+      );
+      topGroups[col].style.cursor = started.has(col) ? 'default' : 'pointer';
+    });
+  }
+
+  /** チップは作り直さず状態だけ更新する（キーボード操作中にフォーカスを失わないため） */
+  function updateChips() {
+    if (chipsEl.children.length !== players.length) {
+      chipsEl.replaceChildren();
+      players.forEach((name, i) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'ui-btn';
+        button.textContent = name;
+        button.addEventListener('click', () => {
+          selected = i;
+          updateChips();
+        });
+        chipsEl.append(button);
+      });
+    }
+    (Array.from(chipsEl.children) as HTMLButtonElement[]).forEach(
+      (button, i) => {
+        button.disabled = owner.includes(i);
+        button.setAttribute('aria-pressed', String(i === selected));
+        button.classList.toggle('ring-2', i === selected);
+        button.classList.toggle('ring-blue-500', i === selected);
+      },
+    );
+  }
+
+  function nextUnassigned() {
+    const next = players.findIndex((_, i) => !owner.includes(i));
+    return next === -1 ? null : next;
+  }
+
+  function updateResultList() {
+    resultList.replaceChildren();
+    const rows = [...traced]
+      .map((col) => ({ col, who: owner[col] }))
+      .filter((r): r is { col: number; who: number } => r.who !== null)
+      .sort((a, b) => a.who - b.who);
+    rows.forEach(({ col, who }) => {
+      const li = document.createElement('li');
+      li.className = 'break-all';
+      li.textContent = fill(msg.routeResult, {
+        player: players[who],
+        result: results[endOf(col)],
+      });
+      li.style.borderLeft = `4px solid ${colColor(col)}`;
+      li.style.paddingLeft = '0.5rem';
+      resultList.append(li);
+    });
+    resultEl.hidden = rows.length === 0;
+  }
+
+  function finishTrace(col: number) {
+    traced.add(col);
+    shownEnds.add(endOf(col));
+    updateBottom();
+    updateResultList();
+  }
+
+  function trace(col: number, animate: boolean) {
+    if (!ladder || started.has(col)) return;
+    started.add(col);
+    const line = el('polyline', {
+      points: traceRoute(ladder, col)
+        .map((p) => `${colX(p.col)},${rowY(p.row)}`)
+        .join(' '),
+      fill: 'none',
+      stroke: colColor(col),
+      'stroke-width': 4,
+      'stroke-linejoin': 'round',
+      'stroke-linecap': 'round',
+      opacity: 0.9,
+    });
+    routesGroup.append(line);
+    topRects[col].setAttribute('stroke', colColor(col));
+    topRects[col].setAttribute('stroke-width', '3');
+    updateTops();
+    if (!animate || reducedMotion()) {
+      finishTrace(col);
+      return;
+    }
+    const gen = generation;
+    const length = line.getTotalLength();
+    line.style.strokeDasharray = String(length);
+    line.style.strokeDashoffset = String(length);
+    const duration = Math.min(2500, 700 + length * 2);
+    const startedAt = performance.now();
+    const step = (now: number) => {
+      if (gen !== generation) return;
+      const p = Math.min(1, (now - startedAt) / duration);
+      line.style.strokeDashoffset = String(length * (1 - p));
+      if (p < 1) requestAnimationFrame(step);
+      else finishTrace(col);
+    };
+    requestAnimationFrame(step);
+  }
+
+  /** 線をタップしたとき。未選択の線なら、選択中の参加者がその線を選ぶ */
+  function pick(col: number) {
+    if (!ladder || started.has(col)) return;
+    if (owner[col] === null) {
+      if (selected === null) return;
+      owner[col] = selected;
+      selected = nextUnassigned();
+      updateChips();
+    }
+    trace(col, true);
+  }
+
+  function draw() {
+    const n = players.length;
+    const rows = ladder!.length;
+    const width = n * COL_W;
+    const height = rowY(rows + 1) + BOTTOM;
+    svg.replaceChildren();
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svg.setAttribute('width', String(width));
+    svg.setAttribute('height', String(height));
+    svg.style.maxWidth = 'none';
+
+    const lines = el('g', {
+      stroke: '#9ca3af',
+      'stroke-width': 3,
+      'stroke-linecap': 'round',
+    });
+    for (let c = 0; c < n; c++) {
+      lines.append(
+        el('line', {
+          x1: colX(c),
+          y1: rowY(0),
+          x2: colX(c),
+          y2: rowY(rows + 1),
+        }),
+      );
+    }
+    ladder!.forEach((row, r) => {
+      row.forEach((bar, c) => {
+        if (!bar) return;
+        lines.append(
+          el('line', {
+            x1: colX(c),
+            y1: rowY(r + 1),
+            x2: colX(c + 1),
+            y2: rowY(r + 1),
+          }),
+        );
+      });
+    });
+    svg.append(lines);
+
+    routesGroup = el('g', {});
+    svg.append(routesGroup);
+
+    topGroups = [];
+    topRects = [];
+    topLabels = [];
+    for (let c = 0; c < n; c++) {
+      const g = el('g', {
+        'data-col': c,
+        role: 'button',
+        tabindex: 0,
+        style: 'cursor:pointer',
+      });
+      const rect = el('rect', {
+        x: colX(c) - COL_W / 2 + 4,
+        y: 6,
+        width: COL_W - 8,
+        height: TOP - 14,
+        rx: 8,
+        fill: '#f3f4f6',
+        stroke: '#9ca3af',
+        'stroke-width': 1.5,
+      });
+      const label = el('text', {
+        x: colX(c),
+        y: 6 + (TOP - 14) / 2,
+        'text-anchor': 'middle',
+        'dominant-baseline': 'central',
+        'font-size': 13,
+        fill: '#111827',
+        'data-top': c,
+      });
+      g.append(rect, label);
+      g.addEventListener('click', () => pick(c));
+      g.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          pick(c);
+        }
+      });
+      svg.append(g);
+      topGroups.push(g);
+      topRects.push(rect);
+      topLabels.push(label);
+    }
+    updateTops();
+
+    bottomLabels = results.map((_, c) => {
+      const label = el('text', {
+        x: colX(c),
+        y: rowY(rows + 1) + BOTTOM / 2 + 4,
+        'text-anchor': 'middle',
+        'dominant-baseline': 'central',
+        'font-size': 13,
+        'font-weight': 'bold',
+        fill: 'currentColor',
+        'data-end': c,
+      });
+      svg.append(label);
+      return label;
+    });
+    updateBottom();
+  }
+
+  function resetBoard() {
+    generation++;
+    started.clear();
+    traced.clear();
+    shownEnds.clear();
+    owner = players.map(() => null);
+    selected = players.length > 0 ? 0 : null;
+    resultList.replaceChildren();
+    resultEl.hidden = true;
+    chipsEl.replaceChildren();
+    updateChips();
+    draw();
+  }
+
+  function generate() {
+    showError('');
+    const nextPlayers = parseLines(playersInput.value);
+    const nextResults = parseLines(resultsInput.value);
+    const min = Number(msg.min);
+    const max = Number(msg.max);
+    if (nextPlayers.length < min || nextPlayers.length > max) {
+      showError(fill(msg.rangeError, { min: String(min), max: String(max) }));
+      return;
+    }
+    if (nextPlayers.length !== nextResults.length) {
+      showError(
+        fill(msg.mismatchError, {
+          players: String(nextPlayers.length),
+          results: String(nextResults.length),
+        }),
+      );
+      return;
+    }
+    players = nextPlayers;
+    // ゴールの結果の並びもランダムにする（入力順では位置が分からない）
+    results = shuffle(nextResults);
+    ladder = generateLadder(players.length);
+    board.hidden = false;
+    resetBoard();
+  }
+
+  /** 全員分を表示。まだ線を選んでいない参加者は、残りの線にランダムに割り振る */
+  function revealAll() {
+    if (!ladder) return;
+    const freeCols = owner
+      .map((who, col) => (who === null ? col : -1))
+      .filter((col) => col !== -1);
+    const freePlayers = players
+      .map((_, i) => i)
+      .filter((i) => !owner.includes(i));
+    const assigned = shuffle(freePlayers);
+    freeCols.forEach((col, k) => {
+      owner[col] = assigned[k];
+    });
+    selected = null;
+    updateChips();
+    owner.forEach((_, col) => trace(col, false));
+  }
+
+  /** print: 紙への印刷用。結果をすべて表示し、経路の色を付けず、線を濃くする。名前は入れず線の番号だけにする */
+  async function saveImage(print: boolean) {
+    if (!ladder) return;
+    const clone = svg.cloneNode(true) as SVGSVGElement;
+    clone.setAttribute('xmlns', NS);
+    clone
+      .querySelectorAll('[fill="currentColor"]')
+      .forEach((node) => node.setAttribute('fill', '#111827'));
+    if (print) {
+      clone.querySelectorAll('polyline').forEach((node) => node.remove());
+      clone.querySelectorAll('[data-col] rect').forEach((node) => {
+        node.setAttribute('stroke', '#9ca3af');
+        node.setAttribute('stroke-width', '1.5');
+      });
+      clone.querySelectorAll('text[data-top]').forEach((node) => {
+        node.textContent = String(Number(node.getAttribute('data-top')) + 1);
+      });
+      clone.querySelector('g[stroke]')?.setAttribute('stroke', '#374151');
+      // 印刷用は結果を長めに出す（長い結果は文字を小さくして7文字まで）
+      clone.querySelectorAll('text[data-end]').forEach((node) => {
+        const full = results[Number(node.getAttribute('data-end'))];
+        const text = shorten(full, 7);
+        node.textContent = text;
+        node.setAttribute(
+          'font-size',
+          String(Math.max(8, Math.min(13, 56 / Array.from(text).length))),
+        );
+      });
+    }
+    const width = Number(svg.getAttribute('width'));
+    const height = Number(svg.getAttribute('height'));
+    clone.insertBefore(
+      el('rect', { width, height, fill: '#ffffff' }),
+      clone.firstChild,
+    );
+    const scale = 2;
+    clone.setAttribute('width', String(width * scale));
+    clone.setAttribute('height', String(height * scale));
+    const svgUrl = URL.createObjectURL(
+      new Blob([new XMLSerializer().serializeToString(clone)], {
+        type: 'image/svg+xml;charset=utf-8',
+      }),
+    );
+    try {
+      const img = new Image();
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('image load failed'));
+        img.src = svgUrl;
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      canvas.getContext('2d')!.drawImage(img, 0, 0);
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, 'image/png'),
+      );
+      if (!blob) throw new Error('toBlob failed');
+      downloadBlob(blob, print ? 'amidakuji-print.png' : 'amidakuji.png');
+    } catch {
+      showError(msg.imageFailed ?? '');
+    } finally {
+      URL.revokeObjectURL(svgUrl);
+    }
+  }
+
+  generateButton.addEventListener('click', generate);
+  revealButton.addEventListener('click', revealAll);
+  resetButton.addEventListener('click', () => {
+    if (ladder) resetBoard();
+  });
+  saveButton.addEventListener('click', () => void saveImage(false));
+  printButton.addEventListener('click', () => void saveImage(true));
+  hideCheck.addEventListener('change', () => {
+    if (ladder) updateBottom();
+  });
+  playersInput.addEventListener('input', updateInfo);
+  resultsInput.addEventListener('input', () => showError(''));
+  document.addEventListener('DOMContentLoaded', updateInfo);
+  updateInfo();
+</script>

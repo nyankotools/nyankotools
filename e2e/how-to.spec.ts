@@ -37,6 +37,7 @@ const slugs = [
   'camera-color-picker',
   'zip-tool',
   'screen-recorder',
+  'text-merge-tool',
 ];
 
 const locales = [

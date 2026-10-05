@@ -4440,6 +4440,43 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'text-merge-tool',
+    category: 'text',
+    addedAt: '2026-10-05',
+    updatedAt: '2026-10-05',
+    related: ['text-diff', 'line-ending-converter', 'char-counter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'テキストマージツール',
+        keywords: [
+          'マージ',
+          'テキスト統合',
+          '差分',
+          '結合',
+          '2バージョン',
+          'merge',
+          'diff',
+        ],
+        description:
+          '2つのバージョンのテキストを比較し、差分の箇所ごとにA・Bのどちらを採用するか選んで1つに統合します。結果は手動で編集でき、コピー・ダウンロードも可能。',
+      },
+      en: {
+        name: 'Text Merge Tool',
+        keywords: [
+          'merge',
+          'text merge',
+          'combine',
+          'diff',
+          'three-way',
+          'resolve conflicts',
+        ],
+        description:
+          'Compare two versions of a text and choose A, B, or both for each difference to merge them into one. Edit the result by hand, then copy or download it.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

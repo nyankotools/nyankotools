@@ -5,8 +5,8 @@ import { updates } from './updates';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 describe('tools registry', () => {
-  it('all tools count should be 133', () => {
-    expect(tools.length).toBe(133);
+  it('all tools count should be 135', () => {
+    expect(tools.length).toBe(135);
   });
 
   it('slug が重複していない', () => {
@@ -178,6 +178,8 @@ describe('tools registry - flags', () => {
       'pdf-redactor',
       'pdf-page-number-watermark',
       'pdf-metadata-editor',
+      'zip-tool',
+      'screen-recorder',
       'crypto-encryptor',
       'hmac-generator',
       'totp-generator',

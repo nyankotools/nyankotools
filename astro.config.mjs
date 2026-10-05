@@ -105,6 +105,7 @@ export default defineConfig({
         'csso',
         'dompurify',
         'exifr',
+        'fflate',
         'heic-to/csp',
         'jsbarcode',
         'jsqr',

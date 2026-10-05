@@ -370,6 +370,20 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-05',
+    toolSlugs: ['zip-tool', 'screen-recorder'],
+    translations: {
+      ja: {
+        summary:
+          'ZIP作成・解凍（ファイルをまとめる・中身を確認して取り出す）、画面録画（画面・ウィンドウ・タブをブラウザだけで録画して保存）を追加しました。',
+      },
+      en: {
+        summary:
+          'Added the ZIP Maker & Extractor (bundle files, browse a ZIP and save what you need) and the Screen Recorder (record a screen, window or tab in the browser and save it).',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

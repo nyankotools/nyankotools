@@ -4333,6 +4333,77 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'zip-tool',
+    category: 'file',
+    addedAt: '2026-10-05',
+    updatedAt: '2026-10-05',
+    related: ['file-hash-calculator', 'crypto-encryptor'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ZIP作成・解凍',
+        keywords: [
+          'ZIP',
+          '圧縮',
+          '解凍',
+          '展開',
+          'アーカイブ',
+          'ファイルをまとめる',
+        ],
+        description:
+          '複数のファイルをZIPにまとめたり、ZIPの中身を確認して必要なファイルだけ取り出したりできます。日本語のファイル名にも対応。',
+      },
+      en: {
+        name: 'ZIP Maker & Extractor',
+        keywords: [
+          'zip',
+          'unzip',
+          'compress',
+          'extract',
+          'archive',
+          'create zip',
+        ],
+        description:
+          'Bundle files into a ZIP, or open a ZIP, browse its contents and save only the files you need. Works with non-English file names.',
+      },
+    },
+  },
+  {
+    slug: 'screen-recorder',
+    category: 'hardware',
+    addedAt: '2026-10-05',
+    updatedAt: '2026-10-05',
+    related: ['mic-tester', 'webcam-tester'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画面録画',
+        keywords: [
+          '画面録画',
+          'スクリーンレコーダー',
+          '画面キャプチャ',
+          '録画',
+          'タブ録画',
+          'screen recording',
+        ],
+        description:
+          '画面全体・ウィンドウ・ブラウザのタブをブラウザだけで録画し、動画ファイルとして保存できます。ソフトのインストール不要。',
+      },
+      en: {
+        name: 'Screen Recorder',
+        keywords: [
+          'screen recorder',
+          'screen capture',
+          'record screen',
+          'tab recorder',
+          'screencast',
+        ],
+        description:
+          'Record your entire screen, a window or a browser tab right in the browser and save it as a video file. Nothing to install.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -35,6 +35,8 @@ const slugs = [
   'pdf-metadata-editor',
   'id-photo-maker',
   'camera-color-picker',
+  'zip-tool',
+  'screen-recorder',
 ];
 
 const locales = [

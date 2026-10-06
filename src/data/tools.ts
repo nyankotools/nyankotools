@@ -15,6 +15,7 @@ export const categoryIds = [
   'security',
   'file',
   'hardware',
+  'media',
 ] as const;
 
 export type CategoryId = (typeof categoryIds)[number];
@@ -34,6 +35,7 @@ export const categories: Record<CategoryId, Record<Locale, string>> = {
   security: { ja: 'セキュリティ', en: 'Security' },
   file: { ja: 'ファイル', en: 'File' },
   hardware: { ja: 'ハードウェア', en: 'Hardware' },
+  media: { ja: '動画・音声', en: 'Video & Audio' },
 };
 
 export interface ToolTranslation {
@@ -4330,6 +4332,375 @@ export const tools: Tool[] = [
         ],
         description:
           'Generate up to 1,000 fake people with names, emails, phones, addresses, and birthdays as JSON, CSV, or TSV, with a seed for repeatable output.',
+      },
+    },
+  },
+  {
+    slug: 'zip-tool',
+    category: 'file',
+    addedAt: '2026-10-05',
+    updatedAt: '2026-10-05',
+    related: ['file-hash-calculator', 'crypto-encryptor'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ZIP作成・解凍',
+        keywords: [
+          'ZIP',
+          '圧縮',
+          '解凍',
+          '展開',
+          'アーカイブ',
+          'ファイルをまとめる',
+        ],
+        description:
+          '複数のファイルをZIPにまとめたり、ZIPの中身を確認して必要なファイルだけ取り出したりできます。日本語のファイル名にも対応。',
+      },
+      en: {
+        name: 'ZIP Maker & Extractor',
+        keywords: [
+          'zip',
+          'unzip',
+          'compress',
+          'extract',
+          'archive',
+          'create zip',
+        ],
+        description:
+          'Bundle files into a ZIP, or open a ZIP, browse its contents and save only the files you need. Works with non-English file names.',
+      },
+    },
+  },
+  {
+    slug: 'screen-recorder',
+    category: 'hardware',
+    addedAt: '2026-10-05',
+    updatedAt: '2026-10-05',
+    related: ['mic-tester', 'webcam-tester'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画面録画',
+        keywords: [
+          '画面録画',
+          'スクリーンレコーダー',
+          '画面キャプチャ',
+          '録画',
+          'タブ録画',
+          'screen recording',
+        ],
+        description:
+          '画面全体・ウィンドウ・ブラウザのタブをブラウザだけで録画し、動画ファイルとして保存できます。ソフトのインストール不要。',
+      },
+      en: {
+        name: 'Screen Recorder',
+        keywords: [
+          'screen recorder',
+          'screen capture',
+          'record screen',
+          'tab recorder',
+          'screencast',
+        ],
+        description:
+          'Record your entire screen, a window or a browser tab right in the browser and save it as a video file. Nothing to install.',
+      },
+    },
+  },
+  {
+    slug: 'amidakuji-generator',
+    category: 'generate',
+    addedAt: '2026-10-05',
+    updatedAt: '2026-10-05',
+    related: ['roulette-dice', 'password-generator', 'uuid-generator'],
+    translations: {
+      ja: {
+        name: 'あみだくじ生成',
+        keywords: [
+          'あみだくじ',
+          'アミダクジ',
+          'くじ引き',
+          '抽選',
+          '順番決め',
+          '役割分担',
+          '飲み会',
+        ],
+        description:
+          '参加者と結果を入力するだけで、あみだくじを自動作成。結果を隠して1人ずつ辿る・全員分を一括表示・画像保存に対応します。',
+      },
+      en: {
+        name: 'Amidakuji (Ghost Leg) Generator',
+        keywords: [
+          'amidakuji',
+          'ghost leg',
+          'ladder lottery',
+          'random assignment',
+          'lottery',
+          'chore picker',
+        ],
+        description:
+          'Create an amidakuji ghost-leg ladder from names and outcomes. Hide results and trace one player at a time, reveal everyone, or save it as an image.',
+      },
+    },
+  },
+  {
+    slug: 'text-merge-tool',
+    category: 'text',
+    addedAt: '2026-10-05',
+    updatedAt: '2026-10-05',
+    related: ['text-diff', 'line-ending-converter', 'char-counter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'テキストマージツール',
+        keywords: [
+          'マージ',
+          'テキスト統合',
+          '差分',
+          '結合',
+          '2バージョン',
+          'merge',
+          'diff',
+        ],
+        description:
+          '2つのバージョンのテキストを比較し、差分の箇所ごとにA・Bのどちらを採用するか選んで1つに統合します。結果は手動で編集でき、コピー・ダウンロードも可能。',
+      },
+      en: {
+        name: 'Text Merge Tool',
+        keywords: [
+          'merge',
+          'text merge',
+          'combine',
+          'diff',
+          'three-way',
+          'resolve conflicts',
+        ],
+        description:
+          'Compare two versions of a text and choose A, B, or both for each difference to merge them into one. Edit the result by hand, then copy or download it.',
+      },
+    },
+  },
+  {
+    slug: 'keypair-generator',
+    category: 'security',
+    addedAt: '2026-10-06',
+    updatedAt: '2026-10-06',
+    related: ['crypto-encryptor', 'hmac-generator', 'password-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'キーペア生成',
+        keywords: [
+          'RSA',
+          'ECDSA',
+          'Ed25519',
+          '公開鍵',
+          '秘密鍵',
+          'PEM',
+          '鍵生成',
+        ],
+        description:
+          'RSA・ECDSA・Ed25519の公開鍵と秘密鍵のペアをPEM形式で生成。鍵はブラウザ内で作られ、送信されません。',
+      },
+      en: {
+        name: 'Key Pair Generator',
+        keywords: [
+          'RSA',
+          'ECDSA',
+          'Ed25519',
+          'public key',
+          'private key',
+          'PEM',
+          'keygen',
+        ],
+        description:
+          'Generate RSA, ECDSA, or Ed25519 public/private key pairs in PEM format. Keys are created in your browser and never sent.',
+      },
+    },
+  },
+  {
+    slug: 'data-recipe-builder',
+    category: 'encode',
+    addedAt: '2026-10-06',
+    updatedAt: '2026-10-06',
+    related: ['base64', 'url-encode', 'hash-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '多段エンコード/デコード・ハッシュ変換チェーン',
+        keywords: [
+          'レシピ',
+          'CyberChef',
+          '連続変換',
+          'Base64',
+          'ハッシュ',
+          'パイプライン',
+        ],
+        description:
+          'Base64・URL・16進数・HTMLエスケープ・MD5/SHA-256などを好きな順に連結して一度に変換。手順ごとの途中結果も確認できます。',
+      },
+      en: {
+        name: 'Multi-Step Encode/Decode & Hash Chain',
+        keywords: [
+          'recipe',
+          'CyberChef',
+          'chain',
+          'pipeline',
+          'base64',
+          'hash',
+          'multi-step',
+        ],
+        description:
+          'Chain Base64, URL, hex, HTML escape, MD5/SHA-256 and more in any order and convert in one go, with every intermediate result shown.',
+      },
+    },
+  },
+  {
+    slug: 'text-replace-tools',
+    category: 'text',
+    addedAt: '2026-10-06',
+    updatedAt: '2026-10-06',
+    related: ['text-list-tools', 'regex-tester', 'text-diff'],
+    translations: {
+      ja: {
+        name: 'テキスト一括置換・行操作',
+        keywords: [
+          '一括置換',
+          '文字列置換',
+          '行番号',
+          '行番号付与',
+          '行抽出',
+          'grep',
+          '正規表現',
+          '行頭追加',
+        ],
+        description:
+          'テキストの一括置換（正規表現対応）、行番号の付与・削除、キーワードを含む行の抽出・除外、各行の前後への文字追加、行の逆順を行います。',
+      },
+      en: {
+        name: 'Find & Replace and Line Tools',
+        keywords: [
+          'find and replace',
+          'bulk replace',
+          'add line numbers',
+          'filter lines',
+          'grep',
+          'regex replace',
+          'prefix suffix',
+        ],
+        description:
+          'Bulk find and replace (regex supported), add or remove line numbers, keep or remove lines by keyword, add a prefix or suffix to each line, and reverse line order.',
+      },
+    },
+  },
+  {
+    slug: 'ocr-protect-image',
+    category: 'image',
+    addedAt: '2026-10-06',
+    updatedAt: '2026-10-06',
+    related: ['image-pixelart-converter', 'image-text-overlay', 'exif-viewer'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'OCR対策画像加工',
+        keywords: [
+          'OCR対策',
+          '文字認識',
+          'スクレイピング対策',
+          '画像ノイズ',
+          '文字を読み取りにくく',
+        ],
+        description:
+          '画像内の文字に微小な歪み・ノイズ・細線を加え、OCRによる自動読み取りを難しくします。効果は保証できません。PNGで保存可能。',
+      },
+      en: {
+        name: 'OCR-Resistant Image Obfuscator',
+        keywords: [
+          'OCR protection',
+          'anti OCR',
+          'anti scraping',
+          'image noise',
+          'obfuscate text',
+        ],
+        description:
+          'Adds subtle distortion, noise, and fine lines to text in an image to make automatic OCR reading harder. No guarantee of effect. Saves as PNG.',
+      },
+    },
+  },
+  {
+    slug: 'csp-sri-generator',
+    category: 'security',
+    addedAt: '2026-10-06',
+    updatedAt: '2026-10-06',
+    related: ['http-header-analyzer', 'hash-generator', 'meta-tag-generator'],
+    translations: {
+      ja: {
+        name: 'CSP・SRIハッシュ生成',
+        keywords: [
+          'CSP',
+          'Content-Security-Policy',
+          'SRI',
+          'integrity',
+          'Subresource Integrity',
+          'セキュリティヘッダー',
+          'nonce',
+        ],
+        description:
+          'Content-Security-Policyをディレクティブごとに組み立て、nginx・Apache・_headers形式で出力。スクリプトやCSSのSRI integrityハッシュとタグも生成します。',
+      },
+      en: {
+        name: 'CSP & SRI Hash Generator',
+        keywords: [
+          'CSP',
+          'Content-Security-Policy',
+          'SRI',
+          'integrity',
+          'Subresource Integrity',
+          'security headers',
+          'nonce',
+        ],
+        description:
+          'Build a Content-Security-Policy per directive and copy it as nginx, Apache, or _headers config. Also generates SRI integrity hashes and tags.',
+      },
+    },
+  },
+  {
+    slug: 'media-converter',
+    category: 'media',
+    addedAt: '2026-10-06',
+    updatedAt: '2026-10-06',
+    related: ['screen-recorder', 'image-converter', 'file-hash-calculator'],
+    heavy: true,
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '動画・音声変換／トリミング／圧縮',
+        keywords: [
+          '動画変換',
+          '音声変換',
+          'MP4',
+          'WebM',
+          'MP3',
+          '動画圧縮',
+          '動画トリミング',
+          '音声抽出',
+        ],
+        description:
+          '動画・音声をMP4・WebM・MP3などに変換し、必要な部分の切り出しや、画質・解像度を下げた圧縮もできます。ブラウザ内で処理され、アップロード不要。',
+      },
+      en: {
+        name: 'Video & Audio Converter, Trimmer, Compressor',
+        keywords: [
+          'video converter',
+          'audio converter',
+          'MP4',
+          'WebM',
+          'MP3',
+          'compress video',
+          'trim video',
+          'extract audio',
+        ],
+        description:
+          'Convert video and audio to MP4, WebM, MP3 and more, trim a section, or shrink the file by lowering quality and resolution. Runs in your browser, no upload.',
       },
     },
   },

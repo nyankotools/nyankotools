@@ -1,0 +1,280 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { screenRecorderContent } from '../../i18n/tools/screen-recorder';
+import { MAX_RECORD_SECONDS } from '../../lib/tools/screen-recorder';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = screenRecorderContent[locale];
+const limitNote = t.limitNote.replace('{max}', String(MAX_RECORD_SECONDS / 60));
+---
+
+<ToolShell t={t}>
+  <div
+    id="sr-root"
+    data-max-seconds={MAX_RECORD_SECONDS}
+    data-start-label={t.startLabel}
+    data-stop-label={t.stopLabel}
+    data-recording={t.recording}
+    data-size-info={t.sizeInfo}
+    data-error-cancelled={t.errors.cancelled}
+    data-error-unsupported={t.errors.unsupported}
+    data-error-insecure={t.errors.insecure}
+    data-error-unknown={t.errors.unknown}
+  >
+    <label class="ui-check">
+      <input id="sr-audio" type="checkbox" class="h-4 w-4" />
+      {t.audioLabel}
+    </label>
+    <p class="mt-1 max-w-2xl text-xs text-gray-500 dark:text-gray-400">
+      {t.audioHint}
+    </p>
+
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button id="sr-toggle" type="button" class="ui-btn-primary h-12">
+        {t.startLabel}
+      </button>
+      <span
+        id="sr-status"
+        hidden
+        role="status"
+        class="text-sm font-medium text-red-600 dark:text-red-400"
+      ></span>
+    </div>
+    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{limitNote}</p>
+    <p id="sr-idle" class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+      {t.idleMessage}
+    </p>
+    <p id="sr-error" hidden role="alert" class="ui-error mt-4 max-w-2xl"></p>
+    <p
+      id="sr-notice"
+      hidden
+      role="status"
+      class="mt-3 text-sm text-amber-700 dark:text-amber-400"
+    >
+      {t.autoStopped}
+    </p>
+    <p id="sr-unsupported" hidden class="ui-error mt-2 max-w-2xl">
+      {t.recorderUnsupported}
+    </p>
+
+    <div id="sr-result" hidden class="mt-6 max-w-3xl">
+      <h2 class="mb-2 text-lg font-bold">{t.previewHeading}</h2>
+      <video
+        id="sr-video"
+        controls
+        playsinline
+        aria-label={t.playbackAriaLabel}
+        class="w-full rounded-lg border border-gray-200 bg-black dark:border-gray-700"
+      ></video>
+      <p id="sr-size" class="mt-2 text-sm text-gray-600 dark:text-gray-400"></p>
+      <div class="mt-3 flex flex-wrap gap-3">
+        <button id="sr-download" type="button" class="ui-btn-primary">
+          {t.downloadLabel}
+        </button>
+        <button id="sr-discard" type="button" class="ui-btn">
+          {t.discardLabel}
+        </button>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import {
+    MAX_RECORD_SECONDS,
+    classifyDisplayError,
+    pickVideoMimeType,
+    recordingFileName,
+    videoExtensionForMime,
+    type ScreenCaptureErrorKind,
+  } from '../../lib/tools/screen-recorder';
+  import { formatDuration } from '../../lib/tools/mic-tester';
+  import { formatBytes } from '../../lib/tools/zip-tool';
+
+  const root = document.getElementById('sr-root')!;
+  const d = root.dataset;
+  const audioInput = document.getElementById('sr-audio') as HTMLInputElement;
+  const toggleButton = document.getElementById(
+    'sr-toggle',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('sr-status')!;
+  const idleEl = document.getElementById('sr-idle')!;
+  const errorEl = document.getElementById('sr-error')!;
+  const noticeEl = document.getElementById('sr-notice')!;
+  const unsupportedEl = document.getElementById('sr-unsupported')!;
+  const resultEl = document.getElementById('sr-result')!;
+  const videoEl = document.getElementById('sr-video') as HTMLVideoElement;
+  const sizeEl = document.getElementById('sr-size')!;
+  const downloadButton = document.getElementById(
+    'sr-download',
+  ) as HTMLButtonElement;
+  const discardButton = document.getElementById(
+    'sr-discard',
+  ) as HTMLButtonElement;
+
+  const ERROR_TEXT: Record<ScreenCaptureErrorKind, string> = {
+    cancelled: d.errorCancelled ?? '',
+    unsupported: d.errorUnsupported ?? '',
+    insecure: d.errorInsecure ?? '',
+    unknown: d.errorUnknown ?? '',
+  };
+
+  let stream: MediaStream | null = null;
+  let recorder: MediaRecorder | null = null;
+  let chunks: Blob[] = [];
+  let startedAt = 0;
+  let timer = 0;
+  let starting = false;
+  let autoStopped = false;
+  let blob: Blob | null = null;
+  let blobUrl: string | null = null;
+  let blobMime = '';
+
+  if (typeof MediaRecorder === 'undefined') {
+    unsupportedEl.hidden = false;
+    toggleButton.disabled = true;
+  }
+
+  function showError(kind: ScreenCaptureErrorKind) {
+    errorEl.textContent = ERROR_TEXT[kind];
+    errorEl.hidden = false;
+  }
+
+  function clearResult() {
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
+    blobUrl = null;
+    blob = null;
+    videoEl.removeAttribute('src');
+    videoEl.load();
+    resultEl.hidden = true;
+  }
+
+  function updateStatus() {
+    const seconds = (performance.now() - startedAt) / 1000;
+    statusEl.textContent = `● ${d.recording ?? ''} ${formatDuration(seconds)} / ${formatDuration(MAX_RECORD_SECONDS)}`;
+    if (seconds >= MAX_RECORD_SECONDS) {
+      autoStopped = true;
+      stopRecording();
+    }
+  }
+
+  function stopRecording() {
+    if (recorder && recorder.state !== 'inactive') recorder.stop();
+  }
+
+  function releaseStream() {
+    stream?.getTracks().forEach((track) => track.stop());
+    stream = null;
+  }
+
+  async function startRecording() {
+    if (starting) return;
+    starting = true;
+    errorEl.hidden = true;
+    noticeEl.hidden = true;
+    autoStopped = false;
+    try {
+      if (!navigator.mediaDevices?.getDisplayMedia) {
+        showError(window.isSecureContext ? 'unsupported' : 'insecure');
+        return;
+      }
+      let media: MediaStream;
+      try {
+        media = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: audioInput.checked,
+        });
+      } catch (error) {
+        showError(
+          classifyDisplayError((error as DOMException | undefined)?.name),
+        );
+        return;
+      }
+      stream = media;
+      const mimeType = pickVideoMimeType((m) =>
+        MediaRecorder.isTypeSupported(m),
+      );
+      let current: MediaRecorder;
+      try {
+        // ビットレートを抑え、30分録画でもメモリを使い切らないようにする
+        current = new MediaRecorder(media, {
+          ...(mimeType ? { mimeType } : {}),
+          videoBitsPerSecond: 2_500_000,
+        });
+      } catch {
+        releaseStream();
+        showError('unsupported');
+        return;
+      }
+      recorder = current;
+      chunks = [];
+      current.addEventListener('dataavailable', (event) => {
+        if (event.data.size > 0) chunks.push(event.data);
+      });
+      current.addEventListener('stop', () => {
+        clearInterval(timer);
+        releaseStream();
+        statusEl.hidden = true;
+        toggleButton.textContent = d.startLabel ?? '';
+        idleEl.hidden = false;
+        if (recorder === current) recorder = null;
+        if (autoStopped) noticeEl.hidden = false;
+        if (chunks.length === 0) return;
+        blobMime = current.mimeType || mimeType || 'video/webm';
+        clearResult();
+        blob = new Blob(chunks, { type: blobMime });
+        chunks = [];
+        blobUrl = URL.createObjectURL(blob);
+        videoEl.src = blobUrl;
+        sizeEl.textContent = (d.sizeInfo ?? '').replace(
+          '{size}',
+          formatBytes(blob.size),
+        );
+        resultEl.hidden = false;
+      });
+      // ブラウザの「共有を停止」で映像が終わったら、録画も止める
+      media.getVideoTracks()[0]?.addEventListener('ended', stopRecording);
+
+      clearResult();
+      current.start(1000);
+      startedAt = performance.now();
+      statusEl.hidden = false;
+      idleEl.hidden = true;
+      toggleButton.textContent = d.stopLabel ?? '';
+      updateStatus();
+      timer = window.setInterval(updateStatus, 500);
+    } finally {
+      starting = false;
+    }
+  }
+
+  toggleButton.addEventListener('click', () => {
+    if (recorder && recorder.state !== 'inactive') {
+      stopRecording();
+    } else {
+      void startRecording();
+    }
+  });
+  downloadButton.addEventListener('click', () => {
+    if (!blob) return;
+    downloadBlob(
+      blob,
+      recordingFileName(new Date(), videoExtensionForMime(blobMime)),
+    );
+  });
+  discardButton.addEventListener('click', clearResult);
+
+  window.addEventListener('pagehide', () => {
+    if (recorder) {
+      recorder.stop();
+    }
+    releaseStream();
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
+  });
+</script>

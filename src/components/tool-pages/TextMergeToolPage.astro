@@ -1,0 +1,277 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { textMergeToolContent } from '../../i18n/tools/text-merge-tool';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = textMergeToolContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="tm-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-status-template={t.statusTemplate}
+    data-no-changes={t.noChanges}
+    data-hunk-title={t.hunkTitleTemplate}
+    data-side-a={t.sideA}
+    data-side-b={t.sideB}
+    data-empty-side={t.emptySide}
+    data-download-file-name={t.downloadFileName}
+  >
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="tm-input-a" class="ui-label">
+          {t.inputALabel}
+        </label>
+        <textarea
+          id="tm-input-a"
+          class="ui-input h-52 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.inputPlaceholder}
+          spellcheck="false"
+          data-no-count
+        ></textarea>
+      </div>
+      <div>
+        <label for="tm-input-b" class="ui-label">
+          {t.inputBLabel}
+        </label>
+        <textarea
+          id="tm-input-b"
+          class="ui-input h-52 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.inputPlaceholder}
+          spellcheck="false"
+          data-no-count
+        ></textarea>
+      </div>
+    </div>
+    <button
+      id="tm-sample-button"
+      type="button"
+      class="ui-btn mt-3"
+      data-sample-a={t.sampleA}
+      data-sample-b={t.sampleB}
+    >
+      {t.insertSample}
+    </button>
+
+    <h2 class="mt-6 text-lg font-semibold">{t.hunksHeading}</h2>
+    <div class="mt-2 flex flex-wrap items-center gap-2">
+      <button id="tm-all-a" type="button" class="ui-btn">
+        {t.allA}
+      </button>
+      <button id="tm-all-b" type="button" class="ui-btn">
+        {t.allB}
+      </button>
+      <button id="tm-all-ab" type="button" class="ui-btn">
+        {t.allBoth}
+      </button>
+      <span
+        id="tm-status"
+        class="text-sm font-medium text-gray-700 dark:text-gray-300"
+        aria-live="polite"
+      ></span>
+    </div>
+    <div id="tm-hunks" class="mt-3 space-y-3"></div>
+
+    <label for="tm-result" class="ui-label mt-6">
+      {t.resultLabel}
+    </label>
+    <textarea
+      id="tm-result"
+      class="ui-input h-64 w-full p-4 font-mono dark:bg-gray-900"
+      spellcheck="false"
+      data-no-count
+    ></textarea>
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button id="tm-copy-button" type="button" class="ui-btn">
+        {t.copy}
+      </button>
+      <button id="tm-download-button" type="button" class="ui-btn">
+        {t.download}
+      </button>
+      <span
+        id="tm-copy-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </section>
+
+  <template id="tm-choice-options">
+    <option value="a">{t.choiceA}</option>
+    <option value="b" selected>
+      {t.choiceB}
+    </option>
+    <option value="ab">{t.choiceAB}</option>
+    <option value="ba">{t.choiceBA}</option>
+    <option value="none">{t.choiceNone}</option>
+  </template>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    buildSegments,
+    changeKey,
+    countChanges,
+    mergeSegments,
+    type MergeChoice,
+  } from '../../lib/tools/text-merge-tool';
+
+  const DEFAULT_CHOICE: MergeChoice = 'b';
+
+  const root = document.getElementById('tm-root')!;
+  const inputA = document.getElementById('tm-input-a') as HTMLTextAreaElement;
+  const inputB = document.getElementById('tm-input-b') as HTMLTextAreaElement;
+  const result = document.getElementById('tm-result') as HTMLTextAreaElement;
+  const hunksEl = document.getElementById('tm-hunks')!;
+  const statusEl = document.getElementById('tm-status')!;
+  const copyStatus = document.getElementById('tm-copy-status')!;
+  const optionsTemplate = document.getElementById(
+    'tm-choice-options',
+  ) as HTMLTemplateElement;
+
+  let segments = buildSegments('', '');
+  // 入力を変えても選択を引き継ぐため、ハンクの内容（同内容は出現順）をキーに保持する
+  const choiceByKey = new Map<string, MergeChoice>();
+  let hunkSelects: HTMLSelectElement[] = [];
+  let hunkKeys: string[] = [];
+
+  function currentChoices(): MergeChoice[] {
+    return hunkSelects.map((s) => s.value as MergeChoice);
+  }
+
+  function updateResult() {
+    result.value = mergeSegments(segments, currentChoices(), DEFAULT_CHOICE);
+    copyStatus.textContent = '';
+  }
+
+  function makeSide(label: string, lines: string[], tone: 'a' | 'b') {
+    const box = document.createElement('div');
+    box.className =
+      tone === 'a'
+        ? 'min-w-0 rounded-md bg-red-50 p-2 text-red-800 dark:bg-red-950 dark:text-red-300'
+        : 'min-w-0 rounded-md bg-green-50 p-2 text-green-800 dark:bg-green-950 dark:text-green-300';
+    const head = document.createElement('div');
+    head.className = 'mb-1 text-xs font-semibold';
+    head.textContent = label;
+    const body = document.createElement('pre');
+    body.className = 'font-mono text-sm break-words whitespace-pre-wrap';
+    body.textContent =
+      lines.length > 0 ? lines.join('\n') : (root.dataset.emptySide ?? '');
+    box.append(head, body);
+    return box;
+  }
+
+  function rebuildHunks() {
+    segments = buildSegments(inputA.value, inputB.value);
+    const total = countChanges(segments);
+    hunksEl.replaceChildren();
+    hunkSelects = [];
+    hunkKeys = [];
+
+    statusEl.textContent =
+      total === 0
+        ? (root.dataset.noChanges ?? '')
+        : (root.dataset.statusTemplate ?? '').replace('{count}', String(total));
+
+    const seen = new Map<string, number>();
+    let n = 0;
+    for (const segment of segments) {
+      if (segment.type !== 'change') continue;
+      n++;
+      const base = changeKey(segment);
+      const occurrence = seen.get(base) ?? 0;
+      seen.set(base, occurrence + 1);
+      const key = `${base}#${occurrence}`;
+      hunkKeys.push(key);
+
+      const card = document.createElement('div');
+      card.className =
+        'rounded-lg border border-gray-300 p-3 dark:border-gray-700';
+      const header = document.createElement('div');
+      header.className = 'mb-2 flex flex-wrap items-center gap-2';
+      const title = document.createElement('span');
+      title.className = 'text-sm font-medium';
+      title.textContent = (root.dataset.hunkTitle ?? '')
+        .replace('{n}', String(n))
+        .replace('{total}', String(total));
+      const select = document.createElement('select');
+      select.className = 'ui-input h-11 px-3 dark:bg-gray-900';
+      select.setAttribute('aria-label', title.textContent);
+      select.append(optionsTemplate.content.cloneNode(true));
+      select.value = choiceByKey.get(key) ?? DEFAULT_CHOICE;
+      select.addEventListener('change', () => {
+        choiceByKey.set(key, select.value as MergeChoice);
+        updateResult();
+      });
+      hunkSelects.push(select);
+      header.append(title, select);
+
+      const sides = document.createElement('div');
+      sides.className = 'grid gap-2 sm:grid-cols-2';
+      sides.append(
+        makeSide(root.dataset.sideA ?? 'A', segment.a, 'a'),
+        makeSide(root.dataset.sideB ?? 'B', segment.b, 'b'),
+      );
+      card.append(header, sides);
+      hunksEl.append(card);
+    }
+    updateResult();
+  }
+
+  function setAll(choice: MergeChoice) {
+    hunkSelects.forEach((select, i) => {
+      select.value = choice;
+      choiceByKey.set(hunkKeys[i], choice);
+    });
+    updateResult();
+  }
+
+  onTextInput(inputA, rebuildHunks, { watch: [inputB] });
+  onTextInput(inputB, rebuildHunks, { watch: [inputA] });
+
+  document
+    .getElementById('tm-sample-button')!
+    .addEventListener('click', (e) => {
+      const btn = e.currentTarget as HTMLElement;
+      inputA.value = btn.dataset.sampleA ?? '';
+      inputB.value = btn.dataset.sampleB ?? '';
+      rebuildHunks();
+    });
+  for (const [id, choice] of [
+    ['tm-all-a', 'a'],
+    ['tm-all-b', 'b'],
+    ['tm-all-ab', 'ab'],
+  ] as const) {
+    document.getElementById(id)!.addEventListener('click', () => {
+      setAll(choice);
+    });
+  }
+
+  document
+    .getElementById('tm-copy-button')!
+    .addEventListener('click', async () => {
+      copyStatus.textContent = (await copyText(result.value))
+        ? (root.dataset.copied ?? '')
+        : (root.dataset.copyFailed ?? '');
+    });
+  document
+    .getElementById('tm-download-button')!
+    .addEventListener('click', () => {
+      downloadBlob(
+        new Blob([result.value], { type: 'text/plain;charset=utf-8' }),
+        root.dataset.downloadFileName ?? 'merged.txt',
+      );
+    });
+
+  rebuildHunks();
+</script>

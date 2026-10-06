@@ -5,8 +5,8 @@ import { updates } from './updates';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 describe('tools registry', () => {
-  it('all tools count should be 133', () => {
-    expect(tools.length).toBe(133);
+  it('all tools count should be 143', () => {
+    expect(tools.length).toBe(143);
   });
 
   it('slug が重複していない', () => {
@@ -16,9 +16,9 @@ describe('tools registry', () => {
 });
 
 describe('tools registry - category', () => {
-  it('categories は categoryIds と同じ13個のIDを持つ', () => {
+  it('categories は categoryIds と同じ14個のIDを持つ', () => {
     expect(Object.keys(categories).sort()).toEqual([...categoryIds].sort());
-    expect(categoryIds).toHaveLength(13);
+    expect(categoryIds).toHaveLength(14);
   });
 
   it('各カテゴリに ja/en の表示名があり、ロケール内で重複しない', () => {
@@ -178,7 +178,11 @@ describe('tools registry - flags', () => {
       'pdf-redactor',
       'pdf-page-number-watermark',
       'pdf-metadata-editor',
+      'zip-tool',
+      'screen-recorder',
       'crypto-encryptor',
+      'keypair-generator',
+      'data-recipe-builder',
       'hmac-generator',
       'totp-generator',
       'bcrypt-generator',

@@ -1,0 +1,511 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cspSriGeneratorContent } from '../../i18n/tools/csp-sri-generator';
+import {
+  CSP_DIRECTIVES,
+  CSP_FORMATS,
+  CSP_PRESET_IDS,
+  SRI_ALGORITHMS,
+} from '../../lib/tools/csp-sri-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cspSriGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <section>
+    <h2 class="text-xl font-semibold">{t.sriHeading}</h2>
+
+    <label for="csp-sri-file-input" class="ui-label mt-4">
+      {t.sriFileLabel}
+    </label>
+    <div id="csp-sri-dropzone" class="ui-dropzone">
+      <input id="csp-sri-file-input" type="file" class="ui-file" />
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        {t.sriFileHint}
+      </p>
+    </div>
+    <p
+      id="csp-sri-file-error"
+      role="alert"
+      hidden
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+      data-too-large={t.sriFileTooLarge}
+      data-read-error={t.sriFileReadError}
+    ></p>
+
+    <label for="csp-sri-text" class="ui-label mt-4">
+      {t.sriTextLabel}
+    </label>
+    <textarea
+      id="csp-sri-text"
+      class="ui-input h-32 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.sriTextPlaceholder}
+      spellcheck="false"
+      data-no-count
+    ></textarea>
+
+    <div class="mt-4 flex flex-wrap gap-x-6 gap-y-3">
+      <fieldset>
+        <legend class="ui-label">{t.sriAlgoLabel}</legend>
+        <div class="flex flex-wrap gap-4">
+          {SRI_ALGORITHMS.map((algorithm) => (
+            <label class="ui-check">
+              <input
+                id={`csp-sri-algo-${algorithm}`}
+                type="checkbox"
+                value={algorithm}
+                checked={algorithm === 'sha384'}
+              />
+              {algorithm}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <div>
+        <label for="csp-sri-kind" class="ui-label">
+          {t.sriKindLabel}
+        </label>
+        <select id="csp-sri-kind" class="ui-input h-11 px-3 dark:bg-gray-900">
+          <option value="script">{t.sriKindScript}</option>
+          <option value="stylesheet">{t.sriKindStylesheet}</option>
+        </select>
+      </div>
+    </div>
+
+    <label for="csp-sri-url" class="ui-label mt-4">
+      {t.sriUrlLabel}
+    </label>
+    <input
+      id="csp-sri-url"
+      type="text"
+      class="ui-input h-11 w-full max-w-2xl px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.sriUrlPlaceholder}
+      spellcheck="false"
+      autocomplete="off"
+    />
+
+    <p
+      id="csp-sri-source"
+      hidden
+      class="mt-4 text-sm text-gray-600 dark:text-gray-400"
+      data-template={t.sriSource}
+    ></p>
+    <p
+      id="csp-sri-error"
+      role="alert"
+      hidden
+      class="ui-error mt-4 max-w-2xl"
+      data-no-algo={t.sriNoAlgo}
+    ></p>
+
+    <div id="csp-sri-results" hidden>
+      <label for="csp-sri-integrity" class="ui-label mt-4">
+        {t.sriIntegrityLabel}
+      </label>
+      <textarea
+        id="csp-sri-integrity"
+        readonly
+        class="ui-input h-20 w-full bg-gray-50 p-3 font-mono dark:bg-gray-900"
+        data-no-persist
+      ></textarea>
+      <div class="mt-2 flex flex-wrap items-center gap-3">
+        <button id="csp-sri-copy-integrity-button" type="button" class="ui-btn">
+          {t.copy}
+        </button>
+      </div>
+
+      <label for="csp-sri-tag" class="ui-label mt-4">
+        {t.sriTagLabel}
+      </label>
+      <textarea
+        id="csp-sri-tag"
+        readonly
+        class="ui-input h-24 w-full bg-gray-50 p-3 font-mono dark:bg-gray-900"
+        data-no-persist
+      ></textarea>
+      <div class="mt-2 flex flex-wrap items-center gap-3">
+        <button id="csp-sri-copy-tag-button" type="button" class="ui-btn">
+          {t.copy}
+        </button>
+        <span
+          id="csp-sri-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="mt-10">
+    <h2 class="text-xl font-semibold">{t.cspHeading}</h2>
+
+    <div class="mt-4 flex flex-wrap items-end gap-3">
+      <div>
+        <label for="csp-preset" class="ui-label">
+          {t.presetLabel}
+        </label>
+        <select
+          id="csp-preset"
+          class="ui-input h-11 px-3 dark:bg-gray-900"
+          data-no-persist
+        >
+          {CSP_PRESET_IDS.map((id) => (
+            <option value={id}>{t.presets[id]}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <h3 class="ui-label mt-4">{t.directivesLabel}</h3>
+    <div class="mt-2 grid gap-3">
+      {CSP_DIRECTIVES.map((directive) => (
+        <div>
+          <label for={`csp-d-${directive}`} class="text-sm">
+            <code class="font-semibold">{directive}</code>
+            <span class="ml-2 text-xs text-gray-500 dark:text-gray-400">
+              {t.directiveHints[directive]}
+            </span>
+          </label>
+          <input
+            id={`csp-d-${directive}`}
+            type="text"
+            class="ui-input mt-1 h-10 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+            placeholder={t.sourcesPlaceholder}
+            spellcheck="false"
+            autocomplete="off"
+          />
+        </div>
+      ))}
+    </div>
+
+    <div class="mt-4 grid gap-2">
+      <label class="ui-check">
+        <input id="csp-upgrade" type="checkbox" />
+        {t.upgradeInsecure}
+      </label>
+      <label class="ui-check">
+        <input id="csp-report-only" type="checkbox" />
+        {t.reportOnly}
+      </label>
+    </div>
+
+    <div class="mt-4">
+      <label for="csp-format" class="ui-label">
+        {t.formatLabel}
+      </label>
+      <select id="csp-format" class="ui-input h-11 px-3 dark:bg-gray-900">
+        {CSP_FORMATS.map((f) => (
+          <option value={f}>{t.formats[f]}</option>
+        ))}
+      </select>
+    </div>
+
+    <label for="csp-output" class="ui-label mt-4">
+      {t.policyLabel}
+    </label>
+    <textarea
+      id="csp-output"
+      readonly
+      class="ui-input h-32 w-full bg-gray-50 p-3 font-mono dark:bg-gray-900"
+      placeholder={t.emptyPolicy}
+      data-no-persist
+    ></textarea>
+    <p
+      id="csp-note"
+      hidden
+      class="mt-2 max-w-2xl text-sm text-amber-700 dark:text-amber-400"
+      data-meta-ignored={t.metaIgnoredNote}
+      data-meta-report-only={t.metaReportOnlyNote}
+    ></p>
+    <div class="mt-2 flex flex-wrap items-center gap-3">
+      <button
+        id="csp-copy-button"
+        type="button"
+        class="ui-btn ui-btn-primary"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+      >
+        {t.copy}
+      </button>
+      <span
+        id="csp-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+
+    <div id="csp-warnings" hidden class="mt-6">
+      <h3 class="ui-label">{t.warningsHeading}</h3>
+      <ul
+        id="csp-warning-list"
+        class="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-800 dark:text-amber-300"
+        data-messages={JSON.stringify(t.warnings)}
+      ></ul>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    CSP_DIRECTIVES,
+    CSP_FORMATS,
+    CSP_PRESETS,
+    MAX_SRI_FILE_SIZE,
+    SRI_ALGORITHMS,
+    analyzePolicy,
+    buildPolicy,
+    buildSriTag,
+    computeSri,
+    formatPolicy,
+    type CspFormat,
+    type CspInput,
+    type CspPresetId,
+    type SriAlgorithm,
+    type SriTagKind,
+  } from '../../lib/tools/csp-sri-generator';
+
+  const el = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  // ===== SRI =====
+  const fileInput = el<HTMLInputElement>('csp-sri-file-input');
+  const dropzone = el<HTMLElement>('csp-sri-dropzone');
+  const fileError = el<HTMLElement>('csp-sri-file-error');
+  const textInput = el<HTMLTextAreaElement>('csp-sri-text');
+  const kindSelect = el<HTMLSelectElement>('csp-sri-kind');
+  const urlInput = el<HTMLInputElement>('csp-sri-url');
+  const sourceEl = el<HTMLElement>('csp-sri-source');
+  const sriError = el<HTMLElement>('csp-sri-error');
+  const sriResults = el<HTMLElement>('csp-sri-results');
+  const integrityOut = el<HTMLTextAreaElement>('csp-sri-integrity');
+  const tagOut = el<HTMLTextAreaElement>('csp-sri-tag');
+  const algoBoxes = SRI_ALGORITHMS.map((a) => ({
+    algorithm: a,
+    box: el<HTMLInputElement>(`csp-sri-algo-${a}`),
+  }));
+
+  let fileData: { name: string; bytes: Uint8Array<ArrayBuffer> } | null = null;
+  let sriRun = 0;
+
+  function isSriKind(value: string): value is SriTagKind {
+    return value === 'script' || value === 'stylesheet';
+  }
+
+  async function recomputeSri() {
+    const id = ++sriRun;
+    sriError.hidden = true;
+
+    let bytes: Uint8Array<ArrayBuffer> | null = null;
+    if (fileData) {
+      bytes = fileData.bytes;
+      sourceEl.textContent = (sourceEl.dataset.template ?? '').replace(
+        '{name}',
+        fileData.name,
+      );
+      sourceEl.hidden = false;
+    } else {
+      sourceEl.hidden = true;
+      if (textInput.value !== '') {
+        bytes = new Uint8Array(new TextEncoder().encode(textInput.value));
+      }
+    }
+    if (!bytes) {
+      sriResults.hidden = true;
+      return;
+    }
+
+    const selected: SriAlgorithm[] = algoBoxes
+      .filter(({ box }) => box.checked)
+      .map(({ algorithm }) => algorithm);
+    if (selected.length === 0) {
+      sriResults.hidden = true;
+      sriError.textContent = sriError.dataset.noAlgo ?? '';
+      sriError.hidden = false;
+      return;
+    }
+
+    const hashes = await computeSri(bytes, selected);
+    if (id !== sriRun) return;
+    const integrity = selected.map((a) => hashes[a]).join(' ');
+    const kind = isSriKind(kindSelect.value) ? kindSelect.value : 'script';
+    integrityOut.value = integrity;
+    tagOut.value = buildSriTag(kind, urlInput.value, integrity);
+    sriResults.hidden = false;
+  }
+
+  function showFileError(key: 'tooLarge' | 'readError') {
+    fileError.textContent = fileError.dataset[key] ?? '';
+    fileError.hidden = false;
+  }
+
+  enableFileDrop(dropzone, fileInput);
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    fileError.hidden = true;
+    if (!file) return;
+    if (file.size > MAX_SRI_FILE_SIZE) {
+      showFileError('tooLarge');
+      return;
+    }
+    try {
+      fileData = {
+        name: file.name,
+        bytes: new Uint8Array(await file.arrayBuffer()),
+      };
+    } catch {
+      showFileError('readError');
+      return;
+    }
+    void recomputeSri();
+  });
+
+  onTextInput(textInput, () => {
+    // テキストを編集し始めたら、ファイル指定より優先する
+    fileData = null;
+    void recomputeSri();
+  });
+  urlInput.addEventListener('input', () => void recomputeSri());
+  kindSelect.addEventListener('change', () => void recomputeSri());
+  for (const { box } of algoBoxes) {
+    box.addEventListener('change', () => void recomputeSri());
+  }
+
+  function wireCopy(
+    button: HTMLElement,
+    source: HTMLTextAreaElement,
+    status: HTMLElement,
+    messages: { copied: string; failed: string },
+  ) {
+    button.addEventListener('click', async () => {
+      if (!source.value) return;
+      status.textContent = (await copyText(source.value))
+        ? messages.copied
+        : messages.failed;
+    });
+  }
+
+  // ===== CSP =====
+  const presetSelect = el<HTMLSelectElement>('csp-preset');
+  const directiveInputs = CSP_DIRECTIVES.map((d) => ({
+    directive: d,
+    input: el<HTMLInputElement>(`csp-d-${d}`),
+  }));
+  const upgradeBox = el<HTMLInputElement>('csp-upgrade');
+  const reportOnlyBox = el<HTMLInputElement>('csp-report-only');
+  const formatSelect = el<HTMLSelectElement>('csp-format');
+  const cspOutput = el<HTMLTextAreaElement>('csp-output');
+  const noteEl = el<HTMLElement>('csp-note');
+  const copyButton = el<HTMLButtonElement>('csp-copy-button');
+  const statusEl = el<HTMLElement>('csp-status');
+  const warningsBox = el<HTMLElement>('csp-warnings');
+  const warningList = el<HTMLUListElement>('csp-warning-list');
+  const warningMessages: Record<string, string> = JSON.parse(
+    warningList.dataset.messages ?? '{}',
+  );
+
+  function readInput(): CspInput {
+    const input: CspInput = {};
+    for (const { directive, input: field } of directiveInputs) {
+      input[directive] = field.value;
+    }
+    return input;
+  }
+
+  function isFormat(value: string): value is CspFormat {
+    return (CSP_FORMATS as readonly string[]).includes(value);
+  }
+
+  function recomputeCsp() {
+    statusEl.textContent = '';
+    const input = readInput();
+    const policy = buildPolicy(input, {
+      upgradeInsecureRequests: upgradeBox.checked,
+    });
+
+    noteEl.hidden = true;
+    if (policy === '') {
+      cspOutput.value = '';
+    } else {
+      const format = isFormat(formatSelect.value)
+        ? formatSelect.value
+        : 'header';
+      const formatted = formatPolicy(policy, format, reportOnlyBox.checked);
+      cspOutput.value = formatted.text;
+      const notes = [
+        formatted.metaIgnored ? noteEl.dataset.metaIgnored : '',
+        formatted.metaReportOnly ? noteEl.dataset.metaReportOnly : '',
+      ].filter(Boolean);
+      if (notes.length > 0) {
+        noteEl.textContent = notes.join(' ');
+        noteEl.hidden = false;
+      }
+    }
+
+    const warnings = analyzePolicy(input);
+    warningList.replaceChildren(
+      ...warnings.map((w) => {
+        const li = document.createElement('li');
+        li.textContent = (warningMessages[w.code] ?? w.code).replace(
+          '{directive}',
+          w.directive ?? '',
+        );
+        return li;
+      }),
+    );
+    warningsBox.hidden = warnings.length === 0;
+  }
+
+  function isPresetId(value: string): value is CspPresetId {
+    return value in CSP_PRESETS;
+  }
+
+  presetSelect.addEventListener('change', () => {
+    if (!isPresetId(presetSelect.value)) return;
+    const preset = CSP_PRESETS[presetSelect.value];
+    for (const { directive, input } of directiveInputs) {
+      input.value = preset[directive] ?? '';
+    }
+    upgradeBox.checked = false;
+    recomputeCsp();
+  });
+
+  for (const { input } of directiveInputs) {
+    input.addEventListener('input', recomputeCsp);
+  }
+  upgradeBox.addEventListener('change', recomputeCsp);
+  reportOnlyBox.addEventListener('change', recomputeCsp);
+  formatSelect.addEventListener('change', recomputeCsp);
+
+  copyButton.addEventListener('click', async () => {
+    if (!cspOutput.value) return;
+    statusEl.textContent = (await copyText(cspOutput.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  const copyMessages = {
+    copied: copyButton.dataset.copied ?? '',
+    failed: copyButton.dataset.copyFailed ?? '',
+  };
+  const sriStatus = el<HTMLElement>('csp-sri-status');
+  wireCopy(
+    el('csp-sri-copy-integrity-button'),
+    integrityOut,
+    sriStatus,
+    copyMessages,
+  );
+  wireCopy(el('csp-sri-copy-tag-button'), tagOut, sriStatus, copyMessages);
+
+  recomputeCsp();
+  void recomputeSri();
+</script>

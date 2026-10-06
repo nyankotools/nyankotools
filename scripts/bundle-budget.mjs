@@ -17,13 +17,13 @@ import { fileURLToPath } from 'node:url';
 const KB = 1024;
 
 /**
- * gzip後のバイト数の上限（2026-09-30時点の実測: 通常ツール最大 toml-converter 59KB、
+ * gzip後のバイト数の上限（2026-10-06時点の実測: 通常ツール最大 toml-converter 81KB（全ページ共通のツール登録簿チャンク約35KBを含む。ツール追加で増える）、
  * heavy 最大 code-minifier 469KB。それぞれに余裕を持たせた値）。
  * wasm・PDFワーカーなど、JSの静的/動的importで辿れないアセット（qpdf.wasm 等）は計測対象外。
  */
 export const budgets = {
   // 通常ページ・通常ツール（initial / total の両方に適用）
-  normal: 80 * KB,
+  normal: 100 * KB,
   // heavy ツール（PDF・wasm・大きめのライブラリ）。initial / total の両方に適用
   heavy: 520 * KB,
 };

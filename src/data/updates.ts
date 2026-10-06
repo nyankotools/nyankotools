@@ -370,6 +370,46 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-05',
+    toolSlugs: [
+      'zip-tool',
+      'screen-recorder',
+      'amidakuji-generator',
+      'text-merge-tool',
+    ],
+    translations: {
+      ja: {
+        summary:
+          'ZIP作成・解凍（ファイルをまとめる・中身を確認して取り出す）、画面録画（画面・ウィンドウ・タブをブラウザだけで録画して保存）、あみだくじ生成（結果を隠して1人ずつ辿れる・画像保存）、テキストマージツール（2つのバージョンを差分ごとに選んで統合）を追加しました。',
+      },
+      en: {
+        summary:
+          'Added the ZIP Maker & Extractor (bundle files, browse a ZIP and save what you need) the Screen Recorder (record a screen, window or tab in the browser and save it) and the Amidakuji Generator (ghost-leg ladder lottery with hidden results and image saving) and the Text Merge Tool (combine two versions by choosing per difference).',
+      },
+    },
+  },
+  {
+    date: '2026-10-06',
+    toolSlugs: [
+      'keypair-generator',
+      'data-recipe-builder',
+      'text-replace-tools',
+      'ocr-protect-image',
+      'csp-sri-generator',
+      'media-converter',
+    ],
+    translations: {
+      ja: {
+        summary:
+          'キーペア生成、多段エンコード/デコード・ハッシュ変換チェーン、テキスト一括置換・行操作、OCR対策画像加工、CSP・SRIハッシュ生成、動画・音声変換／トリミング／圧縮を追加しました。あわせて、404ページに猫アクションのミニゲームを追加しました。',
+      },
+      en: {
+        summary:
+          'Added the Key Pair Generator, Multi-Step Encode/Decode & Hash Chain, Find & Replace and Line Tools, OCR-Resistant Image Obfuscator, CSP & SRI Hash Generator, and Video & Audio Converter, Trimmer, Compressor. Also added a cat action minigame to the 404 page.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

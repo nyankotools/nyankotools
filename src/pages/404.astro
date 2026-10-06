@@ -29,7 +29,330 @@ import Layout from '../layouts/Layout.astro';
       Back to homepage{' '}
     </a>
   </div>
+  <section class="mt-10 max-w-[600px]" aria-labelledby="cat-game-title">
+    <h2 id="cat-game-title" class="mb-1 text-lg font-bold">
+      <span data-lang="ja">迷子の猫アクション</span>
+      <span data-lang="en" hidden>
+        Lost Cat Action
+      </span>
+    </h2>
+    <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+      <span data-lang="ja">
+        矢印キー（A/D）で左右移動、スペース（W/↑）でジャンプ。右端のゴールを目指そう。…ただし、何が起きても文句は言わないこと。
+      </span>
+      <span data-lang="en" hidden>
+        Move with the arrow keys (A/D), jump with Space (W/↑). Reach the goal on
+        the right... and don't trust anything.
+      </span>
+    </p>
+    <canvas
+      id="cat-game-canvas"
+      width="600"
+      height="160"
+      class="w-full touch-manipulation rounded-lg border border-gray-300 text-gray-800 dark:border-gray-600 dark:text-gray-200"
+      role="img"
+      aria-label="猫アクションのミニゲーム"
+    ></canvas>
+    <div class="mt-3 flex items-center gap-2 select-none">
+      <button
+        id="cat-game-left"
+        type="button"
+        class="ui-btn h-12 w-16 touch-manipulation"
+        aria-label="←"
+      >
+        ◀
+      </button>
+      <button
+        id="cat-game-right"
+        type="button"
+        class="ui-btn h-12 w-16 touch-manipulation"
+        aria-label="→"
+      >
+        ▶
+      </button>
+      <button
+        id="cat-game-jump"
+        type="button"
+        class="ui-btn ui-btn-primary ml-auto h-12 min-w-24 whitespace-nowrap touch-manipulation"
+      >
+        <span data-lang="ja">ジャンプ</span>
+        <span data-lang="en" hidden>
+          Jump
+        </span>
+      </button>
+    </div>
+    <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+      <button id="cat-game-button" type="button" class="ui-btn">
+        <span data-lang="ja">はじめから</span>
+        <span data-lang="en" hidden>
+          Restart
+        </span>
+      </button>
+      <p class="text-sm">
+        <span data-lang="ja">やられた回数</span>
+        <span data-lang="en" hidden>
+          Deaths
+        </span>
+        <span id="cat-game-deaths">0</span>
+      </p>
+    </div>
+    <p
+      id="cat-game-status"
+      class="mt-2 min-h-6 text-sm font-bold"
+      aria-live="polite"
+    ></p>
+  </section>
 </Layout>
+
+<script>
+  import {
+    CAT_SIZE,
+    WORLD_HEIGHT,
+    WORLD_WIDTH,
+    createState,
+    jump,
+    step,
+    type DeathCause,
+    type Input,
+  } from '../lib/tools/cat-runner';
+
+  const isEn =
+    location.pathname.startsWith('/en/') || location.pathname === '/en';
+  if (isEn) {
+    document
+      .getElementById('cat-game-canvas')
+      ?.setAttribute('aria-label', 'Cat action mini game');
+    document.querySelectorAll('[data-lang="ja"]').forEach((e) => {
+      e.setAttribute('hidden', '');
+    });
+    document.querySelectorAll('[data-lang="en"]').forEach((e) => {
+      e.removeAttribute('hidden');
+    });
+  }
+
+  const MESSAGES: Record<
+    'ja' | 'en',
+    Record<DeathCause | 'bump' | 'clear', string>
+  > = {
+    ja: {
+      pit: '穴に落ちた！ 床だと思った？',
+      bump: '見えないブロックに頭をぶつけた！ そんなの聞いてない。',
+      spike: 'トゲが出てきた！ 理不尽？ いいえ仕様です。',
+      block: '天井が落ちてきた！ 上を見ていれば…',
+      enemy: '敵が突っ込んできた！ 予告はありません。',
+      clear: 'ゴール！ おめでとう。ここまで来たあなたは猫の鑑です。',
+    },
+    en: {
+      pit: 'You fell! Did you think it was solid ground?',
+      bump: 'You bumped into an invisible block! Nobody warned you.',
+      spike: 'Spikes! Unfair? No, that is a feature.',
+      block: 'The ceiling fell! You should have looked up...',
+      enemy: 'A charging enemy! No warning was given.',
+      clear: 'Goal! Congratulations, you are a true cat.',
+    },
+  };
+  const messages = MESSAGES[isEn ? 'en' : 'ja'];
+  const RETRY_HINT = isEn
+    ? ' Press Space or an arrow key to retry.'
+    : ' スペースか矢印キーでもう一度。';
+
+  const canvas = document.getElementById(
+    'cat-game-canvas',
+  ) as HTMLCanvasElement | null;
+  const restartButton = document.getElementById('cat-game-button');
+  const leftButton = document.getElementById('cat-game-left');
+  const rightButton = document.getElementById('cat-game-right');
+  const jumpButton = document.getElementById('cat-game-jump');
+  const deathsEl = document.getElementById('cat-game-deaths');
+  const statusEl = document.getElementById('cat-game-status');
+  const ctx = canvas?.getContext('2d');
+  if (
+    canvas &&
+    restartButton &&
+    leftButton &&
+    rightButton &&
+    jumpButton &&
+    deathsEl &&
+    statusEl &&
+    ctx
+  ) {
+    const GROUND = WORLD_HEIGHT - 30;
+    const input: Input = { left: false, right: false };
+    let state = createState();
+    let deaths = 0;
+    let running = false;
+    let last = 0;
+    let rafId = 0;
+    let endedAt = 0;
+
+    const draw = () => {
+      const color = getComputedStyle(canvas).color;
+      ctx.clearRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 3;
+      for (const f of state.floors) {
+        if (f.gone) continue;
+        ctx.beginPath();
+        ctx.moveTo(f.x, GROUND + 2);
+        ctx.lineTo(f.x + f.width, GROUND + 2);
+        ctx.stroke();
+      }
+      ctx.lineWidth = 1;
+      // ゴール旗
+      ctx.beginPath();
+      ctx.moveTo(state.goalX, GROUND);
+      ctx.lineTo(state.goalX, GROUND - 50);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(state.goalX, GROUND - 50);
+      ctx.lineTo(state.goalX - 18, GROUND - 42);
+      ctx.lineTo(state.goalX, GROUND - 34);
+      ctx.fill();
+      for (const c of state.ceilings) {
+        if (c.revealed) {
+          ctx.fillRect(c.x, GROUND - c.y - c.height, c.width, c.height);
+        }
+      }
+      for (const h of state.hazards) {
+        if (!h.triggered) continue;
+        const top = GROUND - h.y - h.height;
+        if (h.kind === 'spike') {
+          ctx.beginPath();
+          ctx.moveTo(h.x, GROUND - h.y);
+          ctx.lineTo(h.x + h.width / 2, top);
+          ctx.lineTo(h.x + h.width, GROUND - h.y);
+          ctx.fill();
+        } else if (h.kind === 'block') {
+          ctx.fillRect(h.x, top, h.width, h.height);
+        } else {
+          ctx.font = `${h.height}px sans-serif`;
+          ctx.textBaseline = 'bottom';
+          ctx.fillText('👾', h.x, GROUND - h.y + 2);
+        }
+      }
+      ctx.font = `${CAT_SIZE}px sans-serif`;
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('🐱', state.x, GROUND - state.y + 2);
+    };
+
+    const showEnd = () => {
+      endedAt = performance.now();
+      if (state.cleared) {
+        statusEl.textContent = messages.clear + RETRY_HINT;
+      } else {
+        deaths += 1;
+        deathsEl.textContent = String(deaths);
+        const bumped = state.ceilings.some((c) => c.revealed);
+        const message =
+          state.cause === 'pit' && bumped
+            ? messages.bump
+            : state.cause
+              ? messages[state.cause]
+              : '';
+        statusEl.textContent = message + RETRY_HINT;
+      }
+    };
+
+    const frame = (now: number) => {
+      // タブ非表示などで間が空いても一気に進まないよう上限を設ける
+      const dt = Math.min(Math.max((now - last) / 1000, 0), 0.05);
+      last = now;
+      step(state, dt, input);
+      draw();
+      if (state.over || state.cleared) {
+        running = false;
+        showEnd();
+        return;
+      }
+      rafId = requestAnimationFrame(frame);
+    };
+
+    const start = () => {
+      cancelAnimationFrame(rafId);
+      state = createState();
+      statusEl.textContent = '';
+      // ボタンにフォーカスが残るとキー操作が効かなくなるため外す
+      restartButton.blur();
+      running = true;
+      last = performance.now();
+      rafId = requestAnimationFrame(frame);
+    };
+
+    // 終了直後の連打で結果を見る間もなく再開しないよう猶予を設ける
+    const startIfIdle = () => {
+      if (!running && performance.now() - endedAt > 500) start();
+    };
+    const doJump = () => {
+      if (running) jump(state);
+      else startIfIdle();
+    };
+    const press = (key: 'left' | 'right', repeat = false) => {
+      input[key] = true;
+      // 押しっぱなし（リピート）では再開しない
+      if (!repeat) startIfIdle();
+    };
+
+    restartButton.addEventListener('click', start);
+    jumpButton.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      doJump();
+    });
+    canvas.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      doJump();
+    });
+    for (const [el, key] of [
+      [leftButton, 'left'],
+      [rightButton, 'right'],
+    ] as const) {
+      el.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        press(key);
+      });
+      for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) {
+        el.addEventListener(ev, () => {
+          input[key] = false;
+        });
+      }
+    }
+
+    const KEYS: Record<string, 'left' | 'right' | 'jump'> = {
+      ArrowLeft: 'left',
+      KeyA: 'left',
+      ArrowRight: 'right',
+      KeyD: 'right',
+      Space: 'jump',
+      ArrowUp: 'jump',
+      KeyW: 'jump',
+    };
+    const isGameTarget = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      return !t || t === document.body || t === canvas;
+    };
+    document.addEventListener('keydown', (e) => {
+      const action = KEYS[e.code];
+      if (!action || !isGameTarget(e)) return;
+      // Alt+←（戻る）などブラウザのショートカットは奪わない
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      e.preventDefault();
+      if (action === 'jump') {
+        if (!e.repeat) doJump();
+      } else {
+        press(action, e.repeat);
+      }
+    });
+    document.addEventListener('keyup', (e) => {
+      const action = KEYS[e.code];
+      if (action === 'left' || action === 'right') input[action] = false;
+    });
+    window.addEventListener('blur', () => {
+      input.left = false;
+      input.right = false;
+    });
+    draw();
+  }
+</script>
 
 <script>
   if (location.pathname.startsWith('/en/') || location.pathname === '/en') {

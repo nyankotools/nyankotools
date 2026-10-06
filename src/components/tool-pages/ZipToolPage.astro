@@ -1,0 +1,401 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { zipToolContent } from '../../i18n/tools/zip-tool';
+import { MAX_ENTRIES, MAX_TOTAL_BYTES } from '../../lib/tools/zip-tool';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = zipToolContent[locale];
+const maxMb = String(MAX_TOTAL_BYTES / 1024 / 1024);
+const levels = [
+  { value: '0', label: t.levelStore },
+  { value: '1', label: t.levelFast },
+  { value: '6', label: t.levelNormal },
+  { value: '9', label: t.levelMax },
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="zip-root"
+    data-max-mb={maxMb}
+    data-max-entries={MAX_ENTRIES}
+    data-created-status={t.createdStatus}
+    data-entries-summary={t.entriesSummary}
+    data-empty-list={t.emptyList}
+    data-remove={t.remove}
+    data-download={t.download}
+    data-folder={t.folder}
+    data-error-too-large={t.errorTooLarge}
+    data-error-too-many-entries={t.errorTooManyEntries}
+    data-error-invalid-zip={t.errorInvalidZip}
+    data-error-unsupported={t.errorUnsupported}
+    data-error-read-failed={t.errorReadFailed}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <div id="zip-mode" class="ui-seg" role="group" aria-label={t.modeLabel}>
+        <button
+          type="button"
+          data-mode="create"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.modeCreate}
+        </button>
+        <button
+          type="button"
+          data-mode="extract"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.modeExtract}
+        </button>
+      </div>
+    </div>
+
+    <p id="zip-error" role="alert" hidden class="ui-error mt-4 max-w-2xl"></p>
+
+    <section id="zip-create" class="mt-4">
+      <label for="zip-create-input" class="ui-label">
+        {t.createDropLabel}
+      </label>
+      <div id="zip-create-drop" class="ui-dropzone">
+        <input id="zip-create-input" type="file" multiple class="ui-file" />
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          {t.createDropHint}
+        </p>
+      </div>
+
+      <h2 class="mt-6 mb-2 text-lg font-bold">{t.fileListHeading}</h2>
+      <p id="zip-empty" class="text-sm text-gray-600 dark:text-gray-400">
+        {t.emptyList}
+      </p>
+      <ul id="zip-file-list" class="space-y-2"></ul>
+      <button id="zip-clear" type="button" hidden class="ui-btn mt-3">
+        {t.clearAll}
+      </button>
+
+      <div class="mt-6 grid max-w-xl gap-4 sm:grid-cols-2">
+        <div>
+          <label for="zip-level" class="ui-label">
+            {t.levelLabel}
+          </label>
+          <select
+            id="zip-level"
+            class="min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:outline-blue-400"
+          >
+            {levels.map((l) => (
+              <option value={l.value} selected={l.value === '6'}>
+                {l.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="zip-name" class="ui-label">
+            {t.nameLabel}
+          </label>
+          <input
+            id="zip-name"
+            type="text"
+            value="archive"
+            autocomplete="off"
+            spellcheck="false"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+
+      <button
+        id="zip-create-button"
+        type="button"
+        disabled
+        class="ui-btn-primary mt-4 h-12"
+      >
+        {t.createButton}
+      </button>
+      <p
+        id="zip-status"
+        role="status"
+        class="mt-3 text-sm text-green-600 dark:text-green-400"
+      ></p>
+    </section>
+
+    <section id="zip-extract" hidden class="mt-4">
+      <label for="zip-extract-input" class="ui-label">
+        {t.extractDropLabel}
+      </label>
+      <div id="zip-extract-drop" class="ui-dropzone">
+        <input
+          id="zip-extract-input"
+          type="file"
+          accept=".zip,application/zip,application/x-zip-compressed"
+          class="ui-file"
+        />
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          {t.extractDropHint}
+        </p>
+      </div>
+
+      <div id="zip-entries-wrap" hidden>
+        <h2 class="mt-6 mb-1 text-lg font-bold">{t.entriesHeading}</h2>
+        <p
+          id="zip-entries-summary"
+          class="mb-2 text-sm text-gray-600 dark:text-gray-400"
+        ></p>
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[320px] border-collapse text-sm">
+            <thead>
+              <tr class="border-b border-gray-200 text-left text-gray-600 dark:border-gray-700 dark:text-gray-400">
+                <th class="py-2 pr-4 font-medium">{t.colName}</th>
+                <th class="py-2 pr-4 text-right font-medium">{t.colSize}</th>
+                <th class="py-2 font-medium">
+                  <span class="sr-only">{t.colAction}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="zip-entries"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    MAX_TOTAL_BYTES,
+    ZipToolError,
+    baseName,
+    createZip,
+    extractEntry,
+    formatBytes,
+    listZip,
+    zipFileName,
+    type ZipLevel,
+  } from '../../lib/tools/zip-tool';
+
+  const root = document.getElementById('zip-root')!;
+  const d = root.dataset;
+  const modeButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#zip-mode [data-mode]'),
+  );
+  const errorEl = document.getElementById('zip-error')!;
+  const createSection = document.getElementById('zip-create')!;
+  const extractSection = document.getElementById('zip-extract')!;
+  const createInput = document.getElementById(
+    'zip-create-input',
+  ) as HTMLInputElement;
+  const extractInput = document.getElementById(
+    'zip-extract-input',
+  ) as HTMLInputElement;
+  const fileListEl = document.getElementById('zip-file-list')!;
+  const emptyEl = document.getElementById('zip-empty')!;
+  const clearButton = document.getElementById('zip-clear') as HTMLButtonElement;
+  const levelSelect = document.getElementById('zip-level') as HTMLSelectElement;
+  const nameInput = document.getElementById('zip-name') as HTMLInputElement;
+  const createButton = document.getElementById(
+    'zip-create-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('zip-status')!;
+  const entriesWrap = document.getElementById('zip-entries-wrap')!;
+  const entriesSummary = document.getElementById('zip-entries-summary')!;
+  const entriesBody = document.getElementById('zip-entries')!;
+
+  const maxMb = d.maxMb ?? '';
+  const maxEntries = d.maxEntries ?? '';
+
+  interface PendingFile {
+    file: File;
+  }
+  let pending: PendingFile[] = [];
+  let extractData: Uint8Array | null = null;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  function messageFor(error: unknown): string {
+    if (error instanceof ZipToolError) {
+      switch (error.code) {
+        case 'too-large':
+          return (d.errorTooLarge ?? '').replace('{max}', maxMb);
+        case 'too-many-entries':
+          return (d.errorTooManyEntries ?? '').replace('{max}', maxEntries);
+        case 'unsupported':
+          return d.errorUnsupported ?? '';
+        default:
+          return d.errorInvalidZip ?? '';
+      }
+    }
+    return d.errorReadFailed ?? '';
+  }
+
+  function setMode(mode: string) {
+    modeButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.mode === mode)),
+    );
+    createSection.hidden = mode !== 'create';
+    extractSection.hidden = mode !== 'extract';
+    showError('');
+  }
+
+  function totalPendingBytes(): number {
+    return pending.reduce((sum, p) => sum + p.file.size, 0);
+  }
+
+  function renderPending() {
+    fileListEl.replaceChildren();
+    pending.forEach((item, index) => {
+      const li = document.createElement('li');
+      li.className =
+        'flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-gray-700';
+      const name = document.createElement('span');
+      name.className = 'min-w-0 break-all text-gray-900 dark:text-gray-100';
+      name.textContent = `${item.file.name} (${formatBytes(item.file.size)})`;
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'ui-btn shrink-0';
+      remove.textContent = d.remove ?? '';
+      remove.setAttribute('aria-label', `${d.remove ?? ''}: ${item.file.name}`);
+      remove.addEventListener('click', () => {
+        pending.splice(index, 1);
+        statusEl.textContent = '';
+        renderPending();
+      });
+      li.append(name, remove);
+      fileListEl.append(li);
+    });
+    emptyEl.hidden = pending.length > 0;
+    clearButton.hidden = pending.length === 0;
+    createButton.disabled = pending.length === 0;
+  }
+
+  createInput.addEventListener('change', () => {
+    const files = Array.from(createInput.files ?? []);
+    createInput.value = '';
+    if (files.length === 0) return;
+    statusEl.textContent = '';
+    showError('');
+    const added = totalPendingBytes() + files.reduce((s, f) => s + f.size, 0);
+    if (added > MAX_TOTAL_BYTES) {
+      showError((d.errorTooLarge ?? '').replace('{max}', maxMb));
+      return;
+    }
+    pending.push(...files.map((file) => ({ file })));
+    renderPending();
+  });
+
+  clearButton.addEventListener('click', () => {
+    pending = [];
+    statusEl.textContent = '';
+    renderPending();
+  });
+
+  createButton.addEventListener('click', async () => {
+    showError('');
+    statusEl.textContent = '';
+    createButton.disabled = true;
+    try {
+      const files = await Promise.all(
+        pending.map(async ({ file }) => ({
+          name: file.name,
+          data: new Uint8Array(await file.arrayBuffer()),
+        })),
+      );
+      const zip = createZip(files, Number(levelSelect.value) as ZipLevel);
+      downloadBlob(
+        new Blob([zip as BlobPart], { type: 'application/zip' }),
+        zipFileName(nameInput.value),
+      );
+      statusEl.textContent = (d.createdStatus ?? '')
+        .replace('{count}', String(files.length))
+        .replace('{size}', formatBytes(zip.length));
+    } catch (error) {
+      showError(messageFor(error));
+    } finally {
+      createButton.disabled = pending.length === 0;
+    }
+  });
+
+  function renderEntries() {
+    entriesBody.replaceChildren();
+    entriesWrap.hidden = true;
+    if (!extractData) return;
+    const data = extractData;
+    const entries = listZip(data);
+    const files = entries.filter((e) => !e.isDirectory);
+    entriesSummary.textContent = (d.entriesSummary ?? '')
+      .replace('{count}', String(files.length))
+      .replace('{size}', formatBytes(files.reduce((s, e) => s + e.size, 0)));
+    for (const entry of entries) {
+      const tr = document.createElement('tr');
+      tr.className = 'border-b border-gray-100 dark:border-gray-800';
+      const nameTd = document.createElement('td');
+      nameTd.className = 'py-2 pr-4 break-all text-gray-900 dark:text-gray-100';
+      nameTd.textContent = entry.name;
+      const sizeTd = document.createElement('td');
+      sizeTd.className =
+        'py-2 pr-4 text-right whitespace-nowrap text-gray-700 dark:text-gray-300';
+      const actionTd = document.createElement('td');
+      actionTd.className = 'py-2 text-right';
+      if (entry.isDirectory) {
+        sizeTd.textContent = d.folder ?? '';
+      } else {
+        sizeTd.textContent = formatBytes(entry.size);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'ui-btn';
+        button.textContent = d.download ?? '';
+        button.setAttribute('aria-label', `${d.download ?? ''}: ${entry.name}`);
+        button.addEventListener('click', () => {
+          showError('');
+          try {
+            const out = extractEntry(data, entry.name);
+            downloadBlob(new Blob([out as BlobPart]), baseName(entry.name));
+          } catch (error) {
+            showError(messageFor(error));
+          }
+        });
+        actionTd.append(button);
+      }
+      tr.append(nameTd, sizeTd, actionTd);
+      entriesBody.append(tr);
+    }
+    entriesWrap.hidden = false;
+  }
+
+  extractInput.addEventListener('change', async () => {
+    const file = extractInput.files?.[0];
+    extractInput.value = '';
+    if (!file) return;
+    showError('');
+    extractData = null;
+    entriesWrap.hidden = true;
+    if (file.size > MAX_TOTAL_BYTES) {
+      showError((d.errorTooLarge ?? '').replace('{max}', maxMb));
+      return;
+    }
+    try {
+      extractData = new Uint8Array(await file.arrayBuffer());
+      renderEntries();
+    } catch (error) {
+      extractData = null;
+      showError(messageFor(error));
+    }
+  });
+
+  modeButtons.forEach((b) =>
+    b.addEventListener('click', () => setMode(b.dataset.mode ?? 'create')),
+  );
+  enableFileDrop(document.getElementById('zip-create-drop')!, createInput);
+  enableFileDrop(document.getElementById('zip-extract-drop')!, extractInput);
+  renderPending();
+</script>

@@ -1,0 +1,358 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { textReplaceToolsContent } from '../../i18n/tools/text-replace-tools';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = textReplaceToolsContent[locale];
+
+const modes = [
+  { value: 'replace', label: t.modeReplace },
+  { value: 'extract', label: t.modeExtract },
+  { value: 'affix', label: t.modeAffix },
+  { value: 'numberAdd', label: t.modeNumberAdd },
+  { value: 'numberRemove', label: t.modeNumberRemove },
+  { value: 'reverse', label: t.modeReverse },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    id="tr-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-invalid-regex={t.invalidRegex}
+    data-count-replace={t.countReplace}
+    data-count-extract={t.countExtract}
+    data-count-affix={t.countAffix}
+    data-count-number-add={t.countNumberAdd}
+    data-count-number-remove={t.countNumberRemove}
+    data-count-reverse={t.countReverse}
+  >
+    <label for="tr-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="tr-input"
+      class="ui-input h-52 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+      data-query-target="text"
+      data-sample={t.sampleText}
+    ></textarea>
+
+    <label for="tr-mode" class="ui-label mt-4">
+      {t.modeLabel}
+    </label>
+    <select id="tr-mode" class="ui-input h-11 w-full px-3 dark:bg-gray-900">
+      {modes.map((m) => (
+        <option value={m.value}>{m.label}</option>
+      ))}
+    </select>
+
+    <div class="mt-4 space-y-3" data-panel="replace">
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label for="tr-find" class="ui-label">
+            {t.findLabel}
+          </label>
+          <input
+            id="tr-find"
+            type="text"
+            class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+            spellcheck="false"
+          />
+        </div>
+        <div>
+          <label for="tr-replace" class="ui-label">
+            {t.replaceLabel}
+          </label>
+          <input
+            id="tr-replace"
+            type="text"
+            class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+            spellcheck="false"
+          />
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-x-6 gap-y-2">
+        <label class="ui-check">
+          <input id="tr-replace-regex" type="checkbox" />
+          {t.regexOption}
+        </label>
+        <label class="ui-check">
+          <input id="tr-replace-ignore-case" type="checkbox" />
+          {t.ignoreCaseOption}
+        </label>
+      </div>
+    </div>
+
+    <div class="mt-4 space-y-3" data-panel="extract" hidden>
+      <div>
+        <label for="tr-keyword" class="ui-label">
+          {t.keywordLabel}
+        </label>
+        <input
+          id="tr-keyword"
+          type="text"
+          class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+          spellcheck="false"
+        />
+      </div>
+      <div class="flex flex-wrap gap-x-6 gap-y-2">
+        <label class="ui-check">
+          <input id="tr-extract-regex" type="checkbox" />
+          {t.regexOption}
+        </label>
+        <label class="ui-check">
+          <input id="tr-extract-ignore-case" type="checkbox" />
+          {t.ignoreCaseOption}
+        </label>
+        <label class="ui-check">
+          <input id="tr-extract-invert" type="checkbox" />
+          {t.invertOption}
+        </label>
+      </div>
+    </div>
+
+    <div class="mt-4 space-y-3" data-panel="affix" hidden>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label for="tr-prefix" class="ui-label">
+            {t.prefixLabel}
+          </label>
+          <input
+            id="tr-prefix"
+            type="text"
+            class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+            spellcheck="false"
+          />
+        </div>
+        <div>
+          <label for="tr-suffix" class="ui-label">
+            {t.suffixLabel}
+          </label>
+          <input
+            id="tr-suffix"
+            type="text"
+            class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+            spellcheck="false"
+          />
+        </div>
+      </div>
+      <label class="ui-check">
+        <input id="tr-affix-skip-empty" type="checkbox" />
+        {t.skipEmptyOption}
+      </label>
+    </div>
+
+    <div class="mt-4 space-y-3" data-panel="numberAdd" hidden>
+      <div class="grid gap-3 sm:grid-cols-3">
+        <div>
+          <label for="tr-start" class="ui-label">
+            {t.startLabel}
+          </label>
+          <input
+            id="tr-start"
+            type="number"
+            value="1"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="tr-step" class="ui-label">
+            {t.stepLabel}
+          </label>
+          <input
+            id="tr-step"
+            type="number"
+            value="1"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="tr-separator" class="ui-label">
+            {t.separatorLabel}
+          </label>
+          <input
+            id="tr-separator"
+            type="text"
+            value=". "
+            class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+            spellcheck="false"
+          />
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-x-6 gap-y-2">
+        <label class="ui-check">
+          <input id="tr-zero-pad" type="checkbox" />
+          {t.zeroPadOption}
+        </label>
+        <label class="ui-check">
+          <input id="tr-number-skip-empty" type="checkbox" />
+          {t.skipEmptyOption}
+        </label>
+      </div>
+    </div>
+
+    <p
+      class="mt-4 text-sm text-gray-600 dark:text-gray-400"
+      data-panel="numberRemove"
+      hidden
+    >
+      {t.numberRemoveHint}
+    </p>
+    <p
+      class="mt-4 text-sm text-gray-600 dark:text-gray-400"
+      data-panel="reverse"
+      hidden
+    >
+      {t.reverseHint}
+    </p>
+
+    <p id="tr-error" hidden class="ui-error mt-4 max-w-2xl"></p>
+
+    <label for="tr-output" class="ui-label mt-6">
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="tr-output"
+      readonly
+      class="ui-input h-52 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      data-no-count
+    ></textarea>
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button id="tr-copy-button" type="button" class="ui-btn">
+        {t.copy}
+      </button>
+      <span
+        id="tr-status"
+        class="text-sm font-medium text-gray-700 dark:text-gray-300"
+        aria-live="polite"
+      ></span>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    applyLineOperation,
+    type LineOperation,
+  } from '../../lib/tools/text-replace-tools';
+
+  const root = document.getElementById('tr-root')!;
+  const input = document.getElementById('tr-input') as HTMLTextAreaElement;
+  const output = document.getElementById('tr-output') as HTMLTextAreaElement;
+  const modeSelect = document.getElementById('tr-mode') as HTMLSelectElement;
+  const statusEl = document.getElementById('tr-status')!;
+  const errorEl = document.getElementById('tr-error')!;
+  const panels = document.querySelectorAll<HTMLElement>('[data-panel]');
+
+  const text = (id: string) =>
+    (document.getElementById(id) as HTMLInputElement).value;
+  const checked = (id: string) =>
+    (document.getElementById(id) as HTMLInputElement).checked;
+
+  // 空欄は Number('') が 0 になるため NaN として渡し、ロジック側の既定値（1）に任せる
+  const numberOrNaN = (id: string) =>
+    text(id).trim() === '' ? Number.NaN : Number(text(id));
+
+  function readOperation(): LineOperation {
+    switch (modeSelect.value) {
+      case 'replace':
+        return {
+          type: 'replace',
+          find: text('tr-find'),
+          replace: text('tr-replace'),
+          regex: checked('tr-replace-regex'),
+          ignoreCase: checked('tr-replace-ignore-case'),
+        };
+      case 'extract':
+        return {
+          type: 'extract',
+          keyword: text('tr-keyword'),
+          regex: checked('tr-extract-regex'),
+          ignoreCase: checked('tr-extract-ignore-case'),
+          invert: checked('tr-extract-invert'),
+        };
+      case 'affix':
+        return {
+          type: 'affix',
+          prefix: text('tr-prefix'),
+          suffix: text('tr-suffix'),
+          skipEmpty: checked('tr-affix-skip-empty'),
+        };
+      case 'numberAdd':
+        return {
+          type: 'numberAdd',
+          start: numberOrNaN('tr-start'),
+          step: numberOrNaN('tr-step'),
+          separator: text('tr-separator'),
+          zeroPad: checked('tr-zero-pad'),
+          skipEmpty: checked('tr-number-skip-empty'),
+        };
+      case 'numberRemove':
+        return { type: 'numberRemove' };
+      default:
+        return { type: 'reverse' };
+    }
+  }
+
+  const countKey: Record<string, string | undefined> = {
+    replace: root.dataset.countReplace,
+    extract: root.dataset.countExtract,
+    affix: root.dataset.countAffix,
+    numberAdd: root.dataset.countNumberAdd,
+    numberRemove: root.dataset.countNumberRemove,
+    reverse: root.dataset.countReverse,
+  };
+
+  function update() {
+    for (const panel of panels) {
+      panel.hidden = panel.dataset.panel !== modeSelect.value;
+    }
+    statusEl.textContent = '';
+    const result = applyLineOperation(input.value, readOperation());
+    if (!result.success) {
+      output.value = '';
+      errorEl.textContent = root.dataset.invalidRegex ?? '';
+      errorEl.hidden = false;
+      return;
+    }
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    output.value = result.output;
+    if (input.value !== '') {
+      statusEl.textContent = (countKey[modeSelect.value] ?? '').replace(
+        '{count}',
+        String(result.count),
+      );
+    }
+  }
+
+  onTextInput(input, update);
+  const controls = document.querySelectorAll<HTMLElement>(
+    '#tr-root input:not(#tr-input), #tr-mode',
+  );
+  controls.forEach((el) => {
+    el.addEventListener('input', update);
+    el.addEventListener('change', update);
+  });
+
+  document
+    .getElementById('tr-copy-button')!
+    .addEventListener('click', async () => {
+      if (!output.value) return;
+      statusEl.textContent = (await copyText(output.value))
+        ? (root.dataset.copied ?? '')
+        : (root.dataset.copyFailed ?? '');
+    });
+
+  update();
+</script>

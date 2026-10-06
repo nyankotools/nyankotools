@@ -4552,6 +4552,44 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'text-replace-tools',
+    category: 'text',
+    addedAt: '2026-10-06',
+    updatedAt: '2026-10-06',
+    related: ['text-list-tools', 'regex-tester', 'text-diff'],
+    translations: {
+      ja: {
+        name: 'テキスト一括置換・行操作',
+        keywords: [
+          '一括置換',
+          '文字列置換',
+          '行番号',
+          '行番号付与',
+          '行抽出',
+          'grep',
+          '正規表現',
+          '行頭追加',
+        ],
+        description:
+          'テキストの一括置換（正規表現対応）、行番号の付与・削除、キーワードを含む行の抽出・除外、各行の前後への文字追加、行の逆順を行います。',
+      },
+      en: {
+        name: 'Find & Replace and Line Tools',
+        keywords: [
+          'find and replace',
+          'bulk replace',
+          'add line numbers',
+          'filter lines',
+          'grep',
+          'regex replace',
+          'prefix suffix',
+        ],
+        description:
+          'Bulk find and replace (regex supported), add or remove line numbers, keep or remove lines by keyword, add a prefix or suffix to each line, and reverse line order.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

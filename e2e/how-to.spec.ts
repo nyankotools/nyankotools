@@ -40,6 +40,7 @@ const slugs = [
   'text-merge-tool',
   'keypair-generator',
   'data-recipe-builder',
+  'text-replace-tools',
 ];
 
 const locales = [

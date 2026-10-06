@@ -39,6 +39,7 @@ const slugs = [
   'screen-recorder',
   'text-merge-tool',
   'keypair-generator',
+  'data-recipe-builder',
 ];
 
 const locales = [

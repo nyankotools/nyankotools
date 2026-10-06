@@ -4515,6 +4515,43 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'data-recipe-builder',
+    category: 'encode',
+    addedAt: '2026-10-06',
+    updatedAt: '2026-10-06',
+    related: ['base64', 'url-encode', 'hash-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '多段エンコード/デコード・ハッシュ変換チェーン',
+        keywords: [
+          'レシピ',
+          'CyberChef',
+          '連続変換',
+          'Base64',
+          'ハッシュ',
+          'パイプライン',
+        ],
+        description:
+          'Base64・URL・16進数・HTMLエスケープ・MD5/SHA-256などを好きな順に連結して一度に変換。手順ごとの途中結果も確認できます。',
+      },
+      en: {
+        name: 'Multi-Step Encode/Decode & Hash Chain',
+        keywords: [
+          'recipe',
+          'CyberChef',
+          'chain',
+          'pipeline',
+          'base64',
+          'hash',
+          'multi-step',
+        ],
+        description:
+          'Chain Base64, URL, hex, HTML escape, MD5/SHA-256 and more in any order and convert in one go, with every intermediate result shown.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

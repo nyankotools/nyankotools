@@ -1,0 +1,269 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { dataRecipeBuilderContent } from '../../i18n/tools/data-recipe-builder';
+import { RECIPE_OPS } from '../../lib/tools/data-recipe-builder';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = dataRecipeBuilderContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="recipe-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="recipe-input"
+      class="ui-input h-40 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-3">
+    <div>
+      <label for="recipe-op" class="ui-label">
+        {t.addStepLabel}
+      </label>
+      <select
+        id="recipe-op"
+        class="ui-input h-11 w-full max-w-xs px-3 dark:bg-gray-900"
+      >
+        {RECIPE_OPS.map((op) => (
+          <option value={op}>{t.ops[op]}</option>
+        ))}
+      </select>
+    </div>
+    <button id="recipe-add-button" type="button" class="ui-btn ui-btn-primary">
+      {t.addStep}
+    </button>
+    <button id="recipe-clear-button" type="button" class="ui-btn">
+      {t.clearRecipe}
+    </button>
+  </div>
+
+  <h2 class="ui-label mt-6">{t.recipeLabel}</h2>
+  <p id="recipe-empty" class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+    {t.emptyRecipe}
+  </p>
+  <ol id="recipe-steps" class="mt-2 grid gap-2"></ol>
+
+  <p
+    id="recipe-error"
+    hidden
+    role="alert"
+    data-invalid={t.stepInvalid}
+    data-unsupported={t.unsupported}
+    data-max={t.maxSteps}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+
+  <div class="mt-6">
+    <label for="recipe-output" class="ui-label">
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="recipe-output"
+      readonly
+      class="ui-input h-40 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+    ></textarea>
+    <p
+      id="recipe-notice"
+      hidden
+      class="mt-2 max-w-2xl text-sm text-amber-700 dark:text-amber-400"
+    >
+      {t.nonUtf8Notice}
+    </p>
+    <div class="mt-2 flex flex-wrap items-center gap-3">
+      <button
+        id="recipe-copy-button"
+        type="button"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="ui-btn"
+      >
+        {t.copy}
+      </button>
+      <span
+        id="recipe-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+
+  <span
+    id="recipe-labels"
+    hidden
+    data-up={t.moveUp}
+    data-down={t.moveDown}
+    data-remove={t.removeStep}
+    data-output={t.stepOutputLabel}
+  ></span>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    MAX_RECIPE_STEPS,
+    bytesToDisplayText,
+    isRecipeOp,
+    isValidUtf8,
+    runRecipe,
+    type RecipeOp,
+  } from '../../lib/tools/data-recipe-builder';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`recipe-${id}`) as T;
+  const input = $<HTMLTextAreaElement>('input');
+  const output = $<HTMLTextAreaElement>('output');
+  const opSelect = $<HTMLSelectElement>('op');
+  const addButton = $<HTMLButtonElement>('add-button');
+  const clearButton = $<HTMLButtonElement>('clear-button');
+  const stepsEl = $<HTMLOListElement>('steps');
+  const emptyEl = $<HTMLElement>('empty');
+  const errorEl = $<HTMLElement>('error');
+  const noticeEl = $<HTMLElement>('notice');
+  const copyButton = $<HTMLButtonElement>('copy-button');
+  const statusEl = $<HTMLElement>('status');
+  const labels = $<HTMLElement>('labels').dataset;
+
+  const PREVIEW_LENGTH = 300;
+  const steps: RecipeOp[] = [];
+  let runId = 0;
+
+  const opName = (op: RecipeOp) =>
+    opSelect.querySelector<HTMLOptionElement>(`option[value="${op}"]`)
+      ?.textContent ?? op;
+
+  function preview(bytes: Uint8Array): string {
+    const text = bytesToDisplayText(bytes.subarray(0, PREVIEW_LENGTH * 4));
+    return text.length > PREVIEW_LENGTH
+      ? `${text.slice(0, PREVIEW_LENGTH)}…`
+      : text;
+  }
+
+  function makeButton(text: string, onClick: () => void, disabled: boolean) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'ui-btn';
+    button.textContent = text;
+    button.disabled = disabled;
+    button.addEventListener('click', onClick);
+    return button;
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  /** 手順一覧を描く。途中結果（outputs）と失敗位置（failedStep）があれば合わせて表示する */
+  function renderSteps(outputs: Uint8Array[] = [], failedStep = -1) {
+    stepsEl.replaceChildren();
+    emptyEl.hidden = steps.length > 0;
+    steps.forEach((op, i) => {
+      const li = document.createElement('li');
+      li.className =
+        'rounded-lg border p-3 ' +
+        (i === failedStep
+          ? 'border-red-300 bg-red-50 dark:border-red-900 dark:bg-red-950/40'
+          : 'border-gray-300 dark:border-gray-700');
+
+      const head = document.createElement('div');
+      head.className = 'flex flex-wrap items-center gap-2';
+      const title = document.createElement('span');
+      title.className = 'mr-auto text-sm font-medium';
+      title.textContent = `${i + 1}. ${opName(op)}`;
+      head.append(
+        title,
+        makeButton(labels.up ?? '', () => move(i, -1), i === 0),
+        makeButton(labels.down ?? '', () => move(i, 1), i === steps.length - 1),
+        makeButton(labels.remove ?? '', () => remove(i), false),
+      );
+      li.append(head);
+
+      if (i < outputs.length) {
+        const out = document.createElement('p');
+        out.className =
+          'mt-2 max-h-24 overflow-auto break-all font-mono text-xs text-gray-600 dark:text-gray-400';
+        out.textContent = `${labels.output}: ${preview(outputs[i])}`;
+        li.append(out);
+      }
+      stepsEl.append(li);
+    });
+  }
+
+  async function recompute() {
+    const id = ++runId;
+    statusEl.textContent = '';
+    errorEl.hidden = true;
+    noticeEl.hidden = true;
+    const result = await runRecipe(input.value, steps);
+    if (id !== runId) return;
+
+    renderSteps(result.outputs, result.success ? -1 : result.step);
+    if (result.success) {
+      output.value = bytesToDisplayText(result.output);
+      noticeEl.hidden = isValidUtf8(result.output);
+    } else {
+      output.value = '';
+      showError(
+        result.reason === 'unsupported'
+          ? (errorEl.dataset.unsupported ?? '')
+          : (errorEl.dataset.invalid ?? '')
+              .replace('{n}', String(result.step + 1))
+              .replace('{op}', opName(steps[result.step])),
+      );
+    }
+  }
+
+  function move(index: number, delta: number) {
+    const target = index + delta;
+    if (target < 0 || target >= steps.length) return;
+    [steps[index], steps[target]] = [steps[target], steps[index]];
+    renderSteps();
+    void recompute();
+  }
+
+  function remove(index: number) {
+    steps.splice(index, 1);
+    renderSteps();
+    void recompute();
+  }
+
+  addButton.addEventListener('click', () => {
+    const op = opSelect.value;
+    if (!isRecipeOp(op)) return;
+    if (steps.length >= MAX_RECIPE_STEPS) {
+      showError(errorEl.dataset.max ?? '');
+      return;
+    }
+    steps.push(op);
+    renderSteps();
+    void recompute();
+  });
+
+  clearButton.addEventListener('click', () => {
+    steps.length = 0;
+    renderSteps();
+    void recompute();
+  });
+
+  onTextInput(input, () => void recompute());
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  void recompute();
+</script>

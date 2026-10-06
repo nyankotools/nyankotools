@@ -40,6 +40,7 @@ const slugs = [
   'text-merge-tool',
   'keypair-generator',
   'data-recipe-builder',
+  'csp-sri-generator',
   'text-replace-tools',
   'ocr-protect-image',
 ];

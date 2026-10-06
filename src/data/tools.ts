@@ -4624,6 +4624,43 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'csp-sri-generator',
+    category: 'security',
+    addedAt: '2026-10-06',
+    updatedAt: '2026-10-06',
+    related: ['http-header-analyzer', 'hash-generator', 'meta-tag-generator'],
+    translations: {
+      ja: {
+        name: 'CSP・SRIハッシュ生成',
+        keywords: [
+          'CSP',
+          'Content-Security-Policy',
+          'SRI',
+          'integrity',
+          'Subresource Integrity',
+          'セキュリティヘッダー',
+          'nonce',
+        ],
+        description:
+          'Content-Security-Policyをディレクティブごとに組み立て、nginx・Apache・_headers形式で出力。スクリプトやCSSのSRI integrityハッシュとタグも生成します。',
+      },
+      en: {
+        name: 'CSP & SRI Hash Generator',
+        keywords: [
+          'CSP',
+          'Content-Security-Policy',
+          'SRI',
+          'integrity',
+          'Subresource Integrity',
+          'security headers',
+          'nonce',
+        ],
+        description:
+          'Build a Content-Security-Policy per directive and copy it as nginx, Apache, or _headers config. Also generates SRI integrity hashes and tags.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

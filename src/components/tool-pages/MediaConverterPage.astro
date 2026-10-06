@@ -1,0 +1,484 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { mediaConverterContent } from '../../i18n/tools/media-converter';
+import { HEIGHT_OPTIONS } from '../../lib/tools/media-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = mediaConverterContent[locale];
+
+const qualityOptions = [
+  { value: 'high', label: t.qualityHigh },
+  { value: 'medium', label: t.qualityMedium },
+  { value: 'low', label: t.qualityLow },
+  { value: 'veryLow', label: t.qualityVeryLow },
+];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="mc-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="mc-dropzone" class="ui-dropzone">
+      <input
+        id="mc-file-input"
+        type="file"
+        accept="video/*,audio/*,.mkv,.mov,.m4a,.opus,.flac,.ts"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="mc-source-info"
+      data-video-template={t.sourceInfoVideoTemplate}
+      data-audio-template={t.sourceInfoAudioTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="mc-error"
+      role="alert"
+      hidden
+      data-unsupported={t.errorUnsupportedFile}
+      data-unreadable={t.errorUnreadable}
+      data-unsupported-input={t.errorUnsupportedInput}
+      data-unsupported-output={t.errorUnsupportedOutput}
+      data-no-audio={t.errorNoAudio}
+      data-failed={t.errorFailed}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-trim-invalid={t.errorTrimInvalid}
+      data-trim-out-of-range={t.errorTrimOutOfRange}
+      data-trim-order={t.errorTrimOrder}
+      data-canceled={t.errorCanceled}
+      class="ui-error mt-2"
+    ></p>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-start gap-4">
+    <div class="min-w-48 flex-1">
+      <label for="mc-format" class="ui-label">
+        {t.formatLabel}
+      </label>
+      <select id="mc-format" class="ui-input h-11 w-full px-3 dark:bg-gray-900">
+        <optgroup label={t.formatGroupVideo}>
+          <option value="mp4" selected>
+            {t.formatMp4}
+          </option>
+          <option value="webm">{t.formatWebm}</option>
+        </optgroup>
+        <optgroup label={t.formatGroupAudio}>
+          <option value="mp3">{t.formatMp3}</option>
+          <option value="m4a">{t.formatM4a}</option>
+          <option value="ogg">{t.formatOgg}</option>
+          <option value="wav">{t.formatWav}</option>
+        </optgroup>
+      </select>
+    </div>
+    <div class="min-w-48 flex-1">
+      <label for="mc-quality" class="ui-label">
+        {t.qualityLabel}
+      </label>
+      <select
+        id="mc-quality"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      >
+        {qualityOptions.map((o) => (
+          <option value={o.value} selected={o.value === 'medium'}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <p
+        id="mc-wav-hint"
+        hidden
+        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+      >
+        {t.qualityWavHint}
+      </p>
+    </div>
+    <div id="mc-height-field" class="min-w-48 flex-1">
+      <label for="mc-height" class="ui-label">
+        {t.heightLabel}
+      </label>
+      <select id="mc-height" class="ui-input h-11 w-full px-3 dark:bg-gray-900">
+        {HEIGHT_OPTIONS.map((h) => (
+          <option value={String(h)}>
+            {h === 0
+              ? t.heightOriginal
+              : t.heightTemplate.replace('{height}', String(h))}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+
+  <label id="mc-remove-audio-field" class="ui-check mt-2">
+    <input id="mc-remove-audio" type="checkbox" class="h-4 w-4" />
+    {t.removeAudioLabel}
+  </label>
+
+  <fieldset class="mt-4">
+    <legend class="ui-label">{t.trimLabel}</legend>
+    <div class="flex flex-wrap gap-4">
+      <div class="min-w-36 flex-1">
+        <label for="mc-trim-start" class="ui-label">
+          {t.trimStartLabel}
+        </label>
+        <input
+          id="mc-trim-start"
+          type="text"
+          inputmode="decimal"
+          autocomplete="off"
+          placeholder={t.trimPlaceholderStart}
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div class="min-w-36 flex-1">
+        <label for="mc-trim-end" class="ui-label">
+          {t.trimEndLabel}
+        </label>
+        <input
+          id="mc-trim-end"
+          type="text"
+          inputmode="decimal"
+          autocomplete="off"
+          placeholder={t.trimPlaceholderEnd}
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.trimHint}</p>
+  </fieldset>
+
+  <div class="mt-4 flex flex-wrap gap-3">
+    <button
+      id="mc-convert-button"
+      type="button"
+      disabled
+      class="ui-btn-primary"
+    >
+      {t.convertButton}
+    </button>
+    <button id="mc-cancel-button" type="button" hidden class="ui-btn">
+      {t.cancelButton}
+    </button>
+    <button
+      id="mc-clear-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.clearButton}
+    </button>
+  </div>
+
+  <div id="mc-progress-section" hidden class="mt-4">
+    <p
+      id="mc-progress-text"
+      data-template={t.progressTemplate}
+      class="mb-1 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+    <progress
+      id="mc-progress"
+      max="100"
+      value="0"
+      aria-label={t.progressLabel}
+      class="h-2 w-full"
+    ></progress>
+  </div>
+
+  <div id="mc-results-section" hidden class="mt-6">
+    <h2 class="mb-2 text-lg font-bold">{t.resultsHeading}</h2>
+    <video
+      id="mc-result-video"
+      controls
+      hidden
+      class="max-h-96 w-full rounded-lg border border-gray-300 bg-black dark:border-gray-700"
+    ></video>
+    <audio id="mc-result-audio" controls hidden class="w-full"></audio>
+    <p
+      id="mc-result-size"
+      data-template={t.resultSizeTemplate}
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+    <button id="mc-download-button" type="button" class="ui-btn-primary mt-3">
+      {t.downloadButton}
+    </button>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    FORMAT_SPECS,
+    MAX_FILE_SIZE,
+    ConvertError,
+    buildOutputFileName,
+    convertMedia,
+    formatDuration,
+    formatFileSize,
+    isAcceptedMediaFile,
+    isFormatId,
+    isQualityId,
+    readMediaInfo,
+    resolveTrim,
+    type ConvertHandle,
+    type MediaInfo,
+  } from '../../lib/tools/media-converter';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const dropzone = $('mc-dropzone');
+  const fileInput = $<HTMLInputElement>('mc-file-input');
+  const sourceInfoEl = $('mc-source-info');
+  const errorEl = $('mc-error');
+  const formatSelect = $<HTMLSelectElement>('mc-format');
+  const qualitySelect = $<HTMLSelectElement>('mc-quality');
+  const wavHint = $('mc-wav-hint');
+  const heightField = $('mc-height-field');
+  const heightSelect = $<HTMLSelectElement>('mc-height');
+  const removeAudioField = $('mc-remove-audio-field');
+  const removeAudioCheck = $<HTMLInputElement>('mc-remove-audio');
+  const trimStart = $<HTMLInputElement>('mc-trim-start');
+  const trimEnd = $<HTMLInputElement>('mc-trim-end');
+  const convertButton = $<HTMLButtonElement>('mc-convert-button');
+  const cancelButton = $<HTMLButtonElement>('mc-cancel-button');
+  const clearButton = $<HTMLButtonElement>('mc-clear-button');
+  const progressSection = $('mc-progress-section');
+  const progressText = $('mc-progress-text');
+  const progressBar = $<HTMLProgressElement>('mc-progress');
+  const resultsSection = $('mc-results-section');
+  const resultVideo = $<HTMLVideoElement>('mc-result-video');
+  const resultAudio = $<HTMLAudioElement>('mc-result-audio');
+  const resultSizeEl = $('mc-result-size');
+  const downloadButton = $<HTMLButtonElement>('mc-download-button');
+
+  let currentFile: File | null = null;
+  let currentInfo: MediaInfo | null = null;
+  let resultBlob: Blob | null = null;
+  let resultName = '';
+  let resultUrl: string | null = null;
+  let handle: ConvertHandle | null = null;
+  // ファイル選択のやり直しなどで古い非同期処理の結果を捨てるための世代番号
+  let generation = 0;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function updateOptionsUi() {
+    const format = isFormatId(formatSelect.value) ? formatSelect.value : 'mp4';
+    const isWav = format === 'wav';
+    const videoOutput = FORMAT_SPECS[format].hasVideo;
+    const sourceHasVideo = currentInfo?.hasVideo ?? true;
+    qualitySelect.disabled = isWav;
+    wavHint.hidden = !isWav;
+    heightField.hidden = !(videoOutput && sourceHasVideo);
+    removeAudioField.hidden = !(videoOutput && sourceHasVideo);
+  }
+
+  function revokeResult() {
+    if (resultUrl) URL.revokeObjectURL(resultUrl);
+    resultUrl = null;
+    resultBlob = null;
+    resultVideo.removeAttribute('src');
+    resultAudio.removeAttribute('src');
+    resultVideo.load();
+    resultAudio.load();
+    resultVideo.hidden = true;
+    resultAudio.hidden = true;
+    resultsSection.hidden = true;
+    resultSizeEl.textContent = '';
+  }
+
+  function setBusy(busy: boolean) {
+    convertButton.hidden = busy;
+    cancelButton.hidden = !busy;
+    progressSection.hidden = !busy;
+    for (const el of [
+      fileInput,
+      formatSelect,
+      qualitySelect,
+      heightSelect,
+      removeAudioCheck,
+      trimStart,
+      trimEnd,
+      clearButton,
+    ]) {
+      el.disabled = busy;
+    }
+    if (!busy) updateOptionsUi();
+  }
+
+  function setProgress(ratio: number) {
+    const percent = Math.floor(ratio * 100);
+    progressBar.value = percent;
+    progressText.textContent = (progressText.dataset.template ?? '').replace(
+      '{percent}',
+      String(percent),
+    );
+  }
+
+  function resetAll() {
+    generation++;
+    handle?.cancel();
+    handle = null;
+    revokeResult();
+    currentFile = null;
+    currentInfo = null;
+    sourceInfoEl.textContent = '';
+    convertButton.disabled = true;
+    clearButton.disabled = true;
+    setBusy(false);
+  }
+
+  async function loadFile(file: File) {
+    clearError();
+    resetAll();
+    const gen = generation;
+
+    if (!isAcceptedMediaFile(file)) {
+      showError(errorEl.dataset.unsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace(
+          '{max}',
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+
+    let info: MediaInfo;
+    try {
+      info = await readMediaInfo(file);
+    } catch {
+      if (gen === generation) showError(errorEl.dataset.unreadable ?? '');
+      return;
+    }
+    if (gen !== generation) return;
+
+    currentFile = file;
+    currentInfo = info;
+    const template = info.hasVideo
+      ? (sourceInfoEl.dataset.videoTemplate ?? '')
+      : (sourceInfoEl.dataset.audioTemplate ?? '');
+    sourceInfoEl.textContent = template
+      .replace('{resolution}', `${info.width}×${info.height}`)
+      .replace('{duration}', formatDuration(info.duration))
+      .replace('{size}', formatFileSize(file.size));
+    convertButton.disabled = false;
+    clearButton.disabled = false;
+    updateOptionsUi();
+  }
+
+  const errorKeyByCode: Record<string, string> = {
+    'unsupported-input': 'unsupportedInput',
+    'unsupported-output': 'unsupportedOutput',
+    'no-audio': 'noAudio',
+    canceled: 'canceled',
+    failed: 'failed',
+  };
+
+  async function startConversion() {
+    if (!currentFile || !currentInfo || handle) return;
+    clearError();
+    revokeResult();
+
+    const trim = resolveTrim(
+      trimStart.value,
+      trimEnd.value,
+      currentInfo.duration,
+    );
+    if (!trim.ok) {
+      const key =
+        trim.error === 'invalid'
+          ? 'trimInvalid'
+          : trim.error === 'outOfRange'
+            ? 'trimOutOfRange'
+            : 'trimOrder';
+      showError(errorEl.dataset[key] ?? '');
+      return;
+    }
+
+    const format = isFormatId(formatSelect.value) ? formatSelect.value : 'mp4';
+    const quality = isQualityId(qualitySelect.value)
+      ? qualitySelect.value
+      : 'medium';
+    const file = currentFile;
+    const gen = generation;
+
+    setBusy(true);
+    setProgress(0);
+    const current = convertMedia(file, {
+      format,
+      quality,
+      maxHeight: Number(heightSelect.value) || 0,
+      removeAudio: removeAudioCheck.checked,
+      trim: trim.range,
+      sourceHeight: currentInfo.height,
+      onProgress: (ratio) => {
+        if (gen === generation) setProgress(ratio);
+      },
+    });
+    handle = current;
+
+    try {
+      const { blob } = await current.promise;
+      if (gen !== generation) return;
+      resultBlob = blob;
+      resultName = buildOutputFileName(file.name, format, '-converted');
+      resultUrl = URL.createObjectURL(blob);
+      const isVideo = FORMAT_SPECS[format].hasVideo && currentInfo.hasVideo;
+      const player = isVideo ? resultVideo : resultAudio;
+      player.src = resultUrl;
+      player.hidden = false;
+      resultSizeEl.textContent = (resultSizeEl.dataset.template ?? '')
+        .replace('{size}', formatFileSize(blob.size))
+        .replace('{ratio}', String(Math.round((blob.size / file.size) * 100)));
+      resultsSection.hidden = false;
+    } catch (e) {
+      if (gen !== generation) return;
+      const code = e instanceof ConvertError ? e.code : 'failed';
+      showError(errorEl.dataset[errorKeyByCode[code] ?? 'failed'] ?? '');
+    } finally {
+      if (handle === current) handle = null;
+      if (gen === generation) setBusy(false);
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+
+  enableFileDrop(dropzone, fileInput);
+
+  formatSelect.addEventListener('change', updateOptionsUi);
+  convertButton.addEventListener('click', () => void startConversion());
+  cancelButton.addEventListener('click', () => handle?.cancel());
+  clearButton.addEventListener('click', () => {
+    resetAll();
+    clearError();
+  });
+  downloadButton.addEventListener('click', () => {
+    if (resultBlob) downloadBlob(resultBlob, resultName);
+  });
+
+  updateOptionsUi();
+</script>

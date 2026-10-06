@@ -169,6 +169,9 @@ importers:
       '@fontsource/m-plus-rounded-1c':
         specifier: ^5.3.0
         version: 5.3.0
+      '@mediabunny/mp3-encoder':
+        specifier: ^1.61.1
+        version: 1.61.1(mediabunny@1.61.1)
       '@neslinesli93/qpdf-wasm':
         specifier: ^0.3.0
         version: 0.3.0
@@ -211,6 +214,9 @@ importers:
       marked:
         specifier: ^18.0.14
         version: 18.0.14
+      mediabunny:
+        specifier: ^1.61.1
+        version: 1.61.1
       pdf-lib:
         specifier: ^1.17.1
         version: 1.17.1
@@ -1230,6 +1236,11 @@ packages:
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
 
+  '@mediabunny/mp3-encoder@1.61.1':
+    resolution: {integrity: sha512-E8ZFUC0FDfangFV9vxi9HWISiOGrwymj+kLJBgTZBdTuaF1GubLf5tveaHzYXHjrhHPmd58sNaaI7k7VJiCLRg==}
+    peerDependencies:
+      mediabunny: ^1.0.0
+
   '@mixmark-io/domino@2.2.0':
     resolution: {integrity: sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==}
 
@@ -1599,6 +1610,12 @@ packages:
 
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
+
+  '@types/dom-mediacapture-transform@0.1.12':
+    resolution: {integrity: sha512-d7/QsLRwF864A5mgIM/YrfiglHoYn7zgCcAoJgW404r+2DwnNr7EBbLnCWpmOMgH8y0te73L1AV6H1bmauaWFw==}
+
+  '@types/dom-webcodecs@0.1.13':
+    resolution: {integrity: sha512-O5hkiFIcjjszPIYyUSyvScyvrBoV3NOEEZx/pMlsu44TKzWNkLVBBxnxJz42in5n3QIolYOcBYFCPZZ0h8SkwQ==}
 
   '@types/esrecurse@4.3.1':
     resolution: {integrity: sha512-xJBAbDifo5hpffDBuHl0Y8ywswbiAp/Wi7Y/GtAgSlZyIABppyurxVueOPE8LUQOxdlgi6Zqce7uoEpqNTeiUw==}
@@ -2543,6 +2560,9 @@ packages:
 
   mdn-data@2.27.1:
     resolution: {integrity: sha512-9Yubnt3e8A0OKwxYSXyhLymGW4sCufcLG6VdiDdUGVkPhpqLxlvP5vl1983gQjJl3tqbrM731mjaZaP68AgosQ==}
+
+  mediabunny@1.61.1:
+    resolution: {integrity: sha512-530o7Q2OkChbfXt8N9WmzcW/wmUN0Vdxgl3RE5zUlzny3aNJUi7huOjdOVVq60aCEjTaMR1Ikby+61+co8gRwA==}
 
   micromark-util-character@2.1.1:
     resolution: {integrity: sha512-wv8tdUTJ3thSFFFJKtpYKOYiGP2+v96Hvk4Tu8KpCAsTMs6yi+nVmGh1syvSCsaxz45J6Jbw+9DD6g97+NV67Q==}
@@ -4118,6 +4138,10 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
+  '@mediabunny/mp3-encoder@1.61.1(mediabunny@1.61.1)':
+    dependencies:
+      mediabunny: 1.61.1
+
   '@mixmark-io/domino@2.2.0': {}
 
   '@napi-rs/canvas-android-arm64@1.0.9':
@@ -4394,6 +4418,12 @@ snapshots:
       '@types/css-tree': 2.3.11
 
   '@types/deep-eql@4.0.2': {}
+
+  '@types/dom-mediacapture-transform@0.1.12':
+    dependencies:
+      '@types/dom-webcodecs': 0.1.13
+
+  '@types/dom-webcodecs@0.1.13': {}
 
   '@types/esrecurse@4.3.1': {}
 
@@ -5430,6 +5460,11 @@ snapshots:
   mdn-data@2.0.28: {}
 
   mdn-data@2.27.1: {}
+
+  mediabunny@1.61.1:
+    dependencies:
+      '@types/dom-mediacapture-transform': 0.1.12
+      '@types/dom-webcodecs': 0.1.13
 
   micromark-util-character@2.1.1:
     dependencies:

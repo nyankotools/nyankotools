@@ -15,6 +15,7 @@ export const categoryIds = [
   'security',
   'file',
   'hardware',
+  'media',
 ] as const;
 
 export type CategoryId = (typeof categoryIds)[number];
@@ -34,6 +35,7 @@ export const categories: Record<CategoryId, Record<Locale, string>> = {
   security: { ja: 'セキュリティ', en: 'Security' },
   file: { ja: 'ファイル', en: 'File' },
   hardware: { ja: 'ハードウェア', en: 'Hardware' },
+  media: { ja: '動画・音声', en: 'Video & Audio' },
 };
 
 export interface ToolTranslation {
@@ -4658,6 +4660,47 @@ export const tools: Tool[] = [
         ],
         description:
           'Build a Content-Security-Policy per directive and copy it as nginx, Apache, or _headers config. Also generates SRI integrity hashes and tags.',
+      },
+    },
+  },
+  {
+    slug: 'media-converter',
+    category: 'media',
+    addedAt: '2026-10-06',
+    updatedAt: '2026-10-06',
+    related: ['screen-recorder', 'image-converter', 'file-hash-calculator'],
+    heavy: true,
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '動画・音声変換／トリミング／圧縮',
+        keywords: [
+          '動画変換',
+          '音声変換',
+          'MP4',
+          'WebM',
+          'MP3',
+          '動画圧縮',
+          '動画トリミング',
+          '音声抽出',
+        ],
+        description:
+          '動画・音声をMP4・WebM・MP3などに変換し、必要な部分の切り出しや、画質・解像度を下げた圧縮もできます。ブラウザ内で処理され、アップロード不要。',
+      },
+      en: {
+        name: 'Video & Audio Converter, Trimmer, Compressor',
+        keywords: [
+          'video converter',
+          'audio converter',
+          'MP4',
+          'WebM',
+          'MP3',
+          'compress video',
+          'trim video',
+          'extract audio',
+        ],
+        description:
+          'Convert video and audio to MP4, WebM, MP3 and more, trim a section, or shrink the file by lowering quality and resolution. Runs in your browser, no upload.',
       },
     },
   },

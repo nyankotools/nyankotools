@@ -111,6 +111,8 @@ export default defineConfig({
         'jsqr',
         'jsonpath-plus',
         'marked',
+        'mediabunny',
+        '@mediabunny/mp3-encoder',
         'pdf-lib',
         'pdfjs-dist/legacy/build/pdf.mjs',
         'prettier/standalone',

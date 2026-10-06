@@ -43,6 +43,7 @@ const slugs = [
   'csp-sri-generator',
   'text-replace-tools',
   'ocr-protect-image',
+  'media-converter',
 ];
 
 const locales = [

@@ -4590,6 +4590,40 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'ocr-protect-image',
+    category: 'image',
+    addedAt: '2026-10-06',
+    updatedAt: '2026-10-06',
+    related: ['image-pixelart-converter', 'image-text-overlay', 'exif-viewer'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'OCR対策画像加工',
+        keywords: [
+          'OCR対策',
+          '文字認識',
+          'スクレイピング対策',
+          '画像ノイズ',
+          '文字を読み取りにくく',
+        ],
+        description:
+          '画像内の文字に微小な歪み・ノイズ・細線を加え、OCRによる自動読み取りを難しくします。効果は保証できません。PNGで保存可能。',
+      },
+      en: {
+        name: 'OCR-Resistant Image Obfuscator',
+        keywords: [
+          'OCR protection',
+          'anti OCR',
+          'anti scraping',
+          'image noise',
+          'obfuscate text',
+        ],
+        description:
+          'Adds subtle distortion, noise, and fine lines to text in an image to make automatic OCR reading harder. No guarantee of effect. Saves as PNG.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

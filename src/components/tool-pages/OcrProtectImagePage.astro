@@ -1,0 +1,490 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { ocrProtectImageContent } from '../../i18n/tools/ocr-protect-image';
+import {
+  DEFAULT_OPTIONS,
+  MAX_STRENGTH,
+  MIN_STRENGTH,
+} from '../../lib/tools/ocr-protect-image';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = ocrProtectImageContent[locale];
+
+const sliders = [
+  { key: 'noise', label: t.noiseLabel, value: DEFAULT_OPTIONS.noise },
+  { key: 'warp', label: t.warpLabel, value: DEFAULT_OPTIONS.warp },
+  { key: 'lines', label: t.linesLabel, value: DEFAULT_OPTIONS.lines },
+];
+---
+
+<ToolShell t={t}>
+  <p
+    role="note"
+    class="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
+  >
+    {t.disclaimer}
+  </p>
+
+  <div>
+    <label for="op-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="op-dropzone" class="ui-dropzone">
+      <input
+        id="op-file-input"
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="op-source-info"
+      data-template={t.sourceInfoTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="op-error"
+      role="alert"
+      hidden
+      data-unsupported={t.errorUnsupportedFile}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-too-many-pixels-template={t.errorTooManyPixelsTemplate}
+      data-conversion-failed={t.errorConversionFailed}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+  </div>
+
+  <div class="mt-4">
+    <span class="ui-label">{t.presetLabel}</span>
+    <div id="op-preset" class="ui-seg" role="group" aria-label={t.presetLabel}>
+      <button
+        type="button"
+        data-preset="light"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.presetLight}
+      </button>
+      <button
+        type="button"
+        data-preset="standard"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.presetStandard}
+      </button>
+      <button
+        type="button"
+        data-preset="strong"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.presetStrong}
+      </button>
+    </div>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-6">
+    {sliders.map((s) => (
+      <div class="min-w-48 flex-1">
+        <label for={`op-${s.key}`} class="ui-label">
+          {s.label}
+          <span
+            id={`op-${s.key}-value`}
+            data-value-template={t.strengthValueTemplate}
+            data-off-label={t.strengthOffLabel}
+          />
+        </label>
+        <input
+          id={`op-${s.key}`}
+          type="range"
+          min={MIN_STRENGTH}
+          max={MAX_STRENGTH}
+          value={s.value}
+          class="h-11 w-full"
+        />
+      </div>
+    ))}
+  </div>
+
+  <div class="mt-4 flex flex-wrap gap-3">
+    <button
+      id="op-regenerate-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.regenerateButton}
+    </button>
+    <button
+      id="op-clear-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.clearButton}
+    </button>
+  </div>
+
+  <div
+    id="op-results-section"
+    hidden
+    class="mt-6"
+    data-size-template={t.resultSizeTemplate}
+  >
+    <h2 class="mb-2 text-lg font-bold">{t.resultsHeading}</h2>
+    <div class="flex flex-wrap gap-4">
+      <div class="min-w-40 flex-1">
+        <p class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t.originalPreviewLabel}
+        </p>
+        <img
+          id="op-original-preview"
+          alt={t.originalPreviewAlt}
+          class="w-full rounded-lg border border-gray-300 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800"
+        />
+      </div>
+      <div class="min-w-40 flex-1">
+        <p class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t.resultPreviewLabel}
+        </p>
+        <canvas
+          id="op-result-canvas"
+          role="img"
+          aria-label={t.resultCanvasLabel}
+          class="w-full rounded-lg border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
+        ></canvas>
+      </div>
+    </div>
+    <p
+      id="op-result-size"
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+    <a
+      id="op-download-button"
+      download
+      class="mt-3 inline-flex min-h-11 items-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 aria-disabled:pointer-events-none aria-disabled:bg-gray-300 aria-disabled:text-gray-500 dark:aria-disabled:bg-gray-700 dark:aria-disabled:text-gray-400"
+      aria-disabled="true"
+    >
+      {t.downloadButton}
+    </a>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    MAX_FILE_SIZE,
+    MAX_PIXELS,
+    PRESETS,
+    buildOutputFileName,
+    clampStrength,
+    formatFileSize,
+    isAcceptedImageFile,
+    isWithinPixelLimit,
+    protectImageData,
+    type OcrProtectOptions,
+    type PresetId,
+  } from '../../lib/tools/ocr-protect-image';
+
+  const dropzone = document.getElementById('op-dropzone')!;
+  const fileInput = document.getElementById(
+    'op-file-input',
+  ) as HTMLInputElement;
+  const sourceInfoEl = document.getElementById('op-source-info')!;
+  const errorEl = document.getElementById('op-error')!;
+  const presetButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#op-preset [data-preset]',
+  );
+  const regenerateButton = document.getElementById(
+    'op-regenerate-button',
+  ) as HTMLButtonElement;
+  const clearButton = document.getElementById(
+    'op-clear-button',
+  ) as HTMLButtonElement;
+  const resultsSection = document.getElementById('op-results-section')!;
+  const originalPreview = document.getElementById(
+    'op-original-preview',
+  ) as HTMLImageElement;
+  const resultCanvas = document.getElementById(
+    'op-result-canvas',
+  ) as HTMLCanvasElement;
+  const resultSizeEl = document.getElementById('op-result-size')!;
+  const downloadButton = document.getElementById(
+    'op-download-button',
+  ) as HTMLAnchorElement;
+
+  const keys = ['noise', 'warp', 'lines'] as const;
+  const sliderEls = Object.fromEntries(
+    keys.map((k) => [
+      k,
+      {
+        input: document.getElementById(`op-${k}`) as HTMLInputElement,
+        value: document.getElementById(`op-${k}-value`)!,
+      },
+    ]),
+  ) as Record<
+    (typeof keys)[number],
+    { input: HTMLInputElement; value: HTMLElement }
+  >;
+
+  const sourceInfoTemplate = sourceInfoEl.dataset.template ?? '';
+  const sizeTemplate = resultsSection.dataset.sizeTemplate ?? '';
+
+  let currentFile: File | null = null;
+  let currentBitmap: ImageBitmap | null = null;
+  let sourcePixels: Uint8ClampedArray | null = null;
+  let seed = 1;
+  let previewObjectUrl: string | null = null;
+  let downloadObjectUrl: string | null = null;
+  // 並行して走った処理のうち、最後に開始したものの結果だけを反映させるための世代番号
+  let renderGeneration = 0;
+
+  function readOptions(): OcrProtectOptions {
+    return {
+      noise: clampStrength(Number(sliderEls.noise.input.value)),
+      warp: clampStrength(Number(sliderEls.warp.input.value)),
+      lines: clampStrength(Number(sliderEls.lines.input.value)),
+    };
+  }
+
+  function updateSliderUi() {
+    for (const k of keys) {
+      const { input, value } = sliderEls[k];
+      const v = clampStrength(Number(input.value));
+      value.textContent =
+        v === 0
+          ? ` ${value.dataset.offLabel ?? ''}`
+          : ` ${(value.dataset.valueTemplate ?? '').replace('{value}', String(v))}`;
+    }
+  }
+
+  function markPreset(id: PresetId | null) {
+    presetButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.preset === id)),
+    );
+  }
+
+  function matchingPreset(): PresetId | null {
+    const o = readOptions();
+    for (const id of Object.keys(PRESETS) as PresetId[]) {
+      const p = PRESETS[id];
+      if (p.noise === o.noise && p.warp === o.warp && p.lines === o.lines) {
+        return id;
+      }
+    }
+    return null;
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearErrorBanner() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function revokePreviewObjectUrl() {
+    if (previewObjectUrl) {
+      URL.revokeObjectURL(previewObjectUrl);
+      previewObjectUrl = null;
+    }
+  }
+
+  function revokeDownloadObjectUrl() {
+    if (downloadObjectUrl) {
+      URL.revokeObjectURL(downloadObjectUrl);
+      downloadObjectUrl = null;
+    }
+  }
+
+  function resetAll() {
+    renderGeneration++;
+    revokePreviewObjectUrl();
+    revokeDownloadObjectUrl();
+    currentFile = null;
+    currentBitmap?.close();
+    currentBitmap = null;
+    sourcePixels = null;
+    sourceInfoEl.textContent = '';
+    resultsSection.hidden = true;
+    resultSizeEl.textContent = '';
+    downloadButton.setAttribute('aria-disabled', 'true');
+    downloadButton.removeAttribute('href');
+    originalPreview.removeAttribute('src');
+    clearButton.disabled = true;
+    regenerateButton.disabled = true;
+  }
+
+  function render() {
+    if (!currentBitmap || !sourcePixels || !currentFile) return;
+    const generation = ++renderGeneration;
+    const { width, height } = currentBitmap;
+
+    try {
+      const out = protectImageData(
+        sourcePixels,
+        width,
+        height,
+        readOptions(),
+        seed,
+      );
+      resultCanvas.width = width;
+      resultCanvas.height = height;
+      const ctx = resultCanvas.getContext('2d')!;
+      ctx.putImageData(
+        new ImageData(out as Uint8ClampedArray<ArrayBuffer>, width, height),
+        0,
+        0,
+      );
+    } catch {
+      revokeDownloadObjectUrl();
+      downloadButton.setAttribute('aria-disabled', 'true');
+      downloadButton.removeAttribute('href');
+      showError(errorEl.dataset.conversionFailed ?? '');
+      return;
+    }
+
+    const file = currentFile;
+    resultCanvas.toBlob((blob) => {
+      if (generation !== renderGeneration) return;
+      if (!blob) {
+        showError(errorEl.dataset.conversionFailed ?? '');
+        return;
+      }
+      revokeDownloadObjectUrl();
+      downloadObjectUrl = URL.createObjectURL(blob);
+      downloadButton.href = downloadObjectUrl;
+      downloadButton.download = buildOutputFileName(file.name, 'png');
+      downloadButton.removeAttribute('aria-disabled');
+      resultSizeEl.textContent = sizeTemplate
+        .replace('{width}', String(width))
+        .replace('{height}', String(height))
+        .replace('{size}', formatFileSize(blob.size));
+    }, 'image/png');
+  }
+
+  let renderDebounce: ReturnType<typeof setTimeout> | undefined;
+  function scheduleRender() {
+    clearTimeout(renderDebounce);
+    renderDebounce = setTimeout(render, 200);
+  }
+
+  async function loadFile(file: File) {
+    clearErrorBanner();
+    resetAll();
+
+    if (!isAcceptedImageFile(file)) {
+      showError(errorEl.dataset.unsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace(
+          '{max}',
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+
+    let bitmap: ImageBitmap;
+    try {
+      bitmap = await createImageBitmap(file);
+    } catch {
+      showError(errorEl.dataset.conversionFailed ?? '');
+      return;
+    }
+    if (!isWithinPixelLimit(bitmap.width, bitmap.height)) {
+      bitmap.close();
+      showError(
+        (errorEl.dataset.tooManyPixelsTemplate ?? '').replace(
+          '{max}',
+          String(MAX_PIXELS / 1_000_000),
+        ),
+      );
+      return;
+    }
+
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+      ctx.drawImage(bitmap, 0, 0);
+      sourcePixels = ctx.getImageData(0, 0, bitmap.width, bitmap.height).data;
+    } catch {
+      bitmap.close();
+      showError(errorEl.dataset.conversionFailed ?? '');
+      return;
+    }
+
+    currentFile = file;
+    currentBitmap = bitmap;
+    seed = Math.floor(Math.random() * 0xffffffff);
+
+    sourceInfoEl.textContent = sourceInfoTemplate
+      .replace('{width}', String(bitmap.width))
+      .replace('{height}', String(bitmap.height))
+      .replace('{size}', formatFileSize(file.size));
+
+    previewObjectUrl = URL.createObjectURL(file);
+    originalPreview.src = previewObjectUrl;
+
+    resultsSection.hidden = false;
+    clearButton.disabled = false;
+    regenerateButton.disabled = false;
+
+    render();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+
+  enableFileDrop(dropzone, fileInput);
+
+  for (const k of keys) {
+    sliderEls[k].input.addEventListener('input', () => {
+      updateSliderUi();
+      markPreset(matchingPreset());
+      scheduleRender();
+    });
+  }
+
+  presetButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const id = button.dataset.preset as PresetId;
+      const p = PRESETS[id];
+      sliderEls.noise.input.value = String(p.noise);
+      sliderEls.warp.input.value = String(p.warp);
+      sliderEls.lines.input.value = String(p.lines);
+      updateSliderUi();
+      markPreset(id);
+      scheduleRender();
+    });
+  });
+
+  regenerateButton.addEventListener('click', () => {
+    seed = Math.floor(Math.random() * 0xffffffff);
+    render();
+  });
+
+  clearButton.addEventListener('click', () => {
+    resetAll();
+    clearErrorBanner();
+  });
+
+  updateSliderUi();
+  markPreset(matchingPreset());
+</script>

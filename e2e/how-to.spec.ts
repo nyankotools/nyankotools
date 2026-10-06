@@ -41,6 +41,7 @@ const slugs = [
   'keypair-generator',
   'data-recipe-builder',
   'text-replace-tools',
+  'ocr-protect-image',
 ];
 
 const locales = [

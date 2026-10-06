@@ -1,0 +1,192 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { keypairGeneratorContent } from '../../i18n/tools/keypair-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = keypairGeneratorContent[locale];
+
+const fields = [
+  { id: 'public', label: t.publicKeyLabel, file: 'public.pem' },
+  { id: 'private', label: t.privateKeyLabel, file: 'private.pem' },
+];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="keypair-algorithm" class="ui-label">
+      {t.algorithmLabel}
+    </label>
+    <select
+      id="keypair-algorithm"
+      class="ui-input h-11 w-full max-w-xs px-3 dark:bg-gray-900"
+    >
+      <optgroup label={t.groupRsa}>
+        <option value="rsa-2048" selected>
+          RSA 2048
+        </option>
+        <option value="rsa-3072">RSA 3072</option>
+        <option value="rsa-4096">RSA 4096</option>
+      </optgroup>
+      <optgroup label={t.groupEc}>
+        <option value="ec-p256">ECDSA P-256</option>
+        <option value="ec-p384">ECDSA P-384</option>
+        <option value="ec-p521">ECDSA P-521</option>
+      </optgroup>
+      <optgroup label={t.groupEd}>
+        <option value="ed25519">Ed25519</option>
+      </optgroup>
+    </select>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="keypair-generate-button"
+      type="button"
+      data-generating={t.generating}
+      class="ui-btn ui-btn-primary"
+    >
+      {t.generate}
+    </button>
+  </div>
+
+  <p
+    id="keypair-error"
+    hidden
+    data-unsupported={t.unsupported}
+    class="ui-error mt-4 max-w-2xl"
+    role="alert"
+  ></p>
+
+  {fields.map((f) => (
+    <div class="mt-4">
+      <label for={`keypair-${f.id}`} class="ui-label">
+        {f.label}
+      </label>
+      <textarea
+        id={`keypair-${f.id}`}
+        readonly
+        class="ui-input h-40 w-full bg-gray-50 p-4 font-mono text-xs dark:bg-gray-900"
+        spellcheck="false"
+      />
+      <div class="mt-2 flex flex-wrap items-center gap-3">
+        <button
+          id={`keypair-${f.id}-copy-button`}
+          type="button"
+          data-target={f.id}
+          class="ui-btn"
+        >
+          {t.copy}
+        </button>
+        <button
+          id={`keypair-${f.id}-download-button`}
+          type="button"
+          data-target={f.id}
+          data-filename={f.file}
+          class="ui-btn"
+        >
+          {t.download}
+        </button>
+        <span
+          id={`keypair-${f.id}-status`}
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        />
+      </div>
+    </div>
+  ))}
+  <span
+    id="keypair-messages"
+    hidden
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  ></span>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    generateKeyPair,
+    keyAlgorithms,
+    type KeyAlgorithm,
+  } from '../../lib/tools/keypair-generator';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`keypair-${id}`) as T;
+  const algorithm = $<HTMLSelectElement>('algorithm');
+  const generateButton = $<HTMLButtonElement>('generate-button');
+  const errorEl = $<HTMLElement>('error');
+  const messages = $<HTMLElement>('messages');
+  const outputs = {
+    public: $<HTMLTextAreaElement>('public'),
+    private: $<HTMLTextAreaElement>('private'),
+  };
+
+  function clearStatus() {
+    for (const id of ['public', 'private']) $(`${id}-status`).textContent = '';
+  }
+
+  generateButton.addEventListener('click', async () => {
+    const selected = algorithm.value as KeyAlgorithm;
+    if (!keyAlgorithms.includes(selected)) return;
+    const label = generateButton.textContent;
+    errorEl.hidden = true;
+    clearStatus();
+    generateButton.disabled = true;
+    generateButton.textContent = generateButton.dataset.generating ?? '';
+    try {
+      const result = await generateKeyPair(selected);
+      if (result.success) {
+        outputs.public.value = result.keyPair.publicKey;
+        outputs.private.value = result.keyPair.privateKey;
+      } else {
+        outputs.public.value = '';
+        outputs.private.value = '';
+        errorEl.textContent = errorEl.dataset.unsupported ?? '';
+        errorEl.hidden = false;
+      }
+    } catch {
+      outputs.public.value = '';
+      outputs.private.value = '';
+      errorEl.textContent = errorEl.dataset.unsupported ?? '';
+      errorEl.hidden = false;
+    } finally {
+      generateButton.disabled = false;
+      generateButton.textContent = label;
+    }
+  });
+
+  document
+    .querySelectorAll<HTMLButtonElement>('[id$="-copy-button"][data-target]')
+    .forEach((button) => {
+      button.addEventListener('click', async () => {
+        const id = button.dataset.target as 'public' | 'private';
+        const value = outputs[id].value;
+        if (!value) return;
+        $(`${id}-status`).textContent = (await copyText(value))
+          ? (messages.dataset.copied ?? '')
+          : (messages.dataset.copyFailed ?? '');
+      });
+    });
+
+  document
+    .querySelectorAll<HTMLButtonElement>(
+      '[id$="-download-button"][data-target]',
+    )
+    .forEach((button) => {
+      button.addEventListener('click', () => {
+        const id = button.dataset.target as 'public' | 'private';
+        const value = outputs[id].value;
+        if (!value) return;
+        downloadBlob(
+          new Blob([value], { type: 'application/x-pem-file' }),
+          button.dataset.filename ?? `${id}.pem`,
+        );
+      });
+    });
+</script>

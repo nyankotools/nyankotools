@@ -4477,6 +4477,44 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'keypair-generator',
+    category: 'security',
+    addedAt: '2026-10-06',
+    updatedAt: '2026-10-06',
+    related: ['crypto-encryptor', 'hmac-generator', 'password-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'キーペア生成',
+        keywords: [
+          'RSA',
+          'ECDSA',
+          'Ed25519',
+          '公開鍵',
+          '秘密鍵',
+          'PEM',
+          '鍵生成',
+        ],
+        description:
+          'RSA・ECDSA・Ed25519の公開鍵と秘密鍵のペアをPEM形式で生成。鍵はブラウザ内で作られ、送信されません。',
+      },
+      en: {
+        name: 'Key Pair Generator',
+        keywords: [
+          'RSA',
+          'ECDSA',
+          'Ed25519',
+          'public key',
+          'private key',
+          'PEM',
+          'keygen',
+        ],
+        description:
+          'Generate RSA, ECDSA, or Ed25519 public/private key pairs in PEM format. Keys are created in your browser and never sent.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

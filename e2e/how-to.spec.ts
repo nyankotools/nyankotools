@@ -38,6 +38,7 @@ const slugs = [
   'zip-tool',
   'screen-recorder',
   'text-merge-tool',
+  'keypair-generator',
 ];
 
 const locales = [

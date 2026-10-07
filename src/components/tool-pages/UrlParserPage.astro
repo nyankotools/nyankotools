@@ -1,0 +1,382 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { urlParserContent } from '../../i18n/tools/url-parser';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = urlParserContent[locale];
+
+const partFields = [
+  { name: 'protocol', label: t.partProtocol },
+  { name: 'username', label: t.partUsername },
+  { name: 'password', label: t.partPassword },
+  { name: 'hostname', label: t.partHostname },
+  { name: 'port', label: t.partPort },
+  { name: 'pathname', label: t.partPathname },
+  { name: 'hash', label: t.partHash },
+];
+---
+
+<ToolShell t={t}>
+  <div class="grid gap-4">
+    <div>
+      <label for="url-parser-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="url-parser-input"
+        class="ui-input h-28 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+        autocomplete="off"
+      ></textarea>
+    </div>
+    <div>
+      <label for="url-parser-base" class="ui-label">
+        {t.baseLabel}
+      </label>
+      <input
+        id="url-parser-base"
+        type="text"
+        class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.basePlaceholder}
+        spellcheck="false"
+        autocomplete="off"
+      />
+      <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{t.baseHint}</p>
+    </div>
+  </div>
+
+  <p
+    id="url-parser-error"
+    hidden
+    data-empty={t.errorEmpty}
+    data-invalid={t.errorInvalid}
+    data-invalid-base={t.errorInvalidBase}
+    data-build={t.errorBuild}
+    class="ui-error mt-4 max-w-2xl"
+    role="alert"
+  ></p>
+
+  <div id="url-parser-body" hidden>
+    <h2 class="mt-6 text-lg font-semibold">{t.partsHeading}</h2>
+    <p
+      id="url-parser-resolved"
+      hidden
+      class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+    >
+      {t.resolvedNotice}
+    </p>
+    <p id="url-parser-missing-scheme" hidden class="ui-error mt-1 max-w-2xl">
+      {t.missingSchemeNotice}
+    </p>
+    <div class="mt-3 grid gap-3 sm:grid-cols-2">
+      {partFields.map((f) => (
+        <div>
+          <label for={`url-parser-part-${f.name}`} class="ui-label">
+            {f.label}
+          </label>
+          <input
+            id={`url-parser-part-${f.name}`}
+            data-part={f.name}
+            type="text"
+            class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+            spellcheck="false"
+            autocomplete="off"
+          />
+        </div>
+      ))}
+    </div>
+
+    <h2 class="mt-6 text-lg font-semibold">{t.paramsHeading}</h2>
+    <p
+      id="url-parser-duplicates"
+      hidden
+      data-prefix={t.duplicateKeys}
+      class="mt-1 text-sm text-amber-700 dark:text-amber-400"
+    ></p>
+    <p
+      id="url-parser-empty"
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    >
+      {t.paramsEmpty}
+    </p>
+    <ul
+      id="url-parser-params"
+      class="mt-2 grid gap-3"
+      data-key-label={t.paramKey}
+      data-value-label={t.paramValue}
+      data-remove={t.paramRemove}
+      data-up={t.paramUp}
+      data-down={t.paramDown}
+    ></ul>
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button id="url-parser-add" type="button" class="ui-btn">
+        {t.paramAdd}
+      </button>
+      <button id="url-parser-sort" type="button" class="ui-btn">
+        {t.paramSort}
+      </button>
+      <label class="ui-check">
+        <input id="url-parser-plus" type="checkbox" />
+        {t.plusForSpace}
+      </label>
+    </div>
+
+    <div class="mt-6">
+      <label for="url-parser-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="url-parser-output"
+        readonly
+        class="ui-input h-28 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button
+        id="url-parser-copy-button"
+        type="button"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="ui-btn"
+      >
+        {t.copy}
+      </button>
+      <span
+        id="url-parser-status"
+        class="text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    addParam,
+    buildUrl,
+    findDuplicateKeys,
+    moveParam,
+    parseUrl,
+    removeParam,
+    sortParams,
+    updateParam,
+    type QueryParam,
+    type UrlParts,
+  } from '../../lib/tools/url-parser';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const input = $<HTMLTextAreaElement>('url-parser-input');
+  const baseInput = $<HTMLInputElement>('url-parser-base');
+  const errorEl = $<HTMLParagraphElement>('url-parser-error');
+  const bodyEl = $<HTMLDivElement>('url-parser-body');
+  const resolvedEl = $<HTMLParagraphElement>('url-parser-resolved');
+  const missingSchemeEl = $<HTMLParagraphElement>('url-parser-missing-scheme');
+  const listEl = $<HTMLUListElement>('url-parser-params');
+  const emptyEl = $<HTMLParagraphElement>('url-parser-empty');
+  const dupEl = $<HTMLParagraphElement>('url-parser-duplicates');
+  const addButton = $<HTMLButtonElement>('url-parser-add');
+  const sortButton = $<HTMLButtonElement>('url-parser-sort');
+  const plusCheck = $<HTMLInputElement>('url-parser-plus');
+  const output = $<HTMLTextAreaElement>('url-parser-output');
+  const copyButton = $<HTMLButtonElement>('url-parser-copy-button');
+  const statusEl = $<HTMLSpanElement>('url-parser-status');
+  const partInputs = Array.from(
+    document.querySelectorAll<HTMLInputElement>('[data-part]'),
+  );
+
+  let baseHref = '';
+  let params: QueryParam[] = [];
+
+  function showError(key: 'empty' | 'invalid' | 'invalidBase' | 'build') {
+    const map = {
+      empty: errorEl.dataset.empty,
+      invalid: errorEl.dataset.invalid,
+      invalidBase: errorEl.dataset.invalidBase,
+      build: errorEl.dataset.build,
+    };
+    errorEl.textContent = map[key] ?? '';
+    errorEl.hidden = false;
+  }
+
+  function readParts(): UrlParts {
+    const parts: Record<string, string> = {};
+    for (const el of partInputs) parts[el.dataset.part!] = el.value;
+    return parts as unknown as UrlParts;
+  }
+
+  let original: { params: QueryParam[]; raw: string } | undefined;
+
+  function rebuild() {
+    statusEl.textContent = '';
+    const result = buildUrl(
+      baseHref,
+      readParts(),
+      params,
+      plusCheck.checked,
+      plusCheck.checked ? undefined : original,
+    );
+    if (result.success) {
+      output.value = result.url;
+      if (errorEl.dataset.state === 'build') {
+        errorEl.hidden = true;
+        errorEl.dataset.state = '';
+      }
+    } else {
+      output.value = '';
+      showError('build');
+      errorEl.dataset.state = 'build';
+    }
+  }
+
+  function renderDuplicates() {
+    const dups = findDuplicateKeys(params);
+    dupEl.hidden = dups.length === 0;
+    dupEl.textContent = dups.length
+      ? `${dupEl.dataset.prefix ?? ''}${dups.join(', ')}`
+      : '';
+  }
+
+  function renderParams() {
+    listEl.textContent = '';
+    emptyEl.hidden = params.length > 0;
+    renderDuplicates();
+
+    params.forEach((param, index) => {
+      const li = document.createElement('li');
+      li.className =
+        'flex flex-col gap-2 rounded-lg border border-gray-200 p-3 dark:border-gray-700 sm:flex-row sm:items-end';
+
+      const field = (
+        labelText: string,
+        value: string,
+        onInput: (v: string) => void,
+      ) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'min-w-0 flex-1';
+        const id = `url-parser-param-${labelText}-${index}`;
+        const label = document.createElement('label');
+        label.className = 'ui-label';
+        label.htmlFor = id;
+        label.textContent = labelText;
+        const el = document.createElement('input');
+        el.id = id;
+        el.type = 'text';
+        el.value = value;
+        el.spellcheck = false;
+        el.autocomplete = 'off';
+        el.className =
+          'ui-input h-11 w-full px-3 font-mono bg-white dark:bg-gray-900';
+        el.addEventListener('input', () => onInput(el.value));
+        wrap.append(label, el);
+        return wrap;
+      };
+
+      const button = (text: string, disabled: boolean, onClick: () => void) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'ui-btn';
+        b.textContent = text;
+        b.disabled = disabled;
+        b.addEventListener('click', onClick);
+        return b;
+      };
+
+      const actions = document.createElement('div');
+      actions.className = 'flex flex-wrap gap-2';
+      const change = (next: QueryParam[]) => {
+        params = next;
+        renderParams();
+        rebuild();
+      };
+      actions.append(
+        button(listEl.dataset.up ?? '', index === 0, () =>
+          change(moveParam(params, index, -1)),
+        ),
+        button(listEl.dataset.down ?? '', index === params.length - 1, () =>
+          change(moveParam(params, index, 1)),
+        ),
+        button(listEl.dataset.remove ?? '', false, () =>
+          change(removeParam(params, index)),
+        ),
+      );
+
+      li.append(
+        field(listEl.dataset.keyLabel ?? '', param.key, (v) => {
+          params = updateParam(params, index, { key: v });
+          renderDuplicates();
+          rebuild();
+        }),
+        field(listEl.dataset.valueLabel ?? '', param.value, (v) => {
+          params = updateParam(params, index, { value: v });
+          rebuild();
+        }),
+        actions,
+      );
+      listEl.append(li);
+    });
+  }
+
+  function parse() {
+    statusEl.textContent = '';
+    const result = parseUrl(input.value, baseInput.value);
+    errorEl.dataset.state = '';
+    if (!result.success) {
+      bodyEl.hidden = true;
+      output.value = '';
+      baseHref = '';
+      if (result.error === 'empty') {
+        errorEl.hidden = true;
+      } else {
+        showError(result.error);
+      }
+      return;
+    }
+    errorEl.hidden = true;
+    bodyEl.hidden = false;
+    baseHref = result.href;
+    original = { params: result.params, raw: result.rawQuery };
+    resolvedEl.hidden = !result.resolvedFromBase;
+    missingSchemeEl.hidden = !result.missingScheme;
+    for (const el of partInputs) {
+      el.value = result.parts[el.dataset.part as keyof UrlParts];
+    }
+    params = result.params;
+    renderParams();
+    rebuild();
+  }
+
+  onTextInput(input, parse);
+  baseInput.addEventListener('input', parse);
+  partInputs.forEach((el) => el.addEventListener('input', rebuild));
+  plusCheck.addEventListener('change', rebuild);
+
+  addButton.addEventListener('click', () => {
+    params = addParam(params);
+    renderParams();
+    rebuild();
+    listEl.querySelector<HTMLInputElement>('li:last-child input')?.focus();
+  });
+  sortButton.addEventListener('click', () => {
+    params = sortParams(params);
+    renderParams();
+    rebuild();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  parse();
+</script>

@@ -1,0 +1,284 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { fuelCostCalculatorContent } from '../../i18n/tools/fuel-cost-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = fuelCostCalculatorContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+    data-liters-unit={t.litersUnit}
+    data-per-km-unit={t.perKmUnit}
+  >
+    <div class="mb-3">
+      <span id="fuel-unit-label" class="ui-label">
+        {t.economyUnitLegend}
+      </span>
+      <div
+        class="flex flex-wrap gap-3"
+        role="radiogroup"
+        aria-labelledby="fuel-unit-label"
+      >
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="fuel-unit" value="kmPerL" checked />
+          {t.economyUnitKmPerL}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="fuel-unit" value="lPer100km" />
+          {t.economyUnitLPer100km}
+        </label>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="fuel-distance" class="ui-label">
+          {t.distanceLabel}
+        </label>
+        <div class="flex items-center gap-1">
+          <input
+            id="fuel-distance"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="any"
+            class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.distanceUnit}
+          </span>
+        </div>
+      </div>
+      <div>
+        <label for="fuel-economy" class="ui-label">
+          {t.economyLabel}
+        </label>
+        <input
+          id="fuel-economy"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="fuel-price" class="ui-label">
+          {t.priceLabel}
+        </label>
+        <input
+          id="fuel-price"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+
+    <div class="mt-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label for="fuel-extra" class="ui-label">
+          {t.extraCostLabel}
+        </label>
+        <input
+          id="fuel-extra"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          class="ui-input h-11 w-36 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="fuel-people" class="ui-label">
+          {t.peopleLabel}
+        </label>
+        <div class="flex items-center gap-1">
+          <input
+            id="fuel-people"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            step="1"
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.peopleUnit}
+          </span>
+        </div>
+      </div>
+    </div>
+    <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+      {t.extraCostNote}
+    </p>
+
+    <p
+      id="fuel-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl
+      id="fuel-results"
+      class="mt-4 hidden grid grid-cols-1 gap-3 sm:grid-cols-2"
+      aria-live="polite"
+    >
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultLitersLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="fuel-result-liters"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultFuelCostLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="fuel-result-fuel"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultFuelPerKmLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="fuel-result-fuel-per-km"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultTotalLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="fuel-result-total"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultTotalPerKmLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="fuel-result-total-per-km"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultPerPersonLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="fuel-result-per-person"></dd>
+      </div>
+      <div>
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultPerPersonCeilLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="fuel-result-per-person-ceil"></dd>
+      </div>
+    </dl>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    calculateFuelCost,
+    type FuelEconomyUnit,
+  } from '../../lib/tools/fuel-cost-calculator';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
+  const errorMessage = configEl.dataset.error ?? '';
+  const litersUnit = configEl.dataset.litersUnit ?? 'L';
+  const perKmUnit = configEl.dataset.perKmUnit ?? '/km';
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const yenDecimal = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });
+  const liters = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 2,
+  });
+
+  const byId = (id: string) => document.getElementById(id)!;
+  const distanceInput = byId('fuel-distance') as HTMLInputElement;
+  const economyInput = byId('fuel-economy') as HTMLInputElement;
+  const priceInput = byId('fuel-price') as HTMLInputElement;
+  const extraInput = byId('fuel-extra') as HTMLInputElement;
+  const peopleInput = byId('fuel-people') as HTMLInputElement;
+  const unitInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="fuel-unit"]',
+  );
+  const errorEl = byId('fuel-error');
+  const resultsEl = byId('fuel-results');
+
+  function selectedUnit(): FuelEconomyUnit {
+    return (
+      (Array.from(unitInputs).find((el) => el.checked)
+        ?.value as FuelEconomyUnit) ?? 'kmPerL'
+    );
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    if (
+      distanceInput.value.trim() === '' ||
+      economyInput.value.trim() === '' ||
+      priceInput.value.trim() === ''
+    )
+      return;
+
+    const result = calculateFuelCost({
+      distanceKm: Number(distanceInput.value),
+      economy: Number(economyInput.value),
+      economyUnit: selectedUnit(),
+      pricePerLiter: Number(priceInput.value),
+      extraCost: extraInput.value.trim() === '' ? 0 : Number(extraInput.value),
+      people: peopleInput.value.trim() === '' ? 1 : Number(peopleInput.value),
+    });
+
+    if (result === null) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    byId('fuel-result-liters').textContent =
+      `${liters.format(result.liters)} ${litersUnit}`;
+    byId('fuel-result-fuel').textContent = yen.format(result.fuelCost);
+    byId('fuel-result-fuel-per-km').textContent =
+      `${yenDecimal.format(result.fuelCostPerKm)}${perKmUnit}`;
+    byId('fuel-result-total').textContent = yen.format(result.totalCost);
+    byId('fuel-result-total-per-km').textContent =
+      `${yenDecimal.format(result.totalCostPerKm)}${perKmUnit}`;
+    byId('fuel-result-per-person').textContent = yenDecimal.format(
+      result.perPerson,
+    );
+    byId('fuel-result-per-person-ceil').textContent = yen.format(
+      result.perPersonCeil,
+    );
+    resultsEl.classList.remove('hidden');
+  }
+
+  [distanceInput, economyInput, priceInput, extraInput, peopleInput].forEach(
+    (el) => el.addEventListener('input', render),
+  );
+  unitInputs.forEach((el) => el.addEventListener('change', render));
+
+  distanceInput.value = '300';
+  economyInput.value = '15';
+  priceInput.value = '175';
+  extraInput.value = '0';
+  peopleInput.value = '1';
+  render();
+</script>

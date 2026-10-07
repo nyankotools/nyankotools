@@ -1,0 +1,305 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { gachaCalculatorContent } from '../../i18n/tools/gacha-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = gachaCalculatorContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="gacha-root"
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+    data-unreachable={t.unreachable}
+    data-confidence-format={t.confidenceFormat}
+    data-confidence-unreachable={t.confidenceUnreachable}
+    data-pulls-format={t.pullsFormat}
+    data-stones-format={t.stonesFormat}
+    data-hits-format={t.hitsFormat}
+  >
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="gacha-rate" class="ui-label">
+          {t.rateLabel}
+        </label>
+        <input
+          id="gacha-rate"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.ratePlaceholder}
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label for="gacha-pulls" class="ui-label">
+          {t.pullsLabel}
+        </label>
+        <input
+          id="gacha-pulls"
+          type="text"
+          inputmode="numeric"
+          placeholder={t.pullsPlaceholder}
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label for="gacha-ceiling" class="ui-label">
+          {t.ceilingLabel}
+        </label>
+        <input
+          id="gacha-ceiling"
+          type="text"
+          inputmode="numeric"
+          placeholder={t.ceilingPlaceholder}
+          class="ui-input h-11 w-36 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label for="gacha-cost" class="ui-label">
+          {t.costLabel}
+        </label>
+        <input
+          id="gacha-cost"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.costPlaceholder}
+          class="ui-input h-11 w-44 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label for="gacha-owned" class="ui-label">
+          {t.ownedLabel}
+        </label>
+        <input
+          id="gacha-owned"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.ownedPlaceholder}
+          class="ui-input h-11 w-44 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+    </div>
+
+    <p
+      id="gacha-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="gacha-results" class="mt-4 hidden" aria-live="polite">
+      <h2 class="mb-3 text-lg font-bold">{t.resultHeading}</h2>
+      <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultProbabilityLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="gacha-result-probability"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultExpectedHitsLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="gacha-result-hits"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultExpectedPullsLabel}
+          </dt>
+          <dd
+            class="text-lg font-semibold"
+            id="gacha-result-expected-pulls"
+          ></dd>
+        </div>
+        <div id="gacha-row-expected-stones">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultExpectedStonesLabel}
+          </dt>
+          <dd
+            class="text-lg font-semibold"
+            id="gacha-result-expected-stones"
+          ></dd>
+        </div>
+        <div id="gacha-row-ceiling-stones">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultCeilingStonesLabel}
+          </dt>
+          <dd
+            class="text-lg font-semibold"
+            id="gacha-result-ceiling-stones"
+          ></dd>
+        </div>
+        <div id="gacha-row-owned-pulls">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultOwnedPullsLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="gacha-result-owned-pulls"></dd>
+        </div>
+        <div id="gacha-row-owned-probability">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultOwnedProbabilityLabel}
+          </dt>
+          <dd
+            class="text-lg font-semibold"
+            id="gacha-result-owned-probability"
+          ></dd>
+        </div>
+      </dl>
+
+      <h3 class="mt-5 mb-2 font-bold">{t.confidenceHeading}</h3>
+      <ul id="gacha-confidence" class="list-inside list-disc text-sm"></ul>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    calculateConfidencePulls,
+    calculateGacha,
+    toDisplayPercent,
+  } from '../../lib/tools/gacha-calculator';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+  import { fill } from '../../lib/format-template';
+
+  const root = document.getElementById('gacha-root')!;
+  const numberLocale = root.dataset.numberLocale ?? 'en-US';
+  const errorText = root.dataset.error ?? '';
+  const unreachableText = root.dataset.unreachable ?? '';
+  const confidenceFormat = root.dataset.confidenceFormat ?? '';
+  const confidenceUnreachable = root.dataset.confidenceUnreachable ?? '';
+  const pullsFormat = root.dataset.pullsFormat ?? '{n}';
+  const stonesFormat = root.dataset.stonesFormat ?? '{n}';
+  const hitsFormat = root.dataset.hitsFormat ?? '{n}';
+
+  const integerFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 0,
+  });
+  const decimalFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 2,
+  });
+  const percentFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 2,
+  });
+
+  const $ = (id: string) => document.getElementById(id)!;
+  const rateInput = $('gacha-rate') as HTMLInputElement;
+  const pullsInput = $('gacha-pulls') as HTMLInputElement;
+  const ceilingInput = $('gacha-ceiling') as HTMLInputElement;
+  const costInput = $('gacha-cost') as HTMLInputElement;
+  const ownedInput = $('gacha-owned') as HTMLInputElement;
+  const errorEl = $('gacha-error');
+  const resultsEl = $('gacha-results');
+  const confidenceEl = $('gacha-confidence');
+
+  [pullsInput, ceilingInput, costInput, ownedInput].forEach(
+    attachCommaFormatting,
+  );
+
+  const pct = (probability: number) =>
+    `${percentFormat.format(toDisplayPercent(probability))}%`;
+  const pullsText = (n: number) =>
+    fill(pullsFormat, { n: integerFormat.format(n) });
+  const stonesText = (n: number) =>
+    fill(stonesFormat, { n: integerFormat.format(Math.ceil(n)) });
+
+  function setRow(rowId: string, valueId: string, text: string | null) {
+    $(rowId).classList.toggle('hidden', text === null);
+    if (text !== null) $(valueId).textContent = text;
+  }
+
+  /** 空欄は null、数値でなければ NaN */
+  function optionalNumber(input: HTMLInputElement): number | null {
+    const raw = stripCommas(input.value).trim();
+    return raw === '' ? null : Number(raw);
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    const rateRaw = rateInput.value.trim();
+    const pullsRaw = stripCommas(pullsInput.value).trim();
+    if (rateRaw === '' || pullsRaw === '') return;
+
+    const ceiling = optionalNumber(ceilingInput);
+    const ratePercent = Number(rateRaw);
+    const input = {
+      ratePercent,
+      pulls: Number(pullsRaw),
+      ceiling,
+      costPerPull: optionalNumber(costInput),
+      ownedStones: optionalNumber(ownedInput),
+    };
+    const result = calculateGacha(input);
+    const confidences = calculateConfidencePulls(ratePercent, ceiling);
+    if (result === null || confidences === null) {
+      errorEl.textContent = errorText;
+      return;
+    }
+
+    $('gacha-result-probability').textContent = pct(
+      result.probabilityAtLeastOne,
+    );
+    $('gacha-result-hits').textContent = fill(hitsFormat, {
+      n: decimalFormat.format(result.expectedHits),
+    });
+    $('gacha-result-expected-pulls').textContent =
+      result.expectedPulls === null
+        ? unreachableText
+        : pullsText(Math.ceil(result.expectedPulls));
+
+    setRow(
+      'gacha-row-expected-stones',
+      'gacha-result-expected-stones',
+      result.expectedStones === null ? null : stonesText(result.expectedStones),
+    );
+    setRow(
+      'gacha-row-ceiling-stones',
+      'gacha-result-ceiling-stones',
+      result.ceilingStones === null ? null : stonesText(result.ceilingStones),
+    );
+    setRow(
+      'gacha-row-owned-pulls',
+      'gacha-result-owned-pulls',
+      result.ownedPulls === null ? null : pullsText(result.ownedPulls),
+    );
+    setRow(
+      'gacha-row-owned-probability',
+      'gacha-result-owned-probability',
+      result.ownedProbability === null ? null : pct(result.ownedProbability),
+    );
+
+    confidenceEl.replaceChildren(
+      ...confidences.map((c) => {
+        const li = document.createElement('li');
+        li.textContent = fill(confidenceFormat, {
+          pct: String(Math.round(c.confidence * 100)),
+          pulls: c.pulls === null ? confidenceUnreachable : pullsText(c.pulls),
+        });
+        return li;
+      }),
+    );
+    resultsEl.classList.remove('hidden');
+  }
+
+  [rateInput, pullsInput, ceilingInput, costInput, ownedInput].forEach((el) =>
+    el.addEventListener('input', render),
+  );
+
+  rateInput.value = '3';
+  pullsInput.value = formatNumberWithCommas('100');
+  ceilingInput.value = formatNumberWithCommas('200');
+  costInput.value = '3';
+  ownedInput.value = formatNumberWithCommas('300');
+  render();
+</script>

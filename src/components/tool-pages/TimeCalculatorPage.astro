@@ -1,0 +1,426 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { timeCalculatorContent } from '../../i18n/tools/time-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = timeCalculatorContent[locale];
+
+const config = {
+  ariaStart: t.ariaStartTemplate,
+  ariaEnd: t.ariaEndTemplate,
+  ariaBreak: t.ariaBreakTemplate,
+  ariaRemove: t.ariaRemoveTemplate,
+  removeLabel: t.removeRowButton,
+  minutesUnit: t.minutesUnit,
+  hoursSuffix: t.hoursSuffix,
+  copied: t.copiedMessage,
+  errorWork: t.errorWork,
+  errorAddSub: t.errorAddSub,
+  errorConv: t.errorConv,
+  nextDay: t.nextDay,
+  previousDay: t.previousDay,
+  nextDays: t.nextDaysTemplate,
+  previousDays: t.previousDaysTemplate,
+};
+---
+
+<ToolShell t={t}>
+  <div id="tc-root" data-config={JSON.stringify(config)}>
+    <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-bold">{t.section1Heading}</h2>
+      <div id="tc-rows" class="space-y-3"></div>
+      <div class="mt-3 flex flex-wrap items-center gap-3">
+        <button type="button" id="tc-add-row" class="ui-btn">
+          {t.addRowButton}
+        </button>
+        <button type="button" id="tc-copy-button" class="ui-btn ui-btn-primary">
+          {t.copyButton}
+        </button>
+        <span
+          id="tc-copy-status"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></span>
+      </div>
+      <p
+        id="tc-work-error"
+        class="mt-2 text-sm text-red-600 dark:text-red-400"
+        aria-live="polite"
+      ></p>
+      <dl class="mt-4 grid grid-cols-2 gap-3" aria-live="polite">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.totalWorkLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="tc-total-hm"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.totalWorkDecimalLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="tc-total-decimal"></dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="mt-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-bold">{t.section2Heading}</h2>
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="tc-base-time" class="ui-label">
+            {t.baseTimeLabel}
+          </label>
+          <input
+            id="tc-base-time"
+            type="time"
+            class="ui-input h-11 w-32 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <span id="tc-op-label" class="ui-label">
+            {t.operationLegend}
+          </span>
+          <div
+            class="flex h-11 items-center gap-3"
+            role="radiogroup"
+            aria-labelledby="tc-op-label"
+          >
+            <label class="flex items-center gap-1 text-sm">
+              <input type="radio" name="tc-op" value="add" checked />
+              {t.operationAdd}
+            </label>
+            <label class="flex items-center gap-1 text-sm">
+              <input type="radio" name="tc-op" value="subtract" />
+              {t.operationSubtract}
+            </label>
+          </div>
+        </div>
+        <div>
+          <label for="tc-delta-h" class="ui-label">
+            {t.deltaHoursLabel}
+          </label>
+          <input
+            id="tc-delta-h"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="tc-delta-m" class="ui-label">
+            {t.deltaMinutesLabel}
+          </label>
+          <input
+            id="tc-delta-m"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+      <p
+        id="tc-addsub-error"
+        class="mt-2 text-sm text-red-600 dark:text-red-400"
+        aria-live="polite"
+      ></p>
+      <dl class="mt-4" aria-live="polite">
+        <dt class="text-sm text-gray-600 dark:text-gray-400">
+          {t.resultTimeLabel}
+        </dt>
+        <dd class="text-lg font-semibold" id="tc-addsub-result"></dd>
+      </dl>
+    </section>
+
+    <section class="mt-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-bold">{t.section3Heading}</h2>
+      <div class="grid gap-6 sm:grid-cols-2">
+        <div>
+          <h3 class="mb-2 font-semibold">{t.hmToDecimalHeading}</h3>
+          <div class="flex flex-wrap items-end gap-3">
+            <div>
+              <label for="tc-conv-h" class="ui-label">
+                {t.convHoursLabel}
+              </label>
+              <input
+                id="tc-conv-h"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                step="1"
+                class="ui-input h-11 w-20 px-3 dark:bg-gray-900"
+              />
+            </div>
+            <div>
+              <label for="tc-conv-m" class="ui-label">
+                {t.convMinutesLabel}
+              </label>
+              <input
+                id="tc-conv-m"
+                type="number"
+                inputmode="numeric"
+                min="0"
+                step="1"
+                class="ui-input h-11 w-20 px-3 dark:bg-gray-900"
+              />
+            </div>
+          </div>
+          <p
+            id="tc-hm-error"
+            class="mt-2 text-sm text-red-600 dark:text-red-400"
+            aria-live="polite"
+          ></p>
+          <dl class="mt-3" aria-live="polite">
+            <dt class="text-sm text-gray-600 dark:text-gray-400">
+              {t.resultDecimalLabel}
+            </dt>
+            <dd class="text-lg font-semibold" id="tc-hm-result"></dd>
+          </dl>
+        </div>
+        <div>
+          <h3 class="mb-2 font-semibold">{t.decimalToHmHeading}</h3>
+          <div>
+            <label for="tc-conv-decimal" class="ui-label">
+              {t.convDecimalLabel}
+            </label>
+            <input
+              id="tc-conv-decimal"
+              type="text"
+              inputmode="decimal"
+              placeholder="7.75"
+              class="ui-input h-11 w-32 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+            />
+          </div>
+          <p
+            id="tc-decimal-error"
+            class="mt-2 text-sm text-red-600 dark:text-red-400"
+            aria-live="polite"
+          ></p>
+          <dl class="mt-3" aria-live="polite">
+            <dt class="text-sm text-gray-600 dark:text-gray-400">
+              {t.resultHmLabel}
+            </dt>
+            <dd class="text-lg font-semibold" id="tc-decimal-result"></dd>
+          </dl>
+        </div>
+      </div>
+    </section>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    addSubtractTime,
+    decimalHoursToMinutes,
+    formatDuration,
+    hoursMinutesToMinutes,
+    minutesToDecimalHours,
+    sumWork,
+  } from '../../lib/tools/time-calculator';
+  import { copyText } from '../../lib/clipboard';
+
+  const root = document.getElementById('tc-root')!;
+  const cfg = JSON.parse(root.dataset.config ?? '{}') as Record<string, string>;
+  const byId = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const fill = (tpl: string, n: number) => tpl.replace('{n}', String(n));
+
+  // --- 1. 勤務時間の合計 ---
+  const rowsEl = byId('tc-rows');
+  const workErrorEl = byId('tc-work-error');
+  const totalHmEl = byId('tc-total-hm');
+  const totalDecimalEl = byId('tc-total-decimal');
+  const copyStatusEl = byId('tc-copy-status');
+
+  const inputClass = 'ui-input h-11 px-3 dark:bg-gray-900';
+
+  function makeInput(type: string, cls: string, aria: string) {
+    const el = document.createElement('input');
+    el.type = type;
+    el.className = `${inputClass} ${cls}`;
+    el.setAttribute('aria-label', aria);
+    return el;
+  }
+
+  function addRow(start = '', end = '', brk = '0') {
+    const row = document.createElement('div');
+    row.className = 'flex flex-wrap items-center gap-2';
+    row.dataset.role = 'row';
+    const n = rowsEl.children.length + 1;
+    const startEl = makeInput('time', 'w-32', fill(cfg.ariaStart, n));
+    startEl.value = start;
+    startEl.dataset.role = 'start';
+    const endEl = makeInput('time', 'w-32', fill(cfg.ariaEnd, n));
+    endEl.value = end;
+    endEl.dataset.role = 'end';
+    const breakEl = makeInput('number', 'w-20', fill(cfg.ariaBreak, n));
+    breakEl.min = '0';
+    breakEl.step = '1';
+    breakEl.inputMode = 'numeric';
+    breakEl.value = brk;
+    breakEl.dataset.role = 'break';
+    const unit = document.createElement('span');
+    unit.className = 'text-sm text-gray-600 dark:text-gray-400';
+    unit.textContent = cfg.minutesUnit;
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'ui-btn';
+    removeBtn.textContent = cfg.removeLabel;
+    removeBtn.dataset.role = 'remove';
+    row.append(startEl, endEl, breakEl, unit, removeBtn);
+    rowsEl.appendChild(row);
+    renumber();
+    renderWork();
+  }
+
+  function renumber() {
+    Array.from(rowsEl.children).forEach((row, i) => {
+      const n = i + 1;
+      row
+        .querySelector('[data-role="start"]')!
+        .setAttribute('aria-label', fill(cfg.ariaStart, n));
+      row
+        .querySelector('[data-role="end"]')!
+        .setAttribute('aria-label', fill(cfg.ariaEnd, n));
+      row
+        .querySelector('[data-role="break"]')!
+        .setAttribute('aria-label', fill(cfg.ariaBreak, n));
+      row
+        .querySelector('[data-role="remove"]')!
+        .setAttribute('aria-label', fill(cfg.ariaRemove, n));
+    });
+  }
+
+  let lastCopy = '';
+
+  function renderWork() {
+    workErrorEl.textContent = '';
+    copyStatusEl.textContent = '';
+    const entries = Array.from(rowsEl.children)
+      .map((row) => {
+        const get = (r: string) =>
+          (row.querySelector(`[data-role="${r}"]`) as HTMLInputElement).value;
+        return {
+          start: get('start'),
+          end: get('end'),
+          breakText: get('break').trim(),
+        };
+      })
+      // 出勤・退勤が両方空の行は未入力として無視する
+      .filter((e) => e.start !== '' || e.end !== '')
+      .map((e) => ({
+        start: e.start,
+        end: e.end,
+        breakMinutes: e.breakText === '' ? 0 : Number(e.breakText),
+      }));
+    const result = sumWork(entries);
+    if (result.hasError) workErrorEl.textContent = cfg.errorWork;
+    totalHmEl.textContent = formatDuration(result.totalMinutes);
+    const dec = minutesToDecimalHours(result.totalMinutes);
+    totalDecimalEl.textContent = `${dec} ${cfg.hoursSuffix}`;
+    lastCopy = `${formatDuration(result.totalMinutes)} (${dec})`;
+  }
+
+  rowsEl.addEventListener('input', renderWork);
+  rowsEl.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('[data-role="remove"]');
+    if (!btn) return;
+    btn.closest('[data-role="row"]')!.remove();
+    renumber();
+    renderWork();
+  });
+  byId('tc-add-row').addEventListener('click', () => addRow());
+  byId('tc-copy-button').addEventListener('click', async () => {
+    const ok = await copyText(lastCopy);
+    copyStatusEl.textContent = ok ? cfg.copied : '';
+  });
+
+  // --- 2. 時刻の足し算・引き算 ---
+  const baseTimeEl = byId<HTMLInputElement>('tc-base-time');
+  const deltaHEl = byId<HTMLInputElement>('tc-delta-h');
+  const deltaMEl = byId<HTMLInputElement>('tc-delta-m');
+  const addSubErrorEl = byId('tc-addsub-error');
+  const addSubResultEl = byId('tc-addsub-result');
+  const opInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="tc-op"]',
+  );
+
+  function renderAddSub() {
+    addSubErrorEl.textContent = '';
+    addSubResultEl.textContent = '';
+    if (baseTimeEl.value === '') return;
+    const sign =
+      Array.from(opInputs).find((o) => o.checked)?.value === 'subtract'
+        ? -1
+        : 1;
+    const delta = hoursMinutesToMinutes(
+      Number(deltaHEl.value || 0),
+      Number(deltaMEl.value || 0),
+    );
+    const result =
+      delta === null ? null : addSubtractTime(baseTimeEl.value, delta, sign);
+    if (result === null) {
+      addSubErrorEl.textContent = cfg.errorAddSub;
+      return;
+    }
+    let text = formatDuration(result.minutes);
+    const d = result.dayOffset;
+    if (d === 1) text += ` (${cfg.nextDay})`;
+    else if (d === -1) text += ` (${cfg.previousDay})`;
+    else if (d > 1) text += ` (${fill(cfg.nextDays, d)})`;
+    else if (d < -1) text += ` (${fill(cfg.previousDays, -d)})`;
+    addSubResultEl.textContent = text;
+  }
+  [baseTimeEl, deltaHEl, deltaMEl].forEach((el) =>
+    el.addEventListener('input', renderAddSub),
+  );
+  opInputs.forEach((el) => el.addEventListener('change', renderAddSub));
+
+  // --- 3. 換算 ---
+  const convHEl = byId<HTMLInputElement>('tc-conv-h');
+  const convMEl = byId<HTMLInputElement>('tc-conv-m');
+  const hmErrorEl = byId('tc-hm-error');
+  const hmResultEl = byId('tc-hm-result');
+  const convDecimalEl = byId<HTMLInputElement>('tc-conv-decimal');
+  const decimalErrorEl = byId('tc-decimal-error');
+  const decimalResultEl = byId('tc-decimal-result');
+
+  function renderHm() {
+    hmErrorEl.textContent = '';
+    hmResultEl.textContent = '';
+    if (convHEl.value === '' && convMEl.value === '') return;
+    const total = hoursMinutesToMinutes(
+      Number(convHEl.value || 0),
+      Number(convMEl.value || 0),
+    );
+    if (total === null) {
+      hmErrorEl.textContent = cfg.errorConv;
+      return;
+    }
+    hmResultEl.textContent = `${minutesToDecimalHours(total)} ${cfg.hoursSuffix}`;
+  }
+  function renderDecimal() {
+    decimalErrorEl.textContent = '';
+    decimalResultEl.textContent = '';
+    const raw = convDecimalEl.value.trim().replace(',', '.');
+    if (raw === '') return;
+    const minutes = decimalHoursToMinutes(Number(raw));
+    if (minutes === null) {
+      decimalErrorEl.textContent = cfg.errorConv;
+      return;
+    }
+    decimalResultEl.textContent = formatDuration(minutes);
+  }
+  [convHEl, convMEl].forEach((el) => el.addEventListener('input', renderHm));
+  convDecimalEl.addEventListener('input', renderDecimal);
+
+  addRow('09:00', '18:00', '60');
+</script>

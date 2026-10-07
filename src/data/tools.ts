@@ -4704,6 +4704,303 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'css-clamp-calculator',
+    category: 'dev',
+    addedAt: '2026-10-07',
+    updatedAt: '2026-10-07',
+    related: ['px-rem-converter', 'viewport-checker'],
+    translations: {
+      ja: {
+        name: 'CSS clamp()計算機',
+        keywords: [
+          'clamp',
+          'clamp()',
+          '流動タイポグラフィ',
+          'fluid typography',
+          'レスポンシブ',
+          'font-size',
+          'vw',
+        ],
+        description:
+          '最小・最大フォントサイズと画面幅から、流動タイポグラフィ用のclamp()式を自動計算します。',
+      },
+      en: {
+        name: 'CSS clamp() Calculator',
+        keywords: [
+          'clamp',
+          'fluid typography',
+          'responsive font size',
+          'font-size',
+          'vw',
+          'css',
+        ],
+        description:
+          'Generate a fluid typography clamp() expression from min/max font sizes and viewport widths.',
+      },
+    },
+  },
+  {
+    slug: 'time-calculator',
+    category: 'datetime',
+    addedAt: '2026-10-07',
+    updatedAt: '2026-10-07',
+    related: ['hourly-wage-calculator', 'date-calculator'],
+    translations: {
+      ja: {
+        name: '時間計算ツール',
+        keywords: [
+          '勤務時間',
+          '時間計算',
+          '時刻 足し算',
+          '労働時間',
+          '小数時間',
+          '時間 引き算',
+          '夜勤',
+        ],
+        description:
+          '勤務時間の合計、時刻の足し算・引き算、時間（h:mm）と小数時間の換算ができます。',
+      },
+      en: {
+        name: 'Time Calculator',
+        keywords: [
+          'work hours',
+          'time calculator',
+          'add time',
+          'subtract time',
+          'decimal hours',
+          'timesheet',
+          'overnight shift',
+        ],
+        description:
+          'Total work hours, add or subtract time, and convert between h:mm and decimal hours.',
+      },
+    },
+  },
+  {
+    slug: 'fuel-cost-calculator',
+    category: 'calc',
+    addedAt: '2026-10-07',
+    updatedAt: '2026-10-07',
+    related: ['unit-converter', 'hourly-wage-calculator'],
+    translations: {
+      ja: {
+        name: '燃費・ガソリン代計算機',
+        keywords: [
+          'ガソリン代',
+          '燃費計算',
+          '燃料代',
+          '割り勘',
+          'ドライブ',
+          '高速料金',
+          'km/L',
+          '1km当たり',
+        ],
+        description:
+          '走行距離・燃費・ガソリン単価から燃料代と1km当たりのコストを計算。高速料金込みで人数割り勘も。',
+      },
+      en: {
+        name: 'Fuel Cost Calculator',
+        keywords: [
+          'fuel cost',
+          'gas cost',
+          'fuel economy',
+          'trip cost',
+          'cost per km',
+          'km/L',
+          'L/100km',
+          'split cost',
+        ],
+        description:
+          'Calculate fuel cost and cost per km from distance, fuel economy and price, and split a road trip among passengers.',
+      },
+    },
+  },
+  {
+    slug: 'aspect-ratio-calculator',
+    category: 'calc',
+    addedAt: '2026-10-07',
+    updatedAt: '2026-10-07',
+    related: ['image-resizer', 'viewport-checker'],
+    translations: {
+      ja: {
+        name: 'アスペクト比計算機',
+        keywords: [
+          'アスペクト比',
+          '縦横比',
+          '解像度計算',
+          '16:9',
+          '比率計算',
+          '約分',
+        ],
+        description:
+          '幅と高さから比率を約分して求め、比率と片辺の長さからもう一辺も計算。16:9・4:3などのプリセット付き。',
+      },
+      en: {
+        name: 'Aspect Ratio Calculator',
+        keywords: [
+          'aspect ratio',
+          'resolution calculator',
+          '16:9',
+          'ratio simplifier',
+          'resize calculator',
+          'screen ratio',
+        ],
+        description:
+          'Simplify a width and height to an aspect ratio, or find the missing side from a ratio and one dimension. Includes 16:9 and 4:3 presets.',
+      },
+    },
+  },
+  {
+    slug: 'gacha-calculator',
+    category: 'calc',
+    addedAt: '2026-10-07',
+    updatedAt: '2026-10-07',
+    related: ['tax-calculator', 'unit-converter'],
+    translations: {
+      ja: {
+        name: 'ガチャ確率計算機',
+        keywords: [
+          'ガチャ',
+          '天井',
+          '排出率',
+          '確率',
+          '課金',
+          '石',
+          'ソシャゲ',
+        ],
+        description:
+          '排出率と回数から当たる確率・天井までの期待回数・必要な石数を計算',
+      },
+      en: {
+        name: 'Gacha Probability Calculator',
+        keywords: [
+          'gacha',
+          'pity',
+          'drop rate',
+          'probability',
+          'gems',
+          'pull calculator',
+        ],
+        description:
+          'Calculate drop chances, pity cap expectations and gems needed',
+      },
+    },
+  },
+  {
+    slug: 'unicode-inspector',
+    category: 'dev',
+    addedAt: '2026-10-07',
+    updatedAt: '2026-10-07',
+    related: ['unicode-escape', 'special-char-list'],
+    translations: {
+      ja: {
+        name: 'Unicodeコードポイント検索',
+        keywords: [
+          'Unicode',
+          'コードポイント',
+          'U+',
+          'UTF-8',
+          'UTF-16',
+          'サロゲートペア',
+          '文字コード',
+          '逆引き',
+        ],
+        description:
+          '文字のコードポイント・UTF-8/UTF-16バイト列・カテゴリを調べ、U+XXXXから文字を逆引き',
+      },
+      en: {
+        name: 'Unicode Character Inspector',
+        keywords: [
+          'unicode',
+          'code point',
+          'utf-8',
+          'utf-16',
+          'surrogate pair',
+          'character info',
+          'zwj emoji',
+        ],
+        description:
+          'Look up code points, UTF-8/UTF-16 bytes and categories of characters, or convert U+XXXX back to text',
+      },
+    },
+  },
+  {
+    slug: 'url-parser',
+    category: 'dev',
+    addedAt: '2026-10-07',
+    updatedAt: '2026-10-07',
+    related: ['url-encode', 'unicode-escape'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'URLパーサー・クエリ編集',
+        keywords: [
+          'URL',
+          '分解',
+          'クエリ',
+          'クエリパラメータ',
+          'クエリ文字列',
+          'パース',
+          'URLパーサー',
+          'URLSearchParams',
+        ],
+        description:
+          'URLをプロトコル・ホスト・パス・クエリ・ハッシュに分解し、パラメータを編集して再組み立て',
+      },
+      en: {
+        name: 'URL Parser & Query Editor',
+        keywords: [
+          'url parser',
+          'query string',
+          'query params',
+          'url builder',
+          'URLSearchParams',
+          'parse url',
+          'edit query',
+        ],
+        description:
+          'Split a URL into protocol, host, path, query and hash, edit parameters and rebuild it',
+      },
+    },
+  },
+  {
+    slug: 'user-agent-parser',
+    category: 'dev',
+    addedAt: '2026-10-07',
+    updatedAt: '2026-10-07',
+    related: ['viewport-checker', 'http-header-analyzer', 'url-parser'],
+    translations: {
+      ja: {
+        name: 'User-Agent解析',
+        keywords: [
+          'UA',
+          'ユーザーエージェント',
+          'user agent',
+          'ブラウザ判定',
+          'OS判定',
+          'デバイス判定',
+          'userAgentData',
+        ],
+        description:
+          'User-Agent文字列からブラウザ・OS・レンダリングエンジン・デバイス種別を判定。いま使っているブラウザのUAも自動表示します。',
+      },
+      en: {
+        name: 'User-Agent Parser',
+        keywords: [
+          'user agent',
+          'UA string',
+          'browser detection',
+          'OS detection',
+          'device detection',
+          'userAgentData',
+          'navigator.userAgent',
+        ],
+        description:
+          'Parse a User-Agent string into browser, OS, rendering engine and device type, and see the UA of your own browser automatically.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

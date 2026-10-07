@@ -1,0 +1,390 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { aspectRatioCalculatorContent } from '../../i18n/tools/aspect-ratio-calculator';
+import { RATIO_PRESETS } from '../../lib/tools/aspect-ratio-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = aspectRatioCalculatorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="ar-root"
+    data-nearest-approx={t.nearestApprox}
+    data-nearest-exact={t.nearestExact}
+    data-invalid-size={t.invalidSize}
+    data-invalid-ratio={t.invalidRatio}
+    data-rounded-note={t.roundedNote}
+    data-table-caption={t.tableCaption}
+    data-rounded-mark={t.roundedMark}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <section class="mb-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-base font-semibold">{t.fromSizeHeading}</h2>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label for="ar-size-w" class="ui-label">
+            {t.widthLabel}
+          </label>
+          <input
+            id="ar-size-w"
+            type="number"
+            inputmode="decimal"
+            step="any"
+            min="0"
+            value="1920"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ar-size-h" class="ui-label">
+            {t.heightLabel}
+          </label>
+          <input
+            id="ar-size-h"
+            type="number"
+            inputmode="decimal"
+            step="any"
+            min="0"
+            value="1080"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+      <p
+        id="ar-size-error"
+        class="ui-error empty:hidden mt-2"
+        aria-live="polite"
+      ></p>
+      <dl id="ar-size-result" class="mt-3 grid grid-cols-1 gap-2 text-sm">
+        <div>
+          <dt class="text-gray-600 dark:text-gray-400">{t.simplifiedLabel}</dt>
+          <dd id="ar-simplified" class="text-xl font-semibold break-all"></dd>
+        </div>
+        <div>
+          <dt class="text-gray-600 dark:text-gray-400">{t.decimalLabel}</dt>
+          <dd id="ar-decimal" class="font-semibold break-all"></dd>
+        </div>
+        <div>
+          <dt class="text-gray-600 dark:text-gray-400">{t.nearestLabel}</dt>
+          <dd id="ar-nearest" class="font-semibold break-all"></dd>
+        </div>
+      </dl>
+      <button type="button" id="ar-use-button" class="ui-btn mt-3">
+        {t.useRatioButton}
+      </button>
+    </section>
+
+    <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-base font-semibold">{t.toSizeHeading}</h2>
+      <div class="mb-3">
+        <label for="ar-preset" class="ui-label">
+          {t.presetLabel}
+        </label>
+        <select
+          id="ar-preset"
+          data-no-persist
+          class="ui-input h-11 w-full max-w-60 px-3 dark:bg-gray-900"
+        >
+          {RATIO_PRESETS.map((p) => (
+            <option value={p.value}>{p.value}</option>
+          ))}
+          <option value="custom">{t.customOption}</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label for="ar-ratio-w" class="ui-label">
+            {t.ratioWidthLabel}
+          </label>
+          <input
+            id="ar-ratio-w"
+            type="number"
+            inputmode="decimal"
+            step="any"
+            min="0"
+            value="16"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ar-ratio-h" class="ui-label">
+            {t.ratioHeightLabel}
+          </label>
+          <input
+            id="ar-ratio-h"
+            type="number"
+            inputmode="decimal"
+            step="any"
+            min="0"
+            value="9"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ar-known" class="ui-label">
+            {t.knownSideLabel}
+          </label>
+          <select
+            id="ar-known"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          >
+            <option value="width">{t.knownWidth}</option>
+            <option value="height">{t.knownHeight}</option>
+          </select>
+        </div>
+        <div>
+          <label for="ar-known-value" class="ui-label">
+            {t.knownValueLabel}
+          </label>
+          <input
+            id="ar-known-value"
+            type="number"
+            inputmode="decimal"
+            step="any"
+            min="0"
+            value="1280"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+      <p
+        id="ar-ratio-error"
+        class="ui-error empty:hidden mt-2"
+        aria-live="polite"
+      ></p>
+      <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <span class="ui-label">{t.resultWidthLabel}</span>
+          <output
+            id="ar-result-w"
+            class="flex h-11 w-full items-center overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-semibold break-all dark:border-gray-700 dark:bg-gray-900"
+            aria-live="polite"
+          ></output>
+        </div>
+        <div>
+          <span class="ui-label">{t.resultHeightLabel}</span>
+          <output
+            id="ar-result-h"
+            class="flex h-11 w-full items-center overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-semibold break-all dark:border-gray-700 dark:bg-gray-900"
+            aria-live="polite"
+          ></output>
+        </div>
+      </div>
+      <p
+        id="ar-rounded-note"
+        class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+      ></p>
+      <div class="mt-3 flex items-center gap-3">
+        <button type="button" id="ar-copy-button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <span
+          id="ar-copy-status"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></span>
+      </div>
+
+      <h3 class="mt-6 mb-2 text-base font-semibold">{t.tableHeading}</h3>
+      <div
+        class="overflow-x-auto"
+        tabindex="0"
+        role="region"
+        aria-label={t.tableHeading}
+      >
+        <table class="w-full text-sm">
+          <caption
+            id="ar-table-caption"
+            class="mb-1 text-left text-gray-600 dark:text-gray-400"
+          ></caption>
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th scope="col" class="py-1 pr-4 text-left">
+                {t.columnWidth}
+              </th>
+              <th scope="col" class="py-1 text-left">
+                {t.columnHeight}
+              </th>
+            </tr>
+          </thead>
+          <tbody id="ar-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { fill } from '../../lib/format-template';
+  import {
+    RATIO_PRESETS,
+    calcOtherSide,
+    formatDecimal,
+    formatRatio,
+    nearestPreset,
+    parseRatio,
+    ratioValue,
+    resolutionTable,
+    simplifyRatio,
+    type KnownSide,
+  } from '../../lib/tools/aspect-ratio-calculator';
+
+  const root = document.getElementById('ar-root')!;
+  const d = root.dataset;
+  const $ = (id: string) => document.getElementById(id)!;
+  const input = (id: string) => $(id) as HTMLInputElement;
+
+  const sizeW = input('ar-size-w');
+  const sizeH = input('ar-size-h');
+  const preset = $('ar-preset') as HTMLSelectElement;
+  const ratioW = input('ar-ratio-w');
+  const ratioH = input('ar-ratio-h');
+  const known = $('ar-known') as HTMLSelectElement;
+  const knownValue = input('ar-known-value');
+  let lastCopyText = '';
+
+  function renderSize() {
+    const w = Number(sizeW.value);
+    const h = Number(sizeH.value);
+    const simplified =
+      sizeW.value.trim() === '' || sizeH.value.trim() === ''
+        ? null
+        : simplifyRatio(w, h);
+    const empty = sizeW.value.trim() === '' || sizeH.value.trim() === '';
+    $('ar-size-error').textContent =
+      simplified || empty ? '' : (d.invalidSize ?? '');
+    const nearest = simplified ? nearestPreset(w, h) : null;
+    const value = simplified ? ratioValue(w, h) : null;
+    $('ar-simplified').textContent = simplified ? formatRatio(simplified) : '';
+    $('ar-decimal').textContent = value === null ? '' : formatDecimal(value, 4);
+    $('ar-nearest').textContent = nearest
+      ? nearest.exact
+        ? fill(d.nearestExact ?? '', { ratio: nearest.preset.value })
+        : fill(d.nearestApprox ?? '', {
+            ratio: nearest.preset.value,
+            diff: formatDecimal(nearest.diffPercent, 2),
+          })
+      : '';
+    ($('ar-use-button') as HTMLButtonElement).disabled = !simplified;
+  }
+
+  function syncPreset() {
+    const r = { w: Number(ratioW.value), h: Number(ratioH.value) };
+    const match = RATIO_PRESETS.find((p) => p.w === r.w && p.h === r.h);
+    preset.value = match ? match.value : 'custom';
+  }
+
+  function renderTable(ratio: { w: number; h: number } | null) {
+    const body = $('ar-table-body');
+    body.replaceChildren();
+    $('ar-table-caption').textContent = ratio
+      ? fill(d.tableCaption ?? '', { ratio: formatRatio(ratio) })
+      : '';
+    if (!ratio) return;
+    for (const row of resolutionTable(ratio)) {
+      const tr = document.createElement('tr');
+      tr.className = 'border-b border-gray-100 dark:border-gray-800';
+      const tdW = document.createElement('td');
+      tdW.className = 'py-1 pr-4';
+      tdW.textContent = String(row.width);
+      const tdH = document.createElement('td');
+      tdH.className = 'py-1';
+      tdH.textContent =
+        String(row.height) + (row.isInteger ? '' : ` ${d.roundedMark ?? ''}`);
+      tr.append(tdW, tdH);
+      body.append(tr);
+    }
+  }
+
+  function renderRatio() {
+    const empty =
+      ratioW.value.trim() === '' ||
+      ratioH.value.trim() === '' ||
+      knownValue.value.trim() === '';
+    const ratio = { w: Number(ratioW.value), h: Number(ratioH.value) };
+    const side = known.value as KnownSide;
+    const result = empty
+      ? null
+      : calcOtherSide(ratio, side, Number(knownValue.value));
+    $('ar-ratio-error').textContent =
+      result || empty ? '' : (d.invalidRatio ?? '');
+    const outW = $('ar-result-w');
+    const outH = $('ar-result-h');
+    const note = $('ar-rounded-note');
+    $('ar-copy-status').textContent = '';
+    lastCopyText = '';
+    outW.textContent = '';
+    outH.textContent = '';
+    note.textContent = '';
+    if (result) {
+      const given = Number(knownValue.value);
+      const w =
+        side === 'width' ? formatDecimal(given, 6) : String(result.rounded);
+      const h =
+        side === 'height' ? formatDecimal(given, 6) : String(result.rounded);
+      outW.textContent = w;
+      outH.textContent = h;
+      lastCopyText = `${w}x${h}`;
+      if (!result.isInteger) {
+        note.textContent = fill(d.roundedNote ?? '', {
+          exact: formatDecimal(result.exact, 4),
+          value: String(result.rounded),
+        });
+      }
+    }
+    renderTable(
+      ratioW.value.trim() === '' || ratioH.value.trim() === ''
+        ? null
+        : simplifyRatio(ratio.w, ratio.h),
+    );
+  }
+
+  sizeW.addEventListener('input', renderSize);
+  sizeH.addEventListener('input', renderSize);
+  ratioW.addEventListener('input', () => {
+    syncPreset();
+    renderRatio();
+  });
+  ratioH.addEventListener('input', () => {
+    syncPreset();
+    renderRatio();
+  });
+  known.addEventListener('change', renderRatio);
+  knownValue.addEventListener('input', renderRatio);
+
+  preset.addEventListener('change', () => {
+    const r = parseRatio(preset.value);
+    if (!r) return;
+    ratioW.value = String(r.w);
+    ratioH.value = String(r.h);
+    renderRatio();
+  });
+
+  $('ar-use-button').addEventListener('click', () => {
+    const r = simplifyRatio(Number(sizeW.value), Number(sizeH.value));
+    if (!r) return;
+    ratioW.value = String(r.w);
+    ratioH.value = String(r.h);
+    syncPreset();
+    renderRatio();
+  });
+
+  $('ar-copy-button').addEventListener('click', async () => {
+    if (lastCopyText === '') return;
+    $('ar-copy-status').textContent = (await copyText(lastCopyText))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+  });
+
+  syncPreset();
+  renderSize();
+  renderRatio();
+</script>

@@ -410,6 +410,29 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-07',
+    toolSlugs: [
+      'css-clamp-calculator',
+      'time-calculator',
+      'fuel-cost-calculator',
+      'aspect-ratio-calculator',
+      'gacha-calculator',
+      'url-parser',
+      'unicode-inspector',
+      'user-agent-parser',
+    ],
+    translations: {
+      ja: {
+        summary:
+          'CSS clamp()計算機、時間計算ツール、燃費・ガソリン代計算機、アスペクト比計算機、ガチャ確率計算機、URLパーサー・クエリ編集、Unicodeコードポイント検索、User-Agent解析を追加しました。',
+      },
+      en: {
+        summary:
+          'Added the CSS clamp() Calculator, Time Calculator, Fuel Cost Calculator, Aspect Ratio Calculator, Gacha Probability Calculator, URL Parser & Query Editor, Unicode Character Inspector, and User-Agent Parser.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

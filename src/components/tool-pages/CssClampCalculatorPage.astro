@@ -1,0 +1,217 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cssClampCalculatorContent } from '../../i18n/tools/css-clamp-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cssClampCalculatorContent[locale];
+
+const fields = [
+  { id: 'css-clamp-min-size', label: t.minSizeLabel, value: '16' },
+  { id: 'css-clamp-max-size', label: t.maxSizeLabel, value: '24' },
+  { id: 'css-clamp-min-vw', label: t.minViewportLabel, value: '320' },
+  { id: 'css-clamp-max-vw', label: t.maxViewportLabel, value: '1280' },
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="css-clamp-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-preview-template={t.previewTemplate}
+    data-error-invalid-number={t.errorInvalidNumber}
+    data-error-invalid-size={t.errorInvalidSize}
+    data-error-invalid-viewport={t.errorInvalidViewport}
+    data-error-invalid-range={t.errorInvalidRange}
+    data-error-invalid-base={t.errorInvalidBase}
+  >
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {fields.map((f) => (
+        <div>
+          <label for={f.id} class="ui-label">
+            {f.label}
+          </label>
+          <input
+            id={f.id}
+            type="text"
+            inputmode="decimal"
+            spellcheck="false"
+            value={f.value}
+            class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900"
+          />
+        </div>
+      ))}
+      <div>
+        <label for="css-clamp-base" class="ui-label">
+          {t.baseFontSizeLabel}
+        </label>
+        <input
+          id="css-clamp-base"
+          type="text"
+          inputmode="decimal"
+          spellcheck="false"
+          value="16"
+          class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="css-clamp-unit" class="ui-label">
+          {t.unitLabel}
+        </label>
+        <select
+          id="css-clamp-unit"
+          class="ui-input h-11 w-full bg-white px-3 dark:bg-gray-900"
+        >
+          <option value="rem">{t.unitRem}</option>
+          <option value="px">{t.unitPx}</option>
+        </select>
+      </div>
+    </div>
+
+    <p
+      id="css-clamp-error"
+      class="mt-3 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div class="mt-4">
+      <label for="css-clamp-result" class="ui-label">
+        {t.resultLabel}
+      </label>
+      <div class="flex gap-2">
+        <input
+          id="css-clamp-result"
+          type="text"
+          readonly
+          data-no-persist
+          class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900"
+        />
+        <button
+          id="css-clamp-copy-button"
+          type="button"
+          class="ui-btn shrink-0"
+        >
+          {t.copyButton}
+        </button>
+      </div>
+      <span
+        id="css-clamp-status"
+        class="mt-2 block text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+
+    <div class="mt-4">
+      <label for="css-clamp-preview-width" class="ui-label">
+        {t.previewLabel}
+      </label>
+      <input
+        id="css-clamp-preview-width"
+        type="text"
+        inputmode="decimal"
+        spellcheck="false"
+        value="800"
+        class="ui-input h-11 w-full max-w-40 px-3 font-mono dark:bg-gray-900"
+      />
+      <p
+        id="css-clamp-preview"
+        class="mt-2 text-sm text-gray-700 dark:text-gray-300"
+        aria-live="polite"
+      ></p>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    calculateClamp,
+    formatNumber,
+    parseNumber,
+    sizeAtViewport,
+    type ClampUnit,
+  } from '../../lib/tools/css-clamp-calculator';
+
+  const root = document.getElementById('css-clamp-root')!;
+  const $ = (id: string) => document.getElementById(id) as HTMLInputElement;
+  const minSize = $('css-clamp-min-size');
+  const maxSize = $('css-clamp-max-size');
+  const minVw = $('css-clamp-min-vw');
+  const maxVw = $('css-clamp-max-vw');
+  const baseInput = $('css-clamp-base');
+  const unitSelect = document.getElementById(
+    'css-clamp-unit',
+  ) as HTMLSelectElement;
+  const result = $('css-clamp-result');
+  const previewWidth = $('css-clamp-preview-width');
+  const errorEl = document.getElementById('css-clamp-error')!;
+  const statusEl = document.getElementById('css-clamp-status')!;
+  const previewEl = document.getElementById('css-clamp-preview')!;
+  const d = root.dataset;
+
+  function update() {
+    statusEl.textContent = '';
+    previewEl.textContent = '';
+    const nums = [minSize, maxSize, minVw, maxVw, baseInput].map((el) =>
+      parseNumber(el.value),
+    );
+    if (nums.some((n) => n === null)) {
+      result.value = '';
+      errorEl.textContent = d.errorInvalidNumber ?? '';
+      return;
+    }
+    const [a, b, c, e, f] = nums as number[];
+    const input = {
+      minSize: a,
+      maxSize: b,
+      minViewport: c,
+      maxViewport: e,
+      baseFontSize: f,
+      unit: unitSelect.value as ClampUnit,
+    };
+    const r = calculateClamp(input);
+    if (typeof r === 'string') {
+      result.value = '';
+      const messages: Record<string, string | undefined> = {
+        invalidSize: d.errorInvalidSize,
+        invalidViewport: d.errorInvalidViewport,
+        invalidRange: d.errorInvalidRange,
+        invalidBase: d.errorInvalidBase,
+      };
+      errorEl.textContent = messages[r] ?? '';
+      return;
+    }
+    errorEl.textContent = '';
+    result.value = `font-size: ${r.clamp};`;
+
+    const w = parseNumber(previewWidth.value);
+    if (w !== null && w >= 0) {
+      const px = sizeAtViewport(input, w);
+      previewEl.textContent = (d.previewTemplate ?? '')
+        .replace('{width}', formatNumber(w))
+        .replace('{size}', formatNumber(px))
+        .replace('{rem}', formatNumber(px / f));
+    }
+  }
+
+  [minSize, maxSize, minVw, maxVw, baseInput, previewWidth].forEach((el) =>
+    el.addEventListener('input', update),
+  );
+  unitSelect.addEventListener('change', update);
+
+  document
+    .getElementById('css-clamp-copy-button')!
+    .addEventListener('click', async () => {
+      if (!result.value) return;
+      statusEl.textContent = (await copyText(result.value))
+        ? (d.copied ?? '')
+        : (d.copyFailed ?? '');
+    });
+
+  update();
+</script>

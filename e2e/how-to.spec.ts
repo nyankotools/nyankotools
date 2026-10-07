@@ -44,6 +44,8 @@ const slugs = [
   'text-replace-tools',
   'ocr-protect-image',
   'media-converter',
+  'css-clamp-calculator',
+  'time-calculator',
 ];
 
 const locales = [

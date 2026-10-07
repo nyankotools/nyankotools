@@ -1,0 +1,273 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { userAgentParserContent } from '../../i18n/tools/user-agent-parser';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = userAgentParserContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="ua-root"
+    data-unknown={t.unknown}
+    data-device-mobile={t.deviceMobile}
+    data-device-tablet={t.deviceTablet}
+    data-device-desktop={t.deviceDesktop}
+    data-device-bot={t.deviceBot}
+    data-device-unknown={t.deviceUnknown}
+    data-yes={t.yes}
+    data-no={t.no}
+  >
+    <h2 class="mb-2 text-lg font-bold">{t.ownHeading}</h2>
+    <div class="ui-label">{t.uaStringLabel}</div>
+    <p
+      id="ua-own-string"
+      class="mt-1 rounded-lg border border-gray-200 bg-gray-50 p-3 font-mono text-sm break-all dark:border-gray-800 dark:bg-gray-900"
+    ></p>
+    <div class="mt-2 flex flex-wrap items-center gap-3">
+      <button
+        id="ua-copy-button"
+        type="button"
+        class="ui-btn"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+      >
+        {t.copy}
+      </button>
+      <span
+        id="ua-copy-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full min-w-[320px] border-collapse text-sm">
+        <tbody>
+          {t.fieldRows.map(({ id, label }) => (
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <th
+                scope="row"
+                class="py-2 pr-4 text-left font-normal text-gray-600 dark:text-gray-400"
+              >
+                {label}
+              </th>
+              <td
+                id={`ua-own-${id}`}
+                class="py-2 text-right font-mono break-words text-gray-900 dark:text-gray-100"
+              />
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="mt-6 mb-2 text-base font-bold">{t.hintsHeading}</h3>
+    <p
+      id="ua-hints-unsupported"
+      class="hidden text-sm text-gray-600 dark:text-gray-400"
+    >
+      {t.hintsUnsupported}
+    </p>
+    <div id="ua-hints-table" class="hidden overflow-x-auto">
+      <table class="w-full min-w-[320px] border-collapse text-sm">
+        <tbody>
+          {t.hintRows.map(({ id, label }) => (
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <th
+                scope="row"
+                class="py-2 pr-4 text-left font-normal text-gray-600 dark:text-gray-400"
+              >
+                {label}
+              </th>
+              <td
+                id={`ua-hint-${id}`}
+                class="py-2 text-right font-mono break-words text-gray-900 dark:text-gray-100"
+              />
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="mt-10 mb-2 text-lg font-bold">{t.parseHeading}</h2>
+    <label for="ua-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="ua-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      class="ui-input h-28 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+    <div class="mt-2">
+      <button id="ua-use-own" type="button" class="ui-btn">
+        {t.useOwn}
+      </button>
+    </div>
+
+    <p id="ua-empty" class="mt-4 text-sm text-gray-600 dark:text-gray-400">
+      {t.emptyMessage}
+    </p>
+    <div id="ua-in-table" class="mt-4 hidden overflow-x-auto">
+      <table class="w-full min-w-[320px] border-collapse text-sm">
+        <tbody>
+          {t.fieldRows.map(({ id, label }) => (
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <th
+                scope="row"
+                class="py-2 pr-4 text-left font-normal text-gray-600 dark:text-gray-400"
+              >
+                {label}
+              </th>
+              <td
+                id={`ua-in-${id}`}
+                class="py-2 text-right font-mono break-words text-gray-900 dark:text-gray-100"
+              />
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    formatNameVersion,
+    parseUserAgent,
+    summarizeClientHints,
+    type ClientHintsInput,
+    type DeviceType,
+  } from '../../lib/tools/user-agent-parser';
+
+  interface UserAgentData {
+    brands?: { brand: string; version: string }[];
+    mobile?: boolean;
+    platform?: string;
+    getHighEntropyValues?: (hints: string[]) => Promise<ClientHintsInput>;
+  }
+
+  const root = document.getElementById('ua-root') as HTMLElement;
+  const ds = root.dataset;
+  const unknown = ds.unknown ?? '';
+  const deviceLabels: Record<DeviceType, string> = {
+    mobile: ds.deviceMobile ?? '',
+    tablet: ds.deviceTablet ?? '',
+    desktop: ds.deviceDesktop ?? '',
+    bot: ds.deviceBot ?? '',
+    unknown: ds.deviceUnknown ?? '',
+  };
+
+  const input = document.getElementById('ua-input') as HTMLTextAreaElement;
+  const ownString = document.getElementById('ua-own-string')!;
+  const copyButton = document.getElementById(
+    'ua-copy-button',
+  ) as HTMLButtonElement;
+  const copyStatus = document.getElementById('ua-copy-status')!;
+  const useOwnButton = document.getElementById('ua-use-own') as HTMLElement;
+  const emptyEl = document.getElementById('ua-empty')!;
+  const inTable = document.getElementById('ua-in-table')!;
+
+  function fill(prefix: 'own' | 'in', ua: string, maxTouchPoints: number) {
+    const r = parseUserAgent(ua, { maxTouchPoints });
+    const values: Record<string, string> = {
+      browser: formatNameVersion(r.browser) ?? unknown,
+      engine: formatNameVersion(r.engine) ?? unknown,
+      os: formatNameVersion(r.os) ?? unknown,
+      device: deviceLabels[r.device],
+      model: r.model ?? unknown,
+    };
+    for (const [id, value] of Object.entries(values)) {
+      document.getElementById(`ua-${prefix}-${id}`)!.textContent = value;
+    }
+  }
+
+  const ownUa = navigator.userAgent;
+  const touchPoints = navigator.maxTouchPoints ?? 0;
+  ownString.textContent = ownUa;
+  fill('own', ownUa, touchPoints);
+
+  function renderInput() {
+    const value = input.value;
+    const has = value.trim() !== '';
+    emptyEl.classList.toggle('hidden', has);
+    inTable.classList.toggle('hidden', !has);
+    if (has) fill('in', value, 0);
+  }
+  onTextInput(input, renderInput);
+  renderInput();
+
+  useOwnButton.addEventListener('click', () => {
+    input.value = ownUa;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+
+  copyButton.addEventListener('click', async () => {
+    copyStatus.textContent = (await copyText(ownUa))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  // Client Hints（対応ブラウザのみ）
+  const uaData = (navigator as Navigator & { userAgentData?: UserAgentData })
+    .userAgentData;
+  const hintsTable = document.getElementById('ua-hints-table')!;
+  const hintsUnsupported = document.getElementById('ua-hints-unsupported')!;
+
+  function setHint(id: string, value: string | null) {
+    document.getElementById(`ua-hint-${id}`)!.textContent = value ?? unknown;
+  }
+
+  async function renderHints() {
+    if (!uaData) {
+      hintsUnsupported.classList.remove('hidden');
+      return;
+    }
+    let data: ClientHintsInput = {
+      brands: uaData.brands,
+      mobile: uaData.mobile,
+      platform: uaData.platform,
+    };
+    try {
+      if (uaData.getHighEntropyValues) {
+        data = {
+          ...data,
+          ...(await uaData.getHighEntropyValues([
+            'platformVersion',
+            'architecture',
+            'bitness',
+            'model',
+            'fullVersionList',
+          ])),
+        };
+      }
+    } catch {
+      // 高エントロピー値が取得できない場合は基本情報のみ表示する
+    }
+    const view = summarizeClientHints(data);
+    setHint('brands', view.brands);
+    setHint('platform', view.platform);
+    setHint('architecture', view.architecture);
+    setHint('model', view.model);
+    setHint(
+      'mobile',
+      view.mobile === null
+        ? null
+        : view.mobile
+          ? (ds.yes ?? '')
+          : (ds.no ?? ''),
+    );
+    hintsTable.classList.remove('hidden');
+  }
+  void renderHints();
+</script>

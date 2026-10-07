@@ -1,0 +1,293 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { unicodeInspectorContent } from '../../i18n/tools/unicode-inspector';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = unicodeInspectorContent[locale];
+const columns = [
+  t.colChar,
+  t.colCodePoint,
+  t.colUtf8,
+  t.colUtf16,
+  t.colCategory,
+  t.colScript,
+  t.colBlock,
+  t.colName,
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="uni-root"
+    data-invisible={t.invisible}
+    data-flag-emoji={t.flagEmoji}
+    data-flag-joiner={t.flagJoiner}
+    data-truncated={t.truncated}
+    data-invalid-format={t.invalidFormat}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-copy-codepoints={t.copyCodePoints}
+    data-copy-text={t.copyText}
+    data-label-inspect={t.inputLabelInspect}
+    data-label-lookup={t.inputLabelLookup}
+    data-placeholder-inspect={t.placeholderInspect}
+    data-placeholder-lookup={t.placeholderLookup}
+    data-sample-inspect={t.sampleInspect}
+    data-sample-lookup={t.sampleLookup}
+    data-categories={JSON.stringify(t.categoryLabels)}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <div
+        id="uni-mode"
+        class="ui-seg flex-wrap gap-1"
+        role="group"
+        aria-label={t.modeLabel}
+      >
+        <button
+          type="button"
+          data-mode="inspect"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.modeInspect}
+        </button>
+        <button
+          type="button"
+          data-mode="lookup"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.modeLookup}
+        </button>
+      </div>
+      <button id="uni-copy-button" type="button" class="ui-btn">
+        {t.copyCodePoints}
+      </button>
+      <span
+        id="uni-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+
+    <div class="mt-4">
+      <label id="uni-input-label" for="uni-input" class="ui-label">
+        {t.inputLabelInspect}
+      </label>
+      <textarea
+        id="uni-input"
+        data-query-target="text"
+        data-sample={t.sampleInspect}
+        class="ui-input h-32 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.placeholderInspect}
+        spellcheck="false"
+      ></textarea>
+      <p id="uni-invalid" class="ui-error mt-2" hidden></p>
+    </div>
+
+    <h2 class="mt-6 text-sm font-semibold">{t.outputLabel}</h2>
+    <dl
+      id="uni-stats"
+      class="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4"
+      hidden
+    >
+      {[
+        ['codePoints', t.statCodePoints],
+        ['graphemes', t.statGraphemes],
+        ['utf16', t.statUtf16],
+        ['utf8', t.statUtf8],
+      ].map(([key, label]) => (
+        <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+          <dt class="text-xs text-gray-600 dark:text-gray-400">{label}</dt>
+          <dd class="text-lg font-semibold" data-stat={key}>
+            0
+          </dd>
+        </div>
+      ))}
+    </dl>
+    <p id="uni-empty" class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+      {t.empty}
+    </p>
+    <div
+      id="uni-table-wrap"
+      class="mt-2 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700"
+      tabindex="0"
+      role="region"
+      aria-label={t.tableLabel}
+      hidden
+    >
+      <table class="w-full min-w-[56rem] text-left text-sm">
+        <thead class="bg-gray-50 dark:bg-gray-800">
+          <tr>
+            {columns.map((c) => (
+              <th scope="col" class="whitespace-nowrap px-3 py-2 font-semibold">
+                {c}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody id="uni-tbody"></tbody>
+      </table>
+    </div>
+    <p
+      id="uni-truncated"
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+      hidden
+    ></p>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    inspectText,
+    parseCodePoints,
+    formatCodePoint,
+    type CharInfo,
+  } from '../../lib/tools/unicode-inspector';
+
+  const root = document.getElementById('uni-root')!;
+  const input = document.getElementById('uni-input') as HTMLTextAreaElement;
+  const inputLabel = document.getElementById('uni-input-label')!;
+  const tbody = document.getElementById('uni-tbody')!;
+  const tableWrap = document.getElementById('uni-table-wrap')!;
+  const stats = document.getElementById('uni-stats')!;
+  const emptyEl = document.getElementById('uni-empty')!;
+  const truncatedEl = document.getElementById('uni-truncated')!;
+  const invalidEl = document.getElementById('uni-invalid')!;
+  const statusEl = document.getElementById('uni-status')!;
+  const copyButton = document.getElementById(
+    'uni-copy-button',
+  ) as HTMLButtonElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#uni-mode [data-mode]',
+  );
+  const d = root.dataset;
+  const categories = JSON.parse(d.categories ?? '{}') as Record<string, string>;
+
+  let mode: 'inspect' | 'lookup' = 'inspect';
+  let lastCodePoints = '';
+  let lastText = '';
+
+  function cell(text: string, className = ''): HTMLTableCellElement {
+    const td = document.createElement('td');
+    td.className = `px-3 py-2 align-top ${className}`;
+    td.textContent = text;
+    return td;
+  }
+
+  function renderRow(info: CharInfo): HTMLTableRowElement {
+    const tr = document.createElement('tr');
+    tr.className = 'border-t border-gray-200 dark:border-gray-700';
+    const glyph = cell(info.display ?? d.invisible ?? '', 'text-lg');
+    if (info.display === null) {
+      glyph.className =
+        'px-3 py-2 align-top text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap';
+    }
+    tr.append(
+      glyph,
+      cell(info.notation, 'font-mono whitespace-nowrap'),
+      cell(info.utf8, 'font-mono whitespace-nowrap'),
+      cell(info.utf16, 'font-mono whitespace-nowrap'),
+      cell(
+        `${info.category} ${categories[info.category] ?? ''}`,
+        'whitespace-nowrap',
+      ),
+      cell(info.script ?? '-', 'whitespace-nowrap'),
+      cell(info.block ?? '-', 'whitespace-nowrap'),
+    );
+    const nameCell = cell(info.name ?? '-');
+    const flags = [
+      info.isEmoji ? d.flagEmoji : '',
+      info.isJoiner ? d.flagJoiner : '',
+    ].filter(Boolean);
+    if (flags.length > 0) {
+      nameCell.textContent = `${info.name ?? '-'}  [${flags.join(' / ')}]`;
+    }
+    tr.append(nameCell);
+    return tr;
+  }
+
+  function setStat(key: string, value: number) {
+    const el = stats.querySelector<HTMLElement>(`[data-stat="${key}"]`);
+    if (el) el.textContent = value.toLocaleString();
+  }
+
+  function update() {
+    statusEl.textContent = '';
+    invalidEl.hidden = true;
+    let text = input.value;
+    if (mode === 'lookup') {
+      const parsed = parseCodePoints(input.value);
+      text = parsed.text;
+      if (parsed.invalid.length > 0) {
+        invalidEl.textContent = (d.invalidFormat ?? '').replace(
+          '{tokens}',
+          () => parsed.invalid.join(', '),
+        );
+        invalidEl.hidden = false;
+      }
+    }
+    lastText = text;
+    tbody.replaceChildren();
+    if (text === '') {
+      lastCodePoints = '';
+      stats.hidden = true;
+      tableWrap.hidden = true;
+      truncatedEl.hidden = true;
+      emptyEl.hidden = false;
+      return;
+    }
+    const result = inspectText(text);
+    emptyEl.hidden = true;
+    stats.hidden = false;
+    tableWrap.hidden = false;
+    setStat('codePoints', result.summary.codePoints);
+    setStat('graphemes', result.summary.graphemes);
+    setStat('utf16', result.summary.utf16Length);
+    setStat('utf8', result.summary.utf8Length);
+    tbody.append(...result.chars.map(renderRow));
+    truncatedEl.textContent = d.truncated ?? '';
+    truncatedEl.hidden = !result.truncated;
+    lastCodePoints = Array.from(text)
+      .map((ch) => formatCodePoint(ch.codePointAt(0)!))
+      .join(' ');
+  }
+
+  function applyMode(next: 'inspect' | 'lookup') {
+    mode = next;
+    modeButtons.forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.mode === next));
+    });
+    const lookup = next === 'lookup';
+    inputLabel.textContent = (lookup ? d.labelLookup : d.labelInspect) ?? '';
+    input.placeholder =
+      (lookup ? d.placeholderLookup : d.placeholderInspect) ?? '';
+    input.dataset.sample = (lookup ? d.sampleLookup : d.sampleInspect) ?? '';
+    copyButton.textContent = (lookup ? d.copyText : d.copyCodepoints) ?? '';
+    update();
+  }
+
+  onTextInput(input, update);
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      applyMode(button.dataset.mode as 'inspect' | 'lookup');
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    const value = mode === 'lookup' ? lastText : lastCodePoints;
+    if (!value) return;
+    statusEl.textContent = (await copyText(value))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+  });
+
+  update();
+</script>

@@ -46,6 +46,8 @@ const slugs = [
   'media-converter',
   'css-clamp-calculator',
   'time-calculator',
+  'url-parser',
+  'unicode-inspector',
 ];
 
 const locales = [

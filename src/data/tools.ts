@@ -4887,6 +4887,120 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'unicode-inspector',
+    category: 'dev',
+    addedAt: '2026-10-07',
+    updatedAt: '2026-10-07',
+    related: ['unicode-escape', 'special-char-list'],
+    translations: {
+      ja: {
+        name: 'Unicodeコードポイント検索',
+        keywords: [
+          'Unicode',
+          'コードポイント',
+          'U+',
+          'UTF-8',
+          'UTF-16',
+          'サロゲートペア',
+          '文字コード',
+          '逆引き',
+        ],
+        description:
+          '文字のコードポイント・UTF-8/UTF-16バイト列・カテゴリを調べ、U+XXXXから文字を逆引き',
+      },
+      en: {
+        name: 'Unicode Character Inspector',
+        keywords: [
+          'unicode',
+          'code point',
+          'utf-8',
+          'utf-16',
+          'surrogate pair',
+          'character info',
+          'zwj emoji',
+        ],
+        description:
+          'Look up code points, UTF-8/UTF-16 bytes and categories of characters, or convert U+XXXX back to text',
+      },
+    },
+  },
+  {
+    slug: 'url-parser',
+    category: 'dev',
+    addedAt: '2026-10-07',
+    updatedAt: '2026-10-07',
+    related: ['url-encode', 'unicode-escape'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'URLパーサー・クエリ編集',
+        keywords: [
+          'URL',
+          '分解',
+          'クエリ',
+          'クエリパラメータ',
+          'クエリ文字列',
+          'パース',
+          'URLパーサー',
+          'URLSearchParams',
+        ],
+        description:
+          'URLをプロトコル・ホスト・パス・クエリ・ハッシュに分解し、パラメータを編集して再組み立て',
+      },
+      en: {
+        name: 'URL Parser & Query Editor',
+        keywords: [
+          'url parser',
+          'query string',
+          'query params',
+          'url builder',
+          'URLSearchParams',
+          'parse url',
+          'edit query',
+        ],
+        description:
+          'Split a URL into protocol, host, path, query and hash, edit parameters and rebuild it',
+      },
+    },
+  },
+  {
+    slug: 'user-agent-parser',
+    category: 'dev',
+    addedAt: '2026-10-07',
+    updatedAt: '2026-10-07',
+    related: ['viewport-checker', 'http-header-analyzer', 'url-parser'],
+    translations: {
+      ja: {
+        name: 'User-Agent解析',
+        keywords: [
+          'UA',
+          'ユーザーエージェント',
+          'user agent',
+          'ブラウザ判定',
+          'OS判定',
+          'デバイス判定',
+          'userAgentData',
+        ],
+        description:
+          'User-Agent文字列からブラウザ・OS・レンダリングエンジン・デバイス種別を判定。いま使っているブラウザのUAも自動表示します。',
+      },
+      en: {
+        name: 'User-Agent Parser',
+        keywords: [
+          'user agent',
+          'UA string',
+          'browser detection',
+          'OS detection',
+          'device detection',
+          'userAgentData',
+          'navigator.userAgent',
+        ],
+        description:
+          'Parse a User-Agent string into browser, OS, rendering engine and device type, and see the UA of your own browser automatically.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

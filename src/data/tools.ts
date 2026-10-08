@@ -5151,6 +5151,122 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'image-blur-mosaic',
+    category: 'image',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['image-pixelart-converter', 'pdf-redactor', 'image-resizer'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像モザイク・ぼかし',
+        keywords: [
+          'モザイク',
+          'ぼかし',
+          '塗りつぶし',
+          '顔を隠す',
+          '個人情報',
+          '画像加工',
+          'ナンバープレート',
+          'blur',
+        ],
+        description:
+          '画像の一部をドラッグで範囲指定し、モザイク・ぼかし・塗りつぶしで顔や個人情報を隠せます。',
+      },
+      en: {
+        name: 'Image Blur & Mosaic',
+        keywords: [
+          'blur image',
+          'pixelate',
+          'mosaic',
+          'redact image',
+          'hide face',
+          'censor',
+          'blackout',
+          'privacy',
+        ],
+        description:
+          'Drag to select parts of an image and hide faces or personal info with mosaic, blur, or a solid fill.',
+      },
+    },
+  },
+  {
+    slug: 'color-palette-generator',
+    category: 'image',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['color-converter', 'contrast-checker', 'css-gradient-generator'],
+    translations: {
+      ja: {
+        name: '配色パレットジェネレーター',
+        keywords: [
+          '配色',
+          'カラーパレット',
+          '補色',
+          '類似色',
+          'トライアド',
+          'カラースキーム',
+          'color palette',
+        ],
+        description:
+          '基準色から補色・類似色・トライアドなどの配色を生成し、HEXやCSS変数でコピー',
+      },
+      en: {
+        name: 'Color Palette Generator',
+        keywords: [
+          'color scheme',
+          'color harmony',
+          'complementary',
+          'analogous',
+          'triadic',
+          'palette',
+        ],
+        description:
+          'Generate complementary, analogous and triadic color schemes from one base color and copy HEX, CSS variables or JSON',
+      },
+    },
+  },
+  {
+    slug: 'image-filter',
+    category: 'image',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['image-pixelart-converter', 'image-converter', 'image-resizer'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像フィルター・色調補正',
+        keywords: [
+          '画像加工',
+          '色調補正',
+          '明るさ',
+          'コントラスト',
+          'モノクロ',
+          'セピア',
+          '彩度',
+          'フィルター',
+        ],
+        description:
+          '写真の明るさ・コントラスト・彩度・モノクロ・セピアなどをスライダーで調整し、ビフォーアフターを見比べて保存。',
+      },
+      en: {
+        name: 'Image Filter & Color Adjustment',
+        keywords: [
+          'photo filter',
+          'brightness',
+          'contrast',
+          'grayscale',
+          'sepia',
+          'saturation',
+          'hue',
+          'invert',
+        ],
+        description:
+          'Adjust brightness, contrast, saturation, black & white, and sepia with sliders. Compare before and after, then save.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

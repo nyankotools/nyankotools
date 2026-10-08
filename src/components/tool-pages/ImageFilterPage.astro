@@ -1,0 +1,480 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { imageFilterContent } from '../../i18n/tools/image-filter';
+import {
+  FILTER_RANGES,
+  FILTER_PRESETS,
+  OUTPUT_FORMAT_OPTIONS,
+} from '../../lib/tools/image-filter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageFilterContent[locale];
+const formatLabels: Record<string, string> = {
+  png: 'PNG',
+  webp: 'WebP',
+  jpeg: 'JPEG',
+};
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="if-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="if-dropzone" class="ui-dropzone">
+      <input
+        id="if-file-input"
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="if-source-info"
+      data-template={t.sourceInfoTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="if-error"
+      role="alert"
+      hidden
+      data-unsupported={t.errorUnsupportedFile}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-too-many-pixels={t.errorTooManyPixels}
+      data-failed={t.errorConversionFailed}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+  </div>
+
+  <div class="mt-4">
+    <span class="ui-label">{t.presetsLabel}</span>
+    <div class="flex flex-wrap gap-2" id="if-presets">
+      {FILTER_PRESETS.map((p) => (
+        <button
+          type="button"
+          data-preset={p.id}
+          class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {t.presetLabels[p.id]}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <div class="mt-4 grid gap-x-6 gap-y-2 sm:grid-cols-2">
+    {FILTER_RANGES.map((r) => (
+      <div>
+        <label for={`if-${r.key}`} class="ui-label">
+          {t.filterLabels[r.key]}
+          <span id={`if-${r.key}-value`} class="tabular-nums" />
+        </label>
+        <input
+          id={`if-${r.key}`}
+          type="range"
+          min={r.min}
+          max={r.max}
+          value="0"
+          data-filter={r.key}
+          class="h-11 w-full"
+        />
+      </div>
+    ))}
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-6">
+    <div>
+      <span class="ui-label">{t.formatLabel}</span>
+      <div
+        id="if-format"
+        class="ui-seg"
+        role="group"
+        aria-label={t.formatLabel}
+      >
+        {OUTPUT_FORMAT_OPTIONS.map((o) => (
+          <button
+            type="button"
+            data-format={o.value}
+            aria-pressed={o.value === 'png' ? 'true' : 'false'}
+            class="ui-seg-btn"
+          >
+            {formatLabels[o.value]}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <div class="min-w-48 flex-1">
+      <label for="if-quality" class="ui-label">
+        {t.qualityLabel}
+        <span id="if-quality-value" class="tabular-nums"></span>
+      </label>
+      <input
+        id="if-quality"
+        type="range"
+        min="1"
+        max="100"
+        value="90"
+        disabled
+        class="h-11 w-full"
+      />
+      <p
+        id="if-quality-note"
+        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+      >
+        {t.qualityPngNote}
+      </p>
+    </div>
+
+    <button
+      id="if-reset-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.resetButton}
+    </button>
+    <button
+      id="if-clear-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.clearButton}
+    </button>
+  </div>
+
+  <div id="if-results-section" hidden class="mt-6">
+    <h2 class="mb-2 text-lg font-bold">{t.resultsHeading}</h2>
+    <div class="flex flex-wrap gap-4">
+      <div class="min-w-40 flex-1">
+        <p class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t.originalPreviewLabel}
+        </p>
+        <canvas
+          id="if-original-canvas"
+          class="w-full rounded-lg border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
+        ></canvas>
+      </div>
+      <div class="min-w-40 flex-1">
+        <p class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t.resultPreviewLabel}
+        </p>
+        <canvas
+          id="if-result-canvas"
+          class="w-full rounded-lg border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
+        ></canvas>
+      </div>
+    </div>
+    <p
+      id="if-scaled-note"
+      hidden
+      class="mt-2 text-xs text-gray-500 dark:text-gray-400"
+    >
+      {t.previewScaledNote}
+    </p>
+    <button
+      id="if-download-button"
+      type="button"
+      data-processing={t.processing}
+      data-label={t.downloadButton}
+      class="ui-btn ui-btn-primary mt-3 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.downloadButton}
+    </button>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    DEFAULT_FILTER_SETTINGS,
+    FILTER_PRESETS,
+    FILTER_RANGES,
+    MAX_FILE_SIZE,
+    applyFilters,
+    MAX_PIXELS,
+    buildOutputFileName,
+    clampFilterValue,
+    formatFileSize,
+    getOutputFormatOption,
+    isAcceptedImageFile,
+    isIdentity,
+    presetToSettings,
+    type FilterKey,
+    type FilterSettings,
+    type OutputFormat,
+  } from '../../lib/tools/image-filter';
+
+  const PREVIEW_MAX_EDGE = 640;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const dropzone = $('if-dropzone');
+  const fileInput = $<HTMLInputElement>('if-file-input');
+  const sourceInfoEl = $('if-source-info');
+  const errorEl = $('if-error');
+  const resultsSection = $('if-results-section');
+  const originalCanvas = $<HTMLCanvasElement>('if-original-canvas');
+  const resultCanvas = $<HTMLCanvasElement>('if-result-canvas');
+  const scaledNote = $('if-scaled-note');
+  const downloadButton = $<HTMLButtonElement>('if-download-button');
+  const resetButton = $<HTMLButtonElement>('if-reset-button');
+  const clearButton = $<HTMLButtonElement>('if-clear-button');
+  const qualityInput = $<HTMLInputElement>('if-quality');
+  const qualityValueEl = $('if-quality-value');
+  const qualityNoteEl = $('if-quality-note');
+  const presetButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#if-presets [data-preset]',
+  );
+  const formatButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#if-format [data-format]',
+  );
+  const sliders = new Map<FilterKey, HTMLInputElement>();
+  for (const r of FILTER_RANGES) {
+    sliders.set(r.key, $<HTMLInputElement>(`if-${r.key}`));
+  }
+
+  let bitmap: ImageBitmap | null = null;
+  let fileName = '';
+  let format: OutputFormat = 'png';
+  let previewSource: ImageData | null = null;
+  let previewScale = 1;
+  let renderTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function readSettings(): FilterSettings {
+    const s = { ...DEFAULT_FILTER_SETTINGS };
+    for (const [key, el] of sliders) {
+      s[key] = clampFilterValue(key, Number(el.value));
+    }
+    return s;
+  }
+
+  function writeSettings(s: FilterSettings) {
+    for (const [key, el] of sliders) el.value = String(s[key]);
+    updateValueLabels();
+  }
+
+  function updateValueLabels() {
+    for (const [key, el] of sliders) {
+      const v = Number(el.value);
+      const unit = key === 'hue' ? '°' : key === 'blur' ? 'px' : '';
+      const sign =
+        v > 0 && FILTER_RANGES.find((r) => r.key === key)!.min < 0 ? '+' : '';
+      $(`if-${key}-value`).textContent = ` ${sign}${v}${unit}`;
+    }
+    qualityValueEl.textContent = ` ${qualityInput.value}%`;
+  }
+
+  function updateButtons() {
+    const has = bitmap !== null;
+    resetButton.disabled = !has || isIdentity(readSettings());
+    clearButton.disabled = !has;
+    presetButtons.forEach((b) => (b.disabled = !has));
+    for (const el of sliders.values()) el.disabled = !has;
+    downloadButton.disabled = !has;
+    const supportsQuality = getOutputFormatOption(format).supportsQuality;
+    qualityInput.disabled = !supportsQuality || !has;
+    qualityNoteEl.hidden = supportsQuality;
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.textContent = '';
+    errorEl.hidden = true;
+  }
+
+  function drawPreviewBase() {
+    if (!bitmap) return;
+    const scale = Math.min(
+      1,
+      PREVIEW_MAX_EDGE / Math.max(bitmap.width, bitmap.height),
+    );
+    const w = Math.max(1, Math.round(bitmap.width * scale));
+    const h = Math.max(1, Math.round(bitmap.height * scale));
+    originalCanvas.width = w;
+    originalCanvas.height = h;
+    const ctx = originalCanvas.getContext('2d', { willReadFrequently: true })!;
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    previewSource = ctx.getImageData(0, 0, w, h);
+    previewScale = scale;
+    resultCanvas.width = w;
+    resultCanvas.height = h;
+    scaledNote.hidden = scale >= 1;
+  }
+
+  function renderPreview() {
+    if (!previewSource) return;
+    const out = applyFilters(
+      previewSource.data,
+      previewSource.width,
+      previewSource.height,
+      readSettings(),
+    );
+    const ctx = resultCanvas.getContext('2d')!;
+    ctx.putImageData(
+      new ImageData(out, previewSource.width, previewSource.height),
+      0,
+      0,
+    );
+  }
+
+  function scheduleRender() {
+    updateValueLabels();
+    updateButtons();
+    clearTimeout(renderTimer);
+    renderTimer = setTimeout(renderPreview, 60);
+  }
+
+  async function loadFile(file: File) {
+    clearError();
+    if (!isAcceptedImageFile(file)) {
+      showError(errorEl.dataset.unsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace(
+          '{max}',
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+    let next: ImageBitmap;
+    try {
+      next = await createImageBitmap(file);
+    } catch {
+      showError(errorEl.dataset.failed ?? '');
+      return;
+    }
+    if (next.width * next.height > MAX_PIXELS) {
+      next.close();
+      showError(errorEl.dataset.tooManyPixels ?? '');
+      return;
+    }
+    bitmap?.close();
+    bitmap = next;
+    fileName = file.name;
+    sourceInfoEl.textContent = (sourceInfoEl.dataset.template ?? '')
+      .replace('{width}', String(next.width))
+      .replace('{height}', String(next.height))
+      .replace('{size}', formatFileSize(file.size));
+    resultsSection.hidden = false;
+    writeSettings(DEFAULT_FILTER_SETTINGS);
+    drawPreviewBase();
+    updateButtons();
+    renderPreview();
+  }
+
+  function clearAll() {
+    clearTimeout(renderTimer);
+    bitmap?.close();
+    bitmap = null;
+    previewSource = null;
+    fileName = '';
+    sourceInfoEl.textContent = '';
+    resultsSection.hidden = true;
+    writeSettings(DEFAULT_FILTER_SETTINGS);
+    clearError();
+    updateButtons();
+  }
+
+  async function download() {
+    const bm = bitmap;
+    if (!bm) return;
+    const option = getOutputFormatOption(format);
+    const label = downloadButton.dataset.label ?? '';
+    downloadButton.disabled = true;
+    downloadButton.textContent = downloadButton.dataset.processing ?? '';
+    // ラベル更新を描画させてから重い処理を始める
+    await new Promise((r) => setTimeout(r, 30));
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = bm.width;
+      canvas.height = bm.height;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+      if (format === 'jpeg') {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      ctx.drawImage(bm, 0, 0);
+      const src = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      // プレビューは縮小表示なので、ぼかし半径を原寸比で拡大して見た目を揃える
+      const settings = readSettings();
+      settings.blur = Math.round(settings.blur / previewScale);
+      const out = applyFilters(src.data, src.width, src.height, settings);
+      ctx.putImageData(new ImageData(out, src.width, src.height), 0, 0);
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(
+          resolve,
+          option.mimeType,
+          option.supportsQuality ? Number(qualityInput.value) / 100 : undefined,
+        ),
+      );
+      if (!blob || blob.type !== option.mimeType) {
+        showError(errorEl.dataset.failed ?? '');
+        return;
+      }
+      clearError();
+      downloadBlob(blob, buildOutputFileName(fileName, format));
+    } catch {
+      showError(errorEl.dataset.failed ?? '');
+    } finally {
+      downloadButton.textContent = label;
+      updateButtons();
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  for (const el of sliders.values())
+    el.addEventListener('input', scheduleRender);
+
+  presetButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      const preset = FILTER_PRESETS.find((p) => p.id === b.dataset.preset);
+      if (!preset) return;
+      writeSettings(presetToSettings(preset));
+      scheduleRender();
+    }),
+  );
+
+  formatButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      format = b.dataset.format as OutputFormat;
+      formatButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      updateButtons();
+    }),
+  );
+
+  qualityInput.addEventListener('input', updateValueLabels);
+  resetButton.addEventListener('click', () => {
+    writeSettings(DEFAULT_FILTER_SETTINGS);
+    scheduleRender();
+  });
+  clearButton.addEventListener('click', clearAll);
+  downloadButton.addEventListener('click', () => void download());
+
+  writeSettings(DEFAULT_FILTER_SETTINGS);
+  updateButtons();
+</script>

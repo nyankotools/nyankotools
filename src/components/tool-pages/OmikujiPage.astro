@@ -1,0 +1,246 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { omikujiContent } from '../../i18n/tools/omikuji';
+import { MAX_NAME_LENGTH } from '../../lib/tools/omikuji';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = omikujiContent[locale];
+const modes = [
+  { id: 'daily', label: t.modeDaily },
+  { id: 'redraw', label: t.modeRedraw },
+];
+const dict = JSON.stringify({
+  fortunes: t.fortunes,
+  items: t.items,
+  colors: t.colors,
+});
+---
+
+<ToolShell t={t}>
+  <section
+    id="omikuji-root"
+    data-dict={dict}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-daily-info={t.dailyInfo}
+    data-redraw-info={t.redrawInfo}
+    data-draw-daily={t.drawDaily}
+    data-draw-redraw={t.drawRedraw}
+    data-heading-named={t.resultHeadingNamed}
+    data-heading-plain={t.resultHeading}
+    data-share-text={t.shareText}
+    data-lucky-color={t.luckyColorLabel}
+    data-lucky-number={t.luckyNumberLabel}
+  >
+    <span class="ui-label">{t.modeLabel}</span>
+    <div
+      id="omikuji-mode"
+      class="ui-seg flex-wrap"
+      role="group"
+      aria-label={t.modeLabel}
+    >
+      {modes.map((mode, i) => (
+        <button
+          type="button"
+          data-mode={mode.id}
+          aria-pressed={i === 0 ? 'true' : 'false'}
+          class="ui-seg-btn"
+        >
+          {mode.label}
+        </button>
+      ))}
+    </div>
+
+    <div id="omikuji-name-block" class="mt-4">
+      <label for="omikuji-name" class="ui-label">
+        {t.nameLabel}
+      </label>
+      <input
+        id="omikuji-name"
+        type="text"
+        maxlength={MAX_NAME_LENGTH}
+        autocomplete="off"
+        spellcheck="false"
+        placeholder={t.namePlaceholder}
+        data-no-persist
+        class="ui-input h-11 w-full max-w-sm px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+      <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{t.nameHint}</p>
+    </div>
+
+    <p
+      id="omikuji-info"
+      class="mt-4 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+    <button id="omikuji-draw-button" type="button" class="ui-btn-primary mt-2">
+      {t.drawDaily}
+    </button>
+
+    <div id="omikuji-result" class="mt-6" aria-live="polite" hidden>
+      <p
+        id="omikuji-heading"
+        class="text-sm text-gray-600 dark:text-gray-400"
+      ></p>
+      <p
+        id="omikuji-fortune"
+        class="mt-1 text-5xl font-bold text-red-700 dark:text-red-400"
+      ></p>
+      <p
+        id="omikuji-reading"
+        class="text-sm text-gray-600 dark:text-gray-400"
+      ></p>
+      <p id="omikuji-message" class="mt-3 text-base"></p>
+      <dl id="omikuji-items" class="mt-4 space-y-2"></dl>
+      <p id="omikuji-lucky" class="mt-4 text-sm font-medium"></p>
+      <div class="mt-4 flex items-center gap-3">
+        <button id="omikuji-copy-button" type="button" class="ui-btn">
+          {t.copy}
+        </button>
+        <span
+          id="omikuji-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    drawDaily,
+    drawOmikuji,
+    localDateKey,
+    normalizeName,
+  } from '../../lib/tools/omikuji';
+  import type { OmikujiResult } from '../../lib/tools/omikuji';
+
+  interface Dict {
+    fortunes: Record<
+      string,
+      { name: string; reading: string; messages: string[] }
+    >;
+    items: Record<string, { label: string; texts: Record<string, string[]> }>;
+    colors: Record<string, string>;
+  }
+
+  const root = document.getElementById('omikuji-root')!;
+  const msg = root.dataset as Record<string, string | undefined>;
+  const dict = JSON.parse(msg.dict ?? '{}') as Dict;
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#omikuji-mode [data-mode]',
+  );
+  const nameBlock = $('omikuji-name-block');
+  const nameInput = $<HTMLInputElement>('omikuji-name');
+  const info = $('omikuji-info');
+  const drawButton = $<HTMLButtonElement>('omikuji-draw-button');
+  const resultEl = $('omikuji-result');
+  const headingEl = $('omikuji-heading');
+  const fortuneEl = $('omikuji-fortune');
+  const readingEl = $('omikuji-reading');
+  const messageEl = $('omikuji-message');
+  const itemsEl = $('omikuji-items');
+  const luckyEl = $('omikuji-lucky');
+  const copyButton = $<HTMLButtonElement>('omikuji-copy-button');
+  const statusEl = $('omikuji-status');
+
+  let mode = 'daily';
+  let lastText = '';
+
+  const fill = (template: string | undefined, values: Record<string, string>) =>
+    Object.entries(values).reduce(
+      (acc, [key, value]) => acc.replaceAll(`{${key}}`, value),
+      template ?? '',
+    );
+
+  function updateMode() {
+    const daily = mode === 'daily';
+    nameBlock.hidden = !daily;
+    drawButton.textContent = daily
+      ? (msg.drawDaily ?? '')
+      : (msg.drawRedraw ?? '');
+    info.textContent = daily
+      ? fill(msg.dailyInfo, { date: localDateKey(new Date()) })
+      : (msg.redrawInfo ?? '');
+  }
+
+  function render(result: OmikujiResult, name: string) {
+    const fortune = dict.fortunes[result.fortune];
+    headingEl.textContent = name
+      ? fill(msg.headingNamed, { name })
+      : (msg.headingPlain ?? '');
+    fortuneEl.textContent = fortune.name;
+    readingEl.textContent = fortune.reading;
+    messageEl.textContent = fortune.messages[result.message];
+
+    itemsEl.replaceChildren();
+    const lines: string[] = [];
+    for (const entry of result.items) {
+      const item = dict.items[entry.item];
+      const text = item.texts[entry.tier][entry.variant];
+      const wrap = document.createElement('div');
+      wrap.className =
+        'rounded-lg border border-gray-200 p-3 dark:border-gray-700';
+      const dt = document.createElement('dt');
+      dt.className = 'text-sm font-bold';
+      dt.textContent = item.label;
+      const dd = document.createElement('dd');
+      dd.className = 'mt-0.5 text-sm';
+      dd.textContent = text;
+      wrap.append(dt, dd);
+      itemsEl.append(wrap);
+      lines.push(`${item.label}: ${text}`);
+    }
+
+    const color = dict.colors[result.luckyColor];
+    luckyEl.textContent = `${msg.luckyColor}: ${color} / ${msg.luckyNumber}: ${result.luckyNumber}`;
+    lastText = [
+      fill(msg.shareText, { fortune: fortune.name }),
+      fortune.messages[result.message],
+      ...lines,
+      luckyEl.textContent,
+    ].join('\n');
+    statusEl.textContent = '';
+    resultEl.hidden = false;
+  }
+
+  drawButton.addEventListener('click', () => {
+    updateMode();
+    const name = nameInput.value.trim();
+    if (mode === 'daily') {
+      render(drawDaily(new Date(), normalizeName(nameInput.value)), name);
+    } else {
+      render(drawOmikuji(), '');
+    }
+  });
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode ?? 'daily';
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      resultEl.hidden = true;
+      lastText = '';
+      updateMode();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!lastText) return;
+    statusEl.textContent = (await copyText(lastText))
+      ? (msg.copied ?? '')
+      : (msg.copyFailed ?? '');
+  });
+
+  updateMode();
+</script>

@@ -433,6 +433,20 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-08',
+    toolSlugs: ['team-splitter', 'bingo-generator', 'seat-shuffler', 'omikuji'],
+    translations: {
+      ja: {
+        summary:
+          'チーム分け・グループ分け、ビンゴ抽選機・カード生成、席替え・順番決めツール、おみくじ・今日の運勢を追加しました。',
+      },
+      en: {
+        summary:
+          'Added the Random Team Generator, Bingo Caller & Card Generator, Seating Chart Randomizer & Order Shuffler, and Omikuji (Daily Fortune).',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

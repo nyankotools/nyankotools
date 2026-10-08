@@ -16,6 +16,7 @@ export const categoryIds = [
   'file',
   'hardware',
   'media',
+  'games',
 ] as const;
 
 export type CategoryId = (typeof categoryIds)[number];
@@ -36,6 +37,7 @@ export const categories: Record<CategoryId, Record<Locale, string>> = {
   file: { ja: 'ファイル', en: 'File' },
   hardware: { ja: 'ハードウェア', en: 'Hardware' },
   media: { ja: '動画・音声', en: 'Video & Audio' },
+  games: { ja: 'ゲーム・エンタメ', en: 'Games & Fun' },
 };
 
 export interface ToolTranslation {
@@ -4998,6 +5000,154 @@ export const tools: Tool[] = [
         ],
         description:
           'Parse a User-Agent string into browser, OS, rendering engine and device type, and see the UA of your own browser automatically.',
+      },
+    },
+  },
+  {
+    slug: 'team-splitter',
+    category: 'generate',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['roulette-dice', 'amidakuji-generator', 'seat-shuffler'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'チーム分け・グループ分け',
+        keywords: [
+          'チーム分け',
+          'グループ分け',
+          '班分け',
+          '班決め',
+          'ランダム振り分け',
+          '組分け',
+          '席決め',
+          'チーム作成',
+        ],
+        description:
+          '名簿を貼り付けて、チーム数または1チームの人数を指定するだけでランダムにチーム分け。余りは均等に分散、再シャッフルと結果のコピーに対応します。',
+      },
+      en: {
+        name: 'Random Team Generator',
+        keywords: [
+          'team splitter',
+          'team picker',
+          'group maker',
+          'random groups',
+          'split into teams',
+          'team shuffle',
+          'group generator',
+        ],
+        description:
+          'Paste a name list and split it into random teams by team count or team size. Leftovers are spread evenly; reshuffle and copy the result.',
+      },
+    },
+  },
+  {
+    slug: 'bingo-generator',
+    category: 'generate',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['roulette-dice', 'amidakuji-generator'],
+    translations: {
+      ja: {
+        name: 'ビンゴ抽選機・カード生成',
+        keywords: [
+          'ビンゴ',
+          'ビンゴカード',
+          'ビンゴ抽選',
+          '忘年会',
+          'ビンゴゲーム',
+          'bingo',
+        ],
+        description:
+          'ビンゴ大会用の抽選機（履歴・全画面・音）と、人数分の印刷用ビンゴカードを一括生成',
+      },
+      en: {
+        name: 'Bingo Caller & Card Generator',
+        keywords: [
+          'bingo',
+          'bingo card',
+          'bingo caller',
+          'bingo number generator',
+          'printable bingo',
+          'party game',
+        ],
+        description:
+          'Call bingo numbers with history and full screen, and print a batch of bingo cards',
+      },
+    },
+  },
+  {
+    slug: 'seat-shuffler',
+    category: 'generate',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['team-splitter', 'amidakuji-generator', 'roulette-dice'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '席替え・順番決めツール',
+        keywords: [
+          '席替え',
+          '座席表',
+          '座席決め',
+          '順番決め',
+          '発表順',
+          '席順',
+          '教室',
+        ],
+        description:
+          '名簿から席替えの座席表と発表順をランダムに作成。固定席・離したい組み合わせ・空席に対応',
+      },
+      en: {
+        name: 'Seating Chart Randomizer & Order Shuffler',
+        keywords: [
+          'seating chart',
+          'seat shuffler',
+          'random seat',
+          'speaking order',
+          'random order',
+          'classroom',
+        ],
+        description:
+          'Randomize a classroom seating chart or speaking order from a name list, with fixed seats and pairs kept apart',
+      },
+    },
+  },
+  {
+    slug: 'omikuji',
+    category: 'games',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['roulette-dice', 'amidakuji-generator'],
+    translations: {
+      ja: {
+        name: 'おみくじ・今日の運勢',
+        keywords: [
+          'おみくじ',
+          '今日の運勢',
+          '大吉',
+          '運勢',
+          '初詣',
+          '占い',
+          'ラッキーカラー',
+        ],
+        description:
+          '大吉〜大凶のおみくじを無料で引ける。日付と名前で決まる今日の運勢と、何度でも引き直せるモード。ラッキーカラー付き。',
+      },
+      en: {
+        name: 'Omikuji (Daily Fortune)',
+        keywords: [
+          'omikuji',
+          'fortune',
+          'daily fortune',
+          'fortune slip',
+          'luck',
+          'lucky color',
+          'japanese fortune',
+        ],
+        description:
+          'Draw a free Japanese omikuji fortune slip. Get a daily fortune for today, or redraw as often as you like, with lucky color and number.',
       },
     },
   },

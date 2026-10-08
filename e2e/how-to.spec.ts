@@ -48,6 +48,9 @@ const slugs = [
   'time-calculator',
   'url-parser',
   'unicode-inspector',
+  'team-splitter',
+  'bingo-generator',
+  'seat-shuffler',
 ];
 
 const locales = [

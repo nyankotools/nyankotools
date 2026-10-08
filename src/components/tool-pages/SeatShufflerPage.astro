@@ -1,0 +1,327 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { seatShufflerContent } from '../../i18n/tools/seat-shuffler';
+import { MAX_COLS, MAX_ROWS } from '../../lib/tools/seat-shuffler';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = seatShufflerContent[locale];
+const modes = [
+  { id: 'seats', label: t.modeSeats },
+  { id: 'order', label: t.modeOrder },
+];
+const areaClass =
+  'ui-input h-32 w-full p-3 dark:bg-gray-900 dark:placeholder-gray-500';
+---
+
+<ToolShell t={t}>
+  <section
+    id="ss-root"
+    data-count-info={t.countInfo}
+    data-errors={JSON.stringify(t.errors)}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-front={t.frontLabel}
+    data-empty={t.emptySeat}
+  >
+    <span class="ui-label">{t.modeLabel}</span>
+    <div
+      id="ss-mode"
+      class="ui-seg flex-wrap"
+      role="group"
+      aria-label={t.modeLabel}
+    >
+      {modes.map((mode, i) => (
+        <button
+          type="button"
+          data-mode={mode.id}
+          aria-pressed={i === 0 ? 'true' : 'false'}
+          class="ui-seg-btn"
+        >
+          {mode.label}
+        </button>
+      ))}
+    </div>
+
+    <div class="mt-4">
+      <label for="ss-names" class="ui-label">
+        {t.namesLabel}
+      </label>
+      <textarea
+        id="ss-names"
+        class={areaClass}
+        placeholder={t.namesPlaceholder}
+        spellcheck="false"
+        data-no-count
+        data-no-persist
+      >{t.defaultNames}</textarea>
+      <p
+        id="ss-info"
+        class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></p>
+    </div>
+
+    <div id="ss-seat-options">
+      <div class="mt-3 flex flex-wrap gap-4">
+        <div>
+          <label for="ss-rows" class="ui-label">
+            {t.rowsLabel}
+          </label>
+          <input
+            id="ss-rows"
+            type="number"
+            min="1"
+            max={MAX_ROWS}
+            value="3"
+            inputmode="numeric"
+            class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ss-cols" class="ui-label">
+            {t.colsLabel}
+          </label>
+          <input
+            id="ss-cols"
+            type="number"
+            min="1"
+            max={MAX_COLS}
+            value="4"
+            inputmode="numeric"
+            class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+
+      <div class="mt-3 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="ss-fixed" class="ui-label">
+            {t.fixedLabel}
+          </label>
+          <textarea
+            id="ss-fixed"
+            class={areaClass}
+            placeholder={t.fixedPlaceholder}
+            spellcheck="false"
+            data-no-count
+            data-no-persist
+          ></textarea>
+          <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            {t.fixedHint}
+          </p>
+        </div>
+        <div>
+          <label for="ss-pairs" class="ui-label">
+            {t.pairsLabel}
+          </label>
+          <textarea
+            id="ss-pairs"
+            class={areaClass}
+            placeholder={t.pairsPlaceholder}
+            spellcheck="false"
+            data-no-count
+            data-no-persist
+          ></textarea>
+          <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            {t.pairsHint}
+          </p>
+        </div>
+      </div>
+
+      <label class="ui-check mt-3">
+        <input id="ss-diagonal" type="checkbox" />
+        {t.diagonalLabel}
+      </label>
+    </div>
+
+    <div class="mt-4">
+      <button id="ss-generate-button" type="button" class="ui-btn-primary">
+        {t.generate}
+      </button>
+    </div>
+
+    <div id="ss-error" class="ui-error empty:hidden mt-4" role="alert"></div>
+
+    <div id="ss-result" class="mt-4" hidden>
+      <h2 class="mb-2 text-base font-bold text-gray-900 dark:text-gray-100">
+        {t.resultHeading}
+      </h2>
+      <div
+        id="ss-seat-view"
+        class="overflow-x-auto"
+        role="group"
+        aria-label={t.seatsAria}
+        hidden
+      >
+        <div class="inline-block min-w-full">
+          <div class="mb-2 rounded-md bg-gray-200 py-1 text-center text-sm font-bold text-gray-900 dark:bg-gray-700 dark:text-gray-100">
+            {t.frontLabel}
+          </div>
+          <div id="ss-grid" class="grid gap-2"></div>
+        </div>
+      </div>
+      <ol
+        id="ss-order-view"
+        class="list-decimal space-y-1 pl-8 text-gray-900 dark:text-gray-100"
+        aria-label={t.orderAria}
+        hidden
+      ></ol>
+      <div class="mt-3 flex flex-wrap items-center gap-3">
+        <button id="ss-copy-button" type="button" class="ui-btn">
+          {t.copy}
+        </button>
+        <span
+          id="ss-status"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    formatOrderText,
+    formatSeatText,
+    parseLines,
+    shuffleOrder,
+    shuffleSeats,
+    type SeatError,
+    type SeatErrorCode,
+    type SeatGrid,
+  } from '../../lib/tools/seat-shuffler';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('ss-root');
+  const msg = root.dataset;
+  const errors = JSON.parse(msg.errors ?? '{}') as Record<
+    SeatErrorCode,
+    string
+  >;
+  const names = $<HTMLTextAreaElement>('ss-names');
+  const info = $('ss-info');
+  const rowsInput = $<HTMLInputElement>('ss-rows');
+  const colsInput = $<HTMLInputElement>('ss-cols');
+  const fixedInput = $<HTMLTextAreaElement>('ss-fixed');
+  const pairsInput = $<HTMLTextAreaElement>('ss-pairs');
+  const diagonal = $<HTMLInputElement>('ss-diagonal');
+  const seatOptions = $('ss-seat-options');
+  const errorEl = $('ss-error');
+  const result = $('ss-result');
+  const seatView = $('ss-seat-view');
+  const orderView = $('ss-order-view');
+  const grid = $('ss-grid');
+  const status = $('ss-status');
+  const modeButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#ss-mode [data-mode]'),
+  );
+
+  let mode: 'seats' | 'order' = 'seats';
+  let lastText = '';
+
+  function setMode(next: 'seats' | 'order') {
+    mode = next;
+    modeButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.mode === next)),
+    );
+    seatOptions.hidden = next !== 'seats';
+    result.hidden = true;
+    errorEl.textContent = '';
+    status.textContent = '';
+  }
+
+  function updateInfo() {
+    info.textContent = (msg.countInfo ?? '').replace(
+      '{count}',
+      String(parseLines(names.value).length),
+    );
+  }
+
+  function showError(error: SeatError) {
+    // 1回の置換で済ませる（名前中の `$&` などを解釈させない）
+    errorEl.textContent = (errors[error.code] ?? '').replace(
+      '{detail}',
+      () => error.detail ?? '',
+    );
+    result.hidden = true;
+  }
+
+  function renderSeats(g: SeatGrid) {
+    grid.replaceChildren();
+    grid.style.gridTemplateColumns = `repeat(${g[0].length}, minmax(4.5rem, 1fr))`;
+    for (const row of g) {
+      for (const name of row) {
+        const cell = document.createElement('div');
+        cell.className =
+          'break-all rounded-md border px-2 py-3 text-center text-sm ' +
+          (name === null
+            ? 'border-dashed border-gray-300 text-gray-500 dark:border-gray-600 dark:text-gray-400'
+            : 'border-gray-300 bg-white font-bold text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100');
+        cell.textContent = name ?? msg.empty ?? '';
+        grid.append(cell);
+      }
+    }
+  }
+
+  function generate() {
+    errorEl.textContent = '';
+    status.textContent = '';
+    const list = parseLines(names.value);
+    if (mode === 'order') {
+      const r = shuffleOrder(list);
+      if (!r.ok) return showError(r.error);
+      orderView.replaceChildren(
+        ...r.order.map((n) => {
+          const li = document.createElement('li');
+          li.className = 'break-all';
+          li.textContent = n;
+          return li;
+        }),
+      );
+      lastText = formatOrderText(r.order);
+      seatView.hidden = true;
+      orderView.hidden = false;
+    } else {
+      const r = shuffleSeats({
+        names: list,
+        rows: Number(rowsInput.value),
+        cols: Number(colsInput.value),
+        fixedLines: parseLines(fixedInput.value),
+        pairLines: parseLines(pairsInput.value),
+        diagonal: diagonal.checked,
+      });
+      if (!r.ok) return showError(r.error);
+      renderSeats(r.grid);
+      lastText = formatSeatText(r.grid, {
+        front: msg.front ?? '',
+        empty: msg.empty ?? '',
+      });
+      orderView.hidden = true;
+      seatView.hidden = false;
+    }
+    result.hidden = false;
+  }
+
+  modeButtons.forEach((b) =>
+    b.addEventListener('click', () =>
+      setMode(b.dataset.mode as 'seats' | 'order'),
+    ),
+  );
+  $('ss-generate-button').addEventListener('click', generate);
+  $('ss-copy-button').addEventListener('click', async () => {
+    if (!lastText) return;
+    status.textContent = (await copyText(lastText))
+      ? (msg.copied ?? '')
+      : (msg.copyFailed ?? '');
+  });
+  names.addEventListener('input', updateInfo);
+  updateInfo();
+</script>

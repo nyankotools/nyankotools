@@ -1,0 +1,387 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { bingoGeneratorContent } from '../../i18n/tools/bingo-generator';
+import {
+  COLUMN_LETTERS,
+  DEFAULT_CARDS,
+  DEFAULT_DRAW_MAX,
+  MAX_CARDS,
+  MAX_DRAW_MAX,
+  MIN_DRAW_MAX,
+} from '../../lib/tools/bingo-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = bingoGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="bg-root"
+    data-letters={COLUMN_LETTERS.join('')}
+    data-range-hint={t.rangeHint}
+    data-progress={t.progress}
+    data-finished={t.finished}
+    data-current-empty={t.currentEmpty}
+    data-history-empty={t.historyEmpty}
+    data-card-title={t.cardTitle}
+    data-free={t.freeLabel}
+    data-fullscreen-label={t.fullscreenButton}
+    data-exit-fullscreen-label={t.exitFullscreenButton}
+  >
+    <h2 class="mb-3 text-lg font-bold text-gray-900 dark:text-gray-100">
+      {t.drawHeading}
+    </h2>
+    <div
+      id="bg-draw"
+      class="group rounded-lg [&:fullscreen]:overflow-auto [&:fullscreen]:bg-white [&:fullscreen]:p-6 dark:[&:fullscreen]:bg-gray-950"
+    >
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="bg-max" class="ui-label">
+            {t.rangeLabel}
+          </label>
+          <input
+            id="bg-max"
+            type="number"
+            inputmode="numeric"
+            min={MIN_DRAW_MAX}
+            max={MAX_DRAW_MAX}
+            value={DEFAULT_DRAW_MAX}
+            class="ui-input h-11 w-24 dark:bg-gray-900"
+          />
+        </div>
+        <button id="bg-draw-button" type="button" class="ui-btn-primary">
+          {t.drawButton}
+        </button>
+        <button id="bg-reset-button" type="button" class="ui-btn">
+          {t.resetButton}
+        </button>
+        <button id="bg-fullscreen-button" type="button" class="ui-btn">
+          {t.fullscreenButton}
+        </button>
+        <label class="ui-check">
+          <input id="bg-sound" type="checkbox" />
+          {t.soundLabel}
+        </label>
+      </div>
+      <p
+        id="bg-range-hint"
+        class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+      ></p>
+
+      <div class="mt-4 text-center" aria-live="polite">
+        <span class="ui-label">{t.currentLabel}</span>
+        <div
+          id="bg-current"
+          class="text-7xl font-bold tabular-nums text-gray-900 group-[:fullscreen]:text-[9rem] sm:text-8xl dark:text-gray-100"
+        >
+          {t.currentEmpty}
+        </div>
+        <p
+          id="bg-progress"
+          class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+        ></p>
+        <p id="bg-finished" class="ui-error empty:hidden mt-2"></p>
+      </div>
+
+      <div class="mt-4">
+        <span class="ui-label">{t.historyLabel}</span>
+        <ol
+          id="bg-history"
+          class="flex flex-wrap gap-2 text-gray-900 dark:text-gray-100"
+        ></ol>
+        <p
+          id="bg-history-empty"
+          class="text-sm text-gray-600 dark:text-gray-400"
+        >
+          {t.historyEmpty}
+        </p>
+      </div>
+
+      <div class="mt-4">
+        <span class="ui-label">{t.boardLabel}</span>
+        <div
+          id="bg-board"
+          class="grid grid-cols-10 gap-1 text-xs sm:text-sm"
+        ></div>
+      </div>
+    </div>
+
+    <h2 class="mt-8 mb-3 text-lg font-bold text-gray-900 dark:text-gray-100">
+      {t.cardsHeading}
+    </h2>
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="bg-count" class="ui-label">
+          {t.cardCountLabel}
+        </label>
+        <input
+          id="bg-count"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max={MAX_CARDS}
+          value={DEFAULT_CARDS}
+          class="ui-input h-11 w-24 dark:bg-gray-900"
+        />
+      </div>
+      <button
+        id="bg-cards-generate-button"
+        type="button"
+        class="ui-btn-primary"
+      >
+        {t.cardsGenerate}
+      </button>
+      <button id="bg-print-button" type="button" class="ui-btn" disabled>
+        {t.cardsPrint}
+      </button>
+    </div>
+    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+      {t.cardCountHint.replace('{max}', String(MAX_CARDS))}
+      {t.cardsHint}
+    </p>
+    <div id="bg-cards" class="mt-4 grid gap-4 sm:grid-cols-2"></div>
+  </section>
+</ToolShell>
+
+<style is:global>
+  @media print {
+    @page {
+      margin: 10mm;
+    }
+    html.bg-printing
+      body
+      *:not(#bg-cards):not(#bg-cards *):not(:has(#bg-cards)) {
+      display: none !important;
+    }
+    html.bg-printing,
+    html.bg-printing body {
+      background: #fff !important;
+    }
+    html.bg-printing #bg-cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8mm;
+      margin: 0;
+    }
+    html.bg-printing #bg-cards .bg-card {
+      break-inside: avoid;
+    }
+  }
+</style>
+
+<script>
+  import {
+    clampCardCount,
+    clampDrawMax,
+    columnLetter,
+    createPool,
+    drawNumber,
+    generateCards,
+    type BingoCard,
+  } from '../../lib/tools/bingo-generator';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('bg-root');
+  const msg = root.dataset;
+  const letters = (msg.letters ?? '').split('');
+  const drawPanel = $('bg-draw');
+  const maxInput = $<HTMLInputElement>('bg-max');
+  const drawButton = $<HTMLButtonElement>('bg-draw-button');
+  const resetButton = $<HTMLButtonElement>('bg-reset-button');
+  const fullscreenButton = $<HTMLButtonElement>('bg-fullscreen-button');
+  const soundCheck = $<HTMLInputElement>('bg-sound');
+  const rangeHint = $('bg-range-hint');
+  const currentEl = $('bg-current');
+  const progressEl = $('bg-progress');
+  const finishedEl = $('bg-finished');
+  const historyEl = $('bg-history');
+  const historyEmpty = $('bg-history-empty');
+  const boardEl = $('bg-board');
+  const countInput = $<HTMLInputElement>('bg-count');
+  const cardsGenerateButton = $<HTMLButtonElement>('bg-cards-generate-button');
+  const printButton = $<HTMLButtonElement>('bg-print-button');
+  const cardsEl = $('bg-cards');
+
+  let max = clampDrawMax(Number(maxInput.value));
+  let remaining: number[] = [];
+  let history: number[] = [];
+  let audio: AudioContext | null = null;
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  /** 標準の75個のときだけ B-12 のように列見出しを付ける */
+  function label(n: number) {
+    const letter = max === 75 ? columnLetter(n) : '';
+    return letter ? `${letter}-${n}` : String(n);
+  }
+
+  function beep() {
+    if (!soundCheck.checked) return;
+    try {
+      audio ??= new AudioContext();
+      void audio.resume();
+      const osc = audio.createOscillator();
+      const gain = audio.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.2, audio.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.25);
+      osc.connect(gain).connect(audio.destination);
+      osc.start();
+      osc.stop(audio.currentTime + 0.25);
+    } catch {
+      // 音が出せない環境では何もしない
+    }
+  }
+
+  function renderBoard() {
+    boardEl.replaceChildren();
+    for (let n = 1; n <= max; n++) {
+      const cell = document.createElement('div');
+      cell.dataset.n = String(n);
+      cell.className =
+        'rounded bg-gray-100 py-1 text-center tabular-nums text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+      cell.textContent = String(n);
+      boardEl.append(cell);
+    }
+  }
+
+  function markCell(n: number) {
+    const cell = boardEl.querySelector<HTMLElement>(`[data-n="${n}"]`);
+    if (!cell) return;
+    cell.className =
+      'rounded bg-blue-700 py-1 text-center font-bold tabular-nums text-white';
+  }
+
+  function render() {
+    rangeHint.textContent = fill(msg.rangeHint, { n: String(max) });
+    const last = history[history.length - 1];
+    currentEl.textContent =
+      last === undefined ? (msg.currentEmpty ?? '') : label(last);
+    progressEl.textContent = fill(msg.progress, {
+      drawn: String(history.length),
+      total: String(max),
+    });
+    historyEl.replaceChildren();
+    [...history].reverse().forEach((n) => {
+      const li = document.createElement('li');
+      li.className =
+        'rounded-full border border-gray-300 px-3 py-1 text-sm tabular-nums dark:border-gray-600';
+      li.textContent = label(n);
+      historyEl.append(li);
+    });
+    historyEmpty.hidden = history.length > 0;
+    const done = remaining.length === 0;
+    finishedEl.textContent = done ? (msg.finished ?? '') : '';
+    drawButton.disabled = done;
+  }
+
+  function reset() {
+    max = clampDrawMax(Number(maxInput.value));
+    maxInput.value = String(max);
+    remaining = createPool(max);
+    history = [];
+    renderBoard();
+    render();
+  }
+
+  function draw() {
+    const result = drawNumber(remaining);
+    if (!result) return;
+    remaining = result.remaining;
+    history.push(result.drawn);
+    markCell(result.drawn);
+    render();
+    beep();
+  }
+
+  function syncFullscreenLabel() {
+    fullscreenButton.textContent =
+      document.fullscreenElement === drawPanel
+        ? (msg.exitFullscreenLabel ?? '')
+        : (msg.fullscreenLabel ?? '');
+  }
+
+  async function toggleFullscreen() {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await drawPanel.requestFullscreen();
+    } catch {
+      // 非対応・拒否された場合は何もしない
+    }
+  }
+
+  function renderCard(card: BingoCard, index: number) {
+    const table = document.createElement('table');
+    table.className =
+      'bg-card w-full table-fixed border-collapse border-2 border-gray-900 bg-white text-center text-gray-900';
+    const caption = document.createElement('caption');
+    caption.className =
+      'mb-1 text-left text-sm font-bold text-gray-900 dark:text-gray-100 print:text-gray-900';
+    caption.textContent = fill(msg.cardTitle, { n: String(index + 1) });
+    table.append(caption);
+    const head = table.createTHead().insertRow();
+    letters.forEach((letter) => {
+      const th = document.createElement('th');
+      th.scope = 'col';
+      th.className =
+        'border border-gray-900 bg-gray-900 py-1 text-lg font-bold text-white';
+      th.textContent = letter;
+      head.append(th);
+    });
+    const body = table.createTBody();
+    card.forEach((row) => {
+      const tr = body.insertRow();
+      row.forEach((value) => {
+        const td = tr.insertCell();
+        td.className =
+          'border border-gray-900 py-3 text-xl font-bold tabular-nums sm:py-4';
+        if (value === null) {
+          td.textContent = msg.free ?? '';
+          td.classList.add('bg-gray-200', 'text-sm');
+        } else {
+          td.textContent = String(value);
+        }
+      });
+    });
+    return table;
+  }
+
+  function generateAllCards() {
+    const count = clampCardCount(Number(countInput.value));
+    countInput.value = String(count);
+    const cards = generateCards(count);
+    cardsEl.replaceChildren(...cards.map(renderCard));
+    printButton.disabled = false;
+  }
+
+  function printCards() {
+    const html = document.documentElement;
+    const done = () => html.classList.remove('bg-printing');
+    window.addEventListener('afterprint', done, { once: true });
+    html.classList.add('bg-printing');
+    window.print();
+  }
+
+  drawButton.addEventListener('click', draw);
+  resetButton.addEventListener('click', reset);
+  maxInput.addEventListener('change', reset);
+  fullscreenButton.addEventListener('click', () => void toggleFullscreen());
+  document.addEventListener('fullscreenchange', syncFullscreenLabel);
+  cardsGenerateButton.addEventListener('click', generateAllCards);
+  printButton.addEventListener('click', printCards);
+
+  reset();
+  syncFullscreenLabel();
+</script>

@@ -433,6 +433,31 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-08',
+    toolSlugs: [
+      'team-splitter',
+      'bingo-generator',
+      'seat-shuffler',
+      'omikuji',
+      'image-blur-mosaic',
+      'color-palette-generator',
+      'image-filter',
+      'typing-test',
+      'reaction-test',
+      'sudoku',
+    ],
+    translations: {
+      ja: {
+        summary:
+          'チーム分け・グループ分け、ビンゴ抽選機・カード生成、席替え・順番決めツール、おみくじ・今日の運勢、画像モザイク・ぼかし、配色パレットジェネレーター、画像フィルター・色調補正、タイピング速度テスト、反応速度テスト、数独を追加しました。',
+      },
+      en: {
+        summary:
+          'Added the Random Team Generator, Bingo Caller & Card Generator, Seating Chart Randomizer & Order Shuffler, Omikuji (Daily Fortune), Image Blur & Mosaic, Color Palette Generator, Image Filter & Color Adjustment, Typing Speed Test, Reaction Time Test, and Sudoku.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

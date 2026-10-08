@@ -12,6 +12,12 @@ const slugs = [
   'image-converter',
   'image-resizer',
   'image-pixelart-converter',
+  'image-blur-mosaic',
+  'color-palette-generator',
+  'image-filter',
+  'typing-test',
+  'reaction-test',
+  'sudoku',
   'favicon-generator',
   'image-palette-extractor',
   'exif-viewer',
@@ -48,6 +54,9 @@ const slugs = [
   'time-calculator',
   'url-parser',
   'unicode-inspector',
+  'team-splitter',
+  'bingo-generator',
+  'seat-shuffler',
 ];
 
 const locales = [

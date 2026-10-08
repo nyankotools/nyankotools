@@ -1,0 +1,596 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { imageBlurMosaicContent } from '../../i18n/tools/image-blur-mosaic';
+import {
+  MIN_STRENGTH,
+  MAX_STRENGTH,
+  DEFAULT_MOSAIC_BLOCK,
+} from '../../lib/tools/image-blur-mosaic';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageBlurMosaicContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="bm-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="bm-dropzone" class="ui-dropzone">
+      <input
+        id="bm-file-input"
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="bm-source-info"
+      data-template={t.sourceInfoTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="bm-error"
+      role="alert"
+      hidden
+      data-unsupported={t.errorUnsupportedFile}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-load-failed={t.errorLoadFailed}
+      data-export-failed={t.errorExportFailed}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+  </div>
+
+  <div id="bm-editor" hidden class="mt-4">
+    <div class="flex flex-wrap items-end gap-6">
+      <div>
+        <span class="ui-label">{t.modeLabel}</span>
+        <div id="bm-mode" class="ui-seg" role="group" aria-label={t.modeLabel}>
+          <button
+            type="button"
+            data-mode="mosaic"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            {t.modeMosaic}
+          </button>
+          <button
+            type="button"
+            data-mode="blur"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.modeBlur}
+          </button>
+          <button
+            type="button"
+            data-mode="fill"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.modeFill}
+          </button>
+        </div>
+      </div>
+
+      <div id="bm-strength-wrap" class="min-w-56 flex-1">
+        <label for="bm-strength" class="ui-label">
+          <span
+            id="bm-strength-label"
+            data-mosaic={t.mosaicStrengthLabel}
+            data-blur={t.blurStrengthLabel}
+          >
+            {t.mosaicStrengthLabel}
+          </span>
+          <span
+            id="bm-strength-value"
+            data-template={t.strengthValueTemplate}
+          ></span>
+        </label>
+        <input
+          id="bm-strength"
+          type="range"
+          min={MIN_STRENGTH}
+          max={MAX_STRENGTH}
+          value={DEFAULT_MOSAIC_BLOCK}
+          class="h-11 w-full"
+        />
+      </div>
+
+      <div id="bm-color-wrap" hidden>
+        <label for="bm-color" class="ui-label">
+          {t.colorLabel}
+        </label>
+        <input
+          id="bm-color"
+          type="color"
+          value="#000000"
+          class="h-11 w-20 cursor-pointer rounded border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+
+    <p
+      id="bm-blur-warning"
+      hidden
+      class="mt-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200"
+    >
+      {t.blurWarning}
+    </p>
+
+    <p class="mt-4 text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.canvasLabel}
+    </p>
+    <p class="mb-2 text-xs text-gray-500 dark:text-gray-400">{t.canvasHint}</p>
+    <div class="mb-2 md:hidden">
+      <span class="ui-label">{t.touchModeLabel}</span>
+      <div
+        id="bm-touch-mode"
+        class="ui-seg"
+        role="group"
+        aria-label={t.touchModeLabel}
+      >
+        <button
+          type="button"
+          data-touch="select"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.touchModeSelect}
+        </button>
+        <button
+          type="button"
+          data-touch="scroll"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.touchModeScroll}
+        </button>
+      </div>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        {t.touchModeHint}
+      </p>
+    </div>
+    <div class="relative w-full select-none">
+      <canvas
+        id="bm-canvas"
+        role="img"
+        aria-label={t.canvasLabel}
+        class="block h-auto w-full cursor-crosshair rounded-lg border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
+      ></canvas>
+      <div
+        id="bm-selection"
+        hidden
+        class="pointer-events-none absolute border-2 border-dashed border-blue-600 bg-blue-500/20"
+      ></div>
+    </div>
+
+    <p
+      id="bm-region-count"
+      data-template={t.regionCountTemplate}
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+
+    <div class="mt-3 flex flex-wrap items-end gap-3">
+      <button
+        id="bm-undo-button"
+        type="button"
+        disabled
+        class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {t.undoButton}
+      </button>
+      <button
+        id="bm-reset-button"
+        type="button"
+        disabled
+        class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {t.resetButton}
+      </button>
+      <button id="bm-clear-button" type="button" class="ui-btn">
+        {t.clearButton}
+      </button>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-end gap-4">
+      <div>
+        <span class="ui-label">{t.formatLabel}</span>
+        <div
+          id="bm-format"
+          class="ui-seg"
+          role="group"
+          aria-label={t.formatLabel}
+        >
+          <button
+            type="button"
+            data-format="png"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            PNG
+          </button>
+          <button
+            type="button"
+            data-format="webp"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            WebP
+          </button>
+          <button
+            type="button"
+            data-format="jpeg"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            JPEG
+          </button>
+        </div>
+      </div>
+      <button
+        id="bm-download-button"
+        type="button"
+        class="ui-btn ui-btn-primary"
+      >
+        {t.downloadButton}
+      </button>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    applyRegion,
+    applyRegions,
+    buildOutputFileName,
+    clampStrength,
+    clientToImagePoint,
+    DEFAULT_BLUR_RADIUS,
+    DEFAULT_MOSAIC_BLOCK,
+    formatFileSize,
+    isAcceptedImageFile,
+    MAX_FILE_SIZE,
+    normalizeRect,
+    OUTPUT_FORMATS,
+    type Dimensions,
+    type EffectMode,
+    type OutputFormat,
+    type Point,
+    type Region,
+  } from '../../lib/tools/image-blur-mosaic';
+
+  const dropzone = document.getElementById('bm-dropzone')!;
+  const fileInput = document.getElementById(
+    'bm-file-input',
+  ) as HTMLInputElement;
+  const sourceInfoEl = document.getElementById('bm-source-info')!;
+  const errorEl = document.getElementById('bm-error')!;
+  const editor = document.getElementById('bm-editor')!;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#bm-mode [data-mode]',
+  );
+  const strengthWrap = document.getElementById('bm-strength-wrap')!;
+  const strengthInput = document.getElementById(
+    'bm-strength',
+  ) as HTMLInputElement;
+  const strengthLabel = document.getElementById('bm-strength-label')!;
+  const strengthValue = document.getElementById('bm-strength-value')!;
+  const colorWrap = document.getElementById('bm-color-wrap')!;
+  const colorInput = document.getElementById('bm-color') as HTMLInputElement;
+  const blurWarning = document.getElementById('bm-blur-warning')!;
+  const canvas = document.getElementById('bm-canvas') as HTMLCanvasElement;
+  // スマホ幅(md未満)では「範囲を選択」「スクロール」を切り替える。既定はスクロール。
+  // md以上(PC・タブレット)は常に選択モード
+  const mobileQuery = window.matchMedia('(max-width: 767px)');
+  let touchSelect = false;
+  const touchButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#bm-touch-mode [data-touch]',
+  );
+  function selectionEnabled() {
+    return !mobileQuery.matches || touchSelect;
+  }
+  function applyTouchMode() {
+    canvas.style.touchAction = selectionEnabled() ? 'none' : 'pan-y pan-x';
+    touchButtons.forEach((b) =>
+      b.setAttribute(
+        'aria-pressed',
+        String((b.dataset.touch === 'select') === touchSelect),
+      ),
+    );
+  }
+  touchButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      touchSelect = b.dataset.touch === 'select';
+      applyTouchMode();
+    }),
+  );
+  mobileQuery.addEventListener('change', applyTouchMode);
+  applyTouchMode();
+  const selectionEl = document.getElementById('bm-selection')!;
+  const regionCountEl = document.getElementById('bm-region-count')!;
+  const undoButton = document.getElementById(
+    'bm-undo-button',
+  ) as HTMLButtonElement;
+  const resetButton = document.getElementById(
+    'bm-reset-button',
+  ) as HTMLButtonElement;
+  const clearButton = document.getElementById('bm-clear-button')!;
+  const formatButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#bm-format [data-format]',
+  );
+  const downloadButton = document.getElementById('bm-download-button')!;
+
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+
+  let mode: EffectMode = 'mosaic';
+  let format: OutputFormat = 'png';
+  let fileName = 'image';
+  let dims: Dimensions | null = null;
+  let baseData: Uint8ClampedArray | null = null;
+  let working: ImageData | null = null;
+  let regions: Region[] = [];
+  const strengths = {
+    mosaic: DEFAULT_MOSAIC_BLOCK,
+    blur: DEFAULT_BLUR_RADIUS,
+  };
+
+  let dragStart: Point | null = null;
+  let dragPointerId: number | null = null;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function updateStrengthUi() {
+    strengthValue.textContent = (strengthValue.dataset.template ?? '').replace(
+      '{value}',
+      strengthInput.value,
+    );
+  }
+
+  function updateModeUi() {
+    modeButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.mode === mode)),
+    );
+    const usesStrength = mode !== 'fill';
+    strengthWrap.hidden = !usesStrength;
+    colorWrap.hidden = mode !== 'fill';
+    blurWarning.hidden = mode !== 'blur';
+    if (usesStrength) {
+      strengthLabel.textContent = strengthLabel.dataset[mode] ?? '';
+      strengthInput.value = String(strengths[mode as 'mosaic' | 'blur']);
+      updateStrengthUi();
+    }
+  }
+
+  function updateRegionUi() {
+    regionCountEl.textContent = (regionCountEl.dataset.template ?? '').replace(
+      '{count}',
+      String(regions.length),
+    );
+    undoButton.disabled = regions.length === 0;
+    resetButton.disabled = regions.length === 0;
+  }
+
+  function rebuild() {
+    if (!dims || !baseData || !working) return;
+    working.data.set(baseData);
+    applyRegions(working.data, dims, regions);
+    ctx.putImageData(working, 0, 0);
+    updateRegionUi();
+  }
+
+  function hideSelection() {
+    selectionEl.hidden = true;
+    dragStart = null;
+    dragPointerId = null;
+  }
+
+  function resetAll() {
+    dims = null;
+    baseData = null;
+    working = null;
+    regions = [];
+    hideSelection();
+    editor.hidden = true;
+    sourceInfoEl.textContent = '';
+    updateRegionUi();
+  }
+
+  async function loadFile(file: File) {
+    clearError();
+    resetAll();
+    if (!isAcceptedImageFile(file)) {
+      showError(errorEl.dataset.unsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace('{max}', () =>
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+    let bitmap: ImageBitmap;
+    try {
+      bitmap = await createImageBitmap(file);
+    } catch {
+      showError(errorEl.dataset.loadFailed ?? '');
+      return;
+    }
+    try {
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      ctx.clearRect(0, 0, bitmap.width, bitmap.height);
+      ctx.drawImage(bitmap, 0, 0);
+      const image = ctx.getImageData(0, 0, bitmap.width, bitmap.height);
+      baseData = new Uint8ClampedArray(image.data);
+      working = image;
+    } catch {
+      showError(errorEl.dataset.loadFailed ?? '');
+      return;
+    } finally {
+      bitmap.close();
+    }
+    dims = { width: canvas.width, height: canvas.height };
+    fileName = file.name;
+    regions = [];
+    sourceInfoEl.textContent = (sourceInfoEl.dataset.template ?? '')
+      .replace('{width}', String(dims.width))
+      .replace('{height}', String(dims.height))
+      .replace('{size}', () => formatFileSize(file.size));
+    editor.hidden = false;
+    updateRegionUi();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as EffectMode;
+      updateModeUi();
+    });
+  });
+
+  strengthInput.addEventListener('input', () => {
+    if (mode !== 'fill') {
+      strengths[mode] = clampStrength(Number(strengthInput.value));
+    }
+    updateStrengthUi();
+  });
+
+  formatButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      format = button.dataset.format as OutputFormat;
+      formatButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === button)),
+      );
+    });
+  });
+
+  function pointFromEvent(e: PointerEvent): Point {
+    return clientToImagePoint(
+      e.clientX,
+      e.clientY,
+      canvas.getBoundingClientRect(),
+      dims!,
+    );
+  }
+
+  function showSelection(a: Point, b: Point) {
+    if (!dims) return;
+    const left = (Math.min(a.x, b.x) / dims.width) * 100;
+    const top = (Math.min(a.y, b.y) / dims.height) * 100;
+    const width = (Math.abs(a.x - b.x) / dims.width) * 100;
+    const height = (Math.abs(a.y - b.y) / dims.height) * 100;
+    selectionEl.style.left = `${left}%`;
+    selectionEl.style.top = `${top}%`;
+    selectionEl.style.width = `${width}%`;
+    selectionEl.style.height = `${height}%`;
+    selectionEl.hidden = false;
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (!dims || dragPointerId !== null) return;
+    if (!selectionEnabled()) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    dragPointerId = e.pointerId;
+    canvas.setPointerCapture(e.pointerId);
+    dragStart = pointFromEvent(e);
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (!dims || !dragStart || e.pointerId !== dragPointerId) return;
+    showSelection(dragStart, pointFromEvent(e));
+  });
+
+  canvas.addEventListener('pointerup', (e) => {
+    if (!dims || !dragStart || !working || e.pointerId !== dragPointerId)
+      return;
+    const rect = normalizeRect(dragStart, pointFromEvent(e), dims);
+    hideSelection();
+    if (!rect) return;
+    const region: Region = {
+      rect,
+      mode,
+      strength: mode === 'fill' ? 0 : strengths[mode],
+      color: colorInput.value,
+    };
+    regions.push(region);
+    applyRegion(working.data, dims, region);
+    ctx.putImageData(working, 0, 0);
+    updateRegionUi();
+  });
+
+  canvas.addEventListener('pointercancel', hideSelection);
+
+  undoButton.addEventListener('click', () => {
+    regions.pop();
+    rebuild();
+  });
+
+  resetButton.addEventListener('click', () => {
+    regions = [];
+    rebuild();
+  });
+
+  clearButton.addEventListener('click', () => {
+    resetAll();
+    clearError();
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (!dims) return;
+    const option = OUTPUT_FORMATS[format];
+    let source: HTMLCanvasElement = canvas;
+    if (format === 'jpeg') {
+      // JPEGは透過を持てないため白地に合成する
+      const flat = document.createElement('canvas');
+      flat.width = canvas.width;
+      flat.height = canvas.height;
+      const flatCtx = flat.getContext('2d')!;
+      flatCtx.fillStyle = '#ffffff';
+      flatCtx.fillRect(0, 0, flat.width, flat.height);
+      flatCtx.drawImage(canvas, 0, 0);
+      source = flat;
+    }
+    const outName = buildOutputFileName(fileName, format);
+    source.toBlob(
+      (blob) => {
+        if (!blob || blob.type !== option.mimeType) {
+          showError(errorEl.dataset.exportFailed ?? '');
+          return;
+        }
+        clearError();
+        downloadBlob(blob, outName);
+      },
+      option.mimeType,
+      0.92,
+    );
+  });
+
+  updateModeUi();
+  updateRegionUi();
+</script>

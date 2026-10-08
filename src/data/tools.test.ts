@@ -5,8 +5,8 @@ import { updates } from './updates';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 describe('tools registry', () => {
-  it('all tools count should be 151', () => {
-    expect(tools.length).toBe(151);
+  it('all tools count should be 161', () => {
+    expect(tools.length).toBe(161);
   });
 
   it('slug が重複していない', () => {
@@ -16,9 +16,9 @@ describe('tools registry', () => {
 });
 
 describe('tools registry - category', () => {
-  it('categories は categoryIds と同じ14個のIDを持つ', () => {
+  it('categories は categoryIds と同じ15個のIDを持つ', () => {
     expect(Object.keys(categories).sort()).toEqual([...categoryIds].sort());
-    expect(categoryIds).toHaveLength(14);
+    expect(categoryIds).toHaveLength(15);
   });
 
   it('各カテゴリに ja/en の表示名があり、ロケール内で重複しない', () => {

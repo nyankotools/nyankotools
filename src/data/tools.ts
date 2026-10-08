@@ -16,6 +16,7 @@ export const categoryIds = [
   'file',
   'hardware',
   'media',
+  'games',
 ] as const;
 
 export type CategoryId = (typeof categoryIds)[number];
@@ -36,6 +37,7 @@ export const categories: Record<CategoryId, Record<Locale, string>> = {
   file: { ja: 'ファイル', en: 'File' },
   hardware: { ja: 'ハードウェア', en: 'Hardware' },
   media: { ja: '動画・音声', en: 'Video & Audio' },
+  games: { ja: 'ゲーム・エンタメ', en: 'Games & Fun' },
 };
 
 export interface ToolTranslation {
@@ -3443,7 +3445,7 @@ export const tools: Tool[] = [
   },
   {
     slug: 'roulette-dice',
-    category: 'generate',
+    category: 'games',
     addedAt: '2026-10-02',
     updatedAt: '2026-10-02',
     related: ['password-generator', 'uuid-generator', 'text-list-tools'],
@@ -4408,7 +4410,7 @@ export const tools: Tool[] = [
   },
   {
     slug: 'amidakuji-generator',
-    category: 'generate',
+    category: 'games',
     addedAt: '2026-10-05',
     updatedAt: '2026-10-05',
     related: ['roulette-dice', 'password-generator', 'uuid-generator'],
@@ -4853,7 +4855,7 @@ export const tools: Tool[] = [
   },
   {
     slug: 'gacha-calculator',
-    category: 'calc',
+    category: 'games',
     addedAt: '2026-10-07',
     updatedAt: '2026-10-07',
     related: ['tax-calculator', 'unit-converter'],
@@ -4998,6 +5000,377 @@ export const tools: Tool[] = [
         ],
         description:
           'Parse a User-Agent string into browser, OS, rendering engine and device type, and see the UA of your own browser automatically.',
+      },
+    },
+  },
+  {
+    slug: 'team-splitter',
+    category: 'games',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['roulette-dice', 'amidakuji-generator', 'seat-shuffler'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'チーム分け・グループ分け',
+        keywords: [
+          'チーム分け',
+          'グループ分け',
+          '班分け',
+          '班決め',
+          'ランダム振り分け',
+          '組分け',
+          '席決め',
+          'チーム作成',
+        ],
+        description:
+          '名簿を貼り付けて、チーム数または1チームの人数を指定するだけでランダムにチーム分け。余りは均等に分散、再シャッフルと結果のコピーに対応します。',
+      },
+      en: {
+        name: 'Random Team Generator',
+        keywords: [
+          'team splitter',
+          'team picker',
+          'group maker',
+          'random groups',
+          'split into teams',
+          'team shuffle',
+          'group generator',
+        ],
+        description:
+          'Paste a name list and split it into random teams by team count or team size. Leftovers are spread evenly; reshuffle and copy the result.',
+      },
+    },
+  },
+  {
+    slug: 'bingo-generator',
+    category: 'games',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['roulette-dice', 'amidakuji-generator'],
+    translations: {
+      ja: {
+        name: 'ビンゴ抽選機・カード生成',
+        keywords: [
+          'ビンゴ',
+          'ビンゴカード',
+          'ビンゴ抽選',
+          '忘年会',
+          'ビンゴゲーム',
+          'bingo',
+        ],
+        description:
+          'ビンゴ大会用の抽選機（履歴・全画面・音）と、人数分の印刷用ビンゴカードを一括生成',
+      },
+      en: {
+        name: 'Bingo Caller & Card Generator',
+        keywords: [
+          'bingo',
+          'bingo card',
+          'bingo caller',
+          'bingo number generator',
+          'printable bingo',
+          'party game',
+        ],
+        description:
+          'Call bingo numbers with history and full screen, and print a batch of bingo cards',
+      },
+    },
+  },
+  {
+    slug: 'seat-shuffler',
+    category: 'games',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['team-splitter', 'amidakuji-generator', 'roulette-dice'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '席替え・順番決めツール',
+        keywords: [
+          '席替え',
+          '座席表',
+          '座席決め',
+          '順番決め',
+          '発表順',
+          '席順',
+          '教室',
+        ],
+        description:
+          '名簿から席替えの座席表と発表順をランダムに作成。固定席・離したい組み合わせ・空席に対応',
+      },
+      en: {
+        name: 'Seating Chart Randomizer & Order Shuffler',
+        keywords: [
+          'seating chart',
+          'seat shuffler',
+          'random seat',
+          'speaking order',
+          'random order',
+          'classroom',
+        ],
+        description:
+          'Randomize a classroom seating chart or speaking order from a name list, with fixed seats and pairs kept apart',
+      },
+    },
+  },
+  {
+    slug: 'omikuji',
+    category: 'games',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['roulette-dice', 'amidakuji-generator'],
+    translations: {
+      ja: {
+        name: 'おみくじ・今日の運勢',
+        keywords: [
+          'おみくじ',
+          '今日の運勢',
+          '大吉',
+          '運勢',
+          '初詣',
+          '占い',
+          'ラッキーカラー',
+        ],
+        description:
+          '大吉〜大凶のおみくじを無料で引ける。日付と名前で決まる今日の運勢と、何度でも引き直せるモード。ラッキーカラー付き。',
+      },
+      en: {
+        name: 'Omikuji (Daily Fortune)',
+        keywords: [
+          'omikuji',
+          'fortune',
+          'daily fortune',
+          'fortune slip',
+          'luck',
+          'lucky color',
+          'japanese fortune',
+        ],
+        description:
+          'Draw a free Japanese omikuji fortune slip. Get a daily fortune for today, or redraw as often as you like, with lucky color and number.',
+      },
+    },
+  },
+  {
+    slug: 'image-blur-mosaic',
+    category: 'image',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['image-pixelart-converter', 'pdf-redactor', 'image-resizer'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像モザイク・ぼかし',
+        keywords: [
+          'モザイク',
+          'ぼかし',
+          '塗りつぶし',
+          '顔を隠す',
+          '個人情報',
+          '画像加工',
+          'ナンバープレート',
+          'blur',
+        ],
+        description:
+          '画像の一部をドラッグで範囲指定し、モザイク・ぼかし・塗りつぶしで顔や個人情報を隠せます。',
+      },
+      en: {
+        name: 'Image Blur & Mosaic',
+        keywords: [
+          'blur image',
+          'pixelate',
+          'mosaic',
+          'redact image',
+          'hide face',
+          'censor',
+          'blackout',
+          'privacy',
+        ],
+        description:
+          'Drag to select parts of an image and hide faces or personal info with mosaic, blur, or a solid fill.',
+      },
+    },
+  },
+  {
+    slug: 'color-palette-generator',
+    category: 'image',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['color-converter', 'contrast-checker', 'css-gradient-generator'],
+    translations: {
+      ja: {
+        name: '配色パレットジェネレーター',
+        keywords: [
+          '配色',
+          'カラーパレット',
+          '補色',
+          '類似色',
+          'トライアド',
+          'カラースキーム',
+          'color palette',
+        ],
+        description:
+          '基準色から補色・類似色・トライアドなどの配色を生成し、HEXやCSS変数でコピー',
+      },
+      en: {
+        name: 'Color Palette Generator',
+        keywords: [
+          'color scheme',
+          'color harmony',
+          'complementary',
+          'analogous',
+          'triadic',
+          'palette',
+        ],
+        description:
+          'Generate complementary, analogous and triadic color schemes from one base color and copy HEX, CSS variables or JSON',
+      },
+    },
+  },
+  {
+    slug: 'image-filter',
+    category: 'image',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['image-pixelart-converter', 'image-converter', 'image-resizer'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像フィルター・色調補正',
+        keywords: [
+          '画像加工',
+          '色調補正',
+          '明るさ',
+          'コントラスト',
+          'モノクロ',
+          'セピア',
+          '彩度',
+          'フィルター',
+        ],
+        description:
+          '写真の明るさ・コントラスト・彩度・モノクロ・セピアなどをスライダーで調整し、ビフォーアフターを見比べて保存。',
+      },
+      en: {
+        name: 'Image Filter & Color Adjustment',
+        keywords: [
+          'photo filter',
+          'brightness',
+          'contrast',
+          'grayscale',
+          'sepia',
+          'saturation',
+          'hue',
+          'invert',
+        ],
+        description:
+          'Adjust brightness, contrast, saturation, black & white, and sepia with sliders. Compare before and after, then save.',
+      },
+    },
+  },
+  {
+    slug: 'typing-test',
+    category: 'games',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['keyboard-tester', 'omikuji'],
+    translations: {
+      ja: {
+        name: 'タイピング速度テスト',
+        keywords: [
+          'タイピング',
+          'タイピングテスト',
+          'タイピング練習',
+          'WPM',
+          'CPM',
+          'ローマ字入力',
+          'タイピング速度',
+        ],
+        description:
+          '日本語（ローマ字）と英語のタイピング速度を無料で測定。WPM・CPM・正確性と苦手キーを表示。し=si/shiなど表記ゆれにも対応。',
+      },
+      en: {
+        name: 'Typing Speed Test',
+        keywords: [
+          'typing test',
+          'wpm',
+          'cpm',
+          'typing speed',
+          'words per minute',
+          'typing practice',
+          'romaji typing',
+          'accuracy',
+        ],
+        description:
+          'Measure your typing speed in English or Japanese romaji. Get WPM, CPM, accuracy and your weakest keys. Accepts alternate romaji spellings.',
+      },
+    },
+  },
+  {
+    slug: 'reaction-test',
+    category: 'games',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['mouse-tester', 'keyboard-tester', 'omikuji'],
+    translations: {
+      ja: {
+        name: '反応速度テスト',
+        description:
+          '色が変わったらクリック。5回の平均・最速・ランクをミリ秒で測定',
+        keywords: [
+          '反応速度',
+          '反射神経',
+          '反応時間',
+          'リアクションタイム',
+          'クリック',
+          'フライング',
+        ],
+      },
+      en: {
+        name: 'Reaction Time Test',
+        description:
+          'Click when the color changes. Measures your average and best reaction time in ms over 5 rounds',
+        keywords: [
+          'reaction time',
+          'reflex test',
+          'response time',
+          'click speed',
+          'human benchmark',
+          'false start',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'sudoku',
+    category: 'games',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['bingo-generator', 'seat-shuffler', 'omikuji'],
+    translations: {
+      ja: {
+        name: '数独（ナンプレ）',
+        description:
+          '唯一解の数独を難易度別に自動生成。メモ・ヒント・誤りチェック付きで遊べる',
+        keywords: [
+          '数独',
+          'ナンプレ',
+          'ナンバープレース',
+          'sudoku',
+          'パズル',
+          '問題生成',
+        ],
+      },
+      en: {
+        name: 'Sudoku',
+        description:
+          'Play sudoku puzzles generated on the spot, with notes, hints and a mistake check',
+        keywords: [
+          'sudoku',
+          'number place',
+          'puzzle',
+          'puzzle generator',
+          'logic puzzle',
+        ],
       },
     },
   },

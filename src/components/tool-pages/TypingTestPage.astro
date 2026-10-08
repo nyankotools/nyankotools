@@ -1,0 +1,413 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { typingTestContent } from '../../i18n/tools/typing-test';
+import { ROUND_SIZES } from '../../lib/tools/typing-test';
+import { fill } from '../../lib/format-template';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = typingTestContent[locale];
+const modes = [
+  { id: 'ja', label: t.modeJa },
+  { id: 'en', label: t.modeEn },
+];
+const results = [
+  { id: 'wpm', label: t.wpmLabel },
+  { id: 'cpm', label: t.cpmLabel },
+  { id: 'accuracy', label: t.accuracyLabel },
+  { id: 'miss', label: t.missLabel },
+  { id: 'time', label: t.timeLabel },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    id="typing-root"
+    data-status-idle={t.statusIdle}
+    data-status-ready={t.statusReady}
+    data-status-running={t.statusRunning}
+    data-status-done={t.statusDone}
+    data-progress-format={t.progressFormat}
+    data-seconds-format={t.secondsFormat}
+    data-weak-format={t.weakFormat}
+    data-weak-none={t.weakNone}
+    data-share-text={t.shareText}
+    data-mode-ja={t.modeJa}
+    data-mode-en={t.modeEn}
+    data-start-label={t.startLabel}
+    data-retry-label={t.retryLabel}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <p class="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
+      {t.mobileWarning}
+    </p>
+
+    <div class="flex flex-wrap gap-x-8 gap-y-4">
+      <div>
+        <span class="ui-label">{t.modeLabel}</span>
+        <div
+          id="typing-mode"
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-label={t.modeLabel}
+        >
+          {modes.map((mode, i) => (
+            <button
+              type="button"
+              data-mode={mode.id}
+              aria-pressed={i === 0 ? 'true' : 'false'}
+              class="ui-seg-btn"
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <span class="ui-label">{t.sizeLabel}</span>
+        <div
+          id="typing-size"
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-label={t.sizeLabel}
+        >
+          {ROUND_SIZES.map((n, i) => (
+            <button
+              type="button"
+              data-size={n}
+              aria-pressed={i === 1 ? 'true' : 'false'}
+              class="ui-seg-btn"
+            >
+              {fill(t.sizeFormat, { n: String(n) })}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <button id="typing-start-button" type="button" class="ui-btn-primary mt-4">
+      {t.startLabel}
+    </button>
+
+    <div
+      id="typing-area"
+      tabindex="0"
+      role="group"
+      aria-label={t.areaLabel}
+      class="mt-4 max-w-full rounded-xl border-2 border-dashed border-gray-300 p-4 focus:border-solid focus:border-blue-600 focus:outline-none data-[miss=true]:border-red-600 dark:border-gray-700 dark:focus:border-blue-400 dark:data-[miss=true]:border-red-400"
+    >
+      <p
+        id="typing-status"
+        role="status"
+        class="text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.statusIdle}
+      </p>
+      <p id="typing-ime" class="ui-error mt-2" role="alert" hidden>
+        {t.imeWarning}
+      </p>
+      <div class="mt-3 flex flex-wrap justify-between gap-2 text-sm text-gray-600 dark:text-gray-400">
+        <span id="typing-progress"></span>
+        <span id="typing-live-time"></span>
+      </div>
+      <p id="typing-text" class="mt-3 text-xl font-bold break-words" hidden></p>
+      <p
+        id="typing-kana"
+        class="mt-1 text-sm break-words text-gray-600 dark:text-gray-400"
+        hidden
+      ></p>
+      <p
+        id="typing-guide"
+        class="mt-3 font-mono text-xl leading-relaxed break-all whitespace-pre-wrap"
+      ></p>
+    </div>
+
+    <div id="typing-result" class="mt-6" hidden>
+      <h2 class="mb-2 text-lg font-bold">{t.resultHeading}</h2>
+      <dl class="grid max-w-xl grid-cols-1 gap-2 sm:grid-cols-2">
+        {results.map((r) => (
+          <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+            <dt class="text-xs text-gray-600 dark:text-gray-400">{r.label}</dt>
+            <dd id={`typing-r-${r.id}`} class="text-2xl font-bold" />
+          </div>
+        ))}
+      </dl>
+      <h3 class="mt-4 mb-1 text-base font-bold">{t.weakHeading}</h3>
+      <ul id="typing-weak" class="flex flex-wrap gap-2"></ul>
+      <div class="mt-4 flex flex-wrap items-center gap-3">
+        <button id="typing-copy-button" type="button" class="ui-btn">
+          {t.copy}
+        </button>
+        <span
+          id="typing-copy-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { fill } from '../../lib/format-template';
+  import {
+    advance,
+    calcStats,
+    guideFor,
+    keyLabel,
+    pickPrompts,
+    weakKeys,
+  } from '../../lib/tools/typing-test';
+  import type {
+    TypingMode,
+    TypingPrompt,
+    TypingStats,
+  } from '../../lib/tools/typing-test';
+
+  const root = document.getElementById('typing-root')!;
+  const d = root.dataset as Record<string, string | undefined>;
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#typing-mode [data-mode]',
+  );
+  const sizeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#typing-size [data-size]',
+  );
+  const startButton = $<HTMLButtonElement>('typing-start-button');
+  const area = $('typing-area');
+  const statusEl = $('typing-status');
+  const imeEl = $('typing-ime');
+  const progressEl = $('typing-progress');
+  const liveTimeEl = $('typing-live-time');
+  const textEl = $('typing-text');
+  const kanaEl = $('typing-kana');
+  const guideEl = $('typing-guide');
+  const resultEl = $('typing-result');
+  const weakEl = $('typing-weak');
+  const copyButton = $<HTMLButtonElement>('typing-copy-button');
+  const copyStatus = $('typing-copy-status');
+
+  type Phase = 'idle' | 'ready' | 'running' | 'done';
+  let phase: Phase = 'idle';
+  let mode: TypingMode = 'ja';
+  let size = 5;
+  let prompts: TypingPrompt[] = [];
+  let index = 0;
+  let typed = '';
+  let correct = 0;
+  let misses = 0;
+  let missMap: Record<string, number> = {};
+  let startedAt = 0;
+  let timer: number | undefined;
+  let missTimeout: number | undefined;
+  let lastText = '';
+
+  const seconds = (ms: number) =>
+    fill(d.secondsFormat ?? '', { s: (ms / 1000).toFixed(1) });
+
+  function setPhase(next: Phase) {
+    phase = next;
+    statusEl.textContent =
+      d[`status${next[0].toUpperCase()}${next.slice(1)}`] ?? '';
+  }
+
+  function renderPrompt() {
+    const prompt = prompts[index];
+    const isJa = prompt.kana !== null;
+    textEl.hidden = !isJa;
+    kanaEl.hidden = !isJa;
+    textEl.textContent = prompt.text;
+    kanaEl.textContent = prompt.kana ?? '';
+    progressEl.textContent = fill(d.progressFormat ?? '', {
+      current: String(index + 1),
+      total: String(prompts.length),
+    });
+    renderGuide();
+  }
+
+  function renderGuide() {
+    const guide = guideFor(prompts[index], typed);
+    const done = document.createElement('span');
+    done.className = 'text-green-700 dark:text-green-400';
+    done.textContent = guide.slice(0, typed.length);
+    const next = document.createElement('span');
+    next.className =
+      'rounded bg-blue-100 text-gray-900 underline dark:bg-blue-900 dark:text-gray-100';
+    next.textContent = guide.slice(typed.length, typed.length + 1);
+    const rest = document.createElement('span');
+    rest.className = 'text-gray-600 dark:text-gray-400';
+    rest.textContent = guide.slice(typed.length + 1);
+    guideEl.replaceChildren(done, next, rest);
+  }
+
+  function stopTimer() {
+    if (timer !== undefined) window.clearInterval(timer);
+    timer = undefined;
+  }
+
+  function reset() {
+    stopTimer();
+    prompts = [];
+    index = 0;
+    typed = '';
+    correct = 0;
+    misses = 0;
+    missMap = {};
+    lastText = '';
+    guideEl.replaceChildren();
+    textEl.hidden = true;
+    kanaEl.hidden = true;
+    progressEl.textContent = '';
+    liveTimeEl.textContent = '';
+    imeEl.hidden = true;
+    resultEl.hidden = true;
+    copyStatus.textContent = '';
+    startButton.textContent = d.startLabel ?? '';
+    setPhase('idle');
+  }
+
+  function start() {
+    reset();
+    prompts = pickPrompts(mode, size);
+    renderPrompt();
+    setPhase('ready');
+    area.focus();
+  }
+
+  function finish() {
+    stopTimer();
+    const stats: TypingStats = calcStats(
+      correct,
+      misses,
+      performance.now() - startedAt,
+    );
+    liveTimeEl.textContent = seconds(stats.elapsedMs);
+    $('typing-r-wpm').textContent = String(stats.wpm);
+    $('typing-r-cpm').textContent = String(stats.cpm);
+    $('typing-r-accuracy').textContent = `${stats.accuracy}%`;
+    $('typing-r-miss').textContent = String(stats.misses);
+    $('typing-r-time').textContent = seconds(stats.elapsedMs);
+
+    const weak = weakKeys(missMap);
+    weakEl.replaceChildren();
+    if (weak.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'text-sm text-gray-600 dark:text-gray-400';
+      li.textContent = d.weakNone ?? '';
+      weakEl.append(li);
+    }
+    for (const w of weak) {
+      const li = document.createElement('li');
+      li.className =
+        'rounded border border-red-300 bg-red-50 px-2 py-1 text-sm text-red-900 dark:border-red-700 dark:bg-red-950 dark:text-red-100';
+      li.textContent = fill(d.weakFormat ?? '', {
+        key: keyLabel(w.key),
+        n: String(w.misses),
+      });
+      weakEl.append(li);
+    }
+
+    lastText = fill(d.shareText ?? '', {
+      mode: (mode === 'ja' ? d.modeJa : d.modeEn) ?? '',
+      wpm: String(stats.wpm),
+      cpm: String(stats.cpm),
+      accuracy: String(stats.accuracy),
+    });
+    resultEl.hidden = false;
+    startButton.textContent = d.retryLabel ?? '';
+    setPhase('done');
+  }
+
+  function flashMiss() {
+    area.dataset.miss = 'true';
+    window.clearTimeout(missTimeout);
+    missTimeout = window.setTimeout(() => {
+      area.dataset.miss = 'false';
+    }, 150);
+  }
+
+  area.addEventListener('keydown', (event) => {
+    if (phase !== 'ready' && phase !== 'running') return;
+    if (event.isComposing || event.key === 'Process') {
+      imeEl.hidden = false;
+      return;
+    }
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    // 1文字のキーだけを扱う（Tab・Shift・矢印などは通常動作のまま）
+    if (event.key.length !== 1) return;
+    event.preventDefault();
+    event.stopPropagation();
+    imeEl.hidden = true;
+
+    if (phase === 'ready') {
+      startedAt = performance.now();
+      setPhase('running');
+      timer = window.setInterval(() => {
+        liveTimeEl.textContent = seconds(performance.now() - startedAt);
+      }, 100);
+    }
+
+    const result = advance(prompts[index], typed, event.key);
+    if (!result.accepted) {
+      misses += 1;
+      if (result.expected !== null) {
+        missMap[result.expected] = (missMap[result.expected] ?? 0) + 1;
+      }
+      flashMiss();
+      return;
+    }
+    correct += 1;
+    typed = result.typed;
+    if (result.complete) {
+      if (index + 1 >= prompts.length) {
+        finish();
+        return;
+      }
+      index += 1;
+      typed = '';
+      renderPrompt();
+      return;
+    }
+    renderGuide();
+  });
+
+  function bindSeg(
+    buttons: NodeListOf<HTMLButtonElement>,
+    onSelect: (button: HTMLButtonElement) => void,
+  ) {
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        buttons.forEach((b) =>
+          b.setAttribute('aria-pressed', String(b === button)),
+        );
+        onSelect(button);
+        reset();
+      });
+    });
+  }
+  bindSeg(modeButtons, (b) => {
+    mode = b.dataset.mode === 'en' ? 'en' : 'ja';
+  });
+  bindSeg(sizeButtons, (b) => {
+    size = Number(b.dataset.size) || 5;
+  });
+
+  startButton.addEventListener('click', start);
+
+  copyButton.addEventListener('click', async () => {
+    if (!lastText) return;
+    copyStatus.textContent = (await copyText(lastText))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+  });
+
+  reset();
+</script>

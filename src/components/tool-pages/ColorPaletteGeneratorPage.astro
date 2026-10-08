@@ -1,0 +1,231 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { colorPaletteGeneratorContent } from '../../i18n/tools/color-palette-generator';
+import { harmonyTypes } from '../../lib/tools/color-palette-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = colorPaletteGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="space-y-5">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
+      <input
+        id="color-palette-picker"
+        type="color"
+        value="#3b82f6"
+        aria-label={t.pickerAriaLabel}
+        class="h-11 w-16 shrink-0 cursor-pointer rounded-lg border border-gray-300 bg-transparent p-1 dark:border-gray-700"
+      />
+      <div class="min-w-0 flex-1">
+        <label for="color-palette-hex" class="ui-label">
+          {t.hexLabel}
+        </label>
+        <input
+          id="color-palette-hex"
+          type="text"
+          value="#3b82f6"
+          placeholder={t.hexPlaceholder}
+          spellcheck="false"
+          class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div class="min-w-0 flex-1">
+        <label for="color-palette-harmony" class="ui-label">
+          {t.harmonyLabel}
+        </label>
+        <select
+          id="color-palette-harmony"
+          class="ui-input h-11 w-full min-w-0 px-3 dark:bg-gray-900"
+        >
+          {harmonyTypes.map((type) => (
+            <option value={type}>{t.harmonies[type]}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <p
+      id="color-palette-error"
+      data-hex-error={t.hexError}
+      class="text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div>
+      <h2 class="ui-label">{t.paletteHeading}</h2>
+      <div
+        id="color-palette-swatches"
+        data-action={t.swatchAction}
+        class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5"
+      ></div>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <div>
+        <div class="mb-1 flex items-center justify-between gap-2">
+          <label for="color-palette-css" class="ui-label mb-0">
+            {t.cssLabel}
+          </label>
+          <button
+            id="color-palette-css-copy-button"
+            type="button"
+            data-copy-target="color-palette-css"
+            class="ui-btn shrink-0"
+          >
+            {t.copy}
+          </button>
+        </div>
+        <textarea
+          id="color-palette-css"
+          readonly
+          rows="6"
+          spellcheck="false"
+          data-no-count
+          class="ui-input w-full px-3 py-2 font-mono text-sm dark:bg-gray-900"
+        ></textarea>
+      </div>
+      <div>
+        <div class="mb-1 flex items-center justify-between gap-2">
+          <label for="color-palette-json" class="ui-label mb-0">
+            {t.jsonLabel}
+          </label>
+          <button
+            id="color-palette-json-copy-button"
+            type="button"
+            data-copy-target="color-palette-json"
+            class="ui-btn shrink-0"
+          >
+            {t.copy}
+          </button>
+        </div>
+        <textarea
+          id="color-palette-json"
+          readonly
+          rows="6"
+          spellcheck="false"
+          data-no-count
+          class="ui-input w-full px-3 py-2 font-mono text-sm dark:bg-gray-900"
+        ></textarea>
+      </div>
+    </div>
+
+    <span
+      id="color-palette-status"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="block text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { hexToRgb, normalizeHex } from '../../lib/tools/color-converter';
+  import {
+    generatePalette,
+    toCssVariables,
+    toJson,
+    type HarmonyType,
+  } from '../../lib/tools/color-palette-generator';
+
+  const picker = document.getElementById(
+    'color-palette-picker',
+  ) as HTMLInputElement;
+  const hexInput = document.getElementById(
+    'color-palette-hex',
+  ) as HTMLInputElement;
+  const harmony = document.getElementById(
+    'color-palette-harmony',
+  ) as HTMLSelectElement;
+  const errorEl = document.getElementById('color-palette-error')!;
+  const swatches = document.getElementById('color-palette-swatches')!;
+  const cssOut = document.getElementById(
+    'color-palette-css',
+  ) as HTMLTextAreaElement;
+  const jsonOut = document.getElementById(
+    'color-palette-json',
+  ) as HTMLTextAreaElement;
+  const statusEl = document.getElementById('color-palette-status')!;
+
+  function textColorFor(hex: string): string {
+    const rgb = hexToRgb(hex)!;
+    const lin = (v: number) => {
+      const s = v / 255;
+      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+    const lum = 0.2126 * lin(rgb.r) + 0.7152 * lin(rgb.g) + 0.0722 * lin(rgb.b);
+    return lum > 0.179 ? '#000000' : '#ffffff';
+  }
+
+  function render() {
+    statusEl.textContent = '';
+    const palette = generatePalette(
+      hexInput.value,
+      harmony.value as HarmonyType,
+    );
+    if (!palette) {
+      errorEl.textContent = hexInput.value
+        ? (errorEl.dataset.hexError ?? '')
+        : '';
+      return;
+    }
+    errorEl.textContent = '';
+    swatches.replaceChildren(
+      ...palette.map((hex) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = hex;
+        button.setAttribute(
+          'aria-label',
+          `${hex}${swatches.dataset.action ?? ''}`,
+        );
+        button.className =
+          'h-20 rounded-lg border border-gray-300 font-mono text-sm font-semibold dark:border-gray-700';
+        button.style.backgroundColor = hex;
+        button.style.color = textColorFor(hex);
+        button.addEventListener('click', () => copy(hex));
+        return button;
+      }),
+    );
+    cssOut.value = toCssVariables(palette);
+    jsonOut.value = toJson(palette);
+  }
+
+  async function copy(text: string) {
+    if (!text) return;
+    statusEl.textContent = (await copyText(text))
+      ? (statusEl.dataset.copied ?? '')
+      : (statusEl.dataset.copyFailed ?? '');
+  }
+
+  hexInput.addEventListener('input', () => {
+    const normalized = normalizeHex(hexInput.value);
+    if (normalized) picker.value = normalized;
+    render();
+  });
+  picker.addEventListener('input', () => {
+    hexInput.value = picker.value;
+    render();
+  });
+  harmony.addEventListener('change', render);
+
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-copy-target]')
+    .forEach((button) => {
+      button.addEventListener('click', () => {
+        const target = document.getElementById(
+          button.dataset.copyTarget!,
+        ) as HTMLTextAreaElement;
+        void copy(target.value);
+      });
+    });
+
+  render();
+</script>

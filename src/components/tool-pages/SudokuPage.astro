@@ -1,0 +1,420 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { sudokuContent } from '../../i18n/tools/sudoku';
+import { DIFFICULTIES } from '../../lib/tools/sudoku';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = sudokuContent[locale];
+const difficultyNames = {
+  easy: t.difficultyEasy,
+  normal: t.difficultyNormal,
+  hard: t.difficultyHard,
+};
+---
+
+<ToolShell t={t}>
+  <section
+    id="sd-root"
+    data-cell-filled={t.cellFilled}
+    data-cell-notes={t.cellNotes}
+    data-cell-empty={t.cellEmpty}
+    data-cell-given={t.cellGiven}
+    data-hint-result={t.hintResult}
+    data-hint-no-cell={t.hintNoCell}
+    data-mistakes-found={t.mistakesFound}
+    data-no-mistakes={t.noMistakes}
+    data-conflicts-found={t.conflictsFound}
+    data-solved={t.solved}
+    data-progress={t.progress}
+  >
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <span id="sd-difficulty-label" class="ui-label">
+          {t.difficultyLabel}
+        </span>
+        <div class="ui-seg" role="group" aria-labelledby="sd-difficulty-label">
+          {DIFFICULTIES.map((d) => (
+            <button
+              type="button"
+              class="ui-seg-btn"
+              data-difficulty={d}
+              aria-pressed={d === 'normal' ? 'true' : 'false'}
+            >
+              {difficultyNames[d]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <button id="sd-new-button" type="button" class="ui-btn-primary">
+        {t.newGame}
+      </button>
+      <button id="sd-restart-button" type="button" class="ui-btn">
+        {t.restart}
+      </button>
+    </div>
+
+    <p
+      id="sd-progress"
+      class="mt-3 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+
+    <div
+      id="sd-board"
+      role="group"
+      aria-label={t.boardLabel}
+      class="mt-2 grid aspect-square w-full max-w-md grid-cols-9 border-2 border-gray-900 bg-white dark:border-gray-300 dark:bg-gray-900"
+    ></div>
+
+    <p
+      id="sd-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+
+    <div class="mt-3 max-w-md" role="group" aria-label={t.padLabel}>
+      <div class="grid grid-cols-9 gap-1">
+        {Array.from({ length: 9 }, (_, i) => i + 1).map((n) => (
+          <button
+            type="button"
+            class="ui-btn px-0 text-lg"
+            data-pad={n}
+            aria-label={t.padNumber.replace('{n}', String(n))}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+      <div class="mt-2 flex flex-wrap items-center gap-2">
+        <button id="sd-erase-button" type="button" class="ui-btn">
+          {t.erase}
+        </button>
+        <div class="ui-seg">
+          <button
+            id="sd-note-button"
+            type="button"
+            class="ui-seg-btn"
+            aria-pressed="false"
+          >
+            {t.noteMode}
+          </button>
+        </div>
+        <button id="sd-hint-button" type="button" class="ui-btn">
+          {t.hint}
+        </button>
+        <button id="sd-check-button" type="button" class="ui-btn">
+          {t.check}
+        </button>
+      </div>
+    </div>
+    <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+      {t.keyboardHint}
+    </p>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    CELLS,
+    colOf,
+    findConflicts,
+    findMistakes,
+    generatePuzzle,
+    getHint,
+    isSolved,
+    peersOf,
+    rowOf,
+    type Difficulty,
+    type Grid,
+  } from '../../lib/tools/sudoku';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('sd-root');
+  const msg = root.dataset;
+  const boardEl = $('sd-board');
+  const statusEl = $('sd-status');
+  const progressEl = $('sd-progress');
+  const noteButton = $<HTMLButtonElement>('sd-note-button');
+  const diffButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-difficulty]'),
+  );
+  const padButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-pad]'),
+  );
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  let difficulty: Difficulty = 'normal';
+  let puzzle: Grid = [];
+  let solution: Grid = [];
+  let grid: Grid = [];
+  let notes: number[] = []; // ビットマスク（1<<数字）
+  let selected = 0;
+  let noteMode = false;
+  let mistakes = new Set<number>();
+  let done = false;
+
+  const cells: HTMLButtonElement[] = [];
+  for (let i = 0; i < CELLS; i++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.index = String(i);
+    boardEl.append(b);
+    cells.push(b);
+  }
+
+  function setStatus(text: string, tone: 'normal' | 'error' = 'normal') {
+    statusEl.textContent = text;
+    statusEl.classList.toggle('text-red-700', tone === 'error');
+    statusEl.classList.toggle('dark:text-red-400', tone === 'error');
+    statusEl.classList.toggle('text-gray-800', tone !== 'error');
+    statusEl.classList.toggle('dark:text-gray-200', tone !== 'error');
+  }
+
+  function noteList(mask: number) {
+    const out: number[] = [];
+    for (let v = 1; v <= 9; v++) if (mask & (1 << v)) out.push(v);
+    return out;
+  }
+
+  function render() {
+    const conflicts = new Set(findConflicts(grid));
+    const selValue = grid[selected];
+    const peers = new Set(peersOf(selected));
+    cells.forEach((cell, i) => {
+      const r = rowOf(i);
+      const c = colOf(i);
+      const given = puzzle[i] !== 0;
+      const value = grid[i];
+      const bad = conflicts.has(i) || mistakes.has(i);
+      const isSel = i === selected;
+      let bg = 'bg-white dark:bg-gray-900';
+      if (bad) bg = 'bg-red-100 dark:bg-red-950';
+      else if (isSel) bg = 'bg-blue-200 dark:bg-blue-900';
+      else if (selValue && value === selValue)
+        bg = 'bg-blue-100 dark:bg-blue-950';
+      else if (peers.has(i)) bg = 'bg-gray-100 dark:bg-gray-800';
+      let text = 'text-blue-700 dark:text-blue-300';
+      if (bad) text = 'text-red-700 dark:text-red-300';
+      else if (given) text = 'font-bold text-gray-900 dark:text-gray-100';
+      const borderR =
+        c === 8
+          ? ''
+          : c % 3 === 2
+            ? 'border-r-2 border-r-gray-900 dark:border-r-gray-300'
+            : 'border-r border-r-gray-300 dark:border-r-gray-700';
+      const borderB =
+        r === 8
+          ? ''
+          : r % 3 === 2
+            ? 'border-b-2 border-b-gray-900 dark:border-b-gray-300'
+            : 'border-b border-b-gray-300 dark:border-b-gray-700';
+      cell.className = `relative flex min-w-0 items-center justify-center text-xl leading-none focus:z-10 focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-2xl ${bg} ${text} ${borderR} ${borderB}`;
+      cell.tabIndex = isSel ? 0 : -1;
+      cell.replaceChildren();
+      const list = value ? [] : noteList(notes[i]);
+      if (value) {
+        cell.textContent = String(value);
+        cell.setAttribute(
+          'aria-label',
+          fill(msg.cellFilled, {
+            row: String(r + 1),
+            col: String(c + 1),
+            value: String(value),
+          }) + (given ? ` (${msg.cellGiven})` : ''),
+        );
+      } else if (list.length > 0) {
+        const wrap = document.createElement('span');
+        wrap.className =
+          'pointer-events-none absolute inset-0 grid grid-cols-3 grid-rows-3 p-px text-[9px] leading-none font-medium text-gray-700 sm:text-[11px] dark:text-gray-300';
+        for (let v = 1; v <= 9; v++) {
+          const s = document.createElement('span');
+          s.className = 'flex items-center justify-center';
+          s.textContent = notes[i] & (1 << v) ? String(v) : '';
+          wrap.append(s);
+        }
+        cell.append(wrap);
+        cell.setAttribute(
+          'aria-label',
+          fill(msg.cellNotes, {
+            row: String(r + 1),
+            col: String(c + 1),
+            notes: list.join(', '),
+          }),
+        );
+      } else {
+        cell.setAttribute(
+          'aria-label',
+          fill(msg.cellEmpty, { row: String(r + 1), col: String(c + 1) }),
+        );
+      }
+    });
+    progressEl.textContent = fill(msg.progress, {
+      clues: String(grid.filter((v) => v === 0).length),
+    });
+    noteButton.setAttribute('aria-pressed', String(noteMode));
+  }
+
+  function startGame(next: boolean) {
+    if (next) {
+      const p = generatePuzzle(difficulty);
+      puzzle = p.puzzle;
+      solution = p.solution;
+    }
+    grid = puzzle.slice();
+    notes = new Array<number>(CELLS).fill(0);
+    mistakes = new Set();
+    done = false;
+    const firstEmpty = grid.findIndex((v) => v === 0);
+    selected = firstEmpty === -1 ? 0 : firstEmpty;
+    setStatus('');
+    render();
+  }
+
+  function afterEdit() {
+    mistakes = new Set();
+    if (isSolved(grid)) {
+      done = true;
+      setStatus(msg.solved ?? '');
+    } else {
+      const bad = findConflicts(grid).length > 0;
+      setStatus(
+        bad ? (msg.conflictsFound ?? '') : '',
+        bad ? 'error' : 'normal',
+      );
+    }
+    render();
+  }
+
+  function editable(i: number) {
+    return !done && puzzle[i] === 0;
+  }
+
+  function enter(n: number) {
+    if (!editable(selected)) return;
+    if (noteMode) {
+      if (grid[selected]) return;
+      notes[selected] ^= 1 << n;
+      mistakes = new Set();
+      render();
+      return;
+    }
+    if (grid[selected] === n) {
+      grid[selected] = 0;
+    } else {
+      grid[selected] = n;
+      notes[selected] = 0;
+      for (const p of peersOf(selected)) notes[p] &= ~(1 << n);
+    }
+    afterEdit();
+  }
+
+  function erase() {
+    if (!editable(selected)) return;
+    if (grid[selected] === 0 && notes[selected] === 0) return;
+    grid[selected] = 0;
+    notes[selected] = 0;
+    afterEdit();
+  }
+
+  function select(i: number, focus: boolean) {
+    selected = Math.max(0, Math.min(CELLS - 1, i));
+    render();
+    if (focus) cells[selected].focus();
+  }
+
+  function hint() {
+    if (done) return;
+    const h = getHint(grid, solution, selected);
+    if (!h) {
+      setStatus(msg.hintNoCell ?? '');
+      return;
+    }
+    grid[h.index] = h.value;
+    notes[h.index] = 0;
+    for (const p of peersOf(h.index)) notes[p] &= ~(1 << h.value);
+    selected = h.index;
+    afterEdit();
+    if (!done) {
+      setStatus(
+        fill(msg.hintResult, {
+          row: String(rowOf(h.index) + 1),
+          col: String(colOf(h.index) + 1),
+          value: String(h.value),
+        }),
+      );
+    }
+  }
+
+  function check() {
+    if (done) return;
+    mistakes = new Set(findMistakes(grid, solution));
+    if (mistakes.size > 0) {
+      setStatus(fill(msg.mistakesFound, { n: String(mistakes.size) }), 'error');
+    } else {
+      setStatus(msg.noMistakes ?? '');
+    }
+    render();
+  }
+
+  boardEl.addEventListener('click', (e) => {
+    const target = (e.target as HTMLElement).closest<HTMLElement>(
+      '[data-index]',
+    );
+    if (target) select(Number(target.dataset.index), false);
+  });
+
+  boardEl.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const r = rowOf(selected);
+    const c = colOf(selected);
+    let handled = true;
+    if (e.key === 'ArrowUp') select(r > 0 ? selected - 9 : selected, true);
+    else if (e.key === 'ArrowDown')
+      select(r < 8 ? selected + 9 : selected, true);
+    else if (e.key === 'ArrowLeft')
+      select(c > 0 ? selected - 1 : selected, true);
+    else if (e.key === 'ArrowRight')
+      select(c < 8 ? selected + 1 : selected, true);
+    else if (/^[1-9]$/.test(e.key)) enter(Number(e.key));
+    else if (['0', 'Backspace', 'Delete'].includes(e.key)) erase();
+    else if (e.key === 'n' || e.key === 'N') {
+      noteMode = !noteMode;
+      render();
+    } else handled = false;
+    if (handled) e.preventDefault();
+  });
+
+  padButtons.forEach((b) =>
+    b.addEventListener('click', () => enter(Number(b.dataset.pad))),
+  );
+  $('sd-erase-button').addEventListener('click', erase);
+  $('sd-hint-button').addEventListener('click', hint);
+  $('sd-check-button').addEventListener('click', check);
+  noteButton.addEventListener('click', () => {
+    noteMode = !noteMode;
+    render();
+  });
+  $('sd-new-button').addEventListener('click', () => startGame(true));
+  $('sd-restart-button').addEventListener('click', () => startGame(false));
+  diffButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      difficulty = b.dataset.difficulty as Difficulty;
+      diffButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      startGame(true);
+    }),
+  );
+
+  startGame(true);
+</script>

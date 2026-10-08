@@ -5267,6 +5267,113 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'typing-test',
+    category: 'games',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['keyboard-tester', 'omikuji'],
+    translations: {
+      ja: {
+        name: 'タイピング速度テスト',
+        keywords: [
+          'タイピング',
+          'タイピングテスト',
+          'タイピング練習',
+          'WPM',
+          'CPM',
+          'ローマ字入力',
+          'タイピング速度',
+        ],
+        description:
+          '日本語（ローマ字）と英語のタイピング速度を無料で測定。WPM・CPM・正確性と苦手キーを表示。し=si/shiなど表記ゆれにも対応。',
+      },
+      en: {
+        name: 'Typing Speed Test',
+        keywords: [
+          'typing test',
+          'wpm',
+          'cpm',
+          'typing speed',
+          'words per minute',
+          'typing practice',
+          'romaji typing',
+          'accuracy',
+        ],
+        description:
+          'Measure your typing speed in English or Japanese romaji. Get WPM, CPM, accuracy and your weakest keys. Accepts alternate romaji spellings.',
+      },
+    },
+  },
+  {
+    slug: 'reaction-test',
+    category: 'games',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['mouse-tester', 'keyboard-tester', 'omikuji'],
+    translations: {
+      ja: {
+        name: '反応速度テスト',
+        description:
+          '色が変わったらクリック。5回の平均・最速・ランクをミリ秒で測定',
+        keywords: [
+          '反応速度',
+          '反射神経',
+          '反応時間',
+          'リアクションタイム',
+          'クリック',
+          'フライング',
+        ],
+      },
+      en: {
+        name: 'Reaction Time Test',
+        description:
+          'Click when the color changes. Measures your average and best reaction time in ms over 5 rounds',
+        keywords: [
+          'reaction time',
+          'reflex test',
+          'response time',
+          'click speed',
+          'human benchmark',
+          'false start',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'sudoku',
+    category: 'games',
+    addedAt: '2026-10-08',
+    updatedAt: '2026-10-08',
+    related: ['bingo-generator', 'seat-shuffler', 'omikuji'],
+    translations: {
+      ja: {
+        name: '数独（ナンプレ）',
+        description:
+          '唯一解の数独を難易度別に自動生成。メモ・ヒント・誤りチェック付きで遊べる',
+        keywords: [
+          '数独',
+          'ナンプレ',
+          'ナンバープレース',
+          'sudoku',
+          'パズル',
+          '問題生成',
+        ],
+      },
+      en: {
+        name: 'Sudoku',
+        description:
+          'Play sudoku puzzles generated on the spot, with notes, hints and a mistake check',
+        keywords: [
+          'sudoku',
+          'number place',
+          'puzzle',
+          'puzzle generator',
+          'logic puzzle',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

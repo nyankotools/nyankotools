@@ -3445,7 +3445,7 @@ export const tools: Tool[] = [
   },
   {
     slug: 'roulette-dice',
-    category: 'generate',
+    category: 'games',
     addedAt: '2026-10-02',
     updatedAt: '2026-10-02',
     related: ['password-generator', 'uuid-generator', 'text-list-tools'],
@@ -4410,7 +4410,7 @@ export const tools: Tool[] = [
   },
   {
     slug: 'amidakuji-generator',
-    category: 'generate',
+    category: 'games',
     addedAt: '2026-10-05',
     updatedAt: '2026-10-05',
     related: ['roulette-dice', 'password-generator', 'uuid-generator'],
@@ -4855,7 +4855,7 @@ export const tools: Tool[] = [
   },
   {
     slug: 'gacha-calculator',
-    category: 'calc',
+    category: 'games',
     addedAt: '2026-10-07',
     updatedAt: '2026-10-07',
     related: ['tax-calculator', 'unit-converter'],
@@ -5005,7 +5005,7 @@ export const tools: Tool[] = [
   },
   {
     slug: 'team-splitter',
-    category: 'generate',
+    category: 'games',
     addedAt: '2026-10-08',
     updatedAt: '2026-10-08',
     related: ['roulette-dice', 'amidakuji-generator', 'seat-shuffler'],
@@ -5044,7 +5044,7 @@ export const tools: Tool[] = [
   },
   {
     slug: 'bingo-generator',
-    category: 'generate',
+    category: 'games',
     addedAt: '2026-10-08',
     updatedAt: '2026-10-08',
     related: ['roulette-dice', 'amidakuji-generator'],
@@ -5079,7 +5079,7 @@ export const tools: Tool[] = [
   },
   {
     slug: 'seat-shuffler',
-    category: 'generate',
+    category: 'games',
     addedAt: '2026-10-08',
     updatedAt: '2026-10-08',
     related: ['team-splitter', 'amidakuji-generator', 'roulette-dice'],

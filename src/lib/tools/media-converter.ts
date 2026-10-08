@@ -316,6 +316,14 @@ export function convertMedia(
 ): ConvertHandle {
   let conversion: Conversion | null = null;
   let canceled = false;
+  // @mediabunny/mp3-encoder(1.61.1で確認) は close() でワーカーを terminate するだけで、処理中の encode/flush を
+  // reject しない。変換序盤にキャンセルすると execute() が永久に解決されずUIが固まるため、
+  // キャンセル通知と execute() を競わせて必ず抜けられるようにする。
+  let notifyCanceled: () => void = () => {};
+  const canceledSignal = new Promise<never>((_, reject) => {
+    notifyCanceled = () => reject(new ConvertError('canceled'));
+  });
+  canceledSignal.catch(() => {});
 
   const run = async () => {
     const spec = FORMAT_SPECS[options.format];
@@ -398,7 +406,9 @@ export function convertMedia(
       }
 
       conversion.onProgress = (p) => options.onProgress?.(Math.min(1, p));
-      await conversion.execute();
+      const execution = conversion.execute();
+      execution.catch(() => {});
+      await Promise.race([execution, canceledSignal]);
       if (!target.buffer) throw new ConvertError('failed');
       const mimeType =
         options.format === 'm4a' ? 'audio/mp4' : await output.getMimeType();
@@ -416,7 +426,8 @@ export function convertMedia(
     promise: run(),
     cancel: () => {
       canceled = true;
-      void conversion?.cancel();
+      notifyCanceled();
+      conversion?.cancel().catch(() => {});
     },
   };
 }

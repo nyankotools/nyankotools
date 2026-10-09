@@ -100,3 +100,44 @@ export function nextPomodoroPhase(
     ? 'longBreak'
     : 'shortBreak';
 }
+
+export type ChallengeJudge = 'perfect' | 'great' | 'good' | 'close' | 'miss';
+
+/** ぴったりチャレンジの目標秒数として妥当か（1〜60の整数）。不正なら null、正常ならミリ秒 */
+export function challengeTargetMs(seconds: number): number | null {
+  return Number.isInteger(seconds) && seconds >= 1 && seconds <= 60
+    ? seconds * 1000
+    : null;
+}
+
+/** 記録と目標の差（ミリ秒）。早すぎれば負、遅すぎれば正。表示（1/100秒未満切り捨て）と同じ値で比べる */
+export function challengeDiffMs(elapsed: number, targetMs: number): number {
+  return Math.floor(elapsed / 10) * 10 - targetMs;
+}
+
+/** 差を「+0.13」「-0.05」「±0.00」の形にする（1/100秒単位。表示が0.00になる差は ±0.00） */
+export function formatDiffSeconds(diffMs: number): string {
+  const centis = Math.round(diffMs / 10);
+  if (centis === 0) return '±0.00';
+  const abs = (Math.abs(centis) / 100).toFixed(2);
+  return `${centis > 0 ? '+' : '-'}${abs}`;
+}
+
+/** 差の大きさによる判定。表示が目標と一致する（1/100秒単位で ±0.00）ときだけ perfect */
+export function judgeChallenge(diffMs: number): ChallengeJudge {
+  const abs = Math.abs(Math.round(diffMs / 10) * 10);
+  if (abs === 0) return 'perfect';
+  if (abs <= 50) return 'great';
+  if (abs <= 150) return 'good';
+  if (abs <= 500) return 'close';
+  return 'miss';
+}
+
+/** 差の絶対値が最も小さい記録の添字。記録がなければ -1。同点は先の記録 */
+export function bestChallengeIndex(diffs: number[]): number {
+  let best = -1;
+  diffs.forEach((diff, i) => {
+    if (best < 0 || Math.abs(diff) < Math.abs(diffs[best])) best = i;
+  });
+  return best;
+}

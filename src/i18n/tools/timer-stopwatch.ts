@@ -15,6 +15,7 @@ export interface TimerStopwatchPageContent {
   modeStopwatch: string;
   modeTimer: string;
   modePomodoro: string;
+  modeChallenge: string;
 
   startButton: string;
   pauseButton: string;
@@ -22,6 +23,7 @@ export interface TimerStopwatchPageContent {
   resetButton: string;
   lapButton: string;
   skipButton: string;
+  stopButton: string;
   soundLabel: string;
 
   lapHeading: string;
@@ -51,6 +53,28 @@ export interface TimerStopwatchPageContent {
   roundsDone: string;
   phaseFinished: string;
 
+  targetLabel: string;
+  hideCountLabel: string;
+  /** {target} = 目標秒数 */
+  challengeHint: string;
+  invalidTarget: string;
+  /** {time} = 記録（秒）, {diff} = 目標との差（秒）, {judge} = 判定 */
+  challengeResult: string;
+  judgeLabels: {
+    perfect: string;
+    great: string;
+    good: string;
+    close: string;
+    miss: string;
+  };
+  attemptHeading: string;
+  attemptTargetLabel: string;
+  attemptTimeLabel: string;
+  attemptDiffLabel: string;
+  attemptJudgeLabel: string;
+  /** {n} = 何回目, {diff} = 目標との差（秒） */
+  bestText: string;
+
   notesHeading: string;
   notes: string[];
   glossaryHeading: string;
@@ -60,17 +84,18 @@ export interface TimerStopwatchPageContent {
 export const timerStopwatchContent: Record<Locale, TimerStopwatchPageContent> =
   {
     ja: {
-      title: 'タイマー・ストップウォッチ・ポモドーロタイマー',
+      title: 'タイマー・ストップウォッチ・ポモドーロ・ぴったりチャレンジ',
       description:
-        'ブラウザで使えるストップウォッチ（ラップ記録つき）、カウントダウンタイマー、ポモドーロタイマーです。終了時のアラーム音に対応し、作業の時間管理や勉強・料理のタイマーに使えます。インストール不要で、データはサーバーに送信されません。',
-      h1: 'タイマー・ストップウォッチ・ポモドーロ',
+        'ブラウザで使えるストップウォッチ（ラップ記録つき）、カウントダウンタイマー、ポモドーロタイマー、そしてカウントを隠して「ぴったり10秒」を狙うチャレンジゲームです。終了時のアラーム音に対応し、作業の時間管理や勉強・料理のタイマーに使えます。インストール不要で、データはサーバーに送信されません。',
+      h1: 'タイマー・ストップウォッチ・ポモドーロ・ぴったりチャレンジ',
       introHtml:
-        'インストール不要で使えるオンラインのストップウォッチ、カウントダウンタイマー、ポモドーロタイマーです。ストップウォッチはラップタイムを記録でき、タイマーは終了時にアラーム音でお知らせします。ポモドーロは「25分作業＋5分休憩」のサイクルを自動で切り替え、集中力を保ちながら作業を進められます。時間はブラウザの時計で計測するため、タブを切り替えても大きくずれません。すべてブラウザ内で動作し、サーバーには何も送信されません。経過日数や期間の計算は <a href="/tools/date-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">日付計算</a> もご利用ください。',
+        'インストール不要で使えるオンラインのストップウォッチ、カウントダウンタイマー、ポモドーロタイマーです。カウントを隠して目標の秒数ぴったりで止める「ぴったりチャレンジ」（ぴったり10秒ゲーム）も遊べます。ストップウォッチはラップタイムを記録でき、タイマーは終了時にアラーム音でお知らせします。ポモドーロは「25分作業＋5分休憩」のサイクルを自動で切り替え、集中力を保ちながら作業を進められます。時間はブラウザの時計で計測するため、タブを切り替えても大きくずれません。すべてブラウザ内で動作し、サーバーには何も送信されません。経過日数や期間の計算は <a href="/tools/date-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">日付計算</a> もご利用ください。',
 
       modeLabel: 'モード',
       modeStopwatch: 'ストップウォッチ',
       modeTimer: 'タイマー',
       modePomodoro: 'ポモドーロ',
+      modeChallenge: 'ぴったりチャレンジ',
 
       startButton: 'スタート',
       pauseButton: '一時停止',
@@ -78,6 +103,7 @@ export const timerStopwatchContent: Record<Locale, TimerStopwatchPageContent> =
       resetButton: 'リセット',
       lapButton: 'ラップ',
       skipButton: '次へスキップ',
+      stopButton: 'ストップ',
       soundLabel: '終了時にアラーム音を鳴らす',
 
       lapHeading: 'ラップ',
@@ -110,11 +136,32 @@ export const timerStopwatchContent: Record<Locale, TimerStopwatchPageContent> =
       roundsDone: '完了した作業: {n}回',
       phaseFinished: '次は「{phase}」です',
 
+      targetLabel: '目標（秒）',
+      hideCountLabel: 'カウントを隠す',
+      challengeHint:
+        '{target}秒ぴったりで止めてみましょう。スタートしたら心の中で数えて、ストップを押します',
+      invalidTarget: '目標は1〜60の整数（秒）で入力してください',
+      challengeResult: '{time}秒（目標との差 {diff}秒）― {judge}',
+      judgeLabels: {
+        perfect: 'ぴったり！',
+        great: 'すばらしい！',
+        good: 'おしい！',
+        close: 'もう少し',
+        miss: 'ざんねん',
+      },
+      attemptHeading: '記録',
+      attemptTargetLabel: '目標',
+      attemptTimeLabel: '記録',
+      attemptDiffLabel: '差',
+      attemptJudgeLabel: '判定',
+      bestText: 'ベスト: {n}回目（差 {diff}秒）',
+
       notesHeading: '注意事項',
       notes: [
         '時間は端末の時計をもとに計測しているため、タブが裏にあっても終了時刻はほぼ正確です。ただしブラウザの省電力機能で、裏タブでは表示の更新やアラーム音が数秒遅れることがあります。',
         'アラーム音はブラウザの仕様上、スタートボタンを押したあとに限って鳴ります。端末がマナーモードや消音のときは聞こえません。',
-        'ページを閉じる・再読み込みすると、計測中の時間やラップの記録は消えます。',
+        'ページを閉じる・再読み込みすると、計測中の時間やラップの記録、ぴったりチャレンジの記録は消えます。',
+        'ぴったりチャレンジの記録は、ボタンを押した瞬間のブラウザの時計で測っています。画面の表示やクリック・タップの反応には端末ごとにわずかな遅れがあるため、1/100秒単位の差は端末や環境によって変わります。ゲームとしてお楽しみください。',
       ],
       glossaryHeading: '用語解説',
       glossaryTerms: [
@@ -128,20 +175,26 @@ export const timerStopwatchContent: Record<Locale, TimerStopwatchPageContent> =
           description:
             'ストップウォッチを止めずに、途中の区間ごとの時間を記録する機能です。「ラップ」は前回のラップからの区間時間、「経過」はスタートからの合計時間です。',
         },
+        {
+          term: 'ぴったりチャレンジ',
+          description:
+            'カウントを隠した状態で、体感だけで目標の秒数ぴったりに止められるかを競う遊びです。「ぴったり10秒」などの名前で知られ、目標との差が小さいほど高評価になります。',
+        },
       ],
     },
     en: {
-      title: 'Online Timer, Stopwatch & Pomodoro Timer',
+      title: 'Online Timer, Stopwatch, Pomodoro & Stop-at-10-Seconds Game',
       description:
-        'A browser stopwatch with laps, a countdown timer, and a Pomodoro timer with an alarm sound. Nothing to install, and nothing is sent to a server.',
-      h1: 'Timer, Stopwatch and Pomodoro Timer',
+        'A browser stopwatch with laps, a countdown timer, a Pomodoro timer, and a game of stopping at exactly 10 seconds with the count hidden. Nothing is uploaded.',
+      h1: 'Timer, Stopwatch, Pomodoro and Exact-Time Challenge',
       introHtml:
-        'A free online stopwatch, countdown timer, and Pomodoro timer that needs no installation. The stopwatch records lap times, the timer sounds an alarm when time is up, and the Pomodoro mode switches automatically between 25-minute work sessions and 5-minute breaks to help you stay focused. Time is measured with your device’s clock, so it stays accurate even if you switch tabs. Everything runs in your browser, and nothing is sent to a server. To calculate the days between dates, try the <a href="/en/tools/date-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Date Calculator</a>.',
+        'A free online stopwatch, countdown timer, and Pomodoro timer that needs no installation. It also has an Exact-Time Challenge (the stop-at-10-seconds game) where the count is hidden and you try to stop right on the target. The stopwatch records lap times, the timer sounds an alarm when time is up, and the Pomodoro mode switches automatically between 25-minute work sessions and 5-minute breaks to help you stay focused. Time is measured with your device’s clock, so it stays accurate even if you switch tabs. Everything runs in your browser, and nothing is sent to a server. To calculate the days between dates, try the <a href="/en/tools/date-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Date Calculator</a>.',
 
       modeLabel: 'Mode',
       modeStopwatch: 'Stopwatch',
       modeTimer: 'Timer',
       modePomodoro: 'Pomodoro',
+      modeChallenge: 'Exact-time challenge',
 
       startButton: 'Start',
       pauseButton: 'Pause',
@@ -149,6 +202,7 @@ export const timerStopwatchContent: Record<Locale, TimerStopwatchPageContent> =
       resetButton: 'Reset',
       lapButton: 'Lap',
       skipButton: 'Skip to next',
+      stopButton: 'Stop',
       soundLabel: 'Play an alarm sound when time is up',
 
       lapHeading: 'Laps',
@@ -181,11 +235,32 @@ export const timerStopwatchContent: Record<Locale, TimerStopwatchPageContent> =
       roundsDone: 'Work sessions completed: {n}',
       phaseFinished: 'Next: {phase}',
 
+      targetLabel: 'Target (seconds)',
+      hideCountLabel: 'Hide the count',
+      challengeHint:
+        'Try to stop at exactly {target} seconds. Press Start, count in your head, then press Stop',
+      invalidTarget: 'The target must be a whole number from 1 to 60 seconds',
+      challengeResult: '{time} s ({diff} s from the target) — {judge}',
+      judgeLabels: {
+        perfect: 'Perfect!',
+        great: 'Great!',
+        good: 'So close!',
+        close: 'Almost',
+        miss: 'Missed',
+      },
+      attemptHeading: 'Results',
+      attemptTargetLabel: 'Target',
+      attemptTimeLabel: 'Time',
+      attemptDiffLabel: 'Diff',
+      attemptJudgeLabel: 'Result',
+      bestText: 'Best: attempt {n} ({diff} s off)',
+
       notesHeading: 'Notes',
       notes: [
         'Time is measured from your device’s clock, so the end time stays nearly exact even in a background tab. Power saving in some browsers can delay the display and the alarm by a few seconds in background tabs.',
         'Browsers only allow the alarm sound after you press Start. You will not hear it if your device is muted.',
-        'Closing or reloading the page clears the running time and the lap records.',
+        'Closing or reloading the page clears the running time, the lap records, and the Exact-time challenge results.',
+        'The challenge is timed with your browser’s clock at the moment you press each button. Display and click or tap latency differ slightly between devices, so differences of a hundredth of a second vary by device and environment. Enjoy it as a game.',
       ],
       glossaryHeading: 'Glossary',
       glossaryTerms: [
@@ -198,6 +273,11 @@ export const timerStopwatchContent: Record<Locale, TimerStopwatchPageContent> =
           term: 'Lap time',
           description:
             'Recording intermediate times without stopping the stopwatch. “Lap” is the time since the previous lap, and “Total” is the time since the start.',
+        },
+        {
+          term: 'Exact-time challenge',
+          description:
+            'A game where, with the count hidden, you try to stop on a target number of seconds by feel alone. Also known as the “stop at exactly 10 seconds” game; the smaller the difference from the target, the better the result.',
         },
       ],
     },

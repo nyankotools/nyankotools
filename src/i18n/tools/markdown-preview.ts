@@ -23,6 +23,15 @@ export interface MarkdownPreviewPageContent {
   inputPlaceholderMdToHtml: string;
   inputPlaceholderHtmlToMd: string;
   resultHeading: string;
+  headingLabel: string;
+  headingAtx: string;
+  headingSetext: string;
+  bulletLabel: string;
+  codeLabel: string;
+  codeFenced: string;
+  codeIndented: string;
+  removeImagesLabel: string;
+  removeLinksLabel: string;
   /** `{message}` を置換して使うテンプレート */
   errorTemplate: string;
   sanitizeNoteBeforeCode: string;
@@ -59,6 +68,15 @@ export const markdownPreviewContent: Record<
     inputPlaceholderHtmlToMd:
       '<h1>見出し</h1>\n<p><strong>太字</strong>のテキストです。</p>',
     resultHeading: '結果',
+    headingLabel: '見出しの書式',
+    headingAtx: '# 見出し（ATX）',
+    headingSetext: '下線（Setext）',
+    bulletLabel: '箇条書きの記号',
+    codeLabel: 'コードブロック',
+    codeFenced: '``` で囲む',
+    codeIndented: 'インデント',
+    removeImagesLabel: '画像を取り除く',
+    removeLinksLabel: 'リンクを取り除く（文字だけ残す）',
     errorTemplate: 'エラー: {message}',
     sanitizeNoteBeforeCode:
       '※ プレビューは安全のためサニタイズして表示しています。',
@@ -67,7 +85,7 @@ export const markdownPreviewContent: Record<
     notes: [
       'プレビューは安全のためサニタイズして表示するため、scriptタグなど一部のHTML要素は表示されません。',
       'Markdownの解釈は環境ごとに細かな違いがあります。GitHubなど特定のサービスに掲載する場合は、そのサービス上の表示も確認してください。',
-      'HTMLからMarkdownへの変換では、複雑なレイアウトや装飾を完全には再現できない場合があります。変換後の内容を確認してください。',
+      'HTMLからMarkdownへの変換では、表はセルの文字だけのMarkdown表になり（結合セルは展開されません）、<script>・<style> の中身は出力されません。複雑なレイアウトや装飾を完全には再現できない場合があります。変換後の内容を確認してください。',
     ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
@@ -115,6 +133,15 @@ export const markdownPreviewContent: Record<
     inputPlaceholderHtmlToMd:
       '<h1>Heading</h1>\n<p><strong>Bold</strong> text.</p>',
     resultHeading: 'Result',
+    headingLabel: 'Heading style',
+    headingAtx: '# Heading (ATX)',
+    headingSetext: 'Underlined (Setext)',
+    bulletLabel: 'Bullet marker',
+    codeLabel: 'Code blocks',
+    codeFenced: 'Fenced (```)',
+    codeIndented: 'Indented',
+    removeImagesLabel: 'Remove images',
+    removeLinksLabel: 'Remove links (keep the text)',
     errorTemplate: 'Error: {message}',
     sanitizeNoteBeforeCode:
       'Note: the preview is sanitized for safety, so some elements like',

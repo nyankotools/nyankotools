@@ -1,6 +1,6 @@
 ---
 import ToolShell from '../ToolShell.astro';
-import { jsonToTypeScriptContent } from '../../i18n/tools/json-to-typescript';
+import { jsonToTypeScriptContent } from '../../i18n/tools/json-to-types';
 import type { Locale } from '../../data/tools';
 
 interface Props {
@@ -46,6 +46,28 @@ const t = jsonToTypeScriptContent[locale];
     </label>
     <div>
       <span class="mb-1 block text-sm text-gray-700 dark:text-gray-300">
+        {t.languageLabel}
+      </span>
+      <div
+        id="j2ts-language"
+        class="ui-seg"
+        role="group"
+        aria-label={t.languageLabel}
+      >
+        {t.languages.map((language, index) => (
+          <button
+            type="button"
+            data-language={language.id}
+            aria-pressed={index === 0 ? 'true' : 'false'}
+            class="ui-seg-btn"
+          >
+            {language.label}
+          </button>
+        ))}
+      </div>
+    </div>
+    <div data-ts-only>
+      <span class="mb-1 block text-sm text-gray-700 dark:text-gray-300">
         {t.styleLabel}
       </span>
       <div
@@ -72,7 +94,7 @@ const t = jsonToTypeScriptContent[locale];
         </button>
       </div>
     </div>
-    <label class="ui-check h-11">
+    <label class="ui-check h-11" data-ts-only>
       <input id="j2ts-export" type="checkbox" class="h-4 w-4" />
       {t.exportLabel}
     </label>
@@ -104,10 +126,8 @@ const t = jsonToTypeScriptContent[locale];
 <script>
   import { copyText } from '../../lib/clipboard';
   import { onTextInput } from '../../lib/input-scheduler';
-  import {
-    jsonToTypeScript,
-    type TypeScriptDeclarationStyle,
-  } from '../../lib/tools/json-to-typescript';
+  import { jsonToCode, type CodeLanguage } from '../../lib/tools/json-to-code';
+  import type { TypeScriptDeclarationStyle } from '../../lib/tools/json-to-types';
 
   const controls = document.getElementById('j2ts-controls')!;
   const input = document.getElementById('j2ts-input') as HTMLTextAreaElement;
@@ -121,6 +141,10 @@ const t = jsonToTypeScriptContent[locale];
   const styleButtons = document
     .getElementById('j2ts-style')!
     .querySelectorAll<HTMLButtonElement>('[data-style]');
+  const languageButtons = document
+    .getElementById('j2ts-language')!
+    .querySelectorAll<HTMLButtonElement>('[data-language]');
+  const tsOnly = controls.querySelectorAll<HTMLElement>('[data-ts-only]');
   const copyButton = document.getElementById('j2ts-copy-button')!;
   const statusEl = document.getElementById('j2ts-status')!;
   const errorEl = document.getElementById('j2ts-error')!;
@@ -132,13 +156,15 @@ const t = jsonToTypeScriptContent[locale];
   };
 
   let style: TypeScriptDeclarationStyle = 'interface';
+  let language: CodeLanguage = 'typescript';
 
   function render() {
     statusEl.textContent = '';
     errorEl.hidden = true;
     errorEl.textContent = '';
 
-    const result = jsonToTypeScript(input.value, {
+    const result = jsonToCode(input.value, {
+      language,
       rootName: rootName.value,
       style,
       exportDeclarations: exportCheck.checked,
@@ -160,6 +186,17 @@ const t = jsonToTypeScriptContent[locale];
       styleButtons.forEach((b) =>
         b.setAttribute('aria-pressed', String(b === button)),
       );
+      render();
+    });
+  });
+
+  languageButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      language = button.dataset.language as CodeLanguage;
+      languageButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === button)),
+      );
+      tsOnly.forEach((el) => (el.hidden = language !== 'typescript'));
       render();
     });
   });

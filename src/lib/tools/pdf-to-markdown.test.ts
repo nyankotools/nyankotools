@@ -469,3 +469,83 @@ describe('レビュー指摘の回帰', () => {
     expect(r.markdown).toContain('2025');
   });
 });
+
+describe('プレーンテキスト出力（format: text）', () => {
+  const TEXT_OPTS: ConvertOptions = { ...OPTS, format: 'text' };
+  const convertText = (pages: PdfPageInput[]) => convert(pages, TEXT_OPTS);
+
+  it('見出しに # を付けず、段落はそのまま出力する', () => {
+    const r = convertText([
+      page([
+        text('Document Title', 72, 750, 24),
+        text('Section One', 72, 700, 18),
+        ...bodyLines(670, 2),
+      ]),
+    ]);
+    expect(r.markdown).not.toContain('#');
+    expect(r.markdown.startsWith('Document Title\n\nSection One\n\n')).toBe(
+      true,
+    );
+  });
+
+  it('太字・斜体や記号をエスケープせずそのまま出す', () => {
+    const r = convertText([
+      page([
+        text('plain ', 72, 750),
+        text('strong', 72 + 6 * 6, 750, 12, { bold: true }),
+        text(' *x* _foo_ [a](b)', 72 + 12 * 6, 750),
+      ]),
+    ]);
+    expect(r.markdown.trim()).toBe('plain strong *x* _foo_ [a](b)');
+  });
+
+  it('段落全体が太字でも ** を付けない', () => {
+    const r = convertText([
+      page([
+        text('This whole paragraph is bold and continues', 72, 750, 12, {
+          bold: true,
+        }),
+        text('onto a second line, which is also bold.', 72, 732, 12, {
+          bold: true,
+        }),
+      ]),
+    ]);
+    expect(r.markdown.trim()).toBe(
+      'This whole paragraph is bold and continues onto a second line, which is also bold.',
+    );
+  });
+
+  it('箇条書きは行頭の記号を保つ', () => {
+    const r = convertText([
+      page([
+        text('・りんご', 72, 750),
+        text('・みかん', 72, 732),
+        text('1. first', 72, 700),
+        text('2. second', 72, 682),
+      ]),
+    ]);
+    expect(r.markdown.trim()).toBe(
+      ['- りんご', '- みかん', '1. first', '2. second'].join('\n'),
+    );
+  });
+
+  it('表はタブ区切りの行にする', () => {
+    const r = convertText([
+      page([
+        text('Name', 72, 700),
+        text('Qty', 250, 700),
+        text('Price', 400, 700),
+        text('Apple', 72, 680),
+        text('3', 250, 680),
+        text('120', 400, 680),
+      ]),
+    ]);
+    expect(r.tableCount).toBe(1);
+    expect(r.markdown).toBe('Name\tQty\tPrice\nApple\t3\t120\n');
+  });
+
+  it('format を省略すると Markdown になる', () => {
+    const r = convert([page([text('_foo_ and [a](b)', 72, 700)])]);
+    expect(r.markdown.trim()).toBe(String.raw`\_foo\_ and [a\](b)`);
+  });
+});

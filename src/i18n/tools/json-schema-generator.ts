@@ -55,7 +55,7 @@ export const jsonSchemaGeneratorContent: Record<
       'JSONのサンプルからJSON Schema（draft 2020-12 / 2019-09 / 07）を自動生成する無料ツールです。required・additionalProperties・日付やメールのformat推測に対応。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'JSON Schema生成',
     introHtml:
-      'JSONのサンプルを貼り付けると、その形に合う JSON Schema を生成します。APIレスポンスやデータファイルの検証用スキーマの下書きに便利です。配列内のオブジェクトは1つのスキーマに統合し、一部の要素にしかないキーは <code>required</code> から外します。型定義が欲しい場合は <a href="/tools/json-to-typescript/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON→TypeScript型生成</a> をご利用ください。',
+      'JSONのサンプルを貼り付けると、その形に合う JSON Schema を生成します。APIレスポンスやデータファイルの検証用スキーマの下書きに便利です。配列内のオブジェクトは1つのスキーマに統合し、一部の要素にしかないキーは <code>required</code> から外します。型定義が欲しい場合は <a href="/tools/json-to-types/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON→TypeScript型生成</a> をご利用ください。',
     inputLabel: 'JSON',
     inputPlaceholder: '{"id": 1, "name": "Taro", "tags": ["a", "b"]}',
     sampleText,
@@ -110,7 +110,7 @@ export const jsonSchemaGeneratorContent: Record<
       'Generate a JSON Schema (draft 2020-12, 2019-09, or 07) from a JSON sample, with required keys and format detection. Runs in your browser; nothing is uploaded.',
     h1: 'JSON Schema Generator',
     introHtml:
-      'Paste a JSON sample and get a matching JSON Schema. Useful as a starting point for validating API responses or data files. Objects inside arrays are merged into one schema, and keys found in only some items are left out of <code>required</code>. If you want type definitions instead, try the <a href="/en/tools/json-to-typescript/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON to TypeScript Converter</a>.',
+      'Paste a JSON sample and get a matching JSON Schema. Useful as a starting point for validating API responses or data files. Objects inside arrays are merged into one schema, and keys found in only some items are left out of <code>required</code>. If you want type definitions instead, try the <a href="/en/tools/json-to-types/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">JSON to TypeScript Converter</a>.',
     inputLabel: 'JSON',
     inputPlaceholder: '{"id": 1, "name": "Taro", "tags": ["a", "b"]}',
     sampleText,

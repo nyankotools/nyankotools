@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { jsonToTypeScript, toPascalCase } from './json-to-typescript';
+import { jsonToTypeScript, toPascalCase } from './json-to-types';
 
 function gen(input: string, options = {}): string {
   const result = jsonToTypeScript(input, options);

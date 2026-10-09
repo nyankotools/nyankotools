@@ -152,7 +152,7 @@ describe('tools registry - flags', () => {
       'url-encode',
       'json-path-tester',
       'curl-converter',
-      'json-to-typescript',
+      'json-to-types',
       'json-diff',
       'image-converter',
       'heic-converter',

@@ -14,6 +14,7 @@ const modes = [
   { id: 'stopwatch', label: t.modeStopwatch },
   { id: 'timer', label: t.modeTimer },
   { id: 'pomodoro', label: t.modePomodoro },
+  { id: 'challenge', label: t.modeChallenge },
 ];
 ---
 
@@ -22,6 +23,7 @@ const modes = [
     id="ts"
     data-labels={JSON.stringify({
       start: t.startButton,
+      stop: t.stopButton,
       pause: t.pauseButton,
       resume: t.resumeButton,
       lapNumber: t.lapNumber,
@@ -31,10 +33,16 @@ const modes = [
       phases: t.phaseLabels,
       roundsDone: t.roundsDone,
       phaseFinished: t.phaseFinished,
+      challengeHint: t.challengeHint,
+      invalidTarget: t.invalidTarget,
+      challengeResult: t.challengeResult,
+      judges: t.judgeLabels,
+      bestText: t.bestText,
       modes: {
         stopwatch: t.modeStopwatch,
         timer: t.modeTimer,
         pomodoro: t.modePomodoro,
+        challenge: t.modeChallenge,
       },
     })}
   >
@@ -140,6 +148,30 @@ const modes = [
       </div>
     </div>
 
+    <div id="ts-panel-challenge" class="mt-4 hidden">
+      <div class="flex flex-wrap items-end justify-center gap-4">
+        <div>
+          <label for="ts-target" class="ui-label">
+            {t.targetLabel}
+          </label>
+          <input
+            id="ts-target"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="60"
+            step="1"
+            value="10"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <label class="ui-check">
+          <input id="ts-hide" type="checkbox" checked />
+          {t.hideCountLabel}
+        </label>
+      </div>
+    </div>
+
     <fieldset
       id="ts-panel-pomodoro"
       class="mt-4 hidden rounded-lg border border-gray-200 p-3 dark:border-gray-700"
@@ -230,6 +262,33 @@ const modes = [
       </button>
     </div>
 
+    <div id="ts-attempts-wrap" class="mt-6 hidden">
+      <h2 class="mb-1 text-lg font-semibold">{t.attemptHeading}</h2>
+      <p id="ts-best" class="mb-2 text-sm text-gray-700 dark:text-gray-300"></p>
+      <table class="w-full text-left text-sm tabular-nums">
+        <thead>
+          <tr class="border-b border-gray-200 dark:border-gray-700">
+            <th scope="col" class="py-1 pr-3 font-medium">
+              #
+            </th>
+            <th scope="col" class="py-1 pr-3 font-medium">
+              {t.attemptTargetLabel}
+            </th>
+            <th scope="col" class="py-1 pr-3 font-medium">
+              {t.attemptTimeLabel}
+            </th>
+            <th scope="col" class="py-1 pr-3 font-medium">
+              {t.attemptDiffLabel}
+            </th>
+            <th scope="col" class="py-1 font-medium">
+              {t.attemptJudgeLabel}
+            </th>
+          </tr>
+        </thead>
+        <tbody id="ts-attempts"></tbody>
+      </table>
+    </div>
+
     <div id="ts-laps-wrap" class="mt-6 hidden">
       <h2 class="mb-2 text-lg font-semibold">{t.lapHeading}</h2>
       <table class="w-full text-left text-sm tabular-nums">
@@ -256,22 +315,32 @@ const modes = [
   import { fill } from '../../lib/format-template';
   import {
     DEFAULT_POMODORO,
+    bestChallengeIndex,
+    challengeDiffMs,
+    challengeTargetMs,
     durationFromParts,
     elapsedMs,
+    formatDiffSeconds,
     formatDuration,
+    judgeChallenge,
     nextPomodoroPhase,
     phaseDuration,
     remainingMs,
     validatePomodoro,
+    type ChallengeJudge,
     type PomodoroPhase,
     type PomodoroSettings,
   } from '../../lib/tools/timer-stopwatch';
 
-  type Mode = 'stopwatch' | 'timer' | 'pomodoro';
+  type Mode = 'stopwatch' | 'timer' | 'pomodoro' | 'challenge';
+
+  /** カウントを隠している間の表示 */
+  const HIDDEN_DISPLAY = '??:??.??';
 
   const root = document.getElementById('ts')!;
   const labels = JSON.parse(root.dataset.labels ?? '{}') as {
     start: string;
+    stop: string;
     pause: string;
     resume: string;
     lapNumber: string;
@@ -281,6 +350,11 @@ const modes = [
     phases: Record<PomodoroPhase, string>;
     roundsDone: string;
     phaseFinished: string;
+    challengeHint: string;
+    invalidTarget: string;
+    challengeResult: string;
+    judges: Record<ChallengeJudge, string>;
+    bestText: string;
     modes: Record<Mode, string>;
   };
 
@@ -296,6 +370,12 @@ const modes = [
   const resetButton = $('ts-reset-button');
   const timerPanel = $('ts-panel-timer');
   const pomodoroPanel = $('ts-panel-pomodoro');
+  const challengePanel = $('ts-panel-challenge');
+  const targetInput = $<HTMLInputElement>('ts-target');
+  const hideCount = $<HTMLInputElement>('ts-hide');
+  const attemptsWrap = $('ts-attempts-wrap');
+  const attemptsBody = $('ts-attempts');
+  const bestEl = $('ts-best');
   const lapsWrap = $('ts-laps-wrap');
   const lapsBody = $('ts-laps');
   const sound = $<HTMLInputElement>('ts-sound');
@@ -330,6 +410,14 @@ const modes = [
     remaining: null as number | null,
   };
 
+  /** startedAt は計測中の開始時刻。shown は止めた直後に表示する記録（ミリ秒） */
+  const challenge = {
+    startedAt: null as number | null,
+    targetMs: 0,
+    shown: null as number | null,
+    attempts: [] as { targetMs: number; elapsed: number; diff: number }[],
+  };
+
   let mode: Mode = 'stopwatch';
   let intervalId: number | undefined;
   let audioContext: AudioContext | null = null;
@@ -352,12 +440,18 @@ const modes = [
     return validatePomodoro(s) ? s : null;
   }
 
+  function readChallengeTarget(): number | null {
+    return challengeTargetMs(Number(targetInput.value));
+  }
+
   function isRunning(m: Mode): boolean {
     return m === 'stopwatch'
       ? stopwatch.startedAt !== null
       : m === 'timer'
         ? timer.endAt !== null
-        : pomodoro.endAt !== null;
+        : m === 'pomodoro'
+          ? pomodoro.endAt !== null
+          : challenge.startedAt !== null;
   }
 
   // --- アラーム音 ---
@@ -425,6 +519,13 @@ const modes = [
       return formatDuration(
         Math.ceil(currentRemaining(timer, timerIdle()) / 1000) * 1000,
       );
+    if (mode === 'challenge') {
+      if (challenge.startedAt === null)
+        return formatDuration(challenge.shown ?? 0, true);
+      return hideCount.checked
+        ? HIDDEN_DISPLAY
+        : formatDuration(now() - challenge.startedAt, true);
+    }
     return formatDuration(
       Math.ceil(currentRemaining(pomodoro, pomodoroIdle()) / 1000) * 1000,
     );
@@ -451,6 +552,52 @@ const modes = [
     lapsWrap.classList.toggle('hidden', stopwatch.laps.length === 0);
   }
 
+  function renderAttempts() {
+    attemptsBody.replaceChildren();
+    const best = bestChallengeIndex(challenge.attempts.map((a) => a.diff));
+    challenge.attempts.forEach((attempt, i) => {
+      const tr = document.createElement('tr');
+      tr.className = 'border-b border-gray-100 dark:border-gray-800';
+      if (i === best) tr.classList.add('font-semibold');
+      const judge = labels.judges[judgeChallenge(attempt.diff)];
+      [
+        String(i + 1),
+        secondsText(attempt.targetMs),
+        secondsText(attempt.elapsed),
+        formatDiffSeconds(attempt.diff),
+        judge,
+      ].forEach((text, col) => {
+        const cell = document.createElement(col === 0 ? 'th' : 'td');
+        if (col === 0) cell.setAttribute('scope', 'row');
+        cell.className = col === 4 ? 'py-1' : 'py-1 pr-3';
+        cell.textContent = text;
+        tr.append(cell);
+      });
+      attemptsBody.prepend(tr);
+    });
+    bestEl.textContent =
+      best < 0
+        ? ''
+        : fill(labels.bestText, {
+            n: String(best + 1),
+            diff: formatDiffSeconds(challenge.attempts[best].diff),
+          });
+    attemptsWrap.classList.toggle('hidden', challenge.attempts.length === 0);
+  }
+
+  /** ミリ秒を「9.87」のような秒表記にする（1/100秒未満は切り捨て） */
+  function secondsText(ms: number): string {
+    return (Math.floor(ms / 10) / 100).toFixed(2);
+  }
+
+  function showChallengeHint() {
+    const target = readChallengeTarget();
+    messageEl.textContent =
+      target === null
+        ? ''
+        : fill(labels.challengeHint, { target: String(target / 1000) });
+  }
+
   function renderStatic() {
     const running = isRunning(mode);
     const paused =
@@ -458,12 +605,16 @@ const modes = [
       (mode === 'timer' && !running && timer.remaining !== null) ||
       (mode === 'pomodoro' && !running && pomodoro.remaining !== null);
     mainButton.textContent = running
-      ? labels.pause
+      ? mode === 'challenge'
+        ? labels.stop
+        : labels.pause
       : paused
         ? labels.resume
         : labels.start;
     timerPanel.classList.toggle('hidden', mode !== 'timer');
     pomodoroPanel.classList.toggle('hidden', mode !== 'pomodoro');
+    challengePanel.classList.toggle('hidden', mode !== 'challenge');
+    sound.closest('label')?.classList.toggle('hidden', mode === 'challenge');
     lapButton.classList.toggle('hidden', mode !== 'stopwatch');
     lapButton.toggleAttribute('disabled', !running);
     skipButton.classList.toggle('hidden', mode !== 'pomodoro');
@@ -477,6 +628,7 @@ const modes = [
         ? `${labels.phases[pomodoro.phase]} ・ ${fill(labels.roundsDone, { n: String(pomodoro.completedWork) })}`
         : '';
     renderLaps();
+    renderAttempts();
   }
 
   function renderDisplay() {
@@ -527,7 +679,8 @@ const modes = [
     if (
       !isRunning('stopwatch') &&
       !isRunning('timer') &&
-      !isRunning('pomodoro')
+      !isRunning('pomodoro') &&
+      !isRunning('challenge')
     ) {
       window.clearInterval(intervalId);
       intervalId = undefined;
@@ -554,6 +707,15 @@ const modes = [
       }
       timer.endAt = t0 + duration;
       timer.remaining = null;
+    } else if (mode === 'challenge') {
+      const targetMs = readChallengeTarget();
+      if (targetMs === null) {
+        errorEl.textContent = labels.invalidTarget;
+        return;
+      }
+      challenge.targetMs = targetMs;
+      challenge.shown = null;
+      challenge.startedAt = t0;
     } else {
       const settings = readPomodoro();
       if (!settings) {
@@ -565,6 +727,26 @@ const modes = [
       pomodoro.remaining = null;
     }
     ensureTicking();
+    render();
+  }
+
+  /** ぴったりチャレンジを止めて記録する */
+  function stopChallenge() {
+    if (challenge.startedAt === null) return;
+    const elapsed = now() - challenge.startedAt;
+    const diff = challengeDiffMs(elapsed, challenge.targetMs);
+    challenge.startedAt = null;
+    challenge.shown = Math.floor(elapsed / 10) * 10;
+    challenge.attempts.push({
+      targetMs: challenge.targetMs,
+      elapsed: challenge.shown,
+      diff,
+    });
+    messageEl.textContent = fill(labels.challengeResult, {
+      time: secondsText(elapsed),
+      diff: formatDiffSeconds(diff),
+      judge: labels.judges[judgeChallenge(diff)],
+    });
     render();
   }
 
@@ -597,6 +779,11 @@ const modes = [
     } else if (mode === 'timer') {
       timer.endAt = null;
       timer.remaining = null;
+    } else if (mode === 'challenge') {
+      challenge.startedAt = null;
+      challenge.shown = null;
+      challenge.attempts = [];
+      showChallengeHint();
     } else {
       pomodoro.endAt = null;
       pomodoro.remaining = null;
@@ -607,7 +794,8 @@ const modes = [
   }
 
   mainButton.addEventListener('click', () => {
-    if (isRunning(mode)) pause();
+    if (mode === 'challenge' && isRunning(mode)) stopChallenge();
+    else if (isRunning(mode)) pause();
     else start();
   });
   resetButton.addEventListener('click', reset);
@@ -648,6 +836,8 @@ const modes = [
       mode = b.dataset.mode as Mode;
       errorEl.textContent = '';
       messageEl.textContent = '';
+      if (mode === 'challenge' && !isRunning(mode) && challenge.shown === null)
+        showChallengeHint();
       render();
     }),
   );
@@ -671,6 +861,16 @@ const modes = [
       renderStatic();
     }),
   );
+  targetInput.addEventListener('input', () => {
+    errorEl.textContent = '';
+    if (challenge.startedAt === null) {
+      challenge.shown = null;
+      // 入力保持の復元でも発火するため、チャレンジ以外のモードではヒントを出さない
+      if (mode === 'challenge') showChallengeHint();
+      renderDisplay();
+    }
+  });
+  hideCount.addEventListener('change', renderDisplay);
   Object.values(pomodoroInputs).forEach((el) =>
     el.addEventListener('input', () => {
       if (pomodoro.endAt === null) pomodoro.remaining = null;

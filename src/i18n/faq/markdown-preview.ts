@@ -10,7 +10,7 @@ export const faq: FaqContent = {
     {
       question: 'HTMLからMarkdownへの変換もできますか？',
       answer:
-        'はい。HTMLを貼り付けるとMarkdownに変換できます。複雑なレイアウトや装飾は完全には再現できない場合があるため、変換後の内容を確認してください。',
+        'はい。「HTML→Markdown」に切り替えてHTMLを貼り付けると、見出し・リスト・リンク・コードブロック・表をMarkdownに変換できます。見出しや箇条書きの書式、画像・リンクの除去も選べます。複雑なレイアウトや装飾は完全には再現できない場合があるため、変換後の内容を確認してください。',
     },
     {
       question: 'GitHubのREADMEと同じ表示になりますか？',
@@ -27,7 +27,7 @@ export const faq: FaqContent = {
     {
       question: 'Can it convert HTML back to Markdown?',
       answer:
-        'Yes. Paste HTML to get Markdown. Complex layouts or styling may not convert perfectly, so review the result.',
+        'Yes. Switch to "HTML to Markdown" and paste HTML to convert headings, lists, links, code blocks and tables. You can also pick the heading and bullet style, or strip images and links. Complex layouts or styling may not convert perfectly, so review the result.',
     },
     {
       question: 'Will it look identical to a GitHub README?',

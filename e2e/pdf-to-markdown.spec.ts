@@ -103,6 +103,50 @@ for (const [locale, base] of [
       await expect(page.locator('#md-output')).not.toHaveValue(/\| Apple/);
     });
 
+    test('プレーンテキストに切り替えると記号なしのテキストを.txtで保存できる', async ({
+      page,
+    }) => {
+      await page.goto(base);
+      await page.locator('#md-file').setInputFiles({
+        name: 'report.pdf',
+        mimeType: 'application/pdf',
+        buffer: await createTestPdf(),
+      });
+      const output = page.locator('#md-output');
+      await expect(output).toHaveValue(/# Quarterly Report/);
+      await page.locator('[data-format="text"]').click();
+      await expect(output).toHaveValue(/Quarterly Report/);
+      const text = await output.inputValue();
+      expect(text).not.toContain('#');
+      expect(text).not.toContain('|');
+      expect(text).toContain('Item	Qty	Price');
+      expect(text).toContain('Apple	3	120');
+      const [download] = await Promise.all([
+        page.waitForEvent('download'),
+        page.locator('#md-download').click(),
+      ]);
+      expect(download.suggestedFilename()).toBe('report.txt');
+    });
+
+    test('プレーンテキストの表示でも375pxで横スクロールが出ない', async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: 375, height: 800 });
+      await page.goto(base);
+      await page.locator('#md-file').setInputFiles({
+        name: 'report.pdf',
+        mimeType: 'application/pdf',
+        buffer: await createTestPdf(),
+      });
+      await expect(page.locator('#md-output')).toHaveValue(/Quarterly/);
+      await page.locator('[data-format="text"]').click();
+      await expect(page.locator('#md-output')).toHaveValue(/Apple\t3\t120/);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth > window.innerWidth + 1,
+      );
+      expect(overflow).toBe(false);
+    });
+
     test('文字のないPDFは警告を表示する', async ({ page }) => {
       await page.goto(base);
       await page.locator('#md-file').setInputFiles({

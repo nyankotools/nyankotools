@@ -145,7 +145,8 @@ test.describe('media-converter', () => {
     await page.locator('#mc-file-input').setInputFiles({
       name: 'tone.wav',
       mimeType: 'audio/wav',
-      buffer: createWav(3),
+      // 短い音声だとキャンセルのクリック前に変換が終わってしまうため、十分長くする
+      buffer: createWav(300),
     });
     await expect(page.locator('#mc-convert-button')).toBeEnabled();
     // MP3への変換を開始（時間がかかる）
@@ -156,6 +157,78 @@ test.describe('media-converter', () => {
     // キャンセルボタンをクリック
     await page.locator('#mc-cancel-button').click();
     // キャンセル処理完了を待つ（キャンセルボタンが hidden になる）
+    await expect(page.locator('#mc-cancel-button')).toBeHidden({
+      timeout: 30000,
+    });
+    // キャンセルエラーが表示されることを確認
+    await expect(page.locator('#mc-error')).toBeVisible();
+    await expect(page.locator('#mc-error')).toContainText(/キャンセル|Cancel/);
+  });
+
+  test('キャンセル後はボタン状態が復帰し、再変換ができる', async ({ page }) => {
+    await page.goto(PATH);
+    await page.locator('#mc-file-input').setInputFiles({
+      name: 'tone.wav',
+      mimeType: 'audio/wav',
+      buffer: createWav(300),
+    });
+    // 最初の変換をキャンセル
+    await page.locator('#mc-format').selectOption('mp3');
+    await page.locator('#mc-convert-button').click();
+    await expect(page.locator('#mc-cancel-button')).toBeVisible();
+    await page.locator('#mc-cancel-button').click();
+    await expect(page.locator('#mc-cancel-button')).toBeHidden({
+      timeout: 30000,
+    });
+    // ボタン状態が復帰したことを確認
+    await expect(page.locator('#mc-convert-button')).toBeEnabled();
+    // フォーマットセレクタが再び操作可能であることを確認
+    await expect(page.locator('#mc-format')).toBeEnabled();
+    // 再度変換を試みる（WAVに変更）
+    await page.locator('#mc-format').selectOption('wav');
+    await page.locator('#mc-convert-button').click();
+    await expect(page.locator('#mc-results-section')).toBeVisible({
+      timeout: 30000,
+    });
+    await expect(page.locator('#mc-error')).toBeHidden();
+  });
+
+  test('m4aフォーマットのキャンセルが正常に動作する', async ({ page }) => {
+    await page.goto(PATH);
+    await page.locator('#mc-file-input').setInputFiles({
+      name: 'tone.wav',
+      mimeType: 'audio/wav',
+      buffer: createWav(300),
+    });
+    // m4aへの変換を開始
+    await page.locator('#mc-format').selectOption('m4a');
+    await page.locator('#mc-convert-button').click();
+    await expect(page.locator('#mc-cancel-button')).toBeVisible();
+    // キャンセルボタンをクリック
+    await page.locator('#mc-cancel-button').click();
+    // キャンセル処理完了を待つ
+    await expect(page.locator('#mc-cancel-button')).toBeHidden({
+      timeout: 30000,
+    });
+    // キャンセルエラーが表示されることを確認
+    await expect(page.locator('#mc-error')).toBeVisible();
+    await expect(page.locator('#mc-error')).toContainText(/キャンセル|Cancel/);
+  });
+
+  test('OGGフォーマットのキャンセルが正常に動作する', async ({ page }) => {
+    await page.goto(PATH);
+    await page.locator('#mc-file-input').setInputFiles({
+      name: 'tone.wav',
+      mimeType: 'audio/wav',
+      buffer: createWav(300),
+    });
+    // OGGへの変換を開始
+    await page.locator('#mc-format').selectOption('ogg');
+    await page.locator('#mc-convert-button').click();
+    await expect(page.locator('#mc-cancel-button')).toBeVisible();
+    // キャンセルボタンをクリック
+    await page.locator('#mc-cancel-button').click();
+    // キャンセル処理完了を待つ
     await expect(page.locator('#mc-cancel-button')).toBeHidden({
       timeout: 30000,
     });

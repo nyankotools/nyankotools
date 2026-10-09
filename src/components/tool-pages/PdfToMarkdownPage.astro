@@ -38,6 +38,30 @@ const options = [
     class="mt-2 text-sm break-all text-gray-700 dark:text-gray-300"
   ></p>
 
+  <div class="mt-4">
+    <span class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.formatLabel}
+    </span>
+    <div id="md-format" class="ui-seg" role="group" aria-label={t.formatLabel}>
+      <button
+        type="button"
+        data-format="markdown"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.formatMarkdown}
+      </button>
+      <button
+        type="button"
+        data-format="text"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.formatText}
+      </button>
+    </div>
+  </div>
+
   <fieldset class="mt-4">
     <legend class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
       {t.optionsLabel}
@@ -98,7 +122,7 @@ const options = [
       class="mb-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300"
     ></p>
     <label for="md-output" class="ui-label">
-      {t.markdownLabel}
+      {t.outputLabel}
     </label>
     <textarea
       id="md-output"
@@ -116,7 +140,13 @@ const options = [
       >
         {t.copy}
       </button>
-      <button id="md-download" type="button" class={buttonClass}>
+      <button
+        id="md-download"
+        type="button"
+        data-markdown={t.download}
+        data-text={t.downloadText}
+        class={buttonClass}
+      >
         {t.download}
       </button>
       <span
@@ -148,6 +178,8 @@ const options = [
     document.getElementById(id) as T;
   const fileInput = $<HTMLInputElement>('md-file');
   const info = $('md-info');
+  const formatButtons =
+    $('md-format').querySelectorAll<HTMLButtonElement>('[data-format]');
   const optHeaderFooter = $<HTMLInputElement>('md-opt-header-footer');
   const optTables = $<HTMLInputElement>('md-opt-tables');
   const optSeparator = $<HTMLInputElement>('md-opt-separator');
@@ -168,6 +200,7 @@ const options = [
   let pdfName = '';
   /** 抽出済みのテキスト片。オプション変更時に PDF を再解析しないよう保持する */
   let extracted: PdfPageInput[] | null = null;
+  let format: 'markdown' | 'text' = 'markdown';
   let running = false;
   /** 新しいファイル選択が始まったら、古い抽出結果を捨てるための連番 */
   let loadId = 0;
@@ -284,6 +317,7 @@ const options = [
       removeHeaderFooter: optHeaderFooter.checked,
       detectTables: optTables.checked,
       pageSeparator: optSeparator.checked,
+      format,
     });
     output.value = result.markdown;
     stats.textContent = (stats.dataset.template ?? '')
@@ -368,6 +402,20 @@ const options = [
     opt.addEventListener('change', render);
   }
 
+  formatButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      format = button.dataset.format === 'text' ? 'text' : 'markdown';
+      formatButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === button)),
+      );
+      downloadButton.textContent =
+        (format === 'text'
+          ? downloadButton.dataset.text
+          : downloadButton.dataset.markdown) ?? '';
+      render();
+    });
+  });
+
   clearButton.addEventListener('click', () => {
     loadId++;
     runButton.disabled = false;
@@ -391,9 +439,14 @@ const options = [
 
   downloadButton.addEventListener('click', () => {
     if (!output.value) return;
+    const isText = format === 'text';
     downloadBlob(
-      new Blob([output.value], { type: 'text/markdown;charset=utf-8' }),
-      `${pdfName.replace(/\.[^.]+$/, '') || 'document'}.md`,
+      new Blob([output.value], {
+        type: isText
+          ? 'text/plain;charset=utf-8'
+          : 'text/markdown;charset=utf-8',
+      }),
+      `${pdfName.replace(/\.[^.]+$/, '') || 'document'}.${isText ? 'txt' : 'md'}`,
     );
   });
 </script>

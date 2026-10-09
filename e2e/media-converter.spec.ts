@@ -195,6 +195,18 @@ test.describe('media-converter', () => {
 
   test('m4aフォーマットのキャンセルが正常に動作する', async ({ page }) => {
     await page.goto(PATH);
+    // CIのLinux ChromiumにはAACエンコーダがなく、変換が即エラーになってキャンセルを試せない
+    const aacSupported = await page.evaluate(async () => {
+      if (typeof AudioEncoder === 'undefined') return false;
+      const r = await AudioEncoder.isConfigSupported({
+        codec: 'mp4a.40.2',
+        sampleRate: 44100,
+        numberOfChannels: 2,
+        bitrate: 128000,
+      });
+      return r.supported === true;
+    });
+    test.skip(!aacSupported, 'このブラウザはAACエンコードに対応していません');
     await page.locator('#mc-file-input').setInputFiles({
       name: 'tone.wav',
       mimeType: 'audio/wav',

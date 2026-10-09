@@ -29,6 +29,11 @@ export interface ConvertOptions {
   detectTables: boolean;
   /** ページの境目に水平線（---）を入れる */
   pageSeparator: boolean;
+  /**
+   * 出力形式。'text' は見出し・段落・リストの構造（読み順・折り返しの結合・ヘッダー除去）はそのままに、
+   * Markdown の記号（#・**・エスケープ）を付けないプレーンテキストにする。表はタブ区切り。省略時は 'markdown'
+   */
+  format?: 'markdown' | 'text';
 }
 
 export interface ConvertResult {
@@ -83,6 +88,8 @@ interface Context {
   headingSizes: number[];
   regions: Map<string, RegionMetrics>;
   detectTables: boolean;
+  /** Markdown の記号を付けないプレーンテキストで出力する */
+  plain: boolean;
 }
 
 /** これ以上空くと別セグメント（表の列間など）とみなす間隔（em） */
@@ -370,6 +377,7 @@ function clusterSizes(sizes: number[]): number[] {
 function buildContext(
   pages: { lines: Line[] }[],
   detectTables: boolean,
+  plain: boolean,
 ): Context | null {
   const all = pages.flatMap((p) => p.lines);
   if (all.length === 0) return null;
@@ -423,6 +431,7 @@ function buildContext(
     headingSizes,
     regions,
     detectTables,
+    plain,
   };
 }
 
@@ -437,7 +446,13 @@ function escapeText(s: string): string {
     .replace(/\]\(/g, '\\](');
 }
 
-function renderRuns(runs: Run[], withStyle: boolean, inTable = false): string {
+function renderRuns(
+  runs: Run[],
+  withStyle: boolean,
+  inTable = false,
+  plain = false,
+): string {
+  if (plain) return plainOf(runs);
   let out = '';
   for (const run of runs) {
     let text = escapeText(run.text);
@@ -484,12 +499,16 @@ function joinPieces(pieces: Piece[]): string {
   return out;
 }
 
-function pieceOf(line: Line, withStyle: boolean): Piece {
+function pieceOf(line: Line, withStyle: boolean, plain = false): Piece {
   const runs = lineRuns(line);
-  return { md: renderRuns(runs, withStyle), plain: plainOf(runs).trim() };
+  return {
+    md: renderRuns(runs, withStyle, false, plain),
+    plain: plainOf(runs).trim(),
+  };
 }
 
-function renderParagraph(lines: Line[]): string {
+function renderParagraph(lines: Line[], plain: boolean): string {
+  if (plain) return joinPieces(lines.map((l) => pieceOf(l, false, true)));
   const allBold = lines.every((l) => l.bold);
   const text = joinPieces(lines.map((l) => pieceOf(l, !allBold)));
   return allBold ? `**${text}**` : escapeLineStart(text);
@@ -617,6 +636,12 @@ function numberedHeadingLevel(text: string, ctx: Context): number {
   return Math.min(base + depth - 1, MAX_HEADING_LEVEL);
 }
 
+/** 見出し行。Markdown では「#」を付け、プレーンテキストでは文字だけにする */
+function headingText(level: number, runs: Run[], ctx: Context): string {
+  const text = renderRuns(runs, false, false, ctx.plain);
+  return ctx.plain ? text : `${'#'.repeat(level)} ${text}`;
+}
+
 function flushAccumulator(acc: Accumulator, ctx: Context, blocks: Block[]) {
   if (acc.type === 'p') {
     const first = acc.lines[0];
@@ -633,20 +658,23 @@ function flushAccumulator(acc: Accumulator, ctx: Context, blocks: Block[]) {
             );
         blocks.push({
           type: 'heading',
-          text: `${'#'.repeat(level)} ${renderRuns(lineRuns(first), false)}`,
+          text: headingText(level, lineRuns(first), ctx),
         });
         return;
       }
     }
-    blocks.push({ type: 'p', text: renderParagraph(acc.lines) });
+    blocks.push({ type: 'p', text: renderParagraph(acc.lines, ctx.plain) });
     return;
   }
   const marker = acc.marker!;
   const [first, ...rest] = acc.lines;
   const firstRuns = stripPrefix(lineRuns(first), marker.length);
   const pieces: Piece[] = [
-    { md: renderRuns(firstRuns, true), plain: plainOf(firstRuns).trim() },
-    ...rest.map((l) => pieceOf(l, true)),
+    {
+      md: renderRuns(firstRuns, true, false, ctx.plain),
+      plain: plainOf(firstRuns).trim(),
+    },
+    ...rest.map((l) => pieceOf(l, true, ctx.plain)),
   ];
   const indent = '    '.repeat(acc.level ?? 0);
   blocks.push({
@@ -726,7 +754,7 @@ function findTable(
     for (const seg of l.segments) {
       let idx = columns.findIndex(([a, b]) => seg.x0 < b && seg.x1 > a);
       if (idx < 0) idx = 0;
-      const text = renderRuns(seg.runs, rowIndex > 0, true).trim();
+      const text = renderRuns(seg.runs, rowIndex > 0, true, ctx.plain).trim();
       cells[idx] = cells[idx] ? `${cells[idx]} ${text}` : text;
     }
     return cells;
@@ -736,11 +764,13 @@ function findTable(
   if (filled.length < 2) return null;
 
   const format = (cells: string[]) => `| ${cells.join(' | ')} |`;
-  const text = [
-    format(rows[0]),
-    format(columns.map(() => '---')),
-    ...rows.slice(1).map(format),
-  ].join('\n');
+  const text = ctx.plain
+    ? rows.map((cells) => cells.join('\t')).join('\n')
+    : [
+        format(rows[0]),
+        format(columns.map(() => '---')),
+        ...rows.slice(1).map(format),
+      ].join('\n');
   return { end, text };
 }
 
@@ -779,7 +809,7 @@ function buildBlocks(
     if (level > 0) {
       flush();
       listStack = [];
-      const text = renderRuns(lineRuns(line), false);
+      const text = renderRuns(lineRuns(line), false, false, ctx.plain);
       const last = blocks[blocks.length - 1];
       // 折り返された長い見出しは1つにまとめる
       if (
@@ -793,7 +823,10 @@ function buildBlocks(
         last.text +=
           isCjk(last.text.slice(-1)) || isCjk(text[0]) ? text : ` ${text}`;
       } else {
-        blocks.push({ type: 'heading', text: `${'#'.repeat(level)} ${text}` });
+        blocks.push({
+          type: 'heading',
+          text: ctx.plain ? text : `${'#'.repeat(level)} ${text}`,
+        });
       }
       lastHeading = { level, line };
       i++;
@@ -928,7 +961,11 @@ export function convertPagesToMarkdown(
   if (charCount === 0) return empty;
 
   if (options.removeHeaderFooter) stripHeaderFooter(pageLines);
-  const ctx = buildContext(pageLines, options.detectTables);
+  const ctx = buildContext(
+    pageLines,
+    options.detectTables,
+    options.format === 'text',
+  );
   if (!ctx) return { ...empty, charCount };
 
   let tableCount = 0;

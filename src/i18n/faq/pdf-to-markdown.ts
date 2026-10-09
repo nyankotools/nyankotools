@@ -3,6 +3,11 @@ import type { FaqContent } from '../faq';
 export const faq: FaqContent = {
   ja: [
     {
+      question: 'PDFからテキストだけを取り出せますか？',
+      answer:
+        'はい。出力形式で「プレーンテキスト」を選ぶと、Markdownの記号（#や**など）を付けずに文字だけを出力し、.txtでダウンロードできます。読み順や折り返しの結合、ヘッダー・フッターの除去はMarkdownのときと同じです。表はタブ区切りになります。',
+    },
+    {
       question: 'スキャンしたPDFも変換できますか？',
       answer:
         'できません。文字情報を持つPDFが対象で、スキャン画像だけのPDFはOCRが必要なため変換できません。',
@@ -19,6 +24,11 @@ export const faq: FaqContent = {
     },
   ],
   en: [
+    {
+      question: 'Can I extract just the text from a PDF?',
+      answer:
+        'Yes. Choose "Plain text" as the output format to get only the words, without Markdown symbols such as # or **, and download it as .txt. Reading order, joining of wrapped lines, and header/footer removal work the same as in Markdown. Tables become tab-separated rows.',
+    },
     {
       question: 'Can scanned PDFs be converted?',
       answer:

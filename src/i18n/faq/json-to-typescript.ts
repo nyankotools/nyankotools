@@ -3,6 +3,16 @@ import type { FaqContent } from '../faq';
 export const faq: FaqContent = {
   ja: [
     {
+      question: 'TypeScript以外にどの言語の型を生成できますか？',
+      answer:
+        'C#（クラス）、Go（構造体とjsonタグ）、Python（dataclass）、Java（record）に対応しています。出力する言語は画面上のボタンで切り替えます。どの言語でも、ネストしたオブジェクトは別の型として切り出します。',
+    },
+    {
+      question: '数値は整数と小数をどう区別しますか？',
+      answer:
+        'TypeScript以外の言語では、サンプルの値に小数点があれば小数（double / float64 / float）、なければ整数（long / int64 / int）にします。配列内で整数と小数が混在する場合は小数として扱います。サンプルでは整数でも実際は小数になる項目は手で直してください。',
+    },
+    {
       question:
         '配列の中のオブジェクトで、キーが揃っていない場合はどうなりますか？',
       answer:
@@ -18,13 +28,18 @@ export const faq: FaqContent = {
       answer:
         'はい。"first-name" のようにTypeScriptの識別子として使えないキーは、引用符付きのプロパティとして出力します。ネストしたオブジェクトの型名は、キー名をPascalCaseにして付けます。',
     },
-    {
-      question: 'interfaceとtypeのどちらを選ぶべきですか？',
-      answer:
-        'オブジェクトの形を表すだけなら、どちらでも同じように使えます。拡張（extends）や宣言のマージを使うならinterface、ユニオン型などと組み合わせるならtypeが向きます。チームの規約に合わせて選んでください。',
-    },
   ],
   en: [
+    {
+      question: 'Which languages besides TypeScript can it generate?',
+      answer:
+        'C# classes, Go structs with json tags, Python dataclasses, and Java records. Switch the output language with the buttons on the page. In every language, nested objects become their own types.',
+    },
+    {
+      question: 'How are integers and decimals told apart?',
+      answer:
+        'For languages other than TypeScript, a value with a decimal point becomes a floating-point type (double / float64 / float) and one without becomes an integer type (long / int64 / int). If an array mixes both, it is treated as floating-point. Fix fields by hand if a value that is an integer in your sample can really be fractional.',
+    },
     {
       question: 'What happens when objects in an array have different keys?',
       answer:
@@ -39,11 +54,6 @@ export const faq: FaqContent = {
       question: 'Does it work with keys that contain hyphens or digits?',
       answer:
         'Yes. Keys that are not valid TypeScript identifiers, such as "first-name", are emitted as quoted properties. Nested object types are named after the key in PascalCase.',
-    },
-    {
-      question: 'Should I choose interface or type?',
-      answer:
-        'For plain object shapes they work the same way. Use interface if you rely on extends or declaration merging, and type if you combine the result with unions and other type operators. Follow your team convention.',
     },
   ],
 };

@@ -3,6 +3,11 @@ import type { FaqContent } from '../faq';
 export const faq: FaqContent = {
   ja: [
     {
+      question: '「ぴったり10秒」のようなゲームで遊べますか？',
+      answer:
+        'はい。「ぴったりチャレンジ」モードで、目標の秒数（1〜60秒、初期値は10秒）を決め、スタートしてから心の中で数えてストップを押します。「カウントを隠す」をオンにすると経過時間が「??:??.??」と表示されず、体感だけで挑戦できます。止めると記録と目標との差、判定が表示され、何回分かの記録と最も近かった回が一覧に残ります。',
+    },
+    {
       question: 'タブを切り替えたり、画面を閉じたりしても計測は続きますか？',
       answer:
         '別のタブに切り替えても計測は続き、終了時刻は端末の時計で判定するためほぼ正確です。ただしブラウザの省電力機能で、裏タブでは表示更新やアラーム音が数秒遅れることがあります。ページを閉じる・再読み込みすると計測は消えます。',
@@ -24,6 +29,11 @@ export const faq: FaqContent = {
     },
   ],
   en: [
+    {
+      question: 'Can I play a “stop at exactly 10 seconds” game?',
+      answer:
+        'Yes. In the Exact-time challenge mode, set a target (1–60 seconds, 10 by default), press Start, count in your head, and press Stop. With “Hide the count” on, the elapsed time shows as “??:??.??” so you rely on feel alone. When you stop, you see your time, the difference from the target, and a rating, and the results list keeps your attempts and highlights the closest one.',
+    },
     {
       question: 'Does it keep running if I switch tabs or lock the screen?',
       answer:

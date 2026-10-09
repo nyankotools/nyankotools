@@ -2007,21 +2007,31 @@ export const tools: Tool[] = [
     heavy: true,
     translations: {
       ja: {
-        name: 'PDFをMarkdownに変換',
+        name: 'PDFをMarkdown・テキストに変換',
         keywords: [
           'PDF Markdown',
           'PDF変換',
           'PDFテキスト抽出',
           'PDFからMarkdown',
+          'PDF テキスト 変換',
+          'PDF txt',
+          'PDF 文字抽出',
+          'PDFからテキスト',
         ],
         description:
-          'PDFのテキストを見出し・段落・箇条書き・表を推定してMarkdownに変換。AIに読ませる前処理にも。',
+          'PDFのテキストを抽出し、見出し・段落・箇条書き・表を推定してMarkdownまたはプレーンテキストに変換。AIに読ませる前処理にも。',
       },
       en: {
-        name: 'PDF to Markdown Converter',
-        keywords: ['PDF to markdown', 'extract text from PDF', 'convert PDF'],
+        name: 'PDF to Markdown & Text Converter',
+        keywords: [
+          'PDF to markdown',
+          'extract text from PDF',
+          'convert PDF',
+          'PDF to text',
+          'PDF to txt',
+        ],
         description:
-          'Convert PDF text to Markdown with headings, lists and tables detected. Handy for preparing documents for AI tools.',
+          'Extract PDF text and convert it to Markdown or plain text with headings, lists and tables detected. Handy for preparing documents for AI tools.',
       },
     },
   },
@@ -2308,30 +2318,34 @@ export const tools: Tool[] = [
     sensitive: true,
     translations: {
       ja: {
-        name: 'JSON→TypeScript型生成',
+        name: 'JSON→型定義生成',
         keywords: [
           'json',
           'typescript',
-          'interface',
-          'type',
           '型定義',
           'APIレスポンス',
+          'C#',
+          'Go',
+          'Python',
+          'Java',
         ],
         description:
-          'JSONからTypeScriptのinterface・type定義を自動生成します。ネストしたオブジェクト・配列・省略可能なプロパティ・ユニオン型に対応。',
+          'JSONからTypeScript・C#・Go・Python・Javaの型定義（interface・クラス・構造体・dataclass・record）を自動生成します。ネストしたオブジェクト・配列・省略可能なプロパティ・null許容に対応。',
       },
       en: {
-        name: 'JSON to TypeScript Converter',
+        name: 'JSON to Types Converter',
         keywords: [
           'json',
           'typescript',
-          'interface',
-          'type',
           'quicktype',
           'api response',
+          'json to c#',
+          'json to go struct',
+          'json to python dataclass',
+          'json to java record',
         ],
         description:
-          'Generates TypeScript interfaces or type aliases from JSON, handling nested objects, arrays, optional properties, and union types.',
+          'Generates type definitions from JSON as TypeScript interfaces, C# classes, Go structs, Python dataclasses, or Java records, handling nested objects, arrays, optional and nullable fields.',
       },
     },
   },
@@ -3167,9 +3181,11 @@ export const tools: Tool[] = [
           'カウントダウン',
           'ラップタイム',
           '勉強タイマー',
+          'ぴったり10秒',
+          'ぴったりチャレンジ',
         ],
         description:
-          'ラップ記録つきのストップウォッチ、カウントダウンタイマー、ポモドーロタイマーをブラウザで使えます。終了時のアラーム音に対応しています。',
+          'ラップ記録つきのストップウォッチ、カウントダウンタイマー、ポモドーロタイマー、カウントを隠して目標秒数ぴったりを狙うチャレンジをブラウザで使えます。終了時のアラーム音に対応しています。',
       },
       en: {
         name: 'Timer, Stopwatch & Pomodoro Timer',
@@ -3180,9 +3196,11 @@ export const tools: Tool[] = [
           'countdown',
           'lap timer',
           'study timer',
+          'stop at 10 seconds',
+          'exact time game',
         ],
         description:
-          'A browser stopwatch with laps, a countdown timer, and a Pomodoro timer, with an alarm sound when time is up.',
+          'A browser stopwatch with laps, a countdown timer, a Pomodoro timer, and a hidden-count challenge to stop at an exact time, with an alarm sound when time is up.',
       },
     },
   },

@@ -13,13 +13,18 @@ export type JsonToTypeScriptResult =
   | { success: true; code: string }
   | { success: false; reason: 'empty' | 'invalid-json' | 'too-deep' };
 
-interface ObjectField {
+export interface ObjectField {
   type: InferredType;
   optional: boolean;
 }
 
-type InferredType =
-  | { kind: 'primitive'; name: 'string' | 'number' | 'boolean' | 'null' }
+/** `integer` は number のときだけ意味を持つ（TypeScript では使わないが、他言語の int/float の判別に使う） */
+export type InferredType =
+  | {
+      kind: 'primitive';
+      name: 'string' | 'number' | 'boolean' | 'null';
+      integer?: boolean;
+    }
   | { kind: 'object'; fields: Map<string, ObjectField> }
   | { kind: 'array'; element: InferredType | null }
   | { kind: 'union'; members: InferredType[] };
@@ -43,7 +48,7 @@ const RESERVED_TYPE_NAMES = new Set([
   'Symbol',
 ]);
 
-function inferType(value: unknown): InferredType {
+export function inferType(value: unknown): InferredType {
   if (value === null) return { kind: 'primitive', name: 'null' };
   if (Array.isArray(value)) {
     return {
@@ -55,7 +60,11 @@ function inferType(value: unknown): InferredType {
     case 'string':
       return { kind: 'primitive', name: 'string' };
     case 'number':
-      return { kind: 'primitive', name: 'number' };
+      return {
+        kind: 'primitive',
+        name: 'number',
+        integer: Number.isInteger(value),
+      };
     case 'boolean':
       return { kind: 'primitive', name: 'boolean' };
   }
@@ -72,15 +81,25 @@ function mergeTypes(types: InferredType[]): InferredType {
   const objects: Extract<InferredType, { kind: 'object' }>[] = [];
   const arrays: Extract<InferredType, { kind: 'array' }>[] = [];
   const addPrimitive = (type: InferredType) => {
-    if (
-      !primitives.some(
-        (p) =>
-          p.kind === 'primitive' &&
-          type.kind === 'primitive' &&
-          p.name === type.name,
-      )
-    ) {
+    const index = primitives.findIndex(
+      (p) =>
+        p.kind === 'primitive' &&
+        type.kind === 'primitive' &&
+        p.name === type.name,
+    );
+    if (index < 0) {
       primitives.push(type);
+      return;
+    }
+    // 整数と小数が混ざる number は小数として扱う
+    const existing = primitives[index];
+    if (
+      existing.kind === 'primitive' &&
+      type.kind === 'primitive' &&
+      existing.integer &&
+      !type.integer
+    ) {
+      primitives[index] = type;
     }
   };
   const visit = (type: InferredType) => {

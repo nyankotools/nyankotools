@@ -52,6 +52,66 @@ const t = charCounterContent[locale];
     </div>
   </dl>
 
+  <section class="mt-8 max-w-2xl" aria-labelledby="char-counter-x-heading">
+    <h2 id="char-counter-x-heading" class="mb-1 text-lg font-bold">
+      {t.xHeading}
+    </h2>
+    <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+      {t.xDescription}
+    </p>
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label for="char-counter-x-plan" class="ui-label">
+          {t.xPlanLabel}
+        </label>
+        <select
+          id="char-counter-x-plan"
+          class="ui-input h-11 px-3 dark:bg-gray-900"
+        >
+          <option value="280">{t.xPlanFree}</option>
+          <option value="25000">{t.xPlanPaid}</option>
+          <option value="custom">{t.xPlanCustom}</option>
+        </select>
+      </div>
+      <div>
+        <label for="char-counter-x-limit" class="ui-label">
+          {t.xLimitLabel}
+        </label>
+        <input
+          id="char-counter-x-limit"
+          type="number"
+          min="1"
+          step="1"
+          value="280"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <dl class="grid flex-1 grid-cols-2 gap-4">
+        <div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900">
+          <dt class="text-xs text-gray-500 dark:text-gray-400">
+            {t.xCountLabel}
+          </dt>
+          <dd id="char-counter-x-count" class="text-xl font-semibold">
+            0
+          </dd>
+        </div>
+        <div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900">
+          <dt
+            id="char-counter-x-remaining-label"
+            class="text-xs text-gray-500 dark:text-gray-400"
+            data-remaining={t.xRemainingLabel}
+            data-over={t.xOverLabel}
+          >
+            {t.xRemainingLabel}
+          </dt>
+          <dd id="char-counter-x-remaining" class="text-xl font-semibold">
+            280
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
   <Fragment slot="after">
     <h2 class="mt-10 mb-2 text-lg font-bold">{t.relatedHeading}</h2>
     <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
@@ -75,7 +135,11 @@ const t = charCounterContent[locale];
 
 <script>
   import { onTextInput } from '../../lib/input-scheduler';
-  import { countText } from '../../lib/tools/char-counter';
+  import {
+    countText,
+    countXWeighted,
+    X_DEFAULT_LIMIT,
+  } from '../../lib/tools/char-counter';
 
   const input = document.getElementById(
     'char-counter-input',
@@ -87,14 +151,51 @@ const t = charCounterContent[locale];
   const wordsEl = document.getElementById('char-counter-words')!;
   const linesEl = document.getElementById('char-counter-lines')!;
 
+  const xLimitInput = document.getElementById(
+    'char-counter-x-limit',
+  ) as HTMLInputElement;
+  const xPlanSelect = document.getElementById(
+    'char-counter-x-plan',
+  ) as HTMLSelectElement;
+  const xCountEl = document.getElementById('char-counter-x-count')!;
+  const xRemainingEl = document.getElementById('char-counter-x-remaining')!;
+  const xRemainingLabelEl = document.getElementById(
+    'char-counter-x-remaining-label',
+  )!;
+
   function update() {
     const result = countText(input.value);
     charactersEl.textContent = String(result.characters);
     charactersNoSpacesEl.textContent = String(result.charactersNoSpaces);
     wordsEl.textContent = String(result.words);
     linesEl.textContent = String(result.lines);
+
+    const parsedLimit = Math.floor(Number(xLimitInput.value));
+    const limit =
+      Number.isFinite(parsedLimit) && parsedLimit >= 1
+        ? parsedLimit
+        : X_DEFAULT_LIMIT;
+    const x = countXWeighted(input.value, limit);
+    xCountEl.textContent = String(x.weighted);
+    xRemainingEl.textContent = String(Math.abs(x.remaining));
+    xRemainingLabelEl.textContent = x.overLimit
+      ? xRemainingLabelEl.dataset.over!
+      : xRemainingLabelEl.dataset.remaining!;
+    xRemainingEl.classList.toggle('text-red-600', x.overLimit);
+    xRemainingEl.classList.toggle('dark:text-red-400', x.overLimit);
   }
 
   onTextInput(input, update);
+  xLimitInput.addEventListener('input', () => {
+    const preset = ['280', '25000'].includes(xLimitInput.value)
+      ? xLimitInput.value
+      : 'custom';
+    xPlanSelect.value = preset;
+    update();
+  });
+  xPlanSelect.addEventListener('change', () => {
+    if (xPlanSelect.value !== 'custom') xLimitInput.value = xPlanSelect.value;
+    update();
+  });
   update();
 </script>

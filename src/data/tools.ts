@@ -99,9 +99,11 @@ export const tools: Tool[] = [
           '単語数',
           '行数',
           'バイト数',
+          'X 文字数',
+          'ツイート 文字数',
         ],
         description:
-          '入力したテキストの文字数・単語数・行数をリアルタイムで数えます。',
+          '入力したテキストの文字数・単語数・行数と、X（Twitter）の280字制限に対する文字数をリアルタイムで数えます。',
       },
       en: {
         name: 'Character Counter',
@@ -110,9 +112,12 @@ export const tools: Tool[] = [
           'character count',
           'letter count',
           'text length',
+          'twitter character counter',
+          'tweet length',
+          'X post character limit',
         ],
         description:
-          'Counts the characters, words, and lines of your text in real time.',
+          "Counts characters, words, and lines in real time, plus the length against X (Twitter)'s 280-character limit.",
       },
     },
   },

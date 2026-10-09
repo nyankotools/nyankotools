@@ -250,7 +250,7 @@ export const updates: UpdateEntry[] = [
     date: '2026-10-01',
     toolSlugs: [
       'curl-converter',
-      'json-to-typescript',
+      'json-to-types',
       'json-diff',
       'barcode-generator',
       'ulid-nanoid-generator',

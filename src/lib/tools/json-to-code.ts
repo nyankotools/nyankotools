@@ -5,7 +5,7 @@ import {
   type InferredType,
   type JsonToTypeScriptOptions,
   type JsonToTypeScriptResult,
-} from './json-to-typescript';
+} from './json-to-types';
 
 export const CODE_LANGUAGES = [
   'typescript',

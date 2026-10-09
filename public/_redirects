@@ -1,0 +1,5 @@
+# 改名したツールの旧URL（恒久的に新URLへ転送する）
+/tools/json-to-typescript /tools/json-to-types/ 301
+/tools/json-to-typescript/ /tools/json-to-types/ 301
+/en/tools/json-to-typescript /en/tools/json-to-types/ 301
+/en/tools/json-to-typescript/ /en/tools/json-to-types/ 301

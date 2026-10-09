@@ -2,7 +2,7 @@ import { test, expect } from './helpers/test';
 
 test.describe('JSON→型定義生成', () => {
   test('サンプルから型が生成され、オプションで切り替わる', async ({ page }) => {
-    await page.goto('/tools/json-to-typescript/');
+    await page.goto('/tools/json-to-types/');
     await expect(page.locator('main h1')).toContainText('JSON→型定義生成');
 
     const output = page.locator('#j2ts-output');
@@ -21,7 +21,7 @@ test.describe('JSON→型定義生成', () => {
   test('言語を切り替えるとC#・Go・Python・Javaの型が生成され、TypeScript用の設定は隠れる', async ({
     page,
   }) => {
-    await page.goto('/tools/json-to-typescript/');
+    await page.goto('/tools/json-to-types/');
     const output = page.locator('#j2ts-output');
     const styleGroup = page.locator('#j2ts-style');
 
@@ -50,7 +50,7 @@ test.describe('JSON→型定義生成', () => {
   });
 
   test('不正なJSONはエラーになり、空にすると消える', async ({ page }) => {
-    await page.goto('/tools/json-to-typescript/');
+    await page.goto('/tools/json-to-types/');
     const input = page.locator('#j2ts-input');
     await input.fill('{a:1}');
     await expect(page.locator('#j2ts-error')).toBeVisible();
@@ -64,7 +64,7 @@ test.describe('JSON→型定義生成: 言語切替と入力エラー', () => {
   test('TS以外の言語でも不正なJSONはエラーになり、出力は空になる', async ({
     page,
   }) => {
-    await page.goto('/tools/json-to-typescript/');
+    await page.goto('/tools/json-to-types/');
     await page.locator('[data-language="go"]').click();
     const input = page.locator('#j2ts-input');
     await input.fill('{a:1}');
@@ -76,7 +76,7 @@ test.describe('JSON→型定義生成: 言語切替と入力エラー', () => {
   });
 
   test('TSに戻ると、直前のTSの設定（type・export）が残る', async ({ page }) => {
-    await page.goto('/tools/json-to-typescript/');
+    await page.goto('/tools/json-to-types/');
     const output = page.locator('#j2ts-output');
     await page.locator('[data-style="type"]').click();
     await page.locator('#j2ts-export').check();
@@ -88,7 +88,7 @@ test.describe('JSON→型定義生成: 言語切替と入力エラー', () => {
   });
 
   test('ルート名の変更が他言語の出力にも反映される', async ({ page }) => {
-    await page.goto('/tools/json-to-typescript/');
+    await page.goto('/tools/json-to-types/');
     await page.locator('[data-language="csharp"]').click();
     await page.locator('#j2ts-root-name').fill('ApiResponse');
     await expect(page.locator('#j2ts-output')).toHaveValue(
@@ -100,7 +100,7 @@ test.describe('JSON→型定義生成: 言語切替と入力エラー', () => {
 test.describe('JSON→型定義生成: 375px', () => {
   test('言語・TS設定を切り替えても横スクロールが出ない', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 800 });
-    await page.goto('/tools/json-to-typescript/');
+    await page.goto('/tools/json-to-types/');
     for (const id of ['java', 'csharp', 'typescript']) {
       await page.locator(`[data-language="${id}"]`).click();
       const overflow = await page.evaluate(
@@ -113,7 +113,7 @@ test.describe('JSON→型定義生成: 375px', () => {
 
 test.describe('JSON to Types Converter (en)', () => {
   test('displays and converts', async ({ page }) => {
-    await page.goto('/en/tools/json-to-typescript/');
+    await page.goto('/en/tools/json-to-types/');
     await expect(page.locator('main h1')).toContainText(
       'JSON to Types Converter',
     );

@@ -2310,7 +2310,7 @@ export const tools: Tool[] = [
     },
   },
   {
-    slug: 'json-to-typescript',
+    slug: 'json-to-types',
     category: 'data',
     addedAt: '2026-10-01',
     updatedAt: '2026-10-01',
@@ -3719,7 +3719,7 @@ export const tools: Tool[] = [
     category: 'data',
     addedAt: '2026-10-02',
     updatedAt: '2026-10-02',
-    related: ['json-to-typescript', 'json-formatter', 'json-diff'],
+    related: ['json-to-types', 'json-formatter', 'json-diff'],
     sensitive: true,
     translations: {
       ja: {

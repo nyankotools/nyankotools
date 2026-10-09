@@ -27,24 +27,82 @@ export function markdownToHtml(input: string): ConvertOutcome {
   }
 }
 
-let turndownService: TurndownService | null = null;
-
-/** ブラウザ環境でのみ動作（DOMParserが必要なため） */
-function getTurndownService(): TurndownService {
-  if (!turndownService) {
-    turndownService = new TurndownService({
-      headingStyle: 'atx',
-      codeBlockStyle: 'fenced',
-      bulletListMarker: '-',
-    });
-  }
-  return turndownService;
+export interface HtmlToMarkdownOptions {
+  headingStyle: 'atx' | 'setext';
+  bulletMarker: '-' | '*' | '+';
+  codeBlockStyle: 'fenced' | 'indented';
+  removeImages: boolean;
+  removeLinks: boolean;
 }
 
-export function htmlToMarkdown(input: string): ConvertOutcome {
+export const defaultOptions: HtmlToMarkdownOptions = {
+  headingStyle: 'atx',
+  bulletMarker: '-',
+  codeBlockStyle: 'fenced',
+  removeImages: false,
+  removeLinks: false,
+};
+
+/** 表セルの内容をMarkdownの表セルに入れられる1行の文字列にする */
+function cellText(cell: Element): string {
+  return (cell.textContent ?? '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\\/g, '\\\\')
+    .replace(/\|/g, '\\|');
+}
+
+function tableToMarkdown(table: Element): string {
+  const rows = Array.from(table.querySelectorAll('tr')).map((tr) =>
+    Array.from(tr.children)
+      .filter((c) => c.tagName === 'TH' || c.tagName === 'TD')
+      .map(cellText),
+  );
+  const filled = rows.filter((row) => row.length > 0);
+  if (filled.length === 0) return '';
+  const width = Math.max(...filled.map((row) => row.length));
+  const line = (row: string[]) =>
+    `| ${Array.from({ length: width }, (_, i) => row[i] ?? '').join(' | ')} |`;
+  const separator = `| ${Array.from({ length: width }, () => '---').join(' | ')} |`;
+  return `\n\n${[line(filled[0]), separator, ...filled.slice(1).map(line)].join('\n')}\n\n`;
+}
+
+/** ブラウザ環境（またはdominoが使えるNode）で動作する */
+function createService(options: HtmlToMarkdownOptions): TurndownService {
+  const service = new TurndownService({
+    headingStyle: options.headingStyle,
+    bulletListMarker: options.bulletMarker,
+    codeBlockStyle: options.codeBlockStyle,
+    hr: '---',
+    emDelimiter: '*',
+  });
+  service.remove(['script', 'style', 'noscript', 'template']);
+  service.addRule('table', {
+    filter: 'table',
+    replacement: (_content, node) => tableToMarkdown(node as Element),
+  });
+  service.addRule('strikethrough', {
+    filter: ['del', 's', 'strike'] as (keyof HTMLElementTagNameMap)[],
+    replacement: (content) => (content ? `~~${content}~~` : ''),
+  });
+  if (options.removeImages) {
+    service.addRule('removeImages', { filter: 'img', replacement: () => '' });
+  }
+  if (options.removeLinks) {
+    service.addRule('removeLinks', {
+      filter: 'a',
+      replacement: (content) => content,
+    });
+  }
+  return service;
+}
+
+export function htmlToMarkdown(
+  input: string,
+  options: HtmlToMarkdownOptions = defaultOptions,
+): ConvertOutcome {
   try {
-    const output = getTurndownService().turndown(input);
-    return { success: true, output };
+    return { success: true, output: createService(options).turndown(input) };
   } catch (error) {
     return {
       success: false,

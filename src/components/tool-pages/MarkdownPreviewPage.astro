@@ -80,6 +80,67 @@ const t = markdownPreviewContent[locale];
     ></span>
   </div>
 
+  <div
+    id="markdown-preview-html-options"
+    hidden
+    class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-3"
+  >
+    <div class="flex items-center gap-2">
+      <label
+        for="markdown-preview-heading"
+        class="text-sm text-gray-700 dark:text-gray-300"
+      >
+        {t.headingLabel}
+      </label>
+      <select
+        id="markdown-preview-heading"
+        class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+      >
+        <option value="atx">{t.headingAtx}</option>
+        <option value="setext">{t.headingSetext}</option>
+      </select>
+    </div>
+    <div class="flex items-center gap-2">
+      <label
+        for="markdown-preview-bullet"
+        class="text-sm text-gray-700 dark:text-gray-300"
+      >
+        {t.bulletLabel}
+      </label>
+      <select
+        id="markdown-preview-bullet"
+        class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+      >
+        <option value="-">-</option>
+        <option value="*">*</option>
+        <option value="+">+</option>
+      </select>
+    </div>
+    <div class="flex items-center gap-2">
+      <label
+        for="markdown-preview-code"
+        class="text-sm text-gray-700 dark:text-gray-300"
+      >
+        {t.codeLabel}
+      </label>
+      <select
+        id="markdown-preview-code"
+        class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+      >
+        <option value="fenced">{t.codeFenced}</option>
+        <option value="indented">{t.codeIndented}</option>
+      </select>
+    </div>
+    <label class="ui-check">
+      <input type="checkbox" id="markdown-preview-remove-images" />
+      {t.removeImagesLabel}
+    </label>
+    <label class="ui-check">
+      <input type="checkbox" id="markdown-preview-remove-links" />
+      {t.removeLinksLabel}
+    </label>
+  </div>
+
   <div class="mt-4 grid gap-4 lg:grid-cols-2">
     <div>
       <label for="markdown-preview-input" class="ui-label">
@@ -220,6 +281,7 @@ const t = markdownPreviewContent[locale];
     htmlToMarkdown,
     markdownToHtml,
     type ConvertOutcome,
+    type HtmlToMarkdownOptions,
   } from '../../lib/tools/markdown-preview';
 
   type Mode = 'mdToHtml' | 'htmlToMd';
@@ -254,6 +316,23 @@ const t = markdownPreviewContent[locale];
   const statusEl = document.getElementById('markdown-preview-status')!;
   const errorEl = document.getElementById('markdown-preview-error')!;
 
+  const htmlOptions = document.getElementById('markdown-preview-html-options')!;
+  const optionControls = [
+    'heading',
+    'bullet',
+    'code',
+    'remove-images',
+    'remove-links',
+  ].map((id) => document.getElementById(`markdown-preview-${id}`)!);
+  const [headingSelect, bulletSelect, codeSelect, removeImages, removeLinks] =
+    optionControls as [
+      HTMLSelectElement,
+      HTMLSelectElement,
+      HTMLSelectElement,
+      HTMLInputElement,
+      HTMLInputElement,
+    ];
+
   let mode: Mode = 'mdToHtml';
   let view: View = 'preview';
   let latestOutput = '';
@@ -266,6 +345,7 @@ const t = markdownPreviewContent[locale];
   function updateVisibility() {
     const isMdToHtml = mode === 'mdToHtml';
     viewGroup.hidden = !isMdToHtml;
+    htmlOptions.hidden = isMdToHtml;
     const showPreview = isMdToHtml && view === 'preview';
     renderEl.hidden = !showPreview;
     output.hidden = showPreview;
@@ -305,7 +385,16 @@ const t = markdownPreviewContent[locale];
     const result: ConvertOutcome =
       mode === 'mdToHtml'
         ? markdownToHtml(input.value)
-        : htmlToMarkdown(input.value);
+        : htmlToMarkdown(input.value, {
+            headingStyle:
+              headingSelect.value as HtmlToMarkdownOptions['headingStyle'],
+            bulletMarker:
+              bulletSelect.value as HtmlToMarkdownOptions['bulletMarker'],
+            codeBlockStyle:
+              codeSelect.value as HtmlToMarkdownOptions['codeBlockStyle'],
+            removeImages: removeImages.checked,
+            removeLinks: removeLinks.checked,
+          });
     if (result.success) {
       showOutput(result);
     } else {
@@ -314,6 +403,7 @@ const t = markdownPreviewContent[locale];
   }
 
   onTextInput(input, convert);
+  optionControls.forEach((c) => c.addEventListener('change', convert));
 
   modeButtons.forEach((button) => {
     button.addEventListener('click', () => {

@@ -170,6 +170,33 @@ code block
   });
 });
 
+test.describe('HTML→Markdown変換オプション', () => {
+  test('HTML→Markdownモードでだけオプションが表示され、書式を切り替えられる', async ({
+    page,
+  }) => {
+    await page.goto('/tools/markdown-preview/');
+    const options = page.locator('#markdown-preview-html-options');
+    await expect(options).toBeHidden();
+
+    await page.locator('#markdown-preview-mode [data-mode="htmlToMd"]').click();
+    await expect(options).toBeVisible();
+
+    await page
+      .locator('#markdown-preview-input')
+      .fill(
+        '<h1>Title</h1><ul><li>one</li></ul><table><tr><th>A</th></tr><tr><td>1</td></tr></table>',
+      );
+    const output = page.locator('#markdown-preview-output');
+    await expect(output).toHaveValue(/^# Title/);
+    await expect(output).toHaveValue(/\| A \|\n\| --- \|\n\| 1 \|/);
+
+    await page.locator('#markdown-preview-heading').selectOption('setext');
+    await expect(output).toHaveValue(/^Title\n=====/);
+    await page.locator('#markdown-preview-bullet').selectOption('*');
+    await expect(output).toHaveValue(/\* {3}one/);
+  });
+});
+
 test.describe('Markdown⇔HTML Converter (English)', () => {
   test('英語版が正しく表示される', async ({ page }) => {
     await page.goto('/en/tools/markdown-preview/');

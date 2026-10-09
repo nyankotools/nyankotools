@@ -458,6 +458,26 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-09',
+    toolSlugs: [
+      'char-counter',
+      'markdown-preview',
+      'json-to-types',
+      'pdf-to-markdown',
+      'timer-stopwatch',
+    ],
+    translations: {
+      ja: {
+        summary:
+          '文字数カウントにX（Twitter）の文字数判定、Markdown⇔HTML変換にHTML→Markdownの書式オプション、JSON→型定義生成にC#・Go・Python・Javaの出力、PDF→Markdown変換にテキスト出力、タイマー・ストップウォッチに「ぴったりチャレンジ」を追加しました。JSON→型定義生成のURLは /tools/json-to-types/ に変わりました（旧URLは自動で転送されます）。',
+      },
+      en: {
+        summary:
+          'Added X (Twitter) character-limit checking to the Character Counter, formatting options for HTML to Markdown, C#, Go, Python and Java output to the JSON to Types Converter, plain-text output to the PDF to Markdown Converter, and an "exact time challenge" mode to the Timer & Stopwatch. The JSON to Types Converter moved to /en/tools/json-to-types/ (the old URL redirects automatically).',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

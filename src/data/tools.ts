@@ -87,7 +87,7 @@ export const tools: Tool[] = [
     slug: 'char-counter',
     category: 'text',
     addedAt: '2026-09-15',
-    updatedAt: '2026-09-15',
+    updatedAt: '2026-10-09',
     related: ['text-diff', 'text-case-converter', 'text-list-tools'],
     translations: {
       ja: {
@@ -290,7 +290,7 @@ export const tools: Tool[] = [
     slug: 'markdown-preview',
     category: 'data',
     addedAt: '2026-09-15',
-    updatedAt: '2026-09-15',
+    updatedAt: '2026-10-09',
     related: ['pdf-to-markdown', 'html-escape', 'text-diff'],
     translations: {
       ja: {
@@ -2001,7 +2001,7 @@ export const tools: Tool[] = [
     slug: 'pdf-to-markdown',
     category: 'pdf',
     addedAt: '2026-09-26',
-    updatedAt: '2026-09-26',
+    updatedAt: '2026-10-09',
     related: ['markdown-preview', 'pdf-merge-split', 'pdf-image-converter'],
     sensitive: true,
     heavy: true,
@@ -2313,7 +2313,7 @@ export const tools: Tool[] = [
     slug: 'json-to-types',
     category: 'data',
     addedAt: '2026-10-01',
-    updatedAt: '2026-10-01',
+    updatedAt: '2026-10-09',
     related: ['json-formatter', 'json-path-tester', 'yaml-json-converter'],
     sensitive: true,
     translations: {
@@ -3169,7 +3169,7 @@ export const tools: Tool[] = [
     slug: 'timer-stopwatch',
     category: 'datetime',
     addedAt: '2026-10-02',
-    updatedAt: '2026-10-02',
+    updatedAt: '2026-10-09',
     related: ['date-calculator', 'age-calculator', 'unix-timestamp'],
     translations: {
       ja: {

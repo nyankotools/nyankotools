@@ -47,7 +47,7 @@ test.describe('更新情報ページ（日本語版）', () => {
   test('更新履歴に含まれるツールへのリンクから遷移できる', async ({ page }) => {
     await page.goto('/updates/');
 
-    await page.locator('main a', { hasText: '文字数カウント' }).click();
+    await page.locator('main a', { hasText: '文字数カウント' }).first().click();
 
     await expect(page).toHaveURL(/\/tools\/char-counter\/?$/);
   });

@@ -62,6 +62,7 @@ const slugs = [
   'video-to-gif',
   'metronome-bpm',
   'random-generator',
+  'file-type-detector',
 ];
 
 const locales = [

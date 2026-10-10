@@ -5629,6 +5629,44 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'file-type-detector',
+    category: 'file',
+    addedAt: '2026-10-10',
+    updatedAt: '2026-10-10',
+    related: ['file-hash-calculator', 'zip-tool', 'encoding-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ファイル種別判定',
+        description:
+          'ファイルの先頭バイト（マジックナンバー）から実際の形式を判定し、拡張子との不一致を警告します。16進ダンプも表示できます',
+        keywords: [
+          'マジックナンバー',
+          'ファイル形式',
+          '拡張子',
+          '拡張子偽装',
+          'ファイルタイプ',
+          '16進ダンプ',
+          'MIMEタイプ',
+        ],
+      },
+      en: {
+        name: 'File Type Detector',
+        description:
+          'Identify a file’s real format from its magic number, warn when the extension does not match, and view a hex dump',
+        keywords: [
+          'magic number',
+          'file type',
+          'file signature',
+          'mime type',
+          'extension mismatch',
+          'hex dump',
+          'file identifier',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

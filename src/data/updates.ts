@@ -480,15 +480,15 @@ export const updates: UpdateEntry[] = [
   },
   {
     date: '2026-10-10',
-    toolSlugs: ['csv-excel-converter'],
+    toolSlugs: ['csv-excel-converter', 'css-layout-generator'],
     translations: {
       ja: {
         summary:
-          'CSV⇔Excel（xlsx）変換を追加しました。Shift_JISのCSVの自動判定、シート選択、BOM付きUTF-8での保存に対応しています。',
+          'CSV⇔Excel（xlsx）変換を追加しました。Shift_JISのCSVの自動判定、シート選択、BOM付きUTF-8での保存に対応しています。あわせて、CSS Flexbox/Gridジェネレーターを追加しました。',
       },
       en: {
         summary:
-          'Added the CSV to Excel (XLSX) Converter, which also exports xlsx sheets to CSV, with Shift_JIS detection, sheet selection and UTF-8 BOM output.',
+          'Added the CSV to Excel (XLSX) Converter, which also exports xlsx sheets to CSV, with Shift_JIS detection, sheet selection and UTF-8 BOM output. Also added the CSS Flexbox & Grid Generator.',
       },
     },
   },

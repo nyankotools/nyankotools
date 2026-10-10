@@ -4805,6 +4805,47 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'css-layout-generator',
+    category: 'dev',
+    addedAt: '2026-10-10',
+    updatedAt: '2026-10-10',
+    related: [
+      'css-box-shadow-generator',
+      'css-gradient-generator',
+      'css-clamp-calculator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSS Flexbox/Gridジェネレーター',
+        keywords: [
+          'flexbox',
+          'grid',
+          'レイアウト',
+          'justify-content',
+          'align-items',
+          'gap',
+          'CSSレイアウト',
+        ],
+        description:
+          '方向・揃え・間隔・列数を選ぶだけで、FlexboxとGridのCSSをプレビューしながら生成します。',
+      },
+      en: {
+        name: 'CSS Flexbox & Grid Generator',
+        keywords: [
+          'flexbox',
+          'grid',
+          'layout',
+          'justify-content',
+          'align-items',
+          'gap',
+          'css layout',
+        ],
+        description:
+          'Generate Flexbox and Grid CSS with a live preview by choosing direction, alignment, gap and columns.',
+      },
+    },
+  },
+  {
     slug: 'time-calculator',
     category: 'datetime',
     addedAt: '2026-10-07',

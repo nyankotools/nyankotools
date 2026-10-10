@@ -1,0 +1,365 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cssLayoutGeneratorContent } from '../../i18n/tools/css-layout-generator';
+import {
+  ALIGN_CONTENT_VALUES,
+  ALIGN_ITEMS_VALUES,
+  DEFAULT_FLEX,
+  DEFAULT_GRID,
+  FLEX_DIRECTIONS,
+  FLEX_WRAPS,
+  GRID_ALIGN_VALUES,
+  JUSTIFY_CONTENT_VALUES,
+  MAX_GAP,
+  MAX_ITEMS,
+  MAX_TRACKS,
+  MIN_ITEMS,
+} from '../../lib/tools/css-layout-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cssLayoutGeneratorContent[locale];
+
+const fields = [
+  {
+    id: 'cl-direction',
+    label: t.directionLabel,
+    values: FLEX_DIRECTIONS,
+    selected: DEFAULT_FLEX.direction,
+  },
+  {
+    id: 'cl-wrap',
+    label: t.wrapLabel,
+    values: FLEX_WRAPS,
+    selected: DEFAULT_FLEX.wrap,
+  },
+  {
+    id: 'cl-justify-content',
+    label: t.justifyContentLabel,
+    values: JUSTIFY_CONTENT_VALUES,
+    selected: DEFAULT_FLEX.justifyContent,
+  },
+  {
+    id: 'cl-align-items',
+    label: t.alignItemsLabel,
+    values: ALIGN_ITEMS_VALUES,
+    selected: DEFAULT_FLEX.alignItems,
+  },
+  {
+    id: 'cl-align-content',
+    label: t.alignContentLabel,
+    values: ALIGN_CONTENT_VALUES,
+    selected: DEFAULT_FLEX.alignContent,
+  },
+];
+
+const gridFields = [
+  {
+    id: 'cl-justify-items',
+    label: t.justifyItemsLabel,
+    values: GRID_ALIGN_VALUES,
+    selected: DEFAULT_GRID.justifyItems,
+  },
+  {
+    id: 'cl-grid-align-items',
+    label: t.alignItemsGridLabel,
+    values: GRID_ALIGN_VALUES,
+    selected: DEFAULT_GRID.alignItems,
+  },
+];
+---
+
+<ToolShell t={t}>
+  <div class="mb-4 grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="cl-mode" class="ui-label">
+        {t.modeLabel}
+      </label>
+      <select id="cl-mode" class="ui-input h-11 w-full px-3 dark:bg-gray-900">
+        <option value="flex">{t.modeFlex}</option>
+        <option value="grid">{t.modeGrid}</option>
+      </select>
+    </div>
+    <div>
+      <label for="cl-items" class="ui-label">
+        {t.itemCountLabel}
+      </label>
+      <input
+        id="cl-items"
+        type="number"
+        min={MIN_ITEMS}
+        max={MAX_ITEMS}
+        value="6"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      />
+    </div>
+  </div>
+
+  <div id="cl-flex-options" class="mb-6 grid gap-4 sm:grid-cols-2">
+    {fields.map((f) => (
+      <div id={`${f.id}-field`}>
+        <label for={f.id} class="ui-label">
+          {f.label}
+        </label>
+        <select id={f.id} class="ui-input h-11 w-full px-3 dark:bg-gray-900">
+          {f.values.map((v) => (
+            <option value={v} selected={v === f.selected}>
+              {v}
+            </option>
+          ))}
+        </select>
+      </div>
+    ))}
+    <div>
+      <label for="cl-gap" class="ui-label">
+        {t.gapLabel}
+      </label>
+      <input
+        id="cl-gap"
+        type="number"
+        min="0"
+        max={MAX_GAP}
+        value={DEFAULT_FLEX.gap}
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      />
+    </div>
+  </div>
+
+  <div id="cl-grid-options" class="mb-6 grid gap-4 sm:grid-cols-2" hidden>
+    <div>
+      <label for="cl-columns" class="ui-label">
+        {t.columnsLabel}
+      </label>
+      <input
+        id="cl-columns"
+        type="number"
+        min="1"
+        max={MAX_TRACKS}
+        value={DEFAULT_GRID.columns}
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      />
+    </div>
+    <div>
+      <label for="cl-rows" class="ui-label">
+        {t.rowsLabel}
+      </label>
+      <input
+        id="cl-rows"
+        type="number"
+        min="0"
+        max={MAX_TRACKS}
+        value={DEFAULT_GRID.rows}
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      />
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.rowsHint}</p>
+    </div>
+    <div>
+      <label for="cl-column-gap" class="ui-label">
+        {t.columnGapLabel}
+      </label>
+      <input
+        id="cl-column-gap"
+        type="number"
+        min="0"
+        max={MAX_GAP}
+        value={DEFAULT_GRID.columnGap}
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      />
+    </div>
+    <div>
+      <label for="cl-row-gap" class="ui-label">
+        {t.rowGapLabel}
+      </label>
+      <input
+        id="cl-row-gap"
+        type="number"
+        min="0"
+        max={MAX_GAP}
+        value={DEFAULT_GRID.rowGap}
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      />
+    </div>
+    {gridFields.map((f) => (
+      <div>
+        <label for={f.id} class="ui-label">
+          {f.label}
+        </label>
+        <select id={f.id} class="ui-input h-11 w-full px-3 dark:bg-gray-900">
+          {f.values.map((v) => (
+            <option value={v} selected={v === f.selected}>
+              {v}
+            </option>
+          ))}
+        </select>
+      </div>
+    ))}
+  </div>
+
+  <h2 class="mb-2 text-lg font-bold">{t.previewHeading}</h2>
+  <div
+    id="cl-preview"
+    class="mb-6 h-72 w-full overflow-auto rounded-lg border border-gray-300 bg-gray-100 p-3 dark:border-gray-700 dark:bg-gray-950"
+  ></div>
+
+  <div data-copied={t.copied} data-copy-failed={t.copyFailed}>
+    <label for="cl-css-output" class="ui-label">
+      {t.cssHeading}
+    </label>
+    <div class="flex gap-2">
+      <textarea
+        id="cl-css-output"
+        readonly
+        rows="8"
+        class="ui-input h-48 w-full min-w-0 resize-none bg-gray-50 p-3 font-mono dark:bg-gray-900"
+      ></textarea>
+      <button
+        id="cl-copy-button"
+        type="button"
+        class="ui-btn shrink-0 self-start"
+      >
+        {t.copyButton}
+      </button>
+    </div>
+    <span
+      id="cl-status"
+      class="mt-2 block text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    buildCss,
+    buildFlexDeclarations,
+    buildGridDeclarations,
+    clampInt,
+    MAX_GAP,
+    MAX_ITEMS,
+    MAX_TRACKS,
+    MIN_ITEMS,
+    type AlignContent,
+    type AlignItems,
+    type FlexDirection,
+    type FlexWrap,
+    type GridAlign,
+    type JustifyContent,
+  } from '../../lib/tools/css-layout-generator';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const modeSelect = $<HTMLSelectElement>('cl-mode');
+  const flexOptions = $('cl-flex-options');
+  const gridOptions = $('cl-grid-options');
+  const alignContentField = $('cl-align-content-field');
+  const preview = $('cl-preview');
+  const cssOutput = $<HTMLTextAreaElement>('cl-css-output');
+  const copyButton = $('cl-copy-button');
+  const statusEl = $('cl-status');
+  const copyContainer = cssOutput.closest('[data-copied]') as HTMLElement;
+  const copied = copyContainer.dataset.copied ?? '';
+  const copyFailed = copyContainer.dataset.copyFailed ?? '';
+
+  const num = (id: string) => Number($<HTMLInputElement>(id).value);
+  const val = (id: string) => $<HTMLSelectElement>(id).value;
+
+  // 配置の違いが分かるよう、アイテムの大きさをあえて不揃いにする
+  const MIN_WIDTHS = [48, 72, 56];
+  const MIN_HEIGHTS = [40, 64, 52];
+
+  function renderItems(count: number) {
+    preview.replaceChildren();
+    for (let i = 0; i < count; i++) {
+      const item = document.createElement('div');
+      item.textContent = String(i + 1);
+      item.className =
+        'flex items-center justify-center rounded bg-blue-600 px-2 text-sm font-bold text-white';
+      item.style.minWidth = `${MIN_WIDTHS[i % MIN_WIDTHS.length]}px`;
+      item.style.minHeight = `${MIN_HEIGHTS[(i + 1) % MIN_HEIGHTS.length]}px`;
+      preview.appendChild(item);
+    }
+  }
+
+  function update() {
+    // 入力途中（空欄）の値では再計算せず、確定時（change）に補正する
+    if (
+      [
+        'cl-items',
+        'cl-gap',
+        'cl-columns',
+        'cl-rows',
+        'cl-column-gap',
+        'cl-row-gap',
+      ].some((id) => $<HTMLInputElement>(id).value === '')
+    )
+      return;
+    const isFlex = modeSelect.value === 'flex';
+    flexOptions.hidden = !isFlex;
+    gridOptions.hidden = isFlex;
+    alignContentField.hidden = val('cl-wrap') === 'nowrap';
+
+    const decls = isFlex
+      ? buildFlexDeclarations({
+          direction: val('cl-direction') as FlexDirection,
+          wrap: val('cl-wrap') as FlexWrap,
+          justifyContent: val('cl-justify-content') as JustifyContent,
+          alignItems: val('cl-align-items') as AlignItems,
+          alignContent: val('cl-align-content') as AlignContent,
+          gap: clampInt(num('cl-gap'), 0, MAX_GAP),
+        })
+      : buildGridDeclarations({
+          columns: clampInt(num('cl-columns'), 1, MAX_TRACKS),
+          rows: clampInt(num('cl-rows'), 0, MAX_TRACKS),
+          columnGap: clampInt(num('cl-column-gap'), 0, MAX_GAP),
+          rowGap: clampInt(num('cl-row-gap'), 0, MAX_GAP),
+          justifyItems: val('cl-justify-items') as GridAlign,
+          alignItems: val('cl-grid-align-items') as GridAlign,
+        });
+
+    preview.style.cssText = '';
+    for (const d of decls) preview.style.setProperty(d.property, d.value);
+
+    const count = clampInt(num('cl-items'), MIN_ITEMS, MAX_ITEMS);
+    if (preview.childElementCount !== count) renderItems(count);
+
+    cssOutput.value = buildCss(decls);
+  }
+
+  // 入力途中の値を書き換えないよう、確定時（change）に範囲内へ補正する
+  function normalize(id: string, min: number, max: number) {
+    const el = $<HTMLInputElement>(id);
+    el.value = String(clampInt(Number(el.value), min, max));
+  }
+
+  document
+    .querySelectorAll<HTMLElement>(
+      '#cl-mode, #cl-items, #cl-flex-options select, #cl-flex-options input, #cl-grid-options select, #cl-grid-options input',
+    )
+    .forEach((el) => {
+      el.addEventListener('input', update);
+      el.addEventListener('change', () => {
+        normalize('cl-items', MIN_ITEMS, MAX_ITEMS);
+        normalize('cl-gap', 0, MAX_GAP);
+        normalize('cl-columns', 1, MAX_TRACKS);
+        normalize('cl-rows', 0, MAX_TRACKS);
+        normalize('cl-column-gap', 0, MAX_GAP);
+        normalize('cl-row-gap', 0, MAX_GAP);
+        update();
+      });
+    });
+
+  copyButton.addEventListener('click', async () => {
+    if (!cssOutput.value) return;
+    statusEl.textContent = (await copyText(cssOutput.value))
+      ? copied
+      : copyFailed;
+  });
+
+  update();
+</script>

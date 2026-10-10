@@ -5555,6 +5555,42 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'metronome-bpm',
+    category: 'media',
+    addedAt: '2026-10-10',
+    updatedAt: '2026-10-10',
+    related: ['speaker-tester', 'timer-stopwatch', 'mic-tester'],
+    translations: {
+      ja: {
+        name: 'メトロノーム・BPM測定（タップテンポ）',
+        description:
+          '20〜300 BPMで鳴らせるメトロノーム。拍子・三連符などの分割に対応し、タップするだけで曲のBPMも測定できます',
+        keywords: [
+          'メトロノーム',
+          'BPM',
+          'BPM測定',
+          'タップテンポ',
+          'テンポ',
+          'リズム',
+          '拍子',
+        ],
+      },
+      en: {
+        name: 'Metronome & BPM Tap Tempo Counter',
+        description:
+          'An online metronome from 20 to 300 BPM with time signatures and subdivisions, plus a tap tempo counter to find the BPM of a song',
+        keywords: [
+          'metronome',
+          'bpm counter',
+          'tap tempo',
+          'bpm tapper',
+          'tempo',
+          'beat counter',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

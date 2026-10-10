@@ -60,6 +60,7 @@ const slugs = [
   'seat-shuffler',
   'csv-excel-converter',
   'video-to-gif',
+  'metronome-bpm',
 ];
 
 const locales = [

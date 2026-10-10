@@ -1,0 +1,441 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { metronomeBpmContent } from '../../i18n/tools/metronome-bpm';
+import {
+  DEFAULT_BPM,
+  MAX_BEATS_PER_BAR,
+  MAX_BPM,
+  MIN_BPM,
+  SUBDIVISIONS,
+  tempoTerm,
+} from '../../lib/tools/metronome-bpm';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = metronomeBpmContent[locale];
+
+const selectClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+const dotClass =
+  'h-4 w-4 rounded-full bg-gray-300 transition-colors data-[active=true]:bg-blue-600 data-[accent=true]:h-5 data-[accent=true]:w-5 dark:bg-gray-700 dark:data-[active=true]:bg-blue-500';
+
+const beatNumbers = Array.from({ length: MAX_BEATS_PER_BAR }, (_, i) => i + 1);
+---
+
+<ToolShell t={t}>
+  <div
+    id="met-root"
+    data-start-label={t.startLabel}
+    data-stop-label={t.stopLabel}
+    data-tap-empty={t.tapEmpty}
+    data-tap-result={t.tapResult}
+    data-tap-need-more={t.tapNeedMore}
+  >
+    <div class="max-w-md">
+      <label for="met-bpm" class="ui-label">
+        {t.bpmLabel}
+      </label>
+      <div class="flex items-center gap-2">
+        <button
+          id="met-bpm-down"
+          type="button"
+          class="ui-btn h-11 w-11 shrink-0 px-0"
+          aria-label={t.decreaseLabel}
+        >
+          −
+        </button>
+        <input
+          id="met-bpm"
+          type="number"
+          inputmode="numeric"
+          min={MIN_BPM}
+          max={MAX_BPM}
+          step="1"
+          value={DEFAULT_BPM}
+          class="ui-input h-11 min-w-0 flex-1 px-3 text-center text-lg font-bold"
+        />
+        <button
+          id="met-bpm-up"
+          type="button"
+          class="ui-btn h-11 w-11 shrink-0 px-0"
+          aria-label={t.increaseLabel}
+        >
+          +
+        </button>
+      </div>
+      <p
+        id="met-term"
+        class="mt-1 text-center text-sm text-gray-600 dark:text-gray-400"
+      >
+        {tempoTerm(DEFAULT_BPM)}
+      </p>
+    </div>
+
+    <div class="mt-3 max-w-md">
+      <label for="met-bpm-slider" class="sr-only">
+        {t.bpmSliderLabel}
+      </label>
+      <input
+        id="met-bpm-slider"
+        type="range"
+        min={MIN_BPM}
+        max={MAX_BPM}
+        step="1"
+        value={DEFAULT_BPM}
+        class="w-full"
+      />
+    </div>
+
+    <div class="mt-5 grid max-w-md gap-4 sm:grid-cols-2">
+      <div>
+        <label for="met-beats" class="ui-label">
+          {t.beatsLabel}
+        </label>
+        <select id="met-beats" class={selectClass}>
+          {beatNumbers.map((n) => (
+            <option value={n} selected={n === 4}>
+              {t.beatsOption.replace('{n}', String(n))}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="met-subdivision" class="ui-label">
+          {t.subdivisionLabel}
+        </label>
+        <select id="met-subdivision" class={selectClass}>
+          {SUBDIVISIONS.map((s) => (
+            <option value={s}>{t.subdivisions[String(s) as '1']}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <div class="mt-4 max-w-md">
+      <label for="met-volume" class="ui-label">
+        {t.volumeLabel}: <span id="met-volume-value">60</span>%
+      </label>
+      <input
+        id="met-volume"
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value="60"
+        class="w-full"
+      />
+    </div>
+
+    <div
+      id="met-dots"
+      role="img"
+      aria-label={t.beatsIndicatorLabel}
+      class="mt-5 flex min-h-6 max-w-md flex-wrap items-center gap-3"
+    >
+      {beatNumbers.map((n) => (
+        <span
+          class={dotClass}
+          data-dot={n}
+          data-active="false"
+          data-accent={n === 1 ? 'true' : 'false'}
+          hidden={n > 4}
+        />
+      ))}
+    </div>
+
+    <div class="mt-5">
+      <button
+        id="met-toggle-button"
+        type="button"
+        class="ui-btn ui-btn-primary h-12 w-full max-w-md"
+        aria-pressed="false"
+      >
+        {t.startLabel}
+      </button>
+    </div>
+
+    <h2 class="mt-8 mb-2 text-lg font-bold">{t.tapHeading}</h2>
+    <p class="mb-3 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
+      {t.tapHint}
+    </p>
+    <div class="flex max-w-md flex-wrap gap-3">
+      <button
+        id="met-tap"
+        type="button"
+        class="ui-btn h-20 min-w-0 flex-1 text-lg font-bold"
+      >
+        {t.tapLabel}
+      </button>
+      <button id="met-tap-reset" type="button" class="ui-btn h-20">
+        {t.tapResetLabel}
+      </button>
+    </div>
+    <p
+      id="met-tap-result"
+      role="status"
+      class="mt-3 text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.tapEmpty}
+    </p>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    MIN_BPM,
+    addTap,
+    bpmFromTaps,
+    clampBeatsPerBar,
+    clampBpm,
+    tempoTerm,
+    tickInfo,
+    tickSeconds,
+    type Subdivision,
+    type TickInfo,
+  } from '../../lib/tools/metronome-bpm';
+  import { volumeToGain } from '../../lib/tools/speaker-tester';
+
+  /** 何秒先までの打音を先行して予約するか */
+  const LOOKAHEAD_SECONDS = 0.12;
+  /** 予約を行う間隔（ミリ秒） */
+  const SCHEDULE_INTERVAL_MS = 25;
+
+  const root = document.getElementById('met-root')!;
+  const d = root.dataset;
+  const bpmInput = document.getElementById('met-bpm') as HTMLInputElement;
+  const slider = document.getElementById('met-bpm-slider') as HTMLInputElement;
+  const term = document.getElementById('met-term')!;
+  const beatsSelect = document.getElementById('met-beats') as HTMLSelectElement;
+  const subdivisionSelect = document.getElementById(
+    'met-subdivision',
+  ) as HTMLSelectElement;
+  const volume = document.getElementById('met-volume') as HTMLInputElement;
+  const volumeValue = document.getElementById('met-volume-value')!;
+  const toggle = document.getElementById(
+    'met-toggle-button',
+  ) as HTMLButtonElement;
+  const tapButton = document.getElementById('met-tap') as HTMLButtonElement;
+  const tapReset = document.getElementById(
+    'met-tap-reset',
+  ) as HTMLButtonElement;
+  const tapResult = document.getElementById('met-tap-result')!;
+  const dots = Array.from(
+    document.querySelectorAll<HTMLElement>('#met-dots [data-dot]'),
+  );
+
+  let context: AudioContext | null = null;
+  let master: GainNode | null = null;
+  let running = false;
+  let timer = 0;
+  let frame = 0;
+  let nextTime = 0;
+  let tickIndex = 0;
+  let queue: { time: number; info: TickInfo }[] = [];
+  let taps: number[] = [];
+  /** 確定したテンポ。入力途中（"1" など）の値は鳴らす側に反映しない */
+  let currentBpm = clampBpm(Number(bpmInput.value));
+  let pending: OscillatorNode[] = [];
+
+  function bpm(): number {
+    return currentBpm;
+  }
+  function beatsPerBar(): number {
+    return clampBeatsPerBar(Number(beatsSelect.value));
+  }
+  function subdivision(): Subdivision {
+    return Number(subdivisionSelect.value) as Subdivision;
+  }
+
+  function ensureContext(): AudioContext {
+    if (!context) {
+      context = new AudioContext();
+      master = context.createGain();
+      master.gain.value = volumeToGain(Number(volume.value));
+      master.connect(context.destination);
+    }
+    if (context.state === 'suspended') void context.resume();
+    return context;
+  }
+
+  function showBpm(value: number) {
+    currentBpm = value;
+    bpmInput.value = String(value);
+    slider.value = String(value);
+    term.textContent = tempoTerm(value);
+  }
+
+  function setBpm(value: number) {
+    showBpm(clampBpm(value));
+  }
+
+  function showDots() {
+    const n = beatsPerBar();
+    dots.forEach((dot, i) => {
+      dot.hidden = i >= n;
+      dot.dataset.active = 'false';
+    });
+  }
+
+  function click(time: number, info: TickInfo) {
+    const ctx = context!;
+    const osc = ctx.createOscillator();
+    const env = ctx.createGain();
+    const strong = info.sub === 0;
+    osc.type = 'triangle';
+    osc.frequency.value = info.accent ? 1600 : strong ? 1000 : 700;
+    const peak = info.accent ? 1 : strong ? 0.8 : 0.4;
+    env.gain.setValueAtTime(0.0001, time);
+    env.gain.linearRampToValueAtTime(peak, time + 0.002);
+    env.gain.exponentialRampToValueAtTime(0.0001, time + 0.06);
+    osc.connect(env).connect(master!);
+    osc.start(time);
+    osc.stop(time + 0.08);
+    pending.push(osc);
+    osc.onended = () => {
+      pending = pending.filter((o) => o !== osc);
+      osc.disconnect();
+      env.disconnect();
+    };
+  }
+
+  function schedule() {
+    if (!context) return;
+    const bar = beatsPerBar();
+    const sub = subdivision();
+    while (nextTime < context.currentTime + LOOKAHEAD_SECONDS) {
+      const info = tickInfo(tickIndex, bar, sub);
+      click(nextTime, info);
+      queue.push({ time: nextTime, info });
+      nextTime += tickSeconds(bpm(), sub);
+      tickIndex++;
+    }
+  }
+
+  function draw() {
+    if (!running || !context) return;
+    const now = context.currentTime;
+    while (queue.length > 0 && queue[0].time <= now) {
+      const { info } = queue.shift()!;
+      if (info.sub === 0) {
+        dots.forEach((dot, i) => {
+          dot.dataset.active = String(i + 1 === info.beat);
+        });
+      }
+    }
+    frame = requestAnimationFrame(draw);
+  }
+
+  function updateToggle() {
+    toggle.textContent = running ? d.stopLabel! : d.startLabel!;
+    toggle.setAttribute('aria-pressed', String(running));
+  }
+
+  function start() {
+    const ctx = ensureContext();
+    running = true;
+    tickIndex = 0;
+    queue = [];
+    nextTime = ctx.currentTime + 0.06;
+    schedule();
+    timer = window.setInterval(schedule, SCHEDULE_INTERVAL_MS);
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(draw);
+    updateToggle();
+  }
+
+  function stop() {
+    running = false;
+    window.clearInterval(timer);
+    cancelAnimationFrame(frame);
+    queue = [];
+    // 先行予約済みの打音も止める
+    pending.forEach((o) => {
+      try {
+        o.stop();
+      } catch {
+        // すでに停止している場合は無視する
+      }
+    });
+    pending = [];
+    showDots();
+    updateToggle();
+  }
+
+  /** 拍子・分割を変えたら、次の打音から小節を数え直す */
+  function restartBar() {
+    tickIndex = 0;
+    queue = [];
+    showDots();
+  }
+
+  function showTap() {
+    const measured = bpmFromTaps(taps);
+    if (taps.length === 0) {
+      tapResult.textContent = d.tapEmpty!;
+    } else if (measured === null) {
+      tapResult.textContent = d.tapNeedMore!;
+    } else {
+      tapResult.textContent = d
+        .tapResult!.replace('{bpm}', measured.toFixed(1))
+        .replace('{count}', String(taps.length));
+    }
+  }
+
+  toggle.addEventListener('click', () => {
+    if (running) stop();
+    else start();
+  });
+  bpmInput.addEventListener('input', () => {
+    if (bpmInput.value === '') return;
+    const raw = Number(bpmInput.value);
+    // 入力途中（"1" や "15" など）の値は確定せず、下限以上になったら反映する
+    if (!Number.isFinite(raw) || raw < MIN_BPM) return;
+    showBpm(clampBpm(raw));
+  });
+  bpmInput.addEventListener('change', () => setBpm(Number(bpmInput.value)));
+  slider.addEventListener('input', () => setBpm(Number(slider.value)));
+  document.getElementById('met-bpm-down')!.addEventListener('click', () => {
+    setBpm(bpm() - 1);
+  });
+  document.getElementById('met-bpm-up')!.addEventListener('click', () => {
+    setBpm(bpm() + 1);
+  });
+  beatsSelect.addEventListener('change', restartBar);
+  subdivisionSelect.addEventListener('change', restartBar);
+  volume.addEventListener('input', () => {
+    volumeValue.textContent = volume.value;
+    if (context && master) {
+      master.gain.setTargetAtTime(
+        volumeToGain(Number(volume.value)),
+        context.currentTime,
+        0.02,
+      );
+    }
+  });
+  tapButton.addEventListener('click', () => {
+    taps = addTap(taps, performance.now());
+    const measured = bpmFromTaps(taps);
+    if (measured !== null) setBpm(measured);
+    showTap();
+  });
+  tapReset.addEventListener('click', () => {
+    taps = [];
+    showTap();
+  });
+
+  // 他のタブへ移ったら止める（裏のタブはタイマーが遅れて拍がずれるため）
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && running) stop();
+  });
+  window.addEventListener('pagehide', () => {
+    if (running) stop();
+  });
+
+  showBpm(clampBpm(Number(bpmInput.value)));
+  volumeValue.textContent = volume.value;
+  showDots();
+</script>

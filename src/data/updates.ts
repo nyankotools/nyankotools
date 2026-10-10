@@ -485,15 +485,16 @@ export const updates: UpdateEntry[] = [
       'css-layout-generator',
       'calendar-generator',
       'video-to-gif',
+      'metronome-bpm',
     ],
     translations: {
       ja: {
         summary:
-          'CSV⇔Excel（xlsx）変換を追加しました。Shift_JISのCSVの自動判定、シート選択、BOM付きUTF-8での保存に対応しています。あわせて、CSS Flexbox/Gridジェネレーター、カレンダー生成（月間・年間・印刷用）、動画→GIF変換・フレーム抽出を追加しました。',
+          'CSV⇔Excel（xlsx）変換を追加しました。Shift_JISのCSVの自動判定、シート選択、BOM付きUTF-8での保存に対応しています。あわせて、CSS Flexbox/Gridジェネレーター、カレンダー生成（月間・年間・印刷用）、動画→GIF変換・フレーム抽出、メトロノーム・BPM測定を追加しました。',
       },
       en: {
         summary:
-          'Added the CSV to Excel (XLSX) Converter, which also exports xlsx sheets to CSV, with Shift_JIS detection, sheet selection and UTF-8 BOM output. Also added the CSS Flexbox & Grid Generator, the Printable Calendar Generator and the Video to GIF & Frame Extractor.',
+          'Added the CSV to Excel (XLSX) Converter, which also exports xlsx sheets to CSV, with Shift_JIS detection, sheet selection and UTF-8 BOM output. Also added the CSS Flexbox & Grid Generator, the Printable Calendar Generator, the Video to GIF & Frame Extractor and the Metronome & BPM Tap Tempo Counter.',
       },
     },
   },

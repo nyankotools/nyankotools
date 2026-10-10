@@ -5517,6 +5517,44 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'video-to-gif',
+    category: 'media',
+    addedAt: '2026-10-10',
+    updatedAt: '2026-10-10',
+    related: ['media-converter', 'gif-maker', 'screen-recorder'],
+    heavy: true,
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '動画→GIF変換・フレーム抽出',
+        description:
+          '動画の好きな範囲をアニメーションGIFに変換。FPS・幅を指定でき、任意の時刻のフレームをPNGで保存も可能。ブラウザ内で処理され、アップロード不要',
+        keywords: [
+          '動画GIF',
+          'GIF変換',
+          'MP4 GIF',
+          'フレーム抽出',
+          '動画 画像 保存',
+          'キャプチャ',
+          'GIFアニメ',
+        ],
+      },
+      en: {
+        name: 'Video to GIF & Frame Extractor',
+        description:
+          'Turn part of a video into an animated GIF with your FPS and width, or save any frame as PNG. Runs in your browser, no upload',
+        keywords: [
+          'video to gif',
+          'mp4 to gif',
+          'gif maker',
+          'extract frame',
+          'video screenshot',
+          'frame to png',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

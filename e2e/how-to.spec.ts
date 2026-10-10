@@ -59,6 +59,7 @@ const slugs = [
   'bingo-generator',
   'seat-shuffler',
   'csv-excel-converter',
+  'video-to-gif',
 ];
 
 const locales = [

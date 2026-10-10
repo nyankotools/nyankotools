@@ -1,0 +1,560 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { videoToGifContent } from '../../i18n/tools/video-to-gif';
+import {
+  DEFAULT_WIDTH,
+  FPS_OPTIONS,
+  MAX_GIF_FRAMES,
+} from '../../lib/tools/video-to-gif';
+import { MAX_GIF_WIDTH } from '../../lib/tools/gif-maker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = videoToGifContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="vg-root"
+    data-source-info={t.sourceInfoTemplate}
+    data-progress={t.progressTemplate}
+    data-gif-result={t.gifResultTemplate}
+    data-frame-result={t.frameResultTemplate}
+    data-error-canceled={t.errorCanceled}
+    data-error-unsupported={t.errorUnsupportedFile}
+    data-error-unreadable={t.errorUnreadable}
+    data-error-no-video={t.errorNoVideo}
+    data-error-unsupported-input={t.errorUnsupportedInput}
+    data-error-failed={t.errorFailed}
+    data-error-too-large-file={t.errorFileTooLargeTemplate}
+    data-error-range-invalid={t.errorRangeInvalid}
+    data-error-range-out-of-range={t.errorRangeOutOfRange}
+    data-error-range-order={t.errorRangeOrder}
+    data-error-too-many-frames={t.errorTooManyFramesTemplate.replace(
+      '{max}',
+      String(MAX_GIF_FRAMES),
+    )}
+    data-error-too-large={t.errorTooLarge}
+    data-error-frame-time-invalid={t.errorFrameTimeInvalid}
+    data-error-frame-time-out-of-range={t.errorFrameTimeOutOfRange}
+  >
+    <label for="vg-file" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="vg-dropzone" class="ui-dropzone">
+      <input
+        id="vg-file"
+        type="file"
+        accept="video/*,.mkv,.mov,.ts"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="vg-source-info"
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p id="vg-error" role="alert" hidden class="ui-error mt-2"></p>
+
+    <div id="vg-workspace" hidden class="mt-6">
+      <section>
+        <h2 class="mb-3 text-lg font-bold">{t.gifHeading}</h2>
+        <div class="flex flex-wrap gap-4">
+          <div class="min-w-36 flex-1">
+            <label for="vg-start" class="ui-label">
+              {t.startLabel}
+            </label>
+            <input
+              id="vg-start"
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              placeholder={t.startPlaceholder}
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            />
+          </div>
+          <div class="min-w-36 flex-1">
+            <label for="vg-end" class="ui-label">
+              {t.endLabel}
+            </label>
+            <input
+              id="vg-end"
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              placeholder={t.endPlaceholder}
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            />
+          </div>
+        </div>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {t.rangeHint}
+        </p>
+
+        <div class="mt-4 flex flex-wrap gap-4">
+          <div class="min-w-36 flex-1">
+            <label for="vg-fps" class="ui-label">
+              {t.fpsLabel}
+            </label>
+            <select
+              id="vg-fps"
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            >
+              {FPS_OPTIONS.map((fps) => (
+                <option value={String(fps)} selected={fps === 10}>
+                  {t.fpsTemplate.replace('{fps}', String(fps))}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div class="min-w-36 flex-1">
+            <label for="vg-width" class="ui-label">
+              {t.widthLabel}
+            </label>
+            <input
+              id="vg-width"
+              type="number"
+              min="16"
+              max={MAX_GIF_WIDTH}
+              step="1"
+              value={DEFAULT_WIDTH}
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            />
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {t.widthHint}
+            </p>
+          </div>
+        </div>
+
+        <label class="ui-check mt-3">
+          <input id="vg-loop" type="checkbox" checked class="h-4 w-4" />
+          {t.loopLabel}
+        </label>
+
+        <div class="mt-4 flex flex-wrap gap-3">
+          <button id="vg-generate-button" type="button" class="ui-btn-primary">
+            {t.generateButton}
+          </button>
+          <button id="vg-cancel-button" type="button" hidden class="ui-btn">
+            {t.cancelButton}
+          </button>
+          <button id="vg-clear-button" type="button" class="ui-btn">
+            {t.clearButton}
+          </button>
+        </div>
+
+        <div id="vg-progress-section" hidden class="mt-4">
+          <p
+            id="vg-progress-text"
+            class="mb-1 text-sm text-gray-700 dark:text-gray-300"
+          ></p>
+          <progress
+            id="vg-progress"
+            max="100"
+            value="0"
+            aria-label={t.progressLabel}
+            class="h-2 w-full"
+          ></progress>
+        </div>
+
+        <div id="vg-gif-result" hidden class="mt-4">
+          <div
+            class="w-fit max-w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700"
+            style="background-image: conic-gradient(#e5e7eb 25%, #fff 0 50%, #e5e7eb 0 75%, #fff 0); background-size: 16px 16px;"
+          >
+            <img
+              id="vg-gif-preview"
+              alt={t.previewAlt}
+              class="block max-h-[70vh] max-w-full"
+            />
+          </div>
+          <p
+            id="vg-gif-info"
+            class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+            aria-live="polite"
+          ></p>
+          <button
+            id="vg-gif-download"
+            type="button"
+            class="ui-btn-primary mt-3"
+          >
+            {t.downloadGifButton}
+          </button>
+        </div>
+      </section>
+
+      <section class="mt-8">
+        <h2 class="mb-3 text-lg font-bold">{t.frameHeading}</h2>
+        <div class="max-w-xs">
+          <label for="vg-frame-time" class="ui-label">
+            {t.frameTimeLabel}
+          </label>
+          <input
+            id="vg-frame-time"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            placeholder={t.frameTimePlaceholder}
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </div>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {t.frameTimeHint}
+        </p>
+        <button id="vg-extract-button" type="button" class="ui-btn mt-3">
+          {t.extractButton}
+        </button>
+
+        <div id="vg-frame-result" hidden class="mt-4">
+          <div class="w-fit max-w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700">
+            <img
+              id="vg-frame-preview"
+              alt={t.frameAlt}
+              class="block max-h-[70vh] max-w-full"
+            />
+          </div>
+          <p
+            id="vg-frame-info"
+            class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+            aria-live="polite"
+          ></p>
+          <button
+            id="vg-frame-download"
+            type="button"
+            class="ui-btn-primary mt-3"
+          >
+            {t.downloadFrameButton}
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { fill } from '../../lib/format-template';
+  import {
+    MAX_FILE_SIZE,
+    VideoToGifError,
+    buildFrameFileName,
+    buildGifFileName,
+    extractFramePng,
+    formatDuration,
+    formatFileSize,
+    isAcceptedMediaFile,
+    planGif,
+    readMediaInfo,
+    resolveFrameTime,
+    resolveGifRange,
+    videoToGif,
+    type MediaInfo,
+  } from '../../lib/tools/video-to-gif';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('vg-root');
+  const d = root.dataset;
+  const fileInput = $<HTMLInputElement>('vg-file');
+  const sourceInfoEl = $('vg-source-info');
+  const errorEl = $('vg-error');
+  const workspace = $('vg-workspace');
+  const startInput = $<HTMLInputElement>('vg-start');
+  const endInput = $<HTMLInputElement>('vg-end');
+  const fpsSelect = $<HTMLSelectElement>('vg-fps');
+  const widthInput = $<HTMLInputElement>('vg-width');
+  const loopInput = $<HTMLInputElement>('vg-loop');
+  const generateButton = $<HTMLButtonElement>('vg-generate-button');
+  const cancelButton = $<HTMLButtonElement>('vg-cancel-button');
+  const clearButton = $<HTMLButtonElement>('vg-clear-button');
+  const progressSection = $('vg-progress-section');
+  const progressText = $('vg-progress-text');
+  const progressBar = $<HTMLProgressElement>('vg-progress');
+  const gifResult = $('vg-gif-result');
+  const gifPreview = $<HTMLImageElement>('vg-gif-preview');
+  const gifInfo = $('vg-gif-info');
+  const gifDownload = $<HTMLButtonElement>('vg-gif-download');
+  const frameTimeInput = $<HTMLInputElement>('vg-frame-time');
+  const extractButton = $<HTMLButtonElement>('vg-extract-button');
+  const frameResult = $('vg-frame-result');
+  const framePreview = $<HTMLImageElement>('vg-frame-preview');
+  const frameInfo = $('vg-frame-info');
+  const frameDownload = $<HTMLButtonElement>('vg-frame-download');
+
+  let currentFile: File | null = null;
+  let currentInfo: MediaInfo | null = null;
+  let gifBlob: Blob | null = null;
+  let gifUrl: string | null = null;
+  let frameBlob: Blob | null = null;
+  let frameUrl: string | null = null;
+  let frameName = '';
+  let abort: AbortController | null = null;
+  let extracting = false;
+  // ファイル選択のやり直しなどで古い非同期処理の結果を捨てるための世代番号
+  let generation = 0;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  function revokeGif() {
+    if (gifUrl) URL.revokeObjectURL(gifUrl);
+    gifUrl = null;
+    gifBlob = null;
+    gifPreview.removeAttribute('src');
+    gifResult.hidden = true;
+    gifInfo.textContent = '';
+  }
+
+  function revokeFrame() {
+    if (frameUrl) URL.revokeObjectURL(frameUrl);
+    frameUrl = null;
+    frameBlob = null;
+    framePreview.removeAttribute('src');
+    frameResult.hidden = true;
+    frameInfo.textContent = '';
+  }
+
+  function setBusy(busy: boolean) {
+    generateButton.hidden = busy;
+    cancelButton.hidden = !busy;
+    progressSection.hidden = !busy;
+    for (const el of [
+      fileInput,
+      startInput,
+      endInput,
+      fpsSelect,
+      widthInput,
+      loopInput,
+      clearButton,
+    ]) {
+      el.disabled = busy;
+    }
+    extractButton.disabled = busy || extracting;
+    generateButton.disabled = extracting;
+  }
+
+  function setProgress(ratio: number) {
+    const percent = Math.min(100, Math.floor(ratio * 100));
+    progressBar.value = percent;
+    progressText.textContent = fill(d.progress ?? '', {
+      percent: String(percent),
+    });
+  }
+
+  function resetAll() {
+    generation++;
+    abort?.abort();
+    abort = null;
+    revokeGif();
+    revokeFrame();
+    currentFile = null;
+    currentInfo = null;
+    sourceInfoEl.textContent = '';
+    workspace.hidden = true;
+    setBusy(false);
+  }
+
+  async function loadFile(file: File) {
+    showError('');
+    resetAll();
+    const gen = generation;
+
+    if (!isAcceptedMediaFile(file) || file.type.startsWith('audio/')) {
+      showError(d.errorUnsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        fill(d.errorTooLargeFile ?? '', { max: formatFileSize(MAX_FILE_SIZE) }),
+      );
+      return;
+    }
+    let info: MediaInfo;
+    try {
+      info = await readMediaInfo(file);
+    } catch {
+      if (gen === generation) showError(d.errorUnreadable ?? '');
+      return;
+    }
+    if (gen !== generation) return;
+    if (!info.hasVideo) {
+      showError(d.errorNoVideo ?? '');
+      return;
+    }
+
+    currentFile = file;
+    currentInfo = info;
+    sourceInfoEl.textContent = fill(d.sourceInfo ?? '', {
+      resolution: `${info.width}×${info.height}`,
+      duration: formatDuration(info.duration),
+      size: formatFileSize(file.size),
+    });
+    workspace.hidden = false;
+  }
+
+  function errorMessage(e: unknown): string {
+    const code = e instanceof VideoToGifError ? e.code : 'failed';
+    switch (code) {
+      case 'canceled':
+        return d.errorCanceled ?? '';
+      case 'no-video':
+        return d.errorNoVideo ?? '';
+      case 'unsupported-input':
+        return d.errorUnsupportedInput ?? '';
+      default:
+        return d.errorFailed ?? '';
+    }
+  }
+
+  async function generateGif() {
+    if (!currentFile || !currentInfo || abort || extracting) return;
+    showError('');
+    revokeGif();
+
+    const range = resolveGifRange(
+      startInput.value,
+      endInput.value,
+      currentInfo.duration,
+    );
+    if (!range.ok) {
+      showError(
+        range.error === 'invalid'
+          ? (d.errorRangeInvalid ?? '')
+          : range.error === 'outOfRange'
+            ? (d.errorRangeOutOfRange ?? '')
+            : (d.errorRangeOrder ?? ''),
+      );
+      return;
+    }
+    const fps = Number(fpsSelect.value) || 10;
+    const plan = planGif({
+      start: range.start,
+      end: range.end,
+      fps,
+      source: { width: currentInfo.width, height: currentInfo.height },
+      width: Number(widthInput.value),
+    });
+    if (!plan.ok) {
+      showError(
+        plan.error === 'tooManyFrames'
+          ? (d.errorTooManyFrames ?? '')
+          : (d.errorTooLarge ?? ''),
+      );
+      return;
+    }
+
+    const file = currentFile;
+    const gen = generation;
+    const controller = new AbortController();
+    abort = controller;
+    setBusy(true);
+    setProgress(0);
+    try {
+      const blob = await videoToGif(file, {
+        timestamps: plan.timestamps,
+        width: plan.width,
+        height: plan.height,
+        fps,
+        loop: loopInput.checked,
+        signal: controller.signal,
+        onProgress: (ratio) => {
+          if (gen === generation) setProgress(ratio);
+        },
+      });
+      if (gen !== generation) return;
+      gifBlob = blob;
+      gifUrl = URL.createObjectURL(blob);
+      gifPreview.src = gifUrl;
+      gifInfo.textContent = fill(d.gifResult ?? '', {
+        width: String(plan.width),
+        height: String(plan.height),
+        frames: String(plan.timestamps.length),
+        size: formatFileSize(blob.size),
+      });
+      gifResult.hidden = false;
+    } catch (e) {
+      if (gen === generation) showError(errorMessage(e));
+    } finally {
+      if (abort === controller) abort = null;
+      if (gen === generation) setBusy(false);
+    }
+  }
+
+  async function extractFrame() {
+    if (!currentFile || !currentInfo || abort || extracting) return;
+    showError('');
+    revokeFrame();
+    const time = resolveFrameTime(frameTimeInput.value, currentInfo.duration);
+    if (!time.ok) {
+      showError(
+        time.error === 'invalid'
+          ? (d.errorFrameTimeInvalid ?? '')
+          : (d.errorFrameTimeOutOfRange ?? ''),
+      );
+      return;
+    }
+    const file = currentFile;
+    const gen = generation;
+    extracting = true;
+    extractButton.disabled = true;
+    generateButton.disabled = true;
+    try {
+      const png = await extractFramePng(file, time.time);
+      if (gen !== generation) return;
+      frameBlob = png.blob;
+      frameName = buildFrameFileName(file.name, time.time);
+      frameUrl = URL.createObjectURL(png.blob);
+      framePreview.src = frameUrl;
+      frameInfo.textContent = fill(d.frameResult ?? '', {
+        time: formatDuration(time.time),
+        width: String(png.width),
+        height: String(png.height),
+        size: formatFileSize(png.blob.size),
+      });
+      frameResult.hidden = false;
+    } catch (e) {
+      if (gen === generation) showError(errorMessage(e));
+    } finally {
+      extracting = false;
+      if (!abort) extractButton.disabled = false;
+      generateButton.disabled = false;
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop($('vg-dropzone'), fileInput);
+
+  generateButton.addEventListener('click', () => void generateGif());
+  cancelButton.addEventListener('click', () => abort?.abort());
+  extractButton.addEventListener('click', () => void extractFrame());
+  clearButton.addEventListener('click', () => {
+    resetAll();
+    showError('');
+  });
+  gifDownload.addEventListener('click', () => {
+    if (gifBlob && currentFile) {
+      downloadBlob(gifBlob, buildGifFileName(currentFile.name));
+    }
+  });
+  frameDownload.addEventListener('click', () => {
+    if (frameBlob) downloadBlob(frameBlob, frameName);
+  });
+
+  // 設定を変えたら、前に作ったGIFは古いので消す
+  for (const el of [startInput, endInput, fpsSelect, widthInput, loopInput]) {
+    el.addEventListener('input', revokeGif);
+    el.addEventListener('change', revokeGif);
+  }
+  frameTimeInput.addEventListener('input', revokeFrame);
+</script>

@@ -1,0 +1,383 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { calendarGeneratorContent } from '../../i18n/tools/calendar-generator';
+import { businessDayCalculatorContent } from '../../i18n/tools/business-day-calculator';
+import { MAX_YEAR, MIN_YEAR } from '../../lib/tools/calendar-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = calendarGeneratorContent[locale];
+const holidayNames = businessDayCalculatorContent[locale].holidayNames;
+
+const monthFormat = new Intl.DateTimeFormat(t.dateLocale, {
+  timeZone: 'UTC',
+  month: 'long',
+});
+const monthNames = Array.from({ length: 12 }, (_, i) =>
+  monthFormat.format(new Date(Date.UTC(2023, i, 1))),
+);
+---
+
+<ToolShell t={t}>
+  <section
+    id="cal"
+    data-date-locale={t.dateLocale}
+    data-holiday-names={JSON.stringify(holidayNames)}
+    data-week-header={t.weekNumberHeader}
+    data-year-title={t.yearTitle}
+    data-holiday-heading={t.holidayListHeading}
+    data-error-year={t.errorYear}
+    data-min-year={MIN_YEAR}
+    data-max-year={MAX_YEAR}
+    class="space-y-4"
+  >
+    <div class="space-y-4 print:hidden">
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="cal-mode" class="ui-label">
+            {t.modeLabel}
+          </label>
+          <select id="cal-mode" class="ui-input h-11 px-3 dark:bg-gray-900">
+            <option value="month" selected>
+              {t.modeMonth}
+            </option>
+            <option value="year">{t.modeYear}</option>
+          </select>
+        </div>
+        <div>
+          <label for="cal-year" class="ui-label">
+            {t.yearLabel}
+          </label>
+          <input
+            id="cal-year"
+            type="number"
+            inputmode="numeric"
+            min={MIN_YEAR}
+            max={MAX_YEAR}
+            step="1"
+            class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div id="cal-month-field">
+          <label for="cal-month" class="ui-label">
+            {t.monthLabel}
+          </label>
+          <select id="cal-month" class="ui-input h-11 px-3 dark:bg-gray-900">
+            {monthNames.map((name, i) => (
+              <option value={String(i + 1)}>{name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="cal-week-start" class="ui-label">
+            {t.weekStartLabel}
+          </label>
+          <select
+            id="cal-week-start"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+          >
+            <option value="0" selected>
+              {t.weekStartSun}
+            </option>
+            <option value="1">{t.weekStartMon}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-x-6">
+        <label class="ui-check">
+          <input
+            id="cal-holidays"
+            type="checkbox"
+            checked={t.holidaysDefault}
+          />
+          {t.holidaysLabel}
+        </label>
+        <label class="ui-check">
+          <input id="cal-week-numbers" type="checkbox" />
+          {t.weekNumbersLabel}
+        </label>
+        <label class="ui-check">
+          <input id="cal-today" type="checkbox" checked />
+          {t.todayLabel}
+        </label>
+      </div>
+
+      <button id="cal-print-button" type="button" class="ui-btn ui-btn-primary">
+        {t.printButton}
+      </button>
+      <p id="cal-error" class="ui-error empty:hidden" aria-live="polite"></p>
+    </div>
+
+    <div id="cal-output"></div>
+  </section>
+</ToolShell>
+
+<style is:global>
+  @media print {
+    /* 印刷はカレンダーだけにする（見出し・説明文・使い方・注意事項・FAQなどは出さない） */
+    [data-tool-page] > :not(#cal) {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  import {
+    buildMonth,
+    buildYear,
+    isValidYear,
+    weekdayOrder,
+    type CalendarMonth,
+    type CalendarOptions,
+    type WeekStart,
+  } from '../../lib/tools/calendar-generator';
+  import { fill } from '../../lib/format-template';
+  import type { HolidayKey } from '../../lib/tools/business-day-calculator';
+
+  const root = document.getElementById('cal')!;
+  const dateLocale = root.dataset.dateLocale ?? 'en-US';
+  const holidayNames: Record<HolidayKey, string> = JSON.parse(
+    root.dataset.holidayNames ?? '{}',
+  );
+  const weekHeader = root.dataset.weekHeader ?? '';
+  const yearTitle = root.dataset.yearTitle ?? '{year}';
+  const holidayHeading = root.dataset.holidayHeading ?? '';
+  const errorYear = root.dataset.errorYear ?? '';
+  const minYear = Number(root.dataset.minYear);
+  const maxYear = Number(root.dataset.maxYear);
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const modeSelect = $<HTMLSelectElement>('cal-mode');
+  const yearInput = $<HTMLInputElement>('cal-year');
+  const monthField = $('cal-month-field');
+  const monthSelect = $<HTMLSelectElement>('cal-month');
+  const weekStartSelect = $<HTMLSelectElement>('cal-week-start');
+  const holidaysCheck = $<HTMLInputElement>('cal-holidays');
+  const weekNumbersCheck = $<HTMLInputElement>('cal-week-numbers');
+  const todayCheck = $<HTMLInputElement>('cal-today');
+  const printButton = $<HTMLButtonElement>('cal-print-button');
+  const errorEl = $('cal-error');
+  const output = $('cal-output');
+
+  const monthTitleFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: 'long',
+  });
+  const monthOnlyFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    month: 'long',
+  });
+  const weekdayFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    weekday: 'short',
+  });
+  const dayFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    month: 'short',
+    day: 'numeric',
+    weekday: 'short',
+  });
+
+  const utcDate = (year: number, month: number, day = 1) => {
+    const d = new Date(Date.UTC(2000, month - 1, day));
+    d.setUTCFullYear(year);
+    return d;
+  };
+
+  const todayParts = (() => {
+    const d = new Date();
+    return { y: d.getFullYear(), m: d.getMonth() + 1, d: d.getDate() };
+  })();
+
+  function weekdayLabel(dow: number): string {
+    // 2023-01-01 は日曜日
+    return weekdayFormat.format(new Date(Date.UTC(2023, 0, 1 + dow)));
+  }
+
+  function dayColor(dow: number, holiday: boolean): string {
+    if (holiday || dow === 0) return 'text-red-600 dark:text-red-400';
+    if (dow === 6) return 'text-blue-600 dark:text-blue-400';
+    return '';
+  }
+
+  function monthTable(
+    cal: CalendarMonth,
+    opts: CalendarOptions,
+    showWeeks: boolean,
+    large: boolean,
+    title: string,
+  ): HTMLElement {
+    const table = document.createElement('table');
+    table.className = 'w-full table-fixed border-collapse text-center';
+
+    const caption = document.createElement('caption');
+    caption.className = large
+      ? 'mb-2 text-left text-2xl font-bold'
+      : 'mb-1 text-left text-base font-semibold';
+    caption.textContent = title;
+    table.append(caption);
+
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+    if (showWeeks) {
+      const th = document.createElement('th');
+      th.scope = 'col';
+      th.className =
+        'w-8 border border-gray-300 py-1 text-xs font-normal text-gray-500 dark:border-gray-600 dark:text-gray-400 print:border-gray-400 print:text-gray-600';
+      th.textContent = weekHeader;
+      headRow.append(th);
+    }
+    for (const dow of weekdayOrder(opts.weekStart)) {
+      const th = document.createElement('th');
+      th.scope = 'col';
+      th.className = `border border-gray-300 py-1 text-xs font-medium dark:border-gray-600 print:border-gray-400 ${dayColor(dow, false)}`;
+      th.textContent = weekdayLabel(dow);
+      headRow.append(th);
+    }
+    thead.append(headRow);
+    table.append(thead);
+
+    const tbody = document.createElement('tbody');
+    for (const week of cal.weeks) {
+      const tr = document.createElement('tr');
+      if (showWeeks) {
+        const td = document.createElement('td');
+        td.className =
+          'border border-gray-300 text-xs text-gray-500 dark:border-gray-600 dark:text-gray-400 print:border-gray-400 print:text-gray-600';
+        td.textContent = String(week.weekNumber);
+        tr.append(td);
+      }
+      for (const day of week.days) {
+        const td = document.createElement('td');
+        td.className = `border border-gray-300 align-top dark:border-gray-600 print:border-gray-400 ${
+          large ? 'h-14 p-1 text-left text-base sm:h-20' : 'h-9 text-sm'
+        }`;
+        if (day) {
+          const isToday =
+            todayCheck.checked &&
+            day.iso ===
+              `${String(todayParts.y).padStart(4, '0')}-${String(todayParts.m).padStart(2, '0')}-${String(todayParts.d).padStart(2, '0')}`;
+          const span = document.createElement('span');
+          span.className = `${dayColor(day.dow, day.holiday !== null)} ${
+            isToday
+              ? 'inline-block min-w-6 rounded-full bg-blue-600 px-1 text-white print:bg-transparent print:text-inherit print:ring-1 print:ring-gray-500'
+              : ''
+          }`;
+          span.textContent = String(day.day);
+          td.append(span);
+          if (day.holiday && large) {
+            const name = document.createElement('div');
+            name.className =
+              'mt-0.5 hidden text-[10px] leading-tight text-red-600 sm:block dark:text-red-400';
+            name.textContent = holidayNames[day.holiday];
+            td.append(name);
+          }
+        }
+        tr.append(td);
+      }
+      tbody.append(tr);
+    }
+    table.append(tbody);
+    return table;
+  }
+
+  function holidayList(cal: CalendarMonth): HTMLElement | null {
+    if (cal.holidays.length === 0) return null;
+    const wrap = document.createElement('div');
+    wrap.className = 'mt-4';
+    const h = document.createElement('h2');
+    h.className = 'mb-1 text-sm font-semibold';
+    h.textContent = holidayHeading;
+    const ul = document.createElement('ul');
+    ul.className = 'space-y-0.5 text-sm';
+    for (const day of cal.holidays) {
+      const li = document.createElement('li');
+      li.className = 'text-red-600 dark:text-red-400 print:text-black';
+      const date = dayFormat.format(utcDate(cal.year, cal.month, day.day));
+      li.textContent = `${date} ${holidayNames[day.holiday!]}`;
+      ul.append(li);
+    }
+    wrap.append(h, ul);
+    return wrap;
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    output.replaceChildren();
+    const year = Number(yearInput.value);
+    monthField.classList.toggle('hidden', modeSelect.value === 'year');
+    if (yearInput.value.trim() === '' || !isValidYear(year)) {
+      if (yearInput.value.trim() !== '') {
+        errorEl.textContent = fill(errorYear, {
+          min: String(minYear),
+          max: String(maxYear),
+        });
+      }
+      return;
+    }
+
+    const opts: CalendarOptions = {
+      weekStart: Number(weekStartSelect.value) as WeekStart,
+      holidays: holidaysCheck.checked,
+    };
+    const showWeeks = weekNumbersCheck.checked;
+
+    if (modeSelect.value === 'year') {
+      const months = buildYear(year, opts)!;
+      const heading = document.createElement('h2');
+      heading.className = 'mb-3 text-2xl font-bold';
+      heading.textContent = fill(yearTitle, { year: String(year) });
+      const grid = document.createElement('div');
+      grid.className =
+        'grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 print:grid-cols-3 print:gap-4';
+      for (const cal of months) {
+        const wrap = document.createElement('div');
+        wrap.append(
+          monthTable(
+            cal,
+            opts,
+            showWeeks,
+            false,
+            monthOnlyFormat.format(utcDate(year, cal.month)),
+          ),
+        );
+        grid.append(wrap);
+      }
+      output.append(heading, grid);
+    } else {
+      const month = Number(monthSelect.value);
+      const cal = buildMonth(year, month, opts)!;
+      output.append(
+        monthTable(
+          cal,
+          opts,
+          showWeeks,
+          true,
+          monthTitleFormat.format(utcDate(year, month)),
+        ),
+      );
+      const list = holidayList(cal);
+      if (list) output.append(list);
+    }
+  }
+
+  [modeSelect, weekStartSelect, monthSelect].forEach((el) =>
+    el.addEventListener('change', render),
+  );
+  [holidaysCheck, weekNumbersCheck, todayCheck].forEach((el) =>
+    el.addEventListener('change', render),
+  );
+  yearInput.addEventListener('input', render);
+  printButton.addEventListener('click', () => window.print());
+
+  yearInput.value = String(todayParts.y);
+  monthSelect.value = String(todayParts.m);
+  render();
+</script>

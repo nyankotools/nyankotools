@@ -3166,6 +3166,46 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'calendar-generator',
+    category: 'datetime',
+    addedAt: '2026-10-10',
+    updatedAt: '2026-10-10',
+    related: [
+      'business-day-calculator',
+      'date-calculator',
+      'japanese-era-converter',
+    ],
+    translations: {
+      ja: {
+        name: 'カレンダー生成（月間・年間・印刷用）',
+        keywords: [
+          'カレンダー',
+          '月間カレンダー',
+          '年間カレンダー',
+          '祝日',
+          '週番号',
+          '印刷',
+          'カレンダー作成',
+        ],
+        description:
+          '年月を選ぶだけで月間・年間カレンダーを作成して印刷できます。日本の祝日・振替休日、週番号、日曜／月曜始まりに対応。',
+      },
+      en: {
+        name: 'Printable Calendar Generator (Monthly & Yearly)',
+        keywords: [
+          'calendar',
+          'printable calendar',
+          'monthly calendar',
+          'yearly calendar',
+          'week numbers',
+          'holidays',
+        ],
+        description:
+          'Create a printable monthly or yearly calendar with optional Japanese holidays, ISO week numbers and a Sunday or Monday week start.',
+      },
+    },
+  },
+  {
     slug: 'timer-stopwatch',
     category: 'datetime',
     addedAt: '2026-10-02',

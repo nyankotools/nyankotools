@@ -31,6 +31,7 @@ const slugs = [
   'dead-pixel-checker',
   'timezone-converter',
   'business-day-calculator',
+  'calendar-generator',
   'qr-code-reader',
   'heic-converter',
   'pdf-redactor',

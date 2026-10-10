@@ -61,6 +61,7 @@ const slugs = [
   'csv-excel-converter',
   'video-to-gif',
   'metronome-bpm',
+  'random-generator',
 ];
 
 const locales = [

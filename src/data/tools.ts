@@ -5591,6 +5591,44 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'random-generator',
+    category: 'generate',
+    addedAt: '2026-10-10',
+    updatedAt: '2026-10-10',
+    related: ['password-generator', 'uuid-generator', 'roulette-dice'],
+    translations: {
+      ja: {
+        name: 'ランダム文字列・乱数生成',
+        description:
+          '文字種・長さを指定したランダム文字列や、範囲指定の整数・小数の乱数（重複なし対応）を最大1000件まとめて生成します',
+        keywords: [
+          '乱数',
+          '乱数生成',
+          'ランダム文字列',
+          'ランダム数字',
+          '重複なし',
+          'ダミーデータ',
+          '抽選番号',
+          'ランダム漢字',
+        ],
+      },
+      en: {
+        name: 'Random String & Number Generator',
+        description:
+          'Generate up to 1,000 random strings from your characters, or random integers and decimals in a range with no duplicates',
+        keywords: [
+          'random number generator',
+          'random string',
+          'random integer',
+          'rng',
+          'no duplicates',
+          'random text',
+          'random kanji',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

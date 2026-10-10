@@ -31,6 +31,7 @@ const slugs = [
   'dead-pixel-checker',
   'timezone-converter',
   'business-day-calculator',
+  'calendar-generator',
   'qr-code-reader',
   'heic-converter',
   'pdf-redactor',
@@ -57,6 +58,11 @@ const slugs = [
   'team-splitter',
   'bingo-generator',
   'seat-shuffler',
+  'csv-excel-converter',
+  'video-to-gif',
+  'metronome-bpm',
+  'random-generator',
+  'file-type-detector',
 ];
 
 const locales = [

@@ -1,0 +1,209 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { fileTypeDetectorContent } from '../../i18n/tools/file-type-detector';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = fileTypeDetectorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="ftd-root"
+    data-label-type={t.labelType}
+    data-label-category={t.labelCategory}
+    data-label-mime={t.labelMime}
+    data-label-extension={t.labelExtension}
+    data-label-size={t.labelSize}
+    data-label-head={t.labelHead}
+    data-no-extension={t.noExtension}
+    data-hex-dump-summary={t.hexDumpSummary}
+    data-categories={JSON.stringify(t.categories)}
+    data-verdict-match={t.verdictMatch}
+    data-verdict-mismatch={t.verdictMismatch}
+    data-verdict-text-mismatch={t.verdictTextMismatch}
+    data-verdict-no-extension={t.verdictNoExtension}
+    data-verdict-undetermined={t.verdictUndetermined}
+    data-verdict-text-note={t.verdictTextNote}
+    data-empty-file={t.emptyFile}
+    data-error-read-failed={t.errorReadFailed}
+  >
+    <label for="ftd-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="ftd-dropzone" class="ui-dropzone">
+      <input id="ftd-file-input" type="file" multiple class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="ftd-error"
+      role="alert"
+      hidden
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+    ></p>
+
+    <div id="ftd-results" class="mt-4 space-y-4"></div>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    HEAD_BYTES,
+    checkExtension,
+    detectFileType,
+    formatFileSize,
+    formatHeadBytes,
+    formatHexDump,
+    type FileTypeCategory,
+  } from '../../lib/tools/file-type-detector';
+
+  const root = document.getElementById('ftd-root')!;
+  const dropzone = document.getElementById('ftd-dropzone')!;
+  const fileInput = document.getElementById(
+    'ftd-file-input',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('ftd-error')!;
+  const resultsEl = document.getElementById('ftd-results')!;
+
+  const d = root.dataset;
+  const categories = JSON.parse(d.categories ?? '{}') as Record<
+    FileTypeCategory,
+    string
+  >;
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(
+      /\{(\w+)\}/g,
+      (_, key: string) => values[key] ?? '',
+    );
+  }
+
+  function addRow(list: HTMLElement, label: string, value: string) {
+    const dt = document.createElement('dt');
+    dt.className = 'text-gray-500 dark:text-gray-400';
+    dt.textContent = label;
+    const dd = document.createElement('dd');
+    dd.className = 'break-all font-mono text-gray-900 dark:text-gray-100';
+    dd.textContent = value;
+    list.append(dt, dd);
+  }
+
+  function renderResult(file: File, head: Uint8Array): HTMLElement {
+    const card = document.createElement('section');
+    card.className =
+      'rounded-lg border border-gray-200 p-4 dark:border-gray-700';
+
+    const title = document.createElement('h2');
+    title.className =
+      'break-all text-sm font-semibold text-gray-900 dark:text-gray-100';
+    title.textContent = file.name;
+    card.append(title);
+
+    const verdict = document.createElement('p');
+    verdict.setAttribute('role', 'status');
+    card.append(verdict);
+
+    if (file.size === 0) {
+      verdict.className =
+        'mt-2 text-sm font-medium text-gray-700 dark:text-gray-300';
+      verdict.textContent = d.emptyFile ?? '';
+      return card;
+    }
+
+    const type = detectFileType(head);
+    const check = checkExtension(type, file.name);
+    const values = {
+      ext: check.extension,
+      type: type?.name ?? '',
+      exts: (type?.extensions ?? [])
+        .slice(0, 6)
+        .map((e) => `.${e}`)
+        .join(' '),
+    };
+
+    let message: string;
+    let tone = 'text-green-700 dark:text-green-400';
+    if (check.status === 'match') {
+      message = fill(d.verdictMatch, values);
+      if (type?.category === 'text') message += ' ' + (d.verdictTextNote ?? '');
+    } else if (check.status === 'mismatch') {
+      tone = 'text-red-600 dark:text-red-400';
+      message = fill(
+        type?.category === 'text' ? d.verdictTextMismatch : d.verdictMismatch,
+        values,
+      );
+    } else if (check.status === 'no-extension') {
+      tone = 'text-amber-700 dark:text-amber-400';
+      message = fill(d.verdictNoExtension, values);
+    } else {
+      tone = 'text-amber-700 dark:text-amber-400';
+      message = d.verdictUndetermined ?? '';
+    }
+    verdict.className = `mt-2 text-sm font-medium ${tone}`;
+    verdict.textContent = message;
+
+    const list = document.createElement('dl');
+    list.className = 'mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm';
+    if (type) {
+      addRow(list, d.labelType ?? '', type.name);
+      addRow(list, d.labelCategory ?? '', categories[type.category]);
+      addRow(list, d.labelMime ?? '', type.mime);
+    }
+    addRow(
+      list,
+      d.labelExtension ?? '',
+      check.extension ? `.${check.extension}` : (d.noExtension ?? ''),
+    );
+    addRow(list, d.labelSize ?? '', formatFileSize(file.size));
+    addRow(list, d.labelHead ?? '', formatHeadBytes(head, 16));
+    card.append(list);
+
+    const details = document.createElement('details');
+    details.className = 'mt-3';
+    const summary = document.createElement('summary');
+    summary.className =
+      'cursor-pointer text-sm text-gray-700 dark:text-gray-300';
+    summary.textContent = d.hexDumpSummary ?? '';
+    const pre = document.createElement('pre');
+    pre.className =
+      'mt-2 overflow-x-auto rounded-md bg-gray-50 p-3 font-mono text-xs leading-5 text-gray-900 dark:bg-gray-900 dark:text-gray-100';
+    pre.textContent = formatHexDump(head);
+    details.append(summary, pre);
+    card.append(details);
+
+    return card;
+  }
+
+  async function handleFiles(files: File[]) {
+    const errors: string[] = [];
+    errorEl.hidden = true;
+    const cards: HTMLElement[] = [];
+    for (const file of files) {
+      try {
+        const buffer = await file.slice(0, HEAD_BYTES).arrayBuffer();
+        cards.push(renderResult(file, new Uint8Array(buffer)));
+      } catch {
+        errors.push(fill(d.errorReadFailed, { name: file.name }));
+      }
+    }
+    // 新しい選択を上に、同じ選択内のファイルは選択順に並べる
+    resultsEl.prepend(...cards);
+    errorEl.textContent = errors.join(' ');
+    errorEl.hidden = errors.length === 0;
+  }
+
+  let queue: Promise<void> = Promise.resolve();
+
+  fileInput.addEventListener('change', () => {
+    const files = Array.from(fileInput.files ?? []);
+    fileInput.value = '';
+    // 連続して選ばれても、表示の順序が入れ替わらないよう順番に処理する
+    if (files.length > 0) queue = queue.then(() => handleFiles(files));
+  });
+  enableFileDrop(dropzone, fileInput);
+</script>

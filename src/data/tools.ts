@@ -3166,6 +3166,46 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'calendar-generator',
+    category: 'datetime',
+    addedAt: '2026-10-10',
+    updatedAt: '2026-10-10',
+    related: [
+      'business-day-calculator',
+      'date-calculator',
+      'japanese-era-converter',
+    ],
+    translations: {
+      ja: {
+        name: 'カレンダー生成（月間・年間・印刷用）',
+        keywords: [
+          'カレンダー',
+          '月間カレンダー',
+          '年間カレンダー',
+          '祝日',
+          '週番号',
+          '印刷',
+          'カレンダー作成',
+        ],
+        description:
+          '年月を選ぶだけで月間・年間カレンダーを作成して印刷できます。日本の祝日・振替休日、週番号、日曜／月曜始まりに対応。',
+      },
+      en: {
+        name: 'Printable Calendar Generator (Monthly & Yearly)',
+        keywords: [
+          'calendar',
+          'printable calendar',
+          'monthly calendar',
+          'yearly calendar',
+          'week numbers',
+          'holidays',
+        ],
+        description:
+          'Create a printable monthly or yearly calendar with optional Japanese holidays, ISO week numbers and a Sunday or Monday week start.',
+      },
+    },
+  },
+  {
     slug: 'timer-stopwatch',
     category: 'datetime',
     addedAt: '2026-10-02',
@@ -3615,6 +3655,45 @@ export const tools: Tool[] = [
         ],
         description:
           'Converts between .env files and JSON, handling comments, export prefixes, and quoted values.',
+      },
+    },
+  },
+  {
+    slug: 'csv-excel-converter',
+    category: 'data',
+    addedAt: '2026-10-10',
+    updatedAt: '2026-10-10',
+    related: ['csv-json-converter', 'csv-markdown-table', 'encoding-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'CSV⇔Excel（xlsx）変換',
+        keywords: [
+          'CSV',
+          'Excel',
+          'xlsx',
+          'エクセル',
+          '変換',
+          'Shift_JIS',
+          '文字化け',
+          'BOM',
+        ],
+        description:
+          'CSVをExcel（xlsx）に、xlsxのシートをCSVに相互変換します。Shift_JISの自動判定・シート選択・BOM付きUTF-8保存に対応。',
+      },
+      en: {
+        name: 'CSV to Excel (XLSX) Converter',
+        keywords: [
+          'CSV',
+          'Excel',
+          'xlsx',
+          'spreadsheet',
+          'convert',
+          'Shift_JIS',
+          'BOM',
+        ],
+        description:
+          'Converts CSV to an Excel .xlsx file and exports xlsx sheets to CSV, with Shift_JIS detection, sheet selection and UTF-8 BOM output.',
       },
     },
   },
@@ -4766,6 +4845,47 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'css-layout-generator',
+    category: 'dev',
+    addedAt: '2026-10-10',
+    updatedAt: '2026-10-10',
+    related: [
+      'css-box-shadow-generator',
+      'css-gradient-generator',
+      'css-clamp-calculator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSS Flexbox/Gridジェネレーター',
+        keywords: [
+          'flexbox',
+          'grid',
+          'レイアウト',
+          'justify-content',
+          'align-items',
+          'gap',
+          'CSSレイアウト',
+        ],
+        description:
+          '方向・揃え・間隔・列数を選ぶだけで、FlexboxとGridのCSSをプレビューしながら生成します。',
+      },
+      en: {
+        name: 'CSS Flexbox & Grid Generator',
+        keywords: [
+          'flexbox',
+          'grid',
+          'layout',
+          'justify-content',
+          'align-items',
+          'gap',
+          'css layout',
+        ],
+        description:
+          'Generate Flexbox and Grid CSS with a live preview by choosing direction, alignment, gap and columns.',
+      },
+    },
+  },
+  {
     slug: 'time-calculator',
     category: 'datetime',
     addedAt: '2026-10-07',
@@ -5393,6 +5513,156 @@ export const tools: Tool[] = [
           'puzzle',
           'puzzle generator',
           'logic puzzle',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'video-to-gif',
+    category: 'media',
+    addedAt: '2026-10-10',
+    updatedAt: '2026-10-10',
+    related: ['media-converter', 'gif-maker', 'screen-recorder'],
+    heavy: true,
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '動画→GIF変換・フレーム抽出',
+        description:
+          '動画の好きな範囲をアニメーションGIFに変換。FPS・幅を指定でき、任意の時刻のフレームをPNGで保存も可能。ブラウザ内で処理され、アップロード不要',
+        keywords: [
+          '動画GIF',
+          'GIF変換',
+          'MP4 GIF',
+          'フレーム抽出',
+          '動画 画像 保存',
+          'キャプチャ',
+          'GIFアニメ',
+        ],
+      },
+      en: {
+        name: 'Video to GIF & Frame Extractor',
+        description:
+          'Turn part of a video into an animated GIF with your FPS and width, or save any frame as PNG. Runs in your browser, no upload',
+        keywords: [
+          'video to gif',
+          'mp4 to gif',
+          'gif maker',
+          'extract frame',
+          'video screenshot',
+          'frame to png',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'metronome-bpm',
+    category: 'media',
+    addedAt: '2026-10-10',
+    updatedAt: '2026-10-10',
+    related: ['speaker-tester', 'timer-stopwatch', 'mic-tester'],
+    translations: {
+      ja: {
+        name: 'メトロノーム・BPM測定（タップテンポ）',
+        description:
+          '20〜300 BPMで鳴らせるメトロノーム。拍子・三連符などの分割に対応し、タップするだけで曲のBPMも測定できます',
+        keywords: [
+          'メトロノーム',
+          'BPM',
+          'BPM測定',
+          'タップテンポ',
+          'テンポ',
+          'リズム',
+          '拍子',
+        ],
+      },
+      en: {
+        name: 'Metronome & BPM Tap Tempo Counter',
+        description:
+          'An online metronome from 20 to 300 BPM with time signatures and subdivisions, plus a tap tempo counter to find the BPM of a song',
+        keywords: [
+          'metronome',
+          'bpm counter',
+          'tap tempo',
+          'bpm tapper',
+          'tempo',
+          'beat counter',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'random-generator',
+    category: 'generate',
+    addedAt: '2026-10-10',
+    updatedAt: '2026-10-10',
+    related: ['password-generator', 'uuid-generator', 'roulette-dice'],
+    translations: {
+      ja: {
+        name: 'ランダム文字列・乱数生成',
+        description:
+          '文字種・長さを指定したランダム文字列や、範囲指定の整数・小数の乱数（重複なし対応）を最大1000件まとめて生成します',
+        keywords: [
+          '乱数',
+          '乱数生成',
+          'ランダム文字列',
+          'ランダム数字',
+          '重複なし',
+          'ダミーデータ',
+          '抽選番号',
+          'ランダム漢字',
+        ],
+      },
+      en: {
+        name: 'Random String & Number Generator',
+        description:
+          'Generate up to 1,000 random strings from your characters, or random integers and decimals in a range with no duplicates',
+        keywords: [
+          'random number generator',
+          'random string',
+          'random integer',
+          'rng',
+          'no duplicates',
+          'random text',
+          'random kanji',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'file-type-detector',
+    category: 'file',
+    addedAt: '2026-10-10',
+    updatedAt: '2026-10-10',
+    related: ['file-hash-calculator', 'zip-tool', 'encoding-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ファイル種別判定',
+        description:
+          'ファイルの先頭バイト（マジックナンバー）から実際の形式を判定し、拡張子との不一致を警告します。16進ダンプも表示できます',
+        keywords: [
+          'マジックナンバー',
+          'ファイル形式',
+          '拡張子',
+          '拡張子偽装',
+          'ファイルタイプ',
+          '16進ダンプ',
+          'MIMEタイプ',
+        ],
+      },
+      en: {
+        name: 'File Type Detector',
+        description:
+          'Identify a file’s real format from its magic number, warn when the extension does not match, and view a hex dump',
+        keywords: [
+          'magic number',
+          'file type',
+          'file signature',
+          'mime type',
+          'extension mismatch',
+          'hex dump',
+          'file identifier',
         ],
       },
     },

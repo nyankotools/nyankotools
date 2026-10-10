@@ -1,0 +1,562 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { csvExcelConverterContent } from '../../i18n/tools/csv-excel-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = csvExcelConverterContent[locale];
+const selectClass = 'ui-input min-h-11 bg-white px-3 dark:bg-gray-900';
+---
+
+<ToolShell t={t}>
+  <div
+    id="cx-root"
+    data-saved-template={t.savedTemplate}
+    data-loaded-template={t.loadedTemplate}
+    data-size-template={t.sizeTemplate}
+    data-truncated-template={t.truncatedTemplate}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-downloaded={t.downloaded}
+  >
+    <div
+      id="cx-mode"
+      class="ui-seg inline-flex"
+      role="group"
+      aria-label={t.modeAriaLabel}
+    >
+      <button
+        type="button"
+        data-mode="toXlsx"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.modeToXlsx}
+      </button>
+      <button
+        type="button"
+        data-mode="toCsv"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeToCsv}
+      </button>
+    </div>
+
+    <section id="cx-panel-xlsx" class="mt-4 max-w-3xl">
+      <label for="cx-csv-file" class="ui-label">
+        {t.csvFileLabel}
+      </label>
+      <div id="cx-csv-drop" class="ui-dropzone">
+        <input
+          id="cx-csv-file"
+          type="file"
+          accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values,text/plain"
+          class="ui-file"
+        />
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          {t.csvDropHint}
+        </p>
+      </div>
+      <p
+        id="cx-csv-info"
+        hidden
+        class="mt-2 text-sm break-all text-gray-700 dark:text-gray-300"
+      ></p>
+
+      <label for="cx-csv-text" class="ui-label mt-4">
+        {t.csvPasteLabel}
+      </label>
+      <textarea
+        id="cx-csv-text"
+        data-no-persist
+        data-no-count
+        spellcheck="false"
+        placeholder={t.csvPastePlaceholder}
+        class="ui-input h-40 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      ></textarea>
+
+      <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="cx-delimiter" class="ui-label">
+            {t.delimiterLabel}
+          </label>
+          <select id="cx-delimiter" class={`${selectClass} w-full`}>
+            {t.delimiterOptions.map(({ value, label }) => (
+              <option value={value}>{label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="cx-encoding" class="ui-label">
+            {t.encodingLabel}
+          </label>
+          <select id="cx-encoding" class={`${selectClass} w-full`}>
+            {t.encodingOptions.map(({ value, label }) => (
+              <option value={value}>{label}</option>
+            ))}
+          </select>
+        </div>
+        <div class="sm:col-span-2">
+          <label for="cx-sheet-name" class="ui-label">
+            {t.sheetNameLabel}
+          </label>
+          <input
+            id="cx-sheet-name"
+            type="text"
+            value="Sheet1"
+            maxlength="31"
+            autocomplete="off"
+            class="ui-input min-h-11 w-full px-3 sm:max-w-xs dark:bg-gray-900"
+          />
+        </div>
+      </div>
+      <label class="ui-check mt-2 h-auto min-h-11">
+        <input
+          id="cx-detect-numbers"
+          type="checkbox"
+          checked
+          class="h-4 w-4 shrink-0"
+        />
+        {t.detectNumbersLabel}
+      </label>
+
+      <div class="mt-4 flex flex-wrap items-center gap-3">
+        <button id="cx-convert-button" type="button" class="ui-btn-primary">
+          {t.convertButton}
+        </button>
+        <span
+          id="cx-xlsx-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </section>
+
+    <section id="cx-panel-csv" hidden class="mt-4 max-w-3xl">
+      <label for="cx-xlsx-file" class="ui-label">
+        {t.xlsxFileLabel}
+      </label>
+      <div id="cx-xlsx-drop" class="ui-dropzone">
+        <input
+          id="cx-xlsx-file"
+          type="file"
+          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+          class="ui-file"
+        />
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          {t.xlsxDropHint}
+        </p>
+      </div>
+      <p
+        id="cx-xlsx-info"
+        hidden
+        class="mt-2 text-sm break-all text-gray-700 dark:text-gray-300"
+      ></p>
+
+      <div id="cx-csv-options" hidden>
+        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <label for="cx-sheet" class="ui-label">
+              {t.sheetLabel}
+            </label>
+            <select id="cx-sheet" class={`${selectClass} w-full`}></select>
+          </div>
+          <div>
+            <label for="cx-csv-delimiter" class="ui-label">
+              {t.csvDelimiterLabel}
+            </label>
+            <select id="cx-csv-delimiter" class={`${selectClass} w-full`}>
+              {t.csvDelimiterOptions.map(({ value, label }) => (
+                <option value={value}>{label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <label class="ui-check mt-2 h-auto min-h-11">
+          <input id="cx-crlf" type="checkbox" class="h-4 w-4 shrink-0" />
+          {t.crlfLabel}
+        </label>
+        <label class="ui-check h-auto min-h-11">
+          <input id="cx-bom" type="checkbox" class="h-4 w-4 shrink-0" />
+          {t.bomLabel}
+        </label>
+
+        <label for="cx-output" class="ui-label mt-2">
+          {t.outputLabel}
+        </label>
+        <textarea
+          id="cx-output"
+          readonly
+          data-no-persist
+          data-no-count
+          spellcheck="false"
+          class="ui-input h-72 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+        ></textarea>
+        <p
+          id="cx-truncated"
+          hidden
+          class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+        ></p>
+
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+          <button id="cx-download-button" type="button" class="ui-btn-primary">
+            {t.downloadButton}
+          </button>
+          <button id="cx-copy-button" type="button" class="ui-btn">
+            {t.copyButton}
+          </button>
+          <span
+            id="cx-csv-status"
+            class="text-sm text-green-700 dark:text-green-400"
+            aria-live="polite"
+          ></span>
+        </div>
+      </div>
+    </section>
+
+    <p
+      id="cx-error"
+      role="alert"
+      hidden
+      data-no-input={t.errorNoInput}
+      data-no-file={t.errorNoFile}
+      data-unterminated-quote={t.errorUnterminatedQuote}
+      data-too-many-rows={t.errorTooManyRows}
+      data-too-many-columns={t.errorTooManyColumns}
+      data-cell-too-long={t.errorCellTooLong}
+      data-not-xlsx={t.errorNotXlsx}
+      data-legacy-or-encrypted={t.errorLegacy}
+      data-too-large={t.errorTooLarge}
+      data-invalid-xlsx={t.errorInvalid}
+      data-no-sheet={t.errorNoSheet}
+      data-failed={t.errorFailed}
+      class="ui-error mt-4 max-w-3xl"
+    ></p>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { paren } from '../../lib/paren';
+  import type {
+    CsvDelimiter,
+    CsvEncoding,
+    XlsxWorkbook,
+  } from '../../lib/tools/csv-excel-converter';
+
+  // xlsx/zipの処理は変換を実行するときだけ読み込む
+  const loadLib = () => import('../../lib/tools/csv-excel-converter');
+
+  const PREVIEW_CHARS = 200_000;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('cx-root');
+  const errorEl = $('cx-error');
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#cx-mode [data-mode]',
+  );
+  const panelXlsx = $('cx-panel-xlsx');
+  const panelCsv = $('cx-panel-csv');
+
+  // CSV → Excel
+  const csvFile = $<HTMLInputElement>('cx-csv-file');
+  const csvInfo = $('cx-csv-info');
+  const csvText = $<HTMLTextAreaElement>('cx-csv-text');
+  const delimiterSelect = $<HTMLSelectElement>('cx-delimiter');
+  const encodingSelect = $<HTMLSelectElement>('cx-encoding');
+  const detectNumbers = $<HTMLInputElement>('cx-detect-numbers');
+  const sheetNameInput = $<HTMLInputElement>('cx-sheet-name');
+  const convertButton = $<HTMLButtonElement>('cx-convert-button');
+  const xlsxStatus = $('cx-xlsx-status');
+
+  // Excel → CSV
+  const xlsxFile = $<HTMLInputElement>('cx-xlsx-file');
+  const xlsxInfo = $('cx-xlsx-info');
+  const csvOptions = $('cx-csv-options');
+  const sheetSelect = $<HTMLSelectElement>('cx-sheet');
+  const csvDelimiterSelect = $<HTMLSelectElement>('cx-csv-delimiter');
+  const crlf = $<HTMLInputElement>('cx-crlf');
+  const bom = $<HTMLInputElement>('cx-bom');
+  const output = $<HTMLTextAreaElement>('cx-output');
+  const truncated = $('cx-truncated');
+  const downloadButton = $<HTMLButtonElement>('cx-download-button');
+  const copyButton = $<HTMLButtonElement>('cx-copy-button');
+  const csvStatus = $('cx-csv-status');
+
+  enableFileDrop($('cx-csv-drop'), csvFile);
+  enableFileDrop($('cx-xlsx-drop'), xlsxFile);
+
+  let csvBytes: Uint8Array | null = null;
+  let csvName = '';
+  let workbook: XlsxWorkbook | null = null;
+  let workbookName = '';
+  const sheetCache = new Map<number, string[][]>();
+
+  const fill = (template: string | undefined, values: Record<string, string>) =>
+    Object.entries(values).reduce(
+      (text, [key, value]) => text.replace(`{${key}}`, () => value),
+      template ?? '',
+    );
+
+  const fmtSize = (bytes: number) =>
+    bytes < 1024
+      ? `${bytes} B`
+      : bytes < 1024 * 1024
+        ? `${(bytes / 1024).toFixed(1)} KB`
+        : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+
+  const delimiterOf = (value: string): string =>
+    value === 'tab' ? '\t' : value;
+
+  function showError(key: string) {
+    errorEl.textContent = errorEl.dataset[key] ?? errorEl.dataset.failed ?? '';
+    errorEl.hidden = false;
+  }
+
+  function clearMessages() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    xlsxStatus.textContent = '';
+    csvStatus.textContent = '';
+  }
+
+  /** ライブラリのエラーを、辞書のキー（data-* 属性名）に直して表示する */
+  function reportError(e: unknown) {
+    const code =
+      e instanceof Error && e.name === 'ExcelConvertError'
+        ? (e as Error & { code: string }).code
+        : null;
+    if (code) {
+      showError(code.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase()));
+    } else {
+      console.error(e);
+      showError('failed');
+    }
+  }
+
+  // ---- モード切り替え
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const toXlsx = button.dataset.mode === 'toXlsx';
+      modeButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === button)),
+      );
+      panelXlsx.hidden = !toXlsx;
+      panelCsv.hidden = toXlsx;
+      clearMessages();
+    });
+  });
+
+  // ---- CSV → Excel
+  csvFile.addEventListener('change', async () => {
+    const file = csvFile.files?.[0];
+    csvFile.value = '';
+    if (!file) return;
+    clearMessages();
+    csvBytes = null;
+    csvName = '';
+    csvInfo.hidden = true;
+    try {
+      const { MAX_FILE_BYTES } = await loadLib();
+      if (file.size > MAX_FILE_BYTES) {
+        showError('tooLarge');
+        return;
+      }
+      csvBytes = new Uint8Array(await file.arrayBuffer());
+      csvName = file.name;
+      csvText.value = '';
+      csvInfo.textContent = fill(root.dataset.loadedTemplate, {
+        name: file.name,
+        size: fmtSize(file.size),
+      });
+      csvInfo.hidden = false;
+    } catch (e) {
+      csvBytes = null;
+      reportError(e);
+    }
+  });
+
+  csvText.addEventListener('input', () => {
+    // 貼り付けた内容を優先するので、読み込み済みのファイルは破棄する
+    if (csvText.value !== '' && csvBytes) {
+      csvBytes = null;
+      csvName = '';
+      csvInfo.hidden = true;
+    }
+  });
+
+  convertButton.addEventListener('click', async () => {
+    clearMessages();
+    if (!csvBytes && csvText.value.trim() === '') {
+      showError('noInput');
+      return;
+    }
+    convertButton.disabled = true;
+    try {
+      const lib = await loadLib();
+      const text = csvBytes
+        ? lib.decodeCsvBytes(csvBytes, encodingSelect.value as CsvEncoding)
+        : csvText.value;
+      const delimiter =
+        delimiterSelect.value === 'auto'
+          ? lib.detectDelimiter(text)
+          : (delimiterOf(delimiterSelect.value) as CsvDelimiter);
+      const result = lib.csvToXlsx(text, {
+        delimiter,
+        detectNumbers: detectNumbers.checked,
+        sheetName: sheetNameInput.value,
+      });
+      const name = lib.xlsxFileName(csvName || 'output');
+      downloadBlob(
+        new Blob([result.bytes as BlobPart], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+        name,
+      );
+      xlsxStatus.textContent = fill(root.dataset.savedTemplate, {
+        name,
+        rows: String(result.rows),
+        columns: String(result.columns),
+      });
+    } catch (e) {
+      reportError(e);
+    } finally {
+      convertButton.disabled = false;
+    }
+  });
+
+  // ---- Excel → CSV
+  function resetWorkbook() {
+    workbook = null;
+    workbookName = '';
+    sheetCache.clear();
+    xlsxInfo.hidden = true;
+    csvOptions.hidden = true;
+    output.value = '';
+    truncated.hidden = true;
+    sheetSelect.replaceChildren();
+  }
+
+  function currentRows(): string[][] {
+    if (!workbook) return [];
+    const index = Number(sheetSelect.value) || 0;
+    let rows = sheetCache.get(index);
+    if (!rows) {
+      rows = workbook.readSheet(index);
+      sheetCache.set(index, rows);
+    }
+    return rows;
+  }
+
+  async function renderCsv() {
+    if (!workbook) return;
+    clearMessages();
+    try {
+      const lib = await loadLib();
+      const rows = currentRows();
+      const csv = lib.rowsToCsv(rows, {
+        delimiter: delimiterOf(csvDelimiterSelect.value) as CsvDelimiter,
+        crlf: crlf.checked,
+      });
+      const cut = csv.length > PREVIEW_CHARS;
+      output.value = cut ? csv.slice(0, PREVIEW_CHARS) : csv;
+      truncated.hidden = !cut;
+      truncated.textContent = cut
+        ? fill(root.dataset.truncatedTemplate, {
+            count: PREVIEW_CHARS.toLocaleString(),
+          })
+        : '';
+      xlsxInfo.textContent = `${workbookName}${paren(
+        fill(root.dataset.sizeTemplate, {
+          rows: String(rows.length),
+          columns: String(rows[0]?.length ?? 0),
+        }),
+      )}`;
+      xlsxInfo.hidden = false;
+    } catch (e) {
+      output.value = '';
+      reportError(e);
+    }
+  }
+
+  xlsxFile.addEventListener('change', async () => {
+    const file = xlsxFile.files?.[0];
+    xlsxFile.value = '';
+    if (!file) return;
+    resetWorkbook();
+    clearMessages();
+    try {
+      const lib = await loadLib();
+      if (file.size > lib.MAX_FILE_BYTES) {
+        showError('tooLarge');
+        return;
+      }
+      workbook = lib.openXlsx(new Uint8Array(await file.arrayBuffer()));
+      workbookName = file.name;
+      workbook.sheetNames.forEach((name, i) => {
+        sheetSelect.append(new Option(name, String(i)));
+      });
+      csvOptions.hidden = false;
+      await renderCsv();
+    } catch (e) {
+      resetWorkbook();
+      reportError(e);
+    }
+  });
+
+  [sheetSelect, csvDelimiterSelect, crlf].forEach((el) =>
+    el.addEventListener('change', renderCsv),
+  );
+
+  downloadButton.addEventListener('click', async () => {
+    if (!workbook) {
+      showError('noFile');
+      return;
+    }
+    try {
+      const lib = await loadLib();
+      const delimiter = delimiterOf(csvDelimiterSelect.value) as CsvDelimiter;
+      const csv = lib.rowsToCsv(currentRows(), {
+        delimiter,
+        crlf: crlf.checked,
+        bom: bom.checked,
+      });
+      const sheetName = workbook.sheetNames[Number(sheetSelect.value) || 0];
+      downloadBlob(
+        new Blob([csv], { type: 'text/csv;charset=utf-8' }),
+        lib.csvFileName(
+          workbookName,
+          workbook.sheetNames.length > 1 ? sheetName : null,
+          delimiter,
+        ),
+      );
+      csvStatus.textContent = root.dataset.downloaded ?? '';
+    } catch (e) {
+      reportError(e);
+    }
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!workbook) return;
+    try {
+      const lib = await loadLib();
+      const csv = lib.rowsToCsv(currentRows(), {
+        delimiter: delimiterOf(csvDelimiterSelect.value) as CsvDelimiter,
+        crlf: crlf.checked,
+      });
+      csvStatus.textContent = (await copyText(csv))
+        ? (root.dataset.copied ?? '')
+        : (root.dataset.copyFailed ?? '');
+    } catch (e) {
+      reportError(e);
+    }
+  });
+</script>

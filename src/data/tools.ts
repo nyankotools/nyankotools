@@ -3619,6 +3619,45 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'csv-excel-converter',
+    category: 'data',
+    addedAt: '2026-10-10',
+    updatedAt: '2026-10-10',
+    related: ['csv-json-converter', 'csv-markdown-table', 'encoding-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'CSV⇔Excel（xlsx）変換',
+        keywords: [
+          'CSV',
+          'Excel',
+          'xlsx',
+          'エクセル',
+          '変換',
+          'Shift_JIS',
+          '文字化け',
+          'BOM',
+        ],
+        description:
+          'CSVをExcel（xlsx）に、xlsxのシートをCSVに相互変換します。Shift_JISの自動判定・シート選択・BOM付きUTF-8保存に対応。',
+      },
+      en: {
+        name: 'CSV to Excel (XLSX) Converter',
+        keywords: [
+          'CSV',
+          'Excel',
+          'xlsx',
+          'spreadsheet',
+          'convert',
+          'Shift_JIS',
+          'BOM',
+        ],
+        description:
+          'Converts CSV to an Excel .xlsx file and exports xlsx sheets to CSV, with Shift_JIS detection, sheet selection and UTF-8 BOM output.',
+      },
+    },
+  },
+  {
     slug: 'csv-markdown-table',
     category: 'data',
     addedAt: '2026-10-02',

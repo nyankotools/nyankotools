@@ -57,6 +57,7 @@ const slugs = [
   'team-splitter',
   'bingo-generator',
   'seat-shuffler',
+  'csv-excel-converter',
 ];
 
 const locales = [

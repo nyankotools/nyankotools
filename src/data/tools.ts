@@ -5667,6 +5667,184 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'image-ascii-art',
+    category: 'image',
+    addedAt: '2026-10-11',
+    updatedAt: '2026-10-11',
+    related: ['image-pixelart-converter', 'image-filter', 'image-to-base64'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像→ASCIIアート変換',
+        description:
+          '画像をASCIIアート（文字アート）に変換します。横の文字数・文字の種類・明暗の反転を調整し、テキストでコピー・保存できます',
+        keywords: [
+          'ASCIIアート',
+          '文字アート',
+          'アスキーアート',
+          'AA',
+          '画像 文字変換',
+          'テキストアート',
+        ],
+      },
+      en: {
+        name: 'Image to ASCII Art Converter',
+        description:
+          'Convert an image into ASCII art with adjustable width, character set and invert, then copy or save it as text',
+        keywords: [
+          'ascii art',
+          'text art',
+          'image to text',
+          'ascii converter',
+          'character art',
+          'ascii generator',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'jsonl-converter',
+    category: 'data',
+    addedAt: '2026-10-11',
+    updatedAt: '2026-10-11',
+    related: ['csv-json-converter', 'json-formatter', 'yaml-json-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'JSONL（NDJSON）⇔JSON/CSV変換',
+        description:
+          'JSONL（NDJSON・JSON Lines）とJSON配列、CSVを相互に変換します。空行の読み飛ばしや不正な行の行番号表示に対応',
+        keywords: [
+          'JSONL',
+          'NDJSON',
+          'JSON Lines',
+          'jsonl 変換',
+          'ndjson 変換',
+          'JSON CSV',
+        ],
+      },
+      en: {
+        name: 'JSONL (NDJSON) to JSON / CSV Converter',
+        description:
+          'Convert JSONL (NDJSON, JSON Lines) to and from a JSON array or CSV, skipping blank lines and reporting the line number of bad records',
+        keywords: [
+          'jsonl',
+          'ndjson',
+          'json lines',
+          'jsonl to json',
+          'jsonl to csv',
+          'newline delimited json',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'memory-match',
+    category: 'games',
+    addedAt: '2026-10-11',
+    updatedAt: '2026-10-11',
+    related: ['sudoku', 'reaction-test', 'omikuji'],
+    translations: {
+      ja: {
+        name: '神経衰弱',
+        description:
+          '絵文字のカードを揃える記憶力ゲーム。12・16・30枚から選べて、手数とタイムのベスト記録を保存',
+        keywords: [
+          '神経衰弱',
+          '記憶力ゲーム',
+          'メモリーゲーム',
+          'ペアマッチング',
+          'トランプ',
+          '脳トレ',
+        ],
+      },
+      en: {
+        name: 'Memory Match',
+        description:
+          'Flip emoji cards and find every pair. Choose 12, 16 or 30 cards and save your best moves and time',
+        keywords: [
+          'memory match',
+          'memory game',
+          'concentration',
+          'matching pairs',
+          'card matching',
+          'brain training',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'slide-puzzle',
+    category: 'games',
+    addedAt: '2026-10-11',
+    updatedAt: '2026-10-11',
+    related: ['memory-match', 'sudoku', 'image-pixelart-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'スライドパズル',
+        description:
+          '数字や自分の画像で遊べる15パズル。3×3・4×4・5×5に対応し、解けない配置は作らず手数とタイムを記録',
+        keywords: [
+          'スライドパズル',
+          '15パズル',
+          'スライディングパズル',
+          '8パズル',
+          '画像パズル',
+          '脳トレ',
+        ],
+      },
+      en: {
+        name: 'Sliding Puzzle',
+        description:
+          'Play the 15 puzzle with numbers or your own image. 3×3, 4×4 and 5×5, always solvable, with best moves and time',
+        keywords: [
+          'sliding puzzle',
+          '15 puzzle',
+          'slide puzzle',
+          '8 puzzle',
+          'picture puzzle',
+          'brain training',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'game-2048',
+    category: 'games',
+    addedAt: '2026-10-11',
+    updatedAt: '2026-10-11',
+    related: ['slide-puzzle', 'memory-match', 'sudoku'],
+    translations: {
+      ja: {
+        name: '2048',
+        description:
+          'スワイプ・矢印キーで数字を合体させて2048を目指すパズル。4×4・5×5・6×6対応、1手戻す機能とベストスコア記録つき',
+        keywords: [
+          '2048',
+          '2048ゲーム',
+          '数字パズル',
+          '合体パズル',
+          'ナンバーパズル',
+          '脳トレ',
+        ],
+      },
+      en: {
+        name: '2048',
+        description:
+          'Merge tiles to reach 2048 by swiping or with arrow keys. 4×4, 5×5 and 6×6 boards, undo and best scores',
+        keywords: [
+          '2048',
+          '2048 game',
+          'number puzzle',
+          'merge puzzle',
+          'tile game',
+          'brain training',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

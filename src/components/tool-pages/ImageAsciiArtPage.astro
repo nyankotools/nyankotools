@@ -1,0 +1,338 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { imageAsciiArtContent } from '../../i18n/tools/image-ascii-art';
+import {
+  DEFAULT_COLUMNS,
+  MAX_COLUMNS,
+  MIN_COLUMNS,
+} from '../../lib/tools/image-ascii-art';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageAsciiArtContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="aa-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="aa-dropzone" class="ui-dropzone">
+      <input
+        id="aa-file-input"
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="aa-source-info"
+      data-template={t.sourceInfoTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="aa-error"
+      role="alert"
+      hidden
+      data-message={t.errorUnsupportedFile}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-conversion-failed={t.errorConversionFailed}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-6">
+    <div class="min-w-56 flex-1">
+      <label for="aa-columns" class="ui-label">
+        {t.columnsLabel}
+        <span
+          id="aa-columns-value"
+          data-value-template={t.columnsValueTemplate}
+          data-only-template={t.columnsOnlyTemplate}
+        ></span>
+      </label>
+      <input
+        id="aa-columns"
+        type="range"
+        min={MIN_COLUMNS}
+        max={MAX_COLUMNS}
+        value={DEFAULT_COLUMNS}
+        class="h-11 w-full"
+      />
+    </div>
+
+    <div>
+      <label for="aa-charset" class="ui-label">
+        {t.charsetLabel}
+      </label>
+      <select
+        id="aa-charset"
+        class="ui-input h-11 w-full max-w-64 px-3 dark:bg-gray-900"
+      >
+        <option value="standard">{t.charsetStandard}</option>
+        <option value="detailed">{t.charsetDetailed}</option>
+        <option value="blocks">{t.charsetBlocks}</option>
+        <option value="mono">{t.charsetMono}</option>
+      </select>
+    </div>
+
+    <label class="ui-check">
+      <input id="aa-invert" type="checkbox" class="h-4 w-4" />
+      {t.invertLabel}
+    </label>
+  </div>
+
+  <div id="aa-results-section" hidden class="mt-6">
+    <p class="ui-label">{t.outputLabel}</p>
+    <pre
+      id="aa-output"
+      class="max-h-[32rem] overflow-auto rounded-lg border border-gray-300 bg-white p-3 font-mono text-[8px] leading-[8px] whitespace-pre text-gray-900 dark:border-gray-700"
+      aria-label={t.outputLabel}
+    ></pre>
+
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button
+        id="aa-copy-button"
+        type="button"
+        data-copied={t.copiedMessage}
+        data-copy-failed={t.copyFailedMessage}
+        class="ui-btn ui-btn-primary"
+      >
+        {t.copyButton}
+      </button>
+      <button id="aa-download-button" type="button" class="ui-btn">
+        {t.downloadButton}
+      </button>
+      <button id="aa-clear-button" type="button" class="ui-btn">
+        {t.clearButton}
+      </button>
+      <span
+        id="aa-copy-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    buildTextFileName,
+    clampColumns,
+    computeAsciiGrid,
+    formatFileSize,
+    isAcceptedImageFile,
+    isCharsetId,
+    MAX_FILE_SIZE,
+    pixelsToAscii,
+    type Dimensions,
+  } from '../../lib/tools/image-ascii-art';
+
+  const dropzone = document.getElementById('aa-dropzone')!;
+  const fileInput = document.getElementById(
+    'aa-file-input',
+  ) as HTMLInputElement;
+  const sourceInfoEl = document.getElementById('aa-source-info')!;
+  const errorEl = document.getElementById('aa-error')!;
+
+  const columnsInput = document.getElementById(
+    'aa-columns',
+  ) as HTMLInputElement;
+  const columnsValueEl = document.getElementById('aa-columns-value')!;
+  const charsetSelect = document.getElementById(
+    'aa-charset',
+  ) as HTMLSelectElement;
+  const invertInput = document.getElementById('aa-invert') as HTMLInputElement;
+
+  const resultsSection = document.getElementById('aa-results-section')!;
+  const outputEl = document.getElementById('aa-output')!;
+  const copyButton = document.getElementById(
+    'aa-copy-button',
+  ) as HTMLButtonElement;
+  const downloadButton = document.getElementById(
+    'aa-download-button',
+  ) as HTMLButtonElement;
+  const clearButton = document.getElementById(
+    'aa-clear-button',
+  ) as HTMLButtonElement;
+  const copyStatusEl = document.getElementById('aa-copy-status')!;
+
+  const sourceInfoTemplate = sourceInfoEl.dataset.template ?? '';
+  const columnsValueTemplate = columnsValueEl.dataset.valueTemplate ?? '';
+  const columnsOnlyTemplate = columnsValueEl.dataset.onlyTemplate ?? '';
+
+  let currentFile: File | null = null;
+  let currentBitmap: ImageBitmap | null = null;
+  let currentDims: Dimensions | null = null;
+  let currentText = '';
+  let copyStatusTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function updateColumnsUi() {
+    const columns = clampColumns(Number(columnsInput.value));
+    if (!currentDims) {
+      columnsValueEl.textContent = columnsOnlyTemplate.replace(
+        '{value}',
+        String(columns),
+      );
+      return;
+    }
+    const rows = computeAsciiGrid(currentDims, columns).height;
+    columnsValueEl.textContent = columnsValueTemplate
+      .replace('{value}', String(columns))
+      .replace('{rows}', String(rows));
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearErrorBanner() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function resetAll() {
+    currentBitmap?.close();
+    currentFile = null;
+    currentBitmap = null;
+    currentDims = null;
+    currentText = '';
+    sourceInfoEl.textContent = '';
+    resultsSection.hidden = true;
+    outputEl.textContent = '';
+    copyStatusEl.textContent = '';
+    updateColumnsUi();
+  }
+
+  function render() {
+    if (!currentBitmap || !currentDims) return;
+    const columns = clampColumns(Number(columnsInput.value));
+    const grid = computeAsciiGrid(currentDims, columns);
+    const charset = isCharsetId(charsetSelect.value)
+      ? charsetSelect.value
+      : 'standard';
+
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = grid.width;
+      canvas.height = grid.height;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(currentBitmap, 0, 0, grid.width, grid.height);
+      const imageData = ctx.getImageData(0, 0, grid.width, grid.height);
+      currentText = pixelsToAscii(imageData.data, grid.width, grid.height, {
+        charset,
+        invert: invertInput.checked,
+      });
+    } catch {
+      currentText = '';
+      outputEl.textContent = '';
+      showError(errorEl.dataset.conversionFailed ?? '');
+      return;
+    }
+    outputEl.textContent = currentText;
+    updateColumnsUi();
+  }
+
+  // 連続して画像を選んだとき、後から選んだ画像の結果だけを反映させるための世代番号
+  let loadGeneration = 0;
+
+  async function loadFile(file: File) {
+    const generation = ++loadGeneration;
+    clearErrorBanner();
+    resetAll();
+
+    if (!isAcceptedImageFile(file)) {
+      showError(errorEl.dataset.message ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace(
+          '{max}',
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+
+    let bitmap: ImageBitmap;
+    try {
+      bitmap = await createImageBitmap(file);
+    } catch {
+      if (generation === loadGeneration) {
+        showError(errorEl.dataset.conversionFailed ?? '');
+      }
+      return;
+    }
+    if (generation !== loadGeneration) {
+      bitmap.close();
+      return;
+    }
+
+    currentFile = file;
+    currentBitmap = bitmap;
+    currentDims = { width: bitmap.width, height: bitmap.height };
+    sourceInfoEl.textContent = sourceInfoTemplate
+      .replace('{width}', String(currentDims.width))
+      .replace('{height}', String(currentDims.height))
+      .replace('{size}', formatFileSize(file.size));
+
+    resultsSection.hidden = false;
+    render();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+
+  enableFileDrop(dropzone, fileInput);
+
+  let columnsDebounce: ReturnType<typeof setTimeout> | undefined;
+  columnsInput.addEventListener('input', () => {
+    updateColumnsUi();
+    clearTimeout(columnsDebounce);
+    columnsDebounce = setTimeout(render, 100);
+  });
+  charsetSelect.addEventListener('change', render);
+  invertInput.addEventListener('change', render);
+
+  copyButton.addEventListener('click', async () => {
+    if (!currentText) return;
+    const ok = await copyText(currentText);
+    copyStatusEl.textContent = ok
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+    clearTimeout(copyStatusTimer);
+    copyStatusTimer = setTimeout(() => {
+      copyStatusEl.textContent = '';
+    }, 2000);
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (!currentText || !currentFile) return;
+    downloadBlob(
+      new Blob([currentText], { type: 'text/plain;charset=utf-8' }),
+      buildTextFileName(currentFile.name),
+    );
+  });
+
+  clearButton.addEventListener('click', () => {
+    resetAll();
+    clearErrorBanner();
+  });
+
+  updateColumnsUi();
+</script>

@@ -18,6 +18,9 @@ const slugs = [
   'typing-test',
   'reaction-test',
   'sudoku',
+  'memory-match',
+  'slide-puzzle',
+  'game-2048',
   'favicon-generator',
   'image-palette-extractor',
   'exif-viewer',
@@ -63,6 +66,7 @@ const slugs = [
   'metronome-bpm',
   'random-generator',
   'file-type-detector',
+  'image-ascii-art',
 ];
 
 const locales = [

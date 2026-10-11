@@ -5667,6 +5667,42 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'image-ascii-art',
+    category: 'image',
+    addedAt: '2026-10-11',
+    updatedAt: '2026-10-11',
+    related: ['image-pixelart-converter', 'image-filter', 'image-to-base64'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像→ASCIIアート変換',
+        description:
+          '画像をASCIIアート（文字アート）に変換します。横の文字数・文字の種類・明暗の反転を調整し、テキストでコピー・保存できます',
+        keywords: [
+          'ASCIIアート',
+          '文字アート',
+          'アスキーアート',
+          'AA',
+          '画像 文字変換',
+          'テキストアート',
+        ],
+      },
+      en: {
+        name: 'Image to ASCII Art Converter',
+        description:
+          'Convert an image into ASCII art with adjustable width, character set and invert, then copy or save it as text',
+        keywords: [
+          'ascii art',
+          'text art',
+          'image to text',
+          'ascii converter',
+          'character art',
+          'ascii generator',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

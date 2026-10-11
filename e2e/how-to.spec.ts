@@ -63,6 +63,7 @@ const slugs = [
   'metronome-bpm',
   'random-generator',
   'file-type-detector',
+  'image-ascii-art',
 ];
 
 const locales = [

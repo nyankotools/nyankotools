@@ -500,6 +500,20 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-11',
+    toolSlugs: ['image-ascii-art'],
+    translations: {
+      ja: {
+        summary:
+          '画像→ASCIIアート変換を追加しました。横の文字数・文字の種類・明暗の反転を調整し、結果をテキストでコピー・保存できます。',
+      },
+      en: {
+        summary:
+          'Added the Image to ASCII Art Converter, with adjustable width, character set and brightness inversion, and copy or .txt download of the result.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

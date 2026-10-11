@@ -5703,6 +5703,42 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'jsonl-converter',
+    category: 'data',
+    addedAt: '2026-10-11',
+    updatedAt: '2026-10-11',
+    related: ['csv-json-converter', 'json-formatter', 'yaml-json-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'JSONL（NDJSON）⇔JSON/CSV変換',
+        description:
+          'JSONL（NDJSON・JSON Lines）とJSON配列、CSVを相互に変換します。空行の読み飛ばしや不正な行の行番号表示に対応',
+        keywords: [
+          'JSONL',
+          'NDJSON',
+          'JSON Lines',
+          'jsonl 変換',
+          'ndjson 変換',
+          'JSON CSV',
+        ],
+      },
+      en: {
+        name: 'JSONL (NDJSON) to JSON / CSV Converter',
+        description:
+          'Convert JSONL (NDJSON, JSON Lines) to and from a JSON array or CSV, skipping blank lines and reporting the line number of bad records',
+        keywords: [
+          'jsonl',
+          'ndjson',
+          'json lines',
+          'jsonl to json',
+          'jsonl to csv',
+          'newline delimited json',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

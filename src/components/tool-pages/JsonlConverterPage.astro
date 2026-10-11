@@ -1,0 +1,234 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { jsonlConverterContent } from '../../i18n/tools/jsonl-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = jsonlConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="jsonl-converter-controls"
+    class="flex flex-wrap items-center gap-3"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-placeholders={JSON.stringify(t.placeholders)}
+    data-error-template={t.errorTemplate}
+    data-error-unterminated-quote={t.errorUnterminatedQuote}
+    data-error-column-mismatch-template={t.errorColumnMismatchTemplate}
+    data-error-not-array={t.errorNotArray}
+    data-error-not-object-template={t.errorNotObjectTemplate}
+    data-error-invalid-line-template={t.errorInvalidLineTemplate}
+    data-error-not-object-line-template={t.errorNotObjectLineTemplate}
+  >
+    <label
+      for="jsonl-converter-mode"
+      class="text-sm text-gray-700 dark:text-gray-300"
+    >
+      {t.modeLabel}
+    </label>
+    <select
+      id="jsonl-converter-mode"
+      class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+    >
+      {t.modeOptions.map(({ value, label }) => (
+        <option value={value}>{label}</option>
+      ))}
+    </select>
+    <span id="jsonl-converter-delimiter-group" hidden class="contents">
+      <label
+        for="jsonl-converter-delimiter"
+        class="text-sm text-gray-700 dark:text-gray-300"
+      >
+        {t.delimiterLabel}
+      </label>
+      <select
+        id="jsonl-converter-delimiter"
+        class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+      >
+        {t.delimiterOptions.map(({ value, label }) => (
+          <option value={value}>{label}</option>
+        ))}
+      </select>
+    </span>
+    <button id="jsonl-converter-copy-button" type="button" class="ui-btn">
+      {t.copyButton}
+    </button>
+    <span
+      id="jsonl-converter-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="jsonl-converter-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="jsonl-converter-input"
+        class="ui-input h-80 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.placeholders.jsonlToJson}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label for="jsonl-converter-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="jsonl-converter-output"
+        readonly
+        class="ui-input h-80 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="jsonl-converter-error"
+    hidden
+    class="ui-error mt-4 max-w-2xl whitespace-pre-line"
+  ></p>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    csvToJsonl,
+    jsonlToCsv,
+    jsonlToJson,
+    jsonToJsonl,
+    type JsonlOutcome,
+  } from '../../lib/tools/jsonl-converter';
+
+  type Mode = 'jsonlToJson' | 'jsonToJsonl' | 'jsonlToCsv' | 'csvToJsonl';
+
+  const controls = document.getElementById('jsonl-converter-controls')!;
+  const d = controls.dataset;
+  const copied = d.copied ?? '';
+  const copyFailed = d.copyFailed ?? '';
+  const errorTemplate = d.errorTemplate ?? '';
+  const errorUnterminatedQuote = d.errorUnterminatedQuote ?? '';
+  const errorColumnMismatchTemplate = d.errorColumnMismatchTemplate ?? '';
+  const errorNotArray = d.errorNotArray ?? '';
+  const errorNotObjectTemplate = d.errorNotObjectTemplate ?? '';
+  const errorInvalidLineTemplate = d.errorInvalidLineTemplate ?? '';
+  const errorNotObjectLineTemplate = d.errorNotObjectLineTemplate ?? '';
+  const placeholders = JSON.parse(d.placeholders ?? '{}') as Record<
+    string,
+    string
+  >;
+
+  const input = document.getElementById(
+    'jsonl-converter-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'jsonl-converter-output',
+  ) as HTMLTextAreaElement;
+  const modeSelect = document.getElementById(
+    'jsonl-converter-mode',
+  ) as HTMLSelectElement;
+  const delimiterGroup = document.getElementById(
+    'jsonl-converter-delimiter-group',
+  )!;
+  const delimiterSelect = document.getElementById(
+    'jsonl-converter-delimiter',
+  ) as HTMLSelectElement;
+  const copyButton = document.getElementById('jsonl-converter-copy-button')!;
+  const statusEl = document.getElementById('jsonl-converter-status')!;
+  const errorEl = document.getElementById('jsonl-converter-error')!;
+
+  function describeError(result: Extract<JsonlOutcome, { success: false }>) {
+    switch (result.reason) {
+      case 'unterminated-quote':
+        return errorUnterminatedQuote;
+      case 'column-mismatch':
+        return errorColumnMismatchTemplate
+          .replace('{line}', String(result.line))
+          .replace('{expectedColumns}', String(result.expectedColumns))
+          .replace('{actualColumns}', String(result.actualColumns));
+      case 'not-array':
+        return errorNotArray;
+      case 'not-object':
+        return errorNotObjectTemplate.replace(
+          '{index}',
+          String(result.index + 1),
+        );
+      case 'invalid-line':
+        return errorInvalidLineTemplate
+          .replace('{line}', String(result.line))
+          .replace('{message}', () => result.message);
+      case 'not-object-line':
+        return errorNotObjectLineTemplate.replace(
+          '{line}',
+          String(result.line),
+        );
+      case 'invalid-json':
+        return result.message;
+    }
+  }
+
+  function showError(message: string) {
+    output.value = '';
+    errorEl.textContent = errorTemplate.replace('{message}', () => message);
+    errorEl.hidden = false;
+  }
+
+  function showOutput(value: string) {
+    output.value = value;
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function convert() {
+    statusEl.textContent = '';
+    const mode = modeSelect.value as Mode;
+    const usesCsv = mode === 'jsonlToCsv' || mode === 'csvToJsonl';
+    delimiterGroup.hidden = !usesCsv;
+    input.placeholder = placeholders[mode] ?? '';
+
+    if (input.value.trim() === '') {
+      showOutput('');
+      return;
+    }
+    const delimiter = delimiterSelect.value === 'tab' ? '\t' : ',';
+    let result: JsonlOutcome;
+    switch (mode) {
+      case 'jsonlToJson':
+        result = jsonlToJson(input.value);
+        break;
+      case 'jsonToJsonl':
+        result = jsonToJsonl(input.value);
+        break;
+      case 'jsonlToCsv':
+        result = jsonlToCsv(input.value, delimiter);
+        break;
+      case 'csvToJsonl':
+        result = csvToJsonl(input.value, delimiter);
+        break;
+    }
+    if (result.success) {
+      showOutput(result.output);
+    } else {
+      showError(describeError(result));
+    }
+  }
+
+  onTextInput(input, convert);
+  modeSelect.addEventListener('change', convert);
+  delimiterSelect.addEventListener('change', convert);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value)) ? copied : copyFailed;
+  });
+
+  convert();
+</script>

@@ -5810,6 +5810,41 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'game-2048',
+    category: 'games',
+    addedAt: '2026-10-11',
+    updatedAt: '2026-10-11',
+    related: ['slide-puzzle', 'memory-match', 'sudoku'],
+    translations: {
+      ja: {
+        name: '2048',
+        description:
+          'スワイプ・矢印キーで数字を合体させて2048を目指すパズル。4×4・5×5・6×6対応、1手戻す機能とベストスコア記録つき',
+        keywords: [
+          '2048',
+          '2048ゲーム',
+          '数字パズル',
+          '合体パズル',
+          'ナンバーパズル',
+          '脳トレ',
+        ],
+      },
+      en: {
+        name: '2048',
+        description:
+          'Merge tiles to reach 2048 by swiping or with arrow keys. 4×4, 5×5 and 6×6 boards, undo and best scores',
+        keywords: [
+          '2048',
+          '2048 game',
+          'number puzzle',
+          'merge puzzle',
+          'tile game',
+          'brain training',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

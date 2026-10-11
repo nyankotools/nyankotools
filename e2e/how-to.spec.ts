@@ -20,6 +20,7 @@ const slugs = [
   'sudoku',
   'memory-match',
   'slide-puzzle',
+  'game-2048',
   'favicon-generator',
   'image-palette-extractor',
   'exif-viewer',

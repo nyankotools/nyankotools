@@ -1,0 +1,540 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { slidePuzzleContent } from '../../i18n/tools/slide-puzzle';
+import { DEFAULT_SIZE, SIZES } from '../../lib/tools/slide-puzzle';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = slidePuzzleContent[locale];
+const sizeNames = { 3: t.size3, 4: t.size4, 5: t.size5 };
+---
+
+<ToolShell t={t}>
+  <section
+    id="sp-root"
+    data-tile-label={t.tileLabel}
+    data-blank-label={t.blankLabel}
+    data-correct-value={t.correctValue}
+    data-best-none={t.bestNone}
+    data-best-value={t.bestValue}
+    data-records-cleared={t.recordsCleared}
+    data-completed={t.completed}
+    data-new-best-moves={t.newBestMoves}
+    data-new-best-time={t.newBestTime}
+    data-image-loaded={t.imageLoaded}
+    data-error-unsupported={t.errorUnsupportedFile}
+    data-error-too-large={t.errorFileTooLargeTemplate}
+    data-error-image-failed={t.errorImageFailed}
+    data-preview-label={t.previewLabel}
+  >
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <span id="sp-size-label" class="ui-label">
+          {t.sizeLabel}
+        </span>
+        <div class="ui-seg" role="group" aria-labelledby="sp-size-label">
+          {SIZES.map((s) => (
+            <button
+              type="button"
+              class="ui-seg-btn"
+              data-size={s}
+              aria-pressed={s === DEFAULT_SIZE ? 'true' : 'false'}
+            >
+              {sizeNames[s]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <span id="sp-mode-label" class="ui-label">
+          {t.modeLabel}
+        </span>
+        <div class="ui-seg" role="group" aria-labelledby="sp-mode-label">
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-mode="number"
+            aria-pressed="true"
+          >
+            {t.modeNumber}
+          </button>
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-mode="image"
+            aria-pressed="false"
+          >
+            {t.modeImage}
+          </button>
+        </div>
+      </div>
+      <button id="sp-new-button" type="button" class="ui-btn-primary">
+        {t.newGame}
+      </button>
+    </div>
+
+    <div id="sp-image-panel" class="mt-3 max-w-xl" hidden>
+      <label for="sp-file-input" class="ui-label">
+        {t.dropLabel}
+      </label>
+      <div id="sp-dropzone" class="ui-dropzone">
+        <input
+          id="sp-file-input"
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+          class="ui-file"
+        />
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          {t.dropHint}
+        </p>
+      </div>
+      <p
+        id="sp-error"
+        role="alert"
+        hidden
+        class="mt-1 text-xs text-red-600 dark:text-red-400"
+      ></p>
+      <label class="ui-check mt-2">
+        <input id="sp-show-numbers" type="checkbox" class="h-4 w-4" checked />
+        {t.showNumbersLabel}
+      </label>
+    </div>
+
+    <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
+      <div class="flex gap-2">
+        <dt>{t.movesLabel}</dt>
+        <dd id="sp-moves" class="font-semibold tabular-nums">
+          0
+        </dd>
+      </div>
+      <div class="flex gap-2">
+        <dt>{t.timeLabel}</dt>
+        <dd id="sp-time" class="font-semibold tabular-nums">
+          0:00.0
+        </dd>
+      </div>
+      <div class="flex gap-2">
+        <dt>{t.correctLabel}</dt>
+        <dd id="sp-correct" class="font-semibold tabular-nums"></dd>
+      </div>
+    </dl>
+
+    <div class="mt-3 flex flex-wrap items-start gap-4">
+      <div
+        id="sp-board"
+        role="group"
+        aria-label={t.boardLabel}
+        tabindex="-1"
+        class="grid w-full max-w-md gap-1 focus:outline-none sm:gap-1.5"
+      ></div>
+      <figure id="sp-preview-figure" hidden class="w-28">
+        <img
+          id="sp-preview"
+          alt={t.previewLabel}
+          class="aspect-square w-full rounded border border-gray-300 object-cover dark:border-gray-600"
+        />
+        <figcaption class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {t.previewLabel}
+        </figcaption>
+      </figure>
+    </div>
+
+    <p
+      id="sp-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+
+    <div class="mt-4 max-w-xl">
+      <h2 class="text-base font-semibold">{t.bestHeading}</h2>
+      <ul class="mt-2 space-y-1 text-sm text-gray-700 dark:text-gray-300">
+        {SIZES.map((s) => (
+          <li class="flex flex-wrap gap-x-3">
+            <span class="font-medium">{sizeNames[s]}</span>
+            <span id={`sp-best-${s}`} class="tabular-nums"></span>
+          </li>
+        ))}
+      </ul>
+      <button id="sp-reset-button" type="button" class="ui-btn mt-3">
+        {t.resetRecords}
+      </button>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    formatFileSize,
+    isAcceptedImageFile,
+    MAX_FILE_SIZE,
+  } from '../../lib/tools/image-pixelart-converter';
+  import {
+    BLANK,
+    DEFAULT_SIZE,
+    SIZES,
+    applyResult,
+    centerSquare,
+    correctTiles,
+    createBoard,
+    formatTime,
+    isComplete,
+    moveByDirection,
+    moveTile,
+    newGame,
+    parseRecords,
+    serializeRecords,
+    type BestRecords,
+    type Direction,
+    type PuzzleSize,
+    type PuzzleState,
+  } from '../../lib/tools/slide-puzzle';
+
+  const STORAGE_KEY = 'slide-puzzle-best';
+  const MAX_IMAGE_SIDE = 900;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('sp-root');
+  const msg = root.dataset;
+  const boardEl = $('sp-board');
+  const statusEl = $('sp-status');
+  const movesEl = $('sp-moves');
+  const timeEl = $('sp-time');
+  const correctEl = $('sp-correct');
+  const imagePanel = $('sp-image-panel');
+  const errorEl = $('sp-error');
+  const fileInput = $<HTMLInputElement>('sp-file-input');
+  const showNumbersInput = $<HTMLInputElement>('sp-show-numbers');
+  const previewFigure = $('sp-preview-figure');
+  const previewImg = $<HTMLImageElement>('sp-preview');
+  const sizeButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-size]'),
+  );
+  const modeButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-mode]'),
+  );
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  // 連続して画像を選んだとき、後から選んだ画像の結果だけを反映させるための世代番号
+  let loadGeneration = 0;
+  let size: PuzzleSize = DEFAULT_SIZE;
+  let mode: 'number' | 'image' = 'number';
+  let imageUrl: string | null = null;
+  let state: PuzzleState = newGame([], size);
+  let tiles: HTMLButtonElement[] = [];
+  let records: BestRecords = loadRecords();
+  let startedAt: number | null = null;
+  let elapsedMs = 0;
+  let timerId: number | undefined;
+
+  function loadRecords(): BestRecords {
+    try {
+      return parseRecords(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      // localStorageが使えない環境では、このページを開いている間だけの記録にする
+      return {};
+    }
+  }
+
+  function saveRecords() {
+    try {
+      localStorage.setItem(STORAGE_KEY, serializeRecords(records));
+    } catch {
+      // 保存できない環境では今回の表示だけ反映する
+    }
+  }
+
+  function setStatus(text: string) {
+    statusEl.textContent = text;
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function renderRecords() {
+    for (const s of SIZES) {
+      const best = records[s];
+      $(`sp-best-${s}`).textContent = best
+        ? fill(msg.bestValue, {
+            moves: String(best.moves),
+            time: formatTime(best.timeMs),
+          })
+        : (msg.bestNone ?? '');
+    }
+  }
+
+  function renderTime() {
+    timeEl.textContent = formatTime(elapsedMs);
+  }
+
+  const TILE_BASE =
+    'relative flex aspect-square min-w-0 items-center justify-center overflow-hidden rounded-md border-2 font-semibold leading-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600';
+
+  function render() {
+    const useImage = mode === 'image' && imageUrl !== null;
+    const done = isComplete(state);
+    const total = size * size;
+    state.board.forEach((value, i) => {
+      const tile = tiles[i];
+      const isBlank = value === BLANK;
+      // 完成したら空きマスにも最後のピースを入れて、元の絵を完成させる
+      const shown = isBlank && done ? total : value;
+      const showPiece = !isBlank || done;
+      tile.replaceChildren();
+      tile.style.backgroundImage = '';
+      if (!showPiece) {
+        tile.className = `${TILE_BASE} cursor-default border-dashed border-gray-300 bg-gray-100 dark:border-gray-600 dark:bg-gray-800`;
+        tile.tabIndex = -1;
+        tile.setAttribute('aria-label', msg.blankLabel ?? '');
+        return;
+      }
+      tile.tabIndex = 0;
+      tile.setAttribute(
+        'aria-label',
+        fill(msg.tileLabel, { n: String(shown) }),
+      );
+      if (useImage) {
+        const home = shown - 1;
+        const row = Math.floor(home / size);
+        const col = home % size;
+        const denom = size - 1;
+        tile.className = `${TILE_BASE} cursor-pointer border-gray-400 bg-no-repeat dark:border-gray-500`;
+        tile.style.backgroundImage = `url("${imageUrl}")`;
+        tile.style.backgroundSize = `${size * 100}% ${size * 100}%`;
+        tile.style.backgroundPosition = `${(col / denom) * 100}% ${(row / denom) * 100}%`;
+        if (showNumbersInput.checked) {
+          const badge = document.createElement('span');
+          badge.className =
+            'absolute left-0.5 top-0.5 rounded bg-black/60 px-1 py-0.5 text-xs text-white';
+          badge.textContent = String(shown);
+          tile.append(badge);
+        }
+      } else {
+        tile.className = `${TILE_BASE} cursor-pointer border-blue-700 bg-blue-600 text-xl text-white hover:bg-blue-500 sm:text-3xl dark:border-blue-400 dark:bg-blue-700 dark:hover:bg-blue-600`;
+        tile.textContent = String(shown);
+      }
+    });
+    movesEl.textContent = String(state.moves);
+    correctEl.textContent = fill(msg.correctValue, {
+      correct: String(correctTiles(state)),
+      total: String(total - 1),
+    });
+    renderTime();
+  }
+
+  function stopTimer() {
+    if (timerId !== undefined) {
+      window.clearInterval(timerId);
+      timerId = undefined;
+    }
+  }
+
+  function startTimer() {
+    startedAt = performance.now();
+    elapsedMs = 0;
+    timerId = window.setInterval(() => {
+      elapsedMs = performance.now() - (startedAt ?? performance.now());
+      renderTime();
+    }, 100);
+  }
+
+  function buildBoard() {
+    boardEl.style.gridTemplateColumns = `repeat(${size}, minmax(0, 1fr))`;
+    boardEl.replaceChildren();
+    tiles = state.board.map((_, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.index = String(i);
+      boardEl.append(b);
+      return b;
+    });
+  }
+
+  function updatePreview() {
+    const show = mode === 'image' && imageUrl !== null;
+    previewFigure.hidden = !show;
+    if (show && imageUrl) previewImg.src = imageUrl;
+  }
+
+  function startGame() {
+    // 読み込み中の画像が後から届いても、いま始めたゲームをリセットしないようにする
+    loadGeneration++;
+    stopTimer();
+    startedAt = null;
+    elapsedMs = 0;
+    state = newGame(createBoard(size), size);
+    setStatus('');
+    updatePreview();
+    buildBoard();
+    render();
+  }
+
+  function finish() {
+    stopTimer();
+    elapsedMs = performance.now() - (startedAt ?? performance.now());
+    const update = applyResult(records, size, state.moves, elapsedMs);
+    records = update.records;
+    saveRecords();
+    renderRecords();
+    const parts = [
+      fill(msg.completed, {
+        moves: String(state.moves),
+        time: formatTime(elapsedMs),
+      }),
+    ];
+    if (update.newBestMoves) parts.push(msg.newBestMoves ?? '');
+    if (update.newBestTime) parts.push(msg.newBestTime ?? '');
+    setStatus(parts.join(' '));
+    render();
+  }
+
+  function applyMove(next: PuzzleState) {
+    if (next === state || isComplete(state)) return;
+    state = next;
+    if (startedAt === null) startTimer();
+    if (isComplete(state)) {
+      finish();
+      return;
+    }
+    render();
+  }
+
+  boardEl.addEventListener('click', (e) => {
+    const target = (e.target as HTMLElement).closest<HTMLElement>(
+      '[data-index]',
+    );
+    if (!target) return;
+    // Safariはボタンのクリックでフォーカスが移らないため、矢印キー操作が効くよう盤面へ移す
+    if (!root.contains(document.activeElement)) boardEl.focus();
+    applyMove(moveTile(state, Number(target.dataset.index)));
+  });
+
+  const KEY_DIRECTIONS: Record<string, Direction> = {
+    ArrowUp: 'up',
+    ArrowDown: 'down',
+    ArrowLeft: 'left',
+    ArrowRight: 'right',
+  };
+  root.addEventListener('keydown', (e) => {
+    const direction = KEY_DIRECTIONS[e.key];
+    if (!direction || e.altKey || e.ctrlKey || e.metaKey) return;
+    const el = e.target as HTMLElement;
+    if (el.closest('input, select, textarea')) return;
+    e.preventDefault();
+    applyMove(moveByDirection(state, direction));
+  });
+
+  function setImageUrl(url: string | null) {
+    if (imageUrl) URL.revokeObjectURL(imageUrl);
+    imageUrl = url;
+  }
+
+  async function loadFile(file: File) {
+    const generation = ++loadGeneration;
+    clearError();
+    if (!isAcceptedImageFile(file)) {
+      showError(msg.errorUnsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        fill(msg.errorTooLarge, { max: formatFileSize(MAX_FILE_SIZE) }),
+      );
+      return;
+    }
+    try {
+      const bitmap = await createImageBitmap(file);
+      const crop = centerSquare(bitmap.width, bitmap.height);
+      const side = Math.min(crop.side, MAX_IMAGE_SIDE);
+      const canvas = document.createElement('canvas');
+      canvas.width = side;
+      canvas.height = side;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('canvas unavailable');
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(
+        bitmap,
+        crop.x,
+        crop.y,
+        crop.side,
+        crop.side,
+        0,
+        0,
+        side,
+        side,
+      );
+      bitmap.close();
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, 'image/png'),
+      );
+      if (!blob) throw new Error('toBlob failed');
+      if (generation !== loadGeneration) return;
+      setImageUrl(URL.createObjectURL(blob));
+    } catch {
+      if (generation === loadGeneration) showError(msg.errorImageFailed ?? '');
+      return;
+    }
+    startGame();
+    setStatus(msg.imageLoaded ?? '');
+  }
+
+  const dropzone = $('sp-dropzone');
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop(dropzone, fileInput);
+  showNumbersInput.addEventListener('change', render);
+
+  $('sp-new-button').addEventListener('click', startGame);
+  $('sp-reset-button').addEventListener('click', () => {
+    records = {};
+    saveRecords();
+    renderRecords();
+    setStatus(msg.recordsCleared ?? '');
+  });
+  sizeButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      size = Number(b.dataset.size) as PuzzleSize;
+      sizeButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      startGame();
+    }),
+  );
+  modeButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      const next = b.dataset.mode === 'image' ? 'image' : 'number';
+      if (next === mode) return;
+      mode = next;
+      modeButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      imagePanel.hidden = mode !== 'image';
+      // 見た目だけの切り替えなので、盤面と進行は保ったまま描き直す
+      updatePreview();
+      render();
+    }),
+  );
+
+  renderRecords();
+  startGame();
+</script>

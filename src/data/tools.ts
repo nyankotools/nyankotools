@@ -5774,6 +5774,42 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'slide-puzzle',
+    category: 'games',
+    addedAt: '2026-10-11',
+    updatedAt: '2026-10-11',
+    related: ['memory-match', 'sudoku', 'image-pixelart-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'スライドパズル',
+        description:
+          '数字や自分の画像で遊べる15パズル。3×3・4×4・5×5に対応し、解けない配置は作らず手数とタイムを記録',
+        keywords: [
+          'スライドパズル',
+          '15パズル',
+          'スライディングパズル',
+          '8パズル',
+          '画像パズル',
+          '脳トレ',
+        ],
+      },
+      en: {
+        name: 'Sliding Puzzle',
+        description:
+          'Play the 15 puzzle with numbers or your own image. 3×3, 4×4 and 5×5, always solvable, with best moves and time',
+        keywords: [
+          'sliding puzzle',
+          '15 puzzle',
+          'slide puzzle',
+          '8 puzzle',
+          'picture puzzle',
+          'brain training',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -19,6 +19,7 @@ const slugs = [
   'reaction-test',
   'sudoku',
   'memory-match',
+  'slide-puzzle',
   'favicon-generator',
   'image-palette-extractor',
   'exif-viewer',

@@ -60,26 +60,45 @@ export function newGame(
   return { size, board, score: 0, moves: 0, won: false };
 }
 
+/**
+ * 1行（または1列）を先頭側へ詰めて、同じ数を1回だけ合体させる。
+ * gained は合体で増えた点数、sources は結果の各位置に入ったタイルの元の位置（合体なら2つ）
+ */
+export function slideLineTrace(line: readonly number[]): {
+  line: number[];
+  gained: number;
+  sources: number[][];
+} {
+  const tiles: { value: number; pos: number }[] = [];
+  line.forEach((value, pos) => {
+    if (value !== EMPTY) tiles.push({ value, pos });
+  });
+  const merged: number[] = [];
+  const sources: number[][] = [];
+  let gained = 0;
+  for (let i = 0; i < tiles.length; i++) {
+    if (i + 1 < tiles.length && tiles[i].value === tiles[i + 1].value) {
+      const value = tiles[i].value * 2;
+      merged.push(value);
+      sources.push([tiles[i].pos, tiles[i + 1].pos]);
+      gained += value;
+      i++;
+    } else {
+      merged.push(tiles[i].value);
+      sources.push([tiles[i].pos]);
+    }
+  }
+  while (merged.length < line.length) merged.push(EMPTY);
+  return { line: merged, gained, sources };
+}
+
 /** 1行（または1列）を先頭側へ詰めて、同じ数を1回だけ合体させる。gained は合体で増えた点数 */
 export function slideLine(line: readonly number[]): {
   line: number[];
   gained: number;
 } {
-  const tiles = line.filter((v) => v !== EMPTY);
-  const merged: number[] = [];
-  let gained = 0;
-  for (let i = 0; i < tiles.length; i++) {
-    if (i + 1 < tiles.length && tiles[i] === tiles[i + 1]) {
-      const value = tiles[i] * 2;
-      merged.push(value);
-      gained += value;
-      i++;
-    } else {
-      merged.push(tiles[i]);
-    }
-  }
-  while (merged.length < line.length) merged.push(EMPTY);
-  return { line: merged, gained };
+  const { line: result, gained } = slideLineTrace(line);
+  return { line: result, gained };
 }
 
 /** 動かす向きに対して、タイルが寄る側を先頭にした各行・列のマス番号 */
@@ -98,6 +117,43 @@ function lineIndexes(size: number, direction: Direction): number[][] {
   return lines;
 }
 
+export interface TileTransition {
+  /** 動く前のマス番号 */
+  from: number;
+  /** 動いたあとのマス番号 */
+  to: number;
+}
+
+export interface MovePlan {
+  /** 寄せて合体した直後の盤面（新しいタイルはまだ置いていない） */
+  board: number[];
+  gained: number;
+  /** 動く前に埋まっていた各マスのタイルが、どこへ移ったか。合体では2枚が同じ to になる */
+  transitions: TileTransition[];
+}
+
+/** 盤面を指定の向きへ寄せた結果と、各タイルの移動先を求める（新しいタイルは置かない） */
+export function planMove(
+  board: readonly number[],
+  size: number,
+  direction: Direction,
+): MovePlan {
+  const next = [...board];
+  const transitions: TileTransition[] = [];
+  let gained = 0;
+  for (const indexes of lineIndexes(size, direction)) {
+    const result = slideLineTrace(indexes.map((i) => board[i]));
+    indexes.forEach((boardIndex, k) => {
+      next[boardIndex] = result.line[k];
+      for (const src of result.sources[k] ?? []) {
+        transitions.push({ from: indexes[src], to: boardIndex });
+      }
+    });
+    gained += result.gained;
+  }
+  return { board: next, gained, transitions };
+}
+
 /**
  * 盤面を指定の向きへ寄せ、変化があれば新しいタイルを1枚置く。
  * 何も動かなければ（無効な操作）同じ state を返す。
@@ -108,21 +164,13 @@ export function move(
   randomInt: RandomInt = secureRandomInt,
 ): GameState {
   const { size, board } = state;
-  const next = [...board];
-  let gained = 0;
-  for (const indexes of lineIndexes(size, direction)) {
-    const result = slideLine(indexes.map((i) => board[i]));
-    indexes.forEach((boardIndex, k) => {
-      next[boardIndex] = result.line[k];
-    });
-    gained += result.gained;
-  }
-  if (next.every((v, i) => v === board[i])) return state;
-  const spawned = spawnTile(next, randomInt);
+  const plan = planMove(board, size, direction);
+  if (plan.board.every((v, i) => v === board[i])) return state;
+  const spawned = spawnTile(plan.board, randomInt);
   return {
     size,
     board: spawned,
-    score: state.score + gained,
+    score: state.score + plan.gained,
     moves: state.moves + 1,
     won: state.won || maxTile(spawned) >= WIN_TILE,
   };

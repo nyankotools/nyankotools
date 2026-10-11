@@ -7,6 +7,7 @@ import {
   maxTile,
   move,
   newGame,
+  planMove,
   parseRecords,
   serializeRecords,
   slideLine,
@@ -347,5 +348,88 @@ describe('swipeDirection', () => {
     expect(swipeDirection(10, -24)).toBe('up');
     expect(swipeDirection(24, 24)).toBe('right');
     expect(swipeDirection(30, 30, 40)).toBeNull();
+  });
+});
+
+describe('planMove', () => {
+  it('各タイルの移動先と、合体で2枚が同じマスへ入ることを返す', () => {
+    // 2 2 4 0 → 左: [4,4,0,0]（0,1番が0へ、2番が1へ）
+    const plan = planMove(
+      [2, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      4,
+      'left',
+    );
+    expect(plan.board.slice(0, 4)).toEqual([4, 4, 0, 0]);
+    expect(plan.gained).toBe(4);
+    expect(plan.transitions).toEqual([
+      { from: 0, to: 0 },
+      { from: 1, to: 0 },
+      { from: 2, to: 1 },
+    ]);
+  });
+
+  it('右・下では動く向きの端へ寄る', () => {
+    const board = [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0];
+    expect(planMove(board, 4, 'right').transitions).toEqual([
+      { from: 0, to: 3 },
+      { from: 12, to: 15 },
+    ]);
+    expect(planMove(board, 4, 'down').transitions).toEqual([
+      { from: 12, to: 12 },
+      { from: 0, to: 8 },
+    ]);
+  });
+
+  it('入力を変更せず、新しいタイルを置かない', () => {
+    const board = [2, 0, 0, 2];
+    planMove(board, 2, 'left');
+    expect(board).toEqual([2, 0, 0, 2]);
+    expect(planMove([2, 0, 0, 2], 2, 'left').board).toEqual([2, 0, 2, 0]);
+  });
+
+  it('空きだけの盤面では移動元も移動先もない', () => {
+    const plan = planMove(new Array<number>(16).fill(EMPTY), 4, 'up');
+    expect(plan.transitions).toEqual([]);
+    expect(plan.gained).toBe(0);
+  });
+
+  it('5×5・6×6 を含む任意の盤面で、全タイルが1回ずつ移動元になり、合体先の値は2倍になる', () => {
+    const rnd = seeded(7);
+    for (const size of SIZES) {
+      for (let trial = 0; trial < 60; trial++) {
+        const board = Array.from({ length: size * size }, () =>
+          rnd(6) < 3 ? EMPTY : 2 ** (rnd(4) + 1),
+        );
+        const filled = board.flatMap((v, i) => (v !== EMPTY ? [i] : []));
+        for (const dir of ['up', 'down', 'left', 'right'] as const) {
+          const plan = planMove(board, size, dir);
+          const sources = plan.transitions
+            .map((t) => t.from)
+            .sort((a, b) => a - b);
+          expect(sources).toEqual(filled);
+
+          const incoming = new Map<number, number[]>();
+          for (const t of plan.transitions) {
+            incoming.set(t.to, [...(incoming.get(t.to) ?? []), board[t.from]]);
+          }
+          for (let i = 0; i < board.length; i++) {
+            if (!incoming.has(i)) expect(plan.board[i]).toBe(EMPTY);
+          }
+          for (const [to, vals] of incoming) {
+            expect(vals.length).toBeLessThanOrEqual(2);
+            if (vals.length === 1) {
+              expect(plan.board[to]).toBe(vals[0]);
+            } else {
+              expect(vals[0]).toBe(vals[1]);
+              expect(plan.board[to]).toBe(vals[0] * 2);
+            }
+          }
+
+          const g = state(board);
+          const next = move(g, dir, firstEmptyTwo);
+          if (next !== g) expect(next.score - g.score).toBe(plan.gained);
+        }
+      }
+    }
   });
 });

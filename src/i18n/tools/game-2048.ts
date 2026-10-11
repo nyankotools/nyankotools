@@ -34,6 +34,10 @@ export interface Game2048PageContent {
   undone: string;
   /** 2048 を作った直後に表示する */
   won: string;
+  /** 盤面の中央に重ねて表示する短い見出し（2048 を作った直後） */
+  wonTitle: string;
+  /** 盤面の中央に重ねて表示する短い見出し（ゲームオーバー） */
+  gameOverTitle: string;
   /** {score} を置換して表示する */
   gameOver: string;
   resetRecords: string;
@@ -82,6 +86,8 @@ export const game2048Content: Record<Locale, Game2048PageContent> = {
     started: '新しいゲームを始めました。',
     undone: '1手戻しました。',
     won: '2048を達成しました！このまま続けられます。',
+    wonTitle: '2048達成！',
+    gameOverTitle: 'ゲームオーバー',
     gameOver: 'ゲームオーバーです。スコアは {score} でした。',
     resetRecords: '記録をリセット',
     recordsCleared: 'ベスト記録をリセットしました。',
@@ -144,6 +150,8 @@ export const game2048Content: Record<Locale, Game2048PageContent> = {
     started: 'A new game has started.',
     undone: 'Undid the last move.',
     won: 'You made 2048! You can keep playing.',
+    wonTitle: 'You made 2048!',
+    gameOverTitle: 'Game over',
     gameOver: 'Game over. Your score was {score}.',
     resetRecords: 'Reset records',
     recordsCleared: 'Best records have been reset.',

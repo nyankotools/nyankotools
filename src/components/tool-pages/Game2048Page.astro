@@ -27,6 +27,8 @@ const moveButtons = [
     data-undone={t.undone}
     data-won={t.won}
     data-game-over={t.gameOver}
+    data-won-title={t.wonTitle}
+    data-game-over-title={t.gameOverTitle}
     data-best-none={t.bestNone}
     data-best-value={t.bestValue}
     data-records-cleared={t.recordsCleared}
@@ -82,7 +84,7 @@ const moveButtons = [
       id="g2048-board"
       role="group"
       aria-label={t.boardLabel}
-      class="mt-3 grid w-full max-w-md touch-none gap-1.5 rounded-lg bg-gray-300 p-1.5 select-none sm:gap-2 sm:p-2 dark:bg-gray-700"
+      class="relative mt-3 grid w-full max-w-md touch-none gap-1.5 rounded-lg bg-gray-300 p-1.5 select-none sm:gap-2 sm:p-2 dark:bg-gray-700"
     ></div>
 
     <div
@@ -135,6 +137,7 @@ const moveButtons = [
     move,
     newGame,
     parseRecords,
+    planMove,
     serializeRecords,
     swipeDirection,
     updateBest,
@@ -175,6 +178,11 @@ const moveButtons = [
   let previous: GameState | null = null;
   let records: BestRecords = loadRecords();
   let cells: HTMLElement[] = [];
+  // どちらも buildBoard() で作られる（startGame より前に使われない）
+  let tilesEl!: HTMLElement;
+  let overlayEl!: HTMLElement;
+  let overlayMode: 'none' | 'won' | 'over' = 'none';
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   function loadRecords(): BestRecords {
     try {
@@ -210,7 +218,10 @@ const moveButtons = [
   }
 
   const CELL_BASE =
-    'flex aspect-square min-w-0 items-center justify-center rounded-md font-bold leading-none';
+    'flex h-full w-full min-w-0 items-center justify-center rounded-md font-bold leading-none';
+  const SLIDE_MS = 100;
+  const LABEL_BASE =
+    'rounded-md px-4 py-2 text-center text-2xl font-bold sm:text-4xl';
   const EMPTY_CLASS = 'bg-gray-200 dark:bg-gray-800';
   // 2, 4, 8, … の順。値が大きいものは最後の色を使う
   const TILE_COLORS = [
@@ -242,24 +253,141 @@ const moveButtons = [
     return `${TILE_COLORS[colorIndex]} ${font}`;
   }
 
-  function render() {
-    state.board.forEach((value, i) => {
-      const cell = cells[i];
-      if (value === EMPTY) {
-        cell.className = `${CELL_BASE} ${EMPTY_CLASS}`;
-        cell.textContent = '';
-        cell.removeAttribute('aria-label');
-        cell.removeAttribute('role');
-        return;
+  interface MoveAnimation {
+    /** 動かす前の盤面 */
+    prevBoard: readonly number[];
+    transitions: { from: number; to: number }[];
+    /** 動かしたあとに新しいタイルが出たマス */
+    spawned: number;
+    /** この手で初めて 2048 に到達したか */
+    reachedWin: boolean;
+  }
+
+  function placeTile(el: HTMLElement, index: number) {
+    el.style.gridRow = String(Math.floor(index / size) + 1);
+    el.style.gridColumn = String((index % size) + 1);
+  }
+
+  /** 元のマスの位置から現在のマスへ滑り込む動き */
+  function slideFrom(el: HTMLElement, from: number, to: number) {
+    if (from === to) return;
+    const a = cells[from].getBoundingClientRect();
+    const b = cells[to].getBoundingClientRect();
+    el.animate(
+      [
+        {
+          transform: `translate(${a.left - b.left}px, ${a.top - b.top}px)`,
+        },
+        { transform: 'none' },
+      ],
+      { duration: SLIDE_MS, easing: 'ease-out' },
+    );
+  }
+
+  function animateMove(tiles: (HTMLElement | null)[], anim: MoveAnimation) {
+    const seen = new Set<number>();
+    for (const { from, to } of anim.transitions) {
+      const tile = tiles[to];
+      if (!tile) continue;
+      if (!seen.has(to)) {
+        seen.add(to);
+        slideFrom(tile, from, to);
+        continue;
       }
-      cell.className = `${CELL_BASE} ${tileClass(value)}`;
-      cell.textContent = String(value);
-      cell.setAttribute('role', 'img');
-      cell.setAttribute(
+      // 合体した相手のタイルは、同じマスへ滑り込んでから消える
+      const value = anim.prevBoard[from];
+      const ghost = document.createElement('div');
+      ghost.className = `${CELL_BASE} ${tileClass(value)}`;
+      ghost.textContent = String(value);
+      ghost.setAttribute('aria-hidden', 'true');
+      placeTile(ghost, to);
+      tilesEl.prepend(ghost);
+      slideFrom(ghost, from, to);
+      window.setTimeout(() => ghost.remove(), SLIDE_MS);
+      // 合体したタイルは、滑り込んだあとに少し膨らむ
+      tile.animate(
+        [
+          { transform: 'scale(1)' },
+          { transform: 'scale(1.15)' },
+          { transform: 'scale(1)' },
+        ],
+        { duration: 140, delay: SLIDE_MS },
+      );
+    }
+    const spawned = tiles[anim.spawned];
+    if (spawned) {
+      spawned.animate(
+        [
+          { transform: 'scale(0)', opacity: 0 },
+          { transform: 'scale(1)', opacity: 1 },
+        ],
+        { duration: 120, delay: SLIDE_MS, fill: 'backwards' },
+      );
+    }
+  }
+
+  // 見出しの配色（ゲームオーバーは落ち着いた色、達成は明るい色）
+  const LABEL_COLORS = {
+    won: 'bg-amber-400 text-gray-900',
+    over: 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900',
+  };
+
+  /**
+   * 盤面中央の表示（2048 達成・ゲームオーバー）の出し入れ。
+   * 出す瞬間だけ、少し遅れて拡大しながら現れる。達成の表示は次に動かすまで残る
+   */
+  function updateOverlay(animate: boolean, reachedWin: boolean) {
+    const mode = isGameOver(state) ? 'over' : reachedWin ? 'won' : 'none';
+    if (mode === overlayMode) return;
+    overlayMode = mode;
+    overlayEl.style.display = mode === 'none' ? 'none' : 'flex';
+    const label = overlayEl.firstElementChild as HTMLElement | null;
+    if (label && mode !== 'none') {
+      label.textContent =
+        (mode === 'won' ? msg.wonTitle : msg.gameOverTitle) ?? '';
+      label.className = `${LABEL_BASE} ${LABEL_COLORS[mode]}`;
+    }
+    if (mode !== 'none' && animate && !reducedMotion.matches) {
+      overlayEl.animate([{ opacity: 0 }, { opacity: 1 }], {
+        duration: 300,
+        delay: SLIDE_MS + 120,
+        fill: 'backwards',
+      });
+      overlayEl.firstElementChild?.animate(
+        [
+          { transform: 'scale(0.4)', opacity: 0 },
+          { transform: 'scale(1.1)', opacity: 1, offset: 0.7 },
+          { transform: 'scale(1)', opacity: 1 },
+        ],
+        {
+          duration: 450,
+          delay: SLIDE_MS + 120,
+          easing: 'ease-out',
+          fill: 'backwards',
+        },
+      );
+    }
+  }
+
+  function render(anim?: MoveAnimation) {
+    tilesEl.replaceChildren();
+    const tiles = state.board.map((value, i) => {
+      if (value === EMPTY) return null;
+      const tile = document.createElement('div');
+      tile.className = `${CELL_BASE} ${tileClass(value)}`;
+      tile.textContent = String(value);
+      tile.dataset.index = String(i);
+      tile.setAttribute('role', 'img');
+      tile.setAttribute(
         'aria-label',
         fill(msg.tileLabel, { n: String(value) }),
       );
+      placeTile(tile, i);
+      tilesEl.append(tile);
+      return tile;
     });
+    if (anim && !reducedMotion.matches) animateMove(tiles, anim);
+    updateOverlay(Boolean(anim), anim?.reachedWin ?? false);
     scoreEl.textContent = String(state.score);
     bestScoreEl.textContent = String(
       Math.max(records[size]?.score ?? 0, state.score),
@@ -269,13 +397,35 @@ const moveButtons = [
   }
 
   function buildBoard() {
-    boardEl.style.gridTemplateColumns = `repeat(${size}, minmax(0, 1fr))`;
+    const columns = `repeat(${size}, minmax(0, 1fr))`;
+    boardEl.style.gridTemplateColumns = columns;
     boardEl.replaceChildren();
     cells = state.board.map(() => {
       const cell = document.createElement('div');
+      cell.dataset.cell = '';
+      cell.setAttribute('aria-hidden', 'true');
+      cell.className = `${CELL_BASE} aspect-square ${EMPTY_CLASS}`;
       boardEl.append(cell);
       return cell;
     });
+    // タイルは背景のマスと同じ格子の上に重ねる（操作は盤面側で受ける）
+    tilesEl = document.createElement('div');
+    tilesEl.className =
+      'pointer-events-none absolute inset-1.5 grid gap-1.5 sm:inset-2 sm:gap-2';
+    tilesEl.style.gridTemplateColumns = columns;
+    tilesEl.style.gridTemplateRows = columns;
+    boardEl.append(tilesEl);
+    // 達成・ゲームオーバーの表示（読み上げはステータス側で行うため、見た目だけの要素）
+    overlayEl = document.createElement('div');
+    overlayEl.setAttribute('aria-hidden', 'true');
+    overlayEl.className =
+      'pointer-events-none absolute inset-0 items-center justify-center rounded-lg bg-white/70 dark:bg-black/60';
+    overlayEl.style.display = 'none';
+    const label = document.createElement('span');
+    label.className = `${LABEL_BASE} ${LABEL_COLORS.over}`;
+    overlayEl.append(label);
+    boardEl.append(overlayEl);
+    overlayMode = 'none';
   }
 
   function startGame() {
@@ -288,6 +438,13 @@ const moveButtons = [
   function applyMove(direction: Direction) {
     const next = move(state, direction);
     if (next === state) return;
+    const plan = planMove(state.board, size, direction);
+    const anim: MoveAnimation = {
+      prevBoard: state.board,
+      transitions: plan.transitions,
+      spawned: next.board.findIndex((v, i) => v !== plan.board[i]),
+      reachedWin: next.won && !state.won,
+    };
     const wasWon = state.won;
     previous = state;
     state = next;
@@ -309,7 +466,7 @@ const moveButtons = [
     } else {
       setStatus('');
     }
-    render();
+    render(anim);
   }
 
   const KEY_DIRECTIONS: Record<string, Direction> = {

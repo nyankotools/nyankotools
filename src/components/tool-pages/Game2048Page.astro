@@ -435,7 +435,16 @@ const moveButtons = [
     render();
   }
 
+  /** 達成の表示を閉じる。表示中は盤面を動かさず、操作（クリック・キー・ボタン）は閉じるだけにする */
+  function dismissWon() {
+    if (overlayMode !== 'won') return false;
+    overlayMode = 'none';
+    overlayEl.style.display = 'none';
+    return true;
+  }
+
   function applyMove(direction: Direction) {
+    if (dismissWon()) return;
     const next = move(state, direction);
     if (next === state) return;
     const plan = planMove(state.board, size, direction);
@@ -513,6 +522,10 @@ const moveButtons = [
   });
   boardEl.addEventListener('pointerup', (e) => {
     if (!swipeStart || !e.isPrimary) return;
+    if (dismissWon()) {
+      swipeStart = null;
+      return;
+    }
     const direction = swipeDirection(
       e.clientX - swipeStart.x,
       e.clientY - swipeStart.y,

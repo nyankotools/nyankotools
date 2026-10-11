@@ -268,7 +268,7 @@ test.describe('2048', () => {
     expect([2, 4]).toContain(sum(await readBoard(page)) - before);
   });
 
-  test('2048を作ると盤面中央に達成が表示され、次に動かすと消えて続けられる', async ({
+  test('2048を作ると盤面中央に達成が表示され、表示中は動かず、クリックで消えて続けられる', async ({
     page,
   }) => {
     test.setTimeout(180_000);
@@ -318,9 +318,14 @@ test.describe('2048', () => {
       Math.abs(label.x + label.width / 2 - (box.x + box.width / 2)),
     ).toBeLessThan(4);
 
-    // 次に動かすと消え、ゲームは続けられる
-    await moveOnce(page);
+    // 表示中はキー操作でタイルが動かず、表示だけが消える
+    const shown = (await readBoard(page)).join(',');
+    await page.keyboard.press('ArrowLeft');
+    expect((await readBoard(page)).join(',')).toBe(shown);
     await expect(overlay).toBeHidden();
+
+    // 消えたあとは、ゲームを続けられる
+    await moveOnce(page);
     await expect(page.locator('#g2048-undo-button')).toBeEnabled();
   });
 

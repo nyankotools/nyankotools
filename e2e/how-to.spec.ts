@@ -18,6 +18,7 @@ const slugs = [
   'typing-test',
   'reaction-test',
   'sudoku',
+  'memory-match',
   'favicon-generator',
   'image-palette-extractor',
   'exif-viewer',

@@ -5739,6 +5739,41 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'memory-match',
+    category: 'games',
+    addedAt: '2026-10-11',
+    updatedAt: '2026-10-11',
+    related: ['sudoku', 'reaction-test', 'omikuji'],
+    translations: {
+      ja: {
+        name: '神経衰弱',
+        description:
+          '絵文字のカードを揃える記憶力ゲーム。12・16・30枚から選べて、手数とタイムのベスト記録を保存',
+        keywords: [
+          '神経衰弱',
+          '記憶力ゲーム',
+          'メモリーゲーム',
+          'ペアマッチング',
+          'トランプ',
+          '脳トレ',
+        ],
+      },
+      en: {
+        name: 'Memory Match',
+        description:
+          'Flip emoji cards and find every pair. Choose 12, 16 or 30 cards and save your best moves and time',
+        keywords: [
+          'memory match',
+          'memory game',
+          'concentration',
+          'matching pairs',
+          'card matching',
+          'brain training',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

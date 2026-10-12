@@ -5845,6 +5845,40 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'minesweeper',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['sudoku', 'game-2048', 'slide-puzzle'],
+    translations: {
+      ja: {
+        name: 'マインスイーパー',
+        description:
+          '数字のヒントから地雷を推理して全マスを開くパズル。初級・中級・上級とカスタムに対応、最初の1手は必ず安全。スマホは長押しで旗、ベストタイム記録つき',
+        keywords: [
+          'マインスイーパー',
+          'マインスイーパ',
+          '地雷',
+          '地雷ゲーム',
+          'minesweeper',
+          '脳トレ',
+        ],
+      },
+      en: {
+        name: 'Minesweeper',
+        description:
+          'Classic mine-clearing puzzle with Beginner, Intermediate, Expert and custom boards. Safe first click, long-press flags on touch screens and best times',
+        keywords: [
+          'minesweeper',
+          'mine sweeper',
+          'mines game',
+          'logic puzzle',
+          'brain training',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

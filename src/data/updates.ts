@@ -520,6 +520,20 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-12',
+    toolSlugs: ['minesweeper'],
+    translations: {
+      ja: {
+        summary:
+          'マインスイーパーを追加しました。初級・中級・上級とカスタムに対応し、最初の1手は必ず安全です。スマホでは長押しや「旗」モードで旗を立てられ、難易度ごとのベストタイムも記録します。',
+      },
+      en: {
+        summary:
+          'Added Minesweeper, with Beginner, Intermediate, Expert and custom boards and a guaranteed-safe first click. Flag cells by long-press or a flag mode on touch screens; best times are saved per level.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

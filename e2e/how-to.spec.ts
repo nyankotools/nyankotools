@@ -21,6 +21,7 @@ const slugs = [
   'memory-match',
   'slide-puzzle',
   'game-2048',
+  'minesweeper',
   'favicon-generator',
   'image-palette-extractor',
   'exif-viewer',

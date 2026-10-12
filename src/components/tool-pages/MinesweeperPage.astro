@@ -1,0 +1,681 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { minesweeperContent } from '../../i18n/tools/minesweeper';
+import {
+  DEFAULT_DIFFICULTY,
+  DIFFICULTIES,
+  LIMITS,
+  PRESETS,
+} from '../../lib/tools/minesweeper';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = minesweeperContent[locale];
+const difficultyNames = {
+  beginner: t.beginner,
+  intermediate: t.intermediate,
+  expert: t.expert,
+};
+const dash = locale === 'ja' ? '〜' : '–';
+const customHint = t.customHint
+  .replace('{cols}', `${LIMITS.minCols}${dash}${LIMITS.maxCols}`)
+  .replace('{rows}', `${LIMITS.minRows}${dash}${LIMITS.maxRows}`);
+const initial = PRESETS.beginner;
+---
+
+<ToolShell t={t}>
+  <section
+    id="ms-root"
+    data-cell-label={t.cellLabel}
+    data-cell-hidden={t.cellHidden}
+    data-cell-flag={t.cellFlag}
+    data-cell-empty={t.cellEmpty}
+    data-cell-number={t.cellNumber}
+    data-cell-mine={t.cellMine}
+    data-cell-exploded={t.cellExploded}
+    data-cell-wrong-flag={t.cellWrongFlag}
+    data-started={t.started}
+    data-won={t.won}
+    data-new-best={t.newBest}
+    data-lost={t.lost}
+    data-error-cols={t.errorCols}
+    data-error-rows={t.errorRows}
+    data-error-mines={t.errorMines}
+    data-error-invalid={t.errorInvalid}
+    data-best-none={t.bestTimeNone}
+    data-records-cleared={t.recordsCleared}
+  >
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <span id="ms-difficulty-label" class="ui-label">
+          {t.difficultyLabel}
+        </span>
+        <div
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-labelledby="ms-difficulty-label"
+        >
+          {DIFFICULTIES.map((d) => (
+            <button
+              type="button"
+              class="ui-seg-btn"
+              data-difficulty={d}
+              aria-pressed={d === DEFAULT_DIFFICULTY ? 'true' : 'false'}
+            >
+              {difficultyNames[d]}
+            </button>
+          ))}
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-difficulty="custom"
+            aria-pressed="false"
+          >
+            {t.custom}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="ms-custom" class="mt-3 max-w-xl" hidden>
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="ms-cols" class="ui-label">
+            {t.colsLabel}
+          </label>
+          <input
+            id="ms-cols"
+            type="number"
+            inputmode="numeric"
+            min={LIMITS.minCols}
+            max={LIMITS.maxCols}
+            value={initial.cols}
+            class="ui-input h-11 w-24 bg-white px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ms-rows" class="ui-label">
+            {t.rowsLabel}
+          </label>
+          <input
+            id="ms-rows"
+            type="number"
+            inputmode="numeric"
+            min={LIMITS.minRows}
+            max={LIMITS.maxRows}
+            value={initial.rows}
+            class="ui-input h-11 w-24 bg-white px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ms-mines" class="ui-label">
+            {t.minesLabel}
+          </label>
+          <input
+            id="ms-mines"
+            type="number"
+            inputmode="numeric"
+            min={LIMITS.minMines}
+            value={initial.mines}
+            class="ui-input h-11 w-24 bg-white px-3 dark:bg-gray-900"
+          />
+        </div>
+        <button id="ms-custom-start" type="button" class="ui-btn-primary">
+          {t.startCustom}
+        </button>
+      </div>
+      <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">{customHint}</p>
+      <p id="ms-error" class="ui-error mt-3" role="alert" hidden></p>
+    </div>
+
+    <div class="mt-3 flex flex-wrap items-end gap-3">
+      <button id="ms-new-button" type="button" class="ui-btn-primary">
+        {t.newGame}
+      </button>
+      <div>
+        <span id="ms-mode-label" class="ui-label">
+          {t.modeLabel}
+        </span>
+        <div class="ui-seg" role="group" aria-labelledby="ms-mode-label">
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-mode="open"
+            aria-pressed="true"
+          >
+            {t.modeOpen}
+          </button>
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-mode="flag"
+            aria-pressed="false"
+          >
+            {t.modeFlag}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
+      <div class="flex gap-2">
+        <dt>{t.minesLeftLabel}</dt>
+        <dd id="ms-mines-left" class="font-semibold tabular-nums">
+          0
+        </dd>
+      </div>
+      <div class="flex gap-2">
+        <dt>{t.timeLabel}</dt>
+        <dd id="ms-time" class="font-semibold tabular-nums">
+          0:00.0
+        </dd>
+      </div>
+      <div class="flex gap-2">
+        <dt>{t.bestTimeLabel}</dt>
+        <dd id="ms-best-time" class="font-semibold tabular-nums"></dd>
+      </div>
+    </dl>
+
+    <div class="mt-3 max-w-full overflow-x-auto pb-1">
+      <div
+        id="ms-board"
+        role="group"
+        aria-label={t.boardLabel}
+        class="grid w-max touch-manipulation gap-0.5 border-2 border-gray-500 bg-gray-500 select-none dark:border-gray-400 dark:bg-gray-400"
+        style="-webkit-touch-callout: none;"
+      ></div>
+    </div>
+
+    <p
+      id="ms-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+
+    <div class="mt-4 max-w-xl">
+      <h2 class="text-base font-semibold">{t.bestHeading}</h2>
+      <ul class="mt-2 space-y-1 text-sm text-gray-700 dark:text-gray-300">
+        {DIFFICULTIES.map((d) => (
+          <li class="flex flex-wrap gap-x-3">
+            <span class="font-medium">{difficultyNames[d]}</span>
+            <span id={`ms-best-${d}`} class="tabular-nums"></span>
+          </li>
+        ))}
+      </ul>
+      <button id="ms-reset-button" type="button" class="ui-btn mt-3">
+        {t.resetRecords}
+      </button>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    DEFAULT_DIFFICULTY,
+    DIFFICULTIES,
+    LIMITS,
+    PRESETS,
+    applyResult,
+    chord,
+    formatTime,
+    getCellView,
+    maxMines,
+    minesLeft,
+    newGame,
+    parseRecords,
+    revealCell,
+    serializeRecords,
+    toggleFlag,
+    validateCustom,
+    type BestRecords,
+    type CellView,
+    type Difficulty,
+    type GameConfig,
+    type GameState,
+  } from '../../lib/tools/minesweeper';
+
+  const STORAGE_KEY = 'minesweeper-best';
+  const LONG_PRESS_MS = 450;
+  const LONG_PRESS_MOVE_PX = 10;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('ms-root');
+  const msg = root.dataset;
+  const boardEl = $('ms-board');
+  const statusEl = $('ms-status');
+  const errorEl = $('ms-error');
+  const customEl = $('ms-custom');
+  const minesLeftEl = $('ms-mines-left');
+  const timeEl = $('ms-time');
+  const bestTimeEl = $('ms-best-time');
+  const colsInput = $<HTMLInputElement>('ms-cols');
+  const rowsInput = $<HTMLInputElement>('ms-rows');
+  const minesInput = $<HTMLInputElement>('ms-mines');
+  const difficultyButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-difficulty]'),
+  );
+  const modeButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-mode]'),
+  );
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  // 'custom' のときは記録に残さない
+  let selected: Difficulty | 'custom' = DEFAULT_DIFFICULTY;
+  let mode: 'open' | 'flag' = 'open';
+  let state: GameState = newGame(PRESETS[DEFAULT_DIFFICULTY]);
+  let records: BestRecords = loadRecords();
+  let buttons: HTMLButtonElement[] = [];
+  let focusIndex = 0;
+  let startedAt: number | null = null;
+  let timerId: number | undefined;
+
+  function loadRecords(): BestRecords {
+    try {
+      return parseRecords(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      // localStorageが使えない環境では、このページを開いている間だけの記録にする
+      return {};
+    }
+  }
+
+  function saveRecords() {
+    try {
+      localStorage.setItem(STORAGE_KEY, serializeRecords(records));
+    } catch {
+      // 保存できない環境では今回の表示だけ反映する
+    }
+  }
+
+  function setStatus(text: string) {
+    statusEl.textContent = text;
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function bestText(d: Difficulty) {
+    const best = records[d];
+    return best === undefined ? (msg.bestNone ?? '') : formatTime(best);
+  }
+
+  function renderRecords() {
+    for (const d of DIFFICULTIES) $(`ms-best-${d}`).textContent = bestText(d);
+    bestTimeEl.textContent =
+      selected === 'custom' ? (msg.bestNone ?? '') : bestText(selected);
+  }
+
+  function stopTimer() {
+    if (timerId !== undefined) {
+      window.clearInterval(timerId);
+      timerId = undefined;
+    }
+  }
+
+  function startTimer() {
+    startedAt = performance.now();
+    timeEl.textContent = formatTime(0);
+    timerId = window.setInterval(() => {
+      timeEl.textContent = formatTime(
+        performance.now() - (startedAt ?? performance.now()),
+      );
+    }, 100);
+  }
+
+  const CELL_BASE =
+    'flex h-8 w-8 items-center justify-center text-base font-bold leading-none focus-visible:relative focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600';
+  const HIDDEN_CLASS =
+    'cursor-pointer bg-gray-200 hover:bg-gray-100 dark:bg-gray-600 dark:hover:bg-gray-500';
+  const OPEN_CLASS = 'cursor-default bg-gray-50 dark:bg-gray-800';
+  const NUMBER_COLORS = [
+    '',
+    'text-blue-700 dark:text-blue-400',
+    'text-green-700 dark:text-green-400',
+    'text-red-700 dark:text-red-400',
+    'text-purple-800 dark:text-purple-400',
+    'text-amber-800 dark:text-amber-500',
+    'text-teal-700 dark:text-teal-400',
+    'text-gray-900 dark:text-gray-100',
+    'text-gray-600 dark:text-gray-400',
+  ];
+
+  function appearance(view: CellView): {
+    className: string;
+    text: string;
+    stateLabel: string;
+  } {
+    switch (view.kind) {
+      case 'flag':
+        return {
+          className: `${CELL_BASE} ${HIDDEN_CLASS}`,
+          text: '🚩',
+          stateLabel: msg.cellFlag ?? '',
+        };
+      case 'open':
+        return {
+          className: `${CELL_BASE} ${OPEN_CLASS} ${NUMBER_COLORS[view.count]}`,
+          text: view.count > 0 ? String(view.count) : '',
+          stateLabel:
+            view.count > 0
+              ? fill(msg.cellNumber, { n: String(view.count) })
+              : (msg.cellEmpty ?? ''),
+        };
+      case 'mine':
+        return {
+          className: `${CELL_BASE} ${OPEN_CLASS}`,
+          text: '💣',
+          stateLabel: msg.cellMine ?? '',
+        };
+      case 'exploded':
+        return {
+          className: `${CELL_BASE} cursor-default bg-red-500 dark:bg-red-700`,
+          text: '💣',
+          stateLabel: msg.cellExploded ?? '',
+        };
+      case 'wrongFlag':
+        return {
+          className: `${CELL_BASE} ${OPEN_CLASS} text-red-600 dark:text-red-400`,
+          text: '✖',
+          stateLabel: msg.cellWrongFlag ?? '',
+        };
+      default:
+        return {
+          className: `${CELL_BASE} ${HIDDEN_CLASS}`,
+          text: '',
+          stateLabel: msg.cellHidden ?? '',
+        };
+    }
+  }
+
+  function render() {
+    const { cols } = state.config;
+    buttons.forEach((button, i) => {
+      const view = getCellView(state, i);
+      const { className, text, stateLabel } = appearance(view);
+      button.className = className;
+      button.textContent = text;
+      button.setAttribute(
+        'aria-label',
+        fill(msg.cellLabel, {
+          row: String(Math.floor(i / cols) + 1),
+          col: String((i % cols) + 1),
+          state: stateLabel,
+        }),
+      );
+    });
+    minesLeftEl.textContent = String(minesLeft(state));
+  }
+
+  function buildBoard() {
+    const { cols } = state.config;
+    boardEl.style.gridTemplateColumns = `repeat(${cols}, 2rem)`;
+    boardEl.replaceChildren();
+    buttons = state.cells.map((_, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.index = String(i);
+      b.tabIndex = i === 0 ? 0 : -1;
+      boardEl.append(b);
+      return b;
+    });
+    focusIndex = 0;
+  }
+
+  function startGame(config: GameConfig) {
+    stopTimer();
+    startedAt = null;
+    timeEl.textContent = formatTime(0);
+    state = newGame(config);
+    buildBoard();
+    render();
+    renderRecords();
+    setStatus(
+      fill(msg.started, {
+        cols: String(config.cols),
+        rows: String(config.rows),
+        mines: String(config.mines),
+      }),
+    );
+  }
+
+  function startSelected() {
+    if (selected === 'custom') {
+      startCustom();
+      return;
+    }
+    clearError();
+    startGame(PRESETS[selected]);
+  }
+
+  function startCustom() {
+    const cols = Number(colsInput.value);
+    const rows = Number(rowsInput.value);
+    const mines = Number(minesInput.value);
+    // 空欄は Number('') === 0 になるため、整数でない入力として扱う
+    const blank = [colsInput, rowsInput, minesInput].some(
+      (el) => el.value.trim() === '',
+    );
+    const result = blank
+      ? ({ ok: false, error: 'invalid' } as const)
+      : validateCustom(cols, rows, mines);
+    if (!result.ok) {
+      const values = (min: number, max: number) => ({
+        min: String(min),
+        max: String(max),
+      });
+      const messages = {
+        invalid: msg.errorInvalid ?? '',
+        cols: fill(msg.errorCols, values(LIMITS.minCols, LIMITS.maxCols)),
+        rows: fill(msg.errorRows, values(LIMITS.minRows, LIMITS.maxRows)),
+        mines: fill(
+          msg.errorMines,
+          values(LIMITS.minMines, maxMines(cols, rows)),
+        ),
+      };
+      showError(messages[result.error]);
+      return;
+    }
+    clearError();
+    startGame(result.config);
+  }
+
+  function finish() {
+    stopTimer();
+    if (state.phase === 'lost') {
+      setStatus(msg.lost ?? '');
+      return;
+    }
+    const elapsed = performance.now() - (startedAt ?? performance.now());
+    timeEl.textContent = formatTime(elapsed);
+    const parts = [fill(msg.won, { time: formatTime(elapsed) })];
+    if (selected !== 'custom') {
+      const update = applyResult(records, selected, elapsed);
+      if (update.newBest) {
+        records = update.records;
+        saveRecords();
+        renderRecords();
+        parts.push(msg.newBest ?? '');
+      }
+    }
+    setStatus(parts.join(' '));
+  }
+
+  /** 状態を差し替えて表示を更新する。最初の1手でタイマーを始め、終了したら止める */
+  function apply(next: GameState) {
+    if (next === state) return;
+    const wasReady = state.phase === 'ready';
+    state = next;
+    if (wasReady && state.phase !== 'ready') startTimer();
+    render();
+    if (state.phase === 'won' || state.phase === 'lost') finish();
+  }
+
+  function activate(index: number) {
+    const mark = state.cells[index];
+    if (mark === 'open') {
+      apply(chord(state, index));
+    } else if (mode === 'flag') {
+      apply(toggleFlag(state, index));
+    } else {
+      apply(revealCell(state, index));
+    }
+  }
+
+  function setFocus(index: number) {
+    if (index < 0 || index >= buttons.length) return;
+    buttons[focusIndex].tabIndex = -1;
+    focusIndex = index;
+    buttons[index].tabIndex = 0;
+  }
+
+  function indexFrom(target: EventTarget | null): number {
+    const el = (target as HTMLElement | null)?.closest<HTMLElement>(
+      '[data-index]',
+    );
+    return el ? Number(el.dataset.index) : -1;
+  }
+
+  // 長押しで旗を立てる（タッチ・ペン）。マウスは右クリックで立てる
+  let pressTimer: number | undefined;
+  let pressOrigin: { x: number; y: number } | null = null;
+  let longPressed = false;
+  let lastPointerType = 'mouse';
+
+  function clearPress() {
+    if (pressTimer !== undefined) {
+      window.clearTimeout(pressTimer);
+      pressTimer = undefined;
+    }
+    pressOrigin = null;
+  }
+
+  boardEl.addEventListener('pointerdown', (e) => {
+    lastPointerType = e.pointerType;
+    longPressed = false;
+    clearPress();
+    const index = indexFrom(e.target);
+    if (e.pointerType === 'mouse' || index < 0) return;
+    pressOrigin = { x: e.clientX, y: e.clientY };
+    pressTimer = window.setTimeout(() => {
+      pressTimer = undefined;
+      longPressed = true;
+      setFocus(index);
+      // 旗モードでは通常のタップが旗になるため、長押しは逆に開く操作にする
+      const next =
+        mode === 'flag' && state.cells[index] === 'hidden'
+          ? revealCell(state, index)
+          : toggleFlag(state, index);
+      if (next !== state && 'vibrate' in navigator) navigator.vibrate(20);
+      apply(next);
+    }, LONG_PRESS_MS);
+  });
+  boardEl.addEventListener('pointermove', (e) => {
+    if (!pressOrigin) return;
+    if (
+      Math.hypot(e.clientX - pressOrigin.x, e.clientY - pressOrigin.y) >
+      LONG_PRESS_MOVE_PX
+    ) {
+      clearPress();
+    }
+  });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach((type) =>
+    boardEl.addEventListener(type, () => {
+      clearPress();
+      // 続く click が来なかった場合（Android の長押しなど）に抑止フラグを残さない
+      if (longPressed) window.setTimeout(() => (longPressed = false), 50);
+    }),
+  );
+
+  boardEl.addEventListener('click', (e) => {
+    // 長押しで旗を操作したあとに続けて来る click は無視する
+    if (longPressed) {
+      longPressed = false;
+      return;
+    }
+    const index = indexFrom(e.target);
+    if (index < 0) return;
+    setFocus(index);
+    activate(index);
+  });
+
+  boardEl.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    // タッチの長押しで出るメニューは長押し処理に任せ、マウスの右クリックだけ旗にする
+    if (lastPointerType !== 'mouse') return;
+    const index = indexFrom(e.target);
+    if (index < 0) return;
+    setFocus(index);
+    apply(toggleFlag(state, index));
+  });
+
+  boardEl.addEventListener('keydown', (e) => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const { cols, rows } = state.config;
+    let target = -1;
+    const row = Math.floor(focusIndex / cols);
+    const col = focusIndex % cols;
+    if (e.key === 'ArrowLeft' && col > 0) target = focusIndex - 1;
+    else if (e.key === 'ArrowRight' && col < cols - 1) target = focusIndex + 1;
+    else if (e.key === 'ArrowUp' && row > 0) target = focusIndex - cols;
+    else if (e.key === 'ArrowDown' && row < rows - 1)
+      target = focusIndex + cols;
+    if (e.key.startsWith('Arrow')) {
+      e.preventDefault();
+      if (target >= 0) {
+        setFocus(target);
+        buttons[target].focus();
+      }
+      return;
+    }
+    if (e.key === 'f' || e.key === 'F') {
+      e.preventDefault();
+      apply(toggleFlag(state, focusIndex));
+    }
+  });
+
+  difficultyButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      selected = b.dataset.difficulty as Difficulty | 'custom';
+      difficultyButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      customEl.hidden = selected !== 'custom';
+      startSelected();
+    }),
+  );
+  modeButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      mode = b.dataset.mode as 'open' | 'flag';
+      modeButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+    }),
+  );
+  $('ms-new-button').addEventListener('click', startSelected);
+  $('ms-custom-start').addEventListener('click', startCustom);
+  $('ms-reset-button').addEventListener('click', () => {
+    records = {};
+    saveRecords();
+    renderRecords();
+    setStatus(msg.recordsCleared ?? '');
+  });
+
+  startGame(PRESETS[DEFAULT_DIFFICULTY]);
+  setStatus('');
+</script>

@@ -26,6 +26,7 @@ const slugs = [
   'reversi',
   'maze-generator',
   'game-of-life',
+  'picross',
   'word-search-generator',
   'crossword-generator',
   'favicon-generator',

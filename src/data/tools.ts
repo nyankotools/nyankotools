@@ -6095,6 +6095,42 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'picross',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['maze-generator', 'word-search-generator', 'sudoku'],
+    translations: {
+      ja: {
+        name: 'お絵かきロジック（ピクロス）',
+        description:
+          '解が1通りの問題で遊べるお絵かきロジック。5×5・10×10・15×15の出題に対応し、自分で描いた絵や画像から問題も作れる',
+        keywords: [
+          'お絵かきロジック',
+          'ピクロス',
+          'ノノグラム',
+          'イラストロジック',
+          'picross',
+          'nonogram',
+          'ロジックパズル',
+        ],
+      },
+      en: {
+        name: 'Picross (Nonogram)',
+        description:
+          'Play picross puzzles with a single solution in 5×5, 10×10 or 15×15, or turn your own drawing or image into a puzzle',
+        keywords: [
+          'picross',
+          'nonogram',
+          'griddlers',
+          'hanjie',
+          'paint by numbers',
+          'logic puzzle',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

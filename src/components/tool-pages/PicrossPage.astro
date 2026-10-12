@@ -1,0 +1,577 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { picrossContent } from '../../i18n/tools/picross';
+import {
+  DEFAULT_PUZZLE_SIZE,
+  PUZZLE_SIZES,
+  PUZZLE_SIZE_IDS,
+} from '../../lib/tools/picross';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = picrossContent[locale];
+const sizeNames = {
+  small: t.sizeSmall,
+  medium: t.sizeMedium,
+  large: t.sizeLarge,
+};
+---
+
+<ToolShell t={t}>
+  <section
+    id="pc-root"
+    data-default-size={PUZZLE_SIZES[DEFAULT_PUZZLE_SIZE]}
+    data-play-board-label={t.playBoardLabel}
+    data-draft-board-label={t.draftBoardLabel}
+    data-solved={t.solvedMessage}
+    data-solution-shown={t.solutionShown}
+    data-image-load-failed={t.imageLoadFailed}
+    data-unique-ok={t.uniqueOk}
+    data-unique-multiple={t.uniqueMultiple}
+    data-unique-empty={t.uniqueEmpty}
+  >
+    <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
+      <div>
+        <span id="pc-mode-label" class="ui-label">
+          {t.modeLabel}
+        </span>
+        <div
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-labelledby="pc-mode-label"
+        >
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-mode="play"
+            aria-pressed="true"
+          >
+            {t.modePlay}
+          </button>
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-mode="create"
+            aria-pressed="false"
+          >
+            {t.modeCreate}
+          </button>
+        </div>
+      </div>
+      <div>
+        <span id="pc-size-label" class="ui-label">
+          {t.sizeLabel}
+        </span>
+        <div
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-labelledby="pc-size-label"
+        >
+          {PUZZLE_SIZE_IDS.map((id) => (
+            <button
+              type="button"
+              class="ui-seg-btn"
+              data-size={PUZZLE_SIZES[id]}
+              aria-pressed={id === DEFAULT_PUZZLE_SIZE ? 'true' : 'false'}
+            >
+              {sizeNames[id]}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div id="pc-play-controls" class="mt-4 flex flex-wrap items-end gap-3">
+      <div>
+        <span id="pc-tool-label" class="ui-label">
+          {t.toolLabel}
+        </span>
+        <div
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-labelledby="pc-tool-label"
+        >
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-tool="fill"
+            aria-pressed="true"
+          >
+            {t.toolFill}
+          </button>
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-tool="mark"
+            aria-pressed="false"
+          >
+            {t.toolMark}
+          </button>
+        </div>
+      </div>
+      <button id="pc-new-button" type="button" class="ui-btn-primary">
+        {t.newPuzzle}
+      </button>
+      <button id="pc-reset-button" type="button" class="ui-btn">
+        {t.reset}
+      </button>
+      <button id="pc-solution-button" type="button" class="ui-btn">
+        {t.showSolution}
+      </button>
+    </div>
+
+    <div id="pc-create-controls" class="mt-4 hidden" hidden>
+      <p class="text-sm text-gray-700 dark:text-gray-300">{t.createHint}</p>
+      <div class="mt-3 flex flex-wrap items-center gap-3">
+        <button id="pc-make-button" type="button" class="ui-btn-primary">
+          {t.makePuzzle}
+        </button>
+        <button id="pc-clear-button" type="button" class="ui-btn">
+          {t.clearDraft}
+        </button>
+      </div>
+      <div id="pc-dropzone" class="ui-dropzone mt-3">
+        <input
+          id="pc-file-input"
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+          class="ui-file"
+          data-no-persist
+        />
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          {t.dropHint}
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-4 inline-block max-w-full rounded border border-gray-300 bg-white p-1 dark:border-gray-600">
+      <canvas
+        id="pc-canvas"
+        role="img"
+        class="block h-auto max-w-full cursor-pointer bg-white"
+        style="touch-action: none;"
+      ></canvas>
+    </div>
+    <p
+      id="pc-status"
+      role="status"
+      class="mt-2 min-h-6 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    checkUniqueness,
+    clueEquals,
+    computeClues,
+    createSolution,
+    generatePuzzle,
+    isSolved,
+    lineClue,
+    solutionFromBrightness,
+    type Clues,
+    type Solution,
+  } from '../../lib/tools/picross';
+
+  /** 盤面全体の横幅の目安（ピクセル） */
+  const TARGET_PX = 720;
+  const MARK = 2;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('pc-root');
+  const msg = root.dataset;
+  const canvas = $<HTMLCanvasElement>('pc-canvas');
+  const statusEl = $('pc-status');
+  const playControls = $('pc-play-controls');
+  const createControls = $('pc-create-controls');
+  const fileInput = $<HTMLInputElement>('pc-file-input');
+  const makeButton = $<HTMLButtonElement>('pc-make-button');
+  const modeButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-mode]'),
+  );
+  const sizeButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-size]'),
+  );
+  const toolButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-tool]'),
+  );
+
+  type Mode = 'play' | 'create';
+  let mode: Mode = 'play';
+  let size = Number(msg.defaultSize);
+  let tool: 'fill' | 'mark' = 'fill';
+
+  // 遊ぶ盤面: 正解の絵・ヒント・プレイヤーの状態（0 空、1 黒、2 ×印）
+  let solution: Solution = createSolution(size, size);
+  let clues: Clues = computeClues(solution);
+  let cells: Uint8Array = new Uint8Array(size * size);
+  let solved = false;
+  // 作る盤面
+  let draft: Solution = createSolution(size, size);
+
+  /** 画面上の描画位置（canvas 座標）の計算結果 */
+  let cellPx = 24;
+  let originX = 0;
+  let originY = 0;
+
+  function lineOf(index: number, vertical: boolean): number[] {
+    const line: number[] = [];
+    for (let i = 0; i < size; i++) {
+      const v = vertical ? cells[i * size + index] : cells[index * size + i];
+      line.push(v === 1 ? 1 : 0);
+    }
+    return line;
+  }
+
+  function drawGridLines(
+    ctx: CanvasRenderingContext2D,
+    ox: number,
+    oy: number,
+    cell: number,
+  ) {
+    const len = size * cell;
+    for (let i = 0; i <= size; i++) {
+      const strong = i % 5 === 0;
+      ctx.strokeStyle = strong ? '#6b7280' : '#d1d5db';
+      ctx.lineWidth = strong ? 2 : 1;
+      ctx.beginPath();
+      ctx.moveTo(ox + i * cell, oy);
+      ctx.lineTo(ox + i * cell, oy + len);
+      ctx.moveTo(ox, oy + i * cell);
+      ctx.lineTo(ox + len, oy + i * cell);
+      ctx.stroke();
+    }
+  }
+
+  function drawCells(
+    ctx: CanvasRenderingContext2D,
+    ox: number,
+    oy: number,
+    cell: number,
+    value: (index: number) => number,
+  ) {
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const v = value(y * size + x);
+        const px = ox + x * cell;
+        const py = oy + y * cell;
+        if (v === 1) {
+          ctx.fillStyle = '#111827';
+          ctx.fillRect(px + 2, py + 2, cell - 3, cell - 3);
+        } else if (v === MARK) {
+          const pad = cell * 0.3;
+          ctx.strokeStyle = '#9ca3af';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(px + pad, py + pad);
+          ctx.lineTo(px + cell - pad, py + cell - pad);
+          ctx.moveTo(px + cell - pad, py + pad);
+          ctx.lineTo(px + pad, py + cell - pad);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function drawPlay() {
+    const rowDepth = Math.max(...clues.rows.map((c) => c.length));
+    const colDepth = Math.max(...clues.cols.map((c) => c.length));
+    cellPx = Math.max(
+      18,
+      Math.min(44, Math.floor(TARGET_PX / (size + rowDepth))),
+    );
+    originX = rowDepth * cellPx + 2;
+    originY = colDepth * cellPx + 2;
+    canvas.width = originX + size * cellPx + 2;
+    canvas.height = originY + size * cellPx + 2;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.font = `bold ${Math.round(cellPx * 0.52)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (let y = 0; y < size; y++) {
+      const clue = clues.rows[y];
+      const done = clueEquals(lineClue(lineOf(y, false)), clue);
+      ctx.fillStyle = done ? '#9ca3af' : '#111827';
+      clue.forEach((n, i) => {
+        const slot = clue.length - 1 - i;
+        ctx.fillText(
+          String(n),
+          originX - (slot + 0.5) * cellPx,
+          originY + (y + 0.5) * cellPx,
+        );
+      });
+    }
+    for (let x = 0; x < size; x++) {
+      const clue = clues.cols[x];
+      const done = clueEquals(lineClue(lineOf(x, true)), clue);
+      ctx.fillStyle = done ? '#9ca3af' : '#111827';
+      clue.forEach((n, i) => {
+        const slot = clue.length - 1 - i;
+        ctx.fillText(
+          String(n),
+          originX + (x + 0.5) * cellPx,
+          originY - (slot + 0.5) * cellPx,
+        );
+      });
+    }
+
+    drawGridLines(ctx, originX, originY, cellPx);
+    drawCells(ctx, originX, originY, cellPx, (i) => cells[i]);
+  }
+
+  function drawDraft() {
+    cellPx = Math.max(18, Math.min(44, Math.floor(TARGET_PX / size)));
+    originX = 2;
+    originY = 2;
+    canvas.width = size * cellPx + 4;
+    canvas.height = size * cellPx + 4;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawGridLines(ctx, originX, originY, cellPx);
+    drawCells(ctx, originX, originY, cellPx, (i) => draft.cells[i]);
+  }
+
+  function render() {
+    if (mode === 'play') {
+      drawPlay();
+      canvas.setAttribute(
+        'aria-label',
+        (msg.playBoardLabel ?? '').replaceAll('{size}', String(size)),
+      );
+    } else {
+      drawDraft();
+      canvas.setAttribute(
+        'aria-label',
+        (msg.draftBoardLabel ?? '')
+          .replaceAll('{size}', String(size))
+          .replaceAll('{filled}', String(countDraft())),
+      );
+    }
+  }
+
+  const countDraft = () => draft.cells.reduce((a, v) => a + v, 0);
+
+  function startPuzzle(next: Solution) {
+    solution = next;
+    clues = computeClues(next);
+    cells = new Uint8Array(size * size);
+    solved = false;
+    statusEl.textContent = '';
+    render();
+  }
+
+  function newRandomPuzzle() {
+    startPuzzle(generatePuzzle(size));
+  }
+
+  function updateUniqueness() {
+    const result = checkUniqueness(draft);
+    makeButton.disabled = result === 'empty';
+    statusEl.textContent =
+      (result === 'unique'
+        ? msg.uniqueOk
+        : result === 'empty'
+          ? msg.uniqueEmpty
+          : msg.uniqueMultiple) ?? '';
+  }
+
+  function setPressed(
+    buttons: HTMLButtonElement[],
+    match: (b: HTMLButtonElement) => boolean,
+  ) {
+    buttons.forEach((b) => b.setAttribute('aria-pressed', String(match(b))));
+  }
+
+  function setMode(next: Mode) {
+    mode = next;
+    setPressed(modeButtons, (b) => b.dataset.mode === next);
+    const playing = next === 'play';
+    playControls.hidden = !playing;
+    playControls.classList.toggle('hidden', !playing);
+    createControls.hidden = playing;
+    createControls.classList.toggle('hidden', playing);
+    if (playing) {
+      statusEl.textContent = solved ? (msg.solved ?? '') : '';
+    } else {
+      updateUniqueness();
+    }
+    render();
+  }
+
+  modeButtons.forEach((b) =>
+    b.addEventListener('click', () => setMode(b.dataset.mode as Mode)),
+  );
+
+  sizeButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      size = Number(b.dataset.size);
+      setPressed(sizeButtons, (x) => x === b);
+      draft = createSolution(size, size);
+      newRandomPuzzle();
+      if (mode === 'create') updateUniqueness();
+    }),
+  );
+
+  toolButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      tool = b.dataset.tool as 'fill' | 'mark';
+      setPressed(toolButtons, (x) => x === b);
+    }),
+  );
+
+  $('pc-new-button').addEventListener('click', newRandomPuzzle);
+
+  $('pc-reset-button').addEventListener('click', () => {
+    cells = new Uint8Array(size * size);
+    solved = false;
+    statusEl.textContent = '';
+    render();
+  });
+
+  $('pc-solution-button').addEventListener('click', () => {
+    cells = Uint8Array.from(solution.cells);
+    solved = true;
+    statusEl.textContent = msg.solutionShown ?? '';
+    render();
+  });
+
+  $('pc-clear-button').addEventListener('click', () => {
+    draft = createSolution(size, size);
+    updateUniqueness();
+    render();
+  });
+
+  makeButton.addEventListener('click', () => {
+    if (countDraft() === 0) return;
+    startPuzzle({
+      width: size,
+      height: size,
+      cells: Uint8Array.from(draft.cells),
+    });
+    setMode('play');
+  });
+
+  // 画像の読み込み: 盤面の大きさに縮小し、暗い画素を黒マスにする
+  async function loadImage(file: File) {
+    let bitmap: ImageBitmap;
+    try {
+      bitmap = await createImageBitmap(file, {
+        imageOrientation: 'from-image',
+      });
+    } catch {
+      statusEl.textContent = msg.imageLoadFailed ?? '';
+      return;
+    }
+    const work = document.createElement('canvas');
+    work.width = size;
+    work.height = size;
+    const ctx = work.getContext('2d', { willReadFrequently: true });
+    if (!ctx) {
+      bitmap.close();
+      return;
+    }
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+    ctx.imageSmoothingQuality = 'high';
+    const scale = Math.min(size / bitmap.width, size / bitmap.height);
+    const w = bitmap.width * scale;
+    const h = bitmap.height * scale;
+    ctx.drawImage(bitmap, (size - w) / 2, (size - h) / 2, w, h);
+    bitmap.close();
+    const { data } = ctx.getImageData(0, 0, size, size);
+    const brightness: number[] = [];
+    for (let i = 0; i < size * size; i++) {
+      brightness.push(
+        0.299 * data[i * 4] + 0.587 * data[i * 4 + 1] + 0.114 * data[i * 4 + 2],
+      );
+    }
+    draft = solutionFromBrightness(size, brightness);
+    updateUniqueness();
+    render();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadImage(file);
+  });
+  enableFileDrop($('pc-dropzone'), fileInput);
+
+  // マスの描き込み（クリック・ドラッグ）。最初に触れたマスの反転後の状態で塗り続ける
+  let paintValue: number | null = null;
+  let lastPainted = -1;
+
+  function cellFromEvent(event: PointerEvent): number | null {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return null;
+    const px = ((event.clientX - rect.left) / rect.width) * canvas.width;
+    const py = ((event.clientY - rect.top) / rect.height) * canvas.height;
+    const x = Math.floor((px - originX) / cellPx);
+    const y = Math.floor((py - originY) / cellPx);
+    if (x < 0 || y < 0 || x >= size || y >= size) return null;
+    return y * size + x;
+  }
+
+  function paintAt(event: PointerEvent) {
+    if (paintValue === null || !event.isPrimary) return;
+    const index = cellFromEvent(event);
+    if (index === null || index === lastPainted) return;
+    lastPainted = index;
+    if (mode === 'play') {
+      if (cells[index] === paintValue) return;
+      cells[index] = paintValue;
+      const done = isSolved(clues, size, size, cells);
+      if (done !== solved) {
+        solved = done;
+        statusEl.textContent = done ? (msg.solved ?? '') : '';
+      }
+    } else {
+      if (draft.cells[index] === paintValue) return;
+      draft.cells[index] = paintValue;
+    }
+    render();
+  }
+
+  canvas.addEventListener('contextmenu', (event) => event.preventDefault());
+  canvas.addEventListener('pointerdown', (event) => {
+    if (!event.isPrimary || (event.button !== 0 && event.button !== 2)) return;
+    const index = cellFromEvent(event);
+    if (index === null) return;
+    if (mode === 'play') {
+      const target = event.button === 2 || tool === 'mark' ? MARK : 1;
+      paintValue = cells[index] === target ? 0 : target;
+    } else {
+      paintValue = draft.cells[index] === 1 ? 0 : 1;
+    }
+    lastPainted = -1;
+    canvas.setPointerCapture(event.pointerId);
+    if (mode === 'play' && solved) {
+      solved = false;
+      statusEl.textContent = '';
+    }
+    paintAt(event);
+  });
+  canvas.addEventListener('pointermove', paintAt);
+  const endPaint = () => {
+    const wasDraft = mode === 'create' && paintValue !== null;
+    paintValue = null;
+    if (wasDraft) updateUniqueness();
+  };
+  canvas.addEventListener('pointerup', endPaint);
+  canvas.addEventListener('pointercancel', endPaint);
+
+  newRandomPuzzle();
+</script>

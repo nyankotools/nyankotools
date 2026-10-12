@@ -25,6 +25,7 @@ const slugs = [
   'color-sense-test',
   'reversi',
   'maze-generator',
+  'game-of-life',
   'word-search-generator',
   'crossword-generator',
   'favicon-generator',

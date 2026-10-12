@@ -6059,6 +6059,42 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'game-of-life',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['minesweeper', 'maze-generator', 'reversi'],
+    translations: {
+      ja: {
+        name: 'ライフゲーム',
+        description:
+          'セルをクリックして配置し、世代の移り変わりを観察できるライフゲーム。再生・1コマ送り・速度調整、グライダーやパルサーなどのプリセットに対応',
+        keywords: [
+          'ライフゲーム',
+          'life game',
+          'game of life',
+          'コンウェイ',
+          'セルオートマトン',
+          'グライダー',
+          '生命シミュレーション',
+        ],
+      },
+      en: {
+        name: 'Game of Life',
+        description:
+          'Conway’s Game of Life in your browser. Draw cells, play, step and adjust speed, and drop in presets like the glider, pulsar and Gosper gun',
+        keywords: [
+          'game of life',
+          'conway',
+          'cellular automaton',
+          'life simulator',
+          'glider',
+          'simulation',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

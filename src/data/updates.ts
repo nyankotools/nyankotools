@@ -529,15 +529,16 @@ export const updates: UpdateEntry[] = [
       'word-search-generator',
       'crossword-generator',
       'color-sense-test',
+      'game-of-life',
     ],
     translations: {
       ja: {
         summary:
-          'マインスイーパー・リバーシ（オセロ）・迷路ジェネレーター・ワードサーチ作成・クロスワード作成・色彩感覚テストを追加しました。マインスイーパーは初級・中級・上級とカスタムに対応し、最初の1手は必ず安全です。リバーシは4段階のCPUと対戦でき、置ける場所のヒントと「待った」に対応しています。迷路ジェネレーターは、マス数と難易度を選んで迷路を作り、解答表示・PNG保存・印刷ができます。ワードサーチ作成は、好きな言葉を隠した言葉探しパズルを作り、答え表示・PNG保存・印刷ができます。クロスワード作成は、答えとヒントを入れるだけでタテ・ヨコのカギ付きのクロスワードを作れます。色彩感覚テストは、わずかに色の違うタイルを選ぶ60秒のゲームで、正解数でランクが決まります。',
+          'マインスイーパー・リバーシ（オセロ）・迷路ジェネレーター・ワードサーチ作成・クロスワード作成・色彩感覚テスト・ライフゲームを追加しました。マインスイーパーは初級・中級・上級とカスタムに対応し、最初の1手は必ず安全です。リバーシは4段階のCPUと対戦でき、置ける場所のヒントと「待った」に対応しています。迷路ジェネレーターは、マス数と難易度を選んで迷路を作り、解答表示・PNG保存・印刷ができます。ワードサーチ作成は、好きな言葉を隠した言葉探しパズルを作り、答え表示・PNG保存・印刷ができます。クロスワード作成は、答えとヒントを入れるだけでタテ・ヨコのカギ付きのクロスワードを作れます。色彩感覚テストは、わずかに色の違うタイルを選ぶ60秒のゲームで、正解数でランクが決まります。ライフゲームは、セルを配置して再生・1コマ送り・速度調整ができ、グライダーやパルサーなどのプリセットも置けます。',
       },
       en: {
         summary:
-          'Added Minesweeper, Reversi (Othello), a Maze Generator, a Word Search Generator, a Crossword Generator and a Color Sense Test. Minesweeper has Beginner to Expert and custom boards with a guaranteed-safe first click; Reversi offers four computer levels with legal-move hints and undo; the Maze Generator makes printable mazes with a solution view and PNG download; the Word Search Generator hides your own words in a printable puzzle with an answer key; the Crossword Generator turns answers and clues into a numbered crossword; the Color Sense Test is a 60-second game of spotting the odd color tile.',
+          'Added Minesweeper, Reversi (Othello), a Maze Generator, a Word Search Generator, a Crossword Generator, a Color Sense Test and Conway’s Game of Life. Minesweeper has Beginner to Expert and custom boards with a guaranteed-safe first click; Reversi offers four computer levels with legal-move hints and undo; the Maze Generator makes printable mazes with a solution view and PNG download; the Word Search Generator hides your own words in a printable puzzle with an answer key; the Crossword Generator turns answers and clues into a numbered crossword; the Color Sense Test is a 60-second game of spotting the odd color tile; the Game of Life lets you draw cells, play, step and drop in presets such as the glider and Gosper gun.',
       },
     },
   },

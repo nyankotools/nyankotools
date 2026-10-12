@@ -1,0 +1,396 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { gameOfLifeContent } from '../../i18n/tools/game-of-life';
+import {
+  BOARD_SIZE_IDS,
+  DEFAULT_BOARD_SIZE,
+  DEFAULT_SPEED,
+  MAX_SPEED,
+  MIN_SPEED,
+  PATTERN_IDS,
+} from '../../lib/tools/game-of-life';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = gameOfLifeContent[locale];
+const sizeNames = {
+  small: t.sizeSmall,
+  medium: t.sizeMedium,
+  large: t.sizeLarge,
+};
+---
+
+<ToolShell t={t}>
+  <section
+    id="gl-root"
+    data-play={t.play}
+    data-pause={t.pause}
+    data-board-label={t.boardLabel}
+    data-speed-value={t.speedValue}
+    data-stopped-extinct={t.stoppedExtinct}
+    data-stopped-stable={t.stoppedStable}
+    data-board-enlarged={t.boardEnlarged}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <button id="gl-play-button" type="button" class="ui-btn-primary">
+        {t.play}
+      </button>
+      <button id="gl-step-button" type="button" class="ui-btn">
+        {t.step}
+      </button>
+      <button id="gl-random-button" type="button" class="ui-btn">
+        {t.randomize}
+      </button>
+      <button id="gl-clear-button" type="button" class="ui-btn">
+        {t.clear}
+      </button>
+      <label class="sr-only" for="gl-preset">
+        {t.presetPlaceholder}
+      </label>
+      <select
+        id="gl-preset"
+        class="ui-input h-11 w-auto px-3 dark:bg-gray-900"
+        data-no-persist
+      >
+        <option value="">{t.presetPlaceholder}</option>
+        {PATTERN_IDS.map((id) => (
+          <option value={id}>{t.presetNames[id]}</option>
+        ))}
+      </select>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-end gap-x-6 gap-y-3">
+      <div>
+        <span id="gl-size-label" class="ui-label">
+          {t.sizeLabel}
+        </span>
+        <div
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-labelledby="gl-size-label"
+        >
+          {BOARD_SIZE_IDS.map((id) => (
+            <button
+              type="button"
+              class="ui-seg-btn"
+              data-size={id}
+              aria-pressed={id === DEFAULT_BOARD_SIZE ? 'true' : 'false'}
+            >
+              {sizeNames[id]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label for="gl-speed" class="ui-label">
+          {t.speedLabel}
+          <output id="gl-speed-out" class="ml-1 font-mono"></output>
+        </label>
+        <input
+          id="gl-speed"
+          type="range"
+          min={MIN_SPEED}
+          max={MAX_SPEED}
+          step="1"
+          value={DEFAULT_SPEED}
+          class="block h-11 w-48 max-w-full"
+        />
+      </div>
+      <label class="ui-check">
+        <input id="gl-wrap" type="checkbox" />
+        <span>{t.wrapLabel}</span>
+      </label>
+    </div>
+
+    <p class="mt-4 text-sm text-gray-700 dark:text-gray-300">
+      {t.generationLabel}:{' '}
+      <span id="gl-generation" class="font-mono">
+        0
+      </span>
+      <span class="mx-2" aria-hidden="true">
+        /
+      </span>
+      {t.populationLabel}:{' '}
+      <span id="gl-population" class="font-mono">
+        0
+      </span>
+    </p>
+
+    <div class="mt-2 inline-block max-w-full rounded border border-gray-300 bg-white p-1 dark:border-gray-600">
+      <canvas
+        id="gl-canvas"
+        role="img"
+        class="block h-auto max-w-full cursor-pointer bg-white"
+        style="touch-action: none;"
+      ></canvas>
+    </div>
+    <p
+      id="gl-status"
+      role="status"
+      class="mt-2 min-h-6 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    BOARD_SIZES,
+    DEFAULT_BOARD_SIZE,
+    clampSpeed,
+    countAlive,
+    createGrid,
+    getCell,
+    gridWithPattern,
+    gridsEqual,
+    patternFits,
+    randomGrid,
+    setCell,
+    stepGrid,
+    PATTERN_IDS,
+    type BoardSizeId,
+    type Grid,
+    type PatternId,
+  } from '../../lib/tools/game-of-life';
+
+  /** 盤面の横幅の目安（ピクセル） */
+  const TARGET_PX = 960;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('gl-root');
+  const msg = root.dataset;
+  const canvas = $<HTMLCanvasElement>('gl-canvas');
+  const playButton = $<HTMLButtonElement>('gl-play-button');
+  const presetSelect = $<HTMLSelectElement>('gl-preset');
+  const speedInput = $<HTMLInputElement>('gl-speed');
+  const speedOut = $('gl-speed-out');
+  const wrapCheck = $<HTMLInputElement>('gl-wrap');
+  const generationEl = $('gl-generation');
+  const populationEl = $('gl-population');
+  const statusEl = $('gl-status');
+  const sizeButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-size]'),
+  );
+
+  let sizeId: BoardSizeId = DEFAULT_BOARD_SIZE;
+  let grid: Grid = createGrid(
+    BOARD_SIZES[sizeId].width,
+    BOARD_SIZES[sizeId].height,
+  );
+  let generation = 0;
+  let timer: ReturnType<typeof setTimeout> | null = null;
+
+  const isPlaying = () => timer !== null;
+
+  function draw() {
+    const { width, height, cells } = grid;
+    const cell = Math.max(6, Math.floor(TARGET_PX / width));
+    canvas.width = width * cell;
+    canvas.height = height * cell;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x <= width; x++) {
+      ctx.moveTo(x * cell + 0.5, 0);
+      ctx.lineTo(x * cell + 0.5, canvas.height);
+    }
+    for (let y = 0; y <= height; y++) {
+      ctx.moveTo(0, y * cell + 0.5);
+      ctx.lineTo(canvas.width, y * cell + 0.5);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = '#111827';
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (cells[y * width + x]) {
+          ctx.fillRect(x * cell + 1, y * cell + 1, cell - 1, cell - 1);
+        }
+      }
+    }
+  }
+
+  function refresh() {
+    draw();
+    const alive = countAlive(grid);
+    generationEl.textContent = String(generation);
+    populationEl.textContent = String(alive);
+    canvas.setAttribute(
+      'aria-label',
+      (msg.boardLabel ?? '')
+        .replace('{width}', String(grid.width))
+        .replace('{height}', String(grid.height))
+        .replace('{alive}', String(alive)),
+    );
+  }
+
+  function interval() {
+    return 1000 / clampSpeed(Number(speedInput.value));
+  }
+
+  function stop(message = '') {
+    if (timer !== null) clearTimeout(timer);
+    timer = null;
+    playButton.textContent = msg.play ?? '';
+    if (message) statusEl.textContent = message;
+  }
+
+  /** 1世代進める。変化がなくなった・全滅したときは false を返す */
+  function advance(): boolean {
+    const next = stepGrid(grid, wrapCheck.checked);
+    const unchanged = gridsEqual(next, grid);
+    grid = next;
+    if (!unchanged) generation++;
+    refresh();
+    if (countAlive(grid) === 0) {
+      statusEl.textContent = msg.stoppedExtinct ?? '';
+      return false;
+    }
+    if (unchanged) {
+      statusEl.textContent = msg.stoppedStable ?? '';
+      return false;
+    }
+    return true;
+  }
+
+  function tick() {
+    if (!advance()) {
+      stop();
+      return;
+    }
+    timer = setTimeout(tick, interval());
+  }
+
+  function play() {
+    if (isPlaying()) return;
+    statusEl.textContent = '';
+    playButton.textContent = msg.pause ?? '';
+    timer = setTimeout(tick, interval());
+  }
+
+  function resetBoard(next: Grid) {
+    grid = next;
+    generation = 0;
+    refresh();
+  }
+
+  function setSize(id: BoardSizeId) {
+    sizeId = id;
+    sizeButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.size === id)),
+    );
+  }
+
+  playButton.addEventListener('click', () => {
+    if (isPlaying()) stop();
+    else play();
+  });
+
+  $('gl-step-button').addEventListener('click', () => {
+    stop();
+    statusEl.textContent = '';
+    advance();
+  });
+
+  $('gl-random-button').addEventListener('click', () => {
+    stop();
+    statusEl.textContent = '';
+    resetBoard(randomGrid(grid.width, grid.height));
+  });
+
+  $('gl-clear-button').addEventListener('click', () => {
+    stop();
+    statusEl.textContent = '';
+    resetBoard(createGrid(grid.width, grid.height));
+  });
+
+  sizeButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      stop();
+      statusEl.textContent = '';
+      setSize(b.dataset.size as BoardSizeId);
+      resetBoard(
+        createGrid(BOARD_SIZES[sizeId].width, BOARD_SIZES[sizeId].height),
+      );
+    }),
+  );
+
+  presetSelect.addEventListener('change', () => {
+    const id = presetSelect.value as PatternId;
+    presetSelect.value = '';
+    if (!PATTERN_IDS.includes(id)) return;
+    stop();
+    statusEl.textContent = '';
+    let { width, height } = BOARD_SIZES[sizeId];
+    if (!patternFits(id, width, height)) {
+      setSize('medium');
+      ({ width, height } = BOARD_SIZES.medium);
+      statusEl.textContent = msg.boardEnlarged ?? '';
+    }
+    resetBoard(gridWithPattern(width, height, id));
+  });
+
+  function showSpeed() {
+    const n = clampSpeed(Number(speedInput.value));
+    speedOut.textContent = (msg.speedValue ?? '{n}').replace('{n}', String(n));
+  }
+  speedInput.addEventListener('input', showSpeed);
+
+  // セルの描き込み（クリック・ドラッグ）。最初に触れたセルの反転後の状態で塗り続ける
+  let paintValue: boolean | null = null;
+  let lastPainted = -1;
+
+  /** ポインタ位置のセル座標。盤面の外・サイズ0のときは null */
+  function cellFromEvent(event: PointerEvent): [number, number] | null {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return null;
+    const x = Math.floor(
+      ((event.clientX - rect.left) / rect.width) * grid.width,
+    );
+    const y = Math.floor(
+      ((event.clientY - rect.top) / rect.height) * grid.height,
+    );
+    if (x < 0 || y < 0 || x >= grid.width || y >= grid.height) return null;
+    return [x, y];
+  }
+
+  function paintAt(event: PointerEvent) {
+    if (paintValue === null || !event.isPrimary) return;
+    const cell = cellFromEvent(event);
+    if (!cell) return;
+    const [x, y] = cell;
+    const index = y * grid.width + x;
+    if (index === lastPainted) return;
+    lastPainted = index;
+    if (setCell(grid, x, y, paintValue)) refresh();
+  }
+
+  canvas.addEventListener('pointerdown', (event) => {
+    if (event.button !== 0 || !event.isPrimary) return;
+    const cell = cellFromEvent(event);
+    if (!cell) return;
+    paintValue = !getCell(grid, cell[0], cell[1]);
+    lastPainted = -1;
+    canvas.setPointerCapture(event.pointerId);
+    statusEl.textContent = '';
+    paintAt(event);
+  });
+  canvas.addEventListener('pointermove', paintAt);
+  const endPaint = () => {
+    paintValue = null;
+  };
+  canvas.addEventListener('pointerup', endPaint);
+  canvas.addEventListener('pointercancel', endPaint);
+
+  showSpeed();
+  refresh();
+</script>

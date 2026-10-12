@@ -22,6 +22,7 @@ const slugs = [
   'slide-puzzle',
   'game-2048',
   'minesweeper',
+  'reversi',
   'favicon-generator',
   'image-palette-extractor',
   'exif-viewer',

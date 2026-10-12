@@ -5879,6 +5879,40 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'reversi',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['minesweeper', 'game-2048', 'sudoku'],
+    translations: {
+      ja: {
+        name: 'リバーシ（オセロ）',
+        description:
+          'かんたん〜最強の4段階のCPUと対戦できるリバーシ。先手・後手を選べて、置ける場所のヒントと「待った」つき。ブラウザだけで遊べます',
+        keywords: [
+          'リバーシ',
+          'オセロ',
+          'reversi',
+          'othello',
+          '対戦',
+          'ボードゲーム',
+        ],
+      },
+      en: {
+        name: 'Reversi (Othello)',
+        description:
+          'Play Reversi against the computer at four strength levels. Choose first or second, with legal-move hints and undo, right in your browser',
+        keywords: [
+          'reversi',
+          'othello',
+          'board game',
+          'vs computer',
+          'strategy game',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

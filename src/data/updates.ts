@@ -522,15 +522,15 @@ export const updates: UpdateEntry[] = [
   },
   {
     date: '2026-10-12',
-    toolSlugs: ['minesweeper'],
+    toolSlugs: ['minesweeper', 'reversi'],
     translations: {
       ja: {
         summary:
-          'マインスイーパーを追加しました。初級・中級・上級とカスタムに対応し、最初の1手は必ず安全です。スマホでは長押しや「旗」モードで旗を立てられ、難易度ごとのベストタイムも記録します。',
+          'マインスイーパーとリバーシ（オセロ）を追加しました。マインスイーパーは初級・中級・上級とカスタムに対応し、最初の1手は必ず安全です。リバーシは4段階のCPUと対戦でき、置ける場所のヒントと「待った」に対応しています。',
       },
       en: {
         summary:
-          'Added Minesweeper, with Beginner, Intermediate, Expert and custom boards and a guaranteed-safe first click. Flag cells by long-press or a flag mode on touch screens; best times are saved per level.',
+          'Added Minesweeper and Reversi (Othello). Minesweeper has Beginner to Expert and custom boards with a guaranteed-safe first click; Reversi offers four computer levels with legal-move hints and undo.',
       },
     },
   },

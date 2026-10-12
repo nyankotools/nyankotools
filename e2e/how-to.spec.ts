@@ -25,6 +25,7 @@ const slugs = [
   'reversi',
   'maze-generator',
   'word-search-generator',
+  'crossword-generator',
   'favicon-generator',
   'image-palette-extractor',
   'exif-viewer',

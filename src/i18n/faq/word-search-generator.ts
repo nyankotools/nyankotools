@@ -25,7 +25,7 @@ export const faq: FaqContent = {
     {
       question: 'クロスワードは作れますか？',
       answer:
-        'このツールで作れるのはワードサーチ（言葉探し）です。クロスワードの作成には対応していません。',
+        'このツールで作れるのはワードサーチ（言葉探し）です。クロスワードは別ツールの「クロスワード作成」で、答えとヒントを入れるだけで作れます。',
     },
   ],
   en: [
@@ -52,7 +52,7 @@ export const faq: FaqContent = {
     {
       question: 'Can it make crosswords?',
       answer:
-        'This tool makes word search puzzles only. Crossword generation is not supported.',
+        'This tool makes word search puzzles only. For crosswords, use the separate Crossword Generator, which builds a puzzle from your answers and clues.',
     },
   ],
 };

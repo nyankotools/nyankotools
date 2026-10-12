@@ -5987,6 +5987,42 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'crossword-generator',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['word-search-generator', 'maze-generator', 'sudoku'],
+    translations: {
+      ja: {
+        name: 'クロスワード作成',
+        description:
+          '答えとヒントを入れるだけでクロスワードを自動作成。タテ・ヨコのカギと番号付き、答え表示・PNG保存・印刷に対応。教材やイベントに',
+        keywords: [
+          'クロスワード',
+          'クロスワードパズル',
+          'カギ',
+          'crossword',
+          'パズル',
+          '印刷',
+          '教材',
+        ],
+      },
+      en: {
+        name: 'Crossword Generator',
+        description:
+          'Make a crossword puzzle from your own answers and clues, with numbered Across and Down clues, an answer key, PNG download and printing',
+        keywords: [
+          'crossword',
+          'crossword maker',
+          'crossword puzzle',
+          'printable puzzle',
+          'puzzle generator',
+          'worksheet',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

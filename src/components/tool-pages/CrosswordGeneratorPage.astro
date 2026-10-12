@@ -1,0 +1,324 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { crosswordGeneratorContent } from '../../i18n/tools/crossword-generator';
+import { MAX_WORDS } from '../../lib/tools/crossword-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = crosswordGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="cw-root"
+    data-label={t.puzzleLabel}
+    data-across-title={t.acrossTitle}
+    data-down-title={t.downTitle}
+    data-clue-length={t.clueLength}
+    data-placed={t.placed}
+    data-unplaced={t.unplaced}
+    data-ignored={t.ignored}
+    data-empty={t.empty}
+    data-downloaded={t.downloaded}
+    data-max-words={MAX_WORDS}
+  >
+    <label for="cw-words" class="ui-label">
+      {t.wordsLabel}
+    </label>
+    <textarea
+      id="cw-words"
+      class="ui-input h-48 w-full p-3 dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.wordsPlaceholder}
+      spellcheck="false"
+      data-query-target="text"
+      data-no-count
+    >{t.defaultWords}</textarea>
+
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <button id="cw-generate-button" type="button" class="ui-btn-primary">
+        {t.generate}
+      </button>
+      <label class="ui-check">
+        <input id="cw-answer" type="checkbox" />
+        <span>{t.showAnswer}</span>
+      </label>
+      <button id="cw-download-button" type="button" class="ui-btn">
+        {t.download}
+      </button>
+      <button id="cw-print-button" type="button" class="ui-btn">
+        {t.print}
+      </button>
+    </div>
+
+    <p
+      id="cw-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+
+    <div
+      id="cw-wrap"
+      class="mt-2 inline-block max-w-full rounded border border-gray-300 bg-white p-1 dark:border-gray-600"
+    >
+      <canvas
+        id="cw-canvas"
+        role="img"
+        class="block h-auto max-w-full bg-white"
+      ></canvas>
+    </div>
+  </section>
+</ToolShell>
+
+<style is:global>
+  @media print {
+    @page {
+      margin: 10mm;
+    }
+    html.cw-printing body *:not(#cw-wrap):not(#cw-wrap *):not(:has(#cw-wrap)) {
+      display: none !important;
+    }
+    html.cw-printing,
+    html.cw-printing body {
+      background: #fff !important;
+    }
+    html.cw-printing #cw-wrap {
+      display: block;
+      margin: 0 auto;
+      border: 0;
+      padding: 0;
+      width: 100%;
+      max-width: 100%;
+      text-align: center;
+    }
+    html.cw-printing #cw-canvas {
+      display: inline-block;
+      width: auto;
+      max-width: 100%;
+      max-height: 270mm;
+    }
+  }
+</style>
+
+<script>
+  import {
+    generateCrossword,
+    parseEntries,
+    type Crossword,
+  } from '../../lib/tools/crossword-generator';
+  import { downloadBlob } from '../../lib/download';
+
+  const FONT = 'sans-serif';
+  const CJK = '\\u3000-\\u9fff\\uff00-\\uffef';
+  const TOKEN = new RegExp(`[^\\s${CJK}]+\\s*|[${CJK}]\\s*|\\s+`, 'g');
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('cw-root');
+  const msg = root.dataset;
+  const wordsInput = $<HTMLTextAreaElement>('cw-words');
+  const answerCheck = $<HTMLInputElement>('cw-answer');
+  const canvas = $<HTMLCanvasElement>('cw-canvas');
+  const statusEl = $('cw-status');
+
+  let puzzle: Crossword | null = null;
+
+  /** 幅に収まるように折り返す。英単語は途中で切らず、日本語は1文字ずつ切れる */
+  function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number) {
+    const lines: string[] = [];
+    let current = '';
+    for (const token of text.match(TOKEN) ?? []) {
+      if (ctx.measureText(current + token).width <= maxWidth) {
+        current += token;
+        continue;
+      }
+      if (current.trim() !== '') lines.push(current.trimEnd());
+      current = '';
+      // 1語だけで幅を超える場合は文字単位で切る
+      for (const ch of Array.from(token)) {
+        if (current !== '' && ctx.measureText(current + ch).width > maxWidth) {
+          lines.push(current);
+          current = ch;
+        } else {
+          current += ch;
+        }
+      }
+    }
+    if (current.trim() !== '') lines.push(current.trimEnd());
+    return lines;
+  }
+
+  function draw() {
+    if (!puzzle) return;
+    const { width, height, cells, numbers, entries } = puzzle;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const contentWidth = 860;
+    const margin = 24;
+    const cell = Math.min(48, Math.floor(contentWidth / width));
+    const gridW = width * cell;
+    const gridH = height * cell;
+
+    // カギの一覧（ヨコ・タテの2列）を折り返して、キャンバスの高さを求める
+    const clueFont = 20;
+    const lineHeight = 28;
+    const headFont = 22;
+    const headHeight = 40;
+    const gap = 32;
+    const columnWidth = (contentWidth - gap) / 2;
+    const lengthLabel = msg.clueLength ?? '';
+    ctx.font = `${clueFont}px ${FONT}`;
+    const makeColumn = (direction: 'across' | 'down') =>
+      entries
+        .filter((e) => e.direction === direction)
+        .map((e) => {
+          const text = `${e.number}. ${e.clue}${lengthLabel.replace(
+            '{n}',
+            String(Array.from(e.word).length),
+          )}`;
+          return wrap(ctx, text, columnWidth - clueFont * 0.5);
+        });
+    const across = makeColumn('across');
+    const down = makeColumn('down');
+    const columnHeight = (items: string[][]) =>
+      items.length === 0
+        ? 0
+        : headHeight +
+          items.reduce((sum, lines) => sum + lines.length * lineHeight + 8, 0);
+    const cluesHeight = Math.max(columnHeight(across), columnHeight(down));
+
+    canvas.width = contentWidth + margin * 2;
+    canvas.height = gridH + margin * 3 + cluesHeight;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const originX = Math.round((canvas.width - gridW) / 2);
+    const originY = margin;
+
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#111827';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const index = y * width + x;
+        const ch = cells[index];
+        const px = originX + x * cell;
+        const py = originY + y * cell;
+        // 格子状の枠をすべて描き、文字の入らないマスは黒く塗る
+        ctx.fillStyle = ch === null ? '#111827' : '#ffffff';
+        ctx.fillRect(px, py, cell, cell);
+        ctx.strokeRect(px, py, cell, cell);
+        if (ch === null) continue;
+        if (numbers[index] > 0) {
+          ctx.fillStyle = '#111827';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'top';
+          ctx.font = `${Math.max(9, Math.round(cell * 0.28))}px ${FONT}`;
+          ctx.fillText(String(numbers[index]), px + 3, py + 2);
+        }
+        if (answerCheck.checked) {
+          ctx.fillStyle = '#1d4ed8';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.font = `bold ${Math.round(cell * 0.56)}px ${FONT}`;
+          ctx.fillText(ch, px + cell / 2, py + cell / 2 + cell * 0.04);
+        }
+      }
+    }
+
+    const drawColumn = (title: string, items: string[][], left: number) => {
+      if (items.length === 0) return;
+      ctx.fillStyle = '#111827';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.font = `bold ${headFont}px ${FONT}`;
+      ctx.fillText(title, left, top + headHeight * 0.4);
+      ctx.font = `${clueFont}px ${FONT}`;
+      let y = top + headHeight;
+      for (const lines of items) {
+        for (const line of lines) {
+          ctx.fillText(line, left, y + lineHeight / 2);
+          y += lineHeight;
+        }
+        y += 8;
+      }
+    };
+    const top = originY + gridH + margin;
+    const leftX = margin;
+    drawColumn(msg.acrossTitle ?? '', across, leftX);
+    drawColumn(msg.downTitle ?? '', down, leftX + columnWidth + gap);
+
+    canvas.setAttribute(
+      'aria-label',
+      (msg.label ?? '')
+        .replace('{width}', String(width))
+        .replace('{height}', String(height)),
+    );
+  }
+
+  function generate(announce = true) {
+    const { entries, ignored } = parseEntries(wordsInput.value);
+    if (entries.length === 0) {
+      statusEl.textContent = msg.empty ?? '';
+      return;
+    }
+    puzzle = generateCrossword(entries);
+    draw();
+    if (!announce) {
+      statusEl.textContent = '';
+      return;
+    }
+    const lines = [
+      (msg.placed ?? '')
+        .replace('{placed}', String(puzzle.entries.length))
+        .replace('{total}', String(entries.length)),
+    ];
+    if (puzzle.unplaced.length > 0) {
+      lines.push(
+        (msg.unplaced ?? '').replace(
+          '{words}',
+          puzzle.unplaced
+            .map((e) => e.word)
+            .join(document.documentElement.lang.startsWith('ja') ? '、' : ', '),
+        ),
+      );
+    }
+    if (ignored > 0) {
+      lines.push(
+        (msg.ignored ?? '')
+          .replace('{count}', String(ignored))
+          .replace('{max}', msg.maxWords ?? '30'),
+      );
+    }
+    statusEl.textContent = lines.join(' ');
+  }
+
+  wordsInput.addEventListener('change', () => generate());
+  answerCheck.addEventListener('change', draw);
+  $('cw-generate-button').addEventListener('click', () => generate());
+
+  $('cw-download-button').addEventListener('click', () => {
+    if (!puzzle) return;
+    const { width, height } = puzzle;
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      downloadBlob(blob, `crossword-${width}x${height}.png`);
+      statusEl.textContent = msg.downloaded ?? '';
+    }, 'image/png');
+  });
+
+  $('cw-print-button').addEventListener('click', () => {
+    const html = document.documentElement;
+    const done = () => html.classList.remove('cw-printing');
+    window.addEventListener('afterprint', done, { once: true });
+    html.classList.add('cw-printing');
+    window.print();
+  });
+
+  generate(false);
+</script>

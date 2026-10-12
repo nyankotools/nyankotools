@@ -6131,6 +6131,43 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'invaders-game',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['game-2048', 'reaction-test', 'minesweeper'],
+    translations: {
+      ja: {
+        name: 'インベーダーゲーム',
+        description:
+          '左右に動く猫の隊列を撃ち落とす、定番のシューティングゲーム。キーボードとスマホの画面ボタンに対応し、トーチカ・UFO・ステージ進行・ベストスコア記録付き',
+        keywords: [
+          'インベーダー',
+          'インベーダーゲーム',
+          'シューティング',
+          'シューティングゲーム',
+          'shooting game',
+          'invaders',
+          'ブラウザゲーム',
+        ],
+      },
+      en: {
+        name: 'Invaders Game',
+        description:
+          'A classic invaders-style shooter: shoot down the descending cat fleet. Keyboard and on-screen buttons, shields, a bonus UFO, levels and a best score',
+        keywords: [
+          'invader game',
+          'invaders',
+          'shooter',
+          'shoot em up',
+          'arcade game',
+          'browser game',
+          'retro game',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

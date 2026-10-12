@@ -1,0 +1,613 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { invadersGameContent } from '../../i18n/tools/invaders-game';
+import { HEIGHT, START_LIVES, WIDTH } from '../../lib/tools/invaders-game';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = invadersGameContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="invaders-root"
+    data-mode="idle"
+    data-overlay-ready={t.overlayReady}
+    data-overlay-paused={t.overlayPaused}
+    data-overlay-over={t.overlayOver}
+    data-started={t.started}
+    data-paused={t.paused}
+    data-resumed={t.resumed}
+    data-level-up={t.levelUp}
+    data-life-lost={t.lifeLost}
+    data-game-over-lives={t.gameOverLives}
+    data-game-over-invaded={t.gameOverInvaded}
+    data-new-best={t.newBest}
+    data-pause-label={t.pauseButton}
+    data-resume-label={t.resumeButton}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <button id="invaders-start-button" type="button" class="ui-btn-primary">
+        {t.startButton}
+      </button>
+      <button id="invaders-pause-button" type="button" class="ui-btn" disabled>
+        {t.pauseButton}
+      </button>
+    </div>
+
+    <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
+      <div class="flex gap-2">
+        <dt>{t.scoreLabel}</dt>
+        <dd id="invaders-score" class="font-semibold tabular-nums">
+          0
+        </dd>
+      </div>
+      <div class="flex gap-2">
+        <dt>{t.bestLabel}</dt>
+        <dd id="invaders-best" class="font-semibold tabular-nums">
+          0
+        </dd>
+      </div>
+      <div class="flex gap-2">
+        <dt>{t.levelLabel}</dt>
+        <dd id="invaders-level" class="font-semibold tabular-nums">
+          1
+        </dd>
+      </div>
+      <div class="flex gap-2">
+        <dt>{t.livesLabel}</dt>
+        <dd id="invaders-lives" class="font-semibold tabular-nums">
+          {START_LIVES}
+        </dd>
+      </div>
+    </dl>
+
+    <canvas
+      id="invaders-canvas"
+      width={WIDTH * 2}
+      height={HEIGHT * 2}
+      role="application"
+      tabindex="0"
+      aria-label={t.boardLabel}
+      class="mt-3 block w-full max-w-md touch-manipulation rounded-lg bg-gray-950 select-none"
+    ></canvas>
+
+    <div
+      role="group"
+      aria-label={t.controlsLabel}
+      class="mt-3 flex max-w-md items-center gap-2"
+    >
+      <button
+        type="button"
+        class="ui-btn h-14 w-20 touch-none text-xl select-none"
+        data-control="left"
+      >
+        {t.leftButton}
+      </button>
+      <button
+        type="button"
+        class="ui-btn h-14 w-20 touch-none text-xl select-none"
+        data-control="right"
+      >
+        {t.rightButton}
+      </button>
+      <button
+        type="button"
+        class="ui-btn-primary ml-auto h-14 min-w-24 touch-none select-none"
+        data-control="fire"
+      >
+        {t.fireButton}
+      </button>
+    </div>
+
+    <p
+      id="invaders-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    BULLET_H,
+    BULLET_W,
+    COLS,
+    HEIGHT,
+    PLAYER_H,
+    PLAYER_W,
+    PLAYER_Y,
+    ROWS,
+    SHIELD_CELL,
+    SHIELD_COLS,
+    SHIELD_COUNT,
+    SHIELD_ROWS,
+    SHIELD_Y,
+    UFO_Y,
+    WIDTH,
+    alienPosition,
+    createGame,
+    parseBest,
+    serializeBest,
+    shieldX,
+    step,
+    type Input,
+    type InvadersState,
+  } from '../../lib/tools/invaders-game';
+
+  const STORAGE_KEY = 'invaders-game-best';
+  const SCALE = 2;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('invaders-root');
+  const msg = root.dataset;
+  const canvas = $<HTMLCanvasElement>('invaders-canvas');
+  const ctx = canvas.getContext('2d')!;
+  const statusEl = $('invaders-status');
+  const scoreEl = $('invaders-score');
+  const bestEl = $('invaders-best');
+  const levelEl = $('invaders-level');
+  const livesEl = $('invaders-lives');
+  const startButton = $<HTMLButtonElement>('invaders-start-button');
+  const pauseButton = $<HTMLButtonElement>('invaders-pause-button');
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  function random() {
+    return crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32;
+  }
+
+  type Mode = 'idle' | 'playing' | 'paused' | 'over';
+  let mode: Mode = 'idle';
+  let state: InvadersState = createGame(random);
+  let best = loadBest();
+  let rafId = 0;
+  let lastTime = 0;
+  const held = { left: false, right: false, fire: false };
+  const keys = { left: false, right: false, fire: false };
+
+  function loadBest() {
+    try {
+      return parseBest(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      return 0;
+    }
+  }
+
+  function saveBest() {
+    try {
+      localStorage.setItem(STORAGE_KEY, serializeBest(best));
+    } catch {
+      // 保存できない環境では、このページを開いている間だけの記録にする
+    }
+  }
+
+  function setStatus(text: string) {
+    statusEl.textContent = text;
+  }
+
+  // ---- 描画 ----
+
+  // 9×7 のドット絵（猫の顔）。2コマ目は目の位置が変わる（まばたき）
+  const ALIEN_SPRITES: string[][][] = [
+    [
+      [
+        '#.......#',
+        '##.....##',
+        '#########',
+        '##.###.##',
+        '#########',
+        '###.#.###',
+        '.#######.',
+      ],
+      [
+        '#.......#',
+        '##.....##',
+        '#########',
+        '#########',
+        '##.###.##',
+        '###.#.###',
+        '.#######.',
+      ],
+    ],
+    [
+      [
+        '#.......#',
+        '##.....##',
+        '###.#.###',
+        '##.###.##',
+        '#########',
+        '###.#.###',
+        '.#######.',
+      ],
+      [
+        '#.......#',
+        '##.....##',
+        '###.#.###',
+        '#########',
+        '##.###.##',
+        '###.#.###',
+        '.#######.',
+      ],
+    ],
+    [
+      [
+        '#.......#',
+        '##.....##',
+        '#########',
+        '#..###..#',
+        '#########',
+        '###.#.###',
+        '.#######.',
+      ],
+      [
+        '#.......#',
+        '##.....##',
+        '#########',
+        '#.#####.#',
+        '#########',
+        '###.#.###',
+        '.#######.',
+      ],
+    ],
+  ];
+  const ALIEN_COLORS = ['#f472b6', '#fbbf24', '#34d399'];
+  const PLAYER_SPRITE = [
+    '......#......',
+    '.....###.....',
+    '.###########.',
+    '#############',
+    '#############',
+    '#############',
+  ];
+  const UFO_SPRITE = [
+    '....#####....',
+    '..#########..',
+    '.###########.',
+    '##.##.##.##.#',
+    '#############',
+    '..##.....##..',
+  ];
+
+  function drawSprite(
+    rows: string[],
+    x: number,
+    y: number,
+    color: string,
+    unit = 2,
+  ) {
+    ctx.fillStyle = color;
+    rows.forEach((line, r) => {
+      for (let c = 0; c < line.length; c++) {
+        if (line[c] === '#')
+          ctx.fillRect(x + c * unit, y + r * unit, unit, unit);
+      }
+    });
+  }
+
+  function alienType(row: number) {
+    return row === 0 ? 0 : row <= 2 ? 1 : 2;
+  }
+
+  function draw() {
+    ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+    ctx.fillStyle = '#0b1020';
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+    // 地面
+    ctx.fillStyle = '#334155';
+    ctx.fillRect(0, PLAYER_Y + PLAYER_H + 8, WIDTH, 1);
+
+    // トーチカ
+    ctx.fillStyle = '#22c55e';
+    for (let s = 0; s < SHIELD_COUNT; s++) {
+      const sx = shieldX(s);
+      const cells = state.shields[s];
+      for (let r = 0; r < SHIELD_ROWS; r++) {
+        for (let c = 0; c < SHIELD_COLS; c++) {
+          if (cells[r * SHIELD_COLS + c]) {
+            ctx.fillRect(
+              sx + c * SHIELD_CELL,
+              SHIELD_Y + r * SHIELD_CELL,
+              SHIELD_CELL,
+              SHIELD_CELL,
+            );
+          }
+        }
+      }
+    }
+
+    // 敵（動くたびに2コマを切り替える）
+    const frame = Math.floor(state.time * 2) % 2;
+    for (let row = 0; row < ROWS; row++) {
+      const type = alienType(row);
+      for (let col = 0; col < COLS; col++) {
+        if (!state.aliens[row * COLS + col]) continue;
+        const p = alienPosition(state, row, col);
+        drawSprite(
+          ALIEN_SPRITES[type][frame],
+          Math.round(p.x),
+          Math.round(p.y),
+          ALIEN_COLORS[type],
+        );
+      }
+    }
+
+    if (state.ufo) {
+      drawSprite(UFO_SPRITE, Math.round(state.ufo.x), UFO_Y, '#ef4444');
+    }
+
+    // 自機（やられた直後は点滅）
+    const blink =
+      state.invulnerable > 0 && Math.floor(state.time * 10) % 2 === 0;
+    if (!blink) {
+      drawSprite(
+        PLAYER_SPRITE,
+        Math.round(state.playerX - PLAYER_W / 2),
+        PLAYER_Y,
+        '#38bdf8',
+      );
+    }
+
+    // 弾
+    ctx.fillStyle = '#ffffff';
+    if (state.playerBullet) {
+      ctx.fillRect(
+        Math.round(state.playerBullet.x - BULLET_W / 2),
+        Math.round(state.playerBullet.y),
+        BULLET_W,
+        BULLET_H,
+      );
+    }
+    ctx.fillStyle = '#fb923c';
+    for (const b of state.enemyBullets) {
+      ctx.fillRect(
+        Math.round(b.x - BULLET_W / 2),
+        Math.round(b.y),
+        BULLET_W,
+        BULLET_H,
+      );
+    }
+
+    // 盤面の上の表示
+    const text =
+      mode === 'idle'
+        ? msg.overlayReady
+        : mode === 'paused'
+          ? msg.overlayPaused
+          : mode === 'over'
+            ? msg.overlayOver
+            : '';
+    if (text) {
+      ctx.fillStyle = 'rgba(11, 16, 32, 0.7)';
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 20px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, WIDTH / 2, HEIGHT / 2, WIDTH - 20);
+    }
+  }
+
+  function renderHud() {
+    scoreEl.textContent = String(state.score);
+    bestEl.textContent = String(Math.max(best, state.score));
+    levelEl.textContent = String(state.level);
+    livesEl.textContent = String(state.lives);
+  }
+
+  // ---- 進行 ----
+
+  function setMode(next: Mode) {
+    mode = next;
+    root.dataset.mode = next;
+    pauseButton.disabled = next !== 'playing' && next !== 'paused';
+    pauseButton.textContent =
+      (next === 'paused' ? msg.resumeLabel : msg.pauseLabel) ?? '';
+  }
+
+  function currentInput(): Input {
+    return {
+      left: held.left || keys.left,
+      right: held.right || keys.right,
+      fire: held.fire || keys.fire,
+    };
+  }
+
+  function frame(time: number) {
+    rafId = 0;
+    if (mode !== 'playing') return;
+    const dt = lastTime ? (time - lastTime) / 1000 : 0;
+    lastTime = time;
+    const before = { level: state.level, lives: state.lives };
+    step(state, currentInput(), dt, random);
+    if (state.level !== before.level) {
+      setStatus(fill(msg.levelUp, { level: String(state.level) }));
+    } else if (state.lives < before.lives && state.status === 'playing') {
+      setStatus(fill(msg.lifeLost, { lives: String(state.lives) }));
+    }
+    if (state.status === 'over') {
+      finish();
+    }
+    renderHud();
+    draw();
+    if (mode === 'playing') schedule();
+  }
+
+  function schedule() {
+    if (rafId === 0) rafId = requestAnimationFrame(frame);
+  }
+
+  // ゲームオーバーの表示を読む前に、連打で新しいゲームが始まってしまわないようにする
+  const RESTART_GUARD_MS = 800;
+  let overAt = 0;
+  function canRestart() {
+    return mode !== 'over' || performance.now() - overAt >= RESTART_GUARD_MS;
+  }
+
+  function finish() {
+    overAt = performance.now();
+    setMode('over');
+    const template =
+      state.overReason === 'invaded' ? msg.gameOverInvaded : msg.gameOverLives;
+    let text = fill(template, { score: String(state.score) });
+    if (state.score > best) {
+      best = state.score;
+      saveBest();
+      text += ` ${msg.newBest ?? ''}`;
+    }
+    setStatus(text);
+  }
+
+  function startGame() {
+    state = createGame(random);
+    lastTime = 0;
+    setMode('playing');
+    setStatus(msg.started ?? '');
+    renderHud();
+    draw();
+    schedule();
+  }
+
+  function pauseGame() {
+    if (mode !== 'playing') return;
+    setMode('paused');
+    setStatus(msg.paused ?? '');
+    draw();
+  }
+
+  function resumeGame() {
+    if (mode !== 'paused') return;
+    lastTime = 0;
+    setMode('playing');
+    setStatus(msg.resumed ?? '');
+    schedule();
+  }
+
+  function togglePause() {
+    if (mode === 'playing') pauseGame();
+    else if (mode === 'paused') resumeGame();
+  }
+
+  startButton.addEventListener('click', () => {
+    startGame();
+    startButton.blur();
+  });
+  pauseButton.addEventListener('click', () => {
+    togglePause();
+    pauseButton.blur();
+  });
+
+  // タブを離れる・ウィンドウから離れたときは自動で一時停止する
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) pauseGame();
+  });
+  window.addEventListener('blur', () => {
+    keys.left = keys.right = keys.fire = false;
+    pauseGame();
+  });
+
+  // ---- 入力 ----
+
+  const KEY_MAP: Record<string, 'left' | 'right' | 'fire'> = {
+    ArrowLeft: 'left',
+    a: 'left',
+    ArrowRight: 'right',
+    d: 'right',
+    ' ': 'fire',
+  };
+
+  function boardVisible() {
+    const rect = canvas.getBoundingClientRect();
+    return rect.bottom >= 0 && rect.top <= window.innerHeight;
+  }
+
+  function ignoredTarget(e: KeyboardEvent) {
+    const el = e.target as HTMLElement;
+    return Boolean(
+      el.closest?.(
+        'input, select, textarea, [contenteditable="true"], a, nav, aside',
+      ) || document.querySelector('dialog[open]'),
+    );
+  }
+
+  function keyAction(
+    e: KeyboardEvent,
+  ): 'left' | 'right' | 'fire' | 'pause' | null {
+    if (e.defaultPrevented || e.isComposing) return null;
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return null;
+    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    return KEY_MAP[key] ?? (key === 'p' ? 'pause' : null);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    const action = keyAction(e);
+    if (!action || ignoredTarget(e) || !boardVisible()) return;
+    if (mode === 'idle' || mode === 'over') {
+      // 開始前・終了後は、ゲーム画面や操作ボタンにフォーカスがあるときのスペースキーだけで開始する
+      // （ページ下部を読んでいるときのスクロールなどを奪わない）
+      if (action !== 'fire' || !root.contains(e.target as Node)) return;
+      e.preventDefault();
+      if (!e.repeat && canRestart()) startGame();
+      return;
+    }
+    e.preventDefault();
+    if (action === 'pause') {
+      togglePause();
+      return;
+    }
+    if (action === 'fire' && mode === 'paused') {
+      if (!e.repeat) resumeGame();
+      return;
+    }
+    keys[action] = true;
+  });
+
+  document.addEventListener('keyup', (e) => {
+    const action = keyAction(e);
+    if (!action || action === 'pause') return;
+    keys[action] = false;
+    // ボタンにフォーカスがあるとスペースキーの離した瞬間にクリックされるのを防ぐ
+    if (action === 'fire' && !ignoredTarget(e) && boardVisible()) {
+      e.preventDefault();
+    }
+  });
+
+  // 押している間だけ動く／撃つ画面ボタン
+  root.querySelectorAll<HTMLButtonElement>('[data-control]').forEach((b) => {
+    const control = b.dataset.control as 'left' | 'right' | 'fire';
+    const release = () => {
+      held[control] = false;
+    };
+    b.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      held[control] = true;
+      if (control === 'fire' && (mode === 'idle' || mode === 'over')) {
+        if (canRestart()) startGame();
+      } else if (control === 'fire' && mode === 'paused') {
+        resumeGame();
+      }
+      try {
+        b.setPointerCapture(e.pointerId);
+      } catch {
+        // キャプチャできなくても、ボタンの上で離せば止まる
+      }
+    });
+    b.addEventListener('pointerup', release);
+    b.addEventListener('pointercancel', release);
+    b.addEventListener('lostpointercapture', release);
+    b.addEventListener('contextmenu', (e) => e.preventDefault());
+  });
+
+  renderHud();
+  draw();
+</script>

@@ -27,6 +27,7 @@ const slugs = [
   'maze-generator',
   'game-of-life',
   'picross',
+  'invaders-game',
   'word-search-generator',
   'crossword-generator',
   'favicon-generator',

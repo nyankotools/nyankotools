@@ -5913,6 +5913,43 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'maze-generator',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['amidakuji-generator', 'sudoku', 'minesweeper'],
+    translations: {
+      ja: {
+        name: '迷路ジェネレーター',
+        description:
+          '縦横のマス数と難易度を選ぶだけで迷路を自動作成。解答ルートの表示、PNG保存、印刷に対応。知育プリントや遊びに使えます',
+        keywords: [
+          '迷路',
+          'めいろ',
+          '迷路作成',
+          'maze',
+          '知育',
+          '子供',
+          'プリント',
+          '印刷',
+        ],
+      },
+      en: {
+        name: 'Maze Generator',
+        description:
+          'Generate a random maze by choosing its size and difficulty. Show the solution, save it as a PNG or print it for activity sheets',
+        keywords: [
+          'maze',
+          'maze maker',
+          'labyrinth',
+          'printable maze',
+          'kids activity',
+          'puzzle',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -24,6 +24,7 @@ const slugs = [
   'minesweeper',
   'reversi',
   'maze-generator',
+  'word-search-generator',
   'favicon-generator',
   'image-palette-extractor',
   'exif-viewer',

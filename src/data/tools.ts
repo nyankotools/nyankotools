@@ -5950,6 +5950,43 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'word-search-generator',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['maze-generator', 'amidakuji-generator', 'sudoku'],
+    translations: {
+      ja: {
+        name: 'ワードサーチ作成',
+        description:
+          '好きな言葉をマス目に隠した言葉探しパズルを自動作成。マス数と難易度を選べて、答え表示・PNG保存・印刷に対応。教材やイベントに',
+        keywords: [
+          'ワードサーチ',
+          '言葉探し',
+          '言葉さがし',
+          '文字探し',
+          'word search',
+          'パズル',
+          '印刷',
+          '教材',
+        ],
+      },
+      en: {
+        name: 'Word Search Generator',
+        description:
+          'Make a word search puzzle from your own word list. Choose grid size and difficulty, show the answer key, save a PNG or print it for class or parties',
+        keywords: [
+          'word search',
+          'word find',
+          'wordsearch maker',
+          'printable puzzle',
+          'puzzle generator',
+          'worksheet',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

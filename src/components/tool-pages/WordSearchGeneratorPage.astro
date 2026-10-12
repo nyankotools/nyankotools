@@ -1,0 +1,389 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { wordSearchGeneratorContent } from '../../i18n/tools/word-search-generator';
+import {
+  DEFAULT_DIFFICULTY,
+  DEFAULT_SIZE,
+  DIFFICULTIES,
+  MAX_SIZE,
+  MAX_WORDS,
+  MIN_SIZE,
+} from '../../lib/tools/word-search-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = wordSearchGeneratorContent[locale];
+const difficultyNames = {
+  easy: t.difficultyEasy,
+  normal: t.difficultyNormal,
+  hard: t.difficultyHard,
+};
+const difficultyHints = {
+  easy: t.difficultyHintEasy,
+  normal: t.difficultyHintNormal,
+  hard: t.difficultyHintHard,
+};
+---
+
+<ToolShell t={t}>
+  <section
+    id="ws-root"
+    data-label={t.puzzleLabel}
+    data-list-title={t.listTitle}
+    data-placed={t.placed}
+    data-unplaced={t.unplaced}
+    data-ignored={t.ignored}
+    data-empty={t.empty}
+    data-downloaded={t.downloaded}
+    data-max-words={MAX_WORDS}
+  >
+    <label for="ws-words" class="ui-label">
+      {t.wordsLabel}
+    </label>
+    <textarea
+      id="ws-words"
+      class="ui-input h-40 w-full p-3 dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.wordsPlaceholder}
+      spellcheck="false"
+      data-query-target="text"
+      data-no-count
+    >{t.defaultWords}</textarea>
+
+    <div class="mt-4 flex flex-wrap items-end gap-x-6 gap-y-3">
+      <div>
+        <label for="ws-size" class="ui-label">
+          {t.sizeLabel}
+        </label>
+        <input
+          id="ws-size"
+          type="number"
+          inputmode="numeric"
+          min={MIN_SIZE}
+          max={MAX_SIZE}
+          value={DEFAULT_SIZE}
+          class="ui-input h-11 w-24 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <span id="ws-difficulty-label" class="ui-label">
+          {t.difficultyLabel}
+        </span>
+        <div
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-labelledby="ws-difficulty-label"
+        >
+          {DIFFICULTIES.map((level) => (
+            <button
+              type="button"
+              class="ui-seg-btn"
+              data-difficulty={level}
+              data-hint={difficultyHints[level]}
+              aria-pressed={level === DEFAULT_DIFFICULTY ? 'true' : 'false'}
+            >
+              {difficultyNames[level]}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+      {t.sizeHint
+        .replace('{min}', String(MIN_SIZE))
+        .replace('{max}', String(MAX_SIZE))}
+    </p>
+    <p
+      id="ws-difficulty-hint"
+      class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <button id="ws-generate-button" type="button" class="ui-btn-primary">
+        {t.generate}
+      </button>
+      <label class="ui-check">
+        <input id="ws-answer" type="checkbox" />
+        <span>{t.showAnswer}</span>
+      </label>
+      <label class="ui-check">
+        <input id="ws-list" type="checkbox" checked />
+        <span>{t.showWordList}</span>
+      </label>
+      <button id="ws-download-button" type="button" class="ui-btn">
+        {t.download}
+      </button>
+      <button id="ws-print-button" type="button" class="ui-btn">
+        {t.print}
+      </button>
+    </div>
+
+    <p
+      id="ws-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+
+    <div
+      id="ws-wrap"
+      class="mt-2 inline-block max-w-full rounded border border-gray-300 bg-white p-1 dark:border-gray-600"
+    >
+      <canvas
+        id="ws-canvas"
+        role="img"
+        class="block h-auto max-w-full bg-white"
+      ></canvas>
+    </div>
+  </section>
+</ToolShell>
+
+<style is:global>
+  @media print {
+    @page {
+      margin: 10mm;
+    }
+    html.ws-printing body *:not(#ws-wrap):not(#ws-wrap *):not(:has(#ws-wrap)) {
+      display: none !important;
+    }
+    html.ws-printing,
+    html.ws-printing body {
+      background: #fff !important;
+    }
+    html.ws-printing #ws-wrap {
+      display: block;
+      margin: 0 auto;
+      border: 0;
+      padding: 0;
+      width: 100%;
+      max-width: 100%;
+      text-align: center;
+    }
+    html.ws-printing #ws-canvas {
+      display: inline-block;
+      width: auto;
+      max-width: 100%;
+      max-height: 270mm;
+    }
+  }
+</style>
+
+<script>
+  import {
+    DEFAULT_DIFFICULTY,
+    clampSize,
+    generateWordSearch,
+    parseWords,
+    type Difficulty,
+    type WordSearch,
+  } from '../../lib/tools/word-search-generator';
+  import { downloadBlob } from '../../lib/download';
+
+  const FONT = 'sans-serif';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('ws-root');
+  const msg = root.dataset;
+  const wordsInput = $<HTMLTextAreaElement>('ws-words');
+  const sizeInput = $<HTMLInputElement>('ws-size');
+  const hintEl = $('ws-difficulty-hint');
+  const answerCheck = $<HTMLInputElement>('ws-answer');
+  const listCheck = $<HTMLInputElement>('ws-list');
+  const canvas = $<HTMLCanvasElement>('ws-canvas');
+  const statusEl = $('ws-status');
+  const difficultyButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-difficulty]'),
+  );
+
+  let difficulty: Difficulty = DEFAULT_DIFFICULTY;
+  let puzzle: WordSearch | null = null;
+
+  function draw() {
+    if (!puzzle) return;
+    const { size, grid, placements } = puzzle;
+    const cell = Math.min(48, Math.floor(900 / size));
+    const margin = 24;
+    const gridPx = size * cell;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // 単語一覧の配置（列数と行数）を先に決めて、キャンバスの大きさを求める
+    const showList = listCheck.checked && placements.length > 0;
+    const listFont = 22;
+    const rowHeight = 36;
+    const titleHeight = 40;
+    const words = placements.map((p) => p.word);
+    ctx.font = `${listFont}px ${FONT}`;
+    const itemWidth =
+      Math.max(0, ...words.map((w) => ctx.measureText(w).width)) +
+      listFont * 1.8;
+    const columns = Math.max(
+      1,
+      Math.min(6, Math.floor(gridPx / Math.max(1, itemWidth))),
+    );
+    const rows = Math.ceil(words.length / columns);
+    const contentWidth = Math.max(gridPx, showList ? itemWidth * columns : 0);
+
+    canvas.width = Math.ceil(contentWidth) + margin * 2;
+    canvas.height =
+      gridPx +
+      margin * 2 +
+      (showList ? titleHeight + rows * rowHeight + margin * 0.5 : 0);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const originX = Math.round((canvas.width - gridPx) / 2);
+    const originY = margin;
+
+    if (answerCheck.checked) {
+      ctx.strokeStyle = 'rgba(250, 204, 21, 0.65)';
+      ctx.lineWidth = cell * 0.78;
+      ctx.lineCap = 'round';
+      for (const p of placements) {
+        const len = Array.from(p.word).length;
+        ctx.beginPath();
+        ctx.moveTo(originX + (p.x + 0.5) * cell, originY + (p.y + 0.5) * cell);
+        ctx.lineTo(
+          originX + (p.x + p.dx * (len - 1) + 0.5) * cell,
+          originY + (p.y + p.dy * (len - 1) + 0.5) * cell,
+        );
+        ctx.stroke();
+      }
+    }
+
+    ctx.strokeStyle = '#111827';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(originX, originY, gridPx, gridPx);
+
+    ctx.fillStyle = '#111827';
+    ctx.font = `bold ${Math.round(cell * 0.56)}px ${FONT}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        ctx.fillText(
+          grid[y * size + x],
+          originX + (x + 0.5) * cell,
+          originY + (y + 0.5) * cell + cell * 0.03,
+        );
+      }
+    }
+
+    if (showList) {
+      const listTop = originY + gridPx + margin;
+      const listLeft = Math.round((canvas.width - itemWidth * columns) / 2);
+      ctx.textAlign = 'left';
+      ctx.font = `bold ${listFont}px ${FONT}`;
+      ctx.fillText(
+        (msg.listTitle ?? '').replace('{count}', String(words.length)),
+        listLeft,
+        listTop + titleHeight * 0.4,
+      );
+      ctx.font = `${listFont}px ${FONT}`;
+      const boxSize = listFont * 0.8;
+      words.forEach((word, i) => {
+        const col = i % columns;
+        const row = Math.floor(i / columns);
+        const x = listLeft + col * itemWidth;
+        const y = listTop + titleHeight + row * rowHeight + rowHeight * 0.4;
+        ctx.strokeStyle = '#111827';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x, y - boxSize / 2, boxSize, boxSize);
+        ctx.fillText(word, x + listFont * 1.3, y);
+      });
+    }
+
+    canvas.setAttribute(
+      'aria-label',
+      (msg.label ?? '').replace(/\{size\}/g, String(size)),
+    );
+  }
+
+  function generate(announce = true) {
+    const size = clampSize(
+      sizeInput.value.trim() === '' ? NaN : Number(sizeInput.value),
+    );
+    sizeInput.value = String(size);
+    const { words, ignored } = parseWords(wordsInput.value);
+    if (words.length === 0) {
+      statusEl.textContent = msg.empty ?? '';
+      return;
+    }
+    puzzle = generateWordSearch(words, size, difficulty);
+    draw();
+    if (!announce) {
+      statusEl.textContent = '';
+      return;
+    }
+    const lines = [
+      (msg.placed ?? '')
+        .replace('{placed}', String(puzzle.placements.length))
+        .replace('{total}', String(words.length)),
+    ];
+    if (puzzle.unplaced.length > 0) {
+      lines.push(
+        (msg.unplaced ?? '').replace(
+          '{words}',
+          puzzle.unplaced.join(
+            document.documentElement.lang.startsWith('ja') ? '、' : ', ',
+          ),
+        ),
+      );
+    }
+    if (ignored > 0) {
+      lines.push(
+        (msg.ignored ?? '')
+          .replace('{count}', String(ignored))
+          .replace('{max}', msg.maxWords ?? '50'),
+      );
+    }
+    statusEl.textContent = lines.join(' ');
+  }
+
+  function selectDifficulty(button: HTMLButtonElement) {
+    difficulty = button.dataset.difficulty as Difficulty;
+    difficultyButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b === button)),
+    );
+    hintEl.textContent = button.dataset.hint ?? '';
+  }
+
+  difficultyButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      selectDifficulty(b);
+      generate();
+    }),
+  );
+  wordsInput.addEventListener('change', () => generate());
+  sizeInput.addEventListener('change', () => generate());
+  answerCheck.addEventListener('change', draw);
+  listCheck.addEventListener('change', draw);
+  $('ws-generate-button').addEventListener('click', () => generate());
+
+  $('ws-download-button').addEventListener('click', () => {
+    if (!puzzle) return;
+    const { size } = puzzle;
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      downloadBlob(blob, `word-search-${size}x${size}.png`);
+      statusEl.textContent = msg.downloaded ?? '';
+    }, 'image/png');
+  });
+
+  $('ws-print-button').addEventListener('click', () => {
+    const html = document.documentElement;
+    const done = () => html.classList.remove('ws-printing');
+    window.addEventListener('afterprint', done, { once: true });
+    html.classList.add('ws-printing');
+    window.print();
+  });
+
+  const initial = difficultyButtons.find(
+    (b) => b.dataset.difficulty === DEFAULT_DIFFICULTY,
+  );
+  if (initial) selectDifficulty(initial);
+  generate(false);
+</script>

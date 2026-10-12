@@ -1,0 +1,293 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { colorSenseTestContent } from '../../i18n/tools/color-sense-test';
+import { PENALTY_MS, TIME_LIMIT_MS } from '../../lib/tools/color-sense-test';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = colorSenseTestContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="cs-root"
+    data-tile-label={t.tileLabel}
+    data-correct={t.correct}
+    data-wrong={t.wrong}
+    data-finished={t.finished}
+    data-new-best={t.newBest}
+    data-best-none={t.bestNone}
+    data-best-value={t.bestValue}
+    data-records-cleared={t.recordsCleared}
+    data-rank-beginner={t.rankBeginner}
+    data-rank-average={t.rankAverage}
+    data-rank-good={t.rankGood}
+    data-rank-great={t.rankGreat}
+    data-rank-master={t.rankMaster}
+    data-penalty-seconds={String(PENALTY_MS / 1000)}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <button
+        id="cs-start-button"
+        type="button"
+        class="ui-btn-primary"
+        data-restart={t.restart}
+      >
+        {t.start}
+      </button>
+      <dl class="flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
+        <div class="flex gap-2">
+          <dt>{t.timeLabel}</dt>
+          <dd id="cs-time" class="font-semibold tabular-nums">
+            {Math.ceil(TIME_LIMIT_MS / 1000)}
+          </dd>
+        </div>
+        <div class="flex gap-2">
+          <dt>{t.scoreLabel}</dt>
+          <dd id="cs-score" class="font-semibold tabular-nums">
+            0
+          </dd>
+        </div>
+        <div class="flex gap-2">
+          <dt>{t.stageLabel}</dt>
+          <dd id="cs-stage" class="font-semibold tabular-nums">
+            -
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="mt-3 w-full max-w-md">
+      <p
+        id="cs-idle"
+        class="flex aspect-square items-center justify-center rounded-lg border-2 border-dashed border-gray-300 p-4 text-center text-sm text-gray-600 dark:border-gray-600 dark:text-gray-400"
+      >
+        {t.idleHint}
+      </p>
+      <div
+        id="cs-board"
+        role="group"
+        aria-label={t.boardLabel}
+        class="grid aspect-square w-full gap-1 sm:gap-1.5"
+        hidden
+      ></div>
+    </div>
+
+    <p
+      id="cs-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+
+    <div class="mt-4 max-w-xl">
+      <h2 class="text-base font-semibold">{t.bestHeading}</h2>
+      <p
+        id="cs-best"
+        class="mt-2 text-sm tabular-nums text-gray-700 dark:text-gray-300"
+      ></p>
+      <button id="cs-reset-button" type="button" class="ui-btn mt-3">
+        {t.resetRecords}
+      </button>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    TIME_LIMIT_MS,
+    createRound,
+    formatSeconds,
+    parseBest,
+    rankFor,
+    remainingMs,
+    type Round,
+  } from '../../lib/tools/color-sense-test';
+
+  const STORAGE_KEY = 'color-sense-test-best';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('cs-root');
+  const msg = root.dataset;
+  const startButton = $<HTMLButtonElement>('cs-start-button');
+  const idleEl = $('cs-idle');
+  const boardEl = $('cs-board');
+  const timeEl = $('cs-time');
+  const scoreEl = $('cs-score');
+  const stageEl = $('cs-stage');
+  const statusEl = $('cs-status');
+  const bestEl = $('cs-best');
+
+  const rankNames: Record<string, string | undefined> = {
+    beginner: msg.rankBeginner,
+    average: msg.rankAverage,
+    good: msg.rankGood,
+    great: msg.rankGreat,
+    master: msg.rankMaster,
+  };
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  let best = loadBest();
+  let playing = false;
+  let score = 0;
+  let mistakes = 0;
+  let startedAt = 0;
+  let round: Round | null = null;
+  let timerId: number | undefined;
+
+  function loadBest(): number {
+    try {
+      return parseBest(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      // localStorageが使えない環境では、このページを開いている間だけの記録にする
+      return 0;
+    }
+  }
+
+  function saveBest() {
+    try {
+      localStorage.setItem(STORAGE_KEY, String(best));
+    } catch {
+      // 保存できない環境では今回の表示だけ反映する
+    }
+  }
+
+  function renderBest() {
+    bestEl.textContent =
+      best > 0
+        ? fill(msg.bestValue, { score: String(best) })
+        : (msg.bestNone ?? '');
+  }
+
+  function currentRemaining(): number {
+    return remainingMs(performance.now() - startedAt, mistakes);
+  }
+
+  function renderTime(ms: number) {
+    timeEl.textContent = formatSeconds(ms);
+  }
+
+  function stopTimer() {
+    if (timerId !== undefined) {
+      window.clearInterval(timerId);
+      timerId = undefined;
+    }
+  }
+
+  function buildBoard(r: Round) {
+    boardEl.style.gridTemplateColumns = `repeat(${r.size}, minmax(0, 1fr))`;
+    const tiles: HTMLButtonElement[] = [];
+    for (let i = 0; i < r.size * r.size; i++) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.index = String(i);
+      b.className =
+        'min-w-0 cursor-pointer rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600';
+      b.style.backgroundColor = i === r.oddIndex ? r.oddColor : r.baseColor;
+      b.setAttribute('aria-label', fill(msg.tileLabel, { n: String(i + 1) }));
+      tiles.push(b);
+    }
+    boardEl.replaceChildren(...tiles);
+  }
+
+  function nextRound() {
+    round = createRound(score + 1);
+    stageEl.textContent = String(score + 1);
+    buildBoard(round);
+  }
+
+  function finish() {
+    stopTimer();
+    playing = false;
+    renderTime(0);
+    boardEl.hidden = true;
+    idleEl.hidden = false;
+    // 結果文は role=status 側で読み上げるため、見た目だけの表示にする
+    idleEl.setAttribute('aria-hidden', 'true');
+    idleEl.textContent = fill(msg.finished, {
+      score: String(score),
+      rank: rankNames[rankFor(score)] ?? '',
+    });
+    const parts = [idleEl.textContent];
+    if (score > best) {
+      best = score;
+      saveBest();
+      parts.push(msg.newBest ?? '');
+    }
+    renderBest();
+    statusEl.textContent = parts.join(' ');
+    startButton.textContent = startButton.dataset.restart ?? '';
+    startButton.disabled = false;
+    startButton.focus();
+  }
+
+  function start() {
+    stopTimer();
+    playing = true;
+    score = 0;
+    mistakes = 0;
+    scoreEl.textContent = '0';
+    statusEl.textContent = '';
+    idleEl.hidden = true;
+    idleEl.removeAttribute('aria-hidden');
+    boardEl.hidden = false;
+    startedAt = performance.now();
+    renderTime(TIME_LIMIT_MS);
+    nextRound();
+    startButton.disabled = true;
+    boardEl.querySelector('button')?.focus();
+    timerId = window.setInterval(() => {
+      const left = currentRemaining();
+      renderTime(left);
+      if (left <= 0) finish();
+    }, 100);
+  }
+
+  boardEl.addEventListener('click', (e) => {
+    if (!playing || !round) return;
+    const target = (e.target as HTMLElement).closest<HTMLElement>(
+      '[data-index]',
+    );
+    if (!target) return;
+    // 時間切れ後、interval が発火するまでの間の操作は受け付けない
+    if (currentRemaining() <= 0) {
+      finish();
+      return;
+    }
+    if (Number(target.dataset.index) === round.oddIndex) {
+      score++;
+      scoreEl.textContent = String(score);
+      statusEl.textContent = msg.correct ?? '';
+      nextRound();
+      // タイルを作り直すとフォーカスが失われるため、先頭のタイルへ戻す
+      boardEl.querySelector('button')?.focus();
+    } else {
+      mistakes++;
+      statusEl.textContent = fill(msg.wrong, {
+        seconds: msg.penaltySeconds ?? '',
+      });
+      const left = currentRemaining();
+      renderTime(left);
+      if (left <= 0) finish();
+    }
+  });
+
+  startButton.addEventListener('click', start);
+  $('cs-reset-button').addEventListener('click', () => {
+    best = 0;
+    saveBest();
+    renderBest();
+    statusEl.textContent = msg.recordsCleared ?? '';
+  });
+
+  renderBest();
+</script>

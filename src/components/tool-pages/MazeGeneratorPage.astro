@@ -1,0 +1,315 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { mazeGeneratorContent } from '../../i18n/tools/maze-generator';
+import {
+  DEFAULT_DIFFICULTY,
+  DEFAULT_SIZE,
+  DIFFICULTIES,
+  MAX_SIZE,
+  MIN_SIZE,
+} from '../../lib/tools/maze-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = mazeGeneratorContent[locale];
+const difficultyNames = {
+  easy: t.difficultyEasy,
+  normal: t.difficultyNormal,
+  hard: t.difficultyHard,
+};
+const difficultyHints = {
+  easy: t.difficultyHintEasy,
+  normal: t.difficultyHintNormal,
+  hard: t.difficultyHintHard,
+};
+---
+
+<ToolShell t={t}>
+  <section
+    id="mz-root"
+    data-label={t.mazeLabel}
+    data-generated={t.generated}
+    data-downloaded={t.downloaded}
+  >
+    <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
+      <div>
+        <label for="mz-width" class="ui-label">
+          {t.widthLabel}
+        </label>
+        <input
+          id="mz-width"
+          type="number"
+          inputmode="numeric"
+          min={MIN_SIZE}
+          max={MAX_SIZE}
+          value={DEFAULT_SIZE}
+          class="ui-input h-11 w-24 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="mz-height" class="ui-label">
+          {t.heightLabel}
+        </label>
+        <input
+          id="mz-height"
+          type="number"
+          inputmode="numeric"
+          min={MIN_SIZE}
+          max={MAX_SIZE}
+          value={DEFAULT_SIZE}
+          class="ui-input h-11 w-24 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <span id="mz-difficulty-label" class="ui-label">
+          {t.difficultyLabel}
+        </span>
+        <div
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-labelledby="mz-difficulty-label"
+        >
+          {DIFFICULTIES.map((level) => (
+            <button
+              type="button"
+              class="ui-seg-btn"
+              data-difficulty={level}
+              data-hint={difficultyHints[level]}
+              aria-pressed={level === DEFAULT_DIFFICULTY ? 'true' : 'false'}
+            >
+              {difficultyNames[level]}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+      {t.sizeHint
+        .replace('{min}', String(MIN_SIZE))
+        .replace('{max}', String(MAX_SIZE))}
+    </p>
+    <p
+      id="mz-difficulty-hint"
+      class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <button id="mz-generate-button" type="button" class="ui-btn-primary">
+        {t.generate}
+      </button>
+      <label class="ui-check">
+        <input id="mz-solution" type="checkbox" />
+        <span>{t.showSolution}</span>
+      </label>
+      <button id="mz-download-button" type="button" class="ui-btn">
+        {t.download}
+      </button>
+      <button id="mz-print-button" type="button" class="ui-btn">
+        {t.print}
+      </button>
+    </div>
+
+    <div
+      id="mz-wrap"
+      class="mt-4 inline-block max-w-full rounded border border-gray-300 bg-white p-1 dark:border-gray-600"
+    >
+      <canvas
+        id="mz-canvas"
+        role="img"
+        class="block h-auto max-w-full bg-white"
+      ></canvas>
+    </div>
+    <p
+      id="mz-status"
+      role="status"
+      class="mt-2 min-h-6 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+  </section>
+</ToolShell>
+
+<style is:global>
+  @media print {
+    @page {
+      margin: 10mm;
+    }
+    html.mz-printing body *:not(#mz-wrap):not(#mz-wrap *):not(:has(#mz-wrap)) {
+      display: none !important;
+    }
+    html.mz-printing,
+    html.mz-printing body {
+      background: #fff !important;
+    }
+    html.mz-printing #mz-wrap {
+      display: block;
+      margin: 0 auto;
+      border: 0;
+      padding: 0;
+      width: 100%;
+      max-width: 100%;
+      text-align: center;
+    }
+    html.mz-printing #mz-canvas {
+      display: inline-block;
+      width: auto;
+      max-width: 100%;
+      max-height: 185mm;
+    }
+  }
+</style>
+
+<script>
+  import {
+    DEFAULT_DIFFICULTY,
+    clampSize,
+    generateMaze,
+    solveMaze,
+    wallSegments,
+    type Difficulty,
+    type Maze,
+  } from '../../lib/tools/maze-generator';
+  import { downloadBlob } from '../../lib/download';
+
+  /** 画像の長辺の目安（ピクセル） */
+  const TARGET_PX = 1600;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('mz-root');
+  const msg = root.dataset;
+  const widthInput = $<HTMLInputElement>('mz-width');
+  const heightInput = $<HTMLInputElement>('mz-height');
+  const hintEl = $('mz-difficulty-hint');
+  const solutionCheck = $<HTMLInputElement>('mz-solution');
+  const canvas = $<HTMLCanvasElement>('mz-canvas');
+  const statusEl = $('mz-status');
+  const difficultyButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-difficulty]'),
+  );
+
+  let difficulty: Difficulty = DEFAULT_DIFFICULTY;
+  let maze: Maze | null = null;
+  let solution: number[] = [];
+
+  function draw() {
+    if (!maze) return;
+    const { width, height } = maze;
+    const cell = Math.min(
+      40,
+      Math.max(12, Math.floor(TARGET_PX / Math.max(width, height))),
+    );
+    const marginX = Math.round(cell * 0.5);
+    const marginY = cell;
+    canvas.width = width * cell + marginX * 2;
+    canvas.height = height * cell + marginY * 2;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const px = (x: number) => marginX + x * cell;
+    const py = (y: number) => marginY + y * cell;
+
+    if (solutionCheck.checked && solution.length > 0) {
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = Math.max(3, cell * 0.28);
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(px(0.5), py(0));
+      for (const index of solution) {
+        ctx.lineTo(
+          px((index % width) + 0.5),
+          py(Math.floor(index / width) + 0.5),
+        );
+      }
+      ctx.lineTo(px(width - 0.5), py(height));
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = '#111827';
+    ctx.lineWidth = Math.max(2, Math.round(cell * 0.12));
+    ctx.lineCap = 'square';
+    ctx.beginPath();
+    for (const [x1, y1, x2, y2] of wallSegments(maze)) {
+      ctx.moveTo(px(x1), py(y1));
+      ctx.lineTo(px(x2), py(y2));
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = '#111827';
+    ctx.font = `bold ${Math.round(cell * 0.7)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('S', px(0.5), py(0) - cell * 0.5);
+    ctx.fillText('G', px(width - 0.5), py(height) + cell * 0.5);
+
+    canvas.setAttribute(
+      'aria-label',
+      (msg.label ?? '')
+        .replace('{width}', String(width))
+        .replace('{height}', String(height)),
+    );
+  }
+
+  function generate(announce = true) {
+    const width = clampSize(
+      widthInput.value.trim() === '' ? NaN : Number(widthInput.value),
+    );
+    const height = clampSize(
+      heightInput.value.trim() === '' ? NaN : Number(heightInput.value),
+    );
+    widthInput.value = String(width);
+    heightInput.value = String(height);
+    maze = generateMaze(width, height, difficulty);
+    solution = solveMaze(maze);
+    draw();
+    statusEl.textContent = announce ? (msg.generated ?? '') : '';
+  }
+
+  function selectDifficulty(button: HTMLButtonElement) {
+    difficulty = button.dataset.difficulty as Difficulty;
+    difficultyButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b === button)),
+    );
+    hintEl.textContent = button.dataset.hint ?? '';
+  }
+
+  difficultyButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      selectDifficulty(b);
+      generate();
+    }),
+  );
+  widthInput.addEventListener('change', () => generate());
+  heightInput.addEventListener('change', () => generate());
+  solutionCheck.addEventListener('change', draw);
+  $('mz-generate-button').addEventListener('click', () => generate());
+
+  $('mz-download-button').addEventListener('click', () => {
+    if (!maze) return;
+    const { width, height } = maze;
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      downloadBlob(blob, `maze-${width}x${height}.png`);
+      statusEl.textContent = msg.downloaded ?? '';
+    }, 'image/png');
+  });
+
+  $('mz-print-button').addEventListener('click', () => {
+    const html = document.documentElement;
+    const done = () => html.classList.remove('mz-printing');
+    window.addEventListener('afterprint', done, { once: true });
+    html.classList.add('mz-printing');
+    window.print();
+  });
+
+  const initial = difficultyButtons.find(
+    (b) => b.dataset.difficulty === DEFAULT_DIFFICULTY,
+  );
+  if (initial) selectDifficulty(initial);
+  generate(false);
+</script>

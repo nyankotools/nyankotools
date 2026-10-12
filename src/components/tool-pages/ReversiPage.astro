@@ -1,0 +1,449 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { reversiContent } from '../../i18n/tools/reversi';
+import { DEFAULT_LEVEL, LEVELS } from '../../lib/tools/reversi';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = reversiContent[locale];
+const levelNames = {
+  easy: t.levelEasy,
+  normal: t.levelNormal,
+  hard: t.levelHard,
+  expert: t.levelExpert,
+};
+---
+
+<ToolShell t={t}>
+  <section
+    id="rv-root"
+    data-cell-label={t.cellLabel}
+    data-cell-empty={t.cellEmpty}
+    data-cell-black={t.cellBlack}
+    data-cell-white={t.cellWhite}
+    data-cell-legal={t.cellLegal}
+    data-turn-you={t.turnYou}
+    data-turn-cpu={t.turnCpu}
+    data-thinking={t.thinking}
+    data-you-passed={t.youPassed}
+    data-cpu-passed={t.cpuPassed}
+    data-you-won={t.youWon}
+    data-cpu-won={t.cpuWon}
+    data-draw={t.draw}
+    data-started={t.started}
+  >
+    <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
+      <div>
+        <span id="rv-level-label" class="ui-label">
+          {t.levelLabel}
+        </span>
+        <div
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-labelledby="rv-level-label"
+        >
+          {LEVELS.map((level) => (
+            <button
+              type="button"
+              class="ui-seg-btn"
+              data-level={level}
+              aria-pressed={level === DEFAULT_LEVEL ? 'true' : 'false'}
+            >
+              {levelNames[level]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <span id="rv-side-label" class="ui-label">
+          {t.sideLabel}
+        </span>
+        <div class="ui-seg" role="group" aria-labelledby="rv-side-label">
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-side="1"
+            aria-pressed="true"
+          >
+            {t.sideBlack}
+          </button>
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-side="2"
+            aria-pressed="false"
+          >
+            {t.sideWhite}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button id="rv-new-button" type="button" class="ui-btn-primary">
+        {t.newGame}
+      </button>
+      <button id="rv-undo-button" type="button" class="ui-btn" disabled>
+        {t.undo}
+      </button>
+      <button
+        id="rv-hint-button"
+        type="button"
+        class="ui-btn aria-pressed:border-blue-600 aria-pressed:bg-blue-600 aria-pressed:text-white"
+        aria-pressed="false"
+      >
+        {t.hintLabel}
+      </button>
+    </div>
+
+    <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
+      <div class="flex items-center gap-2">
+        <dt class="flex items-center gap-1.5">
+          <span
+            class="inline-block h-3.5 w-3.5 rounded-full bg-gray-900 ring-1 ring-gray-400 dark:ring-gray-500"
+            aria-hidden="true"
+          ></span>
+          {t.blackLabel}
+        </dt>
+        <dd id="rv-black-count" class="font-semibold tabular-nums">
+          2
+        </dd>
+      </div>
+      <div class="flex items-center gap-2">
+        <dt class="flex items-center gap-1.5">
+          <span
+            class="inline-block h-3.5 w-3.5 rounded-full bg-white ring-1 ring-gray-400 dark:ring-gray-500"
+            aria-hidden="true"
+          ></span>
+          {t.whiteLabel}
+        </dt>
+        <dd id="rv-white-count" class="font-semibold tabular-nums">
+          2
+        </dd>
+      </div>
+    </dl>
+
+    <div class="relative mt-3 w-full max-w-md">
+      <div
+        id="rv-board"
+        role="group"
+        aria-label={t.boardLabel}
+        class="grid w-full touch-manipulation grid-cols-8 gap-px border-2 border-green-950 bg-green-950 select-none"
+      ></div>
+      <div
+        id="rv-result"
+        aria-hidden="true"
+        hidden
+        class="absolute inset-0 flex cursor-pointer items-center justify-center p-4"
+      >
+        <p
+          id="rv-result-text"
+          class="max-w-full rounded-lg bg-gray-900/90 px-5 py-4 text-center text-lg font-bold text-white shadow-lg ring-1 ring-white/30"
+        ></p>
+      </div>
+    </div>
+
+    <p
+      id="rv-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    DEFAULT_LEVEL,
+    SIZE,
+    chooseMove,
+    countDiscs,
+    legalMoves,
+    newGame,
+    playMove,
+    winnerOf,
+    type GameState,
+    type Level,
+    type Player,
+  } from '../../lib/tools/reversi';
+
+  const CPU_DELAY_MS = 400;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('rv-root');
+  const msg = root.dataset;
+  const boardEl = $('rv-board');
+  const statusEl = $('rv-status');
+  const resultEl = $('rv-result');
+  const resultTextEl = $('rv-result-text');
+  const blackCountEl = $('rv-black-count');
+  const whiteCountEl = $('rv-white-count');
+  const undoButton = $<HTMLButtonElement>('rv-undo-button');
+  const hintButton = $<HTMLButtonElement>('rv-hint-button');
+  const levelButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-level]'),
+  );
+  const sideButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-side]'),
+  );
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  let level: Level = DEFAULT_LEVEL;
+  let human: Player = 1;
+  let state: GameState = newGame();
+  /** あなたの手番になったときの盤面（「待った」で戻る先） */
+  let history: GameState[] = [];
+  let showHints = false;
+  let thinking = false;
+  let notice = '';
+  let timerId: number | undefined;
+  /** 勝敗メッセージを閉じたあと、次の対局まで再表示しない */
+  let resultDismissed = false;
+  let buttons: HTMLButtonElement[] = [];
+  let focusIndex = 0;
+
+  const CELL_BASE =
+    'relative flex aspect-square w-full items-center justify-center bg-green-700 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600';
+
+  function buildBoard() {
+    boardEl.replaceChildren();
+    buttons = [];
+    for (let i = 0; i < SIZE * SIZE; i++) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.index = String(i);
+      b.tabIndex = i === 0 ? 0 : -1;
+      boardEl.append(b);
+      buttons.push(b);
+    }
+  }
+
+  function humanCanMove() {
+    return !state.over && !thinking && state.turn === human;
+  }
+
+  function render() {
+    const legal = new Set(humanCanMove() ? legalMoves(state.board, human) : []);
+    const flipped = new Set(state.flipped);
+    buttons.forEach((button, i) => {
+      const disc = state.board[i];
+      const isLegal = legal.has(i);
+      button.className = `${CELL_BASE} ${isLegal ? 'cursor-pointer hover:bg-green-600' : 'cursor-default'}`;
+      button.replaceChildren();
+      if (disc !== 0) {
+        const stone = document.createElement('span');
+        stone.className = `block h-4/5 w-4/5 rounded-full shadow ${
+          disc === 1
+            ? 'bg-gray-900 ring-1 ring-black'
+            : 'bg-white ring-1 ring-gray-300'
+        }`;
+        button.append(stone);
+        if (i === state.lastMove || flipped.has(i)) {
+          const mark = document.createElement('span');
+          mark.className = `absolute h-1.5 w-1.5 rounded-full ${
+            i === state.lastMove ? 'bg-red-500' : 'bg-amber-400'
+          }`;
+          mark.setAttribute('aria-hidden', 'true');
+          button.append(mark);
+        }
+      } else if (isLegal && showHints) {
+        const dot = document.createElement('span');
+        dot.className = 'block h-2.5 w-2.5 rounded-full bg-green-300/80';
+        dot.setAttribute('aria-hidden', 'true');
+        button.append(dot);
+      }
+      const stateLabel =
+        disc === 1
+          ? msg.cellBlack
+          : disc === 2
+            ? msg.cellWhite
+            : isLegal && showHints
+              ? msg.cellLegal
+              : msg.cellEmpty;
+      button.setAttribute(
+        'aria-label',
+        fill(msg.cellLabel, {
+          row: String(Math.floor(i / SIZE) + 1),
+          col: String((i % SIZE) + 1),
+          state: stateLabel ?? '',
+        }),
+      );
+    });
+    const { black, white } = countDiscs(state.board);
+    blackCountEl.textContent = String(black);
+    whiteCountEl.textContent = String(white);
+    undoButton.disabled = thinking || history.length === 0;
+  }
+
+  function setStatus() {
+    let text: string;
+    if (state.over) {
+      const { black, white } = countDiscs(state.board);
+      const result = winnerOf(state.board);
+      const template =
+        result === 'draw'
+          ? msg.draw
+          : (result === 'black') === (human === 1)
+            ? msg.youWon
+            : msg.cpuWon;
+      text = fill(template, { black: String(black), white: String(white) });
+    } else if (thinking) {
+      text = msg.thinking ?? '';
+    } else {
+      text = state.turn === human ? (msg.turnYou ?? '') : (msg.turnCpu ?? '');
+    }
+    statusEl.textContent = [notice, text].filter(Boolean).join(' ');
+    // 勝敗は盤面中央にも表示する（読み上げは status 側で行うため overlay は aria-hidden）
+    resultTextEl.textContent = state.over ? text : '';
+    resultEl.hidden = !state.over || resultDismissed;
+  }
+
+  function refresh() {
+    render();
+    setStatus();
+  }
+
+  function cancelCpu() {
+    if (timerId !== undefined) {
+      window.clearTimeout(timerId);
+      timerId = undefined;
+    }
+    thinking = false;
+  }
+
+  /** 手を打った結果、パスが起きていれば通知文に足す */
+  function notePass(next: GameState) {
+    if (next.passed === null) return;
+    const text = (next.passed === human ? msg.youPassed : msg.cpuPassed) ?? '';
+    if (text && !notice.includes(text))
+      notice = [notice, text].filter(Boolean).join(' ');
+  }
+
+  function scheduleCpu() {
+    if (state.over || state.turn === human) {
+      thinking = false;
+      refresh();
+      return;
+    }
+    thinking = true;
+    refresh();
+    // 描画を先に済ませるため、少し待ってから探索する（探索中は画面が止まる）
+    timerId = window.setTimeout(() => {
+      timerId = undefined;
+      const move = chooseMove(state.board, state.turn, level);
+      if (move >= 0) {
+        const next = playMove(state, move);
+        notePass(next);
+        state = next;
+      }
+      scheduleCpu();
+    }, CPU_DELAY_MS);
+  }
+
+  function startGame() {
+    cancelCpu();
+    state = newGame();
+    history = [];
+    resultDismissed = false;
+    notice = msg.started ?? '';
+    scheduleCpu();
+  }
+
+  function humanMove(index: number) {
+    if (!humanCanMove()) return;
+    const next = playMove(state, index);
+    if (next === state) return;
+    history.push(state);
+    notice = '';
+    notePass(next);
+    state = next;
+    scheduleCpu();
+  }
+
+  function undo() {
+    if (thinking || history.length === 0) return;
+    cancelCpu();
+    state = history.pop() as GameState;
+    resultDismissed = false;
+    notice = '';
+    refresh();
+  }
+
+  function setFocus(index: number) {
+    if (index < 0 || index >= buttons.length) return;
+    buttons[focusIndex].tabIndex = -1;
+    focusIndex = index;
+    buttons[index].tabIndex = 0;
+  }
+
+  boardEl.addEventListener('click', (e) => {
+    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-index]');
+    if (!el) return;
+    const index = Number(el.dataset.index);
+    setFocus(index);
+    humanMove(index);
+  });
+
+  boardEl.addEventListener('keydown', (e) => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const row = Math.floor(focusIndex / SIZE);
+    const col = focusIndex % SIZE;
+    let target = -1;
+    if (e.key === 'ArrowLeft' && col > 0) target = focusIndex - 1;
+    else if (e.key === 'ArrowRight' && col < SIZE - 1) target = focusIndex + 1;
+    else if (e.key === 'ArrowUp' && row > 0) target = focusIndex - SIZE;
+    else if (e.key === 'ArrowDown' && row < SIZE - 1)
+      target = focusIndex + SIZE;
+    if (e.key.startsWith('Arrow')) {
+      e.preventDefault();
+      if (target >= 0) {
+        setFocus(target);
+        buttons[target].focus();
+      }
+    }
+  });
+
+  levelButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      level = b.dataset.level as Level;
+      levelButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      startGame();
+    }),
+  );
+  sideButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      human = Number(b.dataset.side) as Player;
+      sideButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      startGame();
+    }),
+  );
+  resultEl.addEventListener('click', () => {
+    resultDismissed = true;
+    resultEl.hidden = true;
+  });
+  $('rv-new-button').addEventListener('click', startGame);
+  undoButton.addEventListener('click', undo);
+  hintButton.addEventListener('click', () => {
+    showHints = !showHints;
+    hintButton.setAttribute('aria-pressed', String(showHints));
+    refresh();
+  });
+
+  buildBoard();
+  startGame();
+  notice = '';
+  setStatus();
+</script>

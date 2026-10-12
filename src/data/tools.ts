@@ -5845,6 +5845,329 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'minesweeper',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['sudoku', 'game-2048', 'slide-puzzle'],
+    translations: {
+      ja: {
+        name: 'マインスイーパー',
+        description:
+          '数字のヒントから地雷を推理して全マスを開くパズル。初級・中級・上級とカスタムに対応、最初の1手は必ず安全。スマホは長押しで旗、ベストタイム記録つき',
+        keywords: [
+          'マインスイーパー',
+          'マインスイーパ',
+          '地雷',
+          '地雷ゲーム',
+          'minesweeper',
+          '脳トレ',
+        ],
+      },
+      en: {
+        name: 'Minesweeper',
+        description:
+          'Classic mine-clearing puzzle with Beginner, Intermediate, Expert and custom boards. Safe first click, long-press flags on touch screens and best times',
+        keywords: [
+          'minesweeper',
+          'mine sweeper',
+          'mines game',
+          'logic puzzle',
+          'brain training',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'reversi',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['minesweeper', 'game-2048', 'sudoku'],
+    translations: {
+      ja: {
+        name: 'リバーシ（オセロ）',
+        description:
+          'かんたん〜最強の4段階のCPUと対戦できるリバーシ。先手・後手を選べて、置ける場所のヒントと「待った」つき。ブラウザだけで遊べます',
+        keywords: [
+          'リバーシ',
+          'オセロ',
+          'reversi',
+          'othello',
+          '対戦',
+          'ボードゲーム',
+        ],
+      },
+      en: {
+        name: 'Reversi (Othello)',
+        description:
+          'Play Reversi against the computer at four strength levels. Choose first or second, with legal-move hints and undo, right in your browser',
+        keywords: [
+          'reversi',
+          'othello',
+          'board game',
+          'vs computer',
+          'strategy game',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'maze-generator',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['amidakuji-generator', 'sudoku', 'minesweeper'],
+    translations: {
+      ja: {
+        name: '迷路ジェネレーター',
+        description:
+          '縦横のマス数と難易度を選ぶだけで迷路を自動作成。解答ルートの表示、PNG保存、印刷に対応。知育プリントや遊びに使えます',
+        keywords: [
+          '迷路',
+          'めいろ',
+          '迷路作成',
+          'maze',
+          '知育',
+          '子供',
+          'プリント',
+          '印刷',
+        ],
+      },
+      en: {
+        name: 'Maze Generator',
+        description:
+          'Generate a random maze by choosing its size and difficulty. Show the solution, save it as a PNG or print it for activity sheets',
+        keywords: [
+          'maze',
+          'maze maker',
+          'labyrinth',
+          'printable maze',
+          'kids activity',
+          'puzzle',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'word-search-generator',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['maze-generator', 'amidakuji-generator', 'sudoku'],
+    translations: {
+      ja: {
+        name: 'ワードサーチ作成',
+        description:
+          '好きな言葉をマス目に隠した言葉探しパズルを自動作成。マス数と難易度を選べて、答え表示・PNG保存・印刷に対応。教材やイベントに',
+        keywords: [
+          'ワードサーチ',
+          '言葉探し',
+          '言葉さがし',
+          '文字探し',
+          'word search',
+          'パズル',
+          '印刷',
+          '教材',
+        ],
+      },
+      en: {
+        name: 'Word Search Generator',
+        description:
+          'Make a word search puzzle from your own word list. Choose grid size and difficulty, show the answer key, save a PNG or print it for class or parties',
+        keywords: [
+          'word search',
+          'word find',
+          'wordsearch maker',
+          'printable puzzle',
+          'puzzle generator',
+          'worksheet',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'crossword-generator',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['word-search-generator', 'maze-generator', 'sudoku'],
+    translations: {
+      ja: {
+        name: 'クロスワード作成',
+        description:
+          '答えとヒントを入れるだけでクロスワードを自動作成。タテ・ヨコのカギと番号付き、答え表示・PNG保存・印刷に対応。教材やイベントに',
+        keywords: [
+          'クロスワード',
+          'クロスワードパズル',
+          'カギ',
+          'crossword',
+          'パズル',
+          '印刷',
+          '教材',
+        ],
+      },
+      en: {
+        name: 'Crossword Generator',
+        description:
+          'Make a crossword puzzle from your own answers and clues, with numbered Across and Down clues, an answer key, PNG download and printing',
+        keywords: [
+          'crossword',
+          'crossword maker',
+          'crossword puzzle',
+          'printable puzzle',
+          'puzzle generator',
+          'worksheet',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'color-sense-test',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['reaction-test', 'memory-match', 'color-palette-generator'],
+    translations: {
+      ja: {
+        name: '色彩感覚テスト',
+        description:
+          'わずかに色の違うタイルを選ぶ60秒の色彩感覚ゲーム。進むほど色の差が縮み、正解数でランクが決まります。娯楽用で色覚検査ではありません',
+        keywords: [
+          '色彩感覚',
+          '色の違い',
+          '色覚',
+          '色当て',
+          '色の差',
+          '脳トレ',
+          'ゲーム',
+        ],
+      },
+      en: {
+        name: 'Color Sense Test',
+        description:
+          'A 60-second game of picking the one slightly different color tile. The difference shrinks as you go and your score sets your rank. For fun, not a color vision test',
+        keywords: [
+          'color test',
+          'color sense',
+          'color perception',
+          'odd color out',
+          'color game',
+          'spot the difference',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'game-of-life',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['minesweeper', 'maze-generator', 'reversi'],
+    translations: {
+      ja: {
+        name: 'ライフゲーム',
+        description:
+          'セルをクリックして配置し、世代の移り変わりを観察できるライフゲーム。再生・1コマ送り・速度調整、グライダーやパルサーなどのプリセットに対応',
+        keywords: [
+          'ライフゲーム',
+          'life game',
+          'game of life',
+          'コンウェイ',
+          'セルオートマトン',
+          'グライダー',
+          '生命シミュレーション',
+        ],
+      },
+      en: {
+        name: 'Game of Life',
+        description:
+          'Conway’s Game of Life in your browser. Draw cells, play, step and adjust speed, and drop in presets like the glider, pulsar and Gosper gun',
+        keywords: [
+          'game of life',
+          'conway',
+          'cellular automaton',
+          'life simulator',
+          'glider',
+          'simulation',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'picross',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['maze-generator', 'word-search-generator', 'sudoku'],
+    translations: {
+      ja: {
+        name: 'お絵かきロジック（ピクロス）',
+        description:
+          '解が1通りの問題で遊べるお絵かきロジック。5×5・10×10・15×15の出題に対応し、自分で描いた絵や画像から問題も作れる',
+        keywords: [
+          'お絵かきロジック',
+          'ピクロス',
+          'ノノグラム',
+          'イラストロジック',
+          'picross',
+          'nonogram',
+          'ロジックパズル',
+        ],
+      },
+      en: {
+        name: 'Picross (Nonogram)',
+        description:
+          'Play picross puzzles with a single solution in 5×5, 10×10 or 15×15, or turn your own drawing or image into a puzzle',
+        keywords: [
+          'picross',
+          'nonogram',
+          'griddlers',
+          'hanjie',
+          'paint by numbers',
+          'logic puzzle',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'invaders-game',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['game-2048', 'reaction-test', 'minesweeper'],
+    translations: {
+      ja: {
+        name: 'インベーダーゲーム',
+        description:
+          '左右に動く猫の隊列を撃ち落とす、定番のシューティングゲーム。キーボードとスマホの画面ボタンに対応し、トーチカ・UFO・ステージ進行・ベストスコア記録付き',
+        keywords: [
+          'インベーダー',
+          'インベーダーゲーム',
+          'シューティング',
+          'シューティングゲーム',
+          'shooting game',
+          'invaders',
+          'ブラウザゲーム',
+        ],
+      },
+      en: {
+        name: 'Invaders Game',
+        description:
+          'A classic invaders-style shooter: shoot down the descending cat fleet. Keyboard and on-screen buttons, shields, a bonus UFO, levels and a best score',
+        keywords: [
+          'invader game',
+          'invaders',
+          'shooter',
+          'shoot em up',
+          'arcade game',
+          'browser game',
+          'retro game',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

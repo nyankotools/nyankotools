@@ -22,6 +22,7 @@ const slugs = [
   'slide-puzzle',
   'game-2048',
   'minesweeper',
+  'color-sense-test',
   'reversi',
   'maze-generator',
   'word-search-generator',

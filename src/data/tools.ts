@@ -6023,6 +6023,42 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'color-sense-test',
+    category: 'games',
+    addedAt: '2026-10-12',
+    updatedAt: '2026-10-12',
+    related: ['reaction-test', 'memory-match', 'color-palette-generator'],
+    translations: {
+      ja: {
+        name: '色彩感覚テスト',
+        description:
+          'わずかに色の違うタイルを選ぶ60秒の色彩感覚ゲーム。進むほど色の差が縮み、正解数でランクが決まります。娯楽用で色覚検査ではありません',
+        keywords: [
+          '色彩感覚',
+          '色の違い',
+          '色覚',
+          '色当て',
+          '色の差',
+          '脳トレ',
+          'ゲーム',
+        ],
+      },
+      en: {
+        name: 'Color Sense Test',
+        description:
+          'A 60-second game of picking the one slightly different color tile. The difference shrinks as you go and your score sets your rank. For fun, not a color vision test',
+        keywords: [
+          'color test',
+          'color sense',
+          'color perception',
+          'odd color out',
+          'color game',
+          'spot the difference',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -6,7 +6,15 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 import globals from 'globals';
 
 export default [
-  { ignores: ['dist/**', '.astro/**', 'node_modules/**', '.wrangler/**'] },
+  {
+    ignores: [
+      'dist/**',
+      '.astro/**',
+      'node_modules/**',
+      '.wrangler/**',
+      'memo/**',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   ...eslintPluginAstro.configs['flat/recommended'],

@@ -28,6 +28,7 @@ Rules to follow in day-to-day development. See [CLAUDE.md](../../CLAUDE.md) for 
 - `pnpm qa [slug ...]` (`scripts/qa.mjs`) runs eslint/prettier (changed files) → vitest → `astro check` → build → the tool's E2E in one command with minimal output (OK/NG per step, log tail on failure). It builds once and sets `E2E_SKIP_BUILD=1` so the Playwright `webServer` skips its own `pnpm build`; without that variable (e.g. plain `pnpm run test:e2e`, CI) `webServer` still builds first.
 - To test an added/changed tool exhaustively, use the `/qa-test` command. An independent QA subagent (`.claude/agents/tool-qa.md`), separate from the implementing conversation, runs lint / type check / build / Vitest / Playwright, adds any missing tests itself, and reports the results.
 - For code review, use the `/tool-review` command. An independent review subagent (`.claude/agents/tool-reviewer.md`) reports findings only (it doesn't change code), covering correctness, simplicity, convention compliance, static-site constraints, SEO/responsive, and security.
+- When a commit extracts a shared helper or component, or changes the page structure, update `.claude/docs/adding-a-tool.md` (and `CLAUDE.md` if it names the old form) in the same commit or push. Before committing, search `.claude/docs` and `CLAUDE.md` for the old form's identifiers.
 
 ## Commit messages
 

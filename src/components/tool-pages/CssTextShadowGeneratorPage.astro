@@ -1,0 +1,345 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cssTextShadowGeneratorContent } from '../../i18n/tools/css-text-shadow-generator';
+import { TEXT_SHADOW_PRESETS } from '../../lib/tools/css-text-shadow-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cssTextShadowGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="mb-6">
+    <h2 class="mb-2 text-lg font-bold">{t.presetsHeading}</h2>
+    <div class="flex flex-wrap gap-2">
+      {TEXT_SHADOW_PRESETS.map((p) => (
+        <button type="button" data-preset={p.id} class="ui-btn">
+          {t.presetLabels[p.id]}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <h2 class="mb-2 text-lg font-bold">{t.previewHeading}</h2>
+  <div
+    id="ts-preview-container"
+    class="mb-3 flex min-h-40 w-full items-center justify-center overflow-auto rounded-lg border border-gray-300 p-6 dark:border-gray-700"
+  >
+    <div
+      id="ts-preview"
+      class="max-w-full text-center font-bold break-words"
+      data-default-text={t.previewTextDefault}
+    ></div>
+  </div>
+
+  <div class="mb-6 flex flex-wrap items-end gap-3">
+    <label class="min-w-0 flex-1 text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.previewTextLabel}</span>
+      <input
+        id="ts-preview-text"
+        type="text"
+        value={t.previewTextDefault}
+        class="ui-input h-11 w-full px-2 dark:bg-gray-900"
+      />
+    </label>
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.fontSizeLabel}</span>
+      <input
+        id="ts-font-size"
+        type="number"
+        min="12"
+        max="200"
+        value="64"
+        class="ui-input h-11 w-24 px-2 dark:bg-gray-900"
+      />
+    </label>
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.textColorLabel}</span>
+      <input
+        id="ts-text-color"
+        type="color"
+        value="#111827"
+        class="h-11 w-14 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+      />
+    </label>
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.backgroundColorLabel}</span>
+      <input
+        id="ts-bg-color"
+        type="color"
+        value="#f3f4f6"
+        class="h-11 w-14 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+      />
+    </label>
+  </div>
+
+  <div class="mb-6">
+    <h2 class="mb-2 text-lg font-bold">{t.shadowsHeading}</h2>
+    <ul id="ts-shadows-list" class="space-y-3"></ul>
+    <button
+      id="ts-add-shadow-button"
+      type="button"
+      class="ui-btn mt-3 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.addShadowButton}
+    </button>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+      {t.maxShadowsHint}
+    </p>
+  </div>
+
+  <template id="ts-shadow-template">
+    <li
+      data-shadow-row
+      class="rounded-lg border border-gray-300 p-3 dark:border-gray-700"
+    >
+      <div class="flex flex-wrap items-end gap-3">
+        <label class="text-sm text-gray-700 dark:text-gray-300">
+          <span class="mb-1 block">{t.offsetXLabel}</span>
+          <input
+            data-offset-x
+            type="number"
+            min="-100"
+            max="100"
+            class="ui-input h-11 w-20 px-2 dark:bg-gray-900"
+          />
+        </label>
+        <label class="text-sm text-gray-700 dark:text-gray-300">
+          <span class="mb-1 block">{t.offsetYLabel}</span>
+          <input
+            data-offset-y
+            type="number"
+            min="-100"
+            max="100"
+            class="ui-input h-11 w-20 px-2 dark:bg-gray-900"
+          />
+        </label>
+        <label class="text-sm text-gray-700 dark:text-gray-300">
+          <span class="mb-1 block">{t.blurLabel}</span>
+          <input
+            data-blur
+            type="number"
+            min="0"
+            max="100"
+            class="ui-input h-11 w-20 px-2 dark:bg-gray-900"
+          />
+        </label>
+        <label class="text-sm text-gray-700 dark:text-gray-300">
+          <span class="mb-1 block">{t.colorLabel}</span>
+          <input
+            data-color
+            type="color"
+            aria-label={t.colorLabel}
+            class="h-11 w-14 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+          />
+        </label>
+        <button
+          data-remove
+          type="button"
+          class="ui-btn ml-auto shrink-0 px-3 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {t.removeShadowButton}
+        </button>
+      </div>
+    </li>
+  </template>
+
+  <div data-copied={t.copied} data-copy-failed={t.copyFailed}>
+    <label for="ts-css-output" class="ui-label">
+      {t.cssHeading}
+    </label>
+    <div class="flex gap-2">
+      <textarea
+        id="ts-css-output"
+        readonly
+        rows="3"
+        class="ui-input h-24 w-full min-w-0 resize-none bg-gray-50 p-3 font-mono dark:bg-gray-900"
+      ></textarea>
+      <button
+        id="ts-copy-button"
+        type="button"
+        class="ui-btn shrink-0 self-start"
+      >
+        {t.copyButton}
+      </button>
+    </div>
+    <span
+      id="ts-status"
+      class="mt-2 block text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    buildCssDeclaration,
+    buildTextShadowValue,
+    clampBlur,
+    clampOffset,
+    getPreset,
+    MAX_SHADOWS,
+    MIN_SHADOWS,
+    suggestNewShadow,
+    type TextShadowLayer,
+  } from '../../lib/tools/css-text-shadow-generator';
+
+  const shadowsList = document.getElementById('ts-shadows-list')!;
+  const shadowTemplate = document.getElementById(
+    'ts-shadow-template',
+  ) as HTMLTemplateElement;
+  const addShadowButton = document.getElementById(
+    'ts-add-shadow-button',
+  ) as HTMLButtonElement;
+
+  const preview = document.getElementById('ts-preview')!;
+  const previewContainer = document.getElementById('ts-preview-container')!;
+  const previewText = document.getElementById(
+    'ts-preview-text',
+  ) as HTMLInputElement;
+  const fontSizeInput = document.getElementById(
+    'ts-font-size',
+  ) as HTMLInputElement;
+  const textColorInput = document.getElementById(
+    'ts-text-color',
+  ) as HTMLInputElement;
+  const bgColorInput = document.getElementById(
+    'ts-bg-color',
+  ) as HTMLInputElement;
+  const cssOutput = document.getElementById(
+    'ts-css-output',
+  ) as HTMLTextAreaElement;
+  const copyButton = document.getElementById('ts-copy-button')!;
+  const statusEl = document.getElementById('ts-status')!;
+
+  const copyContainer = cssOutput.closest('[data-copied]') as HTMLElement;
+  const copied = copyContainer.dataset.copied ?? '';
+  const copyFailed = copyContainer.dataset.copyFailed ?? '';
+
+  function rows(): HTMLElement[] {
+    return Array.from(
+      shadowsList.querySelectorAll<HTMLElement>('[data-shadow-row]'),
+    );
+  }
+
+  function readLayersFromDom(): TextShadowLayer[] {
+    return rows().map((row) => {
+      const num = (sel: string) =>
+        Number((row.querySelector(sel) as HTMLInputElement).value);
+      const x = num('[data-offset-x]');
+      const y = num('[data-offset-y]');
+      const b = num('[data-blur]');
+      return {
+        offsetX: Number.isFinite(x) ? x : 0,
+        offsetY: Number.isFinite(y) ? y : 0,
+        blur: Number.isFinite(b) ? b : 0,
+        color: (row.querySelector('[data-color]') as HTMLInputElement).value,
+      };
+    });
+  }
+
+  function updateOutputs() {
+    const layers = readLayersFromDom();
+    preview.style.textShadow = buildTextShadowValue(layers);
+    preview.style.color = textColorInput.value;
+    previewContainer.style.backgroundColor = bgColorInput.value;
+    const size = Number(fontSizeInput.value);
+    preview.style.fontSize = `${Number.isFinite(size) && size > 0 ? Math.min(200, Math.max(12, size)) : 64}px`;
+    preview.textContent =
+      previewText.value || preview.dataset.defaultText || '';
+    cssOutput.value = buildCssDeclaration(layers);
+  }
+
+  function updateButtonsState() {
+    const count = rows().length;
+    rows().forEach((row) => {
+      (row.querySelector('[data-remove]') as HTMLButtonElement).disabled =
+        count <= MIN_SHADOWS;
+    });
+    addShadowButton.disabled = count >= MAX_SHADOWS;
+  }
+
+  function addShadowRow(layer: TextShadowLayer) {
+    const row = shadowTemplate.content.firstElementChild!.cloneNode(
+      true,
+    ) as HTMLElement;
+    const xInput = row.querySelector('[data-offset-x]') as HTMLInputElement;
+    const yInput = row.querySelector('[data-offset-y]') as HTMLInputElement;
+    const blurInput = row.querySelector('[data-blur]') as HTMLInputElement;
+    const colorInput = row.querySelector('[data-color]') as HTMLInputElement;
+    const removeButton = row.querySelector(
+      '[data-remove]',
+    ) as HTMLButtonElement;
+
+    xInput.value = String(layer.offsetX);
+    yInput.value = String(layer.offsetY);
+    blurInput.value = String(layer.blur);
+    colorInput.value = layer.color;
+
+    for (const el of [xInput, yInput, blurInput, colorInput]) {
+      el.addEventListener('input', updateOutputs);
+    }
+    xInput.addEventListener('change', () => {
+      xInput.value = String(clampOffset(Number(xInput.value)));
+      updateOutputs();
+    });
+    yInput.addEventListener('change', () => {
+      yInput.value = String(clampOffset(Number(yInput.value)));
+      updateOutputs();
+    });
+    blurInput.addEventListener('change', () => {
+      blurInput.value = String(clampBlur(Number(blurInput.value)));
+      updateOutputs();
+    });
+
+    removeButton.addEventListener('click', () => {
+      if (rows().length <= MIN_SHADOWS) return;
+      row.remove();
+      updateButtonsState();
+      updateOutputs();
+    });
+
+    shadowsList.appendChild(row);
+  }
+
+  addShadowButton.addEventListener('click', () => {
+    const count = rows().length;
+    if (count >= MAX_SHADOWS) return;
+    addShadowRow(suggestNewShadow(count));
+    updateButtonsState();
+    updateOutputs();
+  });
+
+  document.querySelectorAll<HTMLElement>('[data-preset]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const preset = getPreset(btn.dataset.preset ?? '');
+      if (!preset) return;
+      rows().forEach((r) => r.remove());
+      preset.layers.forEach(addShadowRow);
+      textColorInput.value = preset.textColor;
+      bgColorInput.value = preset.backgroundColor;
+      updateButtonsState();
+      updateOutputs();
+    });
+  });
+
+  for (const el of [previewText, fontSizeInput, textColorInput, bgColorInput]) {
+    el.addEventListener('input', updateOutputs);
+  }
+
+  copyButton.addEventListener('click', async () => {
+    if (!cssOutput.value) return;
+    statusEl.textContent = (await copyText(cssOutput.value))
+      ? copied
+      : copyFailed;
+  });
+
+  addShadowRow({ offsetX: 2, offsetY: 2, blur: 4, color: '#000000' });
+  updateButtonsState();
+  updateOutputs();
+</script>

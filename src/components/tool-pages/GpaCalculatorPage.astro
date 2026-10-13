@@ -1,0 +1,416 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { gpaCalculatorContent } from '../../i18n/tools/gpa-calculator';
+import {
+  DEFAULT_SCALE,
+  MAX_CREDITS,
+  SCALES,
+} from '../../lib/tools/gpa-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = gpaCalculatorContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="gpa-root"
+    data-default-scale={DEFAULT_SCALE}
+    data-scale-names={JSON.stringify(t.scaleNames)}
+    data-scale-notes={JSON.stringify(t.scaleNotes)}
+    data-grade-unselected={t.gradeUnselected}
+    data-row-label={t.rowLabel}
+    data-remove-label={t.removeRow}
+    data-max-rows-notice={t.maxRowsNotice}
+    data-ungraded-notice={t.ungradedNotice}
+    data-invalid-notice={t.invalidNotice}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-gpa-label={t.gpaLabel}
+    data-total-credits-label={t.totalCreditsLabel}
+    data-earned-credits-label={t.earnedCreditsLabel}
+    data-earned-yes={t.earnedYes}
+    data-earned-no={t.earnedNo}
+    data-max-credits={String(MAX_CREDITS)}
+  >
+    <div>
+      <label for="gpa-scale" class="ui-label">
+        {t.scaleLabel}
+      </label>
+      <select
+        id="gpa-scale"
+        class="ui-input h-11 w-full max-w-md px-3 dark:bg-gray-900"
+      >
+        {SCALES.map((s) => (
+          <option value={s.id} selected={s.id === DEFAULT_SCALE}>
+            {t.scaleNames[s.id]}
+          </option>
+        ))}
+      </select>
+      <p
+        id="gpa-scale-note"
+        class="mt-2 text-sm text-gray-700 dark:text-gray-300"
+      ></p>
+    </div>
+
+    <h2 class="mt-6 mb-3 text-base font-semibold">{t.coursesHeading}</h2>
+    <div id="gpa-rows" class="space-y-3"></div>
+
+    <div class="mt-4 flex flex-wrap gap-2">
+      <button id="gpa-add-button" type="button" class="ui-btn">
+        {t.addRow}
+      </button>
+      <button id="gpa-clear-button" type="button" class="ui-btn">
+        {t.clearAll}
+      </button>
+    </div>
+    <p
+      id="gpa-max-notice"
+      class="mt-2 hidden text-sm text-amber-800 dark:text-amber-300"
+    ></p>
+
+    <div class="mt-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-base font-semibold">{t.resultHeading}</h2>
+      <p id="gpa-empty" class="text-sm text-gray-700 dark:text-gray-300">
+        {t.emptyResult}
+      </p>
+      <div id="gpa-result" class="hidden" aria-live="polite">
+        <p class="text-sm text-gray-700 dark:text-gray-300">{t.gpaLabel}</p>
+        <p id="gpa-value" class="font-mono text-4xl font-semibold"></p>
+        <dl class="mt-4 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+          <div class="flex justify-between gap-3 border-b border-gray-200 py-1 dark:border-gray-800">
+            <dt>{t.totalCreditsLabel}</dt>
+            <dd id="gpa-total-credits" class="font-mono"></dd>
+          </div>
+          <div class="flex justify-between gap-3 border-b border-gray-200 py-1 dark:border-gray-800">
+            <dt>{t.earnedCreditsLabel}</dt>
+            <dd id="gpa-earned-credits" class="font-mono"></dd>
+          </div>
+          <div class="flex justify-between gap-3 border-b border-gray-200 py-1 dark:border-gray-800">
+            <dt>{t.gradePointsLabel}</dt>
+            <dd id="gpa-grade-points" class="font-mono"></dd>
+          </div>
+          <div class="flex justify-between gap-3 border-b border-gray-200 py-1 dark:border-gray-800">
+            <dt>{t.countedLabel}</dt>
+            <dd id="gpa-counted" class="font-mono"></dd>
+          </div>
+        </dl>
+        <div class="mt-4">
+          <button id="gpa-copy-button" type="button" class="ui-btn">
+            {t.copy}
+          </button>
+        </div>
+      </div>
+      <p
+        id="gpa-ungraded"
+        class="mt-3 hidden rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+      ></p>
+      <p id="gpa-invalid" class="ui-error mt-3 hidden" role="alert"></p>
+      <p
+        id="gpa-status"
+        class="mt-2 min-h-5 text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></p>
+    </div>
+
+    <h2 class="mt-8 mb-3 text-base font-semibold">{t.tableHeading}</h2>
+    <div class="overflow-x-auto" tabindex="0">
+      <table class="w-full max-w-md text-sm">
+        <thead>
+          <tr class="border-b border-gray-300 dark:border-gray-700">
+            <th scope="col" class="py-1 pr-3 text-left font-medium">
+              {t.tableGradeHeading}
+            </th>
+            <th scope="col" class="py-1 pr-3 text-left font-medium">
+              {t.tablePointHeading}
+            </th>
+            <th scope="col" class="py-1 text-left font-medium">
+              {t.tableEarnedHeading}
+            </th>
+          </tr>
+        </thead>
+        <tbody id="gpa-table-body"></tbody>
+      </table>
+    </div>
+
+    <template id="gpa-row-template">
+      <div class="gpa-row rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+        <div class="mb-2 flex items-center justify-between gap-2">
+          <p class="gpa-row-title text-sm font-medium"></p>
+          <button type="button" class="gpa-remove ui-btn min-h-9 px-3">
+            {t.removeRow}
+          </button>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-[1fr_8rem_10rem]">
+          <label class="block">
+            <span class="ui-label">{t.subjectLabel}</span>
+            <input
+              type="text"
+              autocomplete="off"
+              maxlength="60"
+              class="gpa-name ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+              placeholder={t.subjectPlaceholder}
+            />
+          </label>
+          <label class="block">
+            <span class="ui-label">{t.creditsLabel}</span>
+            <input
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              class="gpa-credits ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+              placeholder={t.creditsPlaceholder}
+            />
+          </label>
+          <label class="block">
+            <span class="ui-label">{t.gradeLabel}</span>
+            <select class="gpa-grade ui-input h-11 w-full px-3 dark:bg-gray-900"></select>
+          </label>
+        </div>
+      </div>
+    </template>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { fill } from '../../lib/format-template';
+  import {
+    calculateGpa,
+    DEFAULT_SCALE,
+    formatGpa,
+    formatNumber,
+    getScale,
+    type CourseRow,
+    type ScaleId,
+  } from '../../lib/tools/gpa-calculator';
+
+  const MAX_ROWS = 50;
+  const INITIAL_ROWS = 5;
+
+  const root = document.getElementById('gpa-root')!;
+  const scaleSelect = document.getElementById('gpa-scale') as HTMLSelectElement;
+  const scaleNote = document.getElementById('gpa-scale-note')!;
+  const rowsEl = document.getElementById('gpa-rows')!;
+  const template = document.getElementById(
+    'gpa-row-template',
+  ) as HTMLTemplateElement;
+  const addButton = document.getElementById(
+    'gpa-add-button',
+  ) as HTMLButtonElement;
+  const clearButton = document.getElementById(
+    'gpa-clear-button',
+  ) as HTMLButtonElement;
+  const maxNotice = document.getElementById('gpa-max-notice')!;
+  const emptyEl = document.getElementById('gpa-empty')!;
+  const resultEl = document.getElementById('gpa-result')!;
+  const gpaValue = document.getElementById('gpa-value')!;
+  const totalCreditsEl = document.getElementById('gpa-total-credits')!;
+  const earnedCreditsEl = document.getElementById('gpa-earned-credits')!;
+  const gradePointsEl = document.getElementById('gpa-grade-points')!;
+  const countedEl = document.getElementById('gpa-counted')!;
+  const ungradedEl = document.getElementById('gpa-ungraded')!;
+  const invalidEl = document.getElementById('gpa-invalid')!;
+  const statusEl = document.getElementById('gpa-status')!;
+  const copyButton = document.getElementById(
+    'gpa-copy-button',
+  ) as HTMLButtonElement;
+  const tableBody = document.getElementById('gpa-table-body')!;
+
+  const scaleNames = JSON.parse(root.dataset.scaleNames ?? '{}') as Record<
+    string,
+    string
+  >;
+  const scaleNotes = JSON.parse(root.dataset.scaleNotes ?? '{}') as Record<
+    string,
+    string
+  >;
+
+  function currentScaleId(): ScaleId {
+    return (getScale(scaleSelect.value)?.id ?? DEFAULT_SCALE) as ScaleId;
+  }
+
+  function fillGradeOptions(select: HTMLSelectElement, keep: string) {
+    const scale = getScale(currentScaleId())!;
+    select.textContent = '';
+    const none = document.createElement('option');
+    none.value = '';
+    none.textContent = root.dataset.gradeUnselected ?? '';
+    select.append(none);
+    for (const grade of scale.grades) {
+      const opt = document.createElement('option');
+      opt.value = grade.label;
+      opt.textContent = `${grade.label} (${formatNumber(grade.point, 1)})`;
+      select.append(opt);
+    }
+    select.value = scale.grades.some((x) => x.label === keep) ? keep : '';
+  }
+
+  function rowElements() {
+    return Array.from(rowsEl.querySelectorAll<HTMLElement>('.gpa-row'));
+  }
+
+  function renumber() {
+    rowElements().forEach((row, i) => {
+      const title = fill(root.dataset.rowLabel ?? '', { n: String(i + 1) });
+      row.querySelector('.gpa-row-title')!.textContent = title;
+      row
+        .querySelector('.gpa-remove')!
+        .setAttribute(
+          'aria-label',
+          `${root.dataset.removeLabel ?? ''} (${title})`,
+        );
+    });
+  }
+
+  function addRow() {
+    if (rowElements().length >= MAX_ROWS) {
+      maxNotice.textContent = fill(root.dataset.maxRowsNotice ?? '', {
+        max: String(MAX_ROWS),
+      });
+      maxNotice.classList.remove('hidden');
+      return;
+    }
+    const fragment = template.content.cloneNode(true) as DocumentFragment;
+    const row = fragment.querySelector<HTMLElement>('.gpa-row')!;
+    fillGradeOptions(row.querySelector<HTMLSelectElement>('.gpa-grade')!, '');
+    rowsEl.append(fragment);
+    renumber();
+  }
+
+  function readRows(): CourseRow[] {
+    return rowElements().map((row) => ({
+      name: row.querySelector<HTMLInputElement>('.gpa-name')!.value,
+      credits: row.querySelector<HTMLInputElement>('.gpa-credits')!.value,
+      grade: row.querySelector<HTMLSelectElement>('.gpa-grade')!.value,
+    }));
+  }
+
+  function setHidden(el: HTMLElement, hidden: boolean) {
+    el.classList.toggle('hidden', hidden);
+  }
+
+  function renderTable() {
+    const scale = getScale(currentScaleId())!;
+    tableBody.textContent = '';
+    for (const grade of scale.grades) {
+      const tr = document.createElement('tr');
+      tr.className = 'border-b border-gray-200 dark:border-gray-800';
+      const cells = [
+        grade.label,
+        formatNumber(grade.point, 1),
+        grade.earned
+          ? (root.dataset.earnedYes ?? '')
+          : (root.dataset.earnedNo ?? ''),
+      ];
+      cells.forEach((text, i) => {
+        const td = document.createElement('td');
+        td.className = i < 2 ? 'py-1 pr-3 font-mono' : 'py-1';
+        td.textContent = text;
+        tr.append(td);
+      });
+      tableBody.append(tr);
+    }
+  }
+
+  let lastCopy = '';
+
+  function recalc() {
+    statusEl.textContent = '';
+    const id = currentScaleId();
+    const result = calculateGpa(readRows(), id);
+    const rows = rowElements();
+    result.rows.forEach((r, i) => {
+      const credits = rows[i].querySelector<HTMLInputElement>('.gpa-credits')!;
+      credits.setAttribute(
+        'aria-invalid',
+        r.status === 'invalid-credits' ? 'true' : 'false',
+      );
+    });
+
+    const hasResult = result.gpa !== null;
+    setHidden(emptyEl, hasResult);
+    setHidden(resultEl, !hasResult);
+    if (hasResult) {
+      gpaValue.textContent = formatGpa(result.gpa);
+      totalCreditsEl.textContent = formatNumber(result.totalCredits);
+      earnedCreditsEl.textContent = formatNumber(result.earnedCredits);
+      gradePointsEl.textContent = formatNumber(result.gradePoints, 2);
+      countedEl.textContent = String(result.countedCount);
+      lastCopy = [
+        scaleNames[id] ?? '',
+        `${root.dataset.gpaLabel}: ${formatGpa(result.gpa)}`,
+        `${root.dataset.totalCreditsLabel}: ${formatNumber(result.totalCredits)}`,
+        `${root.dataset.earnedCreditsLabel}: ${formatNumber(result.earnedCredits)}`,
+      ].join('\n');
+    }
+
+    const ungraded = result.ungradedCount > 0;
+    ungradedEl.textContent = ungraded
+      ? fill(root.dataset.ungradedNotice ?? '', {
+          count: String(result.ungradedCount),
+          credits: formatNumber(result.ungradedCredits),
+        })
+      : '';
+    setHidden(ungradedEl, !ungraded);
+
+    const invalid = result.invalidCount > 0;
+    invalidEl.textContent = invalid
+      ? fill(root.dataset.invalidNotice ?? '', {
+          count: String(result.invalidCount),
+        })
+      : '';
+    setHidden(invalidEl, !invalid);
+  }
+
+  function applyScale() {
+    scaleNote.textContent = scaleNotes[currentScaleId()] ?? '';
+    rowElements().forEach((row) => {
+      const select = row.querySelector<HTMLSelectElement>('.gpa-grade')!;
+      fillGradeOptions(select, select.value);
+    });
+    renderTable();
+    recalc();
+  }
+
+  scaleSelect.addEventListener('change', applyScale);
+
+  rowsEl.addEventListener('input', recalc);
+  rowsEl.addEventListener('change', recalc);
+  rowsEl.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement;
+    const button = target.closest<HTMLButtonElement>('.gpa-remove');
+    if (!button) return;
+    button.closest('.gpa-row')?.remove();
+    maxNotice.classList.add('hidden');
+    renumber();
+    recalc();
+  });
+
+  addButton.addEventListener('click', () => {
+    addRow();
+    recalc();
+    rowElements().at(-1)?.querySelector<HTMLInputElement>('.gpa-name')?.focus();
+  });
+
+  clearButton.addEventListener('click', () => {
+    rowsEl.textContent = '';
+    maxNotice.classList.add('hidden');
+    for (let i = 0; i < INITIAL_ROWS; i++) addRow();
+    recalc();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!lastCopy) return;
+    statusEl.textContent = (await copyText(lastCopy))
+      ? (root.dataset.copied ?? '')
+      : (root.dataset.copyFailed ?? '');
+  });
+
+  for (let i = 0; i < INITIAL_ROWS; i++) addRow();
+  applyScale();
+</script>

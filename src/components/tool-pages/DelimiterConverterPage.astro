@@ -1,0 +1,273 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { delimiterConverterContent } from '../../i18n/tools/delimiter-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = delimiterConverterContent[locale];
+
+const delimiterOptions = [
+  { value: 'newline', label: t.delimNewline },
+  { value: 'comma', label: t.delimComma },
+  { value: 'commaSpace', label: t.delimCommaSpace },
+  { value: 'tab', label: t.delimTab },
+  { value: 'space', label: t.delimSpace },
+  { value: 'semicolon', label: t.delimSemicolon },
+  { value: 'pipe', label: t.delimPipe },
+  { value: 'custom', label: t.delimCustom },
+];
+// 入力側は「カンマ+スペース」を選ぶ意味がない（カンマと同じ）ため除く
+const inputOptions = delimiterOptions.filter((o) => o.value !== 'commaSpace');
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="dc-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="dc-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      class="ui-input h-52 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-4">
+    <div>
+      <label for="dc-input-delimiter" class="ui-label">
+        {t.inputDelimiterLabel}
+      </label>
+      <select
+        id="dc-input-delimiter"
+        class="ui-input h-11 px-3 dark:bg-gray-900"
+      >
+        {inputOptions.map((o) => (
+          <option value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </div>
+    <div id="dc-input-custom-wrap" class="hidden">
+      <label for="dc-input-custom" class="ui-label">
+        {t.inputCustomLabel}
+      </label>
+      <input
+        id="dc-input-custom"
+        type="text"
+        class="ui-input h-11 w-40 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.customPlaceholder}
+        spellcheck="false"
+        autocomplete="off"
+      />
+    </div>
+
+    <button id="dc-swap-button" type="button" class="ui-btn">
+      {t.swapButton}
+    </button>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-4">
+    <div>
+      <label for="dc-output-delimiter" class="ui-label">
+        {t.outputDelimiterLabel}
+      </label>
+      <select
+        id="dc-output-delimiter"
+        class="ui-input h-11 px-3 dark:bg-gray-900"
+      >
+        {delimiterOptions.map((o) => (
+          <option value={o.value} selected={o.value === 'comma'}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div id="dc-output-custom-wrap" class="hidden">
+      <label for="dc-output-custom" class="ui-label">
+        {t.outputCustomLabel}
+      </label>
+      <input
+        id="dc-output-custom"
+        type="text"
+        class="ui-input h-11 w-40 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.customPlaceholder}
+        spellcheck="false"
+        autocomplete="off"
+      />
+    </div>
+    <div>
+      <label for="dc-quote" class="ui-label">
+        {t.quoteLabel}
+      </label>
+      <select id="dc-quote" class="ui-input h-11 px-3 dark:bg-gray-900">
+        <option value="none">{t.quoteNone}</option>
+        <option value="double">{t.quoteDouble}</option>
+        <option value="single">{t.quoteSingle}</option>
+        <option value="backtick">{t.quoteBacktick}</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+    <label class="flex min-h-11 items-center gap-2">
+      <input id="dc-trim" type="checkbox" class="h-4 w-4" checked />
+      <span class="text-gray-700 dark:text-gray-300">{t.trimLabel}</span>
+    </label>
+    <label class="flex min-h-11 items-center gap-2">
+      <input id="dc-remove-empty" type="checkbox" class="h-4 w-4" checked />
+      <span class="text-gray-700 dark:text-gray-300">{t.removeEmptyLabel}</span>
+    </label>
+    <label class="flex min-h-11 items-center gap-2">
+      <input id="dc-dedupe" type="checkbox" class="h-4 w-4" />
+      <span class="text-gray-700 dark:text-gray-300">{t.dedupeLabel}</span>
+    </label>
+    <label class="flex min-h-11 items-center gap-2">
+      <input id="dc-strip-quotes" type="checkbox" class="h-4 w-4" />
+      <span class="text-gray-700 dark:text-gray-300">{t.stripQuotesLabel}</span>
+    </label>
+  </div>
+
+  <div class="mt-4">
+    <div class="mb-1 flex items-center justify-between">
+      <label
+        for="dc-output"
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.outputLabel}
+      </label>
+      <span
+        id="dc-count"
+        data-count-template={t.countTemplate}
+        class="text-xs text-gray-500 dark:text-gray-400"
+      ></span>
+    </div>
+    <textarea
+      id="dc-output"
+      readonly
+      class="ui-input h-52 w-full bg-gray-50 p-4 font-mono whitespace-pre-wrap dark:bg-gray-900"
+    ></textarea>
+  </div>
+
+  <div class="mt-3 flex flex-wrap items-center gap-3">
+    <button
+      id="dc-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="dc-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { fill } from '../../lib/format-template';
+  import {
+    convertDelimited,
+    type DelimiterKind,
+    type QuoteKind,
+  } from '../../lib/tools/delimiter-converter';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const input = $<HTMLTextAreaElement>('dc-input');
+  const inputDelimiter = $<HTMLSelectElement>('dc-input-delimiter');
+  const inputCustom = $<HTMLInputElement>('dc-input-custom');
+  const inputCustomWrap = $<HTMLDivElement>('dc-input-custom-wrap');
+  const outputDelimiter = $<HTMLSelectElement>('dc-output-delimiter');
+  const outputCustom = $<HTMLInputElement>('dc-output-custom');
+  const outputCustomWrap = $<HTMLDivElement>('dc-output-custom-wrap');
+  const quoteSelect = $<HTMLSelectElement>('dc-quote');
+  const trim = $<HTMLInputElement>('dc-trim');
+  const removeEmpty = $<HTMLInputElement>('dc-remove-empty');
+  const dedupe = $<HTMLInputElement>('dc-dedupe');
+  const stripQuotes = $<HTMLInputElement>('dc-strip-quotes');
+  const swapButton = $<HTMLButtonElement>('dc-swap-button');
+  const copyButton = $<HTMLButtonElement>('dc-copy-button');
+  const statusEl = $<HTMLSpanElement>('dc-status');
+  const countEl = $<HTMLSpanElement>('dc-count');
+  const output = $<HTMLTextAreaElement>('dc-output');
+
+  const countTemplate = countEl.dataset.countTemplate ?? '{count}';
+
+  function process() {
+    statusEl.textContent = '';
+    inputCustomWrap.classList.toggle(
+      'hidden',
+      inputDelimiter.value !== 'custom',
+    );
+    outputCustomWrap.classList.toggle(
+      'hidden',
+      outputDelimiter.value !== 'custom',
+    );
+
+    const result = convertDelimited(input.value, {
+      inputDelimiter: inputDelimiter.value as DelimiterKind,
+      inputCustom: inputCustom.value,
+      outputDelimiter: outputDelimiter.value as DelimiterKind,
+      outputCustom: outputCustom.value,
+      trim: trim.checked,
+      removeEmpty: removeEmpty.checked,
+      dedupe: dedupe.checked,
+      stripQuotes: stripQuotes.checked,
+      quote: quoteSelect.value as QuoteKind,
+    });
+
+    output.value = result.output;
+    countEl.textContent = fill(countTemplate, {
+      count: String(result.items.length),
+    });
+  }
+
+  onTextInput(input, process);
+  for (const el of [
+    inputDelimiter,
+    outputDelimiter,
+    quoteSelect,
+    trim,
+    removeEmpty,
+    dedupe,
+    stripQuotes,
+  ]) {
+    el.addEventListener('change', process);
+  }
+  inputCustom.addEventListener('input', process);
+  outputCustom.addEventListener('input', process);
+
+  swapButton.addEventListener('click', () => {
+    // 入力側に存在しない「カンマ+スペース」は、入れ替え時にカンマへ丸める
+    const nextInput =
+      outputDelimiter.value === 'commaSpace' ? 'comma' : outputDelimiter.value;
+    const nextOutput = inputDelimiter.value;
+    const nextInputCustom = outputCustom.value;
+    outputCustom.value = inputCustom.value;
+    inputCustom.value = nextInputCustom;
+    inputDelimiter.value = nextInput;
+    outputDelimiter.value = nextOutput;
+    process();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  process();
+</script>

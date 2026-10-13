@@ -1,0 +1,440 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { anniversaryCalculatorContent } from '../../i18n/tools/anniversary-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = anniversaryCalculatorContent[locale];
+
+const kinds = [
+  { id: 'days', label: t.kindDays },
+  { id: 'months', label: t.kindMonths },
+  { id: 'years', label: t.kindYears },
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="ann"
+    class="space-y-6"
+    data-format={JSON.stringify(t.format)}
+    data-start-hint={t.startEmptyHint}
+    data-event-hint={t.eventEmptyHint}
+    data-next-badge={t.nextBadge}
+    data-error-custom={t.errorCustomDays}
+    data-error-range={t.errorOutOfRange}
+  >
+    <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-semibold">{t.settingsHeading}</h2>
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="ann-start" class="ui-label">
+            {t.startLabel}
+          </label>
+          <input
+            id="ann-start"
+            type="date"
+            min="0001-01-01"
+            max="9999-12-31"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ann-base" class="ui-label">
+            {t.baseLabel}
+          </label>
+          <input
+            id="ann-base"
+            type="date"
+            min="0001-01-01"
+            max="9999-12-31"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <button id="ann-today" type="button" class="ui-btn">
+          {t.todayButton}
+        </button>
+      </div>
+      <label class="ui-check mt-3">
+        <input id="ann-inclusive" type="checkbox" checked />
+        {t.inclusiveLabel}
+      </label>
+      <div id="ann-leap-field" class="mt-3" hidden>
+        <label for="ann-leap" class="ui-label">
+          {t.leapLabel}
+        </label>
+        <select
+          id="ann-leap"
+          class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
+        >
+          <option value="feb28">{t.leapFeb28}</option>
+          <option value="mar1">{t.leapMar1}</option>
+        </select>
+      </div>
+      <p
+        id="ann-summary"
+        class="mt-4 text-sm font-medium text-gray-800 dark:text-gray-200"
+        aria-live="polite"
+      ></p>
+    </section>
+
+    <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-semibold">{t.listHeading}</h2>
+      <span id="ann-kind-label" class="ui-label">
+        {t.kindLabel}
+      </span>
+      <div
+        id="ann-kind"
+        class="ui-seg flex-wrap"
+        role="group"
+        aria-labelledby="ann-kind-label"
+      >
+        {kinds.map((k, i) => (
+          <button
+            type="button"
+            data-kind={k.id}
+            aria-pressed={i === 0 ? 'true' : 'false'}
+            class="ui-seg-btn"
+          >
+            {k.label}
+          </button>
+        ))}
+      </div>
+      <p
+        id="ann-next"
+        class="mt-3 text-sm text-gray-700 dark:text-gray-300"
+        aria-live="polite"
+      ></p>
+      <div
+        class="mt-3 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700"
+        tabindex="0"
+        role="region"
+        aria-label={t.listHeading}
+      >
+        <table class="w-full min-w-[20rem] text-left text-sm">
+          <thead class="bg-gray-50 dark:bg-gray-900">
+            <tr>
+              <th scope="col" class="px-3 py-2 font-medium">
+                {t.colMilestone}
+              </th>
+              <th scope="col" class="px-3 py-2 font-medium">
+                {t.colDate}
+              </th>
+              <th scope="col" class="px-3 py-2 font-medium">
+                {t.colRemaining}
+              </th>
+            </tr>
+          </thead>
+          <tbody id="ann-rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-semibold">{t.customHeading}</h2>
+      <div class="w-40">
+        <label for="ann-custom" class="ui-label">
+          {t.customLabel}
+        </label>
+        <input
+          id="ann-custom"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          step="1"
+          placeholder={t.customPlaceholder}
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <p
+        id="ann-custom-error"
+        class="ui-error empty:hidden mt-3"
+        role="alert"
+      ></p>
+      <p
+        id="ann-custom-result"
+        class="mt-3 text-lg font-bold"
+        aria-live="polite"
+      ></p>
+    </section>
+
+    <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-semibold">{t.countdownHeading}</h2>
+      <div>
+        <label for="ann-event" class="ui-label">
+          {t.eventLabel}
+        </label>
+        <input
+          id="ann-event"
+          type="date"
+          min="0001-01-01"
+          max="9999-12-31"
+          class="ui-input h-11 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <p
+        id="ann-event-result"
+        class="mt-3 text-lg font-bold"
+        aria-live="polite"
+      ></p>
+      <p
+        id="ann-event-weeks"
+        class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></p>
+    </section>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    buildMilestones,
+    countdownTo,
+    elapsedSince,
+    findNextMilestone,
+    formatISODate,
+    parseISODate,
+    type DateParts,
+    type LeapDayPolicy,
+    type MilestoneKind,
+  } from '../../lib/tools/anniversary-calculator';
+  import { toWeeksAndDays } from '../../lib/tools/date-calculator';
+  import { count, fill } from '../../lib/format-template';
+  import type { AnniversaryFormat } from '../../i18n/tools/anniversary-calculator';
+
+  const root = document.getElementById('ann')!;
+  const format: AnniversaryFormat = JSON.parse(root.dataset.format ?? '{}');
+  const startHint = root.dataset.startHint ?? '';
+  const eventHint = root.dataset.eventHint ?? '';
+  const nextBadge = root.dataset.nextBadge ?? '';
+  const errorCustom = root.dataset.errorCustom ?? '';
+  const errorRange = root.dataset.errorRange ?? '';
+
+  const startInput = document.getElementById('ann-start') as HTMLInputElement;
+  const baseInput = document.getElementById('ann-base') as HTMLInputElement;
+  const todayButton = document.getElementById('ann-today')!;
+  const inclusiveInput = document.getElementById(
+    'ann-inclusive',
+  ) as HTMLInputElement;
+  const leapField = document.getElementById('ann-leap-field')!;
+  const leapSelect = document.getElementById('ann-leap') as HTMLSelectElement;
+  const summaryEl = document.getElementById('ann-summary')!;
+  const kindGroup = document.getElementById('ann-kind')!;
+  const nextEl = document.getElementById('ann-next')!;
+  const rowsEl = document.getElementById('ann-rows')!;
+  const customInput = document.getElementById('ann-custom') as HTMLInputElement;
+  const customError = document.getElementById('ann-custom-error')!;
+  const customResult = document.getElementById('ann-custom-result')!;
+  const eventInput = document.getElementById('ann-event') as HTMLInputElement;
+  const eventResult = document.getElementById('ann-event-result')!;
+  const eventWeeks = document.getElementById('ann-event-weeks')!;
+
+  let kind: MilestoneKind = 'days';
+
+  function localToday(): string {
+    const d = new Date();
+    return formatISODate({
+      year: d.getFullYear(),
+      month: d.getMonth() + 1,
+      day: d.getDate(),
+    });
+  }
+
+  function formatDate(p: DateParts): string {
+    return fill(format.date, {
+      y: String(p.year),
+      m: String(p.month),
+      d: String(p.day),
+      mm: String(p.month).padStart(2, '0'),
+      dd: String(p.day).padStart(2, '0'),
+    });
+  }
+
+  function formatDateWithWeekday(p: DateParts, weekday: number): string {
+    return fill(format.dateWithWeekday, {
+      date: formatDate(p),
+      w: format.weekdayLabels[weekday],
+    });
+  }
+
+  function remainText(daysFromBase: number): string {
+    if (daysFromBase === 0) return format.remainToday;
+    const days = count(format.days, Math.abs(daysFromBase));
+    return fill(daysFromBase > 0 ? format.remainFuture : format.remainPast, {
+      days,
+    });
+  }
+
+  function labelFor(k: MilestoneKind, n: number, inclusive: boolean): string {
+    const tpl =
+      k === 'days'
+        ? inclusive
+          ? format.labelDaysInclusive
+          : format.labelDaysExclusive
+        : k === 'months'
+          ? format.labelMonths
+          : format.labelYears;
+    return fill(tpl, { n: String(n) });
+  }
+
+  function makeCell(tag: 'th' | 'td', text: string, past: boolean) {
+    const cell = document.createElement(tag);
+    cell.className = 'px-3 py-2';
+    if (tag === 'th') {
+      cell.scope = 'row';
+      cell.className += ' font-medium';
+    }
+    if (past && tag === 'td') {
+      cell.className += ' text-gray-600 dark:text-gray-400';
+    }
+    cell.textContent = text;
+    return cell;
+  }
+
+  function render() {
+    const start = parseISODate(startInput.value);
+    const base = parseISODate(baseInput.value);
+    const inclusive = inclusiveInput.checked;
+    leapField.hidden = !(start && start.month === 2 && start.day === 29);
+
+    summaryEl.textContent = '';
+    nextEl.textContent = '';
+    rowsEl.textContent = '';
+    customError.textContent = '';
+    customResult.textContent = '';
+    eventResult.textContent = '';
+    eventWeeks.textContent = '';
+
+    if (!start || !base) {
+      summaryEl.textContent = startHint;
+    } else {
+      const elapsed = elapsedSince(start, base);
+      if (elapsed) {
+        if (elapsed.days === 0) {
+          summaryEl.textContent = format.elapsedToday;
+        } else if (elapsed.dayNumber === null) {
+          summaryEl.textContent = fill(format.beforeStart, {
+            days: count(format.days, Math.abs(elapsed.days)),
+          });
+        } else {
+          summaryEl.textContent = fill(format.elapsed, {
+            days: count(format.days, elapsed.days),
+            n: String(elapsed.dayNumber),
+          });
+        }
+      }
+
+      const options = {
+        inclusive,
+        leapDayPolicy: leapSelect.value as LeapDayPolicy,
+      };
+      const list = buildMilestones(kind, start, base, options);
+      const next = findNextMilestone(list);
+      for (const m of list) {
+        const past = m.daysFromBase < 0;
+        const tr = document.createElement('tr');
+        tr.className = 'border-t border-gray-200 dark:border-gray-700';
+        if (m === next) tr.className += ' bg-blue-50 dark:bg-blue-950/40';
+        const label = labelFor(kind, m.n, inclusive);
+        tr.append(
+          makeCell('th', m === next ? `${label} [${nextBadge}]` : label, false),
+          makeCell('td', formatDateWithWeekday(m.date, m.weekday), past),
+          makeCell('td', remainText(m.daysFromBase), past),
+        );
+        rowsEl.append(tr);
+      }
+      if (next) {
+        const label = labelFor(kind, next.n, inclusive);
+        const date = formatDate(next.date);
+        nextEl.textContent =
+          next.daysFromBase === 0
+            ? fill(format.nextToday, { label, date })
+            : fill(format.nextFuture, {
+                label,
+                date,
+                days: count(format.days, next.daysFromBase),
+              });
+      } else if (list.length > 0) {
+        nextEl.textContent = format.nextNone;
+      }
+
+      // 任意の日数
+      if (customInput.value.trim() !== '') {
+        const n = Number(customInput.value);
+        if (!Number.isInteger(n) || n < 1) {
+          customError.textContent = errorCustom;
+        } else {
+          const [m] = buildMilestones('days', start, base, options, [n]);
+          if (!m) {
+            customError.textContent = errorRange;
+          } else {
+            customResult.textContent = fill(format.custom, {
+              label: labelFor('days', n, inclusive),
+              date: formatDateWithWeekday(m.date, m.weekday),
+              remain: remainText(m.daysFromBase),
+            });
+          }
+        }
+      }
+    }
+
+    // カウントダウン
+    const event = parseISODate(eventInput.value);
+    if (!event) {
+      eventResult.textContent = eventHint;
+      return;
+    }
+    if (!base) return;
+    const cd = countdownTo(base, event);
+    if (!cd) return;
+    const date = formatDateWithWeekday(event, cd.weekday);
+    if (cd.days === 0) {
+      eventResult.textContent = fill(format.countdownToday, { date });
+    } else {
+      const days = count(format.days, Math.abs(cd.days));
+      eventResult.textContent = fill(
+        cd.days > 0 ? format.countdownFuture : format.countdownPast,
+        { date, days },
+      );
+    }
+    if (Math.abs(cd.days) >= 7) {
+      const { weeks, remainderDays } = toWeeksAndDays(Math.abs(cd.days));
+      eventWeeks.textContent = fill(format.weeksAndDays, {
+        weeks: count(format.weeks, weeks),
+        days: count(format.days, remainderDays),
+      });
+    }
+  }
+
+  for (const el of [startInput, baseInput, customInput, eventInput]) {
+    el.addEventListener('input', render);
+  }
+  inclusiveInput.addEventListener('change', render);
+  leapSelect.addEventListener('change', render);
+
+  todayButton.addEventListener('click', () => {
+    baseInput.value = localToday();
+    render();
+  });
+
+  kindGroup.addEventListener('click', (e) => {
+    const button = (e.target as HTMLElement).closest<HTMLButtonElement>(
+      'button[data-kind]',
+    );
+    if (!button) return;
+    kind = button.dataset.kind as MilestoneKind;
+    for (const b of kindGroup.querySelectorAll('button')) {
+      b.setAttribute('aria-pressed', String(b === button));
+    }
+    render();
+  });
+
+  const today = localToday();
+  startInput.value = today;
+  baseInput.value = today;
+  render();
+</script>

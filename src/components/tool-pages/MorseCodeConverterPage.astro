@@ -1,0 +1,638 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { morseCodeConverterContent } from '../../i18n/tools/morse-code-converter';
+import {
+  DEFAULT_FREQUENCY,
+  DEFAULT_WPM,
+  LIGHT_MAX_WPM,
+  MAX_FREQUENCY,
+  MAX_WPM,
+  MIN_FREQUENCY,
+  MIN_WPM,
+} from '../../lib/tools/morse-code-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = morseCodeConverterContent[locale];
+
+const numberClass = 'ui-input h-11 w-full px-3';
+---
+
+<ToolShell t={t}>
+  <section
+    id="morse-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-unsupported={t.unsupportedMessage}
+    data-unknown={t.unknownMessage}
+    data-light-limited={t.lightLimited}
+    data-light-max-wpm={LIGHT_MAX_WPM}
+    data-play-label={t.playLabel}
+    data-stop-label={t.stopLabel}
+    data-playing={t.playingStatus}
+    data-finished={t.finishedStatus}
+    data-nothing-to-play={t.nothingToPlay}
+    data-nothing-selected={t.nothingSelected}
+    data-label-input-encode={t.inputLabelEncode}
+    data-label-input-decode={t.inputLabelDecode}
+    data-label-output-encode={t.outputLabelEncode}
+    data-label-output-decode={t.outputLabelDecode}
+    data-placeholder-international={t.placeholderEncodeInternational}
+    data-placeholder-wabun={t.placeholderEncodeWabun}
+    data-placeholder-decode={t.placeholderDecode}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <div
+        id="morse-mode"
+        class="ui-seg"
+        role="group"
+        aria-label={t.directionLabel}
+      >
+        <button
+          type="button"
+          data-value="encode"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.modeEncode}
+        </button>
+        <button
+          type="button"
+          data-value="decode"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.modeDecode}
+        </button>
+      </div>
+      <button id="morse-swap-button" type="button" class="ui-btn">
+        {t.swapLabel}
+      </button>
+    </div>
+
+    <div class="mt-3 flex flex-wrap gap-x-6 gap-y-3">
+      <div>
+        <span class="ui-label">{t.codeLabel}</span>
+        <div
+          id="morse-code"
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-label={t.codeLabel}
+        >
+          <button
+            type="button"
+            data-value="international"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            {t.codeInternational}
+          </button>
+          <button
+            type="button"
+            data-value="wabun"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.codeWabun}
+          </button>
+        </div>
+      </div>
+      <div data-encode-only>
+        <span class="ui-label">{t.symbolLabel}</span>
+        <div
+          id="morse-symbol"
+          class="ui-seg"
+          role="group"
+          aria-label={t.symbolLabel}
+        >
+          <button
+            type="button"
+            data-value="ascii"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            {t.symbolAscii}
+          </button>
+          <button
+            type="button"
+            data-value="fullwidth"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.symbolFullwidth}
+          </button>
+        </div>
+      </div>
+      <div data-encode-only>
+        <span class="ui-label">{t.separatorLabel}</span>
+        <div
+          id="morse-separator"
+          class="ui-seg"
+          role="group"
+          aria-label={t.separatorLabel}
+        >
+          <button
+            type="button"
+            data-value="slash"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            {t.separatorSlash}
+          </button>
+          <button
+            type="button"
+            data-value="space"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.separatorSpace}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 grid gap-4 lg:grid-cols-2">
+      <div>
+        <label id="morse-input-label" for="morse-input" class="ui-label">
+          {t.inputLabelEncode}
+        </label>
+        <textarea
+          id="morse-input"
+          data-query-target="text"
+          data-sample={t.sampleText}
+          class="ui-input h-48 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.placeholderEncodeInternational}
+          spellcheck="false"
+          autocapitalize="off"
+          autocomplete="off"
+        ></textarea>
+      </div>
+      <div>
+        <label id="morse-output-label" for="morse-output" class="ui-label">
+          {t.outputLabelEncode}
+        </label>
+        <textarea
+          id="morse-output"
+          readonly
+          class="ui-input h-48 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button id="morse-copy-button" type="button" class="ui-btn">
+        {t.copy}
+      </button>
+      <span
+        id="morse-status"
+        class="text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+    <p
+      id="morse-warning"
+      role="status"
+      class="mt-2 text-sm text-amber-800 dark:text-amber-300"
+    ></p>
+
+    <h2 class="mt-8 mb-2 text-lg font-bold">{t.playHeading}</h2>
+    <p class="mb-3 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
+      {t.playHint}
+    </p>
+
+    <div class="grid max-w-xl gap-4 sm:grid-cols-2">
+      <div>
+        <label for="morse-wpm" class="ui-label">
+          {t.wpmLabel}
+        </label>
+        <input
+          id="morse-wpm"
+          type="number"
+          inputmode="numeric"
+          min={MIN_WPM}
+          max={MAX_WPM}
+          step="1"
+          value={DEFAULT_WPM}
+          class={numberClass}
+        />
+      </div>
+      <div>
+        <label for="morse-frequency" class="ui-label">
+          {t.frequencyLabel}
+        </label>
+        <input
+          id="morse-frequency"
+          type="number"
+          inputmode="numeric"
+          min={MIN_FREQUENCY}
+          max={MAX_FREQUENCY}
+          step="10"
+          value={DEFAULT_FREQUENCY}
+          class={numberClass}
+        />
+      </div>
+    </div>
+
+    <div class="mt-4 max-w-xl">
+      <label for="morse-volume" class="ui-label">
+        {t.volumeLabel}: <span id="morse-volume-value">50</span>%
+      </label>
+      <input
+        id="morse-volume"
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value="50"
+        class="w-full"
+      />
+    </div>
+
+    <div class="mt-3 flex flex-wrap gap-x-6">
+      <label class="ui-check">
+        <input id="morse-use-sound" type="checkbox" checked />
+        {t.useSoundLabel}
+      </label>
+      <label class="ui-check">
+        <input id="morse-use-light" type="checkbox" />
+        {t.useLightLabel}
+      </label>
+    </div>
+    <p class="max-w-2xl text-sm text-amber-800 dark:text-amber-300">
+      {t.lightWarning}
+    </p>
+    <p
+      id="morse-reduced-motion"
+      class="mt-1 max-w-2xl text-sm text-gray-700 dark:text-gray-300"
+      hidden
+    >
+      {t.reducedMotion}
+    </p>
+
+    <div
+      id="morse-lamp"
+      role="img"
+      aria-label={t.lampLabel}
+      data-on="false"
+      hidden
+      class="mt-4 h-20 w-full max-w-xs rounded-lg border border-gray-300 bg-gray-200 data-[on=true]:bg-yellow-300 dark:border-gray-700 dark:bg-gray-800 dark:data-[on=true]:bg-yellow-300"
+    ></div>
+
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <button
+        id="morse-play-button"
+        type="button"
+        class="ui-btn ui-btn-primary h-12 w-full max-w-xs"
+        aria-pressed="false"
+      >
+        {t.playLabel}
+      </button>
+    </div>
+    <p
+      id="morse-play-status"
+      role="status"
+      class="mt-2 min-h-5 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { fill } from '../../lib/format-template';
+  import { volumeToGain } from '../../lib/tools/speaker-tester';
+  import {
+    buildTimeline,
+    clampFrequency,
+    clampWpm,
+    decodeMorse,
+    effectiveWpm,
+    encodeMorse,
+    formatMorse,
+    timelineSeconds,
+    unitSeconds,
+    type MorseCodeType,
+    type MorseSegment,
+    type MorseSymbolStyle,
+    type WordSeparator,
+  } from '../../lib/tools/morse-code-converter';
+
+  const root = document.getElementById('morse-root')!;
+  const d = root.dataset;
+  const input = document.getElementById('morse-input') as HTMLTextAreaElement;
+  const output = document.getElementById('morse-output') as HTMLTextAreaElement;
+  const inputLabel = document.getElementById('morse-input-label')!;
+  const outputLabel = document.getElementById('morse-output-label')!;
+  const copyButton = document.getElementById(
+    'morse-copy-button',
+  ) as HTMLButtonElement;
+  const swapButton = document.getElementById(
+    'morse-swap-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('morse-status')!;
+  const warning = document.getElementById('morse-warning')!;
+  const wpmInput = document.getElementById('morse-wpm') as HTMLInputElement;
+  const frequencyInput = document.getElementById(
+    'morse-frequency',
+  ) as HTMLInputElement;
+  const volume = document.getElementById('morse-volume') as HTMLInputElement;
+  const volumeValue = document.getElementById('morse-volume-value')!;
+  const useSound = document.getElementById(
+    'morse-use-sound',
+  ) as HTMLInputElement;
+  const useLight = document.getElementById(
+    'morse-use-light',
+  ) as HTMLInputElement;
+  const reducedNote = document.getElementById('morse-reduced-motion')!;
+  const lamp = document.getElementById('morse-lamp')!;
+  const playButton = document.getElementById(
+    'morse-play-button',
+  ) as HTMLButtonElement;
+  const playStatus = document.getElementById('morse-play-status')!;
+
+  const state = {
+    mode: 'encode' as 'encode' | 'decode',
+    code: 'international' as MorseCodeType,
+    symbol: 'ascii' as MorseSymbolStyle,
+    separator: 'slash' as WordSeparator,
+  };
+
+  /** 再生に使う符号（`.` と `-`）。読み上げ元がない場合は空 */
+  let playSource = '';
+
+  function convert() {
+    statusEl.textContent = '';
+    if (state.mode === 'encode') {
+      const result = encodeMorse(input.value, {
+        code: state.code,
+        wordSeparator: state.separator,
+      });
+      output.value = formatMorse(result.morse, state.symbol);
+      playSource = result.morse;
+      warning.textContent =
+        result.unsupported.length > 0
+          ? fill(d.unsupported!, { chars: result.unsupported.join(' ') })
+          : '';
+    } else {
+      const result = decodeMorse(input.value, state.code);
+      output.value = result.text;
+      playSource = input.value;
+      warning.textContent =
+        result.unknown.length > 0
+          ? fill(d.unknown!, { codes: result.unknown.join(' ') })
+          : '';
+    }
+  }
+
+  function updateLabels() {
+    const encode = state.mode === 'encode';
+    inputLabel.textContent = encode ? d.labelInputEncode! : d.labelInputDecode!;
+    outputLabel.textContent = encode
+      ? d.labelOutputEncode!
+      : d.labelOutputDecode!;
+    input.placeholder = encode
+      ? state.code === 'wabun'
+        ? d.placeholderWabun!
+        : d.placeholderInternational!
+      : d.placeholderDecode!;
+    document
+      .querySelectorAll<HTMLElement>('[data-encode-only]')
+      .forEach((el) => {
+        el.classList.toggle('hidden', !encode);
+      });
+  }
+
+  function setPressed(id: string, value: string) {
+    document
+      .querySelectorAll<HTMLButtonElement>(`#${id} [data-value]`)
+      .forEach((b) => {
+        b.setAttribute('aria-pressed', String(b.dataset.value === value));
+      });
+  }
+
+  function bindGroup(id: string, apply: (value: string) => void) {
+    document
+      .querySelectorAll<HTMLButtonElement>(`#${id} [data-value]`)
+      .forEach((button) => {
+        button.addEventListener('click', () => {
+          apply(button.dataset.value ?? '');
+          setPressed(id, button.dataset.value ?? '');
+          updateLabels();
+          convert();
+        });
+      });
+  }
+
+  bindGroup('morse-mode', (v) => (state.mode = v as typeof state.mode));
+  bindGroup('morse-code', (v) => (state.code = v as MorseCodeType));
+  bindGroup('morse-symbol', (v) => (state.symbol = v as MorseSymbolStyle));
+  bindGroup('morse-separator', (v) => (state.separator = v as WordSeparator));
+
+  swapButton.addEventListener('click', () => {
+    const result = output.value;
+    state.mode = state.mode === 'encode' ? 'decode' : 'encode';
+    setPressed('morse-mode', state.mode);
+    input.value = result;
+    updateLabels();
+    convert();
+  });
+
+  onTextInput(input, convert);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+  });
+
+  // ---- 再生（音・光） ----
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  function applyReducedMotion() {
+    if (reducedMotion.matches) {
+      useLight.checked = false;
+      useLight.disabled = true;
+      reducedNote.hidden = false;
+    } else {
+      useLight.disabled = false;
+      reducedNote.hidden = true;
+    }
+    updateLamp();
+  }
+  function lightEnabled(): boolean {
+    return useLight.checked && !reducedMotion.matches;
+  }
+  function updateLamp() {
+    lamp.hidden = !lightEnabled();
+  }
+
+  let context: AudioContext | null = null;
+  let master: GainNode | null = null;
+  let oscillator: OscillatorNode | null = null;
+  let timer = 0;
+  let playing = false;
+
+  function ensureContext(): AudioContext {
+    if (!context) {
+      context = new AudioContext();
+      master = context.createGain();
+      master.connect(context.destination);
+    }
+    master!.gain.value = volumeToGain(Number(volume.value));
+    if (context.state === 'suspended') void context.resume();
+    return context;
+  }
+
+  function setLamp(on: boolean) {
+    lamp.dataset.on = String(on);
+  }
+
+  function showPlaying() {
+    playButton.textContent = playing ? d.stopLabel! : d.playLabel!;
+    playButton.setAttribute('aria-pressed', String(playing));
+  }
+
+  function stop(message = '') {
+    playing = false;
+    window.clearInterval(timer);
+    if (oscillator) {
+      try {
+        oscillator.stop();
+      } catch {
+        // すでに停止している場合は無視する
+      }
+      oscillator.disconnect();
+      oscillator = null;
+    }
+    setLamp(false);
+    playStatus.textContent = message;
+    showPlaying();
+  }
+
+  function scheduleSound(
+    ctx: AudioContext,
+    segments: MorseSegment[],
+    unit: number,
+    startAt: number,
+    frequency: number,
+  ) {
+    const osc = ctx.createOscillator();
+    const env = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = frequency;
+    env.gain.setValueAtTime(0, startAt);
+    let t = startAt;
+    for (const segment of segments) {
+      const length = segment.units * unit;
+      if (segment.on) {
+        // クリック音（プチ音）を避けるため、立ち上がり・立ち下がりをなだらかにする
+        const ramp = Math.min(0.005, length / 4);
+        env.gain.setValueAtTime(0, t);
+        env.gain.linearRampToValueAtTime(1, t + ramp);
+        env.gain.setValueAtTime(1, t + length - ramp);
+        env.gain.linearRampToValueAtTime(0, t + length);
+      }
+      t += length;
+    }
+    osc.connect(env).connect(master!);
+    osc.start(startAt);
+    osc.stop(t + 0.05);
+    oscillator = osc;
+  }
+
+  function play() {
+    const segments = buildTimeline(playSource);
+    if (segments.length === 0) {
+      playStatus.textContent = d.nothingToPlay!;
+      return;
+    }
+    const sound = useSound.checked;
+    const light = lightEnabled();
+    if (!sound && !light) {
+      playStatus.textContent = d.nothingSelected!;
+      return;
+    }
+
+    const requested = clampWpm(Number(wpmInput.value));
+    const wpm = effectiveWpm(requested, light);
+    const unit = unitSeconds(wpm);
+    const total = timelineSeconds(segments, wpm);
+    const lead = 0.06;
+
+    playing = true;
+    const limited = wpm < requested;
+    playStatus.textContent =
+      d.playing! +
+      (limited ? ` ${fill(d.lightLimited!, { wpm: String(wpm) })}` : '');
+    showPlaying();
+
+    if (sound) {
+      const ctx = ensureContext();
+      scheduleSound(
+        ctx,
+        segments,
+        unit,
+        ctx.currentTime + lead,
+        clampFrequency(Number(frequencyInput.value)),
+      );
+    }
+
+    const startedAt = performance.now() + lead * 1000;
+    let index = 0;
+    let segmentEnd = segments[0].units * unit;
+    timer = window.setInterval(() => {
+      const elapsed = (performance.now() - startedAt) / 1000;
+      if (elapsed >= total) {
+        stop(d.finished!);
+        return;
+      }
+      if (elapsed < 0) return;
+      while (elapsed >= segmentEnd && index < segments.length - 1) {
+        index++;
+        segmentEnd += segments[index].units * unit;
+      }
+      setLamp(light && segments[index].on);
+    }, 20);
+  }
+
+  playButton.addEventListener('click', () => {
+    if (playing) stop();
+    else play();
+  });
+  useLight.addEventListener('change', updateLamp);
+  reducedMotion.addEventListener('change', applyReducedMotion);
+
+  const clampInputs = () => {
+    wpmInput.value = String(clampWpm(Number(wpmInput.value)));
+    frequencyInput.value = String(clampFrequency(Number(frequencyInput.value)));
+  };
+  wpmInput.addEventListener('change', clampInputs);
+  frequencyInput.addEventListener('change', clampInputs);
+  volume.addEventListener('input', () => {
+    volumeValue.textContent = volume.value;
+    if (context && master) {
+      master.gain.setTargetAtTime(
+        volumeToGain(Number(volume.value)),
+        context.currentTime,
+        0.02,
+      );
+    }
+  });
+
+  // 他のタブへ移ったら止める（裏のタブはタイマーが遅れて符号がずれるため）
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && playing) stop();
+  });
+  window.addEventListener('pagehide', () => {
+    if (playing) stop();
+  });
+
+  volumeValue.textContent = volume.value;
+  applyReducedMotion();
+  updateLabels();
+  convert();
+</script>

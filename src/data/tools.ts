@@ -4371,7 +4371,7 @@ export const tools: Tool[] = [
     category: 'dev',
     addedAt: '2026-10-04',
     updatedAt: '2026-10-04',
-    related: ['curl-converter', 'jwt-decoder', 'meta-tag-generator'],
+    related: ['curl-converter', 'jwt-decoder', 'http-status-codes'],
     sensitive: true,
     translations: {
       ja: {
@@ -5634,7 +5634,7 @@ export const tools: Tool[] = [
     category: 'file',
     addedAt: '2026-10-10',
     updatedAt: '2026-10-10',
-    related: ['file-hash-calculator', 'zip-tool', 'encoding-converter'],
+    related: ['file-hash-calculator', 'zip-tool', 'mime-type-lookup'],
     sensitive: true,
     translations: {
       ja: {
@@ -6164,6 +6164,736 @@ export const tools: Tool[] = [
           'arcade game',
           'browser game',
           'retro game',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'delimiter-converter',
+    category: 'text',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['text-list-tools', 'text-replace-tools', 'csv-json-converter'],
+    translations: {
+      ja: {
+        name: '改行⇔カンマ・区切り文字変換',
+        description:
+          '改行区切りとカンマ・タブ・スペース等の区切りを相互変換。空要素・重複の削除や引用符の付与にも対応。',
+        keywords: [
+          '改行 カンマ 変換',
+          '改行 カンマ区切り',
+          'カンマ区切り 改行',
+          '区切り文字 変換',
+          'デリミタ',
+          'タブ区切り',
+          'CSV 変換',
+          '引用符 付与',
+        ],
+      },
+      en: {
+        name: 'Newline to Comma & Delimiter Converter',
+        description:
+          'Convert between newline, comma, tab, space, and custom delimiters. Trim, dedupe, and quote items.',
+        keywords: [
+          'newline to comma',
+          'comma to newline',
+          'delimiter converter',
+          'list to comma separated',
+          'tab separated',
+          'add quotes to list',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'morse-code-converter',
+    category: 'text',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['romaji-kana-converter', 'metronome-bpm', 'classical-cipher'],
+    translations: {
+      ja: {
+        name: 'モールス信号変換',
+        description:
+          '文字とモールス信号を双方向に変換します。英数字の欧文と、カタカナ・濁点・長音を含む和文に対応し、速度（WPM）と音の高さを決めて音や光で再生できます。',
+        keywords: [
+          'モールス',
+          'モールス符号',
+          '和文モールス',
+          '欧文モールス',
+          'SOS',
+          'モールス信号 変換',
+          '光 音 再生',
+          'WPM',
+        ],
+      },
+      en: {
+        name: 'Morse Code Translator',
+        description:
+          'Translate text to Morse code and back, including Japanese Wabun kana. Play it as sound or a light flash at a chosen speed (WPM) and tone.',
+        keywords: [
+          'morse code',
+          'morse translator',
+          'wabun',
+          'japanese morse',
+          'SOS',
+          'text to morse',
+          'morse to text',
+          'morse audio',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'classical-cipher',
+    category: 'encode',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['crypto-encryptor', 'base64', 'morse-code-converter'],
+    translations: {
+      ja: {
+        name: '古典暗号変換（シーザー・ROT13）',
+        description:
+          'シーザー暗号・ROT13・ROT47・ヴィジュネル暗号・アトバシュ暗号で暗号化・復号。シーザー暗号は全25シフトの総当たり解読も可能。',
+        keywords: [
+          'シーザー暗号',
+          'ROT13',
+          'ROT47',
+          'ヴィジュネル暗号',
+          'アトバシュ暗号',
+          '総当たり',
+        ],
+      },
+      en: {
+        name: 'Classical Cipher Tool (Caesar, ROT13)',
+        description:
+          'Encrypt and decrypt with Caesar, ROT13, ROT47, Vigenere, or Atbash. Includes a brute-force list of all 25 Caesar shifts.',
+        keywords: [
+          'caesar cipher',
+          'ROT13',
+          'ROT47',
+          'vigenere cipher',
+          'atbash cipher',
+          'brute force',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'roman-numeral-converter',
+    category: 'calc',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['base-converter', 'kanji-number-converter', 'unit-converter'],
+    translations: {
+      ja: {
+        name: 'ローマ数字⇔算用数字変換',
+        description:
+          '算用数字（1〜3999）とローマ数字を相互に変換します。IIII・VX などの誤った表記には正規形を示し、Unicodeローマ数字・小文字出力や1〜20・西暦年の一覧にも対応。',
+        keywords: [
+          'ローマ数字',
+          'ローマ数字変換',
+          '算用数字',
+          'アラビア数字',
+          'Ⅻ',
+          '章番号',
+          '時計',
+        ],
+      },
+      en: {
+        name: 'Roman Numeral Converter',
+        description:
+          'Convert numbers 1–3999 to Roman numerals and back. Non-standard forms like IIII are flagged with the standard form, with lowercase and Unicode (Ⅻ) output and a quick-reference table.',
+        keywords: [
+          'roman numerals',
+          'roman numeral converter',
+          'arabic numbers',
+          'number to roman',
+          'roman to number',
+          'MCMXCIV',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'prime-factorization',
+    category: 'calc',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['ratio-calculator', 'combination-calculator', 'base-converter'],
+    translations: {
+      ja: {
+        name: '素因数分解・最大公約数・最小公倍数計算',
+        keywords: [
+          '素因数分解',
+          '最大公約数',
+          '最小公倍数',
+          'GCD',
+          'LCM',
+          '約数',
+          '素数判定',
+        ],
+        description:
+          '整数を素因数分解し、約数の一覧・個数・総和と素数判定を表示します。複数の整数の最大公約数・最小公倍数も計算でき、巨大な整数（BigInt）にも対応します。',
+      },
+      en: {
+        name: 'Prime Factorization, GCD & LCM Calculator',
+        keywords: [
+          'prime factorization',
+          'prime factors',
+          'GCD',
+          'LCM',
+          'greatest common divisor',
+          'least common multiple',
+          'divisors',
+          'prime checker',
+        ],
+        description:
+          'Factor an integer into primes, list its divisors with their count and sum, and check primality. Also finds the GCD and LCM of several integers, with BigInt support.',
+      },
+    },
+  },
+  {
+    slug: 'combination-calculator',
+    category: 'calc',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: [
+      'gacha-calculator',
+      'statistics-calculator',
+      'prime-factorization',
+    ],
+    translations: {
+      ja: {
+        name: '順列・組み合わせ計算',
+        description:
+          'nPr（順列）・nCr（組み合わせ）・階乗・重複順列・重複組合せを、巨大な値も全桁正確に計算します。',
+        keywords: [
+          '順列',
+          '組み合わせ',
+          '階乗',
+          'nPr',
+          'nCr',
+          '重複組合せ',
+          '場合の数',
+          'コンビネーション',
+        ],
+      },
+      en: {
+        name: 'Permutation & Combination Calculator',
+        description:
+          'Calculate nPr, nCr, factorials and repetition variants exactly, with every digit shown even for huge values.',
+        keywords: [
+          'permutation',
+          'combination',
+          'factorial',
+          'nPr',
+          'nCr',
+          'binomial coefficient',
+          'combinatorics',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'gpa-calculator',
+    category: 'calc',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: [
+      'statistics-calculator',
+      'scholarship-repayment-simulator',
+      'split-bill-calculator',
+    ],
+    translations: {
+      ja: {
+        name: 'GPA計算ツール',
+        description:
+          '科目ごとの単位数と評価からGPAを計算。日本の大学（S・A・B・C・D）、4.0・4.3スケールに対応。',
+        keywords: [
+          'GPA',
+          'GPA計算',
+          '成績',
+          '成績評価',
+          '単位',
+          '大学',
+          'グレードポイント',
+          '4.0',
+        ],
+      },
+      en: {
+        name: 'GPA Calculator',
+        description:
+          'Calculate GPA from course credits and grades. Supports 4.0, 4.3 and Japanese university scales.',
+        keywords: [
+          'gpa',
+          'grade point average',
+          'grades',
+          'credits',
+          'college',
+          'university',
+          '4.0 scale',
+          '4.3 scale',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'screen-size-calculator',
+    category: 'calc',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['aspect-ratio-calculator', 'unit-converter', 'viewport-checker'],
+    translations: {
+      ja: {
+        name: '画面サイズ計算機',
+        description:
+          'モニター・テレビの対角インチと縦横比から幅・高さ（cm）、PPI、ドットピッチ、視聴距離の目安を計算。cmからインチへの逆算にも対応',
+        keywords: [
+          '画面サイズ',
+          'インチ cm 変換',
+          'PPI',
+          'ドットピッチ',
+          '画素密度',
+          'モニター サイズ',
+          '視聴距離',
+          '解像度',
+        ],
+      },
+      en: {
+        name: 'Screen Size Calculator',
+        description:
+          'Convert a screen diagonal in inches to width and height in cm, and get PPI, dot pitch and a viewing distance estimate. Works backwards from cm too.',
+        keywords: [
+          'screen size',
+          'inch to cm',
+          'PPI',
+          'pixel density',
+          'dot pitch',
+          'monitor size',
+          'diagonal',
+          'viewing distance',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'birthday-info',
+    category: 'datetime',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['age-calculator', 'school-grade-table', 'japanese-era-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '誕生日情報（干支・星座・誕生石）',
+        description:
+          '生年月日から干支・星座・誕生石・誕生花・生まれた曜日・年男年女の年を調べます。',
+        keywords: [
+          '干支',
+          '星座',
+          '誕生石',
+          '誕生花',
+          '年男',
+          '年女',
+          '十二支',
+          '生まれた曜日',
+        ],
+      },
+      en: {
+        name: 'Birthday Info (Zodiac, Star Sign, Birthstone)',
+        description:
+          'Look up the zodiac animal, star sign, birthstone, birth flower, and day of the week for any date of birth.',
+        keywords: [
+          'chinese zodiac',
+          'eto',
+          'star sign',
+          'horoscope',
+          'birthstone',
+          'birth flower',
+          'day of week born',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'school-grade-table',
+    category: 'datetime',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['age-calculator', 'birthday-info', 'japanese-era-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '学年早見表',
+        keywords: [
+          '学年',
+          '早生まれ',
+          '生まれ年',
+          '卒業年',
+          '入学年',
+          '学年早見表',
+          '年度',
+        ],
+        description:
+          '生年月日から学年・入学年・卒業年を、学年から該当する生まれ年を調べる学年早見表。早生まれ（1月1日〜4月1日生まれ）に対応し、基準年度も変更できます。',
+      },
+      en: {
+        name: 'Japanese School Grade Chart',
+        keywords: [
+          'school grade',
+          'early-born',
+          'hayaumare',
+          'birth year to grade',
+          'graduation year',
+          'Japanese school year',
+        ],
+        description:
+          'Looks up the Japanese school grade, entry year, and graduation year from a date of birth, or the birth dates for a grade, with early-born support and an adjustable school year.',
+      },
+    },
+  },
+  {
+    slug: 'anniversary-calculator',
+    category: 'datetime',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['date-calculator', 'age-calculator', 'business-day-calculator'],
+    translations: {
+      ja: {
+        name: '記念日計算',
+        description:
+          '起点日から100日・1000日記念、○か月・○周年の日付と今日からの残り日数を一覧表示。イベントまでのカウントダウンも。',
+        keywords: [
+          '記念日',
+          '100日記念',
+          '周年',
+          'カウントダウン',
+          'あと何日',
+          '何日目',
+          '付き合って何日',
+          '結婚記念日',
+        ],
+      },
+      en: {
+        name: 'Anniversary Calculator',
+        description:
+          'List 100-day, monthly and yearly anniversary dates from a start date, with days remaining, plus a countdown to any event.',
+        keywords: [
+          'anniversary',
+          '100 days',
+          'countdown',
+          'days until',
+          'days since',
+          'milestone',
+          'event countdown',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'due-date-calculator',
+    category: 'calc',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['date-calculator', 'age-calculator', 'bmi-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '出産予定日・妊娠週数計算',
+        description:
+          '最終月経日・排卵日・分娩予定日から、出産予定日と現在の妊娠週数・妊娠月数・安定期や正期産などの節目を計算します。',
+        keywords: [
+          '出産予定日',
+          '妊娠週数',
+          '予定日計算',
+          '妊娠月数',
+          '安定期',
+          '正期産',
+          'ネーゲレ式',
+          '排卵日',
+        ],
+      },
+      en: {
+        name: 'Due Date & Pregnancy Week Calculator',
+        description:
+          'Estimate your due date, current pregnancy week and month, and key milestones from your last period, ovulation date, or a known due date.',
+        keywords: [
+          'due date',
+          'pregnancy calculator',
+          'gestational age',
+          'pregnancy week',
+          'Naegele',
+          'conception date',
+          'trimester',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'css-text-shadow-generator',
+    category: 'dev',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: [
+      'css-box-shadow-generator',
+      'css-glassmorphism-generator',
+      'css-gradient-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSS text-shadowジェネレーター',
+        keywords: [
+          'text-shadow',
+          '文字影',
+          'テキストシャドウ',
+          'ネオン',
+          '縁取り',
+          'CSS影',
+        ],
+        description:
+          'オフセット・ぼかし・色を調整して、複数レイヤーのCSS text-shadowをプレビューしながら生成します。ネオン・縁取りなどのプリセット付き。',
+      },
+      en: {
+        name: 'CSS Text-Shadow Generator',
+        keywords: [
+          'text-shadow',
+          'text shadow',
+          'neon text',
+          'text outline',
+          'CSS shadow',
+        ],
+        description:
+          'Builds multi-layer CSS text-shadow declarations with a live preview, including neon and outline presets.',
+      },
+    },
+  },
+  {
+    slug: 'css-glassmorphism-generator',
+    category: 'dev',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: [
+      'css-box-shadow-generator',
+      'css-gradient-generator',
+      'css-text-shadow-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSSグラスモーフィズム・ニューモーフィズムジェネレーター',
+        keywords: [
+          'グラスモーフィズム',
+          'ニューモーフィズム',
+          'すりガラス',
+          'backdrop-filter',
+          'glassmorphism',
+          'neumorphism',
+          'ガラス風',
+        ],
+        description:
+          'すりガラス風（backdrop-filter）と凹凸のあるニューモーフィズム（多層box-shadow）のCSSを、質感プリセットとプレビュー付きで生成します。',
+      },
+      en: {
+        name: 'CSS Glassmorphism & Neumorphism Generator',
+        keywords: [
+          'glassmorphism',
+          'neumorphism',
+          'frosted glass',
+          'backdrop-filter',
+          'soft UI',
+          'CSS glass',
+        ],
+        description:
+          'Generates CSS for frosted-glass (backdrop-filter) and neumorphic (layered box-shadow) elements with material presets and a live preview.',
+      },
+    },
+  },
+  {
+    slug: 'css-animation-generator',
+    category: 'dev',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: [
+      'css-box-shadow-generator',
+      'css-gradient-generator',
+      'css-layout-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSSアニメーションジェネレーター',
+        keywords: [
+          'CSSアニメーション',
+          'keyframes',
+          'アニメーション',
+          'イージング',
+          'cubic-bezier',
+          'transition',
+          'バウンス',
+        ],
+        description:
+          'バウンス・フェード・回転などのプリセットから、@keyframesとanimationをイージング編集・プレビュー付きで生成します。prefers-reduced-motion対応も出力できます。',
+      },
+      en: {
+        name: 'CSS Animation Generator',
+        keywords: [
+          'CSS animation',
+          'keyframes',
+          'easing',
+          'cubic-bezier',
+          'animation-timing-function',
+          'bounce',
+          'fade',
+        ],
+        description:
+          'Builds CSS @keyframes animations from presets with cubic-bezier easing, duration, delay, iterations, and a live preview, plus prefers-reduced-motion output.',
+      },
+    },
+  },
+  {
+    slug: 'http-status-codes',
+    category: 'dev',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['http-header-analyzer', 'curl-converter', 'mime-type-lookup'],
+    translations: {
+      ja: {
+        name: 'HTTPステータスコード一覧・検索',
+        description:
+          '404・301・500・429 など HTTPステータスコードの意味・原因・対処をコード番号や名称、キーワードで検索できる一覧表です。',
+        keywords: [
+          'HTTPステータスコード',
+          'ステータスコード',
+          '404',
+          '301',
+          '500',
+          'リダイレクト',
+          'RFC 9110',
+          'HTTPエラー',
+        ],
+      },
+      en: {
+        name: 'HTTP Status Codes List & Search',
+        description:
+          'Search HTTP status codes such as 404, 301, 500, and 429 by number, name, or keyword, with meanings, causes, and fixes.',
+        keywords: [
+          'http status codes',
+          'status code',
+          '404 not found',
+          '301 redirect',
+          '500 error',
+          'RFC 9110',
+          'http error',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'mime-type-lookup',
+    category: 'dev',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['file-type-detector', 'http-header-analyzer', 'url-parser'],
+    translations: {
+      ja: {
+        name: 'MIMEタイプ検索',
+        description:
+          '拡張子からMIMEタイプ（Content-Type）を、MIMEタイプから拡張子を調べられます。画像・音声・動画・文書・フォントなどを収録し、部分一致検索にも対応',
+        keywords: [
+          'MIMEタイプ',
+          'Content-Type',
+          'メディアタイプ',
+          '拡張子',
+          'コンテンツタイプ',
+          'mime',
+        ],
+      },
+      en: {
+        name: 'MIME Type Lookup',
+        description:
+          'Look up the MIME type (Content-Type) for a file extension, or the extensions for a MIME type, with partial-match search',
+        keywords: [
+          'mime type',
+          'content-type',
+          'media type',
+          'file extension',
+          'extension to mime',
+          'mime to extension',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'robots-txt-generator',
+    category: 'dev',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['sitemap-generator', 'meta-tag-generator', 'ogp-image-generator'],
+    translations: {
+      ja: {
+        name: 'robots.txt生成',
+        description:
+          'User-agent別のAllow/Disallow、Sitemap、AIボットのブロックに対応したrobots.txtを生成',
+        keywords: [
+          'robots.txt',
+          'ロボットテキスト',
+          'クローラー',
+          'AIボット',
+          'GPTBot',
+          'Disallow',
+          'sitemap',
+          'SEO',
+        ],
+      },
+      en: {
+        name: 'robots.txt Generator',
+        description:
+          'Generate robots.txt with per-user-agent Allow/Disallow rules, sitemaps, and AI bot blocking',
+        keywords: [
+          'robots.txt',
+          'crawler',
+          'AI bot',
+          'GPTBot',
+          'ClaudeBot',
+          'disallow',
+          'sitemap',
+          'SEO',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'sitemap-generator',
+    category: 'dev',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['robots-txt-generator', 'url-parser', 'meta-tag-generator'],
+    translations: {
+      ja: {
+        name: 'sitemap.xml生成（URL一覧から）',
+        description:
+          'URL一覧を貼り付けてsitemap.xmlを生成。lastmod・changefreq・priorityの一括付与、無効URLと重複の除外、50,000件超の分割に対応',
+        keywords: [
+          'サイトマップ',
+          'sitemap',
+          'sitemap.xml',
+          'XMLサイトマップ',
+          'SEO',
+          'lastmod',
+          'サイトマップ作成',
+        ],
+      },
+      en: {
+        name: 'sitemap.xml Generator (from URL list)',
+        description:
+          'Turn a URL list into sitemap.xml with bulk lastmod, changefreq and priority, invalid/duplicate URL removal, and splitting past 50,000 URLs',
+        keywords: [
+          'sitemap',
+          'sitemap.xml',
+          'xml sitemap',
+          'sitemap generator',
+          'seo',
+          'lastmod',
+          'sitemap index',
         ],
       },
     },

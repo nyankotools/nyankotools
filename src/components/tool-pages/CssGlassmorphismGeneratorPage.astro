@@ -1,0 +1,490 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cssGlassmorphismGeneratorContent } from '../../i18n/tools/css-glassmorphism-generator';
+import {
+  DEFAULT_NEU,
+  GLASS_BACKGROUND_IDS,
+  GLASS_PRESETS,
+  GLASS_PRESET_IDS,
+  NEU_LIGHTS,
+  NEU_SHAPES,
+} from '../../lib/tools/css-glassmorphism-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cssGlassmorphismGeneratorContent[locale];
+const g = GLASS_PRESETS.light;
+
+const presetLabels = {
+  light: t.presetLight,
+  dark: t.presetDark,
+  tinted: t.presetTinted,
+  frosted: t.presetFrosted,
+};
+const backgroundLabels = {
+  sunset: t.backgroundSunset,
+  ocean: t.backgroundOcean,
+  aurora: t.backgroundAurora,
+  candy: t.backgroundCandy,
+  night: t.backgroundNight,
+};
+const shapeLabels = {
+  flat: t.shapeFlat,
+  pressed: t.shapePressed,
+  concave: t.shapeConcave,
+  convex: t.shapeConvex,
+};
+const lightLabels = {
+  'top-left': t.lightTopLeft,
+  'top-right': t.lightTopRight,
+  'bottom-left': t.lightBottomLeft,
+  'bottom-right': t.lightBottomRight,
+};
+
+const glassSliders = [
+  {
+    id: 'gm-g-opacity',
+    label: t.opacityLabel,
+    min: 0,
+    max: 100,
+    unit: '%',
+    value: g.opacity,
+  },
+  {
+    id: 'gm-g-blur',
+    label: t.blurLabel,
+    min: 0,
+    max: 40,
+    unit: 'px',
+    value: g.blur,
+  },
+  {
+    id: 'gm-g-saturate',
+    label: t.saturateLabel,
+    min: 100,
+    max: 250,
+    unit: '%',
+    value: g.saturate,
+  },
+  {
+    id: 'gm-g-border',
+    label: t.borderOpacityLabel,
+    min: 0,
+    max: 100,
+    unit: '%',
+    value: g.borderOpacity,
+  },
+  {
+    id: 'gm-g-shadow',
+    label: t.shadowOpacityLabel,
+    min: 0,
+    max: 100,
+    unit: '%',
+    value: g.shadowOpacity,
+  },
+  {
+    id: 'gm-g-radius',
+    label: t.radiusLabel,
+    min: 0,
+    max: 100,
+    unit: 'px',
+    value: g.radius,
+  },
+];
+const neuSliders = [
+  {
+    id: 'gm-n-distance',
+    label: t.distanceLabel,
+    min: 1,
+    max: 50,
+    unit: 'px',
+    value: DEFAULT_NEU.distance,
+  },
+  {
+    id: 'gm-n-blur',
+    label: t.neuBlurLabel,
+    min: 0,
+    max: 100,
+    unit: 'px',
+    value: DEFAULT_NEU.blur,
+  },
+  {
+    id: 'gm-n-intensity',
+    label: t.intensityLabel,
+    min: 1,
+    max: 40,
+    unit: '%',
+    value: DEFAULT_NEU.intensity,
+  },
+  {
+    id: 'gm-n-radius',
+    label: t.radiusLabel,
+    min: 0,
+    max: 100,
+    unit: 'px',
+    value: DEFAULT_NEU.radius,
+  },
+];
+---
+
+<ToolShell t={t}>
+  <div class="mb-5">
+    <span class="ui-label" id="gm-mode-label">
+      {t.modeLabel}
+    </span>
+    <div
+      class="ui-seg w-full sm:w-auto sm:inline-flex"
+      role="group"
+      aria-labelledby="gm-mode-label"
+    >
+      <button
+        type="button"
+        id="gm-mode-glass"
+        class="ui-seg-btn flex-1 sm:flex-none"
+        aria-pressed="true"
+      >
+        {t.modeGlass}
+      </button>
+      <button
+        type="button"
+        id="gm-mode-neu"
+        class="ui-seg-btn flex-1 sm:flex-none"
+        aria-pressed="false"
+      >
+        {t.modeNeu}
+      </button>
+    </div>
+  </div>
+
+  <div id="gm-glass-panel" class="mb-6 space-y-4">
+    <div>
+      <span class="ui-label" id="gm-preset-label">
+        {t.presetLabel}
+      </span>
+      <div
+        class="flex flex-wrap gap-2"
+        role="group"
+        aria-labelledby="gm-preset-label"
+      >
+        {GLASS_PRESET_IDS.map((id) => (
+          <button type="button" class="ui-btn" data-preset={id}>
+            {presetLabels[id]}
+          </button>
+        ))}
+      </div>
+    </div>
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label for="gm-g-bg" class="ui-label">
+          {t.backgroundLabel}
+        </label>
+        <select id="gm-g-bg" class="ui-input h-11 px-2 dark:bg-gray-900">
+          {GLASS_BACKGROUND_IDS.map((id) => (
+            <option value={id}>{backgroundLabels[id]}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="gm-g-color" class="ui-label">
+          {t.colorLabel}
+        </label>
+        <input
+          id="gm-g-color"
+          type="color"
+          value={g.color}
+          class="h-11 w-14 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+        />
+      </div>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      {glassSliders.map((s) => (
+        <div>
+          <label for={s.id} class="ui-label">
+            {s.label}: <span data-val-for={s.id}>{s.value}</span>
+            {s.unit}
+          </label>
+          <input
+            id={s.id}
+            type="range"
+            min={s.min}
+            max={s.max}
+            value={s.value}
+            class="w-full"
+          />
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div id="gm-neu-panel" class="mb-6 space-y-4" hidden>
+    <div>
+      <span class="ui-label" id="gm-shape-label">
+        {t.shapeLabel}
+      </span>
+      <div
+        class="flex flex-wrap gap-2"
+        role="group"
+        aria-labelledby="gm-shape-label"
+      >
+        {NEU_SHAPES.map((id) => (
+          <button
+            type="button"
+            class="ui-btn aria-pressed:bg-blue-600 aria-pressed:text-white aria-pressed:hover:bg-blue-600"
+            data-shape={id}
+            aria-pressed={id === DEFAULT_NEU.shape ? 'true' : 'false'}
+          >
+            {shapeLabels[id]}
+          </button>
+        ))}
+      </div>
+    </div>
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label for="gm-n-color" class="ui-label">
+          {t.colorLabel}
+        </label>
+        <input
+          id="gm-n-color"
+          type="color"
+          value={DEFAULT_NEU.color}
+          class="h-11 w-14 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+        />
+      </div>
+      <div>
+        <label for="gm-n-light" class="ui-label">
+          {t.lightLabel}
+        </label>
+        <select id="gm-n-light" class="ui-input h-11 px-2 dark:bg-gray-900">
+          {NEU_LIGHTS.map((id) => (
+            <option value={id}>{lightLabels[id]}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      {neuSliders.map((s) => (
+        <div>
+          <label for={s.id} class="ui-label">
+            {s.label}: <span data-val-for={s.id}>{s.value}</span>
+            {s.unit}
+          </label>
+          <input
+            id={s.id}
+            type="range"
+            min={s.min}
+            max={s.max}
+            value={s.value}
+            class="w-full"
+          />
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <h2 class="mb-2 text-lg font-bold">{t.previewHeading}</h2>
+  <div
+    id="gm-preview-container"
+    class="relative mb-6 flex h-56 w-full items-center justify-center overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700"
+  >
+    <div
+      id="gm-deco"
+      aria-hidden="true"
+      class="pointer-events-none absolute inset-0"
+    >
+      <div class="absolute left-[18%] top-[14%] h-20 w-20 rounded-full bg-yellow-300"></div>
+      <div class="absolute bottom-[12%] right-[16%] h-24 w-24 rounded-full bg-pink-500"></div>
+      <div class="absolute bottom-[30%] left-[40%] h-12 w-12 rounded-full bg-cyan-400"></div>
+    </div>
+    <div
+      id="gm-preview"
+      aria-hidden="true"
+      class="relative flex h-32 w-48 flex-col justify-center gap-3 p-5"
+    >
+      <div
+        id="gm-preview-line1"
+        class="h-3 w-3/4 rounded-full bg-white/70"
+      ></div>
+      <div
+        id="gm-preview-line2"
+        class="h-3 w-1/2 rounded-full bg-white/50"
+      ></div>
+    </div>
+  </div>
+
+  <div data-copied={t.copied} data-copy-failed={t.copyFailed}>
+    <label for="gm-css-output" class="ui-label">
+      {t.cssHeading}
+    </label>
+    <div class="flex gap-2">
+      <textarea
+        id="gm-css-output"
+        readonly
+        rows="6"
+        class="ui-input h-40 w-full min-w-0 resize-none bg-gray-50 p-3 font-mono dark:bg-gray-900"
+      ></textarea>
+      <button
+        id="gm-copy-button"
+        type="button"
+        class="ui-btn shrink-0 self-start"
+      >
+        {t.copyButton}
+      </button>
+    </div>
+    <span
+      id="gm-status"
+      class="mt-2 block text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    buildGlassCss,
+    buildGlassDeclarations,
+    buildNeuCss,
+    buildNeuDeclarations,
+    clampGlass,
+    clampNeu,
+    GLASS_BACKGROUNDS,
+    GLASS_PRESETS,
+    type GlassBackgroundId,
+    type GlassPresetId,
+    type NeuLight,
+    type NeuParams,
+    type NeuShape,
+  } from '../../lib/tools/css-glassmorphism-generator';
+
+  const $ = (id: string) => document.getElementById(id) as HTMLInputElement;
+  const num = (id: string) => Number($(id).value);
+
+  const glassPanel = $('gm-glass-panel');
+  const neuPanel = $('gm-neu-panel');
+  const modeGlass = $('gm-mode-glass');
+  const modeNeu = $('gm-mode-neu');
+  const container = $('gm-preview-container');
+  const deco = $('gm-deco');
+  const preview = $('gm-preview');
+  const cssOutput = $('gm-css-output') as unknown as HTMLTextAreaElement;
+  const statusEl = $('gm-status');
+  const copyContainer = cssOutput.closest('[data-copied]') as HTMLElement;
+  const copied = copyContainer.dataset.copied ?? '';
+  const copyFailed = copyContainer.dataset.copyFailed ?? '';
+  const shapeButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-shape]'),
+  );
+
+  let mode: 'glass' | 'neu' = 'glass';
+  let shape: NeuShape = 'flat';
+
+  function readGlass() {
+    return clampGlass({
+      color: $('gm-g-color').value,
+      opacity: num('gm-g-opacity'),
+      blur: num('gm-g-blur'),
+      saturate: num('gm-g-saturate'),
+      borderOpacity: num('gm-g-border'),
+      radius: num('gm-g-radius'),
+      shadowOpacity: num('gm-g-shadow'),
+    });
+  }
+
+  function readNeu(): NeuParams {
+    return clampNeu({
+      color: $('gm-n-color').value,
+      shape,
+      light: $('gm-n-light').value as NeuLight,
+      distance: num('gm-n-distance'),
+      blur: num('gm-n-blur'),
+      intensity: num('gm-n-intensity'),
+      radius: num('gm-n-radius'),
+    });
+  }
+
+  function refreshValueLabels() {
+    document.querySelectorAll<HTMLElement>('[data-val-for]').forEach((el) => {
+      el.textContent = $(el.dataset.valFor ?? '').value;
+    });
+  }
+
+  function update() {
+    refreshValueLabels();
+    const isGlass = mode === 'glass';
+    glassPanel.hidden = !isGlass;
+    neuPanel.hidden = isGlass;
+    modeGlass.setAttribute('aria-pressed', String(isGlass));
+    modeNeu.setAttribute('aria-pressed', String(!isGlass));
+    deco.hidden = !isGlass;
+    $('gm-preview-line1').hidden = !isGlass;
+    $('gm-preview-line2').hidden = !isGlass;
+    shapeButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.shape === shape)),
+    );
+
+    if (isGlass) {
+      const p = readGlass();
+      const bg = GLASS_BACKGROUNDS[$('gm-g-bg').value as GlassBackgroundId];
+      container.style.background = bg ?? '';
+      preview.style.cssText = buildGlassDeclarations(p).join(' ');
+      cssOutput.value = buildGlassCss(p);
+    } else {
+      const p = readNeu();
+      container.style.background = p.color;
+      preview.style.cssText = buildNeuDeclarations(p).join(' ');
+      cssOutput.value = buildNeuCss(p);
+    }
+  }
+
+  function applyGlassPreset(id: GlassPresetId) {
+    const p = GLASS_PRESETS[id];
+    $('gm-g-color').value = p.color;
+    $('gm-g-opacity').value = String(p.opacity);
+    $('gm-g-blur').value = String(p.blur);
+    $('gm-g-saturate').value = String(p.saturate);
+    $('gm-g-border').value = String(p.borderOpacity);
+    $('gm-g-radius').value = String(p.radius);
+    $('gm-g-shadow').value = String(p.shadowOpacity);
+    update();
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach((b) => {
+    b.addEventListener('click', () =>
+      applyGlassPreset(b.dataset.preset as GlassPresetId),
+    );
+  });
+
+  shapeButtons.forEach((b) => {
+    b.addEventListener('click', () => {
+      shape = b.dataset.shape as NeuShape;
+      update();
+    });
+  });
+
+  modeGlass.addEventListener('click', () => {
+    mode = 'glass';
+    update();
+  });
+  modeNeu.addEventListener('click', () => {
+    mode = 'neu';
+    update();
+  });
+
+  [glassPanel, neuPanel].forEach((panel) => {
+    panel.addEventListener('input', update);
+    panel.addEventListener('change', update);
+  });
+
+  $('gm-copy-button').addEventListener('click', async () => {
+    if (!cssOutput.value) return;
+    statusEl.textContent = (await copyText(cssOutput.value))
+      ? copied
+      : copyFailed;
+  });
+
+  update();
+</script>

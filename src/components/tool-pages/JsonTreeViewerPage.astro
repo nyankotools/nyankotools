@@ -228,7 +228,7 @@ const t = jsonTreeViewerContent[locale];
 
     const caret = span(
       expandable ? '▸' : '',
-      'w-4 shrink-0 text-gray-500 select-none',
+      'w-4 shrink-0 text-gray-500 select-none dark:text-gray-400',
     );
     row.appendChild(caret);
     // ルート行のラベルは JSONPath のルート記号
@@ -241,9 +241,11 @@ const t = jsonTreeViewerContent[locale];
           : 'text-red-700 dark:text-red-400',
       ),
     );
-    row.appendChild(span(':', 'text-gray-500'));
+    row.appendChild(span(':', 'text-gray-500 dark:text-gray-400'));
     if (expandable) {
-      row.appendChild(span(summarize(value), 'text-gray-500'));
+      row.appendChild(
+        span(summarize(value), 'text-gray-500 dark:text-gray-400'),
+      );
     } else {
       row.appendChild(span(formatPrimitive(value), VALUE_COLORS[kind] ?? ''));
     }

@@ -7,7 +7,7 @@ import { tools, type Locale } from '../src/data/tools';
 //   - 375px幅（FAQ展開時を含む）でも横スクロールが発生しない（growth.md のレスポンシブ要件）
 //   - フッターが main の最後の子である
 //   - サイドバーに全ツールへのリンクがあり、各カテゴリの先頭ツールへ遷移できる
-//   - axe（WCAG 2.x A/AA）でコントラスト・ラベル欠落などの違反がない
+//   - axe（WCAG 2.x A/AA）でコントラスト・ラベル欠落などの違反がない（ダークモードは日本語版のみ末尾で走査）
 // 日本語版・英語版の両方を対象にする。ツール固有の操作や表示は各ツールのspecで検証する。
 // 新しいツールを src/data/tools.ts に登録すれば、この検証は自動的に対象に含まれる。
 
@@ -139,3 +139,33 @@ for (const { locale, prefix } of locales) {
     }
   });
 }
+
+// ダークモードのコントラスト・ラベル欠落の回帰検出。配色はロケールに依存しないため、
+// 実行時間を抑えるために日本語版のみを全ツールで走査する（英語版はライトモードで検証済み）。
+// テーマは既定が system なので、OSのカラースキームをダークにエミュレートすれば .dark が付く。
+test.describe('全ツール共通（ja・ダークモード）', () => {
+  test.use({ colorScheme: 'dark' });
+
+  for (const tool of tools) {
+    test(`${tool.slug}: ダークモードでaxeのアクセシビリティ違反（WCAG 2.x A/AA）がない`, async ({
+      page,
+    }) => {
+      await page.goto(`/tools/${tool.slug}/`);
+      await expect(page.locator('main h1')).toBeVisible();
+      await expect(page.locator('html')).toHaveClass(/(^|\s)dark(\s|$)/);
+
+      const results = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+        .analyze();
+
+      const summary = results.violations.map(
+        (v) =>
+          `${v.id} (${v.impact}): ${v.nodes
+            .slice(0, 3)
+            .map((n) => n.target.join(' '))
+            .join(' | ')}`,
+      );
+      expect.soft(summary).toEqual([]);
+    });
+  }
+});

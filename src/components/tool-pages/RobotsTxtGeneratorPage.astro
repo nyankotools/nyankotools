@@ -1,0 +1,354 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { robotsTxtGeneratorContent } from '../../i18n/tools/robots-txt-generator';
+import { CRAWLER_PRESETS } from '../../lib/tools/robots-txt-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = robotsTxtGeneratorContent[locale];
+const searchCrawlers = CRAWLER_PRESETS.filter((c) => c.kind === 'search');
+const aiCrawlers = CRAWLER_PRESETS.filter((c) => c.kind === 'ai');
+---
+
+<ToolShell t={t}>
+  <div
+    id="rtg-root"
+    data-group-title={t.groupTitle}
+    data-issue-messages={JSON.stringify(t.issueMessages)}
+    data-error-prefix={t.errorPrefix}
+    data-warning-prefix={t.warningPrefix}
+    data-no-issues={t.noIssues}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-downloaded={t.downloaded}
+  >
+    <h2 class="mb-2 text-lg font-bold">{t.presetHeading}</h2>
+    <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">{t.presetHint}</p>
+    <div class="mb-6 flex flex-wrap gap-2">
+      {t.presets.map((p) => (
+        <button type="button" class="ui-btn" data-rtg-preset={p.id}>
+          {p.label}
+        </button>
+      ))}
+    </div>
+
+    <h2 class="mb-2 text-lg font-bold">{t.groupsHeading}</h2>
+    <div id="rtg-groups" class="mb-3 space-y-4"></div>
+    <button id="rtg-add-group" type="button" class="ui-btn mb-6">
+      {t.addGroup}
+    </button>
+
+    <h2 class="mb-2 text-lg font-bold">{t.sitemapHeading}</h2>
+    <div class="mb-6">
+      <label for="rtg-sitemaps" class="ui-label">
+        {t.sitemapLabel}
+      </label>
+      <textarea
+        id="rtg-sitemaps"
+        rows="3"
+        spellcheck="false"
+        placeholder={t.sitemapPlaceholder}
+        class="ui-input w-full resize-y p-3 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+
+    <h2 class="mb-2 text-lg font-bold">{t.issuesHeading}</h2>
+    <ul
+      id="rtg-issues"
+      class="mb-6 list-disc space-y-1 pl-5 text-sm"
+      aria-live="polite"
+    ></ul>
+
+    <div>
+      <label for="rtg-output" class="ui-label">
+        {t.outputHeading}
+      </label>
+      <textarea
+        id="rtg-output"
+        readonly
+        rows="10"
+        placeholder={t.outputEmpty}
+        class="ui-input w-full resize-y bg-gray-50 p-3 font-mono dark:bg-gray-900"
+      ></textarea>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <button id="rtg-copy-button" type="button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <button id="rtg-download-button" type="button" class="ui-btn">
+          {t.downloadButton}
+        </button>
+      </div>
+      <span
+        id="rtg-status"
+        class="mt-2 block text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+
+  <template id="rtg-group-template">
+    <div
+      class="rounded-lg border border-gray-300 p-3 sm:p-4 dark:border-gray-700"
+      data-group
+    >
+      <div class="mb-3 flex items-center justify-between gap-2">
+        <h3 class="text-base font-bold" data-group-title></h3>
+        <button type="button" class="ui-btn shrink-0" data-remove>
+          {t.removeGroup}
+        </button>
+      </div>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <label class="block text-sm text-gray-700 sm:col-span-2 dark:text-gray-300">
+          <span class="ui-label">{t.userAgentLabel}</span>
+          <input
+            type="text"
+            data-field="userAgents"
+            spellcheck="false"
+            placeholder={t.userAgentPlaceholder}
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </label>
+        <label class="block text-sm text-gray-700 sm:col-span-2 dark:text-gray-300">
+          <span class="ui-label">{t.addCrawlerLabel}</span>
+          <select
+            data-field="crawler"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          >
+            <option value="">{t.addCrawlerDefault}</option>
+            <optgroup label={t.crawlerSearchGroup}>
+              {searchCrawlers.map((c) => (
+                <option value={c.name}>{c.name}</option>
+              ))}
+            </optgroup>
+            <optgroup label={t.crawlerAiGroup}>
+              {aiCrawlers.map((c) => (
+                <option value={c.name}>{c.name}</option>
+              ))}
+            </optgroup>
+          </select>
+        </label>
+        <label class="block text-sm text-gray-700 dark:text-gray-300">
+          <span class="ui-label">{t.disallowLabel}</span>
+          <textarea
+            rows="4"
+            data-field="disallow"
+            spellcheck="false"
+            placeholder={t.disallowPlaceholder}
+            class="ui-input w-full resize-y p-3 font-mono dark:bg-gray-900"
+          ></textarea>
+        </label>
+        <label class="block text-sm text-gray-700 dark:text-gray-300">
+          <span class="ui-label">{t.allowLabel}</span>
+          <textarea
+            rows="4"
+            data-field="allow"
+            spellcheck="false"
+            placeholder={t.allowPlaceholder}
+            class="ui-input w-full resize-y p-3 font-mono dark:bg-gray-900"
+          ></textarea>
+        </label>
+        <label class="block text-sm text-gray-700 dark:text-gray-300">
+          <span class="ui-label">{t.crawlDelayLabel}</span>
+          <input
+            type="text"
+            inputmode="decimal"
+            data-field="crawlDelay"
+            placeholder={t.crawlDelayPlaceholder}
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </label>
+      </div>
+    </div>
+  </template>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import { fill } from '../../lib/format-template';
+  import {
+    analyzeRobots,
+    buildRobotsTxt,
+    emptyGroup,
+    parseLines,
+    parseUserAgents,
+    presetGroups,
+    type RobotsGroup,
+    type RobotsIssueCode,
+    type RobotsPresetId,
+  } from '../../lib/tools/robots-txt-generator';
+
+  const root = document.getElementById('rtg-root')!;
+  const groupsEl = document.getElementById('rtg-groups')!;
+  const template = document.getElementById(
+    'rtg-group-template',
+  ) as HTMLTemplateElement;
+  const sitemapsInput = document.getElementById(
+    'rtg-sitemaps',
+  ) as HTMLTextAreaElement;
+  const issuesEl = document.getElementById('rtg-issues')!;
+  const output = document.getElementById('rtg-output') as HTMLTextAreaElement;
+  const statusEl = document.getElementById('rtg-status')!;
+
+  const groupTitle = root.dataset.groupTitle ?? '';
+  const issueMessages = JSON.parse(
+    root.dataset.issueMessages ?? '{}',
+  ) as Record<RobotsIssueCode, string>;
+  const errorPrefix = root.dataset.errorPrefix ?? '';
+  const warningPrefix = root.dataset.warningPrefix ?? '';
+  const noIssues = root.dataset.noIssues ?? '';
+  const copied = root.dataset.copied ?? '';
+  const copyFailed = root.dataset.copyFailed ?? '';
+  const downloaded = root.dataset.downloaded ?? '';
+
+  type Field = HTMLInputElement | HTMLTextAreaElement;
+  const field = (el: Element, name: string) =>
+    el.querySelector<Field>(`[data-field="${name}"]`)!;
+
+  function groupElements(): HTMLElement[] {
+    return Array.from(groupsEl.querySelectorAll<HTMLElement>('[data-group]'));
+  }
+
+  function renumber() {
+    groupElements().forEach((el, i) => {
+      el.querySelector('[data-group-title]')!.textContent = fill(groupTitle, {
+        n: String(i + 1),
+      });
+    });
+  }
+
+  function readGroups(): RobotsGroup[] {
+    return groupElements().map((el) => ({
+      userAgents: parseUserAgents(field(el, 'userAgents').value),
+      disallow: parseLines(field(el, 'disallow').value),
+      allow: parseLines(field(el, 'allow').value),
+      crawlDelay: field(el, 'crawlDelay').value,
+    }));
+  }
+
+  function addGroup(g: RobotsGroup) {
+    const node = template.content.firstElementChild!.cloneNode(
+      true,
+    ) as HTMLElement;
+    field(node, 'userAgents').value = g.userAgents.join(', ');
+    field(node, 'disallow').value = g.disallow.join('\n');
+    field(node, 'allow').value = g.allow.join('\n');
+    field(node, 'crawlDelay').value = g.crawlDelay;
+    groupsEl.appendChild(node);
+    renumber();
+  }
+
+  /** 初期状態のまま（* だけで他に何も入力していない1グループ）か */
+  function isPristine(): boolean {
+    const groups = readGroups();
+    if (groups.length !== 1) return false;
+    const [g] = groups;
+    return (
+      g.userAgents.length === 1 &&
+      g.userAgents[0] === '*' &&
+      g.allow.length === 0 &&
+      g.disallow.length === 0 &&
+      g.crawlDelay.trim() === ''
+    );
+  }
+
+  function update() {
+    const input = {
+      groups: readGroups(),
+      sitemaps: parseLines(sitemapsInput.value),
+    };
+    output.value = buildRobotsTxt(input);
+
+    const issues = analyzeRobots(input);
+    issuesEl.textContent = '';
+    if (issues.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'list-none -ml-5 text-gray-700 dark:text-gray-300';
+      li.textContent = noIssues;
+      issuesEl.appendChild(li);
+      return;
+    }
+    for (const issue of issues) {
+      const li = document.createElement('li');
+      const isError = issue.severity === 'error';
+      li.className = isError
+        ? 'text-red-700 dark:text-red-400'
+        : 'text-amber-800 dark:text-amber-300';
+      const prefix = isError ? errorPrefix : warningPrefix;
+      const message = fill(issueMessages[issue.code] ?? issue.code, {
+        group: String(issue.group ?? ''),
+        value: issue.value ?? '',
+      });
+      li.textContent = `${prefix}: ${message}`;
+      issuesEl.appendChild(li);
+    }
+  }
+
+  groupsEl.addEventListener('input', update);
+  groupsEl.addEventListener('change', (e) => {
+    const target = e.target as HTMLElement;
+    if (
+      target instanceof HTMLSelectElement &&
+      target.dataset.field === 'crawler'
+    ) {
+      if (target.value) {
+        const groupEl = target.closest<HTMLElement>('[data-group]')!;
+        const uaInput = field(groupEl, 'userAgents');
+        const names = parseUserAgents(`${uaInput.value},${target.value}`);
+        uaInput.value = names.join(', ');
+        target.value = '';
+      }
+    }
+    update();
+  });
+  groupsEl.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('[data-remove]');
+    if (!btn) return;
+    btn.closest('[data-group]')!.remove();
+    renumber();
+    update();
+  });
+
+  document.getElementById('rtg-add-group')!.addEventListener('click', () => {
+    addGroup(emptyGroup());
+    update();
+  });
+
+  root.querySelectorAll<HTMLElement>('[data-rtg-preset]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const groups = presetGroups(btn.dataset.rtgPreset as RobotsPresetId);
+      if (isPristine()) groupsEl.textContent = '';
+      groups.forEach(addGroup);
+      update();
+    });
+  });
+
+  sitemapsInput.addEventListener('input', update);
+
+  document
+    .getElementById('rtg-copy-button')!
+    .addEventListener('click', async () => {
+      if (!output.value) return;
+      statusEl.textContent = (await copyText(output.value))
+        ? copied
+        : copyFailed;
+    });
+
+  document
+    .getElementById('rtg-download-button')!
+    .addEventListener('click', () => {
+      if (!output.value) return;
+      downloadBlob(
+        new Blob([output.value], { type: 'text/plain;charset=utf-8' }),
+        'robots.txt',
+      );
+      statusEl.textContent = downloaded;
+    });
+
+  addGroup(emptyGroup());
+  update();
+</script>

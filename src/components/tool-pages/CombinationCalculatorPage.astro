@@ -1,0 +1,270 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { combinationCalculatorContent } from '../../i18n/tools/combination-calculator';
+import { COMBINATION_MAX } from '../../lib/tools/combination-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = combinationCalculatorContent[locale];
+
+const rows = [
+  { key: 'factorial', formula: 'n!', copy: t.factorial },
+  { key: 'permutation', formula: 'nPr', copy: t.permutation },
+  { key: 'combination', formula: 'nCr', copy: t.combination },
+  { key: 'repeatedPermutation', formula: 'n^r', copy: t.repeatedPermutation },
+  { key: 'repeatedCombination', formula: 'nHr', copy: t.repeatedCombination },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    id="comb-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-meta-short={t.metaShort}
+    data-meta-long={t.metaLong}
+    data-unavailable={t.unavailable}
+    data-probability-value={t.probabilityValue}
+    data-error-empty={t.errorEmpty}
+    data-error-invalid={t.errorInvalid}
+    data-error-negative={t.errorNegative}
+    data-error-not-integer={t.errorNotInteger}
+    data-error-too-large={t.errorTooLarge}
+    data-max={String(COMBINATION_MAX)}
+  >
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="comb-n" class="ui-label">
+          {t.nLabel}
+        </label>
+        <input
+          id="comb-n"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          value="10"
+          class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="comb-r" class="ui-label">
+          {t.rLabel}
+        </label>
+        <input
+          id="comb-r"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          value="3"
+          class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+        />
+      </div>
+    </div>
+
+    <p id="comb-error" class="ui-error mt-3 hidden" role="alert"></p>
+    <p
+      id="comb-notice"
+      class="mt-3 hidden rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+      data-text={t.rGreaterNotice}
+    ></p>
+    <p
+      id="comb-status"
+      class="mt-2 min-h-5 text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="comb-results" class="mt-2">
+      <h2 class="mb-3 text-base font-semibold">{t.resultsHeading}</h2>
+      <div class="space-y-3">
+        {rows.map((row) => (
+          <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="min-w-0">
+                <p class="text-sm font-medium">
+                  {row.copy.label}
+                  <span class="ml-2 font-mono text-xs text-gray-600 dark:text-gray-400">
+                    {row.formula}
+                  </span>
+                </p>
+                <p class="text-xs text-gray-600 dark:text-gray-400">
+                  {row.copy.hint}
+                </p>
+              </div>
+              <button
+                id={`comb-copy-button-${row.key}`}
+                type="button"
+                class="ui-btn"
+                data-key={row.key}
+              >
+                {t.copy}
+              </button>
+            </div>
+            <p
+              id={`comb-value-${row.key}`}
+              tabindex="0"
+              class="mt-2 max-h-40 overflow-y-auto rounded bg-gray-50 p-2 font-mono text-sm break-all dark:bg-gray-900"
+            />
+            <p
+              id={`comb-meta-${row.key}`}
+              class="mt-1 text-xs text-gray-600 dark:text-gray-400"
+            />
+          </div>
+        ))}
+      </div>
+
+      <div id="comb-probability" class="mt-6">
+        <h2 class="mb-3 text-base font-semibold">{t.probabilityHeading}</h2>
+        <dl class="space-y-2 text-sm">
+          <div>
+            <dt class="text-gray-700 dark:text-gray-300">
+              {t.probabilityOrdered}
+            </dt>
+            <dd id="comb-prob-ordered" class="font-mono break-all"></dd>
+          </div>
+          <div>
+            <dt class="text-gray-700 dark:text-gray-300">
+              {t.probabilityUnordered}
+            </dt>
+            <dd id="comb-prob-unordered" class="font-mono break-all"></dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { fill } from '../../lib/format-template';
+  import {
+    calculate,
+    describeNumber,
+    parseCount,
+    reciprocalScientific,
+  } from '../../lib/tools/combination-calculator';
+  import type { ParseCountError } from '../../lib/tools/combination-calculator';
+
+  const KEYS = [
+    'factorial',
+    'permutation',
+    'combination',
+    'repeatedPermutation',
+    'repeatedCombination',
+  ] as const;
+
+  const root = document.getElementById('comb-root')!;
+  const nInput = document.getElementById('comb-n') as HTMLInputElement;
+  const rInput = document.getElementById('comb-r') as HTMLInputElement;
+  const errorEl = document.getElementById('comb-error')!;
+  const noticeEl = document.getElementById('comb-notice')!;
+  const statusEl = document.getElementById('comb-status')!;
+  const resultsEl = document.getElementById('comb-results')!;
+  const probabilityEl = document.getElementById('comb-probability')!;
+  const probOrdered = document.getElementById('comb-prob-ordered')!;
+  const probUnordered = document.getElementById('comb-prob-unordered')!;
+  const nLabelText = 'n';
+  const rLabelText = 'r';
+
+  // 全桁表示の値（コピー用）
+  const fullValues: Record<string, string> = {};
+
+  function errorTemplate(reason: ParseCountError): string {
+    const d = root.dataset;
+    const map: Record<ParseCountError, string | undefined> = {
+      empty: d.errorEmpty,
+      invalid: d.errorInvalid,
+      negative: d.errorNegative,
+      'not-integer': d.errorNotInteger,
+      'too-large': d.errorTooLarge,
+    };
+    return map[reason] ?? '';
+  }
+
+  function setRow(key: string, value: bigint | null) {
+    const valueEl = document.getElementById(`comb-value-${key}`)!;
+    const metaEl = document.getElementById(`comb-meta-${key}`)!;
+    const button = document.getElementById(
+      `comb-copy-button-${key}`,
+    ) as HTMLButtonElement;
+    if (value === null) {
+      fullValues[key] = '';
+      valueEl.textContent = '—';
+      metaEl.textContent = root.dataset.unavailable ?? '';
+      button.disabled = true;
+      return;
+    }
+    const d = describeNumber(value);
+    fullValues[key] = d.digits;
+    valueEl.textContent = d.digits;
+    metaEl.textContent = fill(
+      (d.length >= 7 ? root.dataset.metaLong : root.dataset.metaShort) ?? '',
+      { length: String(d.length), sci: d.scientific },
+    );
+    button.disabled = false;
+  }
+
+  function update() {
+    statusEl.textContent = '';
+    const nParsed = parseCount(nInput.value);
+    const rParsed = parseCount(rInput.value);
+    const messages: string[] = [];
+    const max = root.dataset.max ?? '';
+    if (!nParsed.ok) {
+      messages.push(
+        fill(errorTemplate(nParsed.reason), { field: nLabelText, max }),
+      );
+    }
+    if (!rParsed.ok) {
+      messages.push(
+        fill(errorTemplate(rParsed.reason), { field: rLabelText, max }),
+      );
+    }
+    if (!nParsed.ok || !rParsed.ok) {
+      errorEl.textContent = messages.join(' ');
+      errorEl.classList.remove('hidden');
+      resultsEl.classList.add('hidden');
+      noticeEl.classList.add('hidden');
+      return;
+    }
+    errorEl.classList.add('hidden');
+    errorEl.textContent = '';
+    resultsEl.classList.remove('hidden');
+
+    const result = calculate(nParsed.value, rParsed.value);
+    for (const key of KEYS) setRow(key, result[key]);
+
+    const undefinedRow = result.combination === null;
+    noticeEl.textContent = undefinedRow ? (noticeEl.dataset.text ?? '') : '';
+    noticeEl.classList.toggle('hidden', !undefinedRow);
+    probabilityEl.classList.toggle('hidden', undefinedRow);
+    if (result.permutation !== null && result.combination !== null) {
+      const fmt = (v: bigint) =>
+        fill(root.dataset.probabilityValue ?? '', {
+          sci: reciprocalScientific(v) ?? '',
+        });
+      probOrdered.textContent = fmt(result.permutation);
+      probUnordered.textContent = fmt(result.combination);
+    }
+  }
+
+  nInput.addEventListener('input', update);
+  rInput.addEventListener('input', update);
+
+  document
+    .querySelectorAll<HTMLButtonElement>('[id^="comb-copy-button-"]')
+    .forEach((button) => {
+      button.addEventListener('click', async () => {
+        const text = fullValues[button.dataset.key ?? ''];
+        if (!text) return;
+        statusEl.textContent = (await copyText(text))
+          ? (root.dataset.copied ?? '')
+          : (root.dataset.copyFailed ?? '');
+      });
+    });
+
+  update();
+</script>

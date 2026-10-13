@@ -1,0 +1,470 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { screenSizeCalculatorContent } from '../../i18n/tools/screen-size-calculator';
+import {
+  RATIO_PRESETS,
+  RESOLUTION_PRESETS,
+} from '../../lib/tools/screen-size-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = screenSizeCalculatorContent[locale];
+const inputClass = 'ui-input h-11 w-full px-3 dark:bg-gray-900';
+const outClass =
+  'flex min-h-11 w-full items-center overflow-x-auto rounded-lg border border-gray-200 bg-gray-50 px-3 py-1 text-sm font-semibold break-words dark:border-gray-700 dark:bg-gray-900';
+---
+
+<ToolShell t={t}>
+  <div
+    id="sc-root"
+    data-length-value={t.lengthValue}
+    data-area-value={t.areaValue}
+    data-ppi-value={t.ppiValue}
+    data-pitch-value={t.pitchValue}
+    data-invisible-value={t.invisibleValue}
+    data-overview-value={t.overviewValue}
+    data-mismatch-note={t.mismatchNote}
+    data-invalid-screen={t.invalidScreen}
+    data-invalid-size={t.invalidSize}
+    data-diag-value={t.diagValue}
+    data-size-inch-value={t.sizeInchValue}
+    data-nearest-approx={t.nearestApprox}
+    data-nearest-exact={t.nearestExact}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <section class="mb-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-base font-semibold">{t.screenHeading}</h2>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label for="sc-diagonal" class="ui-label">
+            {t.diagonalLabel}
+          </label>
+          <input
+            id="sc-diagonal"
+            type="number"
+            inputmode="decimal"
+            step="any"
+            min="0"
+            value="27"
+            class={inputClass}
+          />
+        </div>
+        <div>
+          <label for="sc-ratio-preset" class="ui-label">
+            {t.ratioPresetLabel}
+          </label>
+          <select id="sc-ratio-preset" data-no-persist class={inputClass}>
+            {RATIO_PRESETS.map((p) => (
+              <option value={p.value}>{p.value}</option>
+            ))}
+            <option value="custom">{t.customOption}</option>
+          </select>
+        </div>
+        <div>
+          <label for="sc-ratio-w" class="ui-label">
+            {t.ratioWidthLabel}
+          </label>
+          <input
+            id="sc-ratio-w"
+            type="number"
+            inputmode="decimal"
+            step="any"
+            min="0"
+            value="16"
+            class={inputClass}
+          />
+        </div>
+        <div>
+          <label for="sc-ratio-h" class="ui-label">
+            {t.ratioHeightLabel}
+          </label>
+          <input
+            id="sc-ratio-h"
+            type="number"
+            inputmode="decimal"
+            step="any"
+            min="0"
+            value="9"
+            class={inputClass}
+          />
+        </div>
+        <div class="sm:col-span-2">
+          <label for="sc-res-preset" class="ui-label">
+            {t.resPresetLabel}
+          </label>
+          <select
+            id="sc-res-preset"
+            data-no-persist
+            class="ui-input h-11 w-full max-w-72 px-3 dark:bg-gray-900"
+          >
+            {RESOLUTION_PRESETS.map((p) => (
+              <option value={p.value}>
+                {p.label}（{p.width}×{p.height}）
+              </option>
+            ))}
+            <option value="custom">{t.customOption}</option>
+          </select>
+        </div>
+        <div>
+          <label for="sc-res-w" class="ui-label">
+            {t.resWidthLabel}
+          </label>
+          <input
+            id="sc-res-w"
+            type="number"
+            inputmode="numeric"
+            step="1"
+            min="0"
+            value="3840"
+            class={inputClass}
+          />
+        </div>
+        <div>
+          <label for="sc-res-h" class="ui-label">
+            {t.resHeightLabel}
+          </label>
+          <input
+            id="sc-res-h"
+            type="number"
+            inputmode="numeric"
+            step="1"
+            min="0"
+            value="2160"
+            class={inputClass}
+          />
+        </div>
+      </div>
+      <p
+        id="sc-screen-error"
+        class="ui-error empty:hidden mt-2"
+        aria-live="polite"
+      ></p>
+
+      <h3 class="mt-4 mb-2 text-base font-semibold">{t.resultHeading}</h3>
+      <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <dt class="ui-label">{t.widthLabel}</dt>
+          <dd id="sc-width" class={outClass}></dd>
+        </div>
+        <div>
+          <dt class="ui-label">{t.heightLabel}</dt>
+          <dd id="sc-height" class={outClass}></dd>
+        </div>
+        <div>
+          <dt class="ui-label">{t.areaLabel}</dt>
+          <dd id="sc-area" class={outClass}></dd>
+        </div>
+        <div>
+          <dt class="ui-label">{t.ppiLabel}</dt>
+          <dd id="sc-ppi" class={outClass}></dd>
+        </div>
+        <div>
+          <dt class="ui-label">{t.pitchLabel}</dt>
+          <dd id="sc-pitch" class={outClass}></dd>
+        </div>
+        <div>
+          <dt class="ui-label">{t.invisibleLabel}</dt>
+          <dd id="sc-invisible" class={outClass}></dd>
+        </div>
+        <div class="sm:col-span-2">
+          <dt class="ui-label">{t.overviewLabel}</dt>
+          <dd id="sc-overview" class={outClass}></dd>
+        </div>
+      </dl>
+      <p
+        id="sc-mismatch"
+        class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+      ></p>
+      <div class="mt-3 flex items-center gap-3">
+        <button type="button" id="sc-copy-button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <span
+          id="sc-copy-status"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </section>
+
+    <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-base font-semibold">{t.sizeHeading}</h2>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label for="sc-cm-w" class="ui-label">
+            {t.cmWidthLabel}
+          </label>
+          <input
+            id="sc-cm-w"
+            type="number"
+            inputmode="decimal"
+            step="any"
+            min="0"
+            value="59.8"
+            class={inputClass}
+          />
+        </div>
+        <div>
+          <label for="sc-cm-h" class="ui-label">
+            {t.cmHeightLabel}
+          </label>
+          <input
+            id="sc-cm-h"
+            type="number"
+            inputmode="decimal"
+            step="any"
+            min="0"
+            value="33.6"
+            class={inputClass}
+          />
+        </div>
+      </div>
+      <p
+        id="sc-size-error"
+        class="ui-error empty:hidden mt-2"
+        aria-live="polite"
+      ></p>
+      <dl class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <dt class="ui-label">{t.diagResultLabel}</dt>
+          <dd id="sc-diag" class={outClass}></dd>
+        </div>
+        <div>
+          <dt class="ui-label">{t.sizeInchLabel}</dt>
+          <dd id="sc-size-inch" class={outClass}></dd>
+        </div>
+        <div class="sm:col-span-2">
+          <dt class="ui-label">{t.nearestLabel}</dt>
+          <dd id="sc-nearest" class={outClass}></dd>
+        </div>
+      </dl>
+    </section>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { fill } from '../../lib/format-template';
+  import {
+    RATIO_PRESETS,
+    RESOLUTION_PRESETS,
+    calculateScreen,
+    formatNumber,
+    simplifyInteger,
+    sizeToDiagonal,
+  } from '../../lib/tools/screen-size-calculator';
+
+  const root = document.getElementById('sc-root')!;
+  const d = root.dataset;
+  const $ = (id: string) => document.getElementById(id)!;
+  const input = (id: string) => $(id) as HTMLInputElement;
+  const select = (id: string) => $(id) as HTMLSelectElement;
+
+  const diagonal = input('sc-diagonal');
+  const ratioPreset = select('sc-ratio-preset');
+  const ratioW = input('sc-ratio-w');
+  const ratioH = input('sc-ratio-h');
+  const resPreset = select('sc-res-preset');
+  const resW = input('sc-res-w');
+  const resH = input('sc-res-h');
+  const cmW = input('sc-cm-w');
+  const cmH = input('sc-cm-h');
+
+  const screenOutIds = [
+    'sc-width',
+    'sc-height',
+    'sc-area',
+    'sc-ppi',
+    'sc-pitch',
+    'sc-invisible',
+    'sc-overview',
+  ];
+  let lastCopyText = '';
+
+  const isEmpty = (...els: HTMLInputElement[]) =>
+    els.some((el) => el.value.trim() === '');
+
+  function renderScreen() {
+    $('sc-copy-status').textContent = '';
+    lastCopyText = '';
+    for (const id of screenOutIds) $(id).textContent = '';
+    $('sc-mismatch').textContent = '';
+    const empty = isEmpty(diagonal, ratioW, ratioH, resW, resH);
+    const r = empty
+      ? null
+      : calculateScreen({
+          diagonalInch: Number(diagonal.value),
+          ratioW: Number(ratioW.value),
+          ratioH: Number(ratioH.value),
+          resWidth: Number(resW.value),
+          resHeight: Number(resH.value),
+        });
+    $('sc-screen-error').textContent =
+      r || empty ? '' : (d.invalidScreen ?? '');
+    if (!r) return;
+    $('sc-width').textContent = fill(d.lengthValue ?? '', {
+      cm: formatNumber(r.widthCm, 2),
+      inch: formatNumber(r.widthInch, 2),
+    });
+    $('sc-height').textContent = fill(d.lengthValue ?? '', {
+      cm: formatNumber(r.heightCm, 2),
+      inch: formatNumber(r.heightInch, 2),
+    });
+    $('sc-area').textContent = fill(d.areaValue ?? '', {
+      cm2: formatNumber(r.areaCm2, 1),
+      in2: formatNumber(r.areaInch2, 1),
+    });
+    $('sc-ppi').textContent = fill(d.ppiValue ?? '', {
+      ppi: formatNumber(r.ppi, 1),
+    });
+    $('sc-pitch').textContent = fill(d.pitchValue ?? '', {
+      mm: formatNumber(r.dotPitchMm, 3),
+    });
+    $('sc-invisible').textContent = fill(d.invisibleValue ?? '', {
+      cm: formatNumber(r.pixelInvisibleCm, 0),
+    });
+    $('sc-overview').textContent = fill(d.overviewValue ?? '', {
+      min: formatNumber(r.overviewMinCm, 0),
+      max: formatNumber(r.overviewMaxCm, 0),
+    });
+    if (r.ratioMismatchPercent >= 1) {
+      $('sc-mismatch').textContent = fill(d.mismatchNote ?? '', {
+        diff: formatNumber(r.ratioMismatchPercent, 1),
+      });
+    }
+    lastCopyText = [
+      'sc-width',
+      'sc-height',
+      'sc-area',
+      'sc-ppi',
+      'sc-pitch',
+      'sc-invisible',
+      'sc-overview',
+    ]
+      .map((id) => {
+        const label =
+          $(id).parentElement?.querySelector('dt')?.textContent ?? '';
+        return `${label}: ${$(id).textContent ?? ''}`;
+      })
+      .join('\n');
+  }
+
+  function syncRatioPreset() {
+    const w = Number(ratioW.value);
+    const h = Number(ratioH.value);
+    const match = RATIO_PRESETS.find((p) => p.w * h === p.h * w);
+    ratioPreset.value = match ? match.value : 'custom';
+  }
+
+  function syncResPreset() {
+    const w = Number(resW.value);
+    const h = Number(resH.value);
+    const match = RESOLUTION_PRESETS.find(
+      (p) => p.width === w && p.height === h,
+    );
+    resPreset.value = match ? match.value : 'custom';
+  }
+
+  /** 解像度を変えたら、画面の縦横比を解像度の比率に合わせる */
+  /** 読み込み完了前は入力状態の復元中。復元の合成イベントで縦横比を上書きしない */
+  let ready = false;
+
+  function followResolutionRatio() {
+    if (!ready) return;
+    const r = simplifyInteger(Number(resW.value), Number(resH.value));
+    if (!r) return;
+    const preset = RATIO_PRESETS.find((p) => p.w * r.h === p.h * r.w);
+    ratioW.value = String(preset ? preset.w : r.w);
+    ratioH.value = String(preset ? preset.h : r.h);
+    syncRatioPreset();
+  }
+
+  function renderSize() {
+    const out = ['sc-diag', 'sc-size-inch', 'sc-nearest'];
+    for (const id of out) $(id).textContent = '';
+    const empty = isEmpty(cmW, cmH);
+    const r = empty
+      ? null
+      : sizeToDiagonal(Number(cmW.value), Number(cmH.value));
+    $('sc-size-error').textContent = r || empty ? '' : (d.invalidSize ?? '');
+    if (!r) return;
+    $('sc-diag').textContent = fill(d.diagValue ?? '', {
+      inch: formatNumber(r.diagonalInch, 2),
+      cm: formatNumber(r.diagonalCm, 2),
+    });
+    $('sc-size-inch').textContent = fill(d.sizeInchValue ?? '', {
+      w: formatNumber(r.widthInch, 2),
+      h: formatNumber(r.heightInch, 2),
+    });
+    $('sc-nearest').textContent =
+      r.nearestDiffPercent < 0.05
+        ? fill(d.nearestExact ?? '', { ratio: r.nearest.value })
+        : fill(d.nearestApprox ?? '', {
+            ratio: r.nearest.value,
+            diff: formatNumber(r.nearestDiffPercent, 1),
+          });
+  }
+
+  diagonal.addEventListener('input', renderScreen);
+  ratioW.addEventListener('input', () => {
+    syncRatioPreset();
+    renderScreen();
+  });
+  ratioH.addEventListener('input', () => {
+    syncRatioPreset();
+    renderScreen();
+  });
+  ratioPreset.addEventListener('change', () => {
+    const p = RATIO_PRESETS.find((x) => x.value === ratioPreset.value);
+    if (!p) return;
+    ratioW.value = String(p.w);
+    ratioH.value = String(p.h);
+    renderScreen();
+  });
+  resW.addEventListener('input', () => {
+    syncResPreset();
+    followResolutionRatio();
+    renderScreen();
+  });
+  resH.addEventListener('input', () => {
+    syncResPreset();
+    followResolutionRatio();
+    renderScreen();
+  });
+  resPreset.addEventListener('change', () => {
+    const p = RESOLUTION_PRESETS.find((x) => x.value === resPreset.value);
+    if (!p) return;
+    resW.value = String(p.width);
+    resH.value = String(p.height);
+    followResolutionRatio();
+    renderScreen();
+  });
+  cmW.addEventListener('input', renderSize);
+  cmH.addEventListener('input', renderSize);
+
+  $('sc-copy-button').addEventListener('click', async () => {
+    if (lastCopyText === '') return;
+    $('sc-copy-status').textContent = (await copyText(lastCopyText))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+  });
+
+  syncRatioPreset();
+  syncResPreset();
+  renderScreen();
+  renderSize();
+
+  // 入力状態の復元では解像度の入力イベントが縦横比を上書きするため、復元後の欄の値で描き直す
+  window.addEventListener('load', () => {
+    ready = true;
+    syncRatioPreset();
+    syncResPreset();
+    renderScreen();
+    renderSize();
+  });
+</script>

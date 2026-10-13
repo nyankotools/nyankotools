@@ -1,0 +1,320 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { primeFactorizationContent } from '../../i18n/tools/prime-factorization';
+import {
+  MAX_DIGITS,
+  MAX_LIST_ITEMS,
+} from '../../lib/tools/prime-factorization';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = primeFactorizationContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="pf-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-factorization-label={t.factorizationLabel}
+    data-prime-status-label={t.primeStatusLabel}
+    data-status-prime={t.statusPrime}
+    data-status-composite={t.statusComposite}
+    data-divisor-count-label={t.divisorCountLabel}
+    data-divisor-sum-label={t.divisorSumLabel}
+    data-divisors-label={t.divisorsLabel}
+    data-divisors-omitted={t.divisorsOmitted}
+    data-probable-notice={t.probableNotice}
+    data-gcd-label={t.gcdLabel}
+    data-lcm-label={t.lcmLabel}
+    data-coprime-notice={t.coprimeNotice}
+    data-error-invalid={t.errorInvalid}
+    data-error-decimal={t.errorDecimal}
+    data-error-negative={t.errorNegative}
+    data-error-zero={t.errorZero}
+    data-error-one={t.errorOne}
+    data-error-too-long={t.errorTooLong}
+    data-error-gave-up={t.errorGaveUp}
+    data-error-too-few={t.errorTooFew}
+    data-error-too-many={t.errorTooMany}
+    data-item-error-prefix={t.itemErrorPrefix}
+    data-max-digits={String(MAX_DIGITS)}
+    data-max-items={String(MAX_LIST_ITEMS)}
+  >
+    <div
+      id="pf-mode"
+      class="ui-seg w-fit"
+      role="group"
+      aria-label={t.modeLabel}
+    >
+      <button
+        type="button"
+        data-mode="factor"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.modeFactor}
+      </button>
+      <button
+        type="button"
+        data-mode="gcd"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeGcd}
+      </button>
+    </div>
+
+    <div id="pf-factor-panel" class="mt-4">
+      <label for="pf-factor-input" class="ui-label">
+        {t.factorInputLabel}
+      </label>
+      <input
+        id="pf-factor-input"
+        type="text"
+        inputmode="numeric"
+        autocomplete="off"
+        spellcheck="false"
+        data-query-target="text"
+        class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.factorPlaceholder}
+      />
+    </div>
+
+    <div id="pf-gcd-panel" class="mt-4 hidden">
+      <label for="pf-gcd-input" class="ui-label">
+        {t.gcdInputLabel}
+      </label>
+      <textarea
+        id="pf-gcd-input"
+        rows="4"
+        autocomplete="off"
+        spellcheck="false"
+        class="ui-input w-full px-3 py-2 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.gcdPlaceholder}
+      ></textarea>
+    </div>
+
+    <p id="pf-error" class="ui-error mt-3 hidden" role="alert"></p>
+
+    <div id="pf-result" class="mt-4 hidden">
+      <dl id="pf-rows" class="grid gap-3"></dl>
+      <p
+        id="pf-notice"
+        class="mt-3 hidden rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+      ></p>
+      <div class="mt-3 flex flex-wrap items-center gap-3">
+        <button id="pf-copy-button" type="button" class="ui-btn">
+          {t.copy}
+        </button>
+        <p
+          id="pf-status"
+          class="min-h-5 text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></p>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { fill } from '../../lib/format-template';
+  import { onTextInput } from '../../lib/input-scheduler';
+  import {
+    factorize,
+    formatFactorization,
+    gcdLcm,
+    parseIntegerList,
+    parsePositiveInteger,
+    type ParseError,
+  } from '../../lib/tools/prime-factorization';
+
+  type Mode = 'factor' | 'gcd';
+
+  const root = document.getElementById('pf-root')!;
+  const factorInput = document.getElementById(
+    'pf-factor-input',
+  ) as HTMLInputElement;
+  const gcdInput = document.getElementById(
+    'pf-gcd-input',
+  ) as HTMLTextAreaElement;
+  const factorPanel = document.getElementById('pf-factor-panel')!;
+  const gcdPanel = document.getElementById('pf-gcd-panel')!;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#pf-mode [data-mode]',
+  );
+  const errorEl = document.getElementById('pf-error')!;
+  const resultEl = document.getElementById('pf-result')!;
+  const rowsEl = document.getElementById('pf-rows')!;
+  const noticeEl = document.getElementById('pf-notice')!;
+  const copyButton = document.getElementById(
+    'pf-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('pf-status')!;
+
+  const d = root.dataset;
+  let mode: Mode = 'factor';
+  let copyValue = '';
+
+  interface Row {
+    label: string;
+    value: string;
+    /** コピー対象にも含めるか */
+    mono?: boolean;
+  }
+
+  function applyMode() {
+    factorPanel.classList.toggle('hidden', mode !== 'factor');
+    gcdPanel.classList.toggle('hidden', mode !== 'gcd');
+    modeButtons.forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
+    });
+  }
+
+  function parseErrorText(reason: ParseError | 'too-few' | 'too-many') {
+    const map: Record<string, string | undefined> = {
+      empty: '',
+      invalid: d.errorInvalid,
+      decimal: d.errorDecimal,
+      negative: d.errorNegative,
+      zero: d.errorZero,
+      'too-long': d.errorTooLong,
+      'too-few': d.errorTooFew,
+      'too-many': d.errorTooMany,
+    };
+    return fill(map[reason] ?? '', {
+      max: reason === 'too-many' ? (d.maxItems ?? '') : (d.maxDigits ?? ''),
+    });
+  }
+
+  function render(rows: Row[], notice: string, copy: string, error: string) {
+    errorEl.textContent = error;
+    errorEl.classList.toggle('hidden', error === '');
+    statusEl.textContent = '';
+    rowsEl.replaceChildren();
+    for (const row of rows) {
+      const wrap = document.createElement('div');
+      const dt = document.createElement('dt');
+      dt.className = 'text-sm font-medium text-gray-700 dark:text-gray-300';
+      dt.textContent = row.label;
+      const dd = document.createElement('dd');
+      dd.className = row.mono
+        ? 'mt-0.5 break-all font-mono text-base'
+        : 'mt-0.5 break-words text-sm';
+      dd.textContent = row.value;
+      wrap.append(dt, dd);
+      rowsEl.append(wrap);
+    }
+    noticeEl.textContent = notice;
+    noticeEl.classList.toggle('hidden', notice === '');
+    copyValue = copy;
+    resultEl.classList.toggle('hidden', rows.length === 0);
+  }
+
+  function runFactor() {
+    const text = factorInput.value;
+    if (text.trim() === '') return render([], '', '', '');
+    const parsed = parsePositiveInteger(text);
+    if (!parsed.ok) return render([], '', '', parseErrorText(parsed.reason));
+    if (parsed.value === 1n) return render([], '', '', d.errorOne ?? '');
+    const r = factorize(parsed.value);
+    if (!r.ok) return render([], '', '', d.errorGaveUp ?? '');
+
+    const expression = formatFactorization(r.factors);
+    const rows: Row[] = [
+      {
+        label: d.factorizationLabel ?? '',
+        value: `${r.value} = ${r.isPrime ? String(r.value) : expression}`,
+        mono: true,
+      },
+      {
+        label: d.primeStatusLabel ?? '',
+        value: (r.isPrime ? d.statusPrime : d.statusComposite) ?? '',
+      },
+      {
+        label: d.divisorCountLabel ?? '',
+        value: r.divisorCount.toString(),
+        mono: true,
+      },
+      {
+        label: d.divisorSumLabel ?? '',
+        value: r.divisorSum.toString(),
+        mono: true,
+      },
+    ];
+    if (r.divisors) {
+      rows.push({
+        label: d.divisorsLabel ?? '',
+        value: r.divisors.join(', '),
+        mono: true,
+      });
+    } else {
+      rows.push({
+        label: d.divisorsLabel ?? '',
+        value: fill(d.divisorsOmitted ?? '', {
+          count: r.divisorCount.toString(),
+        }),
+      });
+    }
+    const copy = rows
+      .filter((x) => x.mono || x.label === d.primeStatusLabel)
+      .map((x) => `${x.label}: ${x.value}`)
+      .join('\n');
+    render(rows, r.probable ? (d.probableNotice ?? '') : '', copy, '');
+  }
+
+  function runGcd() {
+    const text = gcdInput.value;
+    if (text.trim() === '') return render([], '', '', '');
+    const parsed = parseIntegerList(text);
+    if (!parsed.ok) {
+      let message = parseErrorText(parsed.reason);
+      if (parsed.index !== undefined) {
+        message =
+          fill(d.itemErrorPrefix ?? '', {
+            index: String(parsed.index),
+            token: parsed.token ?? '',
+          }) + message;
+      }
+      return render([], '', '', message);
+    }
+    const r = gcdLcm(parsed.values);
+    const rows: Row[] = [
+      { label: d.gcdLabel ?? '', value: r.gcd.toString(), mono: true },
+      { label: d.lcmLabel ?? '', value: r.lcm.toString(), mono: true },
+    ];
+    const copy = `${d.gcdLabel}: ${r.gcd}\n${d.lcmLabel}: ${r.lcm}`;
+    render(rows, r.coprime ? (d.coprimeNotice ?? '') : '', copy, '');
+  }
+
+  function run() {
+    if (mode === 'factor') runFactor();
+    else runGcd();
+  }
+
+  // 20字以上は難しい合成数になり得るため、キー入力ごとの同期計算を避けて遅延する
+  onTextInput(factorInput, run, { threshold: 20 });
+  onTextInput(gcdInput, run);
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as Mode;
+      applyMode();
+      run();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!copyValue) return;
+    statusEl.textContent = (await copyText(copyValue))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+  });
+
+  applyMode();
+  run();
+</script>

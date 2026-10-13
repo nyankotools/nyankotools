@@ -6315,6 +6315,168 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'prime-factorization',
+    category: 'calc',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['ratio-calculator', 'combination-calculator', 'base-converter'],
+    translations: {
+      ja: {
+        name: '素因数分解・最大公約数・最小公倍数計算',
+        keywords: [
+          '素因数分解',
+          '最大公約数',
+          '最小公倍数',
+          'GCD',
+          'LCM',
+          '約数',
+          '素数判定',
+        ],
+        description:
+          '整数を素因数分解し、約数の一覧・個数・総和と素数判定を表示します。複数の整数の最大公約数・最小公倍数も計算でき、巨大な整数（BigInt）にも対応します。',
+      },
+      en: {
+        name: 'Prime Factorization, GCD & LCM Calculator',
+        keywords: [
+          'prime factorization',
+          'prime factors',
+          'GCD',
+          'LCM',
+          'greatest common divisor',
+          'least common multiple',
+          'divisors',
+          'prime checker',
+        ],
+        description:
+          'Factor an integer into primes, list its divisors with their count and sum, and check primality. Also finds the GCD and LCM of several integers, with BigInt support.',
+      },
+    },
+  },
+  {
+    slug: 'combination-calculator',
+    category: 'calc',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: [
+      'gacha-calculator',
+      'statistics-calculator',
+      'prime-factorization',
+    ],
+    translations: {
+      ja: {
+        name: '順列・組み合わせ計算',
+        description:
+          'nPr（順列）・nCr（組み合わせ）・階乗・重複順列・重複組合せを、巨大な値も全桁正確に計算します。',
+        keywords: [
+          '順列',
+          '組み合わせ',
+          '階乗',
+          'nPr',
+          'nCr',
+          '重複組合せ',
+          '場合の数',
+          'コンビネーション',
+        ],
+      },
+      en: {
+        name: 'Permutation & Combination Calculator',
+        description:
+          'Calculate nPr, nCr, factorials and repetition variants exactly, with every digit shown even for huge values.',
+        keywords: [
+          'permutation',
+          'combination',
+          'factorial',
+          'nPr',
+          'nCr',
+          'binomial coefficient',
+          'combinatorics',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'gpa-calculator',
+    category: 'calc',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: [
+      'statistics-calculator',
+      'scholarship-repayment-simulator',
+      'split-bill-calculator',
+    ],
+    translations: {
+      ja: {
+        name: 'GPA計算ツール',
+        description:
+          '科目ごとの単位数と評価からGPAを計算。日本の大学（S・A・B・C・D）、4.0・4.3スケールに対応。',
+        keywords: [
+          'GPA',
+          'GPA計算',
+          '成績',
+          '成績評価',
+          '単位',
+          '大学',
+          'グレードポイント',
+          '4.0',
+        ],
+      },
+      en: {
+        name: 'GPA Calculator',
+        description:
+          'Calculate GPA from course credits and grades. Supports 4.0, 4.3 and Japanese university scales.',
+        keywords: [
+          'gpa',
+          'grade point average',
+          'grades',
+          'credits',
+          'college',
+          'university',
+          '4.0 scale',
+          '4.3 scale',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'screen-size-calculator',
+    category: 'calc',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['aspect-ratio-calculator', 'unit-converter', 'viewport-checker'],
+    translations: {
+      ja: {
+        name: '画面サイズ計算機',
+        description:
+          'モニター・テレビの対角インチと縦横比から幅・高さ（cm）、PPI、ドットピッチ、視聴距離の目安を計算。cmからインチへの逆算にも対応',
+        keywords: [
+          '画面サイズ',
+          'インチ cm 変換',
+          'PPI',
+          'ドットピッチ',
+          '画素密度',
+          'モニター サイズ',
+          '視聴距離',
+          '解像度',
+        ],
+      },
+      en: {
+        name: 'Screen Size Calculator',
+        description:
+          'Convert a screen diagonal in inches to width and height in cm, and get PPI, dot pitch and a viewing distance estimate. Works backwards from cm too.',
+        keywords: [
+          'screen size',
+          'inch to cm',
+          'PPI',
+          'pixel density',
+          'dot pitch',
+          'monitor size',
+          'diagonal',
+          'viewing distance',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

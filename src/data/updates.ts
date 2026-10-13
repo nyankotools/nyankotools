@@ -551,15 +551,19 @@ export const updates: UpdateEntry[] = [
       'morse-code-converter',
       'classical-cipher',
       'roman-numeral-converter',
+      'prime-factorization',
+      'combination-calculator',
+      'gpa-calculator',
+      'screen-size-calculator',
     ],
     translations: {
       ja: {
         summary:
-          '改行⇔カンマ・区切り文字変換・モールス信号変換・古典暗号変換・ローマ数字変換を追加しました。区切り文字変換は、改行・カンマ・タブ・スペースなどを相互に変換し、空要素・重複の削除や引用符の付与もできます。モールス信号変換は、欧文と和文を双方向に変換し、音や光で再生できます。古典暗号変換は、シーザー暗号・ROT13・ヴィジュネル暗号などに対応し、シーザー暗号の総当たり解読も表示します。ローマ数字変換は、1〜3999の算用数字とローマ数字を相互に変換します。',
+          '改行⇔カンマ・区切り文字変換・モールス信号変換・古典暗号変換・ローマ数字変換を追加しました。区切り文字変換は、改行・カンマ・タブ・スペースなどを相互に変換し、空要素・重複の削除や引用符の付与もできます。モールス信号変換は、欧文と和文を双方向に変換し、音や光で再生できます。古典暗号変換は、シーザー暗号・ROT13・ヴィジュネル暗号などに対応し、シーザー暗号の総当たり解読も表示します。ローマ数字変換は、1〜3999の算用数字とローマ数字を相互に変換します。素因数分解・順列組み合わせ計算・GPA計算・画面サイズ計算も追加しました。素因数分解は、約数の一覧や素数判定に加え、複数の整数の最大公約数・最小公倍数も求められます。順列・組み合わせ計算は、nPr・nCr・階乗などを巨大な値でも全桁正確に計算します。GPA計算は、日本の大学や4.0・4.3スケールの成績評価に対応しています。画面サイズ計算は、対角インチと縦横比から幅・高さ、PPI、視聴距離の目安を求めます。',
       },
       en: {
         summary:
-          'Added the Newline to Comma & Delimiter Converter, Morse Code Translator, Classical Cipher Tool and Roman Numeral Converter. The delimiter converter switches between newlines, commas, tabs and spaces with trimming, de-duplication and quoting; the Morse translator handles English and Japanese Wabun and plays the result as sound or light; the cipher tool covers Caesar, ROT13, Vigenere and Atbash with a brute-force view of every Caesar shift; the Roman numeral converter converts 1–3999 both ways.',
+          'Added the Newline to Comma & Delimiter Converter, Morse Code Translator, Classical Cipher Tool and Roman Numeral Converter. The delimiter converter switches between newlines, commas, tabs and spaces with trimming, de-duplication and quoting; the Morse translator handles English and Japanese Wabun and plays the result as sound or light; the cipher tool covers Caesar, ROT13, Vigenere and Atbash with a brute-force view of every Caesar shift; the Roman numeral converter converts 1–3999 both ways. Also added the Prime Factorization / GCD / LCM Calculator, Permutation & Combination Calculator, GPA Calculator and Screen Size Calculator: the factorization tool lists divisors and checks primality as well as finding the GCD and LCM of several integers; the combinatorics tool computes nPr, nCr and factorials exactly even for huge values; the GPA calculator supports Japanese university grades and 4.0 / 4.3 scales; the screen size calculator turns a diagonal and aspect ratio into width, height, PPI and a viewing distance estimate.',
       },
     },
   },

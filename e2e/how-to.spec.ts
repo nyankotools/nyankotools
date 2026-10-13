@@ -31,6 +31,7 @@ const slugs = [
   'delimiter-converter',
   'morse-code-converter',
   'classical-cipher',
+  'gpa-calculator',
   'word-search-generator',
   'crossword-generator',
   'favicon-generator',

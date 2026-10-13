@@ -6168,6 +6168,153 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'delimiter-converter',
+    category: 'text',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['text-list-tools', 'text-replace-tools', 'csv-json-converter'],
+    translations: {
+      ja: {
+        name: '改行⇔カンマ・区切り文字変換',
+        description:
+          '改行区切りとカンマ・タブ・スペース等の区切りを相互変換。空要素・重複の削除や引用符の付与にも対応。',
+        keywords: [
+          '改行 カンマ 変換',
+          '改行 カンマ区切り',
+          'カンマ区切り 改行',
+          '区切り文字 変換',
+          'デリミタ',
+          'タブ区切り',
+          'CSV 変換',
+          '引用符 付与',
+        ],
+      },
+      en: {
+        name: 'Newline to Comma & Delimiter Converter',
+        description:
+          'Convert between newline, comma, tab, space, and custom delimiters. Trim, dedupe, and quote items.',
+        keywords: [
+          'newline to comma',
+          'comma to newline',
+          'delimiter converter',
+          'list to comma separated',
+          'tab separated',
+          'add quotes to list',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'morse-code-converter',
+    category: 'text',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['romaji-kana-converter', 'metronome-bpm', 'classical-cipher'],
+    translations: {
+      ja: {
+        name: 'モールス信号変換',
+        description:
+          '文字とモールス信号を双方向に変換します。英数字の欧文と、カタカナ・濁点・長音を含む和文に対応し、速度（WPM）と音の高さを決めて音や光で再生できます。',
+        keywords: [
+          'モールス',
+          'モールス符号',
+          '和文モールス',
+          '欧文モールス',
+          'SOS',
+          'モールス信号 変換',
+          '光 音 再生',
+          'WPM',
+        ],
+      },
+      en: {
+        name: 'Morse Code Translator',
+        description:
+          'Translate text to Morse code and back, including Japanese Wabun kana. Play it as sound or a light flash at a chosen speed (WPM) and tone.',
+        keywords: [
+          'morse code',
+          'morse translator',
+          'wabun',
+          'japanese morse',
+          'SOS',
+          'text to morse',
+          'morse to text',
+          'morse audio',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'classical-cipher',
+    category: 'encode',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['crypto-encryptor', 'base64', 'morse-code-converter'],
+    translations: {
+      ja: {
+        name: '古典暗号変換（シーザー・ROT13）',
+        description:
+          'シーザー暗号・ROT13・ROT47・ヴィジュネル暗号・アトバシュ暗号で暗号化・復号。シーザー暗号は全25シフトの総当たり解読も可能。',
+        keywords: [
+          'シーザー暗号',
+          'ROT13',
+          'ROT47',
+          'ヴィジュネル暗号',
+          'アトバシュ暗号',
+          '総当たり',
+        ],
+      },
+      en: {
+        name: 'Classical Cipher Tool (Caesar, ROT13)',
+        description:
+          'Encrypt and decrypt with Caesar, ROT13, ROT47, Vigenere, or Atbash. Includes a brute-force list of all 25 Caesar shifts.',
+        keywords: [
+          'caesar cipher',
+          'ROT13',
+          'ROT47',
+          'vigenere cipher',
+          'atbash cipher',
+          'brute force',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'roman-numeral-converter',
+    category: 'calc',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['base-converter', 'kanji-number-converter', 'unit-converter'],
+    translations: {
+      ja: {
+        name: 'ローマ数字⇔算用数字変換',
+        description:
+          '算用数字（1〜3999）とローマ数字を相互に変換します。IIII・VX などの誤った表記には正規形を示し、Unicodeローマ数字・小文字出力や1〜20・西暦年の一覧にも対応。',
+        keywords: [
+          'ローマ数字',
+          'ローマ数字変換',
+          '算用数字',
+          'アラビア数字',
+          'Ⅻ',
+          '章番号',
+          '時計',
+        ],
+      },
+      en: {
+        name: 'Roman Numeral Converter',
+        description:
+          'Convert numbers 1–3999 to Roman numerals and back. Non-standard forms like IIII are flagged with the standard form, with lowercase and Unicode (Ⅻ) output and a quick-reference table.',
+        keywords: [
+          'roman numerals',
+          'roman numeral converter',
+          'arabic numbers',
+          'number to roman',
+          'roman to number',
+          'MCMXCIV',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

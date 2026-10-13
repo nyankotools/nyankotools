@@ -544,6 +544,25 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-13',
+    toolSlugs: [
+      'delimiter-converter',
+      'morse-code-converter',
+      'classical-cipher',
+      'roman-numeral-converter',
+    ],
+    translations: {
+      ja: {
+        summary:
+          '改行⇔カンマ・区切り文字変換・モールス信号変換・古典暗号変換・ローマ数字変換を追加しました。区切り文字変換は、改行・カンマ・タブ・スペースなどを相互に変換し、空要素・重複の削除や引用符の付与もできます。モールス信号変換は、欧文と和文を双方向に変換し、音や光で再生できます。古典暗号変換は、シーザー暗号・ROT13・ヴィジュネル暗号などに対応し、シーザー暗号の総当たり解読も表示します。ローマ数字変換は、1〜3999の算用数字とローマ数字を相互に変換します。',
+      },
+      en: {
+        summary:
+          'Added the Newline to Comma & Delimiter Converter, Morse Code Translator, Classical Cipher Tool and Roman Numeral Converter. The delimiter converter switches between newlines, commas, tabs and spaces with trimming, de-duplication and quoting; the Morse translator handles English and Japanese Wabun and plays the result as sound or light; the cipher tool covers Caesar, ROT13, Vigenere and Atbash with a brute-force view of every Caesar shift; the Roman numeral converter converts 1–3999 both ways.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

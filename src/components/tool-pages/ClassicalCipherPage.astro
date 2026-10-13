@@ -1,0 +1,285 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { classicalCipherContent } from '../../i18n/tools/classical-cipher';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = classicalCipherContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="cc-method" class="ui-label">
+        {t.methodLabel}
+      </label>
+      <select
+        id="cc-method"
+        class="ui-input h-11 w-full bg-white px-3 dark:bg-gray-900"
+      >
+        <option value="caesar">{t.methodCaesar}</option>
+        <option value="rot13">{t.methodRot13}</option>
+        <option value="rot47">{t.methodRot47}</option>
+        <option value="vigenere">{t.methodVigenere}</option>
+        <option value="atbash">{t.methodAtbash}</option>
+      </select>
+    </div>
+    <div>
+      <span id="cc-direction-label" class="ui-label">
+        {t.directionLabel}
+      </span>
+      <div
+        id="cc-direction"
+        class="ui-seg w-fit"
+        role="group"
+        aria-labelledby="cc-direction-label"
+      >
+        <button
+          type="button"
+          data-direction="encrypt"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.directionEncrypt}
+        </button>
+        <button
+          type="button"
+          data-direction="decrypt"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.directionDecrypt}
+        </button>
+      </div>
+    </div>
+    <div id="cc-shift-field">
+      <label for="cc-shift" class="ui-label">
+        {t.shiftLabel}
+      </label>
+      <input
+        id="cc-shift"
+        type="number"
+        min="0"
+        max="25"
+        step="1"
+        value="3"
+        inputmode="numeric"
+        class="ui-input h-11 w-full bg-white px-3 dark:bg-gray-900"
+      />
+    </div>
+    <div id="cc-key-field" hidden>
+      <label for="cc-key" class="ui-label">
+        {t.keyLabel}
+      </label>
+      <input
+        id="cc-key"
+        type="text"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder={t.keyPlaceholder}
+        class="ui-input h-11 w-full bg-white px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+    </div>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="cc-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="cc-input"
+        data-query-target="text"
+        data-sample={t.sampleText}
+        class="ui-input h-48 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <div class="mb-1 flex items-center justify-between gap-3">
+        <label
+          for="cc-output"
+          class="text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.outputLabel}
+        </label>
+        <span
+          id="cc-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+      <textarea
+        id="cc-output"
+        readonly
+        class="ui-input h-48 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+      <button
+        id="cc-copy-button"
+        type="button"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="ui-btn mt-2"
+      >
+        {t.copy}
+      </button>
+    </div>
+  </div>
+
+  <p
+    id="cc-error"
+    hidden
+    data-message={t.keyError}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+
+  <section
+    id="cc-brute"
+    class="mt-8"
+    data-shift-label={t.bruteShiftLabel}
+    data-truncated={t.bruteTruncated}
+    data-empty={t.bruteEmpty}
+  >
+    <h2 class="mb-1 text-lg font-bold">{t.bruteHeading}</h2>
+    <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+      {t.bruteDescription}
+    </p>
+    <p
+      id="cc-brute-note"
+      class="mb-2 text-sm text-gray-600 dark:text-gray-400"
+      hidden
+    ></p>
+    <ul
+      id="cc-brute-list"
+      tabindex="0"
+      class="max-h-96 divide-y divide-gray-200 overflow-auto rounded-lg border border-gray-300 text-sm dark:divide-gray-700 dark:border-gray-700"
+    ></ul>
+  </section>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { fill } from '../../lib/format-template';
+  import {
+    BRUTE_FORCE_LIMIT,
+    CIPHER_METHODS,
+    caesarBruteForce,
+    transform,
+    type CipherDirection,
+    type CipherMethod,
+  } from '../../lib/tools/classical-cipher';
+
+  const method = document.getElementById('cc-method') as HTMLSelectElement;
+  const shift = document.getElementById('cc-shift') as HTMLInputElement;
+  const key = document.getElementById('cc-key') as HTMLInputElement;
+  const shiftField = document.getElementById('cc-shift-field')!;
+  const keyField = document.getElementById('cc-key-field')!;
+  const input = document.getElementById('cc-input') as HTMLTextAreaElement;
+  const output = document.getElementById('cc-output') as HTMLTextAreaElement;
+  const copyButton = document.getElementById(
+    'cc-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('cc-status')!;
+  const errorEl = document.getElementById('cc-error')!;
+  const brute = document.getElementById('cc-brute')!;
+  const bruteList = document.getElementById('cc-brute-list')!;
+  const bruteNote = document.getElementById('cc-brute-note')!;
+  const directionButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#cc-direction [data-direction]',
+  );
+
+  let direction: CipherDirection = 'encrypt';
+
+  function currentMethod(): CipherMethod {
+    const v = method.value as CipherMethod;
+    return CIPHER_METHODS.includes(v) ? v : 'caesar';
+  }
+
+  function renderBrute(text: string) {
+    bruteList.replaceChildren();
+    if (text === '') {
+      const li = document.createElement('li');
+      li.className = 'p-3 text-gray-600 dark:text-gray-400';
+      li.textContent = brute.dataset.empty ?? '';
+      bruteList.append(li);
+      bruteNote.hidden = true;
+      return;
+    }
+    const { rows, truncated } = caesarBruteForce(text);
+    for (const row of rows) {
+      const li = document.createElement('li');
+      li.className = 'flex gap-3 p-2';
+      const label = document.createElement('span');
+      label.className =
+        'w-20 shrink-0 font-medium text-gray-700 dark:text-gray-300';
+      label.textContent = fill(brute.dataset.shiftLabel ?? '', {
+        n: String(row.shift),
+      });
+      const value = document.createElement('span');
+      value.className = 'min-w-0 break-all font-mono';
+      value.textContent = row.text;
+      li.append(label, value);
+      bruteList.append(li);
+    }
+    bruteNote.hidden = !truncated;
+    bruteNote.textContent = truncated
+      ? fill(brute.dataset.truncated ?? '', { n: String(BRUTE_FORCE_LIMIT) })
+      : '';
+  }
+
+  function update() {
+    const m = currentMethod();
+    shiftField.hidden = m !== 'caesar';
+    keyField.hidden = m !== 'vigenere';
+    brute.hidden = m !== 'caesar';
+    statusEl.textContent = '';
+
+    const result = transform(m, direction, input.value, {
+      shift: shift.valueAsNumber,
+      key: key.value,
+    });
+    if (result.success) {
+      output.value = result.output;
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    } else {
+      output.value = '';
+      // 鍵が未入力のうちは、入力直後から赤いエラーを出さない
+      const showError = input.value !== '' || key.value !== '';
+      errorEl.hidden = !showError;
+      errorEl.textContent = showError ? (errorEl.dataset.message ?? '') : '';
+    }
+
+    if (m === 'caesar') renderBrute(input.value);
+  }
+
+  onTextInput(input, update);
+  method.addEventListener('change', update);
+  shift.addEventListener('input', update);
+  key.addEventListener('input', update);
+
+  directionButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      direction = button.dataset.direction as CipherDirection;
+      directionButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      update();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  update();
+</script>

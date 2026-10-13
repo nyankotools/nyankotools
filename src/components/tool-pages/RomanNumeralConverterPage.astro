@@ -1,0 +1,313 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { romanNumeralConverterContent } from '../../i18n/tools/roman-numeral-converter';
+import {
+  integerToRoman,
+  ROMAN_MAX,
+  ROMAN_MIN,
+} from '../../lib/tools/roman-numeral-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = romanNumeralConverterContent[locale];
+
+const rowOf = (n: number) => ({ n, roman: integerToRoman(n)?.roman ?? '' });
+const range = (from: number, to: number) =>
+  Array.from({ length: to - from + 1 }, (_, i) => rowOf(from + i));
+
+const tables = [
+  {
+    caption: t.tableBasicCaption,
+    rows: range(1, 20),
+  },
+  {
+    caption: t.tableYearCaption,
+    rows: [
+      50, 100, 500, 1000, 1999, 2000, 2010, 2020, 2024, 2025, 2026, 2027, 2028,
+      2029, 2030, 3999,
+    ].map(rowOf),
+  },
+  {
+    caption: t.tableSymbolCaption,
+    rows: [1, 5, 10, 50, 100, 500, 1000].map(rowOf),
+  },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    id="roman-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-error-invalid-number={t.errorInvalidNumber}
+    data-error-out-of-range={t.errorOutOfRange}
+    data-error-invalid-char={t.errorInvalidChar}
+    data-error-invalid-form={t.errorInvalidForm}
+    data-nonstandard-notice={t.nonstandardNotice}
+    data-label-to-roman={t.inputLabelToRoman}
+    data-label-to-arabic={t.inputLabelToArabic}
+    data-placeholder-to-roman={t.inputPlaceholderToRoman}
+    data-placeholder-to-arabic={t.inputPlaceholderToArabic}
+    data-min={String(ROMAN_MIN)}
+    data-max={String(ROMAN_MAX)}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <div
+        id="roman-mode"
+        class="ui-seg"
+        role="group"
+        aria-label={t.directionLabel}
+      >
+        <button
+          type="button"
+          data-mode="toRoman"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.modeToRoman}
+        </button>
+        <button
+          type="button"
+          data-mode="toArabic"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.modeToArabic}
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+      <div>
+        <label id="roman-input-label" for="roman-input" class="ui-label">
+          {t.inputLabelToRoman}
+        </label>
+        <input
+          id="roman-input"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          spellcheck="false"
+          data-query-target="text"
+          class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.inputPlaceholderToRoman}
+        />
+      </div>
+      <div>
+        <label for="roman-output" class="ui-label">
+          {t.outputLabel}
+        </label>
+        <div class="flex gap-2">
+          <input
+            id="roman-output"
+            type="text"
+            readonly
+            class="ui-input h-11 min-w-0 flex-1 bg-gray-50 px-3 font-mono dark:bg-gray-900"
+          />
+          <button id="roman-copy-button" type="button" class="ui-btn">
+            {t.copy}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="roman-options" class="mt-2 flex flex-wrap gap-x-6">
+      <label class="ui-check">
+        <input id="roman-unicode" type="checkbox" />
+        {t.unicodeLabel}
+      </label>
+      <label class="ui-check">
+        <input id="roman-lowercase" type="checkbox" />
+        {t.lowercaseLabel}
+      </label>
+    </div>
+
+    <p
+      id="roman-status"
+      class="min-h-5 text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></p>
+    <p id="roman-error" class="ui-error mt-2 hidden" role="alert"></p>
+    <p
+      id="roman-notice"
+      class="mt-2 hidden rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200"
+    ></p>
+    <p
+      id="roman-breakdown"
+      class="mt-2 hidden break-words text-sm text-gray-700 dark:text-gray-300"
+    >
+      <span class="font-medium">{t.breakdownLabel}:</span>
+      <span id="roman-breakdown-text" class="font-mono"></span>
+    </p>
+
+    <h2 class="mt-8 mb-3 text-base font-semibold">{t.tablesHeading}</h2>
+    <div class="grid gap-4 md:grid-cols-3">
+      {tables.map((table) => (
+        <div class="overflow-x-auto" tabindex="0">
+          <table class="w-full text-sm">
+            <caption class="mb-1 text-left font-medium">
+              {table.caption}
+            </caption>
+            <thead>
+              <tr class="border-b border-gray-300 dark:border-gray-700">
+                <th scope="col" class="py-1 pr-3 text-left font-medium">
+                  {t.tableNumberHeading}
+                </th>
+                <th scope="col" class="py-1 text-left font-medium">
+                  {t.tableRomanHeading}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {table.rows.map((row) => (
+                <tr class="border-b border-gray-200 dark:border-gray-800">
+                  <td class="py-1 pr-3 font-mono">{row.n}</td>
+                  <td class="py-1 font-mono">{row.roman}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { fill } from '../../lib/format-template';
+  import {
+    convertFromRoman,
+    convertToRoman,
+    formatParts,
+  } from '../../lib/tools/roman-numeral-converter';
+
+  type Mode = 'toRoman' | 'toArabic';
+
+  const root = document.getElementById('roman-root')!;
+  const input = document.getElementById('roman-input') as HTMLInputElement;
+  const inputLabel = document.getElementById('roman-input-label')!;
+  const output = document.getElementById('roman-output') as HTMLInputElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#roman-mode [data-mode]',
+  );
+  const options = document.getElementById('roman-options')!;
+  const unicodeCheck = document.getElementById(
+    'roman-unicode',
+  ) as HTMLInputElement;
+  const lowerCheck = document.getElementById(
+    'roman-lowercase',
+  ) as HTMLInputElement;
+  const copyButton = document.getElementById(
+    'roman-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('roman-status')!;
+  const errorEl = document.getElementById('roman-error')!;
+  const noticeEl = document.getElementById('roman-notice')!;
+  const breakdownEl = document.getElementById('roman-breakdown')!;
+  const breakdownText = document.getElementById('roman-breakdown-text')!;
+
+  let mode: Mode = 'toRoman';
+
+  function applyMode() {
+    const toRoman = mode === 'toRoman';
+    options.classList.toggle('hidden', !toRoman);
+    inputLabel.textContent =
+      (toRoman ? root.dataset.labelToRoman : root.dataset.labelToArabic) ?? '';
+    input.placeholder =
+      (toRoman
+        ? root.dataset.placeholderToRoman
+        : root.dataset.placeholderToArabic) ?? '';
+    input.inputMode = toRoman ? 'numeric' : 'text';
+    modeButtons.forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
+    });
+  }
+
+  function show(el: HTMLElement, text: string) {
+    el.textContent = text;
+    el.classList.toggle('hidden', text === '');
+  }
+
+  function convert() {
+    statusEl.textContent = '';
+    const values = {
+      min: root.dataset.min ?? '',
+      max: root.dataset.max ?? '',
+      input: input.value.trim(),
+    };
+    let outText = '';
+    let error = '';
+    let notice = '';
+    let parts = '';
+
+    if (input.value.trim() !== '') {
+      if (mode === 'toRoman') {
+        const r = convertToRoman(input.value, {
+          unicode: unicodeCheck.checked,
+          lowercase: lowerCheck.checked,
+        });
+        if (r.ok) {
+          outText = r.output;
+          parts = formatParts(r.parts);
+        } else {
+          error =
+            (r.reason === 'out-of-range'
+              ? root.dataset.errorOutOfRange
+              : root.dataset.errorInvalidNumber) ?? '';
+        }
+      } else {
+        const r = convertFromRoman(input.value);
+        if (r.kind === 'ok' || r.kind === 'nonstandard') {
+          outText = String(r.value);
+          parts = formatParts(r.parts);
+          if (r.kind === 'nonstandard') {
+            notice = fill(root.dataset.nonstandardNotice ?? '', {
+              ...values,
+              value: String(r.value),
+              roman: r.roman,
+            });
+          }
+        } else if (r.reason === 'out-of-range') {
+          error = root.dataset.errorOutOfRange ?? '';
+        } else if (r.reason === 'invalid-char') {
+          error = root.dataset.errorInvalidChar ?? '';
+        } else if (r.reason === 'invalid-form') {
+          error = root.dataset.errorInvalidForm ?? '';
+        }
+      }
+    }
+
+    output.value = outText;
+    show(errorEl, fill(error, values));
+    show(noticeEl, notice);
+    breakdownEl.classList.toggle('hidden', parts === '');
+    breakdownText.textContent = parts;
+  }
+
+  input.addEventListener('input', convert);
+  unicodeCheck.addEventListener('change', convert);
+  lowerCheck.addEventListener('change', convert);
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as Mode;
+      applyMode();
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (root.dataset.copied ?? '')
+      : (root.dataset.copyFailed ?? '');
+  });
+
+  applyMode();
+  convert();
+</script>

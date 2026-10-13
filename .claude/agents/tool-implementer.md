@@ -35,6 +35,15 @@ The registry entry does not exist while you work, so pages cannot be built or op
 
 Pure logic in `src/lib/tools/<slug>.ts` (no copy, no DOM); both ja and en dictionaries with page-specific `title` / `description` / one `h1`, natural (not literal) English, privacy line, `notes`, 3-5 tool-specific FAQ items per locale, `howToHeading`/`howToSteps` for multi-step tools; the page wrapped in `ToolShell`; `ui-*` primitives; `copyText` / `downloadBlob` helpers; dropzone + `enableFileDrop` for file input; layout intact at 375px; no `isJa` branches; no server calls; accessible labels and contrast (axe runs on every page). Write Vitest tests for the logic including edge cases. Do not opt a `sensitive` tool or HTML-rendering tool into `data-query-target`.
 
+## Cross-cutting constraints (rules that earlier batches repeatedly broke)
+
+The checklist above was followed in past batches; these items outside it were not. You cannot run the shared tests, so check each one yourself before you report.
+
+- English `description` <= 160 characters and `title` <= 60 characters in your dictionary (`src/i18n/meta-length.test.ts` enforces this). Keep the registry entry's English `description` within 160 as well. Count them; do not estimate.
+- Every 「…」 label quoted in `howToSteps` (and in `introHtml` / `notes`) must match a label in the same dictionary character for character (`src/i18n/how-to-labels.test.ts`). English quotes use `"…"`.
+- Watch type generics such as `Uint8ClampedArray` (`astro check` fails on them in the integration step).
+- Write regex backslashes with Write/Edit, not through the shell.
+
 ## Final report (required format, this exact order)
 
 1. **Files created**: paths.

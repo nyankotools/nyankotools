@@ -1,0 +1,456 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { schoolGradeTableContent } from '../../i18n/tools/school-grade-table';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = schoolGradeTableContent[locale];
+
+const stageOrder = [
+  'kindergarten',
+  'elementary',
+  'junior-high',
+  'high-school',
+  'university',
+] as const;
+const gradeOptions = stageOrder.flatMap((stage) =>
+  t.gradeNames[stage].map((name, i) => ({
+    value: `${stage}:${i + 1}`,
+    label: name,
+  })),
+);
+const thClass =
+  'border-b border-gray-200 px-3 py-2 text-left font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300';
+const tdClass = 'border-b border-gray-100 px-3 py-2 dark:border-gray-800';
+---
+
+<ToolShell t={t}>
+  <section
+    class="space-y-6"
+    data-school-grade
+    data-format={JSON.stringify(t.format)}
+    data-stage-names={JSON.stringify(t.stageNames)}
+    data-grade-names={JSON.stringify(t.gradeNames)}
+    data-status-preschool={t.statusPreschool}
+    data-status-unborn={t.statusUnborn}
+    data-status-graduated={t.statusGraduated}
+    data-early-born={t.earlyBorn}
+    data-late-born={t.lateBorn}
+    data-error-invalid-date={t.errorInvalidDate}
+    data-error-invalid-year={t.errorInvalidYear}
+  >
+    <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <label for="sgt-base-year" class="ui-label">
+        {t.baseYearLabel}
+      </label>
+      <div class="flex items-center gap-2">
+        <input
+          id="sgt-base-year"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="9999"
+          aria-label={t.baseYearAriaLabel}
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+        {t.baseYearHint}
+      </p>
+      <p
+        id="sgt-year-error"
+        class="mt-2 text-sm text-red-600 dark:text-red-400"
+        aria-live="polite"
+      ></p>
+    </div>
+
+    <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-semibold">{t.birthSectionHeading}</h2>
+      <span id="sgt-birth-label" class="ui-label">
+        {t.birthLabel}
+      </span>
+      <div
+        class="flex flex-wrap items-center gap-1"
+        role="group"
+        aria-labelledby="sgt-birth-label"
+      >
+        <input
+          id="sgt-birth-year"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="9999"
+          placeholder={t.yearPlaceholder}
+          aria-label={t.birthYearAriaLabel}
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+        <span class="text-sm text-gray-600 dark:text-gray-400">
+          {t.yearUnit}
+        </span>
+        <input
+          id="sgt-birth-month"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="12"
+          placeholder={t.monthPlaceholder}
+          aria-label={t.birthMonthAriaLabel}
+          class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+        <span class="text-sm text-gray-600 dark:text-gray-400">
+          {t.monthUnit}
+        </span>
+        <input
+          id="sgt-birth-day"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="31"
+          placeholder={t.dayPlaceholder}
+          aria-label={t.birthDayAriaLabel}
+          class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+        {t.dayUnit && (
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.dayUnit}
+          </span>
+        )}
+      </div>
+      <p
+        id="sgt-birth-error"
+        class="mt-2 text-sm text-red-600 dark:text-red-400"
+        aria-live="polite"
+      ></p>
+
+      <div id="sgt-birth-results" class="mt-4 hidden space-y-3">
+        <dl class="space-y-3" aria-live="polite">
+          <div>
+            <dt class="text-sm text-gray-600 dark:text-gray-400">
+              {t.resultGradeLabel}
+            </dt>
+            <dd class="text-2xl font-bold" id="sgt-grade"></dd>
+          </div>
+          <div>
+            <dt class="text-sm text-gray-600 dark:text-gray-400">
+              {t.resultCohortLabel}
+            </dt>
+            <dd class="text-lg font-semibold" id="sgt-cohort"></dd>
+            <dd
+              class="text-sm text-gray-600 dark:text-gray-400"
+              id="sgt-cohort-range"
+            ></dd>
+          </div>
+          <div>
+            <dt class="text-sm text-gray-600 dark:text-gray-400">
+              {t.resultBornTypeLabel}
+            </dt>
+            <dd class="text-lg font-semibold" id="sgt-born-type"></dd>
+          </div>
+        </dl>
+        <div>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            {t.milestonesLabel}
+          </p>
+          <div class="mt-1 overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr>
+                  <th scope="col" class={thClass}>
+                    {t.milestoneStageHeader}
+                  </th>
+                  <th scope="col" class={thClass}>
+                    {t.milestoneEntryHeader}
+                  </th>
+                  <th scope="col" class={thClass}>
+                    {t.milestoneGraduationHeader}
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="sgt-milestones"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-semibold">{t.gradeSectionHeading}</h2>
+      <label for="sgt-grade-select" class="ui-label">
+        {t.gradeSelectLabel}
+      </label>
+      <select
+        id="sgt-grade-select"
+        class="ui-input h-11 max-w-full px-3 dark:bg-gray-900"
+      >
+        {gradeOptions.map((o) => (
+          <option value={o.value} selected={o.value === 'elementary:1'}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <dl class="mt-4 space-y-3" aria-live="polite">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultCohortLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="sgt-rev-cohort"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.reverseRangeLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="sgt-rev-range"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.reverseCalendarLabel}
+          </dt>
+          <dd class="text-base" id="sgt-rev-calendar"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.reverseAgeLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="sgt-rev-age"></dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-semibold">{t.tableHeading}</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr>
+              <th scope="col" class={thClass}>
+                {t.tableGradeHeader}
+              </th>
+              <th scope="col" class={thClass}>
+                {t.tableRangeHeader}
+              </th>
+              <th scope="col" class={thClass}>
+                {t.tableAgeHeader}
+              </th>
+            </tr>
+          </thead>
+          <tbody id="sgt-table" data-td-class={tdClass}></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    birthRangeOf,
+    birthSchoolYear,
+    birthYearForGrade,
+    gradeInSchoolYear,
+    gradeTable,
+    isEarlyBorn,
+    milestonesOf,
+    schoolYearOf,
+  } from '../../lib/tools/school-grade-table';
+  import type { StageDefinition } from '../../lib/tools/school-grade-table';
+  import { fill } from '../../lib/format-template';
+  import type { SchoolGradeFormat } from '../../i18n/tools/school-grade-table';
+  import type { DateParts } from '../../lib/tools/date-calculator';
+
+  type Stage = StageDefinition['stage'];
+
+  const root = document.querySelector<HTMLElement>('[data-school-grade]')!;
+  const format: SchoolGradeFormat = JSON.parse(root.dataset.format ?? '{}');
+  const stageNames: Record<Stage, string> = JSON.parse(
+    root.dataset.stageNames ?? '{}',
+  );
+  const gradeNames: Record<Stage, string[]> = JSON.parse(
+    root.dataset.gradeNames ?? '{}',
+  );
+  const statusPreschool = root.dataset.statusPreschool ?? '';
+  const statusUnborn = root.dataset.statusUnborn ?? '';
+  const statusGraduated = root.dataset.statusGraduated ?? '';
+  const earlyBornText = root.dataset.earlyBorn ?? '';
+  const lateBornText = root.dataset.lateBorn ?? '';
+  const errorInvalidDate = root.dataset.errorInvalidDate ?? '';
+  const errorInvalidYear = root.dataset.errorInvalidYear ?? '';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const baseYearInput = $<HTMLInputElement>('sgt-base-year');
+  const yearError = $('sgt-year-error');
+  const birthYearInput = $<HTMLInputElement>('sgt-birth-year');
+  const birthMonthInput = $<HTMLInputElement>('sgt-birth-month');
+  const birthDayInput = $<HTMLInputElement>('sgt-birth-day');
+  const birthError = $('sgt-birth-error');
+  const birthResults = $('sgt-birth-results');
+  const gradeEl = $('sgt-grade');
+  const cohortEl = $('sgt-cohort');
+  const cohortRangeEl = $('sgt-cohort-range');
+  const bornTypeEl = $('sgt-born-type');
+  const milestonesEl = $('sgt-milestones');
+  const gradeSelect = $<HTMLSelectElement>('sgt-grade-select');
+  const revCohort = $('sgt-rev-cohort');
+  const revRange = $('sgt-rev-range');
+  const revCalendar = $('sgt-rev-calendar');
+  const revAge = $('sgt-rev-age');
+  const tableEl = $('sgt-table');
+  const tdClass = tableEl.dataset.tdClass ?? '';
+
+  const pad2 = (n: number) => String(n).padStart(2, '0');
+  function formatDate(d: DateParts): string {
+    return fill(format.date, {
+      y: String(d.year),
+      m: String(d.month),
+      d: String(d.day),
+      mm: pad2(d.month),
+      dd: pad2(d.day),
+    });
+  }
+  function formatRange(from: DateParts, to: DateParts): string {
+    return fill(format.range, { from: formatDate(from), to: formatDate(to) });
+  }
+  function cell(tag: 'td' | 'th', text: string, scope?: string) {
+    const el = document.createElement(tag);
+    el.className = tdClass;
+    el.textContent = text;
+    if (scope) el.setAttribute('scope', scope);
+    return el;
+  }
+
+  function readBaseYear(): number | null {
+    const raw = baseYearInput.value.trim();
+    if (raw === '') return null;
+    const n = Number(raw);
+    return Number.isInteger(n) && n >= 1 && n <= 9999 ? n : null;
+  }
+
+  function readBirth(): DateParts | null {
+    if (
+      birthYearInput.value.trim() === '' ||
+      birthMonthInput.value.trim() === '' ||
+      birthDayInput.value.trim() === ''
+    ) {
+      return null;
+    }
+    return {
+      year: Number(birthYearInput.value),
+      month: Number(birthMonthInput.value),
+      day: Number(birthDayInput.value),
+    };
+  }
+
+  function gradeLabel(by: number, base: number): string {
+    const g = gradeInSchoolYear(by, base);
+    if (!g) return '';
+    if (g.stage === 'unborn') return statusUnborn;
+    if (g.stage === 'preschool') return statusPreschool;
+    if (g.stage === 'graduated') return statusGraduated;
+    return gradeNames[g.stage][g.grade - 1];
+  }
+
+  function renderTable(base: number) {
+    tableEl.textContent = '';
+    for (const row of gradeTable(base) ?? []) {
+      const tr = document.createElement('tr');
+      tr.append(
+        cell('th', gradeNames[row.stage][row.grade - 1], 'row'),
+        cell('td', formatRange(row.range.from, row.range.to)),
+        cell('td', fill(format.age, { n: String(row.range.ageAtApril1) })),
+      );
+      tableEl.append(tr);
+    }
+  }
+
+  function renderBirth(base: number) {
+    birthError.textContent = '';
+    birthResults.classList.add('hidden');
+    const birth = readBirth();
+    if (!birth) return;
+    const by = birthSchoolYear(birth);
+    const range = by === null ? null : birthRangeOf(by, base);
+    if (by === null || !range) {
+      birthError.textContent = errorInvalidDate;
+      return;
+    }
+    gradeEl.textContent = gradeLabel(by, base);
+    cohortEl.textContent = fill(format.birthSchoolYear, { y: String(by) });
+    cohortRangeEl.textContent = formatRange(range.from, range.to);
+    bornTypeEl.textContent = isEarlyBorn(birth) ? earlyBornText : lateBornText;
+
+    milestonesEl.textContent = '';
+    for (const m of milestonesOf(by) ?? []) {
+      const tr = document.createElement('tr');
+      tr.append(
+        cell('th', stageNames[m.stage], 'row'),
+        cell('td', fill(format.entry, { y: String(m.entryYear) })),
+        cell('td', fill(format.graduation, { y: String(m.graduationYear) })),
+      );
+      milestonesEl.append(tr);
+    }
+    birthResults.classList.remove('hidden');
+  }
+
+  function renderReverse(base: number) {
+    const [stage, grade] = gradeSelect.value.split(':');
+    const by = birthYearForGrade(stage as Stage, Number(grade), base);
+    const range = by === null ? null : birthRangeOf(by, base);
+    if (by === null || !range) {
+      revCohort.textContent = '';
+      revRange.textContent = '';
+      revCalendar.textContent = '';
+      revAge.textContent = '';
+      return;
+    }
+    revCohort.textContent = fill(format.birthSchoolYear, { y: String(by) });
+    revRange.textContent = formatRange(range.from, range.to);
+    revCalendar.textContent = fill(format.calendarYears, {
+      y1: String(by),
+      y2: String(by + 1),
+    });
+    revAge.textContent = fill(format.age, { n: String(range.ageAtApril1) });
+  }
+
+  function render() {
+    const base = readBaseYear();
+    yearError.textContent =
+      base === null && baseYearInput.value.trim() !== ''
+        ? errorInvalidYear
+        : '';
+    if (base === null) {
+      birthResults.classList.add('hidden');
+      birthError.textContent = '';
+      tableEl.textContent = '';
+      revCohort.textContent = '';
+      revRange.textContent = '';
+      revCalendar.textContent = '';
+      revAge.textContent = '';
+      return;
+    }
+    renderTable(base);
+    renderBirth(base);
+    renderReverse(base);
+  }
+
+  for (const el of [
+    baseYearInput,
+    birthYearInput,
+    birthMonthInput,
+    birthDayInput,
+  ]) {
+    el.addEventListener('input', render);
+  }
+  gradeSelect.addEventListener('change', render);
+
+  const today = new Date();
+  const currentYear = schoolYearOf({
+    year: today.getFullYear(),
+    month: today.getMonth() + 1,
+    day: today.getDate(),
+  });
+  baseYearInput.value = String(currentYear ?? today.getFullYear());
+  render();
+</script>

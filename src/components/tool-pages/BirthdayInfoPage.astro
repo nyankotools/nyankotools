@@ -1,0 +1,235 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { birthdayInfoContent } from '../../i18n/tools/birthday-info';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = birthdayInfoContent[locale];
+
+const resultRows = [
+  { id: 'birthday-info-eto', label: t.etoLabel, big: true },
+  { id: 'birthday-info-sexagenary', label: t.sexagenaryLabel },
+  { id: 'birthday-info-zodiac', label: t.zodiacLabel },
+  { id: 'birthday-info-birthstone', label: t.birthstoneLabel },
+  { id: 'birthday-info-flower', label: t.birthFlowerLabel },
+  { id: 'birthday-info-birthstone-meaning', label: t.birthstoneMeaningLabel },
+  { id: 'birthday-info-flower-meaning', label: t.birthFlowerMeaningLabel },
+  { id: 'birthday-info-weekday', label: t.weekdayLabel },
+  { id: 'birthday-info-age', label: t.ageLabel },
+  { id: 'birthday-info-eto-year', label: t.etoYearLabel },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-locale={locale}
+    data-error-invalid-date={t.errorInvalidDate}
+    data-names={JSON.stringify({
+      branchNames: t.branchNames,
+      branchShortNames: t.branchShortNames,
+      stemNames: t.stemNames,
+      zodiacNames: t.zodiacNames,
+      birthstones: t.birthstones,
+      birthFlowers: t.birthFlowers,
+      birthstoneMeanings: t.birthstoneMeanings,
+      birthFlowerMeanings: t.birthFlowerMeanings,
+      weekdayLabels: t.weekdayLabels,
+    })}
+    data-result-format={JSON.stringify(t.resultFormat)}
+  >
+    <span id="birthday-info-birth-label" class="ui-label">
+      {t.birthLabel}
+    </span>
+    <div
+      class="flex flex-wrap items-center gap-1"
+      role="group"
+      aria-labelledby="birthday-info-birth-label"
+    >
+      <input
+        id="birthday-info-year"
+        type="number"
+        inputmode="numeric"
+        min="1"
+        max="9999"
+        placeholder={t.yearPlaceholder}
+        aria-label={t.birthYearAriaLabel}
+        class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+      <span class="text-sm text-gray-600 dark:text-gray-400">{t.yearUnit}</span>
+      <input
+        id="birthday-info-month"
+        type="number"
+        inputmode="numeric"
+        min="1"
+        max="12"
+        placeholder={t.monthPlaceholder}
+        aria-label={t.birthMonthAriaLabel}
+        class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+      <span class="text-sm text-gray-600 dark:text-gray-400">
+        {t.monthUnit}
+      </span>
+      <input
+        id="birthday-info-day"
+        type="number"
+        inputmode="numeric"
+        min="1"
+        max="31"
+        placeholder={t.dayPlaceholder}
+        aria-label={t.birthDayAriaLabel}
+        class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+      {t.dayUnit && (
+        <span class="text-sm text-gray-600 dark:text-gray-400">
+          {t.dayUnit}
+        </span>
+      )}
+    </div>
+    <p
+      id="birthday-info-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl
+      id="birthday-info-results"
+      class="mt-4 hidden space-y-3"
+      aria-live="polite"
+    >
+      {resultRows.map((row) => (
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">{row.label}</dt>
+          <dd
+            class={row.big ? 'text-2xl font-bold' : 'text-lg font-semibold'}
+            id={row.id}
+          />
+        </div>
+      ))}
+    </dl>
+  </section>
+</ToolShell>
+
+<script>
+  import { getBirthdayInfo } from '../../lib/tools/birthday-info';
+  import { count, fill } from '../../lib/format-template';
+  import type { BirthdayResultFormat } from '../../i18n/tools/birthday-info';
+
+  interface Names {
+    branchNames: string[];
+    branchShortNames: string[];
+    stemNames: string[];
+    zodiacNames: string[];
+    birthstones: string[];
+    birthFlowers: string[];
+    birthstoneMeanings: string[];
+    birthFlowerMeanings: string[];
+    weekdayLabels: string[];
+  }
+
+  const container = document.querySelector<HTMLElement>(
+    'section[data-locale]',
+  )!;
+  const format: BirthdayResultFormat = JSON.parse(
+    container.dataset.resultFormat ?? '{}',
+  );
+  const names: Names = JSON.parse(container.dataset.names ?? '{}');
+  const errorInvalidDate = container.dataset.errorInvalidDate ?? '';
+
+  const yearInput = document.getElementById(
+    'birthday-info-year',
+  ) as HTMLInputElement;
+  const monthInput = document.getElementById(
+    'birthday-info-month',
+  ) as HTMLInputElement;
+  const dayInput = document.getElementById(
+    'birthday-info-day',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('birthday-info-error')!;
+  const resultsEl = document.getElementById('birthday-info-results')!;
+  const out = (id: string) => document.getElementById(id)!;
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+    if (
+      yearInput.value.trim() === '' ||
+      monthInput.value.trim() === '' ||
+      dayInput.value.trim() === ''
+    ) {
+      return;
+    }
+    const today = new Date();
+    const info = getBirthdayInfo(
+      {
+        year: Number(yearInput.value),
+        month: Number(monthInput.value),
+        day: Number(dayInput.value),
+      },
+      {
+        year: today.getFullYear(),
+        month: today.getMonth() + 1,
+        day: today.getDate(),
+      },
+    );
+    if (!info) {
+      errorEl.textContent = errorInvalidDate;
+      return;
+    }
+
+    out('birthday-info-eto').textContent = names.branchNames[info.branchIndex];
+    out('birthday-info-sexagenary').textContent = fill(format.sexagenary, {
+      stem: names.stemNames[info.stemIndex],
+      branch: names.branchShortNames[info.branchIndex],
+    });
+    out('birthday-info-zodiac').textContent =
+      names.zodiacNames[info.zodiacIndex];
+    out('birthday-info-birthstone').textContent =
+      names.birthstones[info.monthIndex];
+    out('birthday-info-flower').textContent =
+      names.birthFlowers[info.monthIndex];
+    out('birthday-info-birthstone-meaning').textContent =
+      names.birthstoneMeanings[info.monthIndex];
+    out('birthday-info-flower-meaning').textContent =
+      names.birthFlowerMeanings[info.monthIndex];
+    out('birthday-info-weekday').textContent = fill(format.weekday, {
+      w: names.weekdayLabels[info.weekday],
+    });
+    out('birthday-info-age').textContent =
+      info.fullAge === null
+        ? format.ageFuture
+        : count(format.fullAge, info.fullAge);
+
+    const lines: string[] = [];
+    if (info.isEtoYear) {
+      lines.push(
+        fill(format.etoYearNow, {
+          y: String(today.getFullYear()),
+          branch: names.branchShortNames[info.branchIndex],
+        }),
+      );
+    }
+    lines.push(
+      fill(format.etoYearNext, {
+        y: String(info.nextEtoYear),
+        age: String(info.ageInNextEtoYear),
+      }),
+    );
+    out('birthday-info-eto-year').textContent = lines.join(' ');
+
+    resultsEl.classList.remove('hidden');
+  }
+
+  yearInput.addEventListener('input', render);
+  monthInput.addEventListener('input', render);
+  dayInput.addEventListener('input', render);
+
+  yearInput.value = '2000';
+  monthInput.value = '1';
+  dayInput.value = '1';
+  render();
+</script>

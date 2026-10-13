@@ -6477,6 +6477,159 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'birthday-info',
+    category: 'datetime',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['age-calculator', 'school-grade-table', 'japanese-era-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '誕生日情報（干支・星座・誕生石）',
+        description:
+          '生年月日から干支・星座・誕生石・誕生花・生まれた曜日・年男年女の年を調べます。',
+        keywords: [
+          '干支',
+          '星座',
+          '誕生石',
+          '誕生花',
+          '年男',
+          '年女',
+          '十二支',
+          '生まれた曜日',
+        ],
+      },
+      en: {
+        name: 'Birthday Info (Zodiac, Star Sign, Birthstone)',
+        description:
+          'Look up the zodiac animal, star sign, birthstone, birth flower, and day of the week for any date of birth.',
+        keywords: [
+          'chinese zodiac',
+          'eto',
+          'star sign',
+          'horoscope',
+          'birthstone',
+          'birth flower',
+          'day of week born',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'school-grade-table',
+    category: 'datetime',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['age-calculator', 'birthday-info', 'japanese-era-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '学年早見表',
+        keywords: [
+          '学年',
+          '早生まれ',
+          '生まれ年',
+          '卒業年',
+          '入学年',
+          '学年早見表',
+          '年度',
+        ],
+        description:
+          '生年月日から学年・入学年・卒業年を、学年から該当する生まれ年を調べる学年早見表。早生まれ（1月1日〜4月1日生まれ）に対応し、基準年度も変更できます。',
+      },
+      en: {
+        name: 'Japanese School Grade Chart',
+        keywords: [
+          'school grade',
+          'early-born',
+          'hayaumare',
+          'birth year to grade',
+          'graduation year',
+          'Japanese school year',
+        ],
+        description:
+          'Looks up the Japanese school grade, entry year, and graduation year from a date of birth, or the birth dates for a grade, with early-born support and an adjustable school year.',
+      },
+    },
+  },
+  {
+    slug: 'anniversary-calculator',
+    category: 'datetime',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['date-calculator', 'age-calculator', 'business-day-calculator'],
+    translations: {
+      ja: {
+        name: '記念日計算',
+        description:
+          '起点日から100日・1000日記念、○か月・○周年の日付と今日からの残り日数を一覧表示。イベントまでのカウントダウンも。',
+        keywords: [
+          '記念日',
+          '100日記念',
+          '周年',
+          'カウントダウン',
+          'あと何日',
+          '何日目',
+          '付き合って何日',
+          '結婚記念日',
+        ],
+      },
+      en: {
+        name: 'Anniversary Calculator',
+        description:
+          'List 100-day, monthly and yearly anniversary dates from a start date, with days remaining, plus a countdown to any event.',
+        keywords: [
+          'anniversary',
+          '100 days',
+          'countdown',
+          'days until',
+          'days since',
+          'milestone',
+          'event countdown',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'due-date-calculator',
+    category: 'calc',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['date-calculator', 'age-calculator', 'bmi-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '出産予定日・妊娠週数計算',
+        description:
+          '最終月経日・排卵日・分娩予定日から、出産予定日と現在の妊娠週数・妊娠月数・安定期や正期産などの節目を計算します。',
+        keywords: [
+          '出産予定日',
+          '妊娠週数',
+          '予定日計算',
+          '妊娠月数',
+          '安定期',
+          '正期産',
+          'ネーゲレ式',
+          '排卵日',
+        ],
+      },
+      en: {
+        name: 'Due Date & Pregnancy Week Calculator',
+        description:
+          'Estimate your due date, current pregnancy week and month, and key milestones from your last period, ovulation date, or a known due date.',
+        keywords: [
+          'due date',
+          'pregnancy calculator',
+          'gestational age',
+          'pregnancy week',
+          'Naegele',
+          'conception date',
+          'trimester',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

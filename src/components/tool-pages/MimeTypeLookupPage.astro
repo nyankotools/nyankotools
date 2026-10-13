@@ -1,0 +1,258 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { mimeTypeLookupContent } from '../../i18n/tools/mime-type-lookup';
+import { MIME_CATEGORIES } from '../../lib/tools/mime-type-lookup';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = mimeTypeLookupContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="grid gap-4">
+    <div>
+      <label for="mime-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <input
+        id="mime-input"
+        type="text"
+        data-query-target="text"
+        class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+        autocomplete="off"
+        autocapitalize="off"
+      />
+    </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="mime-mode" class="ui-label">
+          {t.modeLabel}
+        </label>
+        <select
+          id="mime-mode"
+          class="ui-input h-11 w-full bg-white px-3 dark:bg-gray-900"
+        >
+          <option value="auto">{t.modeAuto}</option>
+          <option value="extension">{t.modeExtension}</option>
+          <option value="mime">{t.modeMime}</option>
+        </select>
+      </div>
+      <div>
+        <label for="mime-category" class="ui-label">
+          {t.categoryLabel}
+        </label>
+        <select
+          id="mime-category"
+          class="ui-input h-11 w-full bg-white px-3 dark:bg-gray-900"
+        >
+          <option value="all">{t.categoryAll}</option>
+          {MIME_CATEGORIES.map((c) => (
+            <option value={c}>{t.categories[c]}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div
+    id="mime-root"
+    data-detected={t.detectedAs}
+    data-kind-extension={t.kindExtension}
+    data-kind-mime={t.kindMime}
+    data-limited={t.partialLimited}
+    data-no-ext={t.noExtensions}
+    data-no-result={t.noResult}
+    data-hint={t.hintEmpty}
+    data-wildcard={t.wildcardNotice}
+    data-suffix={t.suffixNotice}
+    data-exact-heading={t.exactHeading}
+    data-partial-heading={t.partialHeading}
+    data-col-mime={t.colMime}
+    data-col-ext={t.colExtensions}
+    data-col-category={t.colCategory}
+    data-col-content-type={t.colContentType}
+    data-copy={t.copy}
+    data-copy-aria={t.copyAria}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-categories={JSON.stringify(t.categories)}
+  >
+    <p
+      id="mime-message"
+      class="mt-4 text-sm text-gray-700 dark:text-gray-300"
+      aria-live="polite"
+    ></p>
+    <p
+      id="mime-status"
+      class="mt-1 text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></p>
+    <div id="mime-results"></div>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { fill } from '../../lib/format-template';
+  import {
+    buildContentType,
+    formatExtensions,
+    lookup,
+    type CategoryFilter,
+    type LookupMode,
+    type MimeCategory,
+    type MimeEntry,
+  } from '../../lib/tools/mime-type-lookup';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const input = $<HTMLInputElement>('mime-input');
+  const modeSelect = $<HTMLSelectElement>('mime-mode');
+  const categorySelect = $<HTMLSelectElement>('mime-category');
+  const root = $<HTMLDivElement>('mime-root');
+  const messageEl = $<HTMLParagraphElement>('mime-message');
+  const statusEl = $<HTMLParagraphElement>('mime-status');
+  const resultsEl = $<HTMLDivElement>('mime-results');
+  const d = root.dataset;
+  const categoryNames = JSON.parse(d.categories ?? '{}') as Record<
+    MimeCategory,
+    string
+  >;
+
+  function cell(tag: 'th' | 'td', text: string, className = '') {
+    const el = document.createElement(tag);
+    el.textContent = text;
+    el.className = `px-3 py-2 text-left align-top ${className}`;
+    if (tag === 'th') el.scope = 'col';
+    return el;
+  }
+
+  function renderTable(heading: string, entries: MimeEntry[]) {
+    const section = document.createElement('section');
+    const h = document.createElement('h2');
+    h.className = 'mt-6 text-lg font-semibold';
+    h.textContent = heading;
+    section.append(h);
+
+    const wrap = document.createElement('div');
+    wrap.className =
+      'mt-2 overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700';
+    wrap.tabIndex = 0;
+    wrap.setAttribute('role', 'region');
+    wrap.setAttribute('aria-label', heading);
+    const table = document.createElement('table');
+    table.className = 'w-full min-w-[34rem] text-sm';
+
+    const thead = document.createElement('thead');
+    const hr = document.createElement('tr');
+    hr.className = 'bg-gray-50 dark:bg-gray-800';
+    hr.append(
+      cell('th', d.colMime ?? ''),
+      cell('th', d.colExt ?? ''),
+      cell('th', d.colCategory ?? ''),
+      cell('th', d.colContentType ?? ''),
+      cell('th', d.copy ?? '', 'sr-only'),
+    );
+    thead.append(hr);
+    const tbody = document.createElement('tbody');
+
+    for (const e of entries) {
+      const tr = document.createElement('tr');
+      tr.className = 'border-t border-gray-200 dark:border-gray-700';
+      const copyCell = document.createElement('td');
+      copyCell.className = 'px-3 py-2 align-top';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ui-btn';
+      btn.textContent = d.copy ?? '';
+      btn.setAttribute('aria-label', `${d.copyAria ?? ''} ${e.mime}`);
+      btn.addEventListener('click', async () => {
+        statusEl.textContent = (await copyText(e.mime))
+          ? (d.copied ?? '')
+          : (d.copyFailed ?? '');
+      });
+      copyCell.append(btn);
+      tr.append(
+        cell('td', e.mime, 'font-mono break-all'),
+        cell(
+          'td',
+          formatExtensions(e) || (d.noExt ?? ''),
+          'font-mono break-words',
+        ),
+        cell('td', categoryNames[e.category] ?? e.category),
+        cell('td', buildContentType(e.mime), 'font-mono break-all'),
+        copyCell,
+      );
+      tbody.append(tr);
+    }
+    table.append(thead, tbody);
+    wrap.append(table);
+    section.append(wrap);
+    return section;
+  }
+
+  function render() {
+    statusEl.textContent = '';
+    resultsEl.textContent = '';
+    const result = lookup(
+      input.value,
+      modeSelect.value as LookupMode,
+      categorySelect.value as CategoryFilter,
+    );
+
+    if (!result.query && categorySelect.value === 'all') {
+      messageEl.textContent = d.hint ?? '';
+      return;
+    }
+
+    const notes: string[] = [];
+    if (result.query) {
+      notes.push(
+        fill(d.detected ?? '', {
+          query: result.query,
+          kind:
+            result.kind === 'mime'
+              ? (d.kindMime ?? '')
+              : (d.kindExtension ?? ''),
+        }),
+      );
+    }
+    if (result.wildcard) notes.push(d.wildcard ?? '');
+    if (result.structuredSuffix) {
+      notes.push(fill(d.suffix ?? '', { suffix: result.structuredSuffix }));
+    }
+    if (result.exact.length === 0 && result.partial.length === 0) {
+      notes.push(d.noResult ?? '');
+    }
+    messageEl.textContent = notes.join(' ');
+
+    if (result.exact.length > 0) {
+      resultsEl.append(renderTable(d.exactHeading ?? '', result.exact));
+    }
+    if (result.partial.length > 0) {
+      const section = renderTable(d.partialHeading ?? '', result.partial);
+      if (result.partialTotal > result.partial.length) {
+        const p = document.createElement('p');
+        p.className = 'mt-2 text-sm text-gray-600 dark:text-gray-400';
+        p.textContent = fill(d.limited ?? '', {
+          shown: String(result.partial.length),
+          total: String(result.partialTotal),
+        });
+        section.append(p);
+      }
+      resultsEl.append(section);
+    }
+  }
+
+  onTextInput(input, render);
+  modeSelect.addEventListener('change', render);
+  categorySelect.addEventListener('change', render);
+  render();
+</script>

@@ -4371,7 +4371,7 @@ export const tools: Tool[] = [
     category: 'dev',
     addedAt: '2026-10-04',
     updatedAt: '2026-10-04',
-    related: ['curl-converter', 'jwt-decoder', 'meta-tag-generator'],
+    related: ['curl-converter', 'jwt-decoder', 'http-status-codes'],
     sensitive: true,
     translations: {
       ja: {
@@ -5634,7 +5634,7 @@ export const tools: Tool[] = [
     category: 'file',
     addedAt: '2026-10-10',
     updatedAt: '2026-10-10',
-    related: ['file-hash-calculator', 'zip-tool', 'encoding-converter'],
+    related: ['file-hash-calculator', 'zip-tool', 'mime-type-lookup'],
     sensitive: true,
     translations: {
       ja: {
@@ -6746,6 +6746,155 @@ export const tools: Tool[] = [
         ],
         description:
           'Builds CSS @keyframes animations from presets with cubic-bezier easing, duration, delay, iterations, and a live preview, plus prefers-reduced-motion output.',
+      },
+    },
+  },
+  {
+    slug: 'http-status-codes',
+    category: 'dev',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['http-header-analyzer', 'curl-converter', 'mime-type-lookup'],
+    translations: {
+      ja: {
+        name: 'HTTPステータスコード一覧・検索',
+        description:
+          '404・301・500・429 など HTTPステータスコードの意味・原因・対処をコード番号や名称、キーワードで検索できる一覧表です。',
+        keywords: [
+          'HTTPステータスコード',
+          'ステータスコード',
+          '404',
+          '301',
+          '500',
+          'リダイレクト',
+          'RFC 9110',
+          'HTTPエラー',
+        ],
+      },
+      en: {
+        name: 'HTTP Status Codes List & Search',
+        description:
+          'Search HTTP status codes such as 404, 301, 500, and 429 by number, name, or keyword, with meanings, causes, and fixes.',
+        keywords: [
+          'http status codes',
+          'status code',
+          '404 not found',
+          '301 redirect',
+          '500 error',
+          'RFC 9110',
+          'http error',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'mime-type-lookup',
+    category: 'dev',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['file-type-detector', 'http-header-analyzer', 'url-parser'],
+    translations: {
+      ja: {
+        name: 'MIMEタイプ検索',
+        description:
+          '拡張子からMIMEタイプ（Content-Type）を、MIMEタイプから拡張子を調べられます。画像・音声・動画・文書・フォントなどを収録し、部分一致検索にも対応',
+        keywords: [
+          'MIMEタイプ',
+          'Content-Type',
+          'メディアタイプ',
+          '拡張子',
+          'コンテンツタイプ',
+          'mime',
+        ],
+      },
+      en: {
+        name: 'MIME Type Lookup',
+        description:
+          'Look up the MIME type (Content-Type) for a file extension, or the extensions for a MIME type, with partial-match search',
+        keywords: [
+          'mime type',
+          'content-type',
+          'media type',
+          'file extension',
+          'extension to mime',
+          'mime to extension',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'robots-txt-generator',
+    category: 'dev',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['sitemap-generator', 'meta-tag-generator', 'ogp-image-generator'],
+    translations: {
+      ja: {
+        name: 'robots.txt生成',
+        description:
+          'User-agent別のAllow/Disallow、Sitemap、AIボットのブロックに対応したrobots.txtを生成',
+        keywords: [
+          'robots.txt',
+          'ロボットテキスト',
+          'クローラー',
+          'AIボット',
+          'GPTBot',
+          'Disallow',
+          'sitemap',
+          'SEO',
+        ],
+      },
+      en: {
+        name: 'robots.txt Generator',
+        description:
+          'Generate robots.txt with per-user-agent Allow/Disallow rules, sitemaps, and AI bot blocking',
+        keywords: [
+          'robots.txt',
+          'crawler',
+          'AI bot',
+          'GPTBot',
+          'ClaudeBot',
+          'disallow',
+          'sitemap',
+          'SEO',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'sitemap-generator',
+    category: 'dev',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: ['robots-txt-generator', 'url-parser', 'meta-tag-generator'],
+    translations: {
+      ja: {
+        name: 'sitemap.xml生成（URL一覧から）',
+        description:
+          'URL一覧を貼り付けてsitemap.xmlを生成。lastmod・changefreq・priorityの一括付与、無効URLと重複の除外、50,000件超の分割に対応',
+        keywords: [
+          'サイトマップ',
+          'sitemap',
+          'sitemap.xml',
+          'XMLサイトマップ',
+          'SEO',
+          'lastmod',
+          'サイトマップ作成',
+        ],
+      },
+      en: {
+        name: 'sitemap.xml Generator (from URL list)',
+        description:
+          'Turn a URL list into sitemap.xml with bulk lastmod, changefreq and priority, invalid/duplicate URL removal, and splitting past 50,000 URLs',
+        keywords: [
+          'sitemap',
+          'sitemap.xml',
+          'xml sitemap',
+          'sitemap generator',
+          'seo',
+          'lastmod',
+          'sitemap index',
+        ],
       },
     },
   },

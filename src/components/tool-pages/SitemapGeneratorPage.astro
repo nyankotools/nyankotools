@@ -1,0 +1,332 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { sitemapGeneratorContent } from '../../i18n/tools/sitemap-generator';
+import { CHANGEFREQ_VALUES } from '../../lib/tools/sitemap-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = sitemapGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="grid gap-4">
+    <div>
+      <label for="sitemap-gen-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="sitemap-gen-input"
+        class="ui-input h-48 w-full p-4 font-mono text-sm dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        data-query-target="text"
+        data-sample={t.sampleText}
+        spellcheck="false"
+        autocomplete="off"
+        wrap="off"
+      ></textarea>
+    </div>
+
+    <fieldset class="grid gap-3 sm:grid-cols-3">
+      <legend class="ui-label">{t.optionsHeading}</legend>
+      <div>
+        <label for="sitemap-gen-lastmod" class="ui-label">
+          {t.lastmodLabel}
+        </label>
+        <div class="flex gap-2">
+          <input
+            id="sitemap-gen-lastmod"
+            type="text"
+            class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900"
+            placeholder={t.lastmodPlaceholder}
+            spellcheck="false"
+            autocomplete="off"
+          />
+          <button id="sitemap-gen-today" type="button" class="ui-btn shrink-0">
+            {t.todayButton}
+          </button>
+        </div>
+      </div>
+      <div>
+        <label for="sitemap-gen-changefreq" class="ui-label">
+          {t.changefreqLabel}
+        </label>
+        <select
+          id="sitemap-gen-changefreq"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          <option value="">{t.changefreqNone}</option>
+          {CHANGEFREQ_VALUES.map((v) => (
+            <option value={v}>{v}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="sitemap-gen-priority" class="ui-label">
+          {t.priorityLabel}
+        </label>
+        <input
+          id="sitemap-gen-priority"
+          type="text"
+          inputmode="decimal"
+          class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+          placeholder={t.priorityPlaceholder}
+          spellcheck="false"
+          autocomplete="off"
+        />
+      </div>
+    </fieldset>
+    <p class="text-sm text-gray-600 dark:text-gray-400">{t.optionsHint}</p>
+  </div>
+
+  <div
+    id="sitemap-gen-messages"
+    class="mt-4"
+    data-summary={t.summaryFormat}
+    data-hosts={t.hostsWarning}
+    data-invalid-default={t.invalidDefaultFormat}
+    data-split={t.splitNoticeFormat}
+    data-issue-line={t.issueLineFormat}
+    data-reason-invalid-url={t.reasonInvalidUrl}
+    data-reason-unsupported-scheme={t.reasonUnsupportedScheme}
+    data-reason-too-long={t.reasonTooLong}
+    data-reason-duplicate={t.reasonDuplicate}
+    data-reason-invalid-option={t.reasonInvalidOptionFormat}
+  >
+    <p
+      id="sitemap-gen-summary"
+      class="text-sm font-medium text-gray-700 dark:text-gray-300"
+      aria-live="polite"
+    ></p>
+    <p
+      id="sitemap-gen-hosts"
+      hidden
+      class="mt-2 text-sm text-amber-700 dark:text-amber-400"
+    ></p>
+    <p
+      id="sitemap-gen-invalid-default"
+      hidden
+      class="mt-2 text-sm text-amber-700 dark:text-amber-400"
+    ></p>
+    <p
+      id="sitemap-gen-split"
+      hidden
+      class="mt-2 text-sm text-amber-700 dark:text-amber-400"
+    ></p>
+    <div id="sitemap-gen-issues-wrap" hidden class="mt-3">
+      <h2 class="text-base font-semibold">{t.issuesHeading}</h2>
+      <ul
+        id="sitemap-gen-issues"
+        tabindex="0"
+        class="mt-1 max-h-48 list-inside list-disc overflow-auto text-sm break-all text-red-700 dark:text-red-400"
+      ></ul>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div id="sitemap-gen-file-wrap" hidden class="mb-3">
+      <label for="sitemap-gen-file" class="ui-label">
+        {t.fileLabel}
+      </label>
+      <select
+        id="sitemap-gen-file"
+        data-no-persist
+        class="ui-input h-11 w-full px-3 sm:w-72 dark:bg-gray-900"
+      ></select>
+    </div>
+    <label for="sitemap-gen-output" class="ui-label">
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="sitemap-gen-output"
+      readonly
+      class="ui-input h-64 w-full bg-gray-50 p-4 font-mono text-xs dark:bg-gray-900"
+      placeholder={t.outputEmpty}
+      wrap="off"
+    ></textarea>
+  </div>
+  <div class="mt-3 flex flex-wrap items-center gap-3">
+    <button
+      id="sitemap-gen-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copyButton}
+    </button>
+    <button
+      id="sitemap-gen-download"
+      type="button"
+      class="ui-btn ui-btn-primary"
+    >
+      {t.downloadButton}
+    </button>
+    <span
+      id="sitemap-gen-status"
+      class="text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import { fill } from '../../lib/format-template';
+  import {
+    buildSitemapFiles,
+    formatDate,
+    parseSitemapInput,
+    type SitemapFile,
+    type SitemapIssue,
+  } from '../../lib/tools/sitemap-generator';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const input = $<HTMLTextAreaElement>('sitemap-gen-input');
+  const lastmodInput = $<HTMLInputElement>('sitemap-gen-lastmod');
+  const todayButton = $<HTMLButtonElement>('sitemap-gen-today');
+  const changefreqSelect = $<HTMLSelectElement>('sitemap-gen-changefreq');
+  const priorityInput = $<HTMLInputElement>('sitemap-gen-priority');
+  const messages = $<HTMLDivElement>('sitemap-gen-messages');
+  const summaryEl = $<HTMLParagraphElement>('sitemap-gen-summary');
+  const hostsEl = $<HTMLParagraphElement>('sitemap-gen-hosts');
+  const invalidDefaultEl = $<HTMLParagraphElement>(
+    'sitemap-gen-invalid-default',
+  );
+  const splitEl = $<HTMLParagraphElement>('sitemap-gen-split');
+  const issuesWrap = $<HTMLDivElement>('sitemap-gen-issues-wrap');
+  const issuesList = $<HTMLUListElement>('sitemap-gen-issues');
+  const fileWrap = $<HTMLDivElement>('sitemap-gen-file-wrap');
+  const fileSelect = $<HTMLSelectElement>('sitemap-gen-file');
+  const output = $<HTMLTextAreaElement>('sitemap-gen-output');
+  const copyButton = $<HTMLButtonElement>('sitemap-gen-copy-button');
+  const downloadButton = $<HTMLButtonElement>('sitemap-gen-download');
+  const statusEl = $<HTMLSpanElement>('sitemap-gen-status');
+
+  const msg = messages.dataset;
+  let files: SitemapFile[] = [];
+
+  function reasonText(issue: SitemapIssue): string {
+    switch (issue.reason) {
+      case 'invalid-url':
+        return msg.reasonInvalidUrl ?? '';
+      case 'unsupported-scheme':
+        return msg.reasonUnsupportedScheme ?? '';
+      case 'too-long':
+        return msg.reasonTooLong ?? '';
+      case 'duplicate':
+        return msg.reasonDuplicate ?? '';
+      case 'invalid-option':
+        return fill(msg.reasonInvalidOption ?? '', {
+          token: issue.token ?? '',
+        });
+    }
+  }
+
+  function showFile() {
+    const file = files[fileSelect.selectedIndex] ?? files[0];
+    output.value = file ? file.xml : '';
+    downloadButton.disabled = !file;
+    copyButton.disabled = !file;
+  }
+
+  function update() {
+    statusEl.textContent = '';
+    const result = parseSitemapInput(input.value, {
+      lastmod: lastmodInput.value,
+      changefreq: changefreqSelect.value,
+      priority: priorityInput.value,
+    });
+    files = buildSitemapFiles(result.entries);
+
+    const duplicates = result.issues.filter(
+      (i) => i.reason === 'duplicate',
+    ).length;
+    summaryEl.textContent = fill(msg.summary ?? '', {
+      valid: String(result.entries.length),
+      invalid: String(result.issues.length - duplicates),
+      duplicate: String(duplicates),
+    });
+
+    hostsEl.hidden = result.hosts.length <= 1;
+    hostsEl.textContent =
+      result.hosts.length > 1
+        ? fill(msg.hosts ?? '', { hosts: result.hosts.join(', ') })
+        : '';
+
+    invalidDefaultEl.hidden = result.invalidDefaults.length === 0;
+    invalidDefaultEl.textContent =
+      result.invalidDefaults.length > 0
+        ? fill(msg.invalidDefault ?? '', {
+            fields: result.invalidDefaults.join(', '),
+          })
+        : '';
+
+    issuesList.textContent = '';
+    issuesWrap.hidden = result.issues.length === 0;
+    for (const issue of result.issues) {
+      const li = document.createElement('li');
+      li.textContent = `${fill(msg.issueLine ?? '', {
+        line: String(issue.line),
+        text: issue.text,
+      })} - ${reasonText(issue)}`;
+      issuesList.append(li);
+    }
+
+    const split = files.length > 1;
+    splitEl.hidden = !split;
+    splitEl.textContent = split
+      ? fill(msg.split ?? '', { count: String(files.length - 1) })
+      : '';
+    fileWrap.hidden = !split;
+    const previousName = fileSelect.value;
+    fileSelect.textContent = '';
+    files.forEach((file) => {
+      const option = document.createElement('option');
+      option.value = file.filename;
+      option.textContent = file.filename;
+      fileSelect.append(option);
+    });
+    if (files.some((f) => f.filename === previousName)) {
+      fileSelect.value = previousName;
+    }
+    showFile();
+  }
+
+  onTextInput(input, update);
+  lastmodInput.addEventListener('input', update);
+  priorityInput.addEventListener('input', update);
+  changefreqSelect.addEventListener('change', update);
+  fileSelect.addEventListener('change', () => {
+    statusEl.textContent = '';
+    showFile();
+  });
+  todayButton.addEventListener('click', () => {
+    lastmodInput.value = formatDate(new Date());
+    lastmodInput.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  downloadButton.addEventListener('click', () => {
+    const file = files[fileSelect.selectedIndex] ?? files[0];
+    if (!file) return;
+    downloadBlob(
+      new Blob([file.xml], { type: 'application/xml;charset=utf-8' }),
+      file.filename,
+    );
+  });
+
+  update();
+</script>

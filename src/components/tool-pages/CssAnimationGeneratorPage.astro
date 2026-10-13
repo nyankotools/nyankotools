@@ -1,0 +1,503 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cssAnimationGeneratorContent } from '../../i18n/tools/css-animation-generator';
+import {
+  DEFAULT_CONFIG,
+  DIRECTIONS,
+  EASING_IDS,
+  FILL_MODES,
+  PRESET_IDS,
+} from '../../lib/tools/css-animation-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cssAnimationGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div data-copied={t.copied} data-copy-failed={t.copyFailed}>
+    <h2 class="mb-2 text-lg font-bold">{t.settingsHeading}</h2>
+    <div class="mb-6 grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="ca-preset" class="ui-label">
+          {t.presetLabel}
+        </label>
+        <select
+          id="ca-preset"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          {PRESET_IDS.map((id) => (
+            <option value={id} selected={id === DEFAULT_CONFIG.preset}>
+              {t.presetNames[id]}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="ca-name" class="ui-label">
+          {t.nameLabel}
+        </label>
+        <input
+          id="ca-name"
+          type="text"
+          maxlength="40"
+          autocomplete="off"
+          spellcheck="false"
+          value={DEFAULT_CONFIG.name}
+          class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="ca-duration" class="ui-label">
+          {t.durationLabel}
+        </label>
+        <input
+          id="ca-duration"
+          type="number"
+          min="0.05"
+          max="60"
+          step="0.1"
+          value={DEFAULT_CONFIG.duration}
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="ca-delay" class="ui-label">
+          {t.delayLabel}
+        </label>
+        <input
+          id="ca-delay"
+          type="number"
+          min="-60"
+          max="60"
+          step="0.1"
+          value={DEFAULT_CONFIG.delay}
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="ca-iterations" class="ui-label">
+          {t.iterationsLabel}
+        </label>
+        <div class="flex flex-wrap items-center gap-3">
+          <input
+            id="ca-iterations"
+            type="number"
+            min="1"
+            max="100"
+            step="1"
+            value="1"
+            class="ui-input h-11 w-24 px-3 disabled:opacity-50 dark:bg-gray-900"
+          />
+          <label class="ui-check">
+            <input id="ca-infinite" type="checkbox" checked class="h-4 w-4" />
+            {t.infiniteLabel}
+          </label>
+        </div>
+      </div>
+      <div>
+        <label for="ca-direction" class="ui-label">
+          {t.directionLabel}
+        </label>
+        <select
+          id="ca-direction"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          {DIRECTIONS.map((d) => (
+            <option value={d}>{t.directionNames[d]}</option>
+          ))}
+        </select>
+      </div>
+      <div class="sm:col-span-2">
+        <label for="ca-fill-mode" class="ui-label">
+          {t.fillModeLabel}
+        </label>
+        <select
+          id="ca-fill-mode"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          {FILL_MODES.map((m) => (
+            <option value={m}>{t.fillModeNames[m]}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <h2 class="mb-2 text-lg font-bold">{t.easingHeading}</h2>
+    <div class="mb-6 flex flex-wrap items-start gap-4">
+      <div class="min-w-0 flex-1 basis-64">
+        <label for="ca-easing" class="ui-label">
+          {t.easingLabel}
+        </label>
+        <select
+          id="ca-easing"
+          class="ui-input mb-3 h-11 w-full px-3 dark:bg-gray-900"
+        >
+          {EASING_IDS.map((id) => (
+            <option value={id}>{t.easingNames[id]}</option>
+          ))}
+        </select>
+        <div class="flex flex-wrap gap-3">
+          <label class="text-sm text-gray-700 dark:text-gray-300">
+            <span class="mb-1 block">{t.bezierX1Label}</span>
+            <input
+              id="ca-x1"
+              type="number"
+              min="0"
+              max="1"
+              step="0.01"
+              class="ui-input h-11 w-20 px-2 dark:bg-gray-900"
+            />
+          </label>
+          <label class="text-sm text-gray-700 dark:text-gray-300">
+            <span class="mb-1 block">{t.bezierY1Label}</span>
+            <input
+              id="ca-y1"
+              type="number"
+              min="-3"
+              max="3"
+              step="0.01"
+              class="ui-input h-11 w-20 px-2 dark:bg-gray-900"
+            />
+          </label>
+          <label class="text-sm text-gray-700 dark:text-gray-300">
+            <span class="mb-1 block">{t.bezierX2Label}</span>
+            <input
+              id="ca-x2"
+              type="number"
+              min="0"
+              max="1"
+              step="0.01"
+              class="ui-input h-11 w-20 px-2 dark:bg-gray-900"
+            />
+          </label>
+          <label class="text-sm text-gray-700 dark:text-gray-300">
+            <span class="mb-1 block">{t.bezierY2Label}</span>
+            <input
+              id="ca-y2"
+              type="number"
+              min="-3"
+              max="3"
+              step="0.01"
+              class="ui-input h-11 w-20 px-2 dark:bg-gray-900"
+            />
+          </label>
+        </div>
+      </div>
+      <svg
+        viewBox="0 0 120 120"
+        role="img"
+        aria-label={t.curveLabel}
+        class="h-32 w-32 shrink-0 rounded-lg border border-gray-300 bg-white text-blue-600 dark:border-gray-700 dark:bg-gray-950 dark:text-blue-400"
+      >
+        <path
+          d="M20,100 L100,100 M20,100 L20,20"
+          fill="none"
+          stroke="currentColor"
+          stroke-opacity="0.25"
+          stroke-width="1"
+        ></path>
+        <path
+          id="ca-curve"
+          d=""
+          fill="none"
+          stroke="currentColor"
+          stroke-width="3"
+          stroke-linecap="round"
+        ></path>
+      </svg>
+    </div>
+
+    <label class="ui-check mb-6">
+      <input id="ca-reduced-motion" type="checkbox" checked class="h-4 w-4" />
+      {t.reducedMotionLabel}
+    </label>
+
+    <h2 class="mb-2 text-lg font-bold">{t.previewHeading}</h2>
+    <div
+      id="ca-preview-container"
+      class="mb-2 flex h-48 w-full items-center justify-center overflow-hidden rounded-lg border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-950"
+    >
+      <div
+        id="ca-preview"
+        class="h-20 w-20 shrink-0 rounded-lg bg-blue-600 dark:bg-blue-500"
+      ></div>
+    </div>
+    <div class="mb-6 flex flex-wrap items-center gap-3">
+      <button id="ca-replay-button" type="button" class="ui-btn">
+        {t.replayButton}
+      </button>
+      <p class="min-w-0 flex-1 text-xs text-gray-500 dark:text-gray-400">
+        {t.previewHint}
+      </p>
+    </div>
+
+    <label for="ca-css-output" class="ui-label">
+      {t.cssHeading}
+    </label>
+    <div class="flex gap-2">
+      <textarea
+        id="ca-css-output"
+        readonly
+        rows="12"
+        class="ui-input h-64 w-full min-w-0 resize-y bg-gray-50 p-3 font-mono text-sm dark:bg-gray-900"
+      ></textarea>
+      <button
+        id="ca-copy-button"
+        type="button"
+        class="ui-btn shrink-0 self-start"
+      >
+        {t.copyButton}
+      </button>
+    </div>
+    <span
+      id="ca-status"
+      class="mt-2 block text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    DEFAULT_CONFIG,
+    EASING_BEZIERS,
+    PRESET_IDS,
+    EASING_IDS,
+    DIRECTIONS,
+    FILL_MODES,
+    buildCss,
+    buildCurvePath,
+    buildTimingFunction,
+    clampBezier,
+    clampBezierX,
+    clampBezierY,
+    clampDelay,
+    clampDuration,
+    clampIterations,
+    sanitizeAnimationName,
+    toWebAnimationKeyframes,
+    type AnimationConfig,
+    type CubicBezier,
+    type Direction,
+    type EasingId,
+    type FillMode,
+    type PresetEasingId,
+    type PresetId,
+  } from '../../lib/tools/css-animation-generator';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const presetSelect = $<HTMLSelectElement>('ca-preset');
+  const nameInput = $<HTMLInputElement>('ca-name');
+  const durationInput = $<HTMLInputElement>('ca-duration');
+  const delayInput = $<HTMLInputElement>('ca-delay');
+  const iterationsInput = $<HTMLInputElement>('ca-iterations');
+  const infiniteInput = $<HTMLInputElement>('ca-infinite');
+  const directionSelect = $<HTMLSelectElement>('ca-direction');
+  const fillModeSelect = $<HTMLSelectElement>('ca-fill-mode');
+  const easingSelect = $<HTMLSelectElement>('ca-easing');
+  const bezierInputs = {
+    x1: $<HTMLInputElement>('ca-x1'),
+    y1: $<HTMLInputElement>('ca-y1'),
+    x2: $<HTMLInputElement>('ca-x2'),
+    y2: $<HTMLInputElement>('ca-y2'),
+  };
+  const curve = document.getElementById('ca-curve')!;
+  const reducedMotionInput = $<HTMLInputElement>('ca-reduced-motion');
+  const preview = $<HTMLElement>('ca-preview');
+  const replayButton = $<HTMLButtonElement>('ca-replay-button');
+  const cssOutput = $<HTMLTextAreaElement>('ca-css-output');
+  const copyButton = $<HTMLButtonElement>('ca-copy-button');
+  const statusEl = $<HTMLElement>('ca-status');
+
+  const copyContainer = cssOutput.closest('[data-copied]') as HTMLElement;
+  const copied = copyContainer.dataset.copied ?? '';
+  const copyFailed = copyContainer.dataset.copyFailed ?? '';
+
+  let nameEdited = false;
+  let currentAnimation: Animation | null = null;
+
+  function oneOf<T extends string>(
+    list: readonly T[],
+    value: string,
+    fallback: T,
+  ): T {
+    return (list as readonly string[]).includes(value)
+      ? (value as T)
+      : fallback;
+  }
+
+  function readBezier(): CubicBezier {
+    return {
+      x1: Number(bezierInputs.x1.value),
+      y1: Number(bezierInputs.y1.value),
+      x2: Number(bezierInputs.x2.value),
+      y2: Number(bezierInputs.y2.value),
+    };
+  }
+
+  function writeBezier(b: CubicBezier) {
+    bezierInputs.x1.value = String(b.x1);
+    bezierInputs.y1.value = String(b.y1);
+    bezierInputs.x2.value = String(b.x2);
+    bezierInputs.y2.value = String(b.y2);
+  }
+
+  function readConfig(): AnimationConfig {
+    const preset: PresetId = oneOf(
+      PRESET_IDS,
+      presetSelect.value,
+      DEFAULT_CONFIG.preset,
+    );
+    const infinite = infiniteInput.checked;
+    return {
+      preset,
+      name: nameInput.value,
+      duration: clampDuration(Number(durationInput.value)),
+      delay: clampDelay(Number(delayInput.value)),
+      iterations: infinite
+        ? 'infinite'
+        : clampIterations(Number(iterationsInput.value)),
+      direction: oneOf<Direction>(DIRECTIONS, directionSelect.value, 'normal'),
+      fillMode: oneOf<FillMode>(FILL_MODES, fillModeSelect.value, 'none'),
+      easing: oneOf<EasingId>(EASING_IDS, easingSelect.value, 'ease'),
+      bezier: clampBezier(readBezier()),
+      reducedMotion: reducedMotionInput.checked,
+    };
+  }
+
+  function playPreview(config: AnimationConfig) {
+    currentAnimation?.cancel();
+    currentAnimation = null;
+    if (typeof preview.animate !== 'function') return;
+    const timing = buildTimingFunction(config.easing, config.bezier);
+    currentAnimation = preview.animate(
+      toWebAnimationKeyframes(config.preset, timing),
+      {
+        duration: config.duration * 1000,
+        delay: config.delay * 1000,
+        iterations:
+          config.iterations === 'infinite' ? Infinity : config.iterations,
+        direction: config.direction,
+        fill: config.fillMode,
+      },
+    );
+  }
+
+  function updateCurve(config: AnimationConfig) {
+    const bezier =
+      config.easing === 'custom'
+        ? config.bezier
+        : EASING_BEZIERS[config.easing as PresetEasingId];
+    curve.setAttribute('d', buildCurvePath(bezier));
+  }
+
+  function update() {
+    const config = readConfig();
+    iterationsInput.disabled = infiniteInput.checked;
+    cssOutput.value = buildCss(config);
+    updateCurve(config);
+    playPreview(config);
+  }
+
+  presetSelect.addEventListener('change', () => {
+    if (!nameEdited) {
+      const id = oneOf(PRESET_IDS, presetSelect.value, DEFAULT_CONFIG.preset);
+      nameInput.value = sanitizeAnimationName(id);
+    }
+    update();
+  });
+
+  nameInput.addEventListener('input', () => {
+    nameEdited = true;
+    update();
+  });
+
+  for (const el of [
+    durationInput,
+    delayInput,
+    iterationsInput,
+    infiniteInput,
+    directionSelect,
+    fillModeSelect,
+    reducedMotionInput,
+  ]) {
+    el.addEventListener('input', update);
+    el.addEventListener('change', update);
+  }
+
+  durationInput.addEventListener('change', () => {
+    durationInput.value = String(clampDuration(Number(durationInput.value)));
+    update();
+  });
+  delayInput.addEventListener('change', () => {
+    delayInput.value = String(clampDelay(Number(delayInput.value)));
+    update();
+  });
+  iterationsInput.addEventListener('change', () => {
+    iterationsInput.value = String(
+      clampIterations(Number(iterationsInput.value)),
+    );
+    update();
+  });
+
+  easingSelect.addEventListener('change', () => {
+    const id = oneOf<EasingId>(EASING_IDS, easingSelect.value, 'ease');
+    if (id !== 'custom') writeBezier(EASING_BEZIERS[id as PresetEasingId]);
+    update();
+  });
+
+  function sameBezier(a: CubicBezier, b: CubicBezier): boolean {
+    return a.x1 === b.x1 && a.y1 === b.y1 && a.x2 === b.x2 && a.y2 === b.y2;
+  }
+
+  function onBezierInput() {
+    const current = clampBezier(readBezier());
+    const id = oneOf<EasingId>(EASING_IDS, easingSelect.value, 'ease');
+    if (
+      id !== 'custom' &&
+      !sameBezier(current, EASING_BEZIERS[id as PresetEasingId])
+    ) {
+      easingSelect.value = 'custom';
+      easingSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      return;
+    }
+    update();
+  }
+
+  const clampers: Record<keyof typeof bezierInputs, (v: number) => number> = {
+    x1: clampBezierX,
+    y1: clampBezierY,
+    x2: clampBezierX,
+    y2: clampBezierY,
+  };
+  (Object.keys(bezierInputs) as (keyof typeof bezierInputs)[]).forEach(
+    (key) => {
+      const input = bezierInputs[key];
+      input.addEventListener('input', onBezierInput);
+      input.addEventListener('change', () => {
+        input.value = String(clampers[key](Number(input.value)));
+        onBezierInput();
+      });
+    },
+  );
+
+  replayButton.addEventListener('click', () => playPreview(readConfig()));
+
+  copyButton.addEventListener('click', async () => {
+    if (!cssOutput.value) return;
+    statusEl.textContent = (await copyText(cssOutput.value))
+      ? copied
+      : copyFailed;
+  });
+
+  writeBezier(EASING_BEZIERS.ease);
+  update();
+</script>

@@ -6630,6 +6630,125 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'css-text-shadow-generator',
+    category: 'dev',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: [
+      'css-box-shadow-generator',
+      'css-glassmorphism-generator',
+      'css-gradient-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSS text-shadowジェネレーター',
+        keywords: [
+          'text-shadow',
+          '文字影',
+          'テキストシャドウ',
+          'ネオン',
+          '縁取り',
+          'CSS影',
+        ],
+        description:
+          'オフセット・ぼかし・色を調整して、複数レイヤーのCSS text-shadowをプレビューしながら生成します。ネオン・縁取りなどのプリセット付き。',
+      },
+      en: {
+        name: 'CSS Text-Shadow Generator',
+        keywords: [
+          'text-shadow',
+          'text shadow',
+          'neon text',
+          'text outline',
+          'CSS shadow',
+        ],
+        description:
+          'Builds multi-layer CSS text-shadow declarations with a live preview, including neon and outline presets.',
+      },
+    },
+  },
+  {
+    slug: 'css-glassmorphism-generator',
+    category: 'dev',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: [
+      'css-box-shadow-generator',
+      'css-gradient-generator',
+      'css-text-shadow-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSSグラスモーフィズム・ニューモーフィズムジェネレーター',
+        keywords: [
+          'グラスモーフィズム',
+          'ニューモーフィズム',
+          'すりガラス',
+          'backdrop-filter',
+          'glassmorphism',
+          'neumorphism',
+          'ガラス風',
+        ],
+        description:
+          'すりガラス風（backdrop-filter）と凹凸のあるニューモーフィズム（多層box-shadow）のCSSを、質感プリセットとプレビュー付きで生成します。',
+      },
+      en: {
+        name: 'CSS Glassmorphism & Neumorphism Generator',
+        keywords: [
+          'glassmorphism',
+          'neumorphism',
+          'frosted glass',
+          'backdrop-filter',
+          'soft UI',
+          'CSS glass',
+        ],
+        description:
+          'Generates CSS for frosted-glass (backdrop-filter) and neumorphic (layered box-shadow) elements with material presets and a live preview.',
+      },
+    },
+  },
+  {
+    slug: 'css-animation-generator',
+    category: 'dev',
+    addedAt: '2026-10-13',
+    updatedAt: '2026-10-13',
+    related: [
+      'css-box-shadow-generator',
+      'css-gradient-generator',
+      'css-layout-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSSアニメーションジェネレーター',
+        keywords: [
+          'CSSアニメーション',
+          'keyframes',
+          'アニメーション',
+          'イージング',
+          'cubic-bezier',
+          'transition',
+          'バウンス',
+        ],
+        description:
+          'バウンス・フェード・回転などのプリセットから、@keyframesとanimationをイージング編集・プレビュー付きで生成します。prefers-reduced-motion対応も出力できます。',
+      },
+      en: {
+        name: 'CSS Animation Generator',
+        keywords: [
+          'CSS animation',
+          'keyframes',
+          'easing',
+          'cubic-bezier',
+          'animation-timing-function',
+          'bounce',
+          'fade',
+        ],
+        description:
+          'Builds CSS @keyframes animations from presets with cubic-bezier easing, duration, delay, iterations, and a live preview, plus prefers-reduced-motion output.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

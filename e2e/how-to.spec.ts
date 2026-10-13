@@ -34,6 +34,7 @@ const slugs = [
   'gpa-calculator',
   'anniversary-calculator',
   'due-date-calculator',
+  'css-glassmorphism-generator',
   'word-search-generator',
   'crossword-generator',
   'favicon-generator',

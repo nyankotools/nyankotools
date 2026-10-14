@@ -1,0 +1,170 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { numberToWordsContent } from '../../i18n/tools/number-to-words';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = numberToWordsContent[locale];
+
+const rows = [
+  { key: 'cardinal', label: t.cardinalLabel },
+  { key: 'ordinal', label: t.ordinalLabel },
+  { key: 'check', label: t.checkLabel },
+  { key: 'reading', label: t.readingLabel },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    id="ntw-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-unavailable={t.unavailable}
+    data-error-invalid={t.errorInvalid}
+    data-error-too-long={t.errorTooLong}
+  >
+    <label for="ntw-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <input
+      id="ntw-input"
+      type="text"
+      inputmode="decimal"
+      autocomplete="off"
+      spellcheck="false"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      class="ui-input h-11 w-full max-w-md px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+    />
+    <p id="ntw-error" class="ui-error mt-2 hidden" role="alert"></p>
+
+    <div class="mt-3 flex flex-wrap items-center gap-x-6 gap-y-3">
+      <label class="ui-check">
+        <input id="ntw-british" type="checkbox" />
+        {t.britishLabel}
+      </label>
+      <div class="flex items-center gap-2">
+        <label for="ntw-currency" class="text-sm">
+          {t.currencyLabel}
+        </label>
+        <select id="ntw-currency" class="ui-input h-11 px-3 dark:bg-gray-900">
+          <option value="dollars">{t.currencyDollars}</option>
+          <option value="pounds">{t.currencyPounds}</option>
+          <option value="euros">{t.currencyEuros}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mt-5 space-y-4">
+      {rows.map((row, i) => (
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="ui-label !mb-0">{row.label}</span>
+            <button
+              type="button"
+              class="ui-btn"
+              id={i === 0 ? 'ntw-copy-button' : undefined}
+              data-copy-row={row.key}
+            >
+              {t.copy}
+            </button>
+          </div>
+          <p
+            id={`ntw-${row.key}`}
+            class="mt-1 min-h-11 break-words rounded border border-gray-200 bg-gray-50 px-3 py-2 font-mono dark:border-gray-700 dark:bg-gray-900"
+          />
+        </div>
+      ))}
+    </div>
+    <p
+      id="ntw-status"
+      class="mt-2 min-h-5 text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    convertNumberToWords,
+    type CheckCurrency,
+  } from '../../lib/tools/number-to-words';
+
+  const root = document.getElementById('ntw-root')!;
+  const input = document.getElementById('ntw-input') as HTMLInputElement;
+  const british = document.getElementById('ntw-british') as HTMLInputElement;
+  const currency = document.getElementById('ntw-currency') as HTMLSelectElement;
+  const errorEl = document.getElementById('ntw-error')!;
+  const statusEl = document.getElementById('ntw-status')!;
+  const cells: Record<string, HTMLElement> = {};
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-copy-row]')
+    .forEach((button) => {
+      const key = button.dataset.copyRow!;
+      cells[key] = document.getElementById(`ntw-${key}`)!;
+      button.addEventListener('click', async () => {
+        const value = cells[key].dataset.value;
+        if (!value) return;
+        statusEl.textContent = (await copyText(value))
+          ? (root.dataset.copied ?? '')
+          : (root.dataset.copyFailed ?? '');
+      });
+    });
+
+  function setCell(key: string, value: string | null, show = value) {
+    const cell = cells[key];
+    if (value === null) {
+      cell.textContent =
+        input.value.trim() === '' ? '' : (root.dataset.unavailable ?? '');
+      delete cell.dataset.value;
+    } else {
+      cell.textContent = show;
+      cell.dataset.value = value;
+    }
+  }
+
+  function update() {
+    statusEl.textContent = '';
+    const result = convertNumberToWords(input.value, {
+      british: british.checked,
+      currency: currency.value as CheckCurrency,
+    });
+    if (!result.ok) {
+      const message =
+        result.error === 'invalid'
+          ? root.dataset.errorInvalid
+          : result.error === 'tooLong'
+            ? root.dataset.errorTooLong
+            : '';
+      errorEl.textContent = message ?? '';
+      errorEl.classList.toggle('hidden', !message);
+      for (const key of Object.keys(cells)) {
+        cells[key].textContent = '';
+        delete cells[key].dataset.value;
+      }
+      return;
+    }
+    errorEl.textContent = '';
+    errorEl.classList.add('hidden');
+    setCell('cardinal', result.cardinal);
+    setCell(
+      'ordinal',
+      result.ordinal,
+      result.ordinal && `${result.ordinal} (${result.ordinalDigits})`,
+    );
+    setCell('check', result.check);
+    setCell('reading', result.reading);
+  }
+
+  onTextInput(input, update);
+  british.addEventListener('change', update);
+  currency.addEventListener('change', update);
+  update();
+</script>

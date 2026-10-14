@@ -6939,6 +6939,47 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'number-to-words',
+    category: 'text',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: [
+      'kanji-number-converter',
+      'roman-numeral-converter',
+      'unit-converter',
+    ],
+    translations: {
+      ja: {
+        name: '数字→英語表記・日本語読み変換',
+        description:
+          '数字を英語の数詞表記・序数・小切手表記（and 50/100 dollars）と、ひらがなの日本語読みに変換します。英国式のandにも対応しています',
+        keywords: [
+          '数字 英語',
+          '英語 数字 変換',
+          '小切手 金額',
+          '序数',
+          '数詞',
+          '数字 読み方',
+          'number to words',
+        ],
+      },
+      en: {
+        name: 'Number to Words Converter',
+        description:
+          'Convert a number to English words, ordinals and check-writing format (and 50/100 dollars), plus its Japanese reading in hiragana, with British "and" support',
+        keywords: [
+          'number to words',
+          'check writing',
+          'numbers in words',
+          'ordinal numbers',
+          'spell out number',
+          'cardinal',
+          'japanese number reading',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

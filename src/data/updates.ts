@@ -580,15 +580,15 @@ export const updates: UpdateEntry[] = [
   },
   {
     date: '2026-10-14',
-    toolSlugs: ['braille-converter'],
+    toolSlugs: ['braille-converter', 'number-to-words'],
     translations: {
       ja: {
         summary:
-          '点字変換を追加しました。ひらがな・カタカナを日本語点字（Unicode点字）に、点字をかなに相互変換でき、濁音・拗音・促音・数符にも対応しています。点字1マスごとの点の番号も確認できます。',
+          '点字変換を追加しました。ひらがな・カタカナを日本語点字（Unicode点字）に、点字をかなに相互変換でき、濁音・拗音・促音・数符にも対応しています。点字1マスごとの点の番号も確認できます。あわせて数字→英語表記・日本語読み変換も追加し、数字を英語の数詞・序数・小切手表記とひらがなの読みに変換できます。',
       },
       en: {
         summary:
-          'Added the Japanese Braille Converter. It converts kana to six-dot Japanese braille in Unicode characters and back, handling voiced marks, contracted sounds, the small tsu and number signs, and lists the dot numbers of each cell.',
+          'Added the Japanese Braille Converter. It converts kana to six-dot Japanese braille in Unicode characters and back, handling voiced marks, contracted sounds, the small tsu and number signs, and lists the dot numbers of each cell. Also added the Number to Words Converter, which spells a number out in English, as an ordinal and in check-writing format, with its Japanese reading.',
       },
     },
   },

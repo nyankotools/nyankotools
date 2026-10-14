@@ -7285,6 +7285,46 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'japanese-traditional-colors',
+    category: 'image',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: [
+      'color-converter',
+      'color-palette-generator',
+      'image-palette-extractor',
+    ],
+    translations: {
+      ja: {
+        name: '日本の伝統色・和色一覧',
+        keywords: [
+          '和色',
+          '伝統色',
+          '日本の色',
+          '色見本',
+          'カラーコード',
+          '色名',
+          'HEX',
+        ],
+        description:
+          '紅・藍色・桜色など日本の伝統色260色以上を、色名・読み・HEX・RGBで一覧表示。検索してクリックでコピーできます。',
+      },
+      en: {
+        name: 'Japanese Traditional Colors',
+        keywords: [
+          'wa-iro',
+          'japanese colors',
+          'traditional japanese colors',
+          'color names',
+          'hex codes',
+          'color palette',
+        ],
+        description:
+          'Browse 260+ traditional Japanese colors with names, readings, HEX and RGB codes. Search and click to copy.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

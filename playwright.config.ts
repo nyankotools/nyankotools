@@ -3,6 +3,12 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
+  // CIのシャード分割用。tools-common.spec.ts（全ツール×日英×axeで全体の約半分の実行時間）は
+  // `--shard` が「テスト数の連続区間」で分けるため1シャードに偏る。そこで CI では
+  // tools-common だけを先に分割し、残りを E2E_EXCLUDE_COMMON=1 で別実行して各シャードの実行時間を揃える。
+  testIgnore: process.env.E2E_EXCLUDE_COMMON
+    ? /tools-common\.spec\.ts$/
+    : undefined,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   // ローカルは出力が短いレポーター（失敗時のみ詳細）。TTYなら1行で上書きされる line、

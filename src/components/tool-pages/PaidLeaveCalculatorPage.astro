@@ -1,0 +1,340 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { paidLeaveCalculatorContent } from '../../i18n/tools/paid-leave-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = paidLeaveCalculatorContent[locale];
+const dayOptions = [1, 2, 3, 4, 5, 6, 7];
+---
+
+<ToolShell t={t}>
+  <p
+    class="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+    role="note"
+  >
+    {t.disclaimer}
+  </p>
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    id="leave-root"
+    data-error-date={t.errorInvalidDate}
+    data-error-hours={t.errorHours}
+    data-result-format={JSON.stringify(t.resultFormat)}
+  >
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label for="leave-hire" class="ui-label">
+          {t.hireLabel}
+        </label>
+        <input
+          id="leave-hire"
+          type="date"
+          min="1900-01-01"
+          max="2100-12-31"
+          class="ui-input h-11 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="leave-days" class="ui-label">
+          {t.daysLabel}
+        </label>
+        <select id="leave-days" class="ui-input h-11 px-3 dark:bg-gray-900">
+          {dayOptions.map((n) => (
+            <option value={String(n)} selected={n === 5}>
+              {t.daysOption.replace('{n}', String(n))}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="leave-hours" class="ui-label">
+          {t.hoursLabel}
+        </label>
+        <div class="flex items-center gap-1">
+          <input
+            id="leave-hours"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            max="168"
+            step="0.5"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.hoursUnit}
+          </span>
+        </div>
+      </div>
+      <div>
+        <label for="leave-reference" class="ui-label">
+          {t.referenceLabel}
+        </label>
+        <input
+          id="leave-reference"
+          type="date"
+          min="1900-01-01"
+          max="2100-12-31"
+          class="ui-input h-11 px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+    <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{t.hoursHint}</p>
+    <p
+      id="leave-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="leave-results" class="mt-4 hidden space-y-4" aria-live="polite">
+      <dl class="space-y-3">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.categoryLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="leave-result-category"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.currentLabel}
+          </dt>
+          <dd class="text-2xl font-bold" id="leave-result-current"></dd>
+          <dd
+            class="text-sm text-gray-600 dark:text-gray-400"
+            id="leave-result-mandatory"
+          ></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.nextLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="leave-result-next"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.maxHeldLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="leave-result-max"></dd>
+        </div>
+      </dl>
+      <div>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+          {t.scheduleLabel}
+        </h2>
+        <div class="mt-2 overflow-x-auto">
+          <table class="w-full min-w-[32rem] text-left text-sm">
+            <thead>
+              <tr class="border-b border-gray-300 text-gray-700 dark:border-gray-600 dark:text-gray-300">
+                <th scope="col" class="py-2 pr-3 font-semibold">
+                  {t.colService}
+                </th>
+                <th scope="col" class="py-2 pr-3 font-semibold">
+                  {t.colGrantDate}
+                </th>
+                <th scope="col" class="py-2 pr-3 font-semibold">
+                  {t.colDays}
+                </th>
+                <th scope="col" class="py-2 pr-3 font-semibold">
+                  {t.colExpiry}
+                </th>
+                <th scope="col" class="py-2 font-semibold">
+                  {t.colMandatory}
+                </th>
+              </tr>
+            </thead>
+            <tbody id="leave-schedule"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    calculatePaidLeave,
+    classifyWorkPattern,
+    type GrantEntry,
+  } from '../../lib/tools/paid-leave-calculator';
+  import { count, fill } from '../../lib/format-template';
+  import type { PaidLeaveResultFormat } from '../../i18n/tools/paid-leave-calculator';
+  import { getWeekday, type DateParts } from '../../lib/tools/date-calculator';
+
+  const root = document.getElementById('leave-root')!;
+  const format: PaidLeaveResultFormat = JSON.parse(
+    root.dataset.resultFormat ?? '{}',
+  );
+  const errorDate = root.dataset.errorDate ?? '';
+  const errorHours = root.dataset.errorHours ?? '';
+
+  const hireInput = document.getElementById('leave-hire') as HTMLInputElement;
+  const daysSelect = document.getElementById('leave-days') as HTMLSelectElement;
+  const hoursInput = document.getElementById('leave-hours') as HTMLInputElement;
+  const referenceInput = document.getElementById(
+    'leave-reference',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('leave-error')!;
+  const resultsEl = document.getElementById('leave-results')!;
+  const categoryEl = document.getElementById('leave-result-category')!;
+  const currentEl = document.getElementById('leave-result-current')!;
+  const mandatoryEl = document.getElementById('leave-result-mandatory')!;
+  const nextEl = document.getElementById('leave-result-next')!;
+  const maxEl = document.getElementById('leave-result-max')!;
+  const scheduleEl = document.getElementById('leave-schedule')!;
+
+  function parseDate(value: string): DateParts | null {
+    const m = /^(\d{4,6})-(\d{2})-(\d{2})$/.exec(value);
+    if (!m) return null;
+    return { year: Number(m[1]), month: Number(m[2]), day: Number(m[3]) };
+  }
+
+  const pad2 = (n: number) => String(n).padStart(2, '0');
+  function formatDate(date: DateParts): string {
+    const w = getWeekday(date.year, date.month, date.day) ?? 0;
+    return fill(format.date, {
+      y: String(date.year),
+      m: String(date.month),
+      d: String(date.day),
+      mm: pad2(date.month),
+      dd: pad2(date.day),
+      w: format.weekdayLabels[w],
+    });
+  }
+  const dayText = (n: number) => count(format.days, n);
+  function serviceText(months: number): string {
+    const y = Math.floor(months / 12);
+    const m = months % 12;
+    if (y === 0) return fill(format.serviceMonths, { m: String(m) });
+    if (m === 0) return fill(format.serviceYears, { y: String(y) });
+    return fill(format.serviceYearsMonths, { y: String(y), m: String(m) });
+  }
+
+  function addCell(
+    tr: HTMLElement,
+    text: string,
+    className: string,
+    header = false,
+  ) {
+    const cell = document.createElement(header ? 'th' : 'td');
+    if (header) cell.setAttribute('scope', 'row');
+    cell.className = className;
+    cell.textContent = text;
+    tr.append(cell);
+  }
+
+  function renderRow(g: GrantEntry) {
+    const tr = document.createElement('tr');
+    tr.className =
+      'border-b border-gray-200 dark:border-gray-700' +
+      (g.status === 'current' ? ' bg-blue-50 dark:bg-blue-950' : '');
+    const mark =
+      g.status === 'current'
+        ? ` · ${format.statusCurrent}`
+        : g.status === 'next'
+          ? ` · ${format.statusNext}`
+          : '';
+    addCell(
+      tr,
+      serviceText(g.serviceMonths) + mark,
+      'py-2 pr-3 font-medium',
+      true,
+    );
+    addCell(tr, formatDate(g.grantDate), 'py-2 pr-3');
+    addCell(tr, dayText(g.days), 'py-2 pr-3 font-semibold');
+    addCell(tr, formatDate(g.expiryDate), 'py-2 pr-3');
+    addCell(
+      tr,
+      g.mustTakeFive ? format.mandatoryYes : format.mandatoryNo,
+      'py-2',
+    );
+    scheduleEl.append(tr);
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    if (hireInput.value === '') return;
+    const hireDate = parseDate(hireInput.value);
+    const reference = parseDate(referenceInput.value);
+    if (!hireDate || !reference) {
+      errorEl.textContent = errorDate;
+      return;
+    }
+    const daysPerWeek = Number(daysSelect.value);
+    let hoursPerWeek: number | null = null;
+    if (hoursInput.value.trim() !== '') {
+      hoursPerWeek = Number(hoursInput.value);
+      if (classifyWorkPattern(daysPerWeek, hoursPerWeek) === null) {
+        errorEl.textContent = errorHours;
+        return;
+      }
+    }
+    const result = calculatePaidLeave({
+      hireDate,
+      reference,
+      daysPerWeek,
+      hoursPerWeek,
+    });
+    if (!result) {
+      errorEl.textContent = errorDate;
+      return;
+    }
+
+    categoryEl.textContent =
+      result.category === 'full'
+        ? format.categoryFull
+        : fill(format.categoryProportional, { days: String(daysPerWeek) });
+
+    if (result.current) {
+      currentEl.textContent = fill(format.currentValue, {
+        days: dayText(result.current.days),
+        date: formatDate(result.current.grantDate),
+      });
+      mandatoryEl.textContent = result.current.mustTakeFive
+        ? format.mandatoryCurrent
+        : format.mandatoryNotApplicable;
+    } else {
+      currentEl.textContent = format.currentNone;
+      mandatoryEl.textContent = '';
+    }
+
+    if (result.next) {
+      const diff = result.next.daysFromReference;
+      const relative =
+        diff === 0
+          ? format.relativeToday
+          : fill(format.relativeFuture, { days: dayText(diff) });
+      nextEl.textContent = fill(format.nextValue, {
+        days: dayText(result.next.days),
+        date: formatDate(result.next.grantDate),
+        relative,
+      });
+    } else {
+      nextEl.textContent = format.nextNone;
+    }
+    maxEl.textContent = dayText(result.maxHeldDays);
+
+    scheduleEl.textContent = '';
+    const start = Math.max(0, (result.current?.index ?? 0) - 2);
+    for (const g of result.grants.slice(start)) renderRow(g);
+
+    resultsEl.classList.remove('hidden');
+  }
+
+  for (const el of [hireInput, referenceInput]) {
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  }
+  daysSelect.addEventListener('change', render);
+  hoursInput.addEventListener('input', render);
+
+  const today = new Date();
+  referenceInput.value = `${today.getFullYear()}-${pad2(today.getMonth() + 1)}-${pad2(today.getDate())}`;
+  render();
+</script>

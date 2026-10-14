@@ -1,0 +1,522 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { runningPaceCalculatorContent } from '../../i18n/tools/running-pace-calculator';
+import type {
+  DistanceUnit,
+  PaceMode,
+} from '../../lib/tools/running-pace-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = runningPaceCalculatorContent[locale];
+
+const modes: PaceMode[] = ['pace', 'time', 'distance'];
+const units: DistanceUnit[] = ['km', 'mi'];
+---
+
+<ToolShell t={t}>
+  <section
+    id="rpc-calc"
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-error={t.error}
+    data-hr-error={t.hrError}
+    data-bpm-unit={t.bpmUnit}
+    data-race-labels={JSON.stringify(t.raceLabels)}
+    data-zone-names={JSON.stringify(t.hrZoneNames)}
+    data-default-unit={t.defaultUnit}
+  >
+    <div class="mb-4">
+      <span id="rpc-mode-legend" class="ui-label">
+        {t.modeLegend}
+      </span>
+      <div
+        class="flex flex-wrap gap-x-4 gap-y-2"
+        role="radiogroup"
+        aria-labelledby="rpc-mode-legend"
+      >
+        {modes.map((m) => (
+          <label class="flex items-center gap-1 text-sm">
+            <input
+              type="radio"
+              name="rpc-mode"
+              value={m}
+              checked={m === 'pace'}
+            />
+            {t.modeLabels[m]}
+          </label>
+        ))}
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="rpc-unit-select" class="ui-label">
+          {t.unitLabel}
+        </label>
+        <select
+          id="rpc-unit-select"
+          class="ui-input h-11 w-48 max-w-full px-3 dark:bg-gray-900"
+        >
+          {units.map((u) => (
+            <option value={u} selected={u === t.defaultUnit}>
+              {t.unitLabels[u]}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div id="rpc-distance-field">
+        <label for="rpc-distance-input" class="ui-label">
+          {t.distanceLabel}
+        </label>
+        <input
+          id="rpc-distance-input"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          placeholder={t.distancePlaceholder}
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-end gap-x-6 gap-y-3">
+      <div id="rpc-time-field">
+        <span id="rpc-time-legend" class="ui-label">
+          {t.timeLabel}
+        </span>
+        <div
+          class="flex flex-wrap items-center gap-1"
+          role="group"
+          aria-labelledby="rpc-time-legend"
+        >
+          <input
+            id="rpc-hours-input"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            placeholder="0"
+            aria-label={`${t.timeLabel} ${t.hoursUnit}`}
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.hoursUnit}
+          </span>
+          <input
+            id="rpc-minutes-input"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            placeholder="50"
+            aria-label={`${t.timeLabel} ${t.minutesUnit}`}
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.minutesUnit}
+          </span>
+          <input
+            id="rpc-seconds-input"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="any"
+            placeholder="0"
+            aria-label={`${t.timeLabel} ${t.secondsUnit}`}
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.secondsUnit}
+          </span>
+        </div>
+      </div>
+
+      <div id="rpc-pace-field" class="hidden">
+        <span id="rpc-pace-legend" class="ui-label">
+          {t.paceLabel}
+        </span>
+        <div
+          class="flex flex-wrap items-center gap-1"
+          role="group"
+          aria-labelledby="rpc-pace-legend"
+        >
+          <input
+            id="rpc-pace-min-input"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            placeholder="5"
+            aria-label={`${t.paceLabel} ${t.paceMinutesUnit}`}
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.paceMinutesUnit}
+          </span>
+          <input
+            id="rpc-pace-sec-input"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="any"
+            placeholder="0"
+            aria-label={`${t.paceLabel} ${t.paceSecondsUnit}`}
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.paceSecondsUnit}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p
+      id="rpc-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="rpc-results" class="mt-4 hidden" aria-live="polite">
+      <h2 class="mb-1 text-sm font-medium">{t.resultHeading}</h2>
+      <dl class="space-y-2">
+        <div id="rpc-row-time" class="hidden">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultTime}
+          </dt>
+          <dd class="text-lg font-semibold" id="rpc-result-time"></dd>
+        </div>
+        <div id="rpc-row-distance" class="hidden">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultDistance}
+          </dt>
+          <dd class="text-lg font-semibold" id="rpc-result-distance"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultPace}
+          </dt>
+          <dd class="text-lg font-semibold" id="rpc-result-pace"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultPaceMile}
+          </dt>
+          <dd class="text-lg font-semibold" id="rpc-result-pace-mile"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultSpeed}
+          </dt>
+          <dd class="text-lg font-semibold" id="rpc-result-speed"></dd>
+        </div>
+      </dl>
+
+      <h2 class="mt-5 mb-1 text-sm font-medium">{t.racesHeading}</h2>
+      <p class="mb-2 text-xs text-gray-600 dark:text-gray-400">{t.racesNote}</p>
+      <dl id="rpc-races" class="space-y-1 text-sm"></dl>
+    </div>
+  </section>
+
+  <section
+    id="rpc-hr"
+    class="mt-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+  >
+    <h2 class="mb-3 text-lg font-semibold">{t.hrHeading}</h2>
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="rpc-age-input" class="ui-label">
+          {t.hrAgeLabel}
+        </label>
+        <input
+          id="rpc-age-input"
+          type="number"
+          inputmode="numeric"
+          min="10"
+          max="100"
+          step="1"
+          placeholder="40"
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label for="rpc-rest-input" class="ui-label">
+          {t.hrRestLabel}
+        </label>
+        <input
+          id="rpc-rest-input"
+          type="number"
+          inputmode="numeric"
+          min="20"
+          max="150"
+          step="1"
+          placeholder="60"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+    </div>
+
+    <p
+      id="rpc-hr-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="rpc-hr-results" class="mt-4 hidden" aria-live="polite">
+      <dl class="space-y-1 text-sm">
+        <div class="flex flex-wrap justify-between gap-x-4">
+          <dt class="text-gray-600 dark:text-gray-400">{t.hrMaxLabel}</dt>
+          <dd class="font-semibold" id="rpc-hr-max"></dd>
+        </div>
+        <div class="flex flex-wrap justify-between gap-x-4">
+          <dt class="text-gray-600 dark:text-gray-400">{t.hrReserveLabel}</dt>
+          <dd class="font-semibold" id="rpc-hr-reserve"></dd>
+        </div>
+      </dl>
+      <h3 class="mt-4 mb-1 text-sm font-medium">{t.hrZoneHeading}</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th class="py-1 pr-3 font-medium">{t.hrZoneColumn}</th>
+              <th class="py-1 pr-3 font-medium">{t.hrIntensityColumn}</th>
+              <th class="py-1 font-medium">{t.hrBpmColumn}</th>
+            </tr>
+          </thead>
+          <tbody id="rpc-hr-zones"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    calculateHeartRateZones,
+    distanceFromTimePace,
+    distanceToKm,
+    formatDuration,
+    formatPace,
+    KM_PER_MILE,
+    kmToDistance,
+    paceFromDistanceTime,
+    predictRaceTimes,
+    speedKmh,
+    timeFromDistancePace,
+    toSeconds,
+    type DistanceUnit,
+    type PaceMode,
+  } from '../../lib/tools/running-pace-calculator';
+
+  const section = document.getElementById('rpc-calc')!;
+  const errorMessage = section.dataset.error ?? '';
+  const hrErrorMessage = section.dataset.hrError ?? '';
+  const bpmUnit = section.dataset.bpmUnit ?? 'bpm';
+  const raceLabels: Record<string, string> = JSON.parse(
+    section.dataset.raceLabels ?? '{}',
+  );
+  const zoneNames: string[] = JSON.parse(section.dataset.zoneNames ?? '[]');
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const modeInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="rpc-mode"]',
+  );
+  const unitSelect = $<HTMLSelectElement>('rpc-unit-select');
+  const distanceInput = $<HTMLInputElement>('rpc-distance-input');
+  const hoursInput = $<HTMLInputElement>('rpc-hours-input');
+  const minutesInput = $<HTMLInputElement>('rpc-minutes-input');
+  const secondsInput = $<HTMLInputElement>('rpc-seconds-input');
+  const paceMinInput = $<HTMLInputElement>('rpc-pace-min-input');
+  const paceSecInput = $<HTMLInputElement>('rpc-pace-sec-input');
+  const errorEl = $('rpc-error');
+  const resultsEl = $('rpc-results');
+
+  const numberFormat = new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: 2,
+  });
+
+  function selectedMode(): PaceMode {
+    return (
+      (Array.from(modeInputs).find((el) => el.checked)?.value as PaceMode) ??
+      'pace'
+    );
+  }
+
+  function num(el: HTMLInputElement): number {
+    return el.value.trim() === '' ? 0 : Number(el.value);
+  }
+
+  function updateVisibility() {
+    const mode = selectedMode();
+    $('rpc-distance-field').classList.toggle('hidden', mode === 'distance');
+    $('rpc-time-field').classList.toggle('hidden', mode === 'time');
+    $('rpc-pace-field').classList.toggle('hidden', mode === 'pace');
+    $('rpc-row-time').classList.toggle('hidden', mode !== 'time');
+    $('rpc-row-distance').classList.toggle('hidden', mode !== 'distance');
+  }
+
+  function row(label: string, value: string): HTMLElement {
+    const wrap = document.createElement('div');
+    wrap.className = 'flex flex-wrap justify-between gap-x-4';
+    const dt = document.createElement('dt');
+    dt.className = 'text-gray-600 dark:text-gray-400';
+    dt.textContent = label;
+    const dd = document.createElement('dd');
+    dd.className = 'font-semibold';
+    dd.textContent = value;
+    wrap.append(dt, dd);
+    return wrap;
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    const mode = selectedMode();
+    const unit = unitSelect.value as DistanceUnit;
+    const needDistance = mode !== 'distance';
+    const needTime = mode !== 'time';
+    const needPace = mode !== 'pace';
+
+    const distanceEmpty = distanceInput.value.trim() === '';
+    const timeEmpty =
+      hoursInput.value.trim() === '' &&
+      minutesInput.value.trim() === '' &&
+      secondsInput.value.trim() === '';
+    const paceEmpty =
+      paceMinInput.value.trim() === '' && paceSecInput.value.trim() === '';
+    if (
+      (needDistance && distanceEmpty) ||
+      (needTime && timeEmpty) ||
+      (needPace && paceEmpty)
+    )
+      return;
+
+    const distanceKm = distanceToKm(Number(distanceInput.value), unit);
+    const seconds = toSeconds(
+      num(hoursInput),
+      num(minutesInput),
+      num(secondsInput),
+    );
+    const paceInput = num(paceMinInput) * 60 + num(paceSecInput);
+    const paceValid =
+      num(paceMinInput) >= 0 && num(paceSecInput) >= 0 && paceInput > 0;
+
+    let paceSecPerKm: number | null = null;
+    let timeSeconds: number | null = null;
+    let km: number | null = null;
+
+    if (mode === 'pace') {
+      if (seconds !== null)
+        paceSecPerKm = paceFromDistanceTime(distanceKm, seconds);
+      timeSeconds = seconds;
+      km = distanceKm;
+    } else if (mode === 'time') {
+      if (paceValid) {
+        paceSecPerKm = paceInput;
+        timeSeconds = timeFromDistancePace(distanceKm, paceInput);
+      }
+      km = distanceKm;
+    } else if (seconds !== null && paceValid) {
+      paceSecPerKm = paceInput;
+      km = distanceFromTimePace(seconds, paceInput);
+      timeSeconds = seconds;
+    }
+
+    if (paceSecPerKm === null || timeSeconds === null || km === null) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    $('rpc-result-time').textContent = formatDuration(timeSeconds);
+    $('rpc-result-distance').textContent =
+      `${numberFormat.format(kmToDistance(km, unit))} ${unit}`;
+    $('rpc-result-pace').textContent = `${formatPace(paceSecPerKm)} /km`;
+    $('rpc-result-pace-mile').textContent =
+      `${formatPace(paceSecPerKm * KM_PER_MILE)} /mi`;
+    $('rpc-result-speed').textContent =
+      `${numberFormat.format(speedKmh(paceSecPerKm))} km/h`;
+
+    const races = $('rpc-races');
+    races.textContent = '';
+    for (const r of predictRaceTimes(paceSecPerKm)) {
+      races.append(row(raceLabels[r.id] ?? r.id, formatDuration(r.seconds)));
+    }
+    resultsEl.classList.remove('hidden');
+  }
+
+  modeInputs.forEach((el) =>
+    el.addEventListener('change', () => {
+      updateVisibility();
+      render();
+    }),
+  );
+  unitSelect.addEventListener('change', render);
+  [
+    distanceInput,
+    hoursInput,
+    minutesInput,
+    secondsInput,
+    paceMinInput,
+    paceSecInput,
+  ].forEach((el) => el.addEventListener('input', render));
+
+  // 心拍ゾーン
+  const ageInput = $<HTMLInputElement>('rpc-age-input');
+  const restInput = $<HTMLInputElement>('rpc-rest-input');
+  const hrErrorEl = $('rpc-hr-error');
+  const hrResultsEl = $('rpc-hr-results');
+
+  function renderHr() {
+    hrErrorEl.textContent = '';
+    hrResultsEl.classList.add('hidden');
+    if (ageInput.value.trim() === '' || restInput.value.trim() === '') return;
+    const result = calculateHeartRateZones(
+      Number(ageInput.value),
+      Number(restInput.value),
+    );
+    if (!result) {
+      hrErrorEl.textContent = hrErrorMessage;
+      return;
+    }
+    $('rpc-hr-max').textContent = `${result.maxHr} ${bpmUnit}`;
+    $('rpc-hr-reserve').textContent = `${result.reserve} ${bpmUnit}`;
+    const body = $('rpc-hr-zones');
+    body.textContent = '';
+    for (const z of result.zones) {
+      const tr = document.createElement('tr');
+      tr.className = 'border-b border-gray-100 dark:border-gray-800';
+      const cells = [
+        zoneNames[z.zone - 1] ?? `Zone ${z.zone}`,
+        `${z.minPercent}–${z.maxPercent}%`,
+        `${z.minBpm}–${z.maxBpm} ${bpmUnit}`,
+      ];
+      cells.forEach((text, i) => {
+        const td = document.createElement('td');
+        td.className = i === 2 ? 'py-1 font-semibold' : 'py-1 pr-3';
+        td.textContent = text;
+        tr.append(td);
+      });
+      body.append(tr);
+    }
+    hrResultsEl.classList.remove('hidden');
+  }
+
+  ageInput.addEventListener('input', renderHr);
+  restInput.addEventListener('input', renderHr);
+
+  updateVisibility();
+  distanceInput.value = '10';
+  minutesInput.value = '50';
+  ageInput.value = '40';
+  restInput.value = '60';
+  render();
+  renderHr();
+</script>

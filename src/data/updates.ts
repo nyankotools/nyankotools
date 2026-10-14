@@ -580,15 +580,22 @@ export const updates: UpdateEntry[] = [
   },
   {
     date: '2026-10-14',
-    toolSlugs: ['braille-converter', 'number-to-words'],
+    toolSlugs: [
+      'braille-converter',
+      'number-to-words',
+      'html-tag-stripper',
+      'sequence-generator',
+      'paid-leave-calculator',
+      'running-pace-calculator',
+    ],
     translations: {
       ja: {
         summary:
-          '点字変換を追加しました。ひらがな・カタカナを日本語点字（Unicode点字）に、点字をかなに相互変換でき、濁音・拗音・促音・数符にも対応しています。点字1マスごとの点の番号も確認できます。あわせて数字→英語表記・日本語読み変換も追加し、数字を英語の数詞・序数・小切手表記とひらがなの読みに変換できます。',
+          '点字変換を追加しました。ひらがな・カタカナを日本語点字（Unicode点字）に、点字をかなに相互変換でき、濁音・拗音・促音・数符にも対応しています。点字1マスごとの点の番号も確認できます。あわせて数字→英語表記・日本語読み変換も追加し、数字を英語の数詞・序数・小切手表記とひらがなの読みに変換できます。さらにHTMLタグ除去・プレーンテキスト抽出、連番・日付リスト生成、有給休暇の付与日数計算、ランニングペース計算機を追加しました。HTMLタグ除去はスクリプトを実行せずに本文だけを取り出し、連番・日付リスト生成はゼロ埋め・接頭辞・曜日付きの一覧を作成し、有給休暇の付与日数計算は入社日と週の所定労働日数から比例付与を含む日数を算出し、ランニングペース計算機はペース・タイム・予想タイム・心拍ゾーンを求めます。',
       },
       en: {
         summary:
-          'Added the Japanese Braille Converter. It converts kana to six-dot Japanese braille in Unicode characters and back, handling voiced marks, contracted sounds, the small tsu and number signs, and lists the dot numbers of each cell. Also added the Number to Words Converter, which spells a number out in English, as an ordinal and in check-writing format, with its Japanese reading.',
+          'Added the Japanese Braille Converter. It converts kana to six-dot Japanese braille in Unicode characters and back, handling voiced marks, contracted sounds, the small tsu and number signs, and lists the dot numbers of each cell. Also added the Number to Words Converter, which spells a number out in English, as an ordinal and in check-writing format, with its Japanese reading. Also added the HTML Tag Stripper, Number Sequence & Date List Generator, Paid Leave Days Calculator and Running Pace Calculator: the stripper extracts plain text without executing scripts; the sequence generator builds zero-padded numbers and date lists with weekdays; the paid leave calculator works out grant dates and days, including proportional grants, from a hire date and weekly schedule; the pace calculator converts between distance, time and pace and shows race predictions and heart rate zones.',
       },
     },
   },

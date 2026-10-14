@@ -6980,6 +6980,159 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'html-tag-stripper',
+    category: 'text',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: ['html-escape', 'markdown-preview', 'html-table-to-csv'],
+    translations: {
+      ja: {
+        name: 'HTMLタグ除去・プレーンテキスト抽出',
+        description:
+          'HTMLからタグを取り除いてプレーンテキストだけを抽出します。ブロック要素の改行保持、空白・空行の圧縮、リンクURLの併記に対応。スクリプトは実行しません。',
+        keywords: [
+          'HTMLタグ除去',
+          'タグ削除',
+          'プレーンテキスト',
+          'strip tags',
+          'HTMLから文章抽出',
+          'エンティティ デコード',
+        ],
+      },
+      en: {
+        name: 'HTML Tag Stripper',
+        description:
+          'Strips HTML tags and extracts plain text. Keeps line breaks, collapses whitespace, optionally keeps link URLs. Scripts are never executed.',
+        keywords: [
+          'strip html tags',
+          'remove html tags',
+          'html to text',
+          'plain text extractor',
+          'decode html entities',
+          'html cleaner',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'sequence-generator',
+    category: 'generate',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: ['random-generator', 'calendar-generator', 'text-list-tools'],
+    translations: {
+      ja: {
+        name: '連番・日付リスト生成',
+        description:
+          'ゼロ埋め・接頭辞つきの連番や、曜日付き・土日除外の日付リストを最大10000件まとめて作成',
+        keywords: [
+          '連番',
+          '連番 作成',
+          '日付リスト',
+          'ゼロ埋め',
+          '曜日',
+          '日程表',
+          'ファイル名',
+          '通し番号',
+        ],
+      },
+      en: {
+        name: 'Number Sequence & Date List Generator',
+        description:
+          'Generate zero-padded number sequences and date lists with weekdays, skipping weekends',
+        keywords: [
+          'number sequence',
+          'serial number',
+          'date list',
+          'zero padding',
+          'date range',
+          'weekday',
+          'file names',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'paid-leave-calculator',
+    category: 'calc',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: [
+      'business-day-calculator',
+      'hourly-wage-calculator',
+      'date-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '有給休暇の付与日数計算',
+        description:
+          '入社日と週の所定労働日数から、有給休暇の付与日・付与日数（比例付与を含む）と年5日の取得義務の対象を計算します。',
+        keywords: [
+          '有給休暇',
+          '有給日数',
+          '年次有給休暇',
+          '比例付与',
+          '付与日数',
+          '年5日取得義務',
+          'パート 有給',
+          '労働基準法39条',
+        ],
+      },
+      en: {
+        name: 'Paid Leave Days Calculator (Japan)',
+        description:
+          'Calculate annual paid leave grant dates and days in Japan from your hire date and weekly schedule, including proportional grants.',
+        keywords: [
+          'paid leave',
+          'annual leave',
+          'Japan paid leave',
+          'proportional grant',
+          'labor standards act',
+          'part-time leave days',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'running-pace-calculator',
+    category: 'calc',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: ['time-calculator', 'bmr-calorie-calculator', 'bmi-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ランニングペース計算機',
+        description:
+          '距離とタイムからペース・時速を計算。大会距離別の予想タイムとカルボーネン法の心拍ゾーンも表示。',
+        keywords: [
+          'ペース計算',
+          'ランニング',
+          'マラソン',
+          'タイム換算',
+          '心拍ゾーン',
+          'カルボーネン法',
+          '分/km',
+        ],
+      },
+      en: {
+        name: 'Running Pace Calculator',
+        description:
+          'Calculate running pace, speed, finish time and distance, plus race predictions and heart rate zones.',
+        keywords: [
+          'pace calculator',
+          'running pace',
+          'marathon',
+          'race time predictor',
+          'heart rate zones',
+          'karvonen',
+          'min per km',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

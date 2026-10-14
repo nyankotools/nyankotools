@@ -1,0 +1,542 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { sequenceGeneratorContent } from '../../i18n/tools/sequence-generator';
+import {
+  MAX_COUNT,
+  MAX_INTERVAL,
+  MAX_PAD,
+} from '../../lib/tools/sequence-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = sequenceGeneratorContent[locale];
+const modes = [
+  { id: 'number', label: t.modeNumber },
+  { id: 'date', label: t.modeDate },
+];
+const limits = [
+  { id: 'count', label: t.limitCount },
+  { id: 'end', label: t.limitEnd },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    id="sg-root"
+    data-max-count={MAX_COUNT}
+    data-max-pad={MAX_PAD}
+    data-max-interval={MAX_INTERVAL}
+    data-result-summary={t.resultSummary}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-weekdays-short={t.weekdaysShort.join(',')}
+    data-weekdays-long={t.weekdaysLong.join(',')}
+    data-weekday-template={t.weekdayTemplate}
+    data-err-invalid-start={t.invalidStart}
+    data-err-invalid-step={t.invalidStep}
+    data-err-zero-step={t.zeroStep}
+    data-err-invalid-count={t.invalidCount}
+    data-err-invalid-end={t.invalidEnd}
+    data-err-invalid-pad={t.invalidPad}
+    data-err-invalid-interval={t.invalidInterval}
+    data-err-unreachable-end={t.unreachableEnd}
+    data-err-too-many={t.tooMany}
+    data-err-out-of-range={t.outOfRange}
+    data-err-not-enough={t.notEnough}
+  >
+    <div>
+      <span class="ui-label">{t.modeLabel}</span>
+      <div
+        id="sg-mode"
+        class="ui-seg flex-wrap"
+        role="group"
+        aria-label={t.modeLabel}
+      >
+        {modes.map((mode, i) => (
+          <button
+            type="button"
+            data-mode={mode.id}
+            aria-pressed={i === 0 ? 'true' : 'false'}
+            class="ui-seg-btn"
+          >
+            {mode.label}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <span class="ui-label">{t.limitLabel}</span>
+      <div
+        id="sg-limit"
+        class="ui-seg flex-wrap"
+        role="group"
+        aria-label={t.limitLabel}
+      >
+        {limits.map((limit, i) => (
+          <button
+            type="button"
+            data-limit={limit.id}
+            aria-pressed={i === 0 ? 'true' : 'false'}
+            class="ui-seg-btn"
+          >
+            {limit.label}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <div id="sg-number-fields" class="mt-4 flex flex-wrap gap-4">
+      <div>
+        <label for="sg-start" class="ui-label">
+          {t.startLabel}
+        </label>
+        <input
+          id="sg-start"
+          type="number"
+          inputmode="numeric"
+          step="1"
+          value="1"
+          class="ui-input h-11 w-32 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="sg-step" class="ui-label">
+          {t.stepLabel}
+        </label>
+        <input
+          id="sg-step"
+          type="number"
+          inputmode="numeric"
+          step="1"
+          value="1"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div id="sg-end-field" hidden>
+        <label for="sg-end" class="ui-label">
+          {t.endLabel}
+        </label>
+        <input
+          id="sg-end"
+          type="number"
+          inputmode="numeric"
+          step="1"
+          value="10"
+          class="ui-input h-11 w-32 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="sg-pad" class="ui-label">
+          {t.padLabel}
+        </label>
+        <input
+          id="sg-pad"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          max={MAX_PAD}
+          step="1"
+          value="0"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="sg-prefix" class="ui-label">
+          {t.prefixLabel}
+        </label>
+        <input
+          id="sg-prefix"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          class="ui-input h-11 w-40 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="sg-suffix" class="ui-label">
+          {t.suffixLabel}
+        </label>
+        <input
+          id="sg-suffix"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          class="ui-input h-11 w-40 px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+
+    <div id="sg-date-fields" class="mt-4" hidden>
+      <div class="flex flex-wrap gap-4">
+        <div>
+          <label for="sg-start-date" class="ui-label">
+            {t.startDateLabel}
+          </label>
+          <input
+            id="sg-start-date"
+            type="date"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div id="sg-end-date-field" hidden>
+          <label for="sg-end-date" class="ui-label">
+            {t.endDateLabel}
+          </label>
+          <input
+            id="sg-end-date"
+            type="date"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="sg-interval" class="ui-label">
+            {t.intervalLabel}
+          </label>
+          <input
+            id="sg-interval"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max={MAX_INTERVAL}
+            step="1"
+            value="1"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="sg-unit" class="ui-label">
+            {t.unitLabel}
+          </label>
+          <select
+            id="sg-unit"
+            class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
+          >
+            <option value="day">{t.unitDay}</option>
+            <option value="week">{t.unitWeek}</option>
+            <option value="month">{t.unitMonth}</option>
+          </select>
+        </div>
+      </div>
+      <div class="mt-3 flex flex-wrap items-end gap-4">
+        <div>
+          <label for="sg-format" class="ui-label">
+            {t.formatLabel}
+          </label>
+          <input
+            id="sg-format"
+            type="text"
+            list="sg-format-list"
+            autocomplete="off"
+            spellcheck="false"
+            value="YYYY-MM-DD"
+            class="ui-input h-11 w-52 px-3 dark:bg-gray-900"
+          />
+          <datalist id="sg-format-list">
+            <option value="YYYY-MM-DD"></option>
+            <option value="YYYY/MM/DD"></option>
+            <option value="YYYY年M月D日"></option>
+            <option value="MM/DD/YYYY"></option>
+            <option value="M/D"></option>
+            <option value="YYYYMMDD"></option>
+          </datalist>
+        </div>
+        <div>
+          <label for="sg-weekday" class="ui-label">
+            {t.weekdayLabel}
+          </label>
+          <select
+            id="sg-weekday"
+            class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
+          >
+            <option value="none">{t.weekdayNone}</option>
+            <option value="short">{t.weekdayShort}</option>
+            <option value="long">{t.weekdayLong}</option>
+          </select>
+        </div>
+        <label class="ui-check pb-2.5">
+          <input id="sg-skip-weekends" type="checkbox" class="h-4 w-4" />
+          {t.skipWeekends}
+        </label>
+      </div>
+      <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        {t.formatHint}
+      </p>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-end gap-4">
+      <div id="sg-count-field">
+        <label for="sg-count" class="ui-label">
+          {t.countLabel}
+        </label>
+        <input
+          id="sg-count"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max={MAX_COUNT}
+          step="1"
+          value="10"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="sg-separator" class="ui-label">
+          {t.separatorLabel}
+        </label>
+        <select
+          id="sg-separator"
+          class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
+        >
+          <option value="newline">{t.sepNewline}</option>
+          <option value="comma">{t.sepComma}</option>
+          <option value="space">{t.sepSpace}</option>
+          <option value="tab">{t.sepTab}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <button id="sg-generate-button" type="button" class="ui-btn-primary">
+        {t.generate}
+      </button>
+    </div>
+
+    <div id="sg-error" class="ui-error empty:hidden mt-4" role="alert"></div>
+
+    <div id="sg-result" class="mt-4" hidden>
+      <label for="sg-output" class="ui-label">
+        {t.resultLabel}
+      </label>
+      <textarea
+        id="sg-output"
+        readonly
+        spellcheck="false"
+        data-no-count
+        class="ui-input h-56 w-full p-3 font-mono dark:bg-gray-900"
+      ></textarea>
+      <p
+        id="sg-summary"
+        class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></p>
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <button id="sg-copy-button" type="button" class="ui-btn">
+          {t.copy}
+        </button>
+        <button id="sg-download-button" type="button" class="ui-btn">
+          {t.download}
+        </button>
+        <span
+          id="sg-status"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    generateDateSequence,
+    generateNumberSequence,
+    joinValues,
+    type Separator,
+    type SequenceError,
+    type SequenceResult,
+  } from '../../lib/tools/sequence-generator';
+
+  type Mode = 'number' | 'date';
+  type LimitKind = 'count' | 'end';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const msg = $('sg-root').dataset;
+  const input = (id: string) => $<HTMLInputElement>(id);
+  const select = (id: string) => $<HTMLSelectElement>(id);
+  const errorEl = $('sg-error');
+  const resultEl = $('sg-result');
+  const outputEl = $<HTMLTextAreaElement>('sg-output');
+  const summaryEl = $('sg-summary');
+  const statusEl = $('sg-status');
+  const modeButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#sg-mode [data-mode]'),
+  );
+  const limitButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#sg-limit [data-limit]'),
+  );
+
+  let mode: Mode = 'number';
+  let limitKind: LimitKind = 'count';
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  function errorText(error: SequenceError): string {
+    switch (error) {
+      case 'invalidStart':
+        return msg.errInvalidStart ?? '';
+      case 'invalidStep':
+        return msg.errInvalidStep ?? '';
+      case 'zeroStep':
+        return msg.errZeroStep ?? '';
+      case 'invalidCount':
+        return fill(msg.errInvalidCount, { max: msg.maxCount ?? '' });
+      case 'invalidEnd':
+        return msg.errInvalidEnd ?? '';
+      case 'invalidPad':
+        return fill(msg.errInvalidPad, { max: msg.maxPad ?? '' });
+      case 'invalidInterval':
+        return fill(msg.errInvalidInterval, { max: msg.maxInterval ?? '' });
+      case 'unreachableEnd':
+        return msg.errUnreachableEnd ?? '';
+      case 'tooMany':
+        return fill(msg.errTooMany, { max: msg.maxCount ?? '' });
+      case 'outOfRange':
+        return msg.errOutOfRange ?? '';
+      case 'notEnough':
+        return msg.errNotEnough ?? '';
+    }
+  }
+
+  /** 空欄は NaN にして、生成関数のエラー判定に任せる */
+  function num(id: string): number {
+    const raw = input(id).value.trim();
+    return raw === '' ? NaN : Number(raw);
+  }
+
+  function localToday(): string {
+    const d = new Date();
+    const p = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }
+
+  function applyVisibility() {
+    $('sg-number-fields').hidden = mode !== 'number';
+    $('sg-date-fields').hidden = mode !== 'date';
+    $('sg-end-field').hidden = !(mode === 'number' && limitKind === 'end');
+    $('sg-end-date-field').hidden = limitKind !== 'end';
+    $('sg-count-field').hidden = limitKind !== 'count';
+    modeButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.mode === mode)),
+    );
+    limitButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.limit === limitKind)),
+    );
+    errorEl.textContent = '';
+  }
+
+  function generate(): SequenceResult {
+    if (mode === 'number') {
+      return generateNumberSequence({
+        start: num('sg-start'),
+        step: num('sg-step'),
+        limit:
+          limitKind === 'count'
+            ? { kind: 'count', count: num('sg-count') }
+            : { kind: 'end', end: num('sg-end') },
+        pad: num('sg-pad'),
+        prefix: input('sg-prefix').value,
+        suffix: input('sg-suffix').value,
+      });
+    }
+    const weekday = select('sg-weekday').value;
+    const names =
+      weekday === 'short'
+        ? msg.weekdaysShort
+        : weekday === 'long'
+          ? msg.weekdaysLong
+          : undefined;
+    const unit = select('sg-unit').value;
+    return generateDateSequence({
+      start: input('sg-start-date').value,
+      limit:
+        limitKind === 'count'
+          ? { kind: 'count', count: num('sg-count') }
+          : { kind: 'end', end: input('sg-end-date').value },
+      interval: num('sg-interval'),
+      unit: unit === 'week' || unit === 'month' ? unit : 'day',
+      format: input('sg-format').value,
+      weekdayNames: names ? names.split(',') : undefined,
+      weekdayTemplate: msg.weekdayTemplate,
+      skipWeekends: input('sg-skip-weekends').checked,
+    });
+  }
+
+  let values: string[] = [];
+
+  function currentText(): string {
+    const sep = select('sg-separator').value;
+    const separator: Separator =
+      sep === 'comma' || sep === 'space' || sep === 'tab' ? sep : 'newline';
+    return joinValues(values, separator);
+  }
+
+  function run() {
+    errorEl.textContent = '';
+    statusEl.textContent = '';
+    const result = generate();
+    if (!result.ok) {
+      errorEl.textContent = errorText(result.error);
+      resultEl.hidden = true;
+      return;
+    }
+    values = result.values;
+    outputEl.value = currentText();
+    summaryEl.textContent = fill(msg.resultSummary, {
+      count: String(values.length),
+    });
+    resultEl.hidden = false;
+  }
+
+  modeButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      mode = b.dataset.mode === 'date' ? 'date' : 'number';
+      applyVisibility();
+    }),
+  );
+  limitButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      limitKind = b.dataset.limit === 'end' ? 'end' : 'count';
+      applyVisibility();
+    }),
+  );
+  select('sg-separator').addEventListener('change', () => {
+    if (values.length > 0) outputEl.value = currentText();
+  });
+  $('sg-generate-button').addEventListener('click', run);
+  $('sg-copy-button').addEventListener('click', async () => {
+    if (!outputEl.value) return;
+    statusEl.textContent = (await copyText(outputEl.value))
+      ? (msg.copied ?? '')
+      : (msg.copyFailed ?? '');
+  });
+  $('sg-download-button').addEventListener('click', () => {
+    if (!outputEl.value) return;
+    downloadBlob(
+      new Blob([outputEl.value], { type: 'text/plain;charset=utf-8' }),
+      'sequence.txt',
+    );
+  });
+
+  if (!input('sg-start-date').value)
+    input('sg-start-date').value = localToday();
+  if (!input('sg-end-date').value) {
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    const p = (n: number) => String(n).padStart(2, '0');
+    input('sg-end-date').value =
+      `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }
+  applyVisibility();
+</script>

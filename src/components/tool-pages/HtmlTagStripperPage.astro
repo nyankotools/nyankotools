@@ -1,0 +1,131 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { htmlTagStripperContent } from '../../i18n/tools/html-tag-stripper';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = htmlTagStripperContent[locale];
+const options = [
+  { key: 'keepBlockBreaks', label: t.optKeepBlockBreaks, on: true },
+  { key: 'collapseWhitespace', label: t.optCollapseWhitespace, on: true },
+  { key: 'compressBlankLines', label: t.optCompressBlankLines, on: true },
+  { key: 'keepLinkUrls', label: t.optKeepLinkUrls, on: false },
+  { key: 'keepImageAlt', label: t.optKeepImageAlt, on: false },
+  { key: 'decodeEntities', label: t.optDecodeEntities, on: true },
+];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="hts-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="hts-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      data-no-count
+      class="ui-input h-56 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <fieldset class="mt-4">
+    <legend class="ui-label">{t.optionsLabel}</legend>
+    <div class="grid gap-x-6 sm:grid-cols-2">
+      {options.map((o) => (
+        <label class="ui-check py-1">
+          <input
+            id={`hts-opt-${o.key}`}
+            type="checkbox"
+            data-option={o.key}
+            checked={o.on}
+          />
+          <span>{o.label}</span>
+        </label>
+      ))}
+    </div>
+  </fieldset>
+
+  <div class="mt-4">
+    <div class="mb-1 flex flex-wrap items-center gap-3">
+      <label for="hts-output" class="ui-label mb-0">
+        {t.outputLabel}
+      </label>
+      <button
+        id="hts-copy-button"
+        type="button"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="ui-btn"
+      >
+        {t.copy}
+      </button>
+      <span
+        id="hts-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+      <span
+        id="hts-stats"
+        class="text-sm text-gray-600 dark:text-gray-400"
+        data-template={t.stats}
+      ></span>
+    </div>
+    <textarea
+      id="hts-output"
+      readonly
+      class="ui-input h-56 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+    ></textarea>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    stripHtml,
+    type StripOptions,
+  } from '../../lib/tools/html-tag-stripper';
+
+  const input = document.getElementById('hts-input') as HTMLTextAreaElement;
+  const output = document.getElementById('hts-output') as HTMLTextAreaElement;
+  const statsEl = document.getElementById('hts-stats')!;
+  const statusEl = document.getElementById('hts-status')!;
+  const copyButton = document.getElementById(
+    'hts-copy-button',
+  ) as HTMLButtonElement;
+  const checks = document.querySelectorAll<HTMLInputElement>('[data-option]');
+
+  function update() {
+    statusEl.textContent = '';
+    const opts: Partial<StripOptions> = {};
+    checks.forEach((c) => {
+      opts[c.dataset.option as keyof StripOptions] = c.checked;
+    });
+    const result = stripHtml(input.value, opts);
+    output.value = result;
+    statsEl.textContent = input.value
+      ? (statsEl.dataset.template ?? '')
+          .replace('{before}', String(input.value.length))
+          .replace('{after}', String(result.length))
+      : '';
+  }
+
+  onTextInput(input, update);
+  checks.forEach((c) => c.addEventListener('change', update));
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  update();
+</script>

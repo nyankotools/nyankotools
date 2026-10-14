@@ -87,6 +87,8 @@ const slugs = [
   'random-generator',
   'file-type-detector',
   'image-ascii-art',
+  'sequence-generator',
+  'paid-leave-calculator',
 ];
 
 const locales = [

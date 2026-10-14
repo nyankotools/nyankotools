@@ -51,7 +51,8 @@ export const brailleConverterContent: Record<
     inputLabel: '入力',
     inputPlaceholderToBraille: '点字にしたいかな文字を入力',
     inputPlaceholderToKana: 'かなに戻したい点字を貼り付け',
-    sampleText: 'にゃんこツールズ 2026ねん',
+    sampleText:
+      'わたしたちわ この あなで くらし せいかつ し そして いきて きた\nすべてわ ぽけもんの おかげだ\nだが わたしたちわ あの ぽけもんを とじこめた\nこわかったのだ\nゆーき ある ものよ きぼーに みちた ものよ\nとびらを あけよ そこに えいえんの ぽけもんが いる\nはじめに じーらんす おわりに ほえるおー そして すべてが ひらかれる',
     outputLabel: '結果',
     unsupportedPrefix: '変換できずそのまま残した文字: ',
     dotsHeading: '点の番号',
@@ -98,7 +99,8 @@ export const brailleConverterContent: Record<
     inputLabel: 'Input',
     inputPlaceholderToBraille: 'Enter kana to convert to braille',
     inputPlaceholderToKana: 'Paste braille to convert back to kana',
-    sampleText: 'にゃんこツールズ 2026ねん',
+    sampleText:
+      'わたしたちわ この あなで くらし せいかつ し そして いきて きた\nすべてわ ぽけもんの おかげだ\nだが わたしたちわ あの ぽけもんを とじこめた\nこわかったのだ\nゆーき ある ものよ きぼーに みちた ものよ\nとびらを あけよ そこに えいえんの ぽけもんが いる\nはじめに じーらんす おわりに ほえるおー そして すべてが ひらかれる',
     outputLabel: 'Result',
     unsupportedPrefix: 'Characters left unconverted: ',
     dotsHeading: 'Dot numbers',

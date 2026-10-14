@@ -1,0 +1,202 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { brailleConverterContent } from '../../i18n/tools/braille-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = brailleConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-3">
+    <div
+      id="braille-converter-mode"
+      class="ui-seg"
+      role="group"
+      aria-label={t.directionLabel}
+    >
+      <button
+        type="button"
+        data-mode="toBraille"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.modeToBraille}
+      </button>
+      <button
+        type="button"
+        data-mode="toKana"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeToKana}
+      </button>
+    </div>
+    <button
+      id="braille-converter-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="braille-converter-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="braille-converter-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="braille-converter-input"
+        data-query-target="text"
+        data-sample={t.sampleText}
+        data-placeholder-to-braille={t.inputPlaceholderToBraille}
+        data-placeholder-to-kana={t.inputPlaceholderToKana}
+        class="ui-input h-64 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholderToBraille}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label for="braille-converter-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="braille-converter-output"
+        readonly
+        class="ui-input h-64 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="braille-converter-unsupported"
+    data-prefix={t.unsupportedPrefix}
+    class="ui-error mt-3"
+    hidden
+  ></p>
+
+  <section id="braille-converter-dots-section" class="mt-6" hidden>
+    <h2 class="mb-2 text-lg font-bold">{t.dotsHeading}</h2>
+    <ul
+      id="braille-converter-dots"
+      data-label={t.dotsLabel}
+      class="flex flex-wrap gap-2"
+    ></ul>
+  </section>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    brailleDots,
+    brailleToText,
+    textToBraille,
+    type BrailleDirection,
+  } from '../../lib/tools/braille-converter';
+
+  const MAX_DOT_CELLS = 120;
+
+  const input = document.getElementById(
+    'braille-converter-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'braille-converter-output',
+  ) as HTMLTextAreaElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#braille-converter-mode [data-mode]',
+  );
+  const copyButton = document.getElementById(
+    'braille-converter-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('braille-converter-status')!;
+  const unsupportedEl = document.getElementById(
+    'braille-converter-unsupported',
+  )!;
+  const dotsSection = document.getElementById(
+    'braille-converter-dots-section',
+  )!;
+  const dotsList = document.getElementById('braille-converter-dots')!;
+
+  let direction: BrailleDirection = 'toBraille';
+
+  function renderDots(braille: string) {
+    dotsList.textContent = '';
+    const seen = new Set<string>();
+    for (const ch of braille) {
+      const dots = brailleDots(ch);
+      if (dots.length === 0 || seen.has(ch)) continue;
+      seen.add(ch);
+      if (seen.size > MAX_DOT_CELLS) break;
+      const li = document.createElement('li');
+      li.className =
+        'rounded border border-gray-200 px-2 py-1 text-sm dark:border-gray-700';
+      const glyph = document.createElement('span');
+      glyph.className = 'mr-2 text-2xl align-middle';
+      glyph.textContent = ch;
+      li.append(glyph, `${dotsList.dataset.label ?? ''} ${dots.join('・')}`);
+      dotsList.append(li);
+    }
+    dotsSection.hidden = dotsList.childElementCount === 0;
+  }
+
+  function convert() {
+    statusEl.textContent = '';
+    let unsupported: string[];
+    if (direction === 'toBraille') {
+      const r = textToBraille(input.value);
+      output.value = r.braille;
+      unsupported = r.unsupported;
+      renderDots(r.braille);
+    } else {
+      const r = brailleToText(input.value);
+      output.value = r.text;
+      unsupported = r.unsupported;
+      renderDots(input.value);
+    }
+    unsupportedEl.hidden = unsupported.length === 0;
+    unsupportedEl.textContent =
+      unsupported.length === 0
+        ? ''
+        : (unsupportedEl.dataset.prefix ?? '') +
+          unsupported.slice(0, 30).join(' ');
+  }
+
+  onTextInput(input, convert);
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      direction = button.dataset.mode as BrailleDirection;
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      const toBraille = direction === 'toBraille';
+      input.placeholder =
+        (toBraille
+          ? input.dataset.placeholderToBraille
+          : input.dataset.placeholderToKana) ?? '';
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  convert();
+</script>

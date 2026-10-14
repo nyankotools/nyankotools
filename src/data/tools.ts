@@ -6898,6 +6898,433 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'braille-converter',
+    category: 'text',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: [
+      'kana-converter',
+      'romaji-kana-converter',
+      'morse-code-converter',
+    ],
+    translations: {
+      ja: {
+        name: '点字変換（日本語点字・Unicode点字）',
+        description:
+          'ひらがな・カタカナを日本語点字（6点・Unicode点字）に変換し、点字をかなに戻せます。濁音・拗音・促音・数符に対応し、点の番号も確認できます',
+        keywords: [
+          '点字',
+          '点字変換',
+          '点字 変換',
+          '日本語点字',
+          '点訳',
+          'Unicode点字',
+          '六点点字',
+        ],
+      },
+      en: {
+        name: 'Japanese Braille Converter (Kana ⇔ Unicode Braille)',
+        description:
+          'Convert Japanese kana to six-dot braille in Unicode characters and back, with voiced marks, yoon, sokuon and number signs plus per-cell dot numbers',
+        keywords: [
+          'braille',
+          'japanese braille',
+          'tenji',
+          'unicode braille',
+          'braille translator',
+          'kana to braille',
+          'six-dot braille',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'number-to-words',
+    category: 'text',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: [
+      'kanji-number-converter',
+      'roman-numeral-converter',
+      'unit-converter',
+    ],
+    translations: {
+      ja: {
+        name: '数字→英語表記・日本語読み変換',
+        description:
+          '数字を英語の数詞表記・序数・小切手表記（and 50/100 dollars）と、ひらがなの日本語読みに変換します。英国式のandにも対応しています',
+        keywords: [
+          '数字 英語',
+          '英語 数字 変換',
+          '小切手 金額',
+          '序数',
+          '数詞',
+          '数字 読み方',
+          'number to words',
+        ],
+      },
+      en: {
+        name: 'Number to Words Converter',
+        description:
+          'Convert a number to English words, ordinals and check-writing format (and 50/100 dollars), plus its Japanese reading in hiragana, with British "and" support',
+        keywords: [
+          'number to words',
+          'check writing',
+          'numbers in words',
+          'ordinal numbers',
+          'spell out number',
+          'cardinal',
+          'japanese number reading',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'html-tag-stripper',
+    category: 'text',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: ['html-escape', 'markdown-preview', 'html-table-to-csv'],
+    translations: {
+      ja: {
+        name: 'HTMLタグ除去・プレーンテキスト抽出',
+        description:
+          'HTMLからタグを取り除いてプレーンテキストだけを抽出します。ブロック要素の改行保持、空白・空行の圧縮、リンクURLの併記に対応。スクリプトは実行しません。',
+        keywords: [
+          'HTMLタグ除去',
+          'タグ削除',
+          'プレーンテキスト',
+          'strip tags',
+          'HTMLから文章抽出',
+          'エンティティ デコード',
+        ],
+      },
+      en: {
+        name: 'HTML Tag Stripper',
+        description:
+          'Strips HTML tags and extracts plain text. Keeps line breaks, collapses whitespace, optionally keeps link URLs. Scripts are never executed.',
+        keywords: [
+          'strip html tags',
+          'remove html tags',
+          'html to text',
+          'plain text extractor',
+          'decode html entities',
+          'html cleaner',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'sequence-generator',
+    category: 'generate',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: ['random-generator', 'calendar-generator', 'text-list-tools'],
+    translations: {
+      ja: {
+        name: '連番・日付リスト生成',
+        description:
+          'ゼロ埋め・接頭辞つきの連番や、曜日付き・土日除外の日付リストを最大10000件まとめて作成',
+        keywords: [
+          '連番',
+          '連番 作成',
+          '日付リスト',
+          'ゼロ埋め',
+          '曜日',
+          '日程表',
+          'ファイル名',
+          '通し番号',
+        ],
+      },
+      en: {
+        name: 'Number Sequence & Date List Generator',
+        description:
+          'Generate zero-padded number sequences and date lists with weekdays, skipping weekends',
+        keywords: [
+          'number sequence',
+          'serial number',
+          'date list',
+          'zero padding',
+          'date range',
+          'weekday',
+          'file names',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'paid-leave-calculator',
+    category: 'calc',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: [
+      'business-day-calculator',
+      'hourly-wage-calculator',
+      'date-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '有給休暇の付与日数計算',
+        description:
+          '入社日と週の所定労働日数から、有給休暇の付与日・付与日数（比例付与を含む）と年5日の取得義務の対象を計算します。',
+        keywords: [
+          '有給休暇',
+          '有給日数',
+          '年次有給休暇',
+          '比例付与',
+          '付与日数',
+          '年5日取得義務',
+          'パート 有給',
+          '労働基準法39条',
+        ],
+      },
+      en: {
+        name: 'Paid Leave Days Calculator (Japan)',
+        description:
+          'Calculate annual paid leave grant dates and days in Japan from your hire date and weekly schedule, including proportional grants.',
+        keywords: [
+          'paid leave',
+          'annual leave',
+          'Japan paid leave',
+          'proportional grant',
+          'labor standards act',
+          'part-time leave days',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'running-pace-calculator',
+    category: 'calc',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: ['time-calculator', 'bmr-calorie-calculator', 'bmi-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ランニングペース計算機',
+        description:
+          '距離とタイムからペース・時速を計算。大会距離別の予想タイムとカルボーネン法の心拍ゾーンも表示。',
+        keywords: [
+          'ペース計算',
+          'ランニング',
+          'マラソン',
+          'タイム換算',
+          '心拍ゾーン',
+          'カルボーネン法',
+          '分/km',
+        ],
+      },
+      en: {
+        name: 'Running Pace Calculator',
+        description:
+          'Calculate running pace, speed, finish time and distance, plus race predictions and heart rate zones.',
+        keywords: [
+          'pace calculator',
+          'running pace',
+          'marathon',
+          'race time predictor',
+          'heart rate zones',
+          'karvonen',
+          'min per km',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'image-round-crop',
+    category: 'image',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: ['image-cropper', 'image-resizer', 'favicon-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像の円形・角丸切り抜き',
+        keywords: [
+          '円形切り抜き',
+          '丸型',
+          '角丸',
+          'アイコン',
+          '透過PNG',
+          'プロフィール画像',
+        ],
+        description:
+          '画像を円形や角丸に切り抜き、背景が透明なPNG・WebPで保存できます。SNSのアイコン作りに便利です。',
+      },
+      en: {
+        name: 'Round Image Cropper (Circle & Rounded)',
+        keywords: [
+          'circle crop',
+          'round image',
+          'rounded corners',
+          'profile picture',
+          'transparent png',
+          'avatar',
+        ],
+        description:
+          'Crop an image into a circle or rounded corners and save a transparent PNG or WebP. Great for profile icons.',
+      },
+    },
+  },
+  {
+    slug: 'image-padding',
+    category: 'image',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: ['image-cropper', 'image-resizer', 'image-merger'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像に余白を追加・正方形にする',
+        keywords: [
+          '余白追加',
+          '正方形',
+          '画像 余白',
+          'パディング',
+          '背景色',
+          'レターボックス',
+          'SNS 画像',
+        ],
+        description:
+          '画像の周囲に余白を足したり、1:1・4:5・16:9などの縦横比に合わせて背景色や透明で埋めたりします。画像は拡大・縮小・切り抜きされず、PNG・JPEG・WebPで保存できます。',
+      },
+      en: {
+        name: 'Image Padding (Add Margins & Make Square)',
+        keywords: [
+          'add padding to image',
+          'make image square',
+          'add margin to image',
+          'letterbox',
+          'image background color',
+          'instagram square',
+        ],
+        description:
+          'Add margins to an image or fit it to 1:1, 4:5, or 16:9 with a background color or transparency. Saves as PNG, JPEG, or WebP.',
+      },
+    },
+  },
+  {
+    slug: 'seal-stamp-generator',
+    category: 'image',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: [
+      'image-text-overlay',
+      'placeholder-image-generator',
+      'image-resizer',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '電子印鑑・日付印ジェネレーター',
+        keywords: [
+          '電子印鑑',
+          '電子印鑑 作成',
+          '日付印',
+          '丸印',
+          '角印',
+          'ハンコ',
+          '印鑑',
+          '透過PNG',
+        ],
+        description:
+          '名前を入れて丸印・角印・日付印の電子印鑑を作成し、背景が透明なPNGで保存できます。朱色など色も選べます。',
+      },
+      en: {
+        name: 'Hanko & Date Stamp Maker',
+        keywords: [
+          'hanko',
+          'electronic seal',
+          'inkan',
+          'date stamp',
+          'company seal',
+          'transparent PNG',
+        ],
+        description:
+          'Make a round hanko, square company seal, or date stamp image with your name and save a transparent PNG.',
+      },
+    },
+  },
+  {
+    slug: 'signature-pad',
+    category: 'image',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: ['image-converter', 'pdf-page-number-watermark', 'image-cropper'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '手書き署名作成',
+        keywords: [
+          '署名',
+          'サイン',
+          '手書き',
+          '透過PNG',
+          'サイン画像',
+          '電子サイン',
+          'PDF署名',
+        ],
+        description:
+          'マウスやスマホの指で手書きの署名を書き、背景が透明なPNG画像として保存します。ペンの太さ・色・余白の自動トリミングに対応。',
+      },
+      en: {
+        name: 'Signature Maker (Transparent PNG)',
+        keywords: [
+          'signature',
+          'signature generator',
+          'handwritten signature',
+          'transparent png',
+          'sign pdf',
+          'e-signature image',
+        ],
+        description:
+          'Draw a handwritten signature with your mouse or finger and save it as a transparent PNG with pen width, color, and auto-trim.',
+      },
+    },
+  },
+  {
+    slug: 'japanese-traditional-colors',
+    category: 'image',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: [
+      'color-converter',
+      'color-palette-generator',
+      'image-palette-extractor',
+    ],
+    translations: {
+      ja: {
+        name: '日本の伝統色・和色一覧',
+        keywords: [
+          '和色',
+          '伝統色',
+          '日本の色',
+          '色見本',
+          'カラーコード',
+          '色名',
+          'HEX',
+        ],
+        description:
+          '紅・藍色・桜色など日本の伝統色260色以上を、色名・読み・HEX・RGBで一覧表示。検索してクリックでコピーできます。',
+      },
+      en: {
+        name: 'Japanese Traditional Colors',
+        keywords: [
+          'wa-iro',
+          'japanese colors',
+          'traditional japanese colors',
+          'color names',
+          'hex codes',
+          'color palette',
+        ],
+        description:
+          'Browse 260+ traditional Japanese colors with names, readings, HEX and RGB codes. Search and click to copy.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -1,0 +1,160 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { japaneseTraditionalColorsContent } from '../../i18n/tools/japanese-traditional-colors';
+import { COLOR_GROUPS } from '../../lib/tools/japanese-traditional-colors';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = japaneseTraditionalColorsContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="jtc-root"
+    data-count-text={t.countText}
+    data-copy-aria={t.copyHexAria}
+    data-copy-label={t.copyHex}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="jtc-search" class="ui-label">
+          {t.searchLabel}
+        </label>
+        <input
+          id="jtc-search"
+          type="text"
+          placeholder={t.searchPlaceholder}
+          autocomplete="off"
+          spellcheck="false"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label for="jtc-group" class="ui-label">
+          {t.groupLabel}
+        </label>
+        <select
+          id="jtc-group"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          <option value="all">{t.groupAll}</option>
+          {COLOR_GROUPS.map((g) => (
+            <option value={g}>{t.groups[g]}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <p
+      id="jtc-count"
+      class="mt-3 text-sm text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+    <p
+      id="jtc-empty"
+      hidden
+      class="mt-3 text-sm text-gray-600 dark:text-gray-400"
+    >
+      {t.noResults}
+    </p>
+    <ul
+      id="jtc-list"
+      class="mt-3 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-3"
+    ></ul>
+    <p id="jtc-status" class="sr-only" aria-live="polite"></p>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    TRADITIONAL_COLORS,
+    filterColors,
+    readableTextColor,
+    type ColorGroup,
+  } from '../../lib/tools/japanese-traditional-colors';
+
+  const root = document.getElementById('jtc-root')!;
+  const search = document.getElementById('jtc-search') as HTMLInputElement;
+  const groupSelect = document.getElementById('jtc-group') as HTMLSelectElement;
+  const list = document.getElementById('jtc-list')!;
+  const countEl = document.getElementById('jtc-count')!;
+  const emptyEl = document.getElementById('jtc-empty')!;
+  const statusEl = document.getElementById('jtc-status')!;
+
+  function render() {
+    const group = groupSelect.value as ColorGroup | 'all';
+    const colors = filterColors(search.value, group, TRADITIONAL_COLORS);
+    statusEl.textContent = '';
+    countEl.textContent = (root.dataset.countText ?? '').replace(
+      '{count}',
+      String(colors.length),
+    );
+    emptyEl.hidden = colors.length > 0;
+    const frag = document.createDocumentFragment();
+    for (const c of colors) {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.hex = c.hex;
+      btn.title = root.dataset.copyLabel ?? '';
+      btn.setAttribute(
+        'aria-label',
+        (root.dataset.copyAria ?? '')
+          .replace('{name}', c.name)
+          .replace('{hex}', c.hex),
+      );
+      btn.className =
+        'relative flex w-full flex-col items-start rounded-lg border border-gray-300 p-3 text-left dark:border-gray-700';
+      btn.style.backgroundColor = c.hex;
+      btn.style.color = readableTextColor(c.hex);
+      const name = document.createElement('span');
+      name.className = 'text-base font-bold';
+      name.textContent = c.name;
+      const reading = document.createElement('span');
+      reading.className = 'text-xs';
+      reading.textContent = `${c.reading} / ${c.romaji}`;
+      const code = document.createElement('span');
+      code.className = 'mt-1 font-mono text-sm';
+      code.textContent = c.hex.toUpperCase();
+      const rgb = document.createElement('span');
+      rgb.className = 'font-mono text-xs';
+      rgb.textContent = c.rgb;
+      btn.append(name, reading, code, rgb);
+      li.append(btn);
+      frag.append(li);
+    }
+    list.replaceChildren(frag);
+  }
+
+  list.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(
+      'button[data-hex]',
+    );
+    if (!btn) return;
+    const ok = await copyText(btn.dataset.hex!);
+    const message = ok
+      ? (root.dataset.copied ?? '')
+      : (root.dataset.copyFailed ?? '');
+    statusEl.textContent = ok ? `${btn.dataset.hex} ${message}` : message;
+    // 押したカードの上に結果を表示する（一覧が長くても気づけるように）
+    btn.querySelector('[data-toast]')?.remove();
+    const toast = document.createElement('span');
+    toast.dataset.toast = '';
+    toast.textContent = message;
+    toast.className =
+      'pointer-events-none absolute top-2 right-2 rounded bg-gray-900 px-2 py-1 text-xs font-bold text-white shadow dark:bg-white dark:text-gray-900';
+    btn.append(toast);
+    window.setTimeout(() => toast.remove(), 1500);
+  });
+
+  search.addEventListener('input', render);
+  groupSelect.addEventListener('change', render);
+  render();
+</script>

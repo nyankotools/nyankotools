@@ -1,0 +1,360 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { sealStampGeneratorContent } from '../../i18n/tools/seal-stamp-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = sealStampGeneratorContent[locale];
+
+const sizes = [200, 300, 400, 600, 800];
+const selectClass = 'ui-input h-11 px-3 dark:bg-gray-900';
+---
+
+<ToolShell t={t}>
+  <div
+    id="seal-root"
+    data-downloaded={t.downloaded}
+    data-error-export={t.errorExportFailed}
+    data-label-named={t.textLabelNamed}
+    data-label-date={t.textLabelDate}
+  >
+    <p class="max-w-3xl rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
+      {t.disclaimer}
+    </p>
+
+    <div class="mt-6 grid gap-6 md:grid-cols-2">
+      <div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="col-span-2">
+            <label for="seal-kind" class="ui-label">
+              {t.kindLabel}
+            </label>
+            <select id="seal-kind" class={selectClass}>
+              {t.kindOptions.map(({ value, label, selected }) => (
+                <option value={value} selected={selected}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div class="col-span-2">
+            <label for="seal-text" id="seal-text-label" class="ui-label">
+              {t.textLabelNamed}
+            </label>
+            <textarea
+              id="seal-text"
+              rows="2"
+              placeholder={t.textPlaceholder}
+              data-no-count
+              class="ui-input w-full px-3 py-2 dark:bg-gray-900"
+            >{t.defaultText}</textarea>
+          </div>
+          <div id="seal-sub-wrap" class="col-span-2" hidden>
+            <label for="seal-sub" class="ui-label">
+              {t.subTextLabel}
+            </label>
+            <input
+              id="seal-sub"
+              type="text"
+              placeholder={t.subTextPlaceholder}
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            />
+          </div>
+          <div id="seal-date-wrap" hidden>
+            <label for="seal-date" class="ui-label">
+              {t.dateLabel}
+            </label>
+            <input
+              id="seal-date"
+              type="date"
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            />
+          </div>
+          <div id="seal-datestyle-wrap" hidden>
+            <label for="seal-datestyle" class="ui-label">
+              {t.dateStyleLabel}
+            </label>
+            <select id="seal-datestyle" class={selectClass}>
+              {t.dateStyleOptions.map(({ value, label, selected }) => (
+                <option value={value} selected={selected}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div id="seal-orientation-wrap">
+            <label for="seal-orientation" class="ui-label">
+              {t.orientationLabel}
+            </label>
+            <select id="seal-orientation" class={selectClass}>
+              {t.orientationOptions.map(({ value, label, selected }) => (
+                <option value={value} selected={selected}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label for="seal-font" class="ui-label">
+              {t.fontLabel}
+            </label>
+            <select id="seal-font" class={selectClass}>
+              {t.fontOptions.map(({ value, label, selected }) => (
+                <option value={value} selected={selected}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label for="seal-thickness" class="ui-label">
+              {t.thicknessLabel}
+            </label>
+            <select id="seal-thickness" class={selectClass}>
+              {t.thicknessOptions.map(({ value, label, selected }) => (
+                <option value={value} selected={selected}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label for="seal-size" class="ui-label">
+              {t.sizeLabel}
+            </label>
+            <select id="seal-size" class={selectClass}>
+              {sizes.map((s) => (
+                <option value={s} selected={s === 400}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div class="col-span-2">
+            <label for="seal-color" class="ui-label">
+              {t.colorLabel}
+            </label>
+            <div class="flex flex-wrap items-center gap-2">
+              <input
+                id="seal-color"
+                type="color"
+                value="#d7261e"
+                class="h-11 w-16 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+              />
+              {t.colorPresets.map(({ value, label }) => (
+                <button
+                  type="button"
+                  data-color={value}
+                  class="seal-preset ui-btn"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <label class="ui-check mt-3">
+          <input id="seal-bold" type="checkbox" checked />
+          <span>{t.boldLabel}</span>
+        </label>
+      </div>
+
+      <div class="flex flex-col items-center gap-3">
+        <p class="ui-label self-start">{t.previewLabel}</p>
+        <div
+          class="w-fit max-w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700"
+          style="background-image: conic-gradient(#e5e7eb 25%, #fff 0 50%, #e5e7eb 0 75%, #fff 0); background-size: 16px 16px;"
+        >
+          <canvas
+            id="seal-canvas"
+            role="img"
+            aria-label={t.previewLabel}
+            class="block h-auto max-w-full"
+            style="max-height: 70vh;"
+          ></canvas>
+        </div>
+        <p
+          id="seal-empty"
+          hidden
+          class="text-sm text-gray-600 dark:text-gray-400"
+        >
+          {t.emptyHint}
+        </p>
+        <p
+          id="seal-error"
+          role="alert"
+          hidden
+          class="text-sm text-red-600 dark:text-red-400"
+        ></p>
+        <button id="seal-download" type="button" class="ui-btn-primary">
+          {t.downloadButton}
+        </button>
+        <span
+          id="seal-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import {
+    STAMP_FONT_STACKS,
+    clampSize,
+    computeStampLayout,
+    formatStampDate,
+    isStampEmpty,
+    normalizeStampColor,
+    stampFileName,
+    toLocalIsoDate,
+    type StampDateStyle,
+    type StampFontKey,
+    type StampKind,
+    type StampOrientation,
+    type StampSpec,
+    type StampThickness,
+  } from '../../lib/tools/seal-stamp-generator';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('seal-root');
+  const kindEl = $<HTMLSelectElement>('seal-kind');
+  const textEl = $<HTMLTextAreaElement>('seal-text');
+  const textLabel = $('seal-text-label');
+  const subEl = $<HTMLInputElement>('seal-sub');
+  const subWrap = $('seal-sub-wrap');
+  const dateEl = $<HTMLInputElement>('seal-date');
+  const dateWrap = $('seal-date-wrap');
+  const dateStyleEl = $<HTMLSelectElement>('seal-datestyle');
+  const dateStyleWrap = $('seal-datestyle-wrap');
+  const orientationEl = $<HTMLSelectElement>('seal-orientation');
+  const orientationWrap = $('seal-orientation-wrap');
+  const fontEl = $<HTMLSelectElement>('seal-font');
+  const thicknessEl = $<HTMLSelectElement>('seal-thickness');
+  const sizeEl = $<HTMLSelectElement>('seal-size');
+  const colorEl = $<HTMLInputElement>('seal-color');
+  const boldEl = $<HTMLInputElement>('seal-bold');
+  const canvas = $<HTMLCanvasElement>('seal-canvas');
+  const emptyEl = $('seal-empty');
+  const errorEl = $('seal-error');
+  const statusEl = $('seal-status');
+  const downloadBtn = $<HTMLButtonElement>('seal-download');
+  const d = root.dataset;
+
+  if (dateEl.value === '') dateEl.value = toLocalIsoDate(new Date());
+
+  function render() {
+    statusEl.textContent = '';
+    errorEl.hidden = true;
+    const kind = kindEl.value as StampKind;
+    const isDate = kind === 'date';
+    subWrap.hidden = !isDate;
+    dateWrap.hidden = !isDate;
+    dateStyleWrap.hidden = !isDate;
+    orientationWrap.hidden = isDate;
+    textLabel.textContent = (isDate ? d.labelDate : d.labelNamed) ?? '';
+
+    const spec: StampSpec = {
+      kind,
+      text: textEl.value,
+      subText: subEl.value,
+      dateText: isDate
+        ? formatStampDate(dateEl.value, dateStyleEl.value as StampDateStyle)
+        : '',
+      orientation: orientationEl.value as StampOrientation,
+      thickness: thicknessEl.value as StampThickness,
+      size: clampSize(Number(sizeEl.value)),
+    };
+    const layout = computeStampLayout(spec);
+    const empty = isStampEmpty(spec);
+    emptyEl.hidden = !empty;
+    downloadBtn.disabled = empty;
+
+    canvas.width = layout.size;
+    canvas.height = layout.size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      errorEl.textContent = d.errorExport ?? '';
+      errorEl.hidden = false;
+      return;
+    }
+    const color = normalizeStampColor(colorEl.value);
+    ctx.clearRect(0, 0, layout.size, layout.size);
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = layout.lineWidth;
+    ctx.lineCap = 'butt';
+    ctx.beginPath();
+    if (layout.shape.type === 'circle') {
+      ctx.arc(layout.shape.cx, layout.shape.cy, layout.shape.r, 0, Math.PI * 2);
+    } else {
+      ctx.rect(
+        layout.shape.x,
+        layout.shape.y,
+        layout.shape.width,
+        layout.shape.height,
+      );
+    }
+    ctx.stroke();
+    if (layout.rules.length > 0) {
+      ctx.lineWidth = Math.max(1, layout.lineWidth * 0.7);
+      for (const r of layout.rules) {
+        ctx.beginPath();
+        ctx.moveTo(r.x1, r.y1);
+        ctx.lineTo(r.x2, r.y2);
+        ctx.stroke();
+      }
+    }
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const stack = STAMP_FONT_STACKS[fontEl.value as StampFontKey];
+    for (const item of layout.texts) {
+      ctx.font = `${boldEl.checked ? 'bold ' : ''}${Math.round(item.fontSize)}px ${stack}`;
+      ctx.fillText(item.text, item.x, item.y);
+    }
+  }
+
+  for (const el of [
+    kindEl,
+    textEl,
+    subEl,
+    dateEl,
+    dateStyleEl,
+    orientationEl,
+    fontEl,
+    thicknessEl,
+    sizeEl,
+    colorEl,
+    boldEl,
+  ]) {
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  }
+  document.querySelectorAll<HTMLButtonElement>('.seal-preset').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      colorEl.value = btn.dataset.color ?? colorEl.value;
+      render();
+    }),
+  );
+
+  downloadBtn.addEventListener('click', () => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        errorEl.textContent = d.errorExport ?? '';
+        errorEl.hidden = false;
+        return;
+      }
+      downloadBlob(blob, stampFileName(kindEl.value as StampKind));
+      statusEl.textContent = d.downloaded ?? '';
+    }, 'image/png');
+  });
+
+  render();
+</script>

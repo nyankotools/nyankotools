@@ -578,6 +578,32 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-14',
+    toolSlugs: [
+      'braille-converter',
+      'number-to-words',
+      'html-tag-stripper',
+      'sequence-generator',
+      'paid-leave-calculator',
+      'running-pace-calculator',
+      'image-round-crop',
+      'image-padding',
+      'seal-stamp-generator',
+      'signature-pad',
+      'japanese-traditional-colors',
+    ],
+    translations: {
+      ja: {
+        summary:
+          '点字変換を追加しました。ひらがな・カタカナを日本語点字（Unicode点字）に、点字をかなに相互変換でき、濁音・拗音・促音・数符にも対応しています。点字1マスごとの点の番号も確認できます。あわせて数字→英語表記・日本語読み変換も追加し、数字を英語の数詞・序数・小切手表記とひらがなの読みに変換できます。さらにHTMLタグ除去・プレーンテキスト抽出、連番・日付リスト生成、有給休暇の付与日数計算、ランニングペース計算機を追加しました。HTMLタグ除去はスクリプトを実行せずに本文だけを取り出し、連番・日付リスト生成はゼロ埋め・接頭辞・曜日付きの一覧を作成し、有給休暇の付与日数計算は入社日と週の所定労働日数から比例付与を含む日数を算出し、ランニングペース計算機はペース・タイム・予想タイム・心拍ゾーンを求めます。画像関連では、円形・角丸切り抜き、余白追加・正方形化、電子印鑑・日付印ジェネレーター、手書き署名作成を追加しました。切り抜きと余白追加は透過PNGや背景色で保存でき、電子印鑑は丸印・角印・日付印を、署名作成は手書きの署名を透過PNGで書き出します。また、日本の伝統色・和色一覧を追加し、260色以上の色名・読み・HEX・RGBを検索してコピーできます。',
+      },
+      en: {
+        summary:
+          'Added the Japanese Braille Converter. It converts kana to six-dot Japanese braille in Unicode characters and back, handling voiced marks, contracted sounds, the small tsu and number signs, and lists the dot numbers of each cell. Also added the Number to Words Converter, which spells a number out in English, as an ordinal and in check-writing format, with its Japanese reading. Also added the HTML Tag Stripper, Number Sequence & Date List Generator, Paid Leave Days Calculator and Running Pace Calculator: the stripper extracts plain text without executing scripts; the sequence generator builds zero-padded numbers and date lists with weekdays; the paid leave calculator works out grant dates and days, including proportional grants, from a hire date and weekly schedule; the pace calculator converts between distance, time and pace and shows race predictions and heart rate zones. Also added four image tools: the Round Image Cropper (circle and rounded corners), Image Padding (add margins or make an image square), the Hanko & Date Stamp Maker and the Signature Maker, which save transparent PNGs or fill margins with a background color. Also added the Japanese Traditional Colors list, with 260+ color names, readings, HEX and RGB codes you can search and copy.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

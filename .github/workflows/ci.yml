@@ -71,7 +71,16 @@ jobs:
 
       # webServer（pnpm build && pnpm preview --port 4322）と、CSP/サイドバー永続化specのwrangler devは
       # playwright.config.ts / 各specが自動で起動する。
-      - run: pnpm run test:e2e --shard=${{ matrix.shard }}/3
+      # 実行時間の偏りを避けるため、全体の約半分を占める tools-common.spec.ts を各シャードに等分し、
+      # 残りのspecも同じシャード番号で等分する（1回目でビルド済みなので2回目はビルドを省略する）。
+      - run: pnpm run test:e2e tools-common.spec.ts --shard=${{ matrix.shard }}/3
+
+      - run: pnpm run test:e2e --shard=${{ matrix.shard }}/3 --output=test-results-rest
+        if: ${{ !cancelled() }}
+        env:
+          E2E_EXCLUDE_COMMON: '1'
+          E2E_SKIP_BUILD: '1'
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report-rest
 
       - uses: actions/upload-artifact@v7
         if: failure()
@@ -79,7 +88,9 @@ jobs:
           name: playwright-report-${{ matrix.shard }}
           path: |
             playwright-report/
+            playwright-report-rest/
             test-results/
+            test-results-rest/
           retention-days: 7
 
   # test / e2e がともに成功したときだけ、Cloudflare Workers（静的アセット）へデプロイする。

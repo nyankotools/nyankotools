@@ -6898,6 +6898,47 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'braille-converter',
+    category: 'text',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: [
+      'kana-converter',
+      'romaji-kana-converter',
+      'morse-code-converter',
+    ],
+    translations: {
+      ja: {
+        name: '点字変換（日本語点字・Unicode点字）',
+        description:
+          'ひらがな・カタカナを日本語点字（6点・Unicode点字）に変換し、点字をかなに戻せます。濁音・拗音・促音・数符に対応し、点の番号も確認できます',
+        keywords: [
+          '点字',
+          '点字変換',
+          '点字 変換',
+          '日本語点字',
+          '点訳',
+          'Unicode点字',
+          '六点点字',
+        ],
+      },
+      en: {
+        name: 'Japanese Braille Converter (Kana ⇔ Unicode Braille)',
+        description:
+          'Convert Japanese kana to six-dot braille in Unicode characters and back, with voiced marks, yoon, sokuon and number signs plus per-cell dot numbers',
+        keywords: [
+          'braille',
+          'japanese braille',
+          'tenji',
+          'unicode braille',
+          'braille translator',
+          'kana to braille',
+          'six-dot braille',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

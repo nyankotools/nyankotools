@@ -578,6 +578,20 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-14',
+    toolSlugs: ['braille-converter'],
+    translations: {
+      ja: {
+        summary:
+          '点字変換を追加しました。ひらがな・カタカナを日本語点字（Unicode点字）に、点字をかなに相互変換でき、濁音・拗音・促音・数符にも対応しています。点字1マスごとの点の番号も確認できます。',
+      },
+      en: {
+        summary:
+          'Added the Japanese Braille Converter. It converts kana to six-dot Japanese braille in Unicode characters and back, handling voiced marks, contracted sounds, the small tsu and number signs, and lists the dot numbers of each cell.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

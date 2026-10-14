@@ -1,0 +1,344 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { signaturePadContent } from '../../i18n/tools/signature-pad';
+import {
+  DEFAULT_PADDING,
+  DEFAULT_PEN_WIDTH,
+  MAX_OUTPUT_DIMENSION,
+  MAX_PADDING,
+  MAX_PEN_WIDTH,
+  MIN_PEN_WIDTH,
+} from '../../lib/tools/signature-pad';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = signaturePadContent[locale];
+
+const numberInput = 'ui-input h-11 w-full px-3 dark:bg-gray-900';
+---
+
+<ToolShell t={t}>
+  <div
+    id="sig-root"
+    data-output-info={t.outputInfo}
+    data-downloaded={t.downloaded}
+    data-error-empty={t.errorEmpty}
+    data-error-too-large={t.errorTooLarge.replace(
+      '{max}',
+      String(MAX_OUTPUT_DIMENSION),
+    )}
+    data-error-export-failed={t.errorExportFailed}
+  >
+    <p id="sig-canvas-label" class="ui-label">
+      {t.canvasLabel}
+    </p>
+    <div class="relative w-full overflow-hidden rounded-lg border border-gray-300 bg-white dark:border-gray-700">
+      <canvas
+        id="sig-canvas"
+        role="img"
+        aria-labelledby="sig-canvas-label"
+        height="240"
+        class="block h-60 w-full cursor-crosshair"
+        style="touch-action: none;"
+      ></canvas>
+      <div class="pointer-events-none absolute right-4 bottom-12 left-4 border-b border-dashed border-gray-300"></div>
+    </div>
+    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.canvasHint}</p>
+
+    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="sig-width" class="ui-label">
+          {t.penWidthLabel}
+          <span id="sig-width-value">{DEFAULT_PEN_WIDTH}</span>
+        </label>
+        <input
+          id="sig-width"
+          type="range"
+          min={MIN_PEN_WIDTH}
+          max={MAX_PEN_WIDTH}
+          value={DEFAULT_PEN_WIDTH}
+          class="h-11 w-full"
+        />
+      </div>
+      <div>
+        <label for="sig-color" class="ui-label">
+          {t.penColorLabel}
+        </label>
+        <input
+          id="sig-color"
+          type="color"
+          value="#000000"
+          class="h-11 w-16 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+        />
+      </div>
+      <div>
+        <label for="sig-scale" class="ui-label">
+          {t.scaleLabel}
+        </label>
+        <select id="sig-scale" class="ui-input h-11 px-3 dark:bg-gray-900">
+          <option value="1">1x</option>
+          <option value="2" selected>
+            2x
+          </option>
+          <option value="3">3x</option>
+        </select>
+      </div>
+      <div>
+        <label for="sig-padding" class="ui-label">
+          {t.paddingLabel}
+        </label>
+        <input
+          id="sig-padding"
+          type="number"
+          min="0"
+          max={MAX_PADDING}
+          step="1"
+          value={DEFAULT_PADDING}
+          class={numberInput}
+        />
+      </div>
+    </div>
+    <label class="ui-check mt-3">
+      <input id="sig-trim" type="checkbox" checked />
+      <span>{t.trimLabel}</span>
+    </label>
+
+    <div class="mt-4 flex flex-wrap gap-3">
+      <button id="sig-undo" type="button" disabled class="ui-btn">
+        {t.undoButton}
+      </button>
+      <button id="sig-clear" type="button" disabled class="ui-btn">
+        {t.clearButton}
+      </button>
+      <button id="sig-download" type="button" disabled class="ui-btn-primary">
+        {t.downloadButton}
+      </button>
+    </div>
+    <p
+      id="sig-info"
+      class="mt-3 text-sm text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+    <p
+      id="sig-error"
+      role="alert"
+      hidden
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+    ></p>
+    <p
+      id="sig-status"
+      class="mt-2 text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></p>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import {
+    appendPoint,
+    clampPadding,
+    clampPenWidth,
+    exportLayout,
+    midpoint,
+    normalizeColor,
+    signatureFileName,
+    type Stroke,
+  } from '../../lib/tools/signature-pad';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('sig-root');
+  const canvas = $<HTMLCanvasElement>('sig-canvas');
+  const widthInput = $<HTMLInputElement>('sig-width');
+  const widthValue = $('sig-width-value');
+  const colorInput = $<HTMLInputElement>('sig-color');
+  const scaleSelect = $<HTMLSelectElement>('sig-scale');
+  const paddingInput = $<HTMLInputElement>('sig-padding');
+  const trimInput = $<HTMLInputElement>('sig-trim');
+  const undoButton = $<HTMLButtonElement>('sig-undo');
+  const clearButton = $<HTMLButtonElement>('sig-clear');
+  const downloadButton = $<HTMLButtonElement>('sig-download');
+  const infoEl = $('sig-info');
+  const errorEl = $('sig-error');
+  const statusEl = $('sig-status');
+  const d = root.dataset;
+
+  let strokes: Stroke[] = [];
+  let current: Stroke | null = null;
+  let activePointer: number | null = null;
+  /** 描画面のCSSピクセル寸法 */
+  let cssWidth = 0;
+  let cssHeight = 0;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  /** 呼び出し側で座標変換を設定済みのコンテキストにストロークを描く */
+  function drawStrokes(ctx: CanvasRenderingContext2D, list: Stroke[]) {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (const s of list) {
+      ctx.strokeStyle = s.color;
+      ctx.fillStyle = s.color;
+      ctx.lineWidth = s.width;
+      const pts = s.points;
+      if (pts.length === 0) continue;
+      if (pts.length === 1) {
+        ctx.beginPath();
+        ctx.arc(pts[0].x, pts[0].y, s.width / 2, 0, Math.PI * 2);
+        ctx.fill();
+        continue;
+      }
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      // 中点を通る二次ベジェ曲線でなめらかにつなぐ
+      for (let i = 1; i < pts.length - 1; i++) {
+        const m = midpoint(pts[i], pts[i + 1]);
+        ctx.quadraticCurveTo(pts[i].x, pts[i].y, m.x, m.y);
+      }
+      const last = pts[pts.length - 1];
+      ctx.lineTo(last.x, last.y);
+      ctx.stroke();
+    }
+  }
+
+  function currentLayout() {
+    return exportLayout(strokes, {
+      trim: trimInput.checked,
+      padding: clampPadding(Number(paddingInput.value)),
+      scale: Number(scaleSelect.value),
+      canvasWidth: cssWidth,
+      canvasHeight: cssHeight,
+    });
+  }
+
+  function updateState() {
+    const empty = strokes.length === 0;
+    undoButton.disabled = empty;
+    clearButton.disabled = empty;
+    downloadButton.disabled = empty;
+    const r = currentLayout();
+    if (r.ok) {
+      infoEl.textContent = (d.outputInfo ?? '')
+        .replace('{width}', String(r.layout.width))
+        .replace('{height}', String(r.layout.height));
+      showError('');
+    } else {
+      infoEl.textContent = '';
+      showError(r.reason === 'too-large' ? (d.errorTooLarge ?? '') : '');
+    }
+  }
+
+  function redraw() {
+    const dpr = window.devicePixelRatio || 1;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawStrokes(ctx, current ? [...strokes, current] : strokes);
+  }
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0) return;
+    const dpr = window.devicePixelRatio || 1;
+    cssWidth = Math.round(rect.width);
+    cssHeight = Math.round(rect.height);
+    canvas.width = Math.round(cssWidth * dpr);
+    canvas.height = Math.round(cssHeight * dpr);
+    redraw();
+    updateState();
+  }
+
+  function pointFromEvent(e: PointerEvent) {
+    const rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (activePointer !== null || (e.pointerType === 'mouse' && e.button !== 0))
+      return;
+    e.preventDefault();
+    activePointer = e.pointerId;
+    canvas.setPointerCapture(e.pointerId);
+    statusEl.textContent = '';
+    current = {
+      points: [pointFromEvent(e)],
+      width: clampPenWidth(Number(widthInput.value)),
+      color: normalizeColor(colorInput.value),
+    };
+    redraw();
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (!current || e.pointerId !== activePointer) return;
+    e.preventDefault();
+    current.points = appendPoint(current.points, pointFromEvent(e));
+    redraw();
+  });
+  function endStroke(e: PointerEvent) {
+    if (!current || e.pointerId !== activePointer) return;
+    strokes = [...strokes, current];
+    current = null;
+    activePointer = null;
+    redraw();
+    updateState();
+  }
+  canvas.addEventListener('pointerup', endStroke);
+  canvas.addEventListener('pointercancel', endStroke);
+
+  widthInput.addEventListener('input', () => {
+    widthValue.textContent = widthInput.value;
+  });
+  for (const el of [scaleSelect, paddingInput, trimInput]) {
+    el.addEventListener('input', updateState);
+    el.addEventListener('change', updateState);
+  }
+  undoButton.addEventListener('click', () => {
+    strokes = strokes.slice(0, -1);
+    statusEl.textContent = '';
+    redraw();
+    updateState();
+  });
+  clearButton.addEventListener('click', () => {
+    strokes = [];
+    statusEl.textContent = '';
+    redraw();
+    updateState();
+  });
+
+  downloadButton.addEventListener('click', () => {
+    const r = currentLayout();
+    if (!r.ok) {
+      return showError(
+        r.reason === 'too-large'
+          ? (d.errorTooLarge ?? '')
+          : (d.errorEmpty ?? ''),
+      );
+    }
+    const { width, height, originX, originY, scale } = r.layout;
+    const out = document.createElement('canvas');
+    out.width = width;
+    out.height = height;
+    const ctx = out.getContext('2d');
+    if (!ctx) return showError(d.errorExportFailed ?? '');
+    ctx.setTransform(scale, 0, 0, scale, -originX * scale, -originY * scale);
+    drawStrokes(ctx, strokes);
+    out.toBlob((blob) => {
+      if (!blob) return showError(d.errorExportFailed ?? '');
+      showError('');
+      downloadBlob(blob, signatureFileName());
+      statusEl.textContent = d.downloaded ?? '';
+    }, 'image/png');
+  });
+
+  new ResizeObserver(resize).observe(canvas);
+  resize();
+</script>

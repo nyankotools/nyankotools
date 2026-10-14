@@ -1,0 +1,619 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { imageRoundCropContent } from '../../i18n/tools/image-round-crop';
+import { MAX_DIMENSION } from '../../lib/tools/image-round-crop';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageRoundCropContent[locale];
+
+const checker =
+  'background-image: conic-gradient(#e5e7eb 25%, #fff 0 50%, #e5e7eb 0 75%, #fff 0); background-size: 16px 16px;';
+---
+
+<ToolShell t={t}>
+  <div
+    id="rc-root"
+    data-output-info={t.outputInfo}
+    data-downloaded={t.downloaded}
+    data-error-not-image={t.errorNotImage}
+    data-error-too-large={t.errorTooLarge.replace(
+      '{max}',
+      String(MAX_DIMENSION),
+    )}
+    data-error-load-failed={t.errorLoadFailed}
+    data-error-export-failed={t.errorExportFailed}
+  >
+    <label for="rc-file" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="rc-dropzone" class="ui-dropzone">
+      <input id="rc-file" type="file" accept="image/*" class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="rc-error"
+      role="alert"
+      hidden
+      class="mt-3 text-sm text-red-600 dark:text-red-400"
+    ></p>
+
+    <div id="rc-workspace" hidden class="mt-6 grid gap-6 md:grid-cols-2">
+      <div>
+        <span class="ui-label">{t.shapeLabel}</span>
+        <div
+          id="rc-shape"
+          class="ui-seg"
+          role="group"
+          aria-label={t.shapeLabel}
+        >
+          <button
+            type="button"
+            data-shape="circle"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            {t.shapeCircle}
+          </button>
+          <button
+            type="button"
+            data-shape="rounded"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.shapeRounded}
+          </button>
+        </div>
+
+        <div id="rc-radius-wrap" hidden class="mt-4">
+          <label for="rc-radius" class="ui-label">
+            {t.radiusLabel}
+            <span id="rc-radius-value">30</span>
+          </label>
+          <input
+            id="rc-radius"
+            type="range"
+            min="0"
+            max="100"
+            value="30"
+            data-no-persist
+            class="h-11 w-full"
+          />
+        </div>
+
+        <div class="mt-4">
+          <span class="ui-label">{t.frameLabel}</span>
+          <div
+            id="rc-frame"
+            class="ui-seg"
+            role="group"
+            aria-label={t.frameLabel}
+          >
+            <button
+              type="button"
+              data-frame="square"
+              aria-pressed="true"
+              class="ui-seg-btn"
+            >
+              {t.frameSquare}
+            </button>
+            <button
+              type="button"
+              data-frame="original"
+              aria-pressed="false"
+              class="ui-seg-btn"
+            >
+              {t.frameOriginal}
+            </button>
+          </div>
+        </div>
+
+        <fieldset id="rc-position" class="mt-4">
+          <div class="mb-3">
+            <label for="rc-size" class="ui-label">
+              {t.sizeLabel}
+              <span id="rc-size-value"></span>
+            </label>
+            <input
+              id="rc-size"
+              type="range"
+              min="1"
+              max="100"
+              value="100"
+              data-no-persist
+              class="h-11 w-full"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label for="rc-x" class="ui-label">
+                {t.xLabel}
+              </label>
+              <input
+                id="rc-x"
+                type="number"
+                min="0"
+                step="1"
+                data-no-persist
+                class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+              />
+            </div>
+            <div>
+              <label for="rc-y" class="ui-label">
+                {t.yLabel}
+              </label>
+              <input
+                id="rc-y"
+                type="number"
+                min="0"
+                step="1"
+                data-no-persist
+                class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+              />
+            </div>
+          </div>
+          <button id="rc-center" type="button" class="ui-btn mt-3 px-3">
+            {t.centerButton}
+          </button>
+        </fieldset>
+
+        <div class="mt-4">
+          <label for="rc-output" class="ui-label">
+            {t.outputSizeLabel}
+          </label>
+          <select
+            id="rc-output"
+            data-no-persist
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+          >
+            {t.outputSizeOptions.map(({ value, label, selected }) => (
+              <option value={value} selected={selected}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div class="mt-4 flex flex-wrap items-end gap-4">
+          <div>
+            <span class="ui-label">{t.formatLabel}</span>
+            <div
+              id="rc-format"
+              class="ui-seg"
+              role="group"
+              aria-label={t.formatLabel}
+            >
+              <button
+                type="button"
+                data-format="png"
+                aria-pressed="true"
+                class="ui-seg-btn"
+              >
+                PNG
+              </button>
+              <button
+                type="button"
+                data-format="webp"
+                aria-pressed="false"
+                class="ui-seg-btn"
+              >
+                WebP
+              </button>
+            </div>
+          </div>
+          <div id="rc-quality-wrap" hidden class="min-w-40 flex-1">
+            <label for="rc-quality" class="ui-label">
+              {t.qualityLabel}
+              <span id="rc-quality-value">90</span>
+            </label>
+            <input
+              id="rc-quality"
+              type="range"
+              min="10"
+              max="100"
+              value="90"
+              data-no-persist
+              class="h-11 w-full"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center gap-3">
+        <p class="ui-label self-start">{t.previewLabel}</p>
+        <div
+          id="rc-stage"
+          class="relative w-fit max-w-full touch-none overflow-hidden rounded-lg border border-gray-300 select-none dark:border-gray-700"
+          style={`${checker} cursor: crosshair;`}
+        >
+          <canvas
+            id="rc-source"
+            role="img"
+            aria-label={t.previewLabel}
+            class="block max-h-[50vh] max-w-full"
+          ></canvas>
+          <div
+            id="rc-selection"
+            class="pointer-events-none absolute border-2 border-white"
+            style="box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55); outline: 1px solid #2563eb;"
+          ></div>
+        </div>
+        <p class="self-start text-xs text-gray-500 dark:text-gray-400">
+          {t.previewHint}
+        </p>
+
+        <p class="ui-label self-start">{t.resultLabel}</p>
+        <div
+          class="max-w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700"
+          style={checker}
+        >
+          <canvas
+            id="rc-result"
+            role="img"
+            aria-label={t.resultLabel}
+            class="block max-h-64 max-w-full"
+          ></canvas>
+        </div>
+        <p
+          id="rc-info"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></p>
+        <button id="rc-download" type="button" disabled class="ui-btn-primary">
+          {t.downloadButton}
+        </button>
+        <span
+          id="rc-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    clampRadiusPercent,
+    clampSquare,
+    defaultSquare,
+    isWithinSourceLimit,
+    outputSize,
+    roundFileName,
+    roundFormat,
+    shapeGeometry,
+    squareAround,
+    type Frame,
+    type Point,
+    type RoundFormat,
+    type Shape,
+    type Size,
+    type Square,
+  } from '../../lib/tools/image-round-crop';
+
+  const root = document.getElementById('rc-root')!;
+  const fileInput = document.getElementById('rc-file') as HTMLInputElement;
+  const dropzone = document.getElementById('rc-dropzone')!;
+  const errorEl = document.getElementById('rc-error')!;
+  const workspace = document.getElementById('rc-workspace')!;
+  const stage = document.getElementById('rc-stage')!;
+  const source = document.getElementById('rc-source') as HTMLCanvasElement;
+  const result = document.getElementById('rc-result') as HTMLCanvasElement;
+  const selectionEl = document.getElementById('rc-selection')!;
+  const radiusWrap = document.getElementById('rc-radius-wrap')!;
+  const radiusInput = document.getElementById('rc-radius') as HTMLInputElement;
+  const radiusValue = document.getElementById('rc-radius-value')!;
+  const positionSet = document.getElementById('rc-position')!;
+  const sizeInput = document.getElementById('rc-size') as HTMLInputElement;
+  const sizeValue = document.getElementById('rc-size-value')!;
+  const xInput = document.getElementById('rc-x') as HTMLInputElement;
+  const yInput = document.getElementById('rc-y') as HTMLInputElement;
+  const outputSelect = document.getElementById(
+    'rc-output',
+  ) as HTMLSelectElement;
+  const qualityWrap = document.getElementById('rc-quality-wrap')!;
+  const qualityInput = document.getElementById(
+    'rc-quality',
+  ) as HTMLInputElement;
+  const qualityValue = document.getElementById('rc-quality-value')!;
+  const infoEl = document.getElementById('rc-info')!;
+  const statusEl = document.getElementById('rc-status')!;
+  const downloadButton = document.getElementById(
+    'rc-download',
+  ) as HTMLButtonElement;
+  const shapeButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#rc-shape [data-shape]'),
+  );
+  const frameButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#rc-frame [data-frame]'),
+  );
+  const formatButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#rc-format [data-format]'),
+  );
+
+  const d = root.dataset;
+  let bitmap: ImageBitmap | null = null;
+  let sourceName: string | null = null;
+  let shape: Shape = 'circle';
+  let frame: Frame = 'square';
+  let format: RoundFormat = 'png';
+  let square: Square = { x: 0, y: 0, size: 1 };
+  // 画像の読み込みは非同期なので、古い読み込みが新しい選択を上書きしないよう世代で管理する
+  let generation = 0;
+
+  const bounds = (): Size =>
+    bitmap
+      ? { width: bitmap.width, height: bitmap.height }
+      : { width: 1, height: 1 };
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  /** 現在の切り抜き元の範囲（画像上の座標） */
+  function cropRect() {
+    if (frame === 'original' || !bitmap) {
+      const b = bounds();
+      return { x: 0, y: 0, width: b.width, height: b.height };
+    }
+    return {
+      x: square.x,
+      y: square.y,
+      width: square.size,
+      height: square.size,
+    };
+  }
+
+  function drawResult(
+    target: HTMLCanvasElement,
+    out: Size,
+  ): CanvasRenderingContext2D | null {
+    target.width = out.width;
+    target.height = out.height;
+    const ctx = target.getContext('2d');
+    if (!ctx || !bitmap) return null;
+    const rect = cropRect();
+    const g = shapeGeometry(shape, out, Number(radiusInput.value));
+    ctx.clearRect(0, 0, out.width, out.height);
+    ctx.save();
+    ctx.beginPath();
+    if (g.kind === 'ellipse') {
+      ctx.ellipse(
+        out.width / 2,
+        out.height / 2,
+        out.width / 2,
+        out.height / 2,
+        0,
+        0,
+        Math.PI * 2,
+      );
+    } else {
+      ctx.roundRect(0, 0, out.width, out.height, g.radius);
+    }
+    ctx.closePath();
+    ctx.clip();
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(
+      bitmap,
+      rect.x,
+      rect.y,
+      rect.width,
+      rect.height,
+      0,
+      0,
+      out.width,
+      out.height,
+    );
+    ctx.restore();
+    return ctx;
+  }
+
+  function currentOutput(): Size {
+    const rect = cropRect();
+    return outputSize(
+      { width: rect.width, height: rect.height },
+      Number(outputSelect.value),
+    );
+  }
+
+  function render() {
+    if (!bitmap) return;
+    const b = bounds();
+    const isSquare = frame === 'square';
+    positionSet.hidden = !isSquare;
+    selectionEl.hidden = !isSquare;
+    radiusWrap.hidden = shape !== 'rounded';
+    radiusValue.textContent = String(
+      clampRadiusPercent(Number(radiusInput.value)),
+    );
+    sizeInput.max = String(Math.min(b.width, b.height));
+    sizeInput.value = String(square.size);
+    sizeValue.textContent = String(square.size);
+    xInput.value = String(square.x);
+    yInput.value = String(square.y);
+    selectionEl.style.left = `${(square.x / b.width) * 100}%`;
+    selectionEl.style.top = `${(square.y / b.height) * 100}%`;
+    selectionEl.style.width = `${(square.size / b.width) * 100}%`;
+    selectionEl.style.height = `${(square.size / b.height) * 100}%`;
+    const out = currentOutput();
+    drawResult(result, out);
+    infoEl.textContent = (d.outputInfo ?? '')
+      .replace('{width}', String(out.width))
+      .replace('{height}', String(out.height));
+  }
+
+  function setSquare(next: Square) {
+    square = clampSquare(next, bounds());
+    statusEl.textContent = '';
+    render();
+  }
+
+  async function loadFile(file: File) {
+    const current = ++generation;
+    showError('');
+    statusEl.textContent = '';
+    if (!file.type.startsWith('image/'))
+      return showError(d.errorNotImage ?? '');
+    let loaded: ImageBitmap;
+    try {
+      loaded = await createImageBitmap(file);
+    } catch {
+      if (current === generation) showError(d.errorLoadFailed ?? '');
+      return;
+    }
+    if (current !== generation) return loaded.close();
+    if (!isWithinSourceLimit({ width: loaded.width, height: loaded.height })) {
+      loaded.close();
+      return showError(d.errorTooLarge ?? '');
+    }
+    bitmap?.close();
+    bitmap = loaded;
+    sourceName = file.name;
+    source.width = loaded.width;
+    source.height = loaded.height;
+    const ctx = source.getContext('2d');
+    if (!ctx) return showError(d.errorExportFailed ?? '');
+    ctx.drawImage(loaded, 0, 0);
+    square = defaultSquare(bounds());
+    workspace.hidden = false;
+    downloadButton.disabled = false;
+    render();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  function applyPressed<T extends string>(
+    buttons: HTMLButtonElement[],
+    key: 'shape' | 'frame' | 'format',
+    value: T,
+  ) {
+    for (const b of buttons) {
+      b.setAttribute('aria-pressed', String(b.dataset[key] === value));
+    }
+  }
+
+  for (const b of shapeButtons) {
+    b.addEventListener('click', () => {
+      shape = b.dataset.shape as Shape;
+      applyPressed(shapeButtons, 'shape', shape);
+      statusEl.textContent = '';
+      render();
+    });
+  }
+  for (const b of frameButtons) {
+    b.addEventListener('click', () => {
+      frame = b.dataset.frame as Frame;
+      applyPressed(frameButtons, 'frame', frame);
+      statusEl.textContent = '';
+      render();
+    });
+  }
+  for (const b of formatButtons) {
+    b.addEventListener('click', () => {
+      format = b.dataset.format as RoundFormat;
+      applyPressed(formatButtons, 'format', format);
+      qualityWrap.hidden = format === 'png';
+      statusEl.textContent = '';
+    });
+  }
+
+  radiusInput.addEventListener('input', () => {
+    statusEl.textContent = '';
+    render();
+  });
+  outputSelect.addEventListener('change', () => {
+    statusEl.textContent = '';
+    render();
+  });
+  qualityInput.addEventListener('input', () => {
+    qualityValue.textContent = qualityInput.value;
+  });
+
+  sizeInput.addEventListener('input', () => {
+    // 大きさを変えるときは、いまの中心を保つ
+    const center = {
+      x: square.x + square.size / 2,
+      y: square.y + square.size / 2,
+    };
+    square = squareAround(center, Number(sizeInput.value), bounds());
+    statusEl.textContent = '';
+    render();
+  });
+  for (const input of [xInput, yInput]) {
+    input.addEventListener('change', () => {
+      setSquare({
+        x: Number(xInput.value),
+        y: Number(yInput.value),
+        size: square.size,
+      });
+    });
+  }
+  document.getElementById('rc-center')!.addEventListener('click', () => {
+    setSquare(defaultSquare(bounds()));
+  });
+
+  // 元画像上のクリック・ドラッグで切り抜きの中心を動かす
+  let dragging = false;
+  function toImagePoint(e: PointerEvent): Point {
+    const box = source.getBoundingClientRect();
+    const b = bounds();
+    return {
+      x: ((e.clientX - box.left) / box.width) * b.width,
+      y: ((e.clientY - box.top) / box.height) * b.height,
+    };
+  }
+  function moveTo(e: PointerEvent) {
+    square = squareAround(toImagePoint(e), square.size, bounds());
+    statusEl.textContent = '';
+    render();
+  }
+  stage.addEventListener('pointerdown', (e) => {
+    if (!bitmap || frame !== 'square' || e.button !== 0) return;
+    dragging = true;
+    stage.setPointerCapture(e.pointerId);
+    e.preventDefault();
+    moveTo(e);
+  });
+  stage.addEventListener('pointermove', (e) => {
+    if (dragging) moveTo(e);
+  });
+  const endDrag = () => {
+    dragging = false;
+  };
+  stage.addEventListener('pointerup', endDrag);
+  stage.addEventListener('pointercancel', endDrag);
+
+  downloadButton.addEventListener('click', () => {
+    if (!bitmap) return;
+    const out = document.createElement('canvas');
+    if (!drawResult(out, currentOutput())) {
+      return showError(d.errorExportFailed ?? '');
+    }
+    const { mime } = roundFormat(format);
+    out.toBlob(
+      (blob) => {
+        // 非対応の形式はブラウザがPNGで返すため、種類が違えば失敗として扱う
+        if (!blob || blob.type !== mime) {
+          return showError(d.errorExportFailed ?? '');
+        }
+        showError('');
+        downloadBlob(blob, roundFileName(sourceName, format));
+        statusEl.textContent = d.downloaded ?? '';
+      },
+      mime,
+      format === 'png' ? undefined : Number(qualityInput.value) / 100,
+    );
+  });
+</script>

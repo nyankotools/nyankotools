@@ -7133,6 +7133,158 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'image-round-crop',
+    category: 'image',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: ['image-cropper', 'image-resizer', 'favicon-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像の円形・角丸切り抜き',
+        keywords: [
+          '円形切り抜き',
+          '丸型',
+          '角丸',
+          'アイコン',
+          '透過PNG',
+          'プロフィール画像',
+        ],
+        description:
+          '画像を円形や角丸に切り抜き、背景が透明なPNG・WebPで保存できます。SNSのアイコン作りに便利です。',
+      },
+      en: {
+        name: 'Round Image Cropper (Circle & Rounded)',
+        keywords: [
+          'circle crop',
+          'round image',
+          'rounded corners',
+          'profile picture',
+          'transparent png',
+          'avatar',
+        ],
+        description:
+          'Crop an image into a circle or rounded corners and save a transparent PNG or WebP. Great for profile icons.',
+      },
+    },
+  },
+  {
+    slug: 'image-padding',
+    category: 'image',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: ['image-cropper', 'image-resizer', 'image-merger'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像に余白を追加・正方形にする',
+        keywords: [
+          '余白追加',
+          '正方形',
+          '画像 余白',
+          'パディング',
+          '背景色',
+          'レターボックス',
+          'SNS 画像',
+        ],
+        description:
+          '画像の周囲に余白を足したり、1:1・4:5・16:9などの縦横比に合わせて背景色や透明で埋めたりします。画像は拡大・縮小・切り抜きされず、PNG・JPEG・WebPで保存できます。',
+      },
+      en: {
+        name: 'Image Padding (Add Margins & Make Square)',
+        keywords: [
+          'add padding to image',
+          'make image square',
+          'add margin to image',
+          'letterbox',
+          'image background color',
+          'instagram square',
+        ],
+        description:
+          'Add margins to an image or fit it to 1:1, 4:5, or 16:9 with a background color or transparency. Saves as PNG, JPEG, or WebP.',
+      },
+    },
+  },
+  {
+    slug: 'seal-stamp-generator',
+    category: 'image',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: [
+      'image-text-overlay',
+      'placeholder-image-generator',
+      'image-resizer',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '電子印鑑・日付印ジェネレーター',
+        keywords: [
+          '電子印鑑',
+          '電子印鑑 作成',
+          '日付印',
+          '丸印',
+          '角印',
+          'ハンコ',
+          '印鑑',
+          '透過PNG',
+        ],
+        description:
+          '名前を入れて丸印・角印・日付印の電子印鑑を作成し、背景が透明なPNGで保存できます。朱色など色も選べます。',
+      },
+      en: {
+        name: 'Hanko & Date Stamp Maker',
+        keywords: [
+          'hanko',
+          'electronic seal',
+          'inkan',
+          'date stamp',
+          'company seal',
+          'transparent PNG',
+        ],
+        description:
+          'Make a round hanko, square company seal, or date stamp image with your name and save a transparent PNG.',
+      },
+    },
+  },
+  {
+    slug: 'signature-pad',
+    category: 'image',
+    addedAt: '2026-10-14',
+    updatedAt: '2026-10-14',
+    related: ['image-converter', 'pdf-page-number-watermark', 'image-cropper'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '手書き署名作成',
+        keywords: [
+          '署名',
+          'サイン',
+          '手書き',
+          '透過PNG',
+          'サイン画像',
+          '電子サイン',
+          'PDF署名',
+        ],
+        description:
+          'マウスやスマホの指で手書きの署名を書き、背景が透明なPNG画像として保存します。ペンの太さ・色・余白の自動トリミングに対応。',
+      },
+      en: {
+        name: 'Signature Maker (Transparent PNG)',
+        keywords: [
+          'signature',
+          'signature generator',
+          'handwritten signature',
+          'transparent png',
+          'sign pdf',
+          'e-signature image',
+        ],
+        description:
+          'Draw a handwritten signature with your mouse or finger and save it as a transparent PNG with pen width, color, and auto-trim.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

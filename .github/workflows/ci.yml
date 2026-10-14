@@ -38,7 +38,12 @@ jobs:
   # lint/型/単体テストのジョブとは独立して並列実行し、失敗時の切り分けを容易にする。
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # テスト数の増加で単一ジョブだと25分を超えたため、3分割（shard）して並列実行する。
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v7
 
@@ -66,12 +71,12 @@ jobs:
 
       # webServer（pnpm build && pnpm preview --port 4322）と、CSP/サイドバー永続化specのwrangler devは
       # playwright.config.ts / 各specが自動で起動する。
-      - run: pnpm run test:e2e
+      - run: pnpm run test:e2e --shard=${{ matrix.shard }}/3
 
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: |
             playwright-report/
             test-results/

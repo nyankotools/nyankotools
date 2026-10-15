@@ -9,7 +9,7 @@ NyankoTools aims to monetize in the future (ads, affiliate, etc.). Monetization 
 - **Heading structure.** Exactly one `<h1>` per page, specific about the tool name or the problem it solves. Supplementing usage and cautions under `<h2>` and below adds substance and helps SEO.
 - **Internal links.** Link to related existing tools in the page body to improve crawlability and user circulation. When adding a tool, find and link at least one related existing tool.
 - **OGP image.** The default `og:image` is `https://nyankotools.com/ogp.png` (the file is `public/ogp.png`). If a tool-specific OGP image is available, pass it via the `ogImage` prop. Keeping the shared image is fine, but the referenced image file must exist.
-- **Sitemap / robots.txt.** `site` in `astro.config.mjs` is already set, so consider generating a sitemap with `@astrojs/sitemap` and maintaining `public/robots.txt` (propose it if not yet in place).
+- **Sitemap / robots.txt.** Already in place: `@astrojs/sitemap` is configured in `astro.config.mjs` (with the ja/en `i18n` alternates; `/404` is filtered out), and `public/robots.txt` points to `sitemap-index.xml`. New pages are picked up automatically; the `lastmod` comes from the tool's `updatedAt`.
 - **Structured data (JSON-LD).** `Layout.astro` emits `SoftwareApplication` and `BreadcrumbList` for tool pages, and `FAQPage` automatically when `src/i18n/faq/<slug>.ts` exists (every tool must have one; see [adding-a-tool.md](./adding-a-tool.md)).
 - **Body content depth.** Every tool page should carry substantive body copy: intro (with an internal link), notes on limits, a tool-specific FAQ, and a glossary where jargon is used. Avoid thin, template-like pages.
 

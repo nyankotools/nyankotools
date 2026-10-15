@@ -37,7 +37,7 @@ Rules to follow in day-to-day development. See [CLAUDE.md](../../CLAUDE.md) for 
 
 ## Permission settings
 
-`.claude/settings.json` currently auto-allows only the file read/write tools (Read/Edit/Write/MultiEdit/Glob/Grep). Shell commands such as git and pnpm are intentionally set to prompt every time; this is not an oversight. Ask the user before changing it.
+`.claude/settings.json` auto-allows the file read/write tools (Read/Edit/Write/MultiEdit/Glob/Grep) plus a narrow allowlist of test/check commands (`pnpm test`, `pnpm qa`, `pnpm exec vitest run`, `pnpm exec astro check`, `pnpm run lint`, `pnpm exec playwright test`, and their PowerShell equivalents). Everything else, notably git and `pnpm build` / `pnpm dev`, is intentionally set to prompt every time; this is not an oversight. Ask the user before changing it.
 
 ## UI primitives
 

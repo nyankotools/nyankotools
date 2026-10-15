@@ -97,6 +97,7 @@ const slugs = [
   'css-clip-path-generator',
   'svg-wave-generator',
   'color-blindness-simulator',
+  'image-splitter',
 ];
 
 const locales = [

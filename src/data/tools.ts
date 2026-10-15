@@ -7445,6 +7445,45 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'image-splitter',
+    category: 'image',
+    addedAt: '2026-10-15',
+    updatedAt: '2026-10-15',
+    related: ['image-padding', 'image-cropper', 'zip-tool'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像分割（Instagram 9分割・グリッド分割）',
+        keywords: [
+          '画像分割',
+          '9分割',
+          'Instagram',
+          'インスタ',
+          'グリッド',
+          'タイル',
+          '画像 切り分け',
+          'ZIP',
+        ],
+        description:
+          '画像を行×列で等分割してZIPでまとめて保存。Instagramの9分割（3×3）や横3分割、2×2に対応し、右下から順の番号も付けられます。PNG・JPEG・WebPで書き出せます。',
+      },
+      en: {
+        name: 'Image Splitter (Grid & Instagram 3x3)',
+        keywords: [
+          'split image',
+          'image splitter',
+          'instagram grid',
+          '3x3 grid',
+          'image tiles',
+          'cut image into pieces',
+          'carousel split',
+        ],
+        description:
+          'Split an image into equal rows and columns and save all tiles as one ZIP. Supports the Instagram 3x3 grid, 3-panel carousels and 2x2, as PNG, JPEG or WebP.',
+      },
+    },
+  },
+  {
     slug: 'seal-stamp-generator',
     category: 'image',
     addedAt: '2026-10-14',

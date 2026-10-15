@@ -1,0 +1,498 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { imageSplitterContent } from '../../i18n/tools/image-splitter';
+import { MAX_DIMENSION } from '../../lib/tools/image-padding';
+import { MAX_LINES, MAX_TILES } from '../../lib/tools/image-splitter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageSplitterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="split-root"
+    data-output-info={t.outputInfo}
+    data-working={t.working}
+    data-downloaded={t.downloaded}
+    data-error-not-image={t.errorNotImage}
+    data-error-too-large={t.errorTooLarge.replace(
+      '{max}',
+      String(MAX_DIMENSION),
+    )}
+    data-error-too-many-tiles={t.errorTooManyTiles.replace(
+      '{max}',
+      String(MAX_TILES),
+    )}
+    data-error-grid-too-fine={t.errorGridTooFine}
+    data-error-zip-too-large={t.errorZipTooLarge}
+    data-error-load-failed={t.errorLoadFailed}
+    data-error-export-failed={t.errorExportFailed}
+  >
+    <label for="split-file" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="split-dropzone" class="ui-dropzone">
+      <input id="split-file" type="file" accept="image/*" class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="split-error"
+      role="alert"
+      hidden
+      class="mt-3 text-sm text-red-600 dark:text-red-400"
+    ></p>
+
+    <div id="split-workspace" hidden class="mt-6 grid gap-6 md:grid-cols-2">
+      <div>
+        <span class="ui-label">{t.presetLabel}</span>
+        <div class="flex flex-wrap gap-2">
+          <button
+            type="button"
+            class="ui-btn"
+            data-rows="3"
+            data-cols="3"
+            data-preset
+          >
+            {t.presetInstagram}
+          </button>
+          <button
+            type="button"
+            class="ui-btn"
+            data-rows="1"
+            data-cols="3"
+            data-preset
+          >
+            {t.presetRow3}
+          </button>
+          <button
+            type="button"
+            class="ui-btn"
+            data-rows="3"
+            data-cols="1"
+            data-preset
+          >
+            {t.presetCol3}
+          </button>
+          <button
+            type="button"
+            class="ui-btn"
+            data-rows="2"
+            data-cols="2"
+            data-preset
+          >
+            {t.presetGrid2}
+          </button>
+        </div>
+
+        <div class="mt-4 grid grid-cols-2 gap-3">
+          <div>
+            <label for="split-rows" class="ui-label">
+              {t.rowsLabel}
+            </label>
+            <input
+              id="split-rows"
+              type="number"
+              min="1"
+              max={MAX_LINES}
+              step="1"
+              value="3"
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            />
+          </div>
+          <div>
+            <label for="split-cols" class="ui-label">
+              {t.colsLabel}
+            </label>
+            <input
+              id="split-cols"
+              type="number"
+              min="1"
+              max={MAX_LINES}
+              step="1"
+              value="3"
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            />
+          </div>
+        </div>
+
+        <label class="ui-check mt-4">
+          <input id="split-reverse" type="checkbox" />
+          <span>{t.reverseLabel}</span>
+        </label>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {t.reverseHint}
+        </p>
+
+        <div class="mt-4 flex flex-wrap items-end gap-4">
+          <div>
+            <span class="ui-label">{t.formatLabel}</span>
+            <div
+              id="split-format"
+              class="ui-seg"
+              role="group"
+              aria-label={t.formatLabel}
+            >
+              <button
+                type="button"
+                data-format="png"
+                aria-pressed="true"
+                class="ui-seg-btn"
+              >
+                PNG
+              </button>
+              <button
+                type="button"
+                data-format="jpeg"
+                aria-pressed="false"
+                class="ui-seg-btn"
+              >
+                JPEG
+              </button>
+              <button
+                type="button"
+                data-format="webp"
+                aria-pressed="false"
+                class="ui-seg-btn"
+              >
+                WebP
+              </button>
+            </div>
+          </div>
+          <div id="split-quality-wrap" hidden class="min-w-40 flex-1">
+            <label for="split-quality" class="ui-label">
+              {t.qualityLabel}
+              <span id="split-quality-value">90</span>
+            </label>
+            <input
+              id="split-quality"
+              type="range"
+              min="10"
+              max="100"
+              value="90"
+              class="h-11 w-full"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center gap-3">
+        <p class="ui-label self-start">{t.previewLabel}</p>
+        <div
+          class="w-fit max-w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700"
+          style="background-image: conic-gradient(#e5e7eb 25%, #fff 0 50%, #e5e7eb 0 75%, #fff 0); background-size: 16px 16px;"
+        >
+          <canvas
+            id="split-canvas"
+            role="img"
+            aria-label={t.previewLabel}
+            class="block max-h-[70vh] max-w-full"
+          ></canvas>
+        </div>
+        <p
+          id="split-size"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></p>
+        <button
+          id="split-download"
+          type="button"
+          disabled
+          class="ui-btn-primary"
+        >
+          {t.downloadButton}
+        </button>
+        <span
+          id="split-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    isWithinLimit,
+    outputFormat,
+    type OutputFormat,
+  } from '../../lib/tools/image-padding';
+  import {
+    MAX_TILES,
+    clampLines,
+    computeTiles,
+    isValidGrid,
+    splitZipName,
+    tileFileName,
+    tileNumber,
+  } from '../../lib/tools/image-splitter';
+  import { ZipToolError, createZip } from '../../lib/tools/zip-tool';
+
+  const root = document.getElementById('split-root')!;
+  const fileInput = document.getElementById('split-file') as HTMLInputElement;
+  const dropzone = document.getElementById('split-dropzone')!;
+  const errorEl = document.getElementById('split-error')!;
+  const workspace = document.getElementById('split-workspace')!;
+  const canvas = document.getElementById('split-canvas') as HTMLCanvasElement;
+  const rowsInput = document.getElementById('split-rows') as HTMLInputElement;
+  const colsInput = document.getElementById('split-cols') as HTMLInputElement;
+  const reverseInput = document.getElementById(
+    'split-reverse',
+  ) as HTMLInputElement;
+  const sizeEl = document.getElementById('split-size')!;
+  const statusEl = document.getElementById('split-status')!;
+  const downloadButton = document.getElementById(
+    'split-download',
+  ) as HTMLButtonElement;
+  const qualityWrap = document.getElementById('split-quality-wrap')!;
+  const qualityInput = document.getElementById(
+    'split-quality',
+  ) as HTMLInputElement;
+  const qualityValue = document.getElementById('split-quality-value')!;
+  const formatButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#split-format [data-format]'),
+  );
+  const presetButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-preset]'),
+  );
+
+  const d = root.dataset;
+  /** プレビューの長辺の上限（px）。巨大な画像でも軽く描くための縮小 */
+  const PREVIEW_MAX = 1000;
+  let bitmap: ImageBitmap | null = null;
+  let sourceName: string | null = null;
+  let format: OutputFormat = 'png';
+  // 画像の読み込みは非同期なので、古い読み込みが新しい選択を上書きしないよう世代で管理する
+  let generation = 0;
+  // 書き出し中は画像の差し替えを受け付けない（使用中のImageBitmapを閉じないため）
+  let busy = false;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  /** 入力欄の値を分割数として読む（空欄・範囲外は丸める） */
+  function readGrid() {
+    return {
+      rows: clampLines(Number(rowsInput.value)),
+      cols: clampLines(Number(colsInput.value)),
+    };
+  }
+
+  /** 画像と分割線をプレビュー用canvasに描き、ダウンロードの可否を更新する */
+  function render(keepStatus = false) {
+    if (!keepStatus) statusEl.textContent = '';
+    sizeEl.textContent = '';
+    downloadButton.disabled = true;
+    if (!bitmap) return;
+    const source = { width: bitmap.width, height: bitmap.height };
+    const scale = Math.min(
+      1,
+      PREVIEW_MAX / Math.max(source.width, source.height),
+    );
+    const w = Math.max(1, Math.round(source.width * scale));
+    const h = Math.max(1, Math.round(source.height * scale));
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return showError(d.errorExportFailed ?? '');
+    ctx.drawImage(bitmap, 0, 0, w, h);
+
+    const { rows, cols } = readGrid();
+    if (rows * cols > MAX_TILES) {
+      return showError(d.errorTooManyTiles ?? '');
+    }
+    if (!isValidGrid(source, rows, cols)) {
+      return showError(d.errorGridTooFine ?? '');
+    }
+    showError('');
+
+    // 分割線は白線の上に黒線を重ね、明るい画像・暗い画像のどちらでも見えるようにする
+    const tiles = computeTiles(source, rows, cols);
+    const drawLines = (style: string, width: number) => {
+      ctx.strokeStyle = style;
+      ctx.lineWidth = width;
+      ctx.beginPath();
+      for (const tile of tiles) {
+        if (tile.col > 0) {
+          const x = Math.round(tile.x * scale);
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+        }
+        if (tile.row > 0 && tile.col === 0) {
+          const y = Math.round(tile.y * scale);
+          ctx.moveTo(0, y);
+          ctx.lineTo(w, y);
+        }
+      }
+      ctx.stroke();
+    };
+    drawLines('#ffffff', 3);
+    drawLines('#000000', 1);
+
+    const first = tiles[0];
+    sizeEl.textContent = (d.outputInfo ?? '')
+      .replace('{srcWidth}', String(source.width))
+      .replace('{srcHeight}', String(source.height))
+      .replace('{count}', String(tiles.length))
+      .replace('{tileWidth}', String(first.width))
+      .replace('{tileHeight}', String(first.height));
+    downloadButton.disabled = busy;
+  }
+
+  async function loadFile(file: File) {
+    if (busy) return;
+    const current = ++generation;
+    showError('');
+    statusEl.textContent = '';
+    if (!file.type.startsWith('image/'))
+      return showError(d.errorNotImage ?? '');
+    let loaded: ImageBitmap;
+    try {
+      loaded = await createImageBitmap(file);
+    } catch {
+      if (current === generation) showError(d.errorLoadFailed ?? '');
+      return;
+    }
+    if (current !== generation) return loaded.close();
+    if (!isWithinLimit({ width: loaded.width, height: loaded.height })) {
+      loaded.close();
+      return showError(d.errorTooLarge ?? '');
+    }
+    bitmap?.close();
+    bitmap = loaded;
+    sourceName = file.name;
+    workspace.hidden = false;
+    render();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  for (const el of [rowsInput, colsInput]) {
+    el.addEventListener('input', () => render());
+    el.addEventListener('change', () => {
+      const { rows, cols } = readGrid();
+      rowsInput.value = String(rows);
+      colsInput.value = String(cols);
+      render();
+    });
+  }
+  for (const b of presetButtons) {
+    b.addEventListener('click', () => {
+      rowsInput.value = b.dataset.rows ?? '1';
+      colsInput.value = b.dataset.cols ?? '1';
+      render();
+    });
+  }
+
+  function applyFormat(next: OutputFormat) {
+    format = next;
+    for (const b of formatButtons) {
+      b.setAttribute('aria-pressed', String(b.dataset.format === next));
+    }
+    qualityWrap.hidden = next === 'png';
+  }
+  for (const b of formatButtons) {
+    b.addEventListener('click', () =>
+      applyFormat(b.dataset.format as OutputFormat),
+    );
+  }
+  qualityInput.addEventListener('input', () => {
+    qualityValue.textContent = qualityInput.value;
+  });
+
+  function toBlob(target: HTMLCanvasElement, mime: string, quality?: number) {
+    return new Promise<Blob | null>((resolve) =>
+      target.toBlob(resolve, mime, quality),
+    );
+  }
+
+  downloadButton.addEventListener('click', async () => {
+    if (!bitmap) return;
+    const source = { width: bitmap.width, height: bitmap.height };
+    const { rows, cols } = readGrid();
+    const tiles = computeTiles(source, rows, cols);
+    if (tiles.length === 0) return;
+    const { mime } = outputFormat(format);
+    const quality =
+      format === 'png' ? undefined : Number(qualityInput.value) / 100;
+    const total = tiles.length;
+    const reverse = reverseInput.checked;
+    const name = sourceName;
+    const image = bitmap;
+
+    busy = true;
+    downloadButton.disabled = true;
+    showError('');
+    statusEl.textContent = d.working ?? '';
+    try {
+      const files: { name: string; data: Uint8Array }[] = [];
+      const tileCanvas = document.createElement('canvas');
+      const ctx = tileCanvas.getContext('2d');
+      if (!ctx) throw new Error('no-context');
+      for (const tile of tiles) {
+        tileCanvas.width = tile.width;
+        tileCanvas.height = tile.height;
+        ctx.clearRect(0, 0, tile.width, tile.height);
+        if (format === 'jpeg') {
+          // JPEGは透明を持てないので、白の上に重ねてから書き出す
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, tile.width, tile.height);
+        }
+        ctx.drawImage(
+          image,
+          tile.x,
+          tile.y,
+          tile.width,
+          tile.height,
+          0,
+          0,
+          tile.width,
+          tile.height,
+        );
+        const blob = await toBlob(tileCanvas, mime, quality);
+        // 非対応の形式はブラウザがPNGで返すため、種類が違えば失敗として扱う
+        if (!blob || blob.type !== mime) throw new Error('export-failed');
+        files.push({
+          name: tileFileName(
+            name,
+            tileNumber(tile, rows, cols, reverse),
+            total,
+            format,
+          ),
+          data: new Uint8Array(await blob.arrayBuffer()),
+        });
+      }
+      // 画像はすでに圧縮済みなので、ZIPは格納のみ（level 0）にする
+      const zip = createZip(files, 0);
+      downloadBlob(
+        new Blob([zip as BlobPart], { type: 'application/zip' }),
+        splitZipName(name, rows, cols),
+      );
+      statusEl.textContent = d.downloaded ?? '';
+    } catch (error) {
+      statusEl.textContent = '';
+      showError(
+        error instanceof ZipToolError
+          ? (d.errorZipTooLarge ?? '')
+          : (d.errorExportFailed ?? ''),
+      );
+    } finally {
+      busy = false;
+      render(true);
+    }
+  });
+</script>

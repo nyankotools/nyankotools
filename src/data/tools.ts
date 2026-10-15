@@ -2498,6 +2498,42 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'jwt-generator',
+    category: 'security',
+    addedAt: '2026-10-15',
+    updatedAt: '2026-10-15',
+    related: ['jwt-decoder', 'hmac-generator', 'base64'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'JWT生成・署名',
+        keywords: [
+          'JWT',
+          'JWT生成',
+          'JSON Web Token',
+          'HS256',
+          'トークン生成',
+          '署名',
+        ],
+        description:
+          'ヘッダー・ペイロード・秘密鍵からHS256/HS384/HS512のJWTを生成。API認証のデバッグや学習に。',
+      },
+      en: {
+        name: 'JWT Generator',
+        keywords: [
+          'JWT',
+          'JWT generator',
+          'JSON Web Token',
+          'HS256',
+          'sign token',
+          'HMAC',
+        ],
+        description:
+          'Generate HMAC-signed JWTs (HS256/HS384/HS512) from a header, payload and secret for API auth debugging and learning.',
+      },
+    },
+  },
+  {
     slug: 'totp-generator',
     category: 'security',
     addedAt: '2026-10-02',

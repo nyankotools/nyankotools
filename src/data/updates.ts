@@ -604,6 +604,20 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-15',
+    toolSlugs: ['jwt-generator'],
+    translations: {
+      ja: {
+        summary:
+          'JWT生成・署名を追加しました。ヘッダー・ペイロード・秘密鍵から、HS256・HS384・HS512のJWTを生成できます。iat・expの自動設定にも対応し、JWTデコーダーと組み合わせてトークンの確認ができます。',
+      },
+      en: {
+        summary:
+          'Added the JWT Generator. It builds HS256, HS384 and HS512 signed JWTs from a header, payload and secret key, with one-click iat and exp, and pairs with the JWT Decoder for inspecting tokens.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

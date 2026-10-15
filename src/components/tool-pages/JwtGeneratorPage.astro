@@ -1,0 +1,214 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { jwtGeneratorContent } from '../../i18n/tools/jwt-generator';
+import { JWT_ALGORITHMS } from '../../lib/tools/jwt-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = jwtGeneratorContent[locale];
+const defaultHeader = '{\n  "alg": "HS256",\n  "typ": "JWT"\n}';
+const defaultPayload =
+  '{\n  "sub": "1234567890",\n  "name": "John Doe",\n  "iat": 1516239022\n}';
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="jwt-generator-header" class="ui-label">
+      {t.headerLabel}
+    </label>
+    <textarea
+      id="jwt-generator-header"
+      class="ui-input h-28 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      spellcheck="false"
+      autocomplete="off"
+    >{defaultHeader}</textarea>
+  </div>
+
+  <div class="mt-4">
+    <label for="jwt-generator-payload" class="ui-label">
+      {t.payloadLabel}
+    </label>
+    <textarea
+      id="jwt-generator-payload"
+      class="ui-input h-40 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      spellcheck="false"
+      autocomplete="off"
+    >{defaultPayload}</textarea>
+    <button id="jwt-generator-timestamps" type="button" class="ui-btn mt-2">
+      {t.timestampsButton}
+    </button>
+  </div>
+
+  <div class="mt-4">
+    <label for="jwt-generator-secret" class="ui-label">
+      {t.secretLabel}
+    </label>
+    <input
+      id="jwt-generator-secret"
+      type="text"
+      autocomplete="off"
+      value="your-256-bit-secret"
+      class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.secretPlaceholder}
+      spellcheck="false"
+    />
+  </div>
+
+  <div class="mt-4 flex flex-wrap gap-4">
+    <div>
+      <label for="jwt-generator-secret-format" class="ui-label">
+        {t.secretFormatLabel}
+      </label>
+      <select
+        id="jwt-generator-secret-format"
+        class="ui-input h-11 px-3 dark:bg-gray-900"
+      >
+        <option value="text">{t.secretFormatText}</option>
+        <option value="hex">{t.secretFormatHex}</option>
+      </select>
+    </div>
+    <div>
+      <label for="jwt-generator-algorithm" class="ui-label">
+        {t.algorithmLabel}
+      </label>
+      <select
+        id="jwt-generator-algorithm"
+        class="ui-input h-11 px-3 dark:bg-gray-900"
+      >
+        {JWT_ALGORITHMS.map((algorithm) => (
+          <option value={algorithm}>{algorithm}</option>
+        ))}
+      </select>
+    </div>
+  </div>
+
+  <p
+    id="jwt-generator-empty-warning"
+    hidden
+    class="mt-4 max-w-2xl text-sm text-amber-700 dark:text-amber-400"
+  >
+    {t.emptySecretWarning}
+  </p>
+
+  <p
+    id="jwt-generator-error"
+    hidden
+    data-invalid-header={t.invalidHeader}
+    data-invalid-payload={t.invalidPayload}
+    data-invalid-hex={t.invalidHex}
+    class="ui-error mt-4 max-w-2xl"
+    role="alert"
+  ></p>
+
+  <div class="mt-4">
+    <label for="jwt-generator-result" class="ui-label">
+      {t.resultLabel}
+    </label>
+    <textarea
+      id="jwt-generator-result"
+      readonly
+      class="ui-input h-28 w-full bg-gray-50 p-4 font-mono break-all dark:bg-gray-900"
+    ></textarea>
+    <div class="mt-2 flex items-center gap-3">
+      <button
+        id="jwt-generator-copy-button"
+        type="button"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="ui-btn shrink-0"
+      >
+        {t.copy}
+      </button>
+      <span
+        id="jwt-generator-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    applyTimestamps,
+    generateJwt,
+    type JwtAlgorithm,
+    type JwtSecretFormat,
+  } from '../../lib/tools/jwt-generator';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`jwt-generator-${id}`) as T;
+  const header = $<HTMLTextAreaElement>('header');
+  const payload = $<HTMLTextAreaElement>('payload');
+  const secret = $<HTMLInputElement>('secret');
+  const secretFormat = $<HTMLSelectElement>('secret-format');
+  const algorithm = $<HTMLSelectElement>('algorithm');
+  const result = $<HTMLTextAreaElement>('result');
+  const emptyWarning = $<HTMLElement>('empty-warning');
+  const errorEl = $<HTMLElement>('error');
+  const statusEl = $<HTMLElement>('status');
+  const copyButton = $<HTMLButtonElement>('copy-button');
+  const timestampsButton = $<HTMLButtonElement>('timestamps');
+
+  let generation = 0;
+
+  async function update() {
+    const current = ++generation;
+    statusEl.textContent = '';
+    emptyWarning.hidden = secret.value !== '';
+    const generated = await generateJwt(
+      header.value,
+      payload.value,
+      secret.value,
+      secretFormat.value as JwtSecretFormat,
+      algorithm.value as JwtAlgorithm,
+    );
+    if (current !== generation) return;
+
+    if (!generated.success) {
+      result.value = '';
+      const messages = {
+        'invalid-header': errorEl.dataset.invalidHeader,
+        'invalid-payload': errorEl.dataset.invalidPayload,
+        'invalid-hex': errorEl.dataset.invalidHex,
+      };
+      errorEl.textContent = messages[generated.error] ?? '';
+      errorEl.hidden = false;
+      return;
+    }
+    errorEl.hidden = true;
+    result.value = generated.token;
+  }
+
+  onTextInput(header, update);
+  onTextInput(payload, update);
+  onTextInput(secret, update);
+  for (const el of [secretFormat, algorithm]) {
+    el.addEventListener('change', update);
+  }
+
+  timestampsButton.addEventListener('click', () => {
+    const next = applyTimestamps(payload.value, Date.now(), 3600);
+    if (next === null) {
+      update(); // 不正なペイロードのエラーを表示する
+      return;
+    }
+    payload.value = next;
+    update();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!result.value) return;
+    statusEl.textContent = (await copyText(result.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  update();
+</script>

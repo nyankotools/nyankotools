@@ -2304,6 +2304,45 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'color-blindness-simulator',
+    category: 'image',
+    addedAt: '2026-10-15',
+    updatedAt: '2026-10-15',
+    related: ['color-palette-generator', 'color-sense-test', 'image-filter'],
+    translations: {
+      ja: {
+        name: '色覚シミュレーター',
+        keywords: [
+          '色覚',
+          '色弱',
+          '色盲',
+          'P型',
+          'D型',
+          'T型',
+          'カラーユニバーサルデザイン',
+          'アクセシビリティ',
+        ],
+        description:
+          '画像やカラーコードが、P型・D型・T型・全色盲の人にどう見えるかをシミュレーション。デザインの色の見分けやすさ確認やコントラスト比の確認に。',
+      },
+      en: {
+        name: 'Color Blindness Simulator',
+        keywords: [
+          'color blindness',
+          'colorblind',
+          'protanopia',
+          'deuteranopia',
+          'tritanopia',
+          'achromatopsia',
+          'accessibility',
+          'color universal design',
+        ],
+        description:
+          'Simulate how an image or color code looks with protanopia, deuteranopia, tritanopia or total color blindness. Check design accessibility and contrast.',
+      },
+    },
+  },
+  {
     slug: 'css-box-shadow-generator',
     category: 'dev',
     addedAt: '2026-09-27',

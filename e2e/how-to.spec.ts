@@ -96,6 +96,7 @@ const slugs = [
   'csv-viewer',
   'css-clip-path-generator',
   'svg-wave-generator',
+  'color-blindness-simulator',
 ];
 
 const locales = [

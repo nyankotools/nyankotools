@@ -1,0 +1,474 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { colorBlindnessSimulatorContent } from '../../i18n/tools/color-blindness-simulator';
+import { VISION_TYPES } from '../../lib/tools/color-blindness-simulator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = colorBlindnessSimulatorContent[locale];
+const rows = [
+  { id: 'original', label: t.originalLabel, hint: '' },
+  ...VISION_TYPES.map((v) => ({
+    id: v.id,
+    label: t.visionLabels[v.id],
+    hint: t.visionHints[v.id],
+  })),
+];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="cbs-severity" class="ui-label">
+      {t.severityLabel}
+      <span id="cbs-severity-value" class="tabular-nums"></span>
+    </label>
+    <input
+      id="cbs-severity"
+      type="range"
+      min="0"
+      max="100"
+      value="100"
+      class="h-11 w-full max-w-md"
+    />
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+      {t.severityNote}
+    </p>
+  </div>
+
+  <h2 class="mt-6 mb-2 text-lg font-bold">{t.colorHeading}</h2>
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="cbs-color-a" class="ui-label">
+        {t.colorALabel}
+      </label>
+      <div class="flex items-center gap-2">
+        <input
+          id="cbs-color-a"
+          type="text"
+          value="#e53935"
+          maxlength="7"
+          spellcheck="false"
+          autocomplete="off"
+          data-label={t.colorALabel}
+          class="ui-input w-36 font-mono"
+        />
+        <input
+          id="cbs-picker-a"
+          type="color"
+          value="#e53935"
+          aria-label={`${t.colorALabel} ${t.colorPickerLabel}`}
+          class="h-11 w-14 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+        />
+      </div>
+    </div>
+    <div>
+      <label for="cbs-color-b" class="ui-label">
+        {t.colorBLabel}
+      </label>
+      <div class="flex items-center gap-2">
+        <input
+          id="cbs-color-b"
+          type="text"
+          value="#43a047"
+          maxlength="7"
+          spellcheck="false"
+          autocomplete="off"
+          data-label={t.colorBLabel}
+          class="ui-input w-36 font-mono"
+        />
+        <input
+          id="cbs-picker-b"
+          type="color"
+          value="#43a047"
+          aria-label={`${t.colorBLabel} ${t.colorPickerLabel}`}
+          class="h-11 w-14 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+        />
+      </div>
+    </div>
+  </div>
+  <p
+    id="cbs-color-error"
+    role="alert"
+    hidden
+    data-template={t.colorErrorTemplate}
+    class="mt-1 text-xs text-red-600 dark:text-red-400"
+  ></p>
+
+  <ul
+    id="cbs-color-list"
+    class="mt-4 space-y-2"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    {rows.map((r) => (
+      <li
+        data-row={r.id}
+        class="flex flex-wrap items-center gap-3 rounded-lg border border-gray-200 p-2 dark:border-gray-700"
+      >
+        <div
+          data-preview
+          class="flex h-14 w-24 shrink-0 items-center justify-center rounded border border-gray-300 dark:border-gray-600"
+        >
+          <div data-swatch class="h-8 w-12 rounded-sm"></div>
+        </div>
+        <div class="min-w-48 flex-1">
+          <p class="text-sm font-medium">{r.label}</p>
+          {r.hint && (
+            <p class="text-xs text-gray-500 dark:text-gray-400">{r.hint}</p>
+          )}
+          <p class="mt-1 text-xs tabular-nums">
+            <span data-hex-a class="font-mono" />
+            <span> / </span>
+            <span data-hex-b class="font-mono" />
+            <span class="ml-2">
+              {t.contrastLabel}: <span data-ratio class="font-mono" />
+            </span>
+          </p>
+        </div>
+        <button type="button" data-copy class="ui-btn">
+          {t.copyButton}
+        </button>
+      </li>
+    ))}
+  </ul>
+  <p
+    id="cbs-copy-status"
+    role="status"
+    class="mt-1 min-h-4 text-xs text-gray-500 dark:text-gray-400"
+  ></p>
+
+  <h2 class="mt-8 mb-2 text-lg font-bold">{t.imageHeading}</h2>
+  <div>
+    <label for="cbs-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="cbs-dropzone" class="ui-dropzone">
+      <input
+        id="cbs-file-input"
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="cbs-source-info"
+      data-template={t.sourceInfoTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="cbs-error"
+      role="alert"
+      hidden
+      data-unsupported={t.errorUnsupportedFile}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-too-many-pixels={t.errorTooManyPixels}
+      data-failed={t.errorConversionFailed}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+  </div>
+
+  <div id="cbs-results-section" hidden class="mt-4">
+    <div class="grid gap-4 sm:grid-cols-2">
+      {rows.map((r) => (
+        <div data-image-card={r.id}>
+          <p class="mb-1 text-sm font-medium">{r.label}</p>
+          <canvas
+            data-canvas
+            class="w-full rounded-lg border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
+          />
+          {r.id !== 'original' && (
+            <button
+              type="button"
+              data-download={r.id}
+              data-label={t.downloadButton}
+              class="ui-btn mt-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {t.downloadButton}
+            </button>
+          )}
+        </div>
+      ))}
+    </div>
+    <p
+      id="cbs-scaled-note"
+      hidden
+      class="mt-2 text-xs text-gray-500 dark:text-gray-400"
+    >
+      {t.previewScaledNote}
+    </p>
+    <button id="cbs-clear-button" type="button" class="ui-btn mt-3">
+      {t.clearButton}
+    </button>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import { copyText } from '../../lib/clipboard';
+  import { normalizeHex } from '../../lib/tools/color-converter';
+  import {
+    MAX_FILE_SIZE,
+    MAX_PIXELS,
+    VISION_TYPES,
+    buildOutputFileName,
+    clampSeverity,
+    contrastRatio,
+    simulateHex,
+    simulateImageData,
+    type VisionTypeId,
+  } from '../../lib/tools/color-blindness-simulator';
+  import {
+    formatFileSize,
+    isAcceptedImageFile,
+  } from '../../lib/tools/image-filter';
+
+  const PREVIEW_MAX_EDGE = 480;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const severityInput = $<HTMLInputElement>('cbs-severity');
+  const severityValueEl = $('cbs-severity-value');
+  const colorInputs = {
+    a: $<HTMLInputElement>('cbs-color-a'),
+    b: $<HTMLInputElement>('cbs-color-b'),
+  };
+  const pickers = {
+    a: $<HTMLInputElement>('cbs-picker-a'),
+    b: $<HTMLInputElement>('cbs-picker-b'),
+  };
+  const colorError = $('cbs-color-error');
+  const colorList = $('cbs-color-list');
+  const copyStatus = $('cbs-copy-status');
+  const dropzone = $('cbs-dropzone');
+  const fileInput = $<HTMLInputElement>('cbs-file-input');
+  const sourceInfoEl = $('cbs-source-info');
+  const errorEl = $('cbs-error');
+  const resultsSection = $('cbs-results-section');
+  const scaledNote = $('cbs-scaled-note');
+  const clearButton = $<HTMLButtonElement>('cbs-clear-button');
+
+  let bitmap: ImageBitmap | null = null;
+  let fileName = '';
+  let previewSource: ImageData | null = null;
+  let renderTimer: ReturnType<typeof setTimeout> | undefined;
+
+  const severity = () => clampSeverity(Number(severityInput.value));
+
+  function updateColors() {
+    severityValueEl.textContent = ` ${severity()}%`;
+    const hexA = normalizeHex(colorInputs.a.value);
+    const hexB = normalizeHex(colorInputs.b.value);
+    const bad = (['a', 'b'] as const).filter(
+      (k) => !normalizeHex(colorInputs[k].value),
+    );
+    if (bad.length > 0) {
+      const label = colorInputs[bad[0]].dataset.label ?? '';
+      colorError.textContent = (colorError.dataset.template ?? '').replace(
+        '{label}',
+        label,
+      );
+      colorError.hidden = false;
+    } else {
+      colorError.textContent = '';
+      colorError.hidden = true;
+    }
+    if (!hexA || !hexB) return;
+    pickers.a.value = hexA;
+    pickers.b.value = hexB;
+    for (const li of colorList.querySelectorAll<HTMLElement>('[data-row]')) {
+      const id = li.dataset.row as 'original' | VisionTypeId;
+      const a = id === 'original' ? hexA : simulateHex(hexA, id, severity())!;
+      const b = id === 'original' ? hexB : simulateHex(hexB, id, severity())!;
+      const preview = li.querySelector<HTMLElement>('[data-preview]')!;
+      preview.style.backgroundColor = b;
+      preview.querySelector<HTMLElement>(
+        '[data-swatch]',
+      )!.style.backgroundColor = a;
+      li.querySelector('[data-hex-a]')!.textContent = a;
+      li.querySelector('[data-hex-b]')!.textContent = b;
+      const ratio = contrastRatio(a, b);
+      li.querySelector('[data-ratio]')!.textContent =
+        ratio === null ? '-' : `${ratio.toFixed(2)}:1`;
+      const copyBtn = li.querySelector<HTMLButtonElement>('[data-copy]')!;
+      copyBtn.dataset.value = `${a}, ${b}`;
+    }
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.textContent = '';
+    errorEl.hidden = true;
+  }
+
+  function canvasOf(id: string): HTMLCanvasElement {
+    return document.querySelector<HTMLCanvasElement>(
+      `[data-image-card="${id}"] [data-canvas]`,
+    )!;
+  }
+
+  function drawOriginal() {
+    if (!bitmap) return;
+    const scale = Math.min(
+      1,
+      PREVIEW_MAX_EDGE / Math.max(bitmap.width, bitmap.height),
+    );
+    const w = Math.max(1, Math.round(bitmap.width * scale));
+    const h = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = canvasOf('original');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    previewSource = ctx.getImageData(0, 0, w, h);
+    scaledNote.hidden = scale >= 1;
+  }
+
+  function renderImages() {
+    if (!previewSource) return;
+    const { width, height, data } = previewSource;
+    for (const v of VISION_TYPES) {
+      const canvas = canvasOf(v.id);
+      canvas.width = width;
+      canvas.height = height;
+      const out = simulateImageData(data, v.id, severity());
+      canvas
+        .getContext('2d')!
+        .putImageData(new ImageData(out, width, height), 0, 0);
+    }
+  }
+
+  function scheduleRender() {
+    updateColors();
+    clearTimeout(renderTimer);
+    renderTimer = setTimeout(renderImages, 60);
+  }
+
+  async function loadFile(file: File) {
+    clearError();
+    if (!isAcceptedImageFile(file)) {
+      showError(errorEl.dataset.unsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace(
+          '{max}',
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+    let next: ImageBitmap;
+    try {
+      next = await createImageBitmap(file);
+    } catch {
+      showError(errorEl.dataset.failed ?? '');
+      return;
+    }
+    if (next.width * next.height > MAX_PIXELS) {
+      next.close();
+      showError(errorEl.dataset.tooManyPixels ?? '');
+      return;
+    }
+    bitmap?.close();
+    bitmap = next;
+    fileName = file.name;
+    sourceInfoEl.textContent = (sourceInfoEl.dataset.template ?? '')
+      .replace('{width}', String(next.width))
+      .replace('{height}', String(next.height))
+      .replace('{size}', formatFileSize(file.size));
+    resultsSection.hidden = false;
+    drawOriginal();
+    renderImages();
+  }
+
+  function clearAll() {
+    clearTimeout(renderTimer);
+    bitmap?.close();
+    bitmap = null;
+    previewSource = null;
+    fileName = '';
+    sourceInfoEl.textContent = '';
+    resultsSection.hidden = true;
+    clearError();
+  }
+
+  async function download(id: VisionTypeId, button: HTMLButtonElement) {
+    const bm = bitmap;
+    if (!bm) return;
+    button.disabled = true;
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = bm.width;
+      canvas.height = bm.height;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+      ctx.drawImage(bm, 0, 0);
+      const src = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const out = simulateImageData(src.data, id, severity());
+      ctx.putImageData(new ImageData(out, src.width, src.height), 0, 0);
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, 'image/png'),
+      );
+      if (!blob) {
+        showError(errorEl.dataset.failed ?? '');
+        return;
+      }
+      clearError();
+      downloadBlob(blob, buildOutputFileName(fileName, id));
+    } catch {
+      showError(errorEl.dataset.failed ?? '');
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  severityInput.addEventListener('input', scheduleRender);
+  for (const k of ['a', 'b'] as const) {
+    colorInputs[k].addEventListener('input', updateColors);
+    pickers[k].addEventListener('input', () => {
+      colorInputs[k].value = pickers[k].value;
+      updateColors();
+    });
+  }
+
+  colorList.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(
+      '[data-copy]',
+    );
+    if (!btn) return;
+    const ok = await copyText(btn.dataset.value ?? '');
+    copyStatus.textContent =
+      (ok ? colorList.dataset.copied : colorList.dataset.copyFailed) ?? '';
+  });
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  for (const btn of document.querySelectorAll<HTMLButtonElement>(
+    '[data-download]',
+  )) {
+    btn.addEventListener(
+      'click',
+      () => void download(btn.dataset.download as VisionTypeId, btn),
+    );
+  }
+  clearButton.addEventListener('click', clearAll);
+
+  updateColors();
+</script>

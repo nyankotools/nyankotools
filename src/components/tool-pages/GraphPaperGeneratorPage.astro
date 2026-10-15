@@ -1,0 +1,360 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { graphPaperGeneratorContent } from '../../i18n/tools/graph-paper-generator';
+import {
+  CELL_MAX,
+  CELL_MIN,
+  DEFAULT_OPTIONS,
+  LINE_WIDTH_MAX,
+  LINE_WIDTH_MIN,
+  MARGIN_MAX,
+  MARGIN_MIN,
+} from '../../lib/tools/graph-paper-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = graphPaperGeneratorContent[locale];
+
+const types = [
+  { value: 'grid', label: t.typeGrid },
+  { value: 'ruled', label: t.typeRuled },
+  { value: 'dot', label: t.typeDot },
+  { value: 'manuscript', label: t.typeManuscript },
+];
+const papers = [
+  { value: 'a4', label: t.paperA4 },
+  { value: 'a3', label: t.paperA3 },
+  { value: 'a5', label: t.paperA5 },
+  { value: 'b5', label: t.paperB5 },
+  { value: 'b4', label: t.paperB4 },
+  { value: 'letter', label: t.paperLetter },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    id="gp"
+    data-summary={t.summary}
+    data-downloaded={t.downloaded}
+    data-error-cell={t.errorCell}
+    data-error-margin={t.errorMargin}
+    data-error-line-width={t.errorLineWidth}
+    data-error-color={t.errorColor}
+    data-cell-range={`${CELL_MIN},${CELL_MAX}`}
+    data-margin-range={`${MARGIN_MIN},${MARGIN_MAX}`}
+    data-line-width-range={`${LINE_WIDTH_MIN},${LINE_WIDTH_MAX}`}
+    class="space-y-4"
+  >
+    <div class="space-y-4 print:hidden">
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="gp-type" class="ui-label">
+            {t.typeLabel}
+          </label>
+          <select id="gp-type" class="ui-input h-11 px-3 dark:bg-gray-900">
+            {types.map((o) => (
+              <option value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="gp-paper" class="ui-label">
+            {t.paperLabel}
+          </label>
+          <select id="gp-paper" class="ui-input h-11 px-3 dark:bg-gray-900">
+            {papers.map((o) => (
+              <option value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="gp-orientation" class="ui-label">
+            {t.orientationLabel}
+          </label>
+          <select
+            id="gp-orientation"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+          >
+            <option value="portrait">{t.orientationPortrait}</option>
+            <option value="landscape">{t.orientationLandscape}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="gp-cell" class="ui-label">
+            {t.cellLabel}
+          </label>
+          <input
+            id="gp-cell"
+            type="number"
+            inputmode="decimal"
+            min={CELL_MIN}
+            max={CELL_MAX}
+            step="0.5"
+            value={DEFAULT_OPTIONS.cellMm}
+            class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="gp-margin" class="ui-label">
+            {t.marginLabel}
+          </label>
+          <input
+            id="gp-margin"
+            type="number"
+            inputmode="decimal"
+            min={MARGIN_MIN}
+            max={MARGIN_MAX}
+            step="1"
+            value={DEFAULT_OPTIONS.marginMm}
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="gp-line-width" class="ui-label">
+            {t.lineWidthLabel}
+          </label>
+          <input
+            id="gp-line-width"
+            type="number"
+            inputmode="decimal"
+            min={LINE_WIDTH_MIN}
+            max={LINE_WIDTH_MAX}
+            step="0.05"
+            value={DEFAULT_OPTIONS.lineWidthMm}
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="gp-color" class="ui-label">
+            {t.colorLabel}
+          </label>
+          <input
+            id="gp-color"
+            type="color"
+            value={DEFAULT_OPTIONS.color}
+            class="h-11 w-16 cursor-pointer rounded-lg border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+        <button
+          id="gp-print-button"
+          type="button"
+          class="ui-btn ui-btn-primary"
+        >
+          {t.printButton}
+        </button>
+        <button id="gp-download-button" type="button" class="ui-btn">
+          {t.downloadButton}
+        </button>
+      </div>
+      <p id="gp-error" class="ui-error empty:hidden" aria-live="polite"></p>
+      <p
+        id="gp-summary"
+        class="text-sm text-gray-600 empty:hidden dark:text-gray-400"
+      ></p>
+    </div>
+
+    <div
+      id="gp-output"
+      class="mx-auto max-w-xl border border-gray-300 bg-white shadow-sm print:!mt-0 print:max-w-none print:border-0 print:shadow-none dark:border-gray-700"
+    ></div>
+  </section>
+</ToolShell>
+
+<style is:global>
+  #gp-output svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  @media print {
+    @page gp-a3-portrait {
+      size: 297mm 420mm;
+      margin: 0;
+    }
+    @page gp-a3-landscape {
+      size: 420mm 297mm;
+      margin: 0;
+    }
+    @page gp-a4-portrait {
+      size: 210mm 297mm;
+      margin: 0;
+    }
+    @page gp-a4-landscape {
+      size: 297mm 210mm;
+      margin: 0;
+    }
+    @page gp-a5-portrait {
+      size: 148mm 210mm;
+      margin: 0;
+    }
+    @page gp-a5-landscape {
+      size: 210mm 148mm;
+      margin: 0;
+    }
+    @page gp-b4-portrait {
+      size: 257mm 364mm;
+      margin: 0;
+    }
+    @page gp-b4-landscape {
+      size: 364mm 257mm;
+      margin: 0;
+    }
+    @page gp-b5-portrait {
+      size: 182mm 257mm;
+      margin: 0;
+    }
+    @page gp-b5-landscape {
+      size: 257mm 182mm;
+      margin: 0;
+    }
+    @page gp-letter-portrait {
+      size: 215.9mm 279.4mm;
+      margin: 0;
+    }
+    @page gp-letter-landscape {
+      size: 279.4mm 215.9mm;
+      margin: 0;
+    }
+    /* 印刷は用紙だけにする（見出し・説明文・使い方・注意事項・FAQなどは出さない） */
+    [data-tool-page] > :not(#gp) {
+      display: none;
+    }
+    /* 印刷時は用紙の実寸の箱にする（インラインの aspect-ratio で高さが膨らむと2ページ目に溢れるため無効化） */
+    #gp-output {
+      max-width: none;
+      overflow: hidden;
+      aspect-ratio: auto !important;
+      width: var(--gp-width);
+      height: var(--gp-height);
+    }
+    /* 実寸（mm）で出す。端数で2ページ目に溢れないよう、わずかに小さくする */
+    #gp-output svg {
+      width: calc(var(--gp-width) - 0.5mm);
+      height: calc(var(--gp-height) - 0.5mm);
+    }
+  }
+</style>
+
+<script>
+  import {
+    buildSvg,
+    layoutSheet,
+    paperDimensions,
+    validateOptions,
+    type OptionsError,
+    type Orientation,
+    type PaperId,
+    type SheetOptions,
+    type SheetType,
+  } from '../../lib/tools/graph-paper-generator';
+  import { fill } from '../../lib/format-template';
+  import { downloadBlob } from '../../lib/download';
+
+  const root = document.getElementById('gp')!;
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const typeSelect = $<HTMLSelectElement>('gp-type');
+  const paperSelect = $<HTMLSelectElement>('gp-paper');
+  const orientationSelect = $<HTMLSelectElement>('gp-orientation');
+  const cellInput = $<HTMLInputElement>('gp-cell');
+  const marginInput = $<HTMLInputElement>('gp-margin');
+  const lineWidthInput = $<HTMLInputElement>('gp-line-width');
+  const colorInput = $<HTMLInputElement>('gp-color');
+  const printButton = $<HTMLButtonElement>('gp-print-button');
+  const downloadButton = $<HTMLButtonElement>('gp-download-button');
+  const errorEl = $('gp-error');
+  const summaryEl = $('gp-summary');
+  const output = $('gp-output');
+
+  const range = (key: string) => {
+    const [min, max] = (root.dataset[key] ?? '0,0').split(',');
+    return { min, max };
+  };
+  const errorKeys: Record<OptionsError, string> = {
+    cell: 'errorCell',
+    margin: 'errorMargin',
+    lineWidth: 'errorLineWidth',
+    color: 'errorColor',
+  };
+  const errorRanges: Partial<Record<OptionsError, string>> = {
+    cell: 'cellRange',
+    margin: 'marginRange',
+    lineWidth: 'lineWidthRange',
+  };
+
+  let currentSvg = '';
+
+  function readOptions(): SheetOptions {
+    return {
+      type: typeSelect.value as SheetType,
+      paper: paperSelect.value as PaperId,
+      orientation: orientationSelect.value as Orientation,
+      cellMm: Number(cellInput.value),
+      marginMm: Number(marginInput.value),
+      lineWidthMm: Number(lineWidthInput.value),
+      color: colorInput.value,
+    };
+  }
+
+  function render() {
+    const opts = readOptions();
+    const error = validateOptions(opts);
+    errorEl.textContent = '';
+    summaryEl.textContent = '';
+    if (error) {
+      currentSvg = '';
+      output.replaceChildren();
+      downloadButton.disabled = true;
+      printButton.disabled = true;
+      const template = root.dataset[errorKeys[error]] ?? '';
+      const rangeKey = errorRanges[error];
+      errorEl.textContent = rangeKey
+        ? fill(template, range(rangeKey))
+        : template;
+      return;
+    }
+    downloadButton.disabled = false;
+    printButton.disabled = false;
+    const sheet = layoutSheet(opts);
+    const { widthMm, heightMm } = paperDimensions(opts.paper, opts.orientation);
+    currentSvg = buildSvg(opts);
+    output.innerHTML = currentSvg;
+    output.style.setProperty('--gp-width', `${widthMm}mm`);
+    output.style.setProperty('--gp-height', `${heightMm}mm`);
+    output.style.aspectRatio = `${widthMm} / ${heightMm}`;
+    // 用紙サイズは静的CSSの named page（@page gp-a4-portrait など）で指定する。
+    // 実行時に <style> を作ると CSP（style-src 'self'）でブロックされるため
+    output.style.setProperty('page', `gp-${opts.paper}-${opts.orientation}`);
+    summaryEl.textContent = fill(root.dataset.summary ?? '', {
+      columns: String(sheet.columns),
+      rows: String(sheet.rows),
+    });
+  }
+
+  [typeSelect, paperSelect, orientationSelect].forEach((el) =>
+    el.addEventListener('change', render),
+  );
+  [cellInput, marginInput, lineWidthInput, colorInput].forEach((el) =>
+    el.addEventListener('input', render),
+  );
+  printButton.addEventListener('click', () => window.print());
+  downloadButton.addEventListener('click', () => {
+    if (!currentSvg) return;
+    const opts = readOptions();
+    const name = `${opts.type}-${opts.paper}-${opts.cellMm}mm.svg`;
+    downloadBlob(new Blob([currentSvg], { type: 'image/svg+xml' }), name);
+    summaryEl.textContent = root.dataset.downloaded ?? '';
+  });
+
+  render();
+</script>

@@ -93,6 +93,12 @@ const slugs = [
   'image-padding',
   'seal-stamp-generator',
   'signature-pad',
+  'csv-viewer',
+  'css-clip-path-generator',
+  'svg-wave-generator',
+  'color-blindness-simulator',
+  'image-splitter',
+  'graph-paper-generator',
 ];
 
 const locales = [

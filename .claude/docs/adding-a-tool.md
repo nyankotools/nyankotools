@@ -78,6 +78,7 @@ Note: this "shared component + dictionary + thin wrapper" structure is the stand
 - [ ] Made `src/pages/tools/<slug>/index.astro` (ja) and `src/pages/en/tools/<slug>/index.astro` (en) thin wrappers that only call the shared component
 - [ ] Registered the tool in `src/data/tools.ts`: `category` (ID), `addedAt` / `updatedAt`, `related` (1-3), flags if applicable, and `translations.ja` / `translations.en` (`name` / `description` / `keywords`)
 - [ ] If the tool takes a file: it uses the dashed-border dropzone and works by both file picker and drag & drop (see step 3)
+- [ ] If the results depend on tax rates, insurance rates, labor law, holidays or other rules that change over time: stated the basis (year / law) in the copy, and added a row to [regulation-dependent-tools.md](./regulation-dependent-tools.md)
 - [ ] Runs entirely client-side; sends no data to any server
 - [ ] Designed page-specific `title` / `description` for ja and en, and exactly one `<h1>` (see [growth.md](./growth.md))
 - [ ] Confirmed the layout holds at narrow widths (~375px)

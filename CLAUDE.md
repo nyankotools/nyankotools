@@ -90,3 +90,4 @@ More detailed rules and design docs live under `.claude/docs/`:
 - [`adding-a-tool.md`](.claude/docs/adding-a-tool.md) — step-by-step checklist for adding a new tool
 - [`deployment.md`](.claude/docs/deployment.md) — Cloudflare Workers static-asset deploy config
 - [`growth.md`](.claude/docs/growth.md) — monetization-driven rules for SEO, responsive design, and i18n
+- [`regulation-dependent-tools.md`](.claude/docs/regulation-dependent-tools.md) — tools affected by tax/labor-law/holiday changes, and where to update them

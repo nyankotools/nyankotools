@@ -1,0 +1,609 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { csvViewerContent } from '../../i18n/tools/csv-viewer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = csvViewerContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="csv-viewer-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-file-error={t.fileError}
+    data-column-name-template={t.columnNameTemplate}
+    data-move-left-template={t.moveLeftTemplate}
+    data-move-right-template={t.moveRightTemplate}
+    data-remove-template={t.removeTemplate}
+    data-restore-template={t.restoreTemplate}
+    data-sort-template={t.sortTemplate}
+    data-summary-template={t.summaryTemplate}
+    data-all-columns={t.allColumns}
+    data-error-template={t.errorTemplate}
+    data-error-empty={t.errorEmpty}
+    data-error-unterminated-quote={t.errorUnterminatedQuote}
+  >
+    <div>
+      <label for="csv-viewer-file" class="ui-label">
+        {t.fileLabel}
+      </label>
+      <div id="csv-viewer-dropzone" class="ui-dropzone">
+        <input id="csv-viewer-file" type="file" class="ui-file" />
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {t.fileHint}
+        </p>
+      </div>
+      <p
+        id="csv-viewer-file-error"
+        role="alert"
+        hidden
+        class="mt-1 text-xs text-red-600 dark:text-red-400"
+      ></p>
+    </div>
+
+    <div class="mt-4">
+      <label for="csv-viewer-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="csv-viewer-input"
+        class="ui-input h-40 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+      ></textarea>
+    </div>
+
+    <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+      <span class="flex items-center gap-2">
+        <label
+          for="csv-viewer-delimiter"
+          class="text-sm text-gray-700 dark:text-gray-300"
+        >
+          {t.delimiterLabel}
+        </label>
+        <select
+          id="csv-viewer-delimiter"
+          class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+        >
+          {t.delimiterOptions.map(({ value, label }) => (
+            <option value={value}>{label}</option>
+          ))}
+        </select>
+      </span>
+      <label class="ui-check py-1">
+        <input id="csv-viewer-has-header" type="checkbox" checked />
+        <span>{t.hasHeaderLabel}</span>
+      </label>
+    </div>
+
+    <p
+      id="csv-viewer-error"
+      hidden
+      class="ui-error mt-4 max-w-2xl whitespace-pre-line"
+    ></p>
+
+    <div id="csv-viewer-result" hidden>
+      <div class="mt-4 flex flex-wrap items-end gap-3">
+        <div class="min-w-0 flex-1 basis-56">
+          <label for="csv-viewer-filter" class="ui-label">
+            {t.filterLabel}
+          </label>
+          <input
+            id="csv-viewer-filter"
+            type="text"
+            class="ui-input w-full px-3 py-2 dark:bg-gray-900"
+            placeholder={t.filterPlaceholder}
+            spellcheck="false"
+            autocomplete="off"
+          />
+        </div>
+        <div class="min-w-0">
+          <label for="csv-viewer-filter-column" class="ui-label">
+            {t.filterColumnLabel}
+          </label>
+          <select
+            id="csv-viewer-filter-column"
+            class="ui-input max-w-full bg-white px-3 py-2 dark:bg-gray-900"
+          ></select>
+        </div>
+      </div>
+
+      <details class="mt-3">
+        <summary class="cursor-pointer text-sm font-medium">
+          {t.columnsHeading}
+        </summary>
+        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+          {t.columnsHint}
+        </p>
+        <ul id="csv-viewer-columns" class="mt-2 flex flex-wrap gap-2"></ul>
+        <div id="csv-viewer-hidden" hidden class="mt-3">
+          <p class="text-sm text-gray-700 dark:text-gray-300">
+            {t.hiddenColumnsLabel}
+          </p>
+          <ul
+            id="csv-viewer-hidden-list"
+            class="mt-1 flex flex-wrap items-center gap-2"
+          ></ul>
+          <button
+            id="csv-viewer-restore-all"
+            type="button"
+            class="mt-2 rounded border border-gray-300 px-2 py-1 text-sm hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800"
+          >
+            {t.restoreAllButton}
+          </button>
+        </div>
+      </details>
+
+      <div class="mt-3 flex flex-wrap items-center gap-3">
+        <button id="csv-viewer-copy-button" type="button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <button id="csv-viewer-download-button" type="button" class="ui-btn">
+          {t.downloadButton}
+        </button>
+        <span
+          id="csv-viewer-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+        <span
+          id="csv-viewer-summary"
+          class="text-sm text-gray-600 dark:text-gray-400"
+        ></span>
+      </div>
+
+      <div
+        id="csv-viewer-scroll"
+        role="region"
+        tabindex="0"
+        aria-label={t.tableAriaLabel}
+        class="mt-3 h-96 overflow-auto rounded border border-gray-300 dark:border-gray-700"
+      >
+        <table
+          id="csv-viewer-table"
+          class="text-sm"
+          style="table-layout: fixed; border-collapse: separate; border-spacing: 0;"
+        >
+          <colgroup id="csv-viewer-colgroup"></colgroup>
+          <thead id="csv-viewer-thead"></thead>
+          <tbody id="csv-viewer-tbody"></tbody>
+        </table>
+      </div>
+      <p
+        id="csv-viewer-empty"
+        hidden
+        class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+      ></p>
+      <span id="csv-viewer-msg-no-matches" hidden>
+        {t.noMatches}
+      </span>
+      <span id="csv-viewer-msg-no-columns" hidden>
+        {t.noColumns}
+      </span>
+      <span id="csv-viewer-row-header" hidden>
+        {t.rowNumberHeader}
+      </span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    buildCsv,
+    detectDelimiter,
+    filterRowIndices,
+    parseCsvTable,
+    sortRowIndices,
+    type CsvTable,
+    type SortSpec,
+  } from '../../lib/tools/csv-viewer';
+
+  const ROW_HEIGHT = 32;
+  const COLUMN_WIDTH = 160;
+  const ROW_NUMBER_WIDTH = 64;
+  const OVERSCAN = 8;
+
+  const root = document.getElementById('csv-viewer-root')!;
+  const d = root.dataset;
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`csv-viewer-${id}`) as T;
+
+  const fileInput = $<HTMLInputElement>('file');
+  const fileError = $('file-error');
+  const input = $<HTMLTextAreaElement>('input');
+  const delimiterSelect = $<HTMLSelectElement>('delimiter');
+  const hasHeader = $<HTMLInputElement>('has-header');
+  const errorEl = $('error');
+  const result = $('result');
+  const filterInput = $<HTMLInputElement>('filter');
+  const filterColumn = $<HTMLSelectElement>('filter-column');
+  const columnsList = $('columns');
+  const hiddenWrap = $('hidden');
+  const hiddenList = $('hidden-list');
+  const restoreAll = $('restore-all');
+  const copyButton = $('copy-button');
+  const downloadButton = $('download-button');
+  const statusEl = $('status');
+  const summaryEl = $('summary');
+  const scroll = $('scroll');
+  const tableEl = $('table');
+  const colgroup = $('colgroup');
+  const thead = $('thead');
+  const tbody = $('tbody');
+  const emptyEl = $('empty');
+
+  let table: CsvTable | null = null;
+  let delimiter = ',';
+  let layoutKey = '';
+  /** 表示する列（元の列番号）を並び順どおりに持つ */
+  let order: number[] = [];
+  let sort: SortSpec | null = null;
+  let viewIndices: number[] = [];
+  let frame = 0;
+
+  const fill = (template: string | undefined, name: string) =>
+    (template ?? '').replace('{name}', () => name);
+
+  function columnLabel(index: number): string {
+    const header = table?.headers?.[index];
+    if (header) return header;
+    return (d.columnNameTemplate ?? '').replace('{n}', String(index + 1));
+  }
+
+  function el<K extends keyof HTMLElementTagNameMap>(
+    tag: K,
+    className = '',
+    text = '',
+  ): HTMLElementTagNameMap[K] {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text) node.textContent = text;
+    return node;
+  }
+
+  const smallButtonClass =
+    'rounded border border-gray-300 px-2 py-1 text-sm hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800';
+
+  function iconButton(text: string, label: string, onClick: () => void) {
+    const button = el('button', smallButtonClass, text);
+    button.type = 'button';
+    button.setAttribute('aria-label', label);
+    button.addEventListener('click', onClick);
+    return button;
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = (d.errorTemplate ?? '').replace(
+      '{message}',
+      () => message,
+    );
+    errorEl.hidden = false;
+  }
+
+  function resolveDelimiter(text: string): string {
+    switch (delimiterSelect.value) {
+      case 'auto':
+        return detectDelimiter(text);
+      case 'tab':
+        return '\t';
+      default:
+        return delimiterSelect.value;
+    }
+  }
+
+  function parse() {
+    statusEl.textContent = '';
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    if (input.value.trim() === '') {
+      table = null;
+      layoutKey = '';
+      result.hidden = true;
+      return;
+    }
+    delimiter = resolveDelimiter(input.value);
+    const parsed = parseCsvTable(input.value, delimiter, hasHeader.checked);
+    if (!parsed.success) {
+      table = null;
+      layoutKey = '';
+      result.hidden = true;
+      showError(
+        parsed.reason === 'empty'
+          ? (d.errorEmpty ?? '')
+          : (d.errorUnterminatedQuote ?? ''),
+      );
+      return;
+    }
+    table = parsed.table;
+    result.hidden = false;
+    const key = JSON.stringify([table.columnCount, table.headers]);
+    if (key !== layoutKey) {
+      layoutKey = key;
+      order = Array.from({ length: table.columnCount }, (_, i) => i);
+      sort = null;
+      filterColumn.value = '';
+    }
+    refresh({ rebuildColumns: true });
+  }
+
+  function renderColumnControls() {
+    if (!table) return;
+    const t = table;
+    columnsList.textContent = '';
+    order.forEach((col, position) => {
+      const name = columnLabel(col);
+      const item = el(
+        'li',
+        'flex items-center gap-1 rounded border border-gray-300 px-1 py-1 dark:border-gray-600',
+      );
+      const label = el('span', 'max-w-40 truncate px-1 text-sm', name);
+      label.title = name;
+      item.append(label);
+      const left = iconButton('←', fill(d.moveLeftTemplate, name), () => {
+        [order[position - 1], order[position]] = [col, order[position - 1]];
+        refresh({ rebuildColumns: true });
+      });
+      left.disabled = position === 0;
+      const right = iconButton('→', fill(d.moveRightTemplate, name), () => {
+        [order[position + 1], order[position]] = [col, order[position + 1]];
+        refresh({ rebuildColumns: true });
+      });
+      right.disabled = position === order.length - 1;
+      const remove = iconButton('×', fill(d.removeTemplate, name), () => {
+        order.splice(position, 1);
+        if (sort?.column === col) sort = null;
+        refresh({ rebuildColumns: true });
+      });
+      item.append(left, right, remove);
+      columnsList.append(item);
+    });
+
+    hiddenList.textContent = '';
+    const removed = Array.from({ length: t.columnCount }, (_, i) => i).filter(
+      (i) => !order.includes(i),
+    );
+    hiddenWrap.hidden = removed.length === 0;
+    removed.forEach((col) => {
+      const name = columnLabel(col);
+      const item = el('li');
+      item.append(
+        iconButton(`+ ${name}`, fill(d.restoreTemplate, name), () => {
+          order.push(col);
+          refresh({ rebuildColumns: true });
+        }),
+      );
+      hiddenList.append(item);
+    });
+
+    const previous = filterColumn.value;
+    filterColumn.textContent = '';
+    const all = el('option', '', d.allColumns ?? '');
+    all.value = '';
+    filterColumn.append(all);
+    order.forEach((col) => {
+      const option = el('option', '', columnLabel(col));
+      option.value = String(col);
+      filterColumn.append(option);
+    });
+    filterColumn.value = order.includes(Number(previous)) ? previous : '';
+  }
+
+  function renderHeader() {
+    colgroup.textContent = '';
+    thead.textContent = '';
+    const rowNumberCol = el('col');
+    rowNumberCol.style.width = `${ROW_NUMBER_WIDTH}px`;
+    colgroup.append(rowNumberCol);
+    const tr = el('tr');
+    const baseClass =
+      'sticky top-0 z-10 border-b border-gray-300 bg-gray-100 p-0 text-left font-medium dark:border-gray-700 dark:bg-gray-800';
+    const rowNumberTh = el(
+      'th',
+      `${baseClass} px-2 text-gray-500`,
+      document.getElementById('csv-viewer-row-header')?.textContent ?? '#',
+    );
+    rowNumberTh.style.height = `${ROW_HEIGHT}px`;
+    tr.append(rowNumberTh);
+    order.forEach((col) => {
+      const colEl = el('col');
+      colEl.style.width = `${COLUMN_WIDTH}px`;
+      colgroup.append(colEl);
+      const name = columnLabel(col);
+      const th = el('th', baseClass);
+      th.style.height = `${ROW_HEIGHT}px`;
+      const active = sort?.column === col ? sort : null;
+      th.setAttribute(
+        'aria-sort',
+        active
+          ? active.direction === 'asc'
+            ? 'ascending'
+            : 'descending'
+          : 'none',
+      );
+      const button = el('button', 'flex h-full w-full items-center gap-1 px-2');
+      button.type = 'button';
+      button.setAttribute('aria-label', fill(d.sortTemplate, name));
+      const label = el('span', 'min-w-0 flex-1 truncate', name);
+      label.title = name;
+      const mark = el(
+        'span',
+        'text-xs text-gray-500',
+        active ? (active.direction === 'asc' ? '▲' : '▼') : '',
+      );
+      button.append(label, mark);
+      button.addEventListener('click', () => {
+        if (!sort || sort.column !== col) {
+          sort = { column: col, direction: 'asc' };
+        } else if (sort.direction === 'asc') {
+          sort = { column: col, direction: 'desc' };
+        } else {
+          sort = null;
+        }
+        refresh();
+      });
+      th.append(button);
+      tr.append(th);
+    });
+    thead.append(tr);
+    tableEl.style.width = `${ROW_NUMBER_WIDTH + order.length * COLUMN_WIDTH}px`;
+  }
+
+  function spacer(height: number): HTMLTableRowElement {
+    const tr = el('tr');
+    const td = el('td');
+    td.colSpan = order.length + 1;
+    td.style.height = `${height}px`;
+    td.style.padding = '0';
+    td.style.border = '0';
+    tr.append(td);
+    return tr;
+  }
+
+  function renderRows() {
+    frame = 0;
+    if (!table) return;
+    const total = viewIndices.length;
+    const first = Math.max(
+      0,
+      Math.floor(scroll.scrollTop / ROW_HEIGHT) - OVERSCAN,
+    );
+    const last = Math.min(
+      total,
+      first + Math.ceil(scroll.clientHeight / ROW_HEIGHT) + OVERSCAN * 2,
+    );
+    const rows = table.rows;
+    const fragment = document.createDocumentFragment();
+    if (first > 0) fragment.append(spacer(first * ROW_HEIGHT));
+    const cellClass =
+      'truncate border-b border-gray-200 px-2 dark:border-gray-800';
+    for (let position = first; position < last; position++) {
+      const rowIndex = viewIndices[position];
+      const row = rows[rowIndex];
+      const tr = el('tr');
+      const number = el(
+        'td',
+        `${cellClass} text-gray-500`,
+        String(rowIndex + 1),
+      );
+      number.style.height = `${ROW_HEIGHT}px`;
+      tr.append(number);
+      for (const col of order) {
+        const value = row[col] ?? '';
+        const td = el('td', cellClass, value);
+        td.style.height = `${ROW_HEIGHT}px`;
+        if (value.length > 12) td.title = value;
+        tr.append(td);
+      }
+      fragment.append(tr);
+    }
+    if (last < total) fragment.append(spacer((total - last) * ROW_HEIGHT));
+    tbody.textContent = '';
+    tbody.append(fragment);
+  }
+
+  function scheduleRender() {
+    if (frame === 0) frame = requestAnimationFrame(renderRows);
+  }
+
+  function refresh(options: { rebuildColumns?: boolean } = {}) {
+    if (!table) return;
+    statusEl.textContent = '';
+    if (options.rebuildColumns) renderColumnControls();
+    const column =
+      filterColumn.value === '' ? null : Number(filterColumn.value);
+    let indices = filterRowIndices(
+      table.rows,
+      filterInput.value,
+      column,
+      order,
+    );
+    if (sort) indices = sortRowIndices(table.rows, indices, sort);
+    viewIndices = indices;
+    renderHeader();
+    scroll.scrollTop = 0;
+    renderRows();
+    summaryEl.textContent = (d.summaryTemplate ?? '')
+      .replace('{shown}', String(indices.length))
+      .replace('{total}', String(table.rows.length))
+      .replace('{columns}', String(order.length));
+    const message =
+      order.length === 0
+        ? document.getElementById('csv-viewer-msg-no-columns')?.textContent
+        : indices.length === 0
+          ? document.getElementById('csv-viewer-msg-no-matches')?.textContent
+          : '';
+    emptyEl.textContent = message ?? '';
+    emptyEl.hidden = !message;
+    const exportable =
+      order.length > 0 && (indices.length > 0 || table.headers !== null);
+    (copyButton as HTMLButtonElement).disabled = !exportable;
+    (downloadButton as HTMLButtonElement).disabled = !exportable;
+  }
+
+  function buildOutput(): string {
+    if (!table) return '';
+    return buildCsv(table.rows, viewIndices, order, {
+      delimiter,
+      headers: table.headers,
+    });
+  }
+
+  onTextInput(input, parse);
+  delimiterSelect.addEventListener('change', parse);
+  hasHeader.addEventListener('change', parse);
+  onTextInput(filterInput, () => refresh());
+  filterColumn.addEventListener('change', () => refresh());
+  restoreAll.addEventListener('click', () => {
+    if (!table) return;
+    order = Array.from({ length: table.columnCount }, (_, i) => i);
+    refresh({ rebuildColumns: true });
+  });
+  scroll.addEventListener('scroll', scheduleRender, { passive: true });
+
+  copyButton.addEventListener('click', async () => {
+    const csv = buildOutput();
+    if (!csv) return;
+    statusEl.textContent = (await copyText(csv))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+  });
+
+  downloadButton.addEventListener('click', () => {
+    const csv = buildOutput();
+    if (!csv) return;
+    // ExcelでUTF-8として開けるようBOMを付ける
+    downloadBlob(
+      new Blob([String.fromCharCode(0xfeff), csv], {
+        type: 'text/csv;charset=utf-8',
+      }),
+      'data.csv',
+    );
+  });
+
+  enableFileDrop($('dropzone'), fileInput);
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (!file) return;
+    fileError.hidden = true;
+    try {
+      input.value = await file.text();
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+    } catch {
+      fileError.textContent = d.fileError ?? '';
+      fileError.hidden = false;
+    }
+  });
+
+  parse();
+</script>

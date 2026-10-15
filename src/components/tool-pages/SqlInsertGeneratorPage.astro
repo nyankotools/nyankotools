@@ -1,0 +1,404 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { sqlInsertGeneratorContent } from '../../i18n/tools/sql-insert-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = sqlInsertGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="sql-insert-controls"
+    class="flex flex-wrap items-center gap-3"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-placeholder-csv={t.inputPlaceholderCsv}
+    data-placeholder-json={t.inputPlaceholderJson}
+    data-summary-template={t.summaryTemplate}
+    data-column-type-aria-template={t.columnTypeAriaTemplate}
+    data-error-template={t.errorTemplate}
+    data-error-empty={t.errorEmpty}
+    data-error-unterminated-quote={t.errorUnterminatedQuote}
+    data-error-column-mismatch-template={t.errorColumnMismatchTemplate}
+    data-error-duplicate-column-template={t.errorDuplicateColumnTemplate}
+    data-error-not-array={t.errorNotArray}
+    data-error-not-object-template={t.errorNotObjectTemplate}
+  >
+    <div
+      id="sql-insert-mode"
+      class="ui-seg"
+      role="group"
+      aria-label={t.modeAriaLabel}
+    >
+      <button
+        type="button"
+        data-mode="csv"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.modeCsv}
+      </button>
+      <button
+        type="button"
+        data-mode="json"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeJson}
+      </button>
+    </div>
+    <label
+      for="sql-insert-dialect"
+      class="text-sm text-gray-700 dark:text-gray-300"
+    >
+      {t.dialectLabel}
+    </label>
+    <select
+      id="sql-insert-dialect"
+      class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+    >
+      {t.dialectOptions.map(({ value, label }) => (
+        <option value={value}>{label}</option>
+      ))}
+    </select>
+    <span id="sql-insert-delimiter-group" class="flex items-center gap-3">
+      <label
+        for="sql-insert-delimiter"
+        class="text-sm text-gray-700 dark:text-gray-300"
+      >
+        {t.delimiterLabel}
+      </label>
+      <select
+        id="sql-insert-delimiter"
+        class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+      >
+        {t.delimiterOptions.map(({ value, label }) => (
+          <option value={value}>{label}</option>
+        ))}
+      </select>
+    </span>
+  </div>
+
+  <div class="mt-4 max-w-sm">
+    <label for="sql-insert-table-name" class="ui-label">
+      {t.tableNameLabel}
+    </label>
+    <input
+      id="sql-insert-table-name"
+      type="text"
+      class="ui-input w-full px-3 py-2 font-mono dark:bg-gray-900"
+      placeholder={t.tableNamePlaceholder}
+      spellcheck="false"
+      autocomplete="off"
+    />
+  </div>
+
+  <div class="mt-3 grid gap-x-6 sm:grid-cols-2">
+    <label class="ui-check py-1" id="sql-insert-has-header-row">
+      <input id="sql-insert-has-header" type="checkbox" checked />
+      <span>{t.hasHeaderLabel}</span>
+    </label>
+    <label class="ui-check py-1" id="sql-insert-empty-null-row">
+      <input id="sql-insert-empty-null" type="checkbox" checked />
+      <span>{t.emptyAsNullLabel}</span>
+    </label>
+    <label class="ui-check py-1">
+      <input id="sql-insert-multi-row" type="checkbox" checked />
+      <span>{t.multiRowLabel}</span>
+    </label>
+    <label class="ui-check py-1">
+      <input id="sql-insert-create-table" type="checkbox" />
+      <span>{t.createTableLabel}</span>
+    </label>
+  </div>
+
+  <section id="sql-insert-types" hidden class="mt-4">
+    <h2 class="ui-label">{t.columnTypesHeading}</h2>
+    <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+      {t.columnTypesHint}
+    </p>
+    <div
+      id="sql-insert-types-list"
+      class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3"
+    ></div>
+    <datalist id="sql-insert-type-options"></datalist>
+  </section>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="sql-insert-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="sql-insert-input"
+        class="ui-input h-80 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholderCsv}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label for="sql-insert-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="sql-insert-output"
+        readonly
+        class="ui-input h-80 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+
+  <div class="mt-3 flex flex-wrap items-center gap-3">
+    <button id="sql-insert-copy-button" type="button" class="ui-btn">
+      {t.copyButton}
+    </button>
+    <span
+      id="sql-insert-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+    <span
+      id="sql-insert-summary"
+      class="text-sm text-gray-600 dark:text-gray-400"
+    ></span>
+  </div>
+
+  <p
+    id="sql-insert-error"
+    hidden
+    class="ui-error mt-4 max-w-2xl whitespace-pre-line"
+  ></p>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    generateSqlInsert,
+    type SqlDialect,
+    type SqlInsertOutcome,
+    type SqlSource,
+    typeSuggestions,
+  } from '../../lib/tools/sql-insert-generator';
+
+  const controls = document.getElementById('sql-insert-controls')!;
+  const d = controls.dataset;
+
+  const input = document.getElementById(
+    'sql-insert-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'sql-insert-output',
+  ) as HTMLTextAreaElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#sql-insert-mode [data-mode]',
+  );
+  const dialectSelect = document.getElementById(
+    'sql-insert-dialect',
+  ) as HTMLSelectElement;
+  const delimiterSelect = document.getElementById(
+    'sql-insert-delimiter',
+  ) as HTMLSelectElement;
+  const delimiterGroup = document.getElementById('sql-insert-delimiter-group')!;
+  const tableName = document.getElementById(
+    'sql-insert-table-name',
+  ) as HTMLInputElement;
+  const hasHeader = document.getElementById(
+    'sql-insert-has-header',
+  ) as HTMLInputElement;
+  const emptyNull = document.getElementById(
+    'sql-insert-empty-null',
+  ) as HTMLInputElement;
+  const multiRow = document.getElementById(
+    'sql-insert-multi-row',
+  ) as HTMLInputElement;
+  const createTable = document.getElementById(
+    'sql-insert-create-table',
+  ) as HTMLInputElement;
+  const copyButton = document.getElementById('sql-insert-copy-button')!;
+  const statusEl = document.getElementById('sql-insert-status')!;
+  const summaryEl = document.getElementById('sql-insert-summary')!;
+  const errorEl = document.getElementById('sql-insert-error')!;
+  const csvOnlyRows = [
+    document.getElementById('sql-insert-has-header-row')!,
+    document.getElementById('sql-insert-empty-null-row')!,
+  ];
+
+  let mode: SqlSource = 'csv';
+
+  const typesSection = document.getElementById('sql-insert-types')!;
+  const typesList = document.getElementById('sql-insert-types-list')!;
+  const typeOptions = document.getElementById('sql-insert-type-options')!;
+  const columnTypes = new Map<string, string>();
+  let typesKey = '';
+
+  function renderTypeInputs(columns: { name: string; inferredType: string }[]) {
+    const key = JSON.stringify(columns.map((c) => [c.name, c.inferredType]));
+    if (key === typesKey) return;
+    typesKey = key;
+    typesList.textContent = '';
+    columns.forEach((column) => {
+      const wrap = document.createElement('label');
+      wrap.className = 'flex items-center gap-2 text-sm';
+      const name = document.createElement('span');
+      name.className = 'min-w-0 max-w-[40%] truncate font-mono';
+      name.textContent = column.name;
+      const field = document.createElement('input');
+      field.type = 'text';
+      field.setAttribute('list', 'sql-insert-type-options');
+      field.className =
+        'ui-input min-w-0 flex-1 px-2 py-1 font-mono dark:bg-gray-900';
+      field.placeholder = column.inferredType;
+      field.value = columnTypes.get(column.name) ?? '';
+      field.autocomplete = 'off';
+      field.spellcheck = false;
+      field.setAttribute(
+        'aria-label',
+        (d.columnTypeAriaTemplate ?? '').replace('{name}', () => column.name),
+      );
+      field.addEventListener('input', () => {
+        columnTypes.set(column.name, field.value);
+        generate();
+      });
+      wrap.append(name, field);
+      typesList.append(wrap);
+    });
+  }
+
+  function refreshTypeOptions() {
+    typeOptions.textContent = '';
+    typeSuggestions(dialectSelect.value as SqlDialect).forEach((type) => {
+      const option = document.createElement('option');
+      option.value = type;
+      typeOptions.append(option);
+    });
+  }
+
+  function describeError(
+    result: Extract<SqlInsertOutcome, { success: false }>,
+  ) {
+    switch (result.reason) {
+      case 'empty':
+        return d.errorEmpty ?? '';
+      case 'unterminated-quote':
+        return d.errorUnterminatedQuote ?? '';
+      case 'column-mismatch':
+        return (d.errorColumnMismatchTemplate ?? '')
+          .replace('{line}', String(result.line))
+          .replace('{expectedColumns}', String(result.expectedColumns))
+          .replace('{actualColumns}', String(result.actualColumns));
+      case 'duplicate-column':
+        return (d.errorDuplicateColumnTemplate ?? '').replace(
+          '{name}',
+          () => result.name,
+        );
+      case 'not-array':
+        return d.errorNotArray ?? '';
+      case 'not-object':
+        return (d.errorNotObjectTemplate ?? '').replace(
+          '{index}',
+          String(result.index + 1),
+        );
+      case 'invalid-json':
+        return result.message;
+    }
+  }
+
+  function clearResult() {
+    output.value = '';
+    summaryEl.textContent = '';
+  }
+
+  function generate() {
+    statusEl.textContent = '';
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    if (input.value.trim() === '') {
+      clearResult();
+      typesSection.hidden = true;
+      return;
+    }
+    const result = generateSqlInsert(input.value, {
+      source: mode,
+      dialect: dialectSelect.value as SqlDialect,
+      tableName: tableName.value,
+      delimiter: delimiterSelect.value === 'tab' ? '\t' : ',',
+      hasHeader: hasHeader.checked,
+      emptyAsNull: emptyNull.checked,
+      multiRow: multiRow.checked,
+      includeCreateTable: createTable.checked,
+      columnTypes,
+    });
+    if (result.success) {
+      output.value = result.sql;
+      typesSection.hidden = !createTable.checked;
+      if (createTable.checked) renderTypeInputs(result.columns);
+      summaryEl.textContent = (d.summaryTemplate ?? '')
+        .replace('{rows}', String(result.rowCount))
+        .replace('{columns}', () =>
+          result.columns.map((c) => `${c.name} ${c.type}`).join(', '),
+        );
+    } else {
+      clearResult();
+      typesSection.hidden = true;
+      errorEl.textContent = (d.errorTemplate ?? '').replace('{message}', () =>
+        describeError(result),
+      );
+      errorEl.hidden = false;
+    }
+  }
+
+  function applyMode() {
+    const isCsv = mode === 'csv';
+    delimiterGroup.hidden = !isCsv;
+    csvOnlyRows.forEach((row) => {
+      row.hidden = !isCsv;
+    });
+    input.placeholder = (isCsv ? d.placeholderCsv : d.placeholderJson) ?? '';
+  }
+
+  dialectSelect.addEventListener('change', () => {
+    // 型名は方言ごとに異なるので、手入力した型は破棄する
+    columnTypes.clear();
+    typesKey = '';
+    refreshTypeOptions();
+  });
+
+  onTextInput(input, generate);
+  onTextInput(tableName, generate);
+  [
+    dialectSelect,
+    delimiterSelect,
+    hasHeader,
+    emptyNull,
+    multiRow,
+    createTable,
+  ].forEach((el) => el.addEventListener('change', generate));
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as SqlSource;
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      applyMode();
+      generate();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+  });
+
+  refreshTypeOptions();
+  applyMode();
+  generate();
+</script>

@@ -1,0 +1,325 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { svgWaveGeneratorContent } from '../../i18n/tools/svg-wave-generator';
+import { DEFAULT_COLOR, LIMITS } from '../../lib/tools/svg-wave-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = svgWaveGeneratorContent[locale];
+
+// 範囲指定スライダー。data-kinds は表示する形
+const sliders = [
+  {
+    id: 'height',
+    label: t.heightLabel,
+    kinds: 'wave',
+    limit: LIMITS.waveHeight,
+    value: 320,
+    step: 10,
+  },
+  {
+    id: 'amplitude',
+    label: t.amplitudeLabel,
+    kinds: 'wave',
+    limit: LIMITS.amplitude,
+    value: 20,
+    step: 1,
+  },
+  {
+    id: 'waves',
+    label: t.wavesLabel,
+    kinds: 'wave',
+    limit: LIMITS.waves,
+    value: 3,
+    step: 1,
+  },
+  {
+    id: 'points',
+    label: t.pointsLabel,
+    kinds: 'blob',
+    limit: LIMITS.points,
+    value: 7,
+    step: 1,
+  },
+  {
+    id: 'randomness',
+    label: t.randomnessLabel,
+    kinds: 'wave blob',
+    limit: LIMITS.randomness,
+    value: 50,
+    step: 5,
+  },
+];
+---
+
+<ToolShell t={t}>
+  <div id="sw-root" data-copied={t.copied} data-copy-failed={t.copyFailed}>
+    <div class="mb-4 flex flex-wrap items-end gap-4">
+      <label class="text-sm text-gray-700 dark:text-gray-300">
+        <span class="mb-1 block">{t.kindLabel}</span>
+        <select id="sw-kind" class="ui-input h-11 w-64 px-3 dark:bg-gray-900">
+          <option value="wave">{t.kindWave}</option>
+          <option value="blob">{t.kindBlob}</option>
+        </select>
+      </label>
+      <label data-kinds="wave" class="text-sm text-gray-700 dark:text-gray-300">
+        <span class="mb-1 block">{t.sideLabel}</span>
+        <select id="sw-side" class="ui-input h-11 w-32 px-3 dark:bg-gray-900">
+          <option value="bottom">{t.sideBottom}</option>
+          <option value="top">{t.sideTop}</option>
+        </select>
+      </label>
+      <label class="text-sm text-gray-700 dark:text-gray-300">
+        <span class="mb-1 block">{t.colorLabel}</span>
+        <input
+          id="sw-color"
+          type="color"
+          value={DEFAULT_COLOR}
+          class="h-11 w-16 cursor-pointer rounded border border-gray-300 bg-white p-1 dark:border-gray-600 dark:bg-gray-900"
+        />
+      </label>
+    </div>
+
+    <div class="mb-4 grid gap-4 sm:grid-cols-2">
+      {sliders.map((s) => (
+        <label
+          data-kinds={s.kinds}
+          class="block text-sm text-gray-700 dark:text-gray-300"
+        >
+          <span class="mb-1 flex justify-between">
+            <span>{s.label}</span>
+            <output id={`sw-${s.id}-value`} class="font-mono">
+              {s.value}
+            </output>
+          </span>
+          <input
+            id={`sw-${s.id}`}
+            type="range"
+            min={s.limit.min}
+            max={s.limit.max}
+            step={s.step}
+            value={s.value}
+            class="w-full"
+          />
+        </label>
+      ))}
+    </div>
+
+    <div class="mb-6 flex flex-wrap items-end gap-3">
+      <label class="text-sm text-gray-700 dark:text-gray-300">
+        <span class="mb-1 block">{t.seedLabel}</span>
+        <input
+          id="sw-seed"
+          type="number"
+          min="0"
+          step="1"
+          value="1234"
+          class="ui-input h-11 w-36 px-3 font-mono dark:bg-gray-900"
+        />
+      </label>
+      <button id="sw-random-button" type="button" class="ui-btn ui-btn-primary">
+        {t.randomButton}
+      </button>
+    </div>
+
+    <h2 class="mb-2 text-lg font-bold">{t.previewHeading}</h2>
+    <div class="mb-6 overflow-hidden rounded-lg border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-950">
+      <div
+        id="sw-preview"
+        class="mx-auto w-full [&>svg]:block [&>svg]:h-auto [&>svg]:w-full"
+      ></div>
+    </div>
+
+    <div class="mb-6">
+      <label for="sw-svg-output" class="ui-label">
+        {t.svgHeading}
+      </label>
+      <textarea
+        id="sw-svg-output"
+        readonly
+        rows="5"
+        class="ui-input w-full min-w-0 resize-y bg-gray-50 p-3 font-mono text-sm dark:bg-gray-900"
+      ></textarea>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <button id="sw-copy-button" type="button" class="ui-btn">
+          {t.copySvgButton}
+        </button>
+        <button id="sw-download-button" type="button" class="ui-btn">
+          {t.downloadButton}
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <label for="sw-css-output" class="ui-label">
+        {t.cssHeading}
+      </label>
+      <textarea
+        id="sw-css-output"
+        readonly
+        rows="4"
+        class="ui-input w-full min-w-0 resize-y bg-gray-50 p-3 font-mono text-sm dark:bg-gray-900"
+      ></textarea>
+      <div class="mt-2">
+        <button id="sw-css-copy-button" type="button" class="ui-btn">
+          {t.copyCssButton}
+        </button>
+      </div>
+    </div>
+
+    <span
+      id="sw-status"
+      class="mt-2 block text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    BLOB_SIZE,
+    LIMITS,
+    clampInt,
+    WAVE_WIDTH,
+    buildBlobPath,
+    buildCssBackground,
+    buildSvg,
+    buildWavePath,
+    randomSeed,
+    sanitizeColor,
+    type WaveSide,
+  } from '../../lib/tools/svg-wave-generator';
+
+  const root = document.getElementById('sw-root')!;
+  const kindSelect = document.getElementById('sw-kind') as HTMLSelectElement;
+  const sideSelect = document.getElementById('sw-side') as HTMLSelectElement;
+  const colorInput = document.getElementById('sw-color') as HTMLInputElement;
+  const seedInput = document.getElementById('sw-seed') as HTMLInputElement;
+  const preview = document.getElementById('sw-preview')!;
+  const svgOutput = document.getElementById(
+    'sw-svg-output',
+  ) as HTMLTextAreaElement;
+  const cssOutput = document.getElementById(
+    'sw-css-output',
+  ) as HTMLTextAreaElement;
+  const statusEl = document.getElementById('sw-status')!;
+  const kindSections = Array.from(
+    document.querySelectorAll<HTMLElement>('[data-kinds]'),
+  );
+
+  const sliderIds = ['height', 'amplitude', 'waves', 'points', 'randomness'];
+  const sliders = Object.fromEntries(
+    sliderIds.map((id) => [
+      id,
+      {
+        input: document.getElementById(`sw-${id}`) as HTMLInputElement,
+        output: document.getElementById(`sw-${id}-value`)!,
+      },
+    ]),
+  );
+
+  const num = (el: HTMLInputElement) => Number(el.value);
+
+  function render() {
+    const isWave = kindSelect.value === 'wave';
+    for (const el of kindSections) {
+      el.hidden = !el.dataset.kinds!.split(' ').includes(kindSelect.value);
+    }
+    for (const s of Object.values(sliders)) {
+      s.output.textContent = s.input.value;
+    }
+    const seed = Number(seedInput.value);
+    const randomness = num(sliders.randomness.input);
+    const color = sanitizeColor(colorInput.value);
+
+    const waveHeight = clampInt(
+      num(sliders.height.input),
+      LIMITS.waveHeight.min,
+      LIMITS.waveHeight.max,
+    );
+    const svg = isWave
+      ? buildSvg({
+          path: buildWavePath({
+            seed,
+            height: waveHeight,
+            amplitude: num(sliders.amplitude.input),
+            waves: num(sliders.waves.input),
+            randomness,
+            side: sideSelect.value as WaveSide,
+          }),
+          width: WAVE_WIDTH,
+          height: waveHeight,
+          color,
+          stretch: true,
+        })
+      : buildSvg({
+          path: buildBlobPath({
+            seed,
+            points: num(sliders.points.input),
+            randomness,
+          }),
+          width: BLOB_SIZE,
+          height: BLOB_SIZE,
+          color,
+          stretch: false,
+        });
+
+    // パスと色は数値・検証済みの値だけで組み立てているため、そのまま埋め込める
+    preview.innerHTML = svg;
+    preview.classList.toggle('max-w-xs', !isWave);
+    svgOutput.value = svg;
+    cssOutput.value = buildCssBackground(svg, isWave);
+  }
+
+  let statusTimer: ReturnType<typeof setTimeout> | undefined;
+  function showStatus(message: string) {
+    statusEl.textContent = message;
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(() => (statusEl.textContent = ''), 2000);
+  }
+
+  async function copy(text: string) {
+    showStatus(
+      (await copyText(text)) ? root.dataset.copied! : root.dataset.copyFailed!,
+    );
+  }
+
+  for (const el of [
+    kindSelect,
+    sideSelect,
+    colorInput,
+    seedInput,
+    ...Object.values(sliders).map((s) => s.input),
+  ]) {
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  }
+
+  document.getElementById('sw-random-button')!.addEventListener('click', () => {
+    seedInput.value = String(randomSeed());
+    render();
+  });
+  document
+    .getElementById('sw-copy-button')!
+    .addEventListener('click', () => copy(svgOutput.value));
+  document
+    .getElementById('sw-css-copy-button')!
+    .addEventListener('click', () => copy(cssOutput.value));
+  document
+    .getElementById('sw-download-button')!
+    .addEventListener('click', () => {
+      const name = kindSelect.value === 'wave' ? 'wave.svg' : 'blob.svg';
+      downloadBlob(
+        new Blob([svgOutput.value], { type: 'image/svg+xml' }),
+        name,
+      );
+    });
+
+  render();
+</script>

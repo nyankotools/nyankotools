@@ -6,7 +6,9 @@ Cloudflare Workers (static asset serving). `wrangler.jsonc` is configured as fol
 
 ```jsonc
 {
+  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "nyankotools",
+  "compatibility_date": "2026-09-15",
   "build": {
     "command": "pnpm build",
   },

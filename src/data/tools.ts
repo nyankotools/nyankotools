@@ -265,6 +265,88 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'sql-insert-generator',
+    category: 'data',
+    addedAt: '2026-10-15',
+    updatedAt: '2026-10-15',
+    related: ['csv-json-converter', 'sql-formatter', 'jsonl-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'CSV/JSON→SQL INSERT文生成',
+        keywords: [
+          'SQL',
+          'INSERT',
+          'INSERT文',
+          'CREATE TABLE',
+          'CSV',
+          'MySQL',
+          'PostgreSQL',
+          'SQLite',
+        ],
+        description:
+          'CSV・JSONからINSERT文（CREATE TABLE付き）を生成。MySQL・PostgreSQL・SQLite・SQL Server・Oracleの引用符と型推定に対応。',
+      },
+      en: {
+        name: 'CSV/JSON to SQL INSERT Generator',
+        keywords: [
+          'SQL',
+          'INSERT',
+          'CREATE TABLE',
+          'CSV to SQL',
+          'JSON to SQL',
+          'MySQL',
+          'PostgreSQL',
+          'SQLite',
+        ],
+        description:
+          'Generates INSERT statements (optionally with CREATE TABLE) from CSV or JSON, with MySQL/PostgreSQL/SQLite quoting and type inference.',
+      },
+    },
+  },
+  {
+    slug: 'csv-viewer',
+    category: 'data',
+    addedAt: '2026-10-15',
+    updatedAt: '2026-10-15',
+    related: [
+      'csv-json-converter',
+      'delimiter-converter',
+      'sql-insert-generator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'CSVビューア（ソート・絞り込み）',
+        keywords: [
+          'CSV',
+          'ビューア',
+          'ソート',
+          '絞り込み',
+          '列抽出',
+          'TSV',
+          'テーブル表示',
+        ],
+        description:
+          'CSVを表で表示し、列ソート・キーワード絞り込み・列の並べ替えや削除をしてCSVで再出力。大きなCSVも仮想スクロールで軽快。',
+      },
+      en: {
+        name: 'CSV Viewer (Sort & Filter)',
+        keywords: [
+          'CSV',
+          'CSV viewer',
+          'sort',
+          'filter',
+          'extract columns',
+          'TSV',
+          'table',
+        ],
+        description:
+          'View CSV as a table, sort by column, filter rows, reorder or remove columns and export again. Virtual scrolling keeps big files fast.',
+      },
+    },
+  },
+  {
     slug: 'toml-converter',
     category: 'data',
     addedAt: '2026-09-17',
@@ -2141,6 +2223,126 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'css-clip-path-generator',
+    category: 'dev',
+    addedAt: '2026-10-15',
+    updatedAt: '2026-10-15',
+    related: [
+      'css-border-radius-generator',
+      'css-box-shadow-generator',
+      'css-gradient-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSS clip-pathジェネレーター',
+        keywords: [
+          'clip-path',
+          'クリップパス',
+          'polygon',
+          '多角形',
+          '切り抜き',
+          '三角形',
+          '吹き出し',
+        ],
+        description:
+          '頂点をドラッグして多角形・円・楕円・insetのclip-pathを作成。三角形・星・吹き出しなどのプリセット付き。',
+      },
+      en: {
+        name: 'CSS clip-path Generator',
+        keywords: [
+          'clip-path',
+          'polygon',
+          'CSS shape',
+          'triangle',
+          'speech bubble',
+          'crop',
+        ],
+        description:
+          'Build clip-path shapes by dragging polygon points, or use circle, ellipse and inset, with presets like triangle, star and speech bubble.',
+      },
+    },
+  },
+  {
+    slug: 'svg-wave-generator',
+    category: 'image',
+    addedAt: '2026-10-15',
+    updatedAt: '2026-10-15',
+    related: [
+      'css-gradient-generator',
+      'svg-optimizer',
+      'css-clip-path-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'SVG波・ブロブジェネレーター',
+        keywords: [
+          'SVG',
+          '波',
+          'ウェーブ',
+          'ブロブ',
+          'blob',
+          'セクション区切り',
+          '有機的',
+          '背景装飾',
+        ],
+        description:
+          'セクション区切りの波形や有機的なブロブ図形をSVGで作成。山の数・振幅・ランダム性・色を調整し、シード値で再現。SVG・CSSをコピーできます。',
+      },
+      en: {
+        name: 'SVG Wave & Blob Generator',
+        keywords: [
+          'SVG',
+          'wave',
+          'blob',
+          'section divider',
+          'organic shape',
+          'background decoration',
+        ],
+        description:
+          'Generate SVG wave section dividers and organic blob shapes. Adjust waves, amplitude, randomness and color, reproduce with a seed, and copy SVG or CSS.',
+      },
+    },
+  },
+  {
+    slug: 'color-blindness-simulator',
+    category: 'image',
+    addedAt: '2026-10-15',
+    updatedAt: '2026-10-15',
+    related: ['color-palette-generator', 'color-sense-test', 'image-filter'],
+    translations: {
+      ja: {
+        name: '色覚シミュレーター',
+        keywords: [
+          '色覚',
+          '色弱',
+          '色盲',
+          'P型',
+          'D型',
+          'T型',
+          'カラーユニバーサルデザイン',
+          'アクセシビリティ',
+        ],
+        description:
+          '画像やカラーコードが、P型・D型・T型・全色盲の人にどう見えるかをシミュレーション。デザインの色の見分けやすさ確認やコントラスト比の確認に。',
+      },
+      en: {
+        name: 'Color Blindness Simulator',
+        keywords: [
+          'color blindness',
+          'colorblind',
+          'protanopia',
+          'deuteranopia',
+          'tritanopia',
+          'achromatopsia',
+          'accessibility',
+          'color universal design',
+        ],
+        description:
+          'Simulate how an image or color code looks with protanopia, deuteranopia, tritanopia or total color blindness. Check design accessibility and contrast.',
+      },
+    },
+  },
+  {
     slug: 'css-box-shadow-generator',
     category: 'dev',
     addedAt: '2026-09-27',
@@ -2494,6 +2696,42 @@ export const tools: Tool[] = [
         ],
         description:
           'Compute HMAC-SHA1/256/384/512 signatures from a message and secret key, and compare them with a received signature.',
+      },
+    },
+  },
+  {
+    slug: 'jwt-generator',
+    category: 'security',
+    addedAt: '2026-10-15',
+    updatedAt: '2026-10-15',
+    related: ['jwt-decoder', 'hmac-generator', 'base64'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'JWT生成・署名',
+        keywords: [
+          'JWT',
+          'JWT生成',
+          'JSON Web Token',
+          'HS256',
+          'トークン生成',
+          '署名',
+        ],
+        description:
+          'ヘッダー・ペイロード・秘密鍵からHS256/HS384/HS512のJWTを生成。API認証のデバッグや学習に。',
+      },
+      en: {
+        name: 'JWT Generator',
+        keywords: [
+          'JWT',
+          'JWT generator',
+          'JSON Web Token',
+          'HS256',
+          'sign token',
+          'HMAC',
+        ],
+        description:
+          'Generate HMAC-signed JWTs (HS256/HS384/HS512) from a header, payload and secret for API auth debugging and learning.',
       },
     },
   },
@@ -7203,6 +7441,84 @@ export const tools: Tool[] = [
         ],
         description:
           'Add margins to an image or fit it to 1:1, 4:5, or 16:9 with a background color or transparency. Saves as PNG, JPEG, or WebP.',
+      },
+    },
+  },
+  {
+    slug: 'image-splitter',
+    category: 'image',
+    addedAt: '2026-10-15',
+    updatedAt: '2026-10-15',
+    related: ['image-padding', 'image-cropper', 'zip-tool'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像分割（Instagram 9分割・グリッド分割）',
+        keywords: [
+          '画像分割',
+          '9分割',
+          'Instagram',
+          'インスタ',
+          'グリッド',
+          'タイル',
+          '画像 切り分け',
+          'ZIP',
+        ],
+        description:
+          '画像を行×列で等分割してZIPでまとめて保存。Instagramの9分割（3×3）や横3分割、2×2に対応し、右下から順の番号も付けられます。PNG・JPEG・WebPで書き出せます。',
+      },
+      en: {
+        name: 'Image Splitter (Grid & Instagram 3x3)',
+        keywords: [
+          'split image',
+          'image splitter',
+          'instagram grid',
+          '3x3 grid',
+          'image tiles',
+          'cut image into pieces',
+          'carousel split',
+        ],
+        description:
+          'Split an image into equal rows and columns and save all tiles as one ZIP. Supports the Instagram 3x3 grid, 3-panel carousels and 2x2, as PNG, JPEG or WebP.',
+      },
+    },
+  },
+  {
+    slug: 'graph-paper-generator',
+    category: 'generate',
+    addedAt: '2026-10-15',
+    updatedAt: '2026-10-15',
+    related: ['calendar-generator', 'maze-generator', 'bingo-generator'],
+    translations: {
+      ja: {
+        name: '方眼紙・罫線・原稿用紙の作成（印刷用）',
+        keywords: [
+          '方眼紙',
+          '罫線',
+          '原稿用紙',
+          'ドット方眼',
+          'グラフ用紙',
+          'ノート 印刷',
+          'A4',
+          'B5',
+        ],
+        description:
+          'A4・B5・A3などの用紙とマス寸法（mm）を指定して、方眼紙・罫線・ドット方眼・原稿用紙風のマス目を作成。実寸で印刷でき、SVG保存にも対応。',
+      },
+      en: {
+        name: 'Graph Paper, Lined & Dot Grid Generator',
+        keywords: [
+          'graph paper',
+          'grid paper',
+          'lined paper',
+          'dot grid',
+          'printable paper',
+          'notebook template',
+          'a4',
+          'letter',
+        ],
+        description:
+          'Make printable graph paper, lined paper or dot grid sheets in A4, A3, Letter and more with an exact cell size in mm. Print or save as SVG.',
       },
     },
   },

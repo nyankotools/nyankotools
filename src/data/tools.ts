@@ -265,6 +265,46 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'sql-insert-generator',
+    category: 'data',
+    addedAt: '2026-10-15',
+    updatedAt: '2026-10-15',
+    related: ['csv-json-converter', 'sql-formatter', 'jsonl-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'CSV/JSON→SQL INSERT文生成',
+        keywords: [
+          'SQL',
+          'INSERT',
+          'INSERT文',
+          'CREATE TABLE',
+          'CSV',
+          'MySQL',
+          'PostgreSQL',
+          'SQLite',
+        ],
+        description:
+          'CSV・JSONからINSERT文（CREATE TABLE付き）を生成。MySQL・PostgreSQL・SQLite・SQL Server・Oracleの引用符と型推定に対応。',
+      },
+      en: {
+        name: 'CSV/JSON to SQL INSERT Generator',
+        keywords: [
+          'SQL',
+          'INSERT',
+          'CREATE TABLE',
+          'CSV to SQL',
+          'JSON to SQL',
+          'MySQL',
+          'PostgreSQL',
+          'SQLite',
+        ],
+        description:
+          'Generates INSERT statements (optionally with CREATE TABLE) from CSV or JSON, with MySQL/PostgreSQL/SQLite quoting and type inference.',
+      },
+    },
+  },
+  {
     slug: 'toml-converter',
     category: 'data',
     addedAt: '2026-09-17',

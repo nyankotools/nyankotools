@@ -98,6 +98,7 @@ const slugs = [
   'svg-wave-generator',
   'color-blindness-simulator',
   'image-splitter',
+  'graph-paper-generator',
 ];
 
 const locales = [

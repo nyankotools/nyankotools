@@ -7484,6 +7484,45 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'graph-paper-generator',
+    category: 'generate',
+    addedAt: '2026-10-15',
+    updatedAt: '2026-10-15',
+    related: ['calendar-generator', 'maze-generator', 'bingo-generator'],
+    translations: {
+      ja: {
+        name: '方眼紙・罫線・原稿用紙の作成（印刷用）',
+        keywords: [
+          '方眼紙',
+          '罫線',
+          '原稿用紙',
+          'ドット方眼',
+          'グラフ用紙',
+          'ノート 印刷',
+          'A4',
+          'B5',
+        ],
+        description:
+          'A4・B5・A3などの用紙とマス寸法（mm）を指定して、方眼紙・罫線・ドット方眼・原稿用紙風のマス目を作成。実寸で印刷でき、SVG保存にも対応。',
+      },
+      en: {
+        name: 'Graph Paper, Lined & Dot Grid Generator',
+        keywords: [
+          'graph paper',
+          'grid paper',
+          'lined paper',
+          'dot grid',
+          'printable paper',
+          'notebook template',
+          'a4',
+          'letter',
+        ],
+        description:
+          'Make printable graph paper, lined paper or dot grid sheets in A4, A3, Letter and more with an exact cell size in mm. Print or save as SVG.',
+      },
+    },
+  },
+  {
     slug: 'seal-stamp-generator',
     category: 'image',
     addedAt: '2026-10-14',

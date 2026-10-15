@@ -305,6 +305,48 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'csv-viewer',
+    category: 'data',
+    addedAt: '2026-10-15',
+    updatedAt: '2026-10-15',
+    related: [
+      'csv-json-converter',
+      'delimiter-converter',
+      'sql-insert-generator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'CSVビューア（ソート・絞り込み）',
+        keywords: [
+          'CSV',
+          'ビューア',
+          'ソート',
+          '絞り込み',
+          '列抽出',
+          'TSV',
+          'テーブル表示',
+        ],
+        description:
+          'CSVを表で表示し、列ソート・キーワード絞り込み・列の並べ替えや削除をしてCSVで再出力。大きなCSVも仮想スクロールで軽快。',
+      },
+      en: {
+        name: 'CSV Viewer (Sort & Filter)',
+        keywords: [
+          'CSV',
+          'CSV viewer',
+          'sort',
+          'filter',
+          'extract columns',
+          'TSV',
+          'table',
+        ],
+        description:
+          'View CSV as a table, sort by column, filter rows, reorder or remove columns and export again. Virtual scrolling keeps big files fast.',
+      },
+    },
+  },
+  {
     slug: 'toml-converter',
     category: 'data',
     addedAt: '2026-09-17',

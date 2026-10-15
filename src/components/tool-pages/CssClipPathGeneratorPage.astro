@@ -1,0 +1,465 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cssClipPathGeneratorContent } from '../../i18n/tools/css-clip-path-generator';
+import { POLYGON_PRESETS } from '../../lib/tools/css-clip-path-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cssClipPathGeneratorContent[locale];
+
+const shapes = [
+  { id: 'polygon', label: t.shapePolygon },
+  { id: 'circle', label: t.shapeCircle },
+  { id: 'ellipse', label: t.shapeEllipse },
+  { id: 'inset', label: t.shapeInset },
+];
+
+// 数値入力（polygon以外）。data-shapes は表示する図形
+const numberFields = [
+  { id: 'radius', label: t.radiusLabel, shapes: 'circle', value: 50 },
+  { id: 'rx', label: t.rxLabel, shapes: 'ellipse', value: 50 },
+  { id: 'ry', label: t.ryLabel, shapes: 'ellipse', value: 35 },
+  { id: 'cx', label: t.cxLabel, shapes: 'circle ellipse', value: 50 },
+  { id: 'cy', label: t.cyLabel, shapes: 'circle ellipse', value: 50 },
+  { id: 'top', label: t.topLabel, shapes: 'inset', value: 10 },
+  { id: 'right', label: t.rightLabel, shapes: 'inset', value: 10 },
+  { id: 'bottom', label: t.bottomLabel, shapes: 'inset', value: 10 },
+  { id: 'left', label: t.leftLabel, shapes: 'inset', value: 10 },
+  { id: 'round', label: t.roundLabel, shapes: 'inset', value: 0 },
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="cp-root"
+    data-point-label={t.pointLabel}
+    data-remove-label={t.removePointLabel}
+    data-x-label={t.xLabel}
+    data-y-label={t.yLabel}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <div class="mb-4">
+      <span class="ui-label">{t.shapeLabel}</span>
+      <div class="ui-seg flex-wrap" role="group" aria-label={t.shapeLabel}>
+        {shapes.map((shape) => (
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-shape={shape.id}
+            aria-pressed={shape.id === 'polygon' ? 'true' : 'false'}
+          >
+            {shape.label}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <div data-shapes="polygon" class="mb-4 flex flex-wrap items-end gap-4">
+      <label class="text-sm text-gray-700 dark:text-gray-300">
+        <span class="mb-1 block">{t.presetLabel}</span>
+        <select id="cp-preset" class="ui-input h-11 w-48 px-3 dark:bg-gray-900">
+          <option value="">{t.presetCustom}</option>
+          {POLYGON_PRESETS.map((preset) => (
+            <option value={preset.id} selected={preset.id === 'triangle'}>
+              {t.presetNames[preset.id]}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label class="ui-check">
+        <input id="cp-snap" type="checkbox" class="h-4 w-4" />
+        {t.snapLabel}
+      </label>
+    </div>
+
+    <div class="mb-6 flex flex-wrap gap-3">
+      {numberFields.map((field) => (
+        <label
+          data-shapes={field.shapes}
+          hidden
+          class="text-sm text-gray-700 dark:text-gray-300"
+        >
+          <span class="mb-1 block">{field.label}</span>
+          <input
+            id={`cp-${field.id}`}
+            data-param={field.id}
+            type="number"
+            min="0"
+            max="100"
+            step="any"
+            value={field.value}
+            class="ui-input h-11 w-28 px-2 dark:bg-gray-900"
+          />
+        </label>
+      ))}
+    </div>
+
+    <h2 class="mb-2 text-lg font-bold">{t.previewHeading}</h2>
+    <div class="mb-2 flex w-full items-center justify-center rounded-lg border border-gray-300 bg-gray-100 p-6 dark:border-gray-700 dark:bg-gray-950">
+      <div
+        id="cp-stage"
+        class="relative aspect-square w-full max-w-xs touch-none select-none"
+      >
+        <div class="absolute inset-0 border border-dashed border-gray-400 dark:border-gray-600"></div>
+        <div id="cp-preview" class="absolute inset-0 bg-blue-500"></div>
+        <div id="cp-handles" class="absolute inset-0"></div>
+      </div>
+    </div>
+    <p class="mb-6 text-sm text-gray-600 dark:text-gray-400">{t.previewHint}</p>
+
+    <div data-shapes="polygon" class="mb-6">
+      <div class="mb-2 flex items-center justify-between gap-2">
+        <h2 class="text-lg font-bold">{t.pointsHeading}</h2>
+        <button id="cp-add-point" type="button" class="ui-btn">
+          {t.addPointButton}
+        </button>
+      </div>
+      <ul id="cp-point-list" class="space-y-2"></ul>
+    </div>
+
+    <label class="ui-check mb-3">
+      <input id="cp-prefix" type="checkbox" class="h-4 w-4" />
+      {t.prefixLabel}
+    </label>
+
+    <div>
+      <label for="cp-css-output" class="ui-label">
+        {t.cssHeading}
+      </label>
+      <div class="flex gap-2">
+        <textarea
+          id="cp-css-output"
+          readonly
+          rows="3"
+          class="ui-input w-full min-w-0 resize-y bg-gray-50 p-3 font-mono text-sm dark:bg-gray-900"
+        ></textarea>
+        <button
+          id="cp-copy-button"
+          type="button"
+          class="ui-btn shrink-0 self-start"
+        >
+          {t.copyButton}
+        </button>
+      </div>
+      <span
+        id="cp-status"
+        class="mt-2 block text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    addPoint,
+    buildCircleValue,
+    buildClipPathDeclaration,
+    buildClipPathWithPrefix,
+    buildEllipseValue,
+    buildInsetValue,
+    buildPolygonValue,
+    clampPercent,
+    movePoint,
+    pointFromPointer,
+    POLYGON_PRESETS,
+    removePoint,
+    type ClipPoint,
+    type ClipShape,
+  } from '../../lib/tools/css-clip-path-generator';
+
+  const root = document.getElementById('cp-root')!;
+  const stage = document.getElementById('cp-stage')!;
+  const preview = document.getElementById('cp-preview')!;
+  const handlesLayer = document.getElementById('cp-handles')!;
+  const pointList = document.getElementById('cp-point-list')!;
+  const presetSelect = document.getElementById(
+    'cp-preset',
+  ) as HTMLSelectElement;
+  const snapCheckbox = document.getElementById('cp-snap') as HTMLInputElement;
+  const prefixCheckbox = document.getElementById(
+    'cp-prefix',
+  ) as HTMLInputElement;
+  const cssOutput = document.getElementById(
+    'cp-css-output',
+  ) as HTMLTextAreaElement;
+  const addButton = document.getElementById('cp-add-point')!;
+  const copyButton = document.getElementById('cp-copy-button')!;
+  const statusEl = document.getElementById('cp-status')!;
+  const shapeButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-shape]'),
+  );
+  const shapeSections = Array.from(
+    document.querySelectorAll<HTMLElement>('[data-shapes]'),
+  );
+  const paramInputs = Array.from(
+    document.querySelectorAll<HTMLInputElement>('[data-param]'),
+  );
+
+  const pointLabel = root.dataset.pointLabel ?? '';
+  const removeLabel = root.dataset.removeLabel ?? '';
+  const xLabel = root.dataset.xLabel ?? 'X';
+  const yLabel = root.dataset.yLabel ?? 'Y';
+  const copied = root.dataset.copied ?? '';
+  const copyFailed = root.dataset.copyFailed ?? '';
+
+  let shape: ClipShape = 'polygon';
+  let points: ClipPoint[] = POLYGON_PRESETS[0].points.map((p) => ({ ...p }));
+  let dragIndex = -1;
+
+  function param(name: string): number {
+    const input = paramInputs.find((el) => el.dataset.param === name);
+    return clampPercent(Number(input?.value) || 0);
+  }
+
+  function currentValue(): string {
+    switch (shape) {
+      case 'circle':
+        return buildCircleValue({
+          radius: param('radius'),
+          cx: param('cx'),
+          cy: param('cy'),
+        });
+      case 'ellipse':
+        return buildEllipseValue({
+          rx: param('rx'),
+          ry: param('ry'),
+          cx: param('cx'),
+          cy: param('cy'),
+        });
+      case 'inset':
+        return buildInsetValue({
+          top: param('top'),
+          right: param('right'),
+          bottom: param('bottom'),
+          left: param('left'),
+          round: param('round'),
+        });
+      default:
+        return buildPolygonValue(points);
+    }
+  }
+
+  function updateOutputs() {
+    const value = currentValue();
+    preview.style.clipPath = value;
+    preview.style.setProperty('-webkit-clip-path', value);
+    cssOutput.value = prefixCheckbox.checked
+      ? buildClipPathWithPrefix(value)
+      : buildClipPathDeclaration(value);
+  }
+
+  function setPoints(next: ClipPoint[], fromPreset = false) {
+    points = next;
+    if (!fromPreset) presetSelect.value = '';
+    renderPoints();
+    updateOutputs();
+  }
+
+  function renderPoints() {
+    // ハンドル
+    while (handlesLayer.children.length > points.length) {
+      handlesLayer.lastElementChild?.remove();
+    }
+    while (handlesLayer.children.length < points.length) {
+      const index = handlesLayer.children.length;
+      const handle = document.createElement('button');
+      handle.type = 'button';
+      handle.className =
+        'absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none rounded-full border-2 border-white bg-red-500 shadow focus:outline-2 focus:outline-offset-2 focus:outline-blue-600 active:cursor-grabbing';
+      handle.dataset.index = String(index);
+      handle.addEventListener('pointerdown', (event) => {
+        event.preventDefault();
+        dragIndex = Number(handle.dataset.index);
+        handle.setPointerCapture(event.pointerId);
+        handle.focus();
+      });
+      handle.addEventListener('pointermove', (event) => {
+        if (dragIndex !== Number(handle.dataset.index)) return;
+        const next = pointFromPointer(
+          event.clientX,
+          event.clientY,
+          stage.getBoundingClientRect(),
+          snapCheckbox.checked ? 5 : 0,
+        );
+        points = movePoint(points, dragIndex, next.x, next.y);
+        presetSelect.value = '';
+        syncPositions();
+        updateOutputs();
+      });
+      const endDrag = () => {
+        dragIndex = -1;
+      };
+      handle.addEventListener('pointerup', endDrag);
+      handle.addEventListener('pointercancel', endDrag);
+      handle.addEventListener('keydown', (event) => {
+        const step = event.shiftKey ? 5 : 1;
+        const delta: Record<string, [number, number]> = {
+          ArrowLeft: [-step, 0],
+          ArrowRight: [step, 0],
+          ArrowUp: [0, -step],
+          ArrowDown: [0, step],
+        };
+        const move = delta[event.key];
+        if (!move) return;
+        event.preventDefault();
+        const i = Number(handle.dataset.index);
+        points = movePoint(
+          points,
+          i,
+          points[i].x + move[0],
+          points[i].y + move[1],
+        );
+        presetSelect.value = '';
+        syncPositions();
+        updateOutputs();
+      });
+      handlesLayer.appendChild(handle);
+    }
+    Array.from(handlesLayer.children).forEach((el, i) => {
+      (el as HTMLElement).setAttribute('aria-label', `${pointLabel} ${i + 1}`);
+    });
+
+    // 数値リスト
+    pointList.textContent = '';
+    points.forEach((_, i) => {
+      const row = document.createElement('li');
+      row.className = 'flex flex-wrap items-center gap-2';
+
+      const name = document.createElement('span');
+      name.className = 'w-16 shrink-0 text-sm text-gray-700 dark:text-gray-300';
+      name.textContent = `${pointLabel} ${i + 1}`;
+      row.appendChild(name);
+
+      (['x', 'y'] as const).forEach((axis) => {
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '0';
+        input.max = '100';
+        input.step = 'any';
+        input.dataset.index = String(i);
+        input.dataset.axis = axis;
+        input.setAttribute(
+          'aria-label',
+          `${pointLabel} ${i + 1} ${axis === 'x' ? xLabel : yLabel}`,
+        );
+        input.className = 'ui-input h-10 w-24 px-2 dark:bg-gray-900';
+        input.addEventListener('input', () => {
+          const p = points[i];
+          const value = Number(input.value);
+          if (input.value === '' || !Number.isFinite(value)) return;
+          points = movePoint(
+            points,
+            i,
+            axis === 'x' ? value : p.x,
+            axis === 'y' ? value : p.y,
+          );
+          presetSelect.value = '';
+          syncHandlesOnly();
+          updateOutputs();
+        });
+        input.addEventListener('change', () => {
+          input.value = String(points[i][axis]);
+        });
+        row.appendChild(input);
+      });
+
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'ui-btn h-10';
+      remove.textContent = removeLabel;
+      remove.disabled = points.length <= 3;
+      remove.addEventListener('click', () => {
+        setPoints(removePoint(points, i));
+      });
+      row.appendChild(remove);
+
+      pointList.appendChild(row);
+    });
+    (addButton as HTMLButtonElement).disabled = points.length >= 24;
+    syncPositions();
+  }
+
+  function syncHandlesOnly() {
+    Array.from(handlesLayer.children).forEach((el, i) => {
+      const h = el as HTMLElement;
+      h.style.left = `${points[i].x}%`;
+      h.style.top = `${points[i].y}%`;
+    });
+  }
+
+  function syncPositions() {
+    syncHandlesOnly();
+    pointList
+      .querySelectorAll<HTMLInputElement>('input[data-axis]')
+      .forEach((input) => {
+        const i = Number(input.dataset.index);
+        const axis = input.dataset.axis as 'x' | 'y';
+        if (document.activeElement !== input) {
+          input.value = String(points[i][axis]);
+        }
+      });
+  }
+
+  function applyShape(next: ClipShape) {
+    shape = next;
+    shapeButtons.forEach((button) => {
+      button.setAttribute(
+        'aria-pressed',
+        String(button.dataset.shape === next),
+      );
+    });
+    shapeSections.forEach((section) => {
+      const shapes = (section.dataset.shapes ?? '').split(' ');
+      section.hidden = !shapes.includes(next);
+    });
+    handlesLayer.hidden = next !== 'polygon';
+    updateOutputs();
+  }
+
+  shapeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      applyShape(button.dataset.shape as ClipShape);
+    });
+  });
+
+  presetSelect.addEventListener('change', () => {
+    const preset = POLYGON_PRESETS.find((p) => p.id === presetSelect.value);
+    if (preset) {
+      setPoints(
+        preset.points.map((p) => ({ ...p })),
+        true,
+      );
+    }
+  });
+
+  addButton.addEventListener('click', () => {
+    setPoints(addPoint(points));
+  });
+
+  paramInputs.forEach((input) => {
+    input.addEventListener('input', updateOutputs);
+    input.addEventListener('change', () => {
+      input.value = String(clampPercent(Number(input.value) || 0));
+      updateOutputs();
+    });
+  });
+
+  prefixCheckbox.addEventListener('change', updateOutputs);
+
+  copyButton.addEventListener('click', async () => {
+    if (!cssOutput.value) return;
+    statusEl.textContent = (await copyText(cssOutput.value))
+      ? copied
+      : copyFailed;
+  });
+
+  renderPoints();
+  applyShape('polygon');
+</script>

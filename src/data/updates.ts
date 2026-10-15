@@ -606,15 +606,20 @@ export const updates: UpdateEntry[] = [
   },
   {
     date: '2026-10-15',
-    toolSlugs: ['jwt-generator', 'sql-insert-generator', 'csv-viewer'],
+    toolSlugs: [
+      'jwt-generator',
+      'sql-insert-generator',
+      'csv-viewer',
+      'css-clip-path-generator',
+    ],
     translations: {
       ja: {
         summary:
-          'JWT生成・署名を追加しました。ヘッダー・ペイロード・秘密鍵から、HS256・HS384・HS512のJWTを生成できます。iat・expの自動設定にも対応し、JWTデコーダーと組み合わせてトークンの確認ができます。あわせて、CSV/JSON→SQL INSERT文生成を追加しました。MySQL・PostgreSQL・SQLite向けのINSERT文を、型推定やCREATE TABLE付きで生成できます。さらに、CSVビューアを追加しました。CSVを表で確認しながら、列ソート・キーワード絞り込み・列の並べ替えや削除をして、結果をCSVで再出力できます。',
+          'JWT生成・署名を追加しました。ヘッダー・ペイロード・秘密鍵から、HS256・HS384・HS512のJWTを生成できます。iat・expの自動設定にも対応し、JWTデコーダーと組み合わせてトークンの確認ができます。あわせて、CSV/JSON→SQL INSERT文生成を追加しました。MySQL・PostgreSQL・SQLite向けのINSERT文を、型推定やCREATE TABLE付きで生成できます。さらに、CSVビューアを追加しました。CSVを表で確認しながら、列ソート・キーワード絞り込み・列の並べ替えや削除をして、結果をCSVで再出力できます。加えて、CSS clip-pathジェネレーターを追加しました。プレビュー上の頂点をドラッグして多角形を編集でき、円・楕円・insetや三角形・星・吹き出しなどのプリセットにも対応しています。',
       },
       en: {
         summary:
-          'Added the JWT Generator. It builds HS256, HS384 and HS512 signed JWTs from a header, payload and secret key, with one-click iat and exp, and pairs with the JWT Decoder for inspecting tokens. Also new is the CSV/JSON to SQL INSERT Generator, which builds INSERT statements for MySQL, PostgreSQL and SQLite with type inference and optional CREATE TABLE. The new CSV Viewer shows CSV as a table with column sorting, keyword filtering and column reordering or removal, then exports the result as CSV.',
+          'Added the JWT Generator. It builds HS256, HS384 and HS512 signed JWTs from a header, payload and secret key, with one-click iat and exp, and pairs with the JWT Decoder for inspecting tokens. Also new is the CSV/JSON to SQL INSERT Generator, which builds INSERT statements for MySQL, PostgreSQL and SQLite with type inference and optional CREATE TABLE. The new CSV Viewer shows CSV as a table with column sorting, keyword filtering and column reordering or removal, then exports the result as CSV. The CSS clip-path Generator lets you drag polygon points on a live preview, and also supports circle, ellipse and inset with presets such as triangle, star and speech bubble.',
       },
     },
   },

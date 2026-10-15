@@ -2223,6 +2223,46 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'css-clip-path-generator',
+    category: 'dev',
+    addedAt: '2026-10-15',
+    updatedAt: '2026-10-15',
+    related: [
+      'css-border-radius-generator',
+      'css-box-shadow-generator',
+      'css-gradient-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSS clip-pathジェネレーター',
+        keywords: [
+          'clip-path',
+          'クリップパス',
+          'polygon',
+          '多角形',
+          '切り抜き',
+          '三角形',
+          '吹き出し',
+        ],
+        description:
+          '頂点をドラッグして多角形・円・楕円・insetのclip-pathを作成。三角形・星・吹き出しなどのプリセット付き。',
+      },
+      en: {
+        name: 'CSS clip-path Generator',
+        keywords: [
+          'clip-path',
+          'polygon',
+          'CSS shape',
+          'triangle',
+          'speech bubble',
+          'crop',
+        ],
+        description:
+          'Build clip-path shapes by dragging polygon points, or use circle, ellipse and inset, with presets like triangle, star and speech bubble.',
+      },
+    },
+  },
+  {
     slug: 'css-box-shadow-generator',
     category: 'dev',
     addedAt: '2026-09-27',

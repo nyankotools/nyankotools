@@ -94,6 +94,7 @@ const slugs = [
   'seal-stamp-generator',
   'signature-pad',
   'csv-viewer',
+  'css-clip-path-generator',
 ];
 
 const locales = [

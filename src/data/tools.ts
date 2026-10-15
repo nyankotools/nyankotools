@@ -2263,6 +2263,47 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'svg-wave-generator',
+    category: 'image',
+    addedAt: '2026-10-15',
+    updatedAt: '2026-10-15',
+    related: [
+      'css-gradient-generator',
+      'svg-optimizer',
+      'css-clip-path-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'SVG波・ブロブジェネレーター',
+        keywords: [
+          'SVG',
+          '波',
+          'ウェーブ',
+          'ブロブ',
+          'blob',
+          'セクション区切り',
+          '有機的',
+          '背景装飾',
+        ],
+        description:
+          'セクション区切りの波形や有機的なブロブ図形をSVGで作成。山の数・振幅・ランダム性・色を調整し、シード値で再現。SVG・CSSをコピーできます。',
+      },
+      en: {
+        name: 'SVG Wave & Blob Generator',
+        keywords: [
+          'SVG',
+          'wave',
+          'blob',
+          'section divider',
+          'organic shape',
+          'background decoration',
+        ],
+        description:
+          'Generate SVG wave section dividers and organic blob shapes. Adjust waves, amplitude, randomness and color, reproduce with a seed, and copy SVG or CSS.',
+      },
+    },
+  },
+  {
     slug: 'css-box-shadow-generator',
     category: 'dev',
     addedAt: '2026-09-27',

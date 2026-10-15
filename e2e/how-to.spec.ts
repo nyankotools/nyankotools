@@ -95,6 +95,7 @@ const slugs = [
   'signature-pad',
   'csv-viewer',
   'css-clip-path-generator',
+  'svg-wave-generator',
 ];
 
 const locales = [

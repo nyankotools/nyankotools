@@ -76,7 +76,11 @@ test.describe('CSVビューア（日本語版）', () => {
     await page.goto('/tools/csv-viewer/');
     const lines = ['n,v'];
     for (let i = 1; i <= 5000; i++) lines.push(`${i},row${i}`);
-    await page.locator('#csv-viewer-input').fill(lines.join('\n'));
+    // 改行の多い巨大テキストは fill だと Chromium で極端に遅い（5000行で約25秒）ため、値を直接設定する
+    await page.locator('#csv-viewer-input').evaluate((el, text) => {
+      (el as HTMLTextAreaElement).value = text;
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    }, lines.join('\n'));
     await expect(page.locator('#csv-viewer-summary')).toHaveText(
       '5000 / 5000 行・2 列',
     );

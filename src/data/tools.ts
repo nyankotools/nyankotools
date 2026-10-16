@@ -7718,6 +7718,47 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'refresh-rate-tester',
+    category: 'hardware',
+    addedAt: '2026-10-16',
+    updatedAt: '2026-10-16',
+    related: [
+      'dead-pixel-checker',
+      'viewport-checker',
+      'screen-size-calculator',
+    ],
+    translations: {
+      ja: {
+        name: 'リフレッシュレート測定（60/120/144Hz）',
+        keywords: [
+          'リフレッシュレート',
+          'Hz',
+          '60Hz',
+          '144Hz',
+          'fps',
+          'モニター確認',
+          '画面更新',
+        ],
+        description:
+          'ブラウザのフレーム間隔から、モニター・スマホの画面のリフレッシュレート（Hz）を実測します。60Hz・120Hz・144Hzなどを自動判定。',
+      },
+      en: {
+        name: 'Refresh Rate Test (60/120/144Hz)',
+        keywords: [
+          'refresh rate',
+          'Hz',
+          '60Hz',
+          '144Hz',
+          'fps test',
+          'monitor test',
+          'screen refresh',
+        ],
+        description:
+          'Measure your monitor or phone refresh rate in Hz from browser frame timing and see whether it is 60Hz, 120Hz, 144Hz and more.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

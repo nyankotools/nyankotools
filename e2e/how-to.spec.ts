@@ -53,6 +53,7 @@ const slugs = [
   'image-background-remover',
   'mic-tester',
   'dead-pixel-checker',
+  'refresh-rate-tester',
   'timezone-converter',
   'business-day-calculator',
   'calendar-generator',

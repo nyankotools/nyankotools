@@ -629,15 +629,15 @@ export const updates: UpdateEntry[] = [
   },
   {
     date: '2026-10-16',
-    toolSlugs: ['loan-calculator', 'size-converter'],
+    toolSlugs: ['loan-calculator', 'size-converter', 'refresh-rate-tester'],
     translations: {
       ja: {
         summary:
-          'ローン・リボ払い返済シミュレーターとサイズ変換（服・靴・指輪）を追加しました。ローン・リボ払い返済シミュレーターでは、借入額・年率から、元利均等・元金均等・リボ払い（定額方式）の毎月の返済額、総利息・手数料、完済までの期間と月ごとの返済計画表を試算できます。サイズ変換では、レディース・メンズの服・靴・指輪のサイズを日本・US・EU・UKの間で換算できます。',
+          'ローン・リボ払い返済シミュレーターとサイズ変換（服・靴・指輪）を追加しました。ローン・リボ払い返済シミュレーターでは、借入額・年率から、元利均等・元金均等・リボ払い（定額方式）の毎月の返済額、総利息・手数料、完済までの期間と月ごとの返済計画表を試算できます。サイズ変換では、レディース・メンズの服・靴・指輪のサイズを日本・US・EU・UKの間で換算できます。さらに、リフレッシュレート測定を追加しました。ブラウザのフレーム間隔から画面のリフレッシュレート（Hz）を実測し、60Hz・120Hz・144Hzなどの近い標準値とフレーム落ちの統計を確認できます。',
       },
       en: {
         summary:
-          'Added the Loan & Revolving Payment Calculator and the Size Converter. From an amount and annual rate, the calculator estimates the monthly payment, total interest or fees, time to pay off and a month-by-month schedule for amortizing, equal-principal and revolving credit. The Size Converter converts women’s and men’s clothing, shoe and ring sizes between Japan, the US, the EU and the UK.',
+          'Added the Loan & Revolving Payment Calculator and the Size Converter. From an amount and annual rate, the calculator estimates the monthly payment, total interest or fees, time to pay off and a month-by-month schedule for amortizing, equal-principal and revolving credit. The Size Converter converts women’s and men’s clothing, shoe and ring sizes between Japan, the US, the EU and the UK. The new Refresh Rate Test measures your screen refresh rate in Hz from browser frame timing and shows the closest standard value such as 60Hz, 120Hz or 144Hz, with jitter and dropped-frame statistics.',
       },
     },
   },

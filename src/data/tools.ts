@@ -7876,6 +7876,48 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'figlet-text',
+    category: 'image',
+    addedAt: '2026-10-16',
+    updatedAt: '2026-10-16',
+    related: [
+      'image-ascii-art',
+      'unicode-decorator',
+      'cat-logo-text-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'ASCIIアート文字（FIGlet風テキストバナー）',
+        description:
+          '英数字を大きなASCIIアート文字（テキストバナー）に変換。Standard・Slant・Doomなど7書体、字間の調整、コードのコメント形式でのコピーに対応',
+        keywords: [
+          'ASCIIアート',
+          'FIGlet',
+          'テキストバナー',
+          'アスキーアート',
+          'バナー文字',
+          'README 見出し',
+          'ターミナル',
+        ],
+      },
+      en: {
+        name: 'ASCII Art Text Generator (FIGlet-style Banner)',
+        description:
+          'Turn text into big ASCII art lettering (text banners) with 7 fonts such as Standard, Slant and Doom, adjustable spacing and code-comment output',
+        keywords: [
+          'ascii art',
+          'figlet',
+          'text banner',
+          'ascii text',
+          'ascii banner',
+          'big text',
+          'readme banner',
+          'text to ascii',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -1,0 +1,224 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { figletTextContent } from '../../i18n/tools/figlet-text';
+import {
+  COMMENT_STYLES,
+  FONT_IDS,
+  LAYOUTS,
+  MAX_INPUT_LENGTH,
+} from '../../lib/tools/figlet-text';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = figletTextContent[locale];
+const selectClass = 'ui-input h-11 w-full bg-white px-3 dark:bg-gray-900';
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="fig-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="fig-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      class="ui-input h-28 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+      autocomplete="off"
+    >{t.initialText}</textarea>
+  </div>
+
+  <div class="mt-4 grid gap-4 sm:grid-cols-3">
+    <div>
+      <label for="fig-font" class="ui-label">
+        {t.fontLabel}
+      </label>
+      <select id="fig-font" class={selectClass}>
+        {FONT_IDS.map((id) => (
+          <option value={id}>{t.fonts[id]}</option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label for="fig-layout" class="ui-label">
+        {t.layoutLabel}
+      </label>
+      <select id="fig-layout" class={selectClass}>
+        {LAYOUTS.map((id) => (
+          <option value={id}>{t.layouts[id]}</option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label for="fig-comment" class="ui-label">
+        {t.commentLabel}
+      </label>
+      <select id="fig-comment" class={selectClass}>
+        {COMMENT_STYLES.map((id) => (
+          <option value={id}>{t.comments[id]}</option>
+        ))}
+      </select>
+    </div>
+  </div>
+
+  <div class="mt-6 flex flex-wrap items-center gap-3">
+    <span class="ui-label !mb-0">{t.outputLabel}</span>
+    <button
+      id="fig-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <button id="fig-download-button" type="button" class="ui-btn">
+      {t.download}
+    </button>
+    <span
+      id="fig-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <pre
+    id="fig-output"
+    tabindex="0"
+    aria-label={t.outputLabel}
+    class="mt-2 min-h-24 overflow-x-auto rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm leading-tight whitespace-pre dark:border-gray-700 dark:bg-gray-900"
+    data-empty={t.emptyOutput}
+  ></pre>
+
+  <p
+    id="fig-notice"
+    hidden
+    data-too-long={t.tooLong}
+    data-skipped={t.skippedFormat}
+    data-load-error={t.loadError}
+    data-max={MAX_INPUT_LENGTH}
+    class="ui-error mt-4 max-w-2xl"
+    aria-live="polite"
+  ></p>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import { fill } from '../../lib/format-template';
+  import { onTextInput } from '../../lib/input-scheduler';
+  import {
+    COMMENT_STYLES,
+    FONT_IDS,
+    LAYOUTS,
+    MAX_INPUT_LENGTH,
+    loadFont,
+    renderFiglet,
+    wrapInComment,
+    type CommentStyle,
+    type FontId,
+    type Layout,
+  } from '../../lib/tools/figlet-text';
+
+  const input = document.getElementById('fig-input') as HTMLTextAreaElement;
+  const fontSelect = document.getElementById('fig-font') as HTMLSelectElement;
+  const layoutSelect = document.getElementById(
+    'fig-layout',
+  ) as HTMLSelectElement;
+  const commentSelect = document.getElementById(
+    'fig-comment',
+  ) as HTMLSelectElement;
+  const output = document.getElementById('fig-output') as HTMLPreElement;
+  const notice = document.getElementById('fig-notice')!;
+  const statusEl = document.getElementById('fig-status')!;
+  const copyButton = document.getElementById(
+    'fig-copy-button',
+  ) as HTMLButtonElement;
+  const downloadButton = document.getElementById(
+    'fig-download-button',
+  ) as HTMLButtonElement;
+
+  // 現在表示している結果（コピー・保存用）。空なら何も出していない
+  let currentText = '';
+  // 書体の読み込み中に入力が変わったときの取り違えを防ぐ
+  let renderToken = 0;
+
+  function pick<T extends string>(value: string, list: readonly T[]): T {
+    return (list as readonly string[]).includes(value) ? (value as T) : list[0];
+  }
+
+  function showNotice(message: string) {
+    notice.textContent = message;
+    notice.hidden = message === '';
+  }
+
+  async function update() {
+    const token = ++renderToken;
+    statusEl.textContent = '';
+    const fontId: FontId = pick(fontSelect.value, FONT_IDS);
+    const layout: Layout = pick(layoutSelect.value, LAYOUTS);
+    const comment: CommentStyle = pick(commentSelect.value, COMMENT_STYLES);
+
+    let font;
+    try {
+      font = await loadFont(fontId);
+    } catch {
+      if (token !== renderToken) return;
+      currentText = '';
+      output.textContent = '';
+      showNotice(notice.dataset.loadError ?? '');
+      return;
+    }
+    if (token !== renderToken) return;
+
+    const messages: string[] = [];
+    let text = input.value;
+    if (text.length > MAX_INPUT_LENGTH) {
+      text = text.slice(0, MAX_INPUT_LENGTH);
+      messages.push(
+        fill(notice.dataset.tooLong ?? '', { max: String(MAX_INPUT_LENGTH) }),
+      );
+    }
+    const result = renderFiglet(font, text, layout);
+    if (result.skipped.length > 0) {
+      messages.push(
+        fill(notice.dataset.skipped ?? '', {
+          chars: result.skipped.join(' '),
+        }),
+      );
+    }
+    showNotice(messages.join('\n'));
+
+    currentText = wrapInComment(result.text, comment);
+    output.textContent = currentText || (output.dataset.empty ?? '');
+    output.classList.toggle('text-gray-500', currentText === '');
+  }
+
+  onTextInput(input, () => void update());
+  for (const el of [fontSelect, layoutSelect, commentSelect]) {
+    el.addEventListener('change', () => void update());
+  }
+
+  copyButton.addEventListener('click', async () => {
+    if (!currentText) return;
+    statusEl.textContent = (await copyText(currentText))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (!currentText) return;
+    downloadBlob(
+      new Blob([currentText + '\n'], { type: 'text/plain;charset=utf-8' }),
+      'ascii-banner.txt',
+    );
+  });
+
+  void update();
+</script>

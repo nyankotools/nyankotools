@@ -7682,6 +7682,42 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'size-converter',
+    category: 'calc',
+    addedAt: '2026-10-16',
+    updatedAt: '2026-10-16',
+    related: ['unit-converter', 'bmi-calculator', 'screen-size-calculator'],
+    translations: {
+      ja: {
+        name: 'サイズ変換（服・靴・指輪）',
+        keywords: [
+          'サイズ換算',
+          '服サイズ',
+          '靴サイズ',
+          '指輪サイズ',
+          'US EU UK',
+          '海外通販',
+          'サイズ表',
+        ],
+        description:
+          'レディース・メンズの服・靴・指輪のサイズを、日本・US・EU・UKの間で換算します。海外通販や個人輸入のサイズ選びの目安に。',
+      },
+      en: {
+        name: 'Size Converter (Clothing, Shoes & Rings)',
+        keywords: [
+          'size chart',
+          'clothing size',
+          'shoe size',
+          'ring size',
+          'US EU UK size',
+          'Japan size',
+        ],
+        description:
+          'Convert women’s and men’s clothing, shoe and ring sizes between Japan, US, EU and UK. A handy guide for overseas shopping.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

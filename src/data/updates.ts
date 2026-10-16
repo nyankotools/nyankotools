@@ -629,15 +629,15 @@ export const updates: UpdateEntry[] = [
   },
   {
     date: '2026-10-16',
-    toolSlugs: ['loan-calculator'],
+    toolSlugs: ['loan-calculator', 'size-converter'],
     translations: {
       ja: {
         summary:
-          'ローン・リボ払い返済シミュレーターを追加しました。借入額・年率から、元利均等・元金均等・リボ払い（定額方式）の毎月の返済額、総利息・手数料、完済までの期間と月ごとの返済計画表を試算できます。',
+          'ローン・リボ払い返済シミュレーターとサイズ変換（服・靴・指輪）を追加しました。ローン・リボ払い返済シミュレーターでは、借入額・年率から、元利均等・元金均等・リボ払い（定額方式）の毎月の返済額、総利息・手数料、完済までの期間と月ごとの返済計画表を試算できます。サイズ変換では、レディース・メンズの服・靴・指輪のサイズを日本・US・EU・UKの間で換算できます。',
       },
       en: {
         summary:
-          'Added the Loan & Revolving Payment Calculator. From an amount and annual rate, it estimates the monthly payment, total interest or fees, time to pay off and a month-by-month schedule for amortizing, equal-principal and revolving credit.',
+          'Added the Loan & Revolving Payment Calculator and the Size Converter. From an amount and annual rate, the calculator estimates the monthly payment, total interest or fees, time to pay off and a month-by-month schedule for amortizing, equal-principal and revolving credit. The Size Converter converts women’s and men’s clothing, shoe and ring sizes between Japan, the US, the EU and the UK.',
       },
     },
   },

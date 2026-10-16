@@ -635,15 +635,16 @@ export const updates: UpdateEntry[] = [
       'refresh-rate-tester',
       'touch-tester',
       'snake-game',
+      'htaccess-generator',
     ],
     translations: {
       ja: {
         summary:
-          'ローン・リボ払い返済シミュレーターとサイズ変換（服・靴・指輪）を追加しました。ローン・リボ払い返済シミュレーターでは、借入額・年率から、元利均等・元金均等・リボ払い（定額方式）の毎月の返済額、総利息・手数料、完済までの期間と月ごとの返済計画表を試算できます。サイズ変換では、レディース・メンズの服・靴・指輪のサイズを日本・US・EU・UKの間で換算できます。さらに、リフレッシュレート測定を追加しました。ブラウザのフレーム間隔から画面のリフレッシュレート（Hz）を実測し、60Hz・120Hz・144Hzなどの近い標準値とフレーム落ちの統計を確認できます。さらに、タッチパネルテストを追加しました。画面をなぞって、同時タッチ数（マルチタッチ）・ドラッグの軌跡・反応しない範囲・勝手に反応するゴースト入力を確認できます。さらに、スネークゲームを追加しました。餌を食べるほど長く速くなる蛇を、矢印キー・WASD・スワイプ・画面ボタンで操作して高得点を目指せます。',
+          'ローン・リボ払い返済シミュレーターとサイズ変換（服・靴・指輪）を追加しました。ローン・リボ払い返済シミュレーターでは、借入額・年率から、元利均等・元金均等・リボ払い（定額方式）の毎月の返済額、総利息・手数料、完済までの期間と月ごとの返済計画表を試算できます。サイズ変換では、レディース・メンズの服・靴・指輪のサイズを日本・US・EU・UKの間で換算できます。さらに、リフレッシュレート測定を追加しました。ブラウザのフレーム間隔から画面のリフレッシュレート（Hz）を実測し、60Hz・120Hz・144Hzなどの近い標準値とフレーム落ちの統計を確認できます。さらに、タッチパネルテストを追加しました。画面をなぞって、同時タッチ数（マルチタッチ）・ドラッグの軌跡・反応しない範囲・勝手に反応するゴースト入力を確認できます。さらに、スネークゲームを追加しました。餌を食べるほど長く速くなる蛇を、矢印キー・WASD・スワイプ・画面ボタンで操作して高得点を目指せます。さらに、.htaccess生成を追加しました。HTTPS強制・wwwの有無の統一・末尾スラッシュ・個別URLの301/302リダイレクト・エラーページ指定を選ぶだけでApache用の.htaccessを生成し、リダイレクトのループや重複の警告と、反映後の確認手順も確認できます。',
       },
       en: {
         summary:
-          'Added the Loan & Revolving Payment Calculator and the Size Converter. From an amount and annual rate, the calculator estimates the monthly payment, total interest or fees, time to pay off and a month-by-month schedule for amortizing, equal-principal and revolving credit. The Size Converter converts women’s and men’s clothing, shoe and ring sizes between Japan, the US, the EU and the UK. The new Refresh Rate Test measures your screen refresh rate in Hz from browser frame timing and shows the closest standard value such as 60Hz, 120Hz or 144Hz, with jitter and dropped-frame statistics. The new Touch Screen Test lets you swipe the screen to check simultaneous touch points, drag trails, dead zones and ghost touches. The new Snake Game lets you steer a snake that grows longer and faster as it eats, using arrow keys, WASD, swipes or on-screen buttons.',
+          'Added the Loan & Revolving Payment Calculator and the Size Converter. From an amount and annual rate, the calculator estimates the monthly payment, total interest or fees, time to pay off and a month-by-month schedule for amortizing, equal-principal and revolving credit. The Size Converter converts women’s and men’s clothing, shoe and ring sizes between Japan, the US, the EU and the UK. The new Refresh Rate Test measures your screen refresh rate in Hz from browser frame timing and shows the closest standard value such as 60Hz, 120Hz or 144Hz, with jitter and dropped-frame statistics. The new Touch Screen Test lets you swipe the screen to check simultaneous touch points, drag trails, dead zones and ghost touches. The new Snake Game lets you steer a snake that grows longer and faster as it eats, using arrow keys, WASD, swipes or on-screen buttons. The new .htaccess Generator builds Apache rules for forcing HTTPS, www or non-www canonicalization, trailing slashes, per-URL 301/302 redirects and custom error pages, with redirect-loop warnings and a post-deploy checklist.',
       },
     },
   },

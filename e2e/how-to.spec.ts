@@ -33,6 +33,7 @@ const slugs = [
   'classical-cipher',
   'gpa-calculator',
   'loan-calculator',
+  'htaccess-generator',
   'anniversary-calculator',
   'due-date-calculator',
   'css-glassmorphism-generator',

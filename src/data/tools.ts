@@ -7833,6 +7833,49 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'htaccess-generator',
+    category: 'dev',
+    addedAt: '2026-10-16',
+    updatedAt: '2026-10-16',
+    related: [
+      'http-status-codes',
+      'robots-txt-generator',
+      'http-header-analyzer',
+    ],
+    translations: {
+      ja: {
+        name: '.htaccess生成（リダイレクト・HTTPS強制・www統一）',
+        description:
+          'HTTPS強制・www有無の統一・個別URLの301/302リダイレクト・エラーページ指定の.htaccessを生成。ループの警告と確認手順つき',
+        keywords: [
+          'htaccess',
+          'リダイレクト',
+          '301',
+          'HTTPS強制',
+          'www統一',
+          'Apache',
+          '末尾スラッシュ',
+          'ErrorDocument',
+        ],
+      },
+      en: {
+        name: '.htaccess Generator (Redirects, Force HTTPS, www)',
+        description:
+          'Generate .htaccess rules for forcing HTTPS, www canonicalization, per-URL 301/302 redirects and error pages, with loop warnings',
+        keywords: [
+          'htaccess',
+          'redirect',
+          '301 redirect',
+          'force https',
+          'www redirect',
+          'Apache',
+          'trailing slash',
+          'ErrorDocument',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

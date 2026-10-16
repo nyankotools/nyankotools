@@ -1,0 +1,516 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { snakeGameContent } from '../../i18n/tools/snake-game';
+import { COLS, ROWS } from '../../lib/tools/snake-game';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = snakeGameContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="snake-root"
+    data-mode="idle"
+    data-overlay-ready={t.overlayReady}
+    data-overlay-paused={t.overlayPaused}
+    data-overlay-over={t.overlayOver}
+    data-overlay-won={t.overlayWon}
+    data-started={t.started}
+    data-paused={t.paused}
+    data-resumed={t.resumed}
+    data-game-over-wall={t.gameOverWall}
+    data-game-over-self={t.gameOverSelf}
+    data-won={t.won}
+    data-new-best={t.newBest}
+    data-pause-label={t.pauseButton}
+    data-resume-label={t.resumeButton}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <button id="snake-start-button" type="button" class="ui-btn-primary">
+        {t.startButton}
+      </button>
+      <button id="snake-pause-button" type="button" class="ui-btn" disabled>
+        {t.pauseButton}
+      </button>
+    </div>
+
+    <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
+      <div class="flex gap-2">
+        <dt>{t.scoreLabel}</dt>
+        <dd id="snake-score" class="font-semibold tabular-nums">
+          0
+        </dd>
+      </div>
+      <div class="flex gap-2">
+        <dt>{t.bestLabel}</dt>
+        <dd id="snake-best" class="font-semibold tabular-nums">
+          0
+        </dd>
+      </div>
+      <div class="flex gap-2">
+        <dt>{t.lengthLabel}</dt>
+        <dd id="snake-length" class="font-semibold tabular-nums">
+          3
+        </dd>
+      </div>
+    </dl>
+
+    <canvas
+      id="snake-canvas"
+      width={COLS * 40}
+      height={ROWS * 40}
+      role="application"
+      tabindex="0"
+      aria-label={t.boardLabel}
+      class="mt-3 block aspect-square w-full max-w-md touch-none rounded-lg bg-gray-950 select-none"
+    ></canvas>
+
+    <div
+      role="group"
+      aria-label={t.controlsLabel}
+      class="mt-3 grid max-w-48 grid-cols-3 gap-2"
+    >
+      <button
+        type="button"
+        class="ui-btn col-start-2 h-14 touch-none text-xl select-none"
+        data-control="up"
+      >
+        {t.upButton}
+      </button>
+      <button
+        type="button"
+        class="ui-btn col-start-1 row-start-2 h-14 touch-none text-xl select-none"
+        data-control="left"
+      >
+        {t.leftButton}
+      </button>
+      <button
+        type="button"
+        class="ui-btn col-start-2 row-start-2 h-14 touch-none text-xl select-none"
+        data-control="down"
+      >
+        {t.downButton}
+      </button>
+      <button
+        type="button"
+        class="ui-btn col-start-3 row-start-2 h-14 touch-none text-xl select-none"
+        data-control="right"
+      >
+        {t.rightButton}
+      </button>
+    </div>
+
+    <p
+      id="snake-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    COLS,
+    ROWS,
+    createGame,
+    parseBest,
+    queueDirection,
+    serializeBest,
+    step,
+    tickMs,
+    type Dir,
+    type SnakeState,
+  } from '../../lib/tools/snake-game';
+
+  const STORAGE_KEY = 'snake-game-best';
+  const CELL = 40;
+  const SWIPE_PX = 24;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('snake-root');
+  const msg = root.dataset;
+  const canvas = $<HTMLCanvasElement>('snake-canvas');
+  const ctx = canvas.getContext('2d')!;
+  const statusEl = $('snake-status');
+  const scoreEl = $('snake-score');
+  const bestEl = $('snake-best');
+  const lengthEl = $('snake-length');
+  const startButton = $<HTMLButtonElement>('snake-start-button');
+  const pauseButton = $<HTMLButtonElement>('snake-pause-button');
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  function random() {
+    return crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32;
+  }
+
+  type Mode = 'idle' | 'playing' | 'paused' | 'over';
+  let mode: Mode = 'idle';
+  let state: SnakeState = createGame(random);
+  let best = loadBest();
+  let rafId = 0;
+  let lastTime = 0;
+  let acc = 0;
+
+  function loadBest() {
+    try {
+      return parseBest(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      return 0;
+    }
+  }
+
+  function saveBest() {
+    try {
+      localStorage.setItem(STORAGE_KEY, serializeBest(best));
+    } catch {
+      // 保存できない環境では、このページを開いている間だけの記録にする
+    }
+  }
+
+  function setStatus(text: string) {
+    statusEl.textContent = text;
+  }
+
+  // ---- 描画 ----
+
+  function roundRect(x: number, y: number, w: number, h: number, r: number) {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, r);
+    ctx.fill();
+  }
+
+  function draw() {
+    const size = COLS * CELL;
+    ctx.fillStyle = '#0b1020';
+    ctx.fillRect(0, 0, size, ROWS * CELL);
+
+    // 市松模様の盤面
+    ctx.fillStyle = '#111a30';
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        if ((x + y) % 2 === 0) ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+      }
+    }
+
+    if (state.food) {
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath();
+      ctx.arc(
+        state.food.x * CELL + CELL / 2,
+        state.food.y * CELL + CELL / 2,
+        CELL * 0.34,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+
+    const pad = 3;
+    for (let i = state.snake.length - 1; i >= 0; i--) {
+      const c = state.snake[i];
+      ctx.fillStyle = i === 0 ? '#86efac' : '#22c55e';
+      roundRect(
+        c.x * CELL + pad,
+        c.y * CELL + pad,
+        CELL - pad * 2,
+        CELL - pad * 2,
+        8,
+      );
+    }
+
+    // 目
+    const head = state.snake[0];
+    const off: Record<Dir, [number, number][]> = {
+      up: [
+        [-9, -6],
+        [9, -6],
+      ],
+      down: [
+        [-9, 6],
+        [9, 6],
+      ],
+      left: [
+        [-6, -9],
+        [-6, 9],
+      ],
+      right: [
+        [6, -9],
+        [6, 9],
+      ],
+    };
+    ctx.fillStyle = '#0b1020';
+    for (const [dx, dy] of off[state.dir]) {
+      ctx.beginPath();
+      ctx.arc(
+        head.x * CELL + CELL / 2 + dx,
+        head.y * CELL + CELL / 2 + dy,
+        4,
+        0,
+        Math.PI * 2,
+      );
+      ctx.fill();
+    }
+
+    const text =
+      mode === 'idle'
+        ? msg.overlayReady
+        : mode === 'paused'
+          ? msg.overlayPaused
+          : mode === 'over'
+            ? state.status === 'won'
+              ? msg.overlayWon
+              : msg.overlayOver
+            : '';
+    if (text) {
+      ctx.fillStyle = 'rgba(11, 16, 32, 0.7)';
+      ctx.fillRect(0, 0, size, ROWS * CELL);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 40px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, size / 2, (ROWS * CELL) / 2, size - 40);
+    }
+  }
+
+  function renderHud() {
+    scoreEl.textContent = String(state.score);
+    bestEl.textContent = String(Math.max(best, state.score));
+    lengthEl.textContent = String(state.snake.length);
+  }
+
+  // ---- 進行 ----
+
+  function setMode(next: Mode) {
+    mode = next;
+    root.dataset.mode = next;
+    pauseButton.disabled = next !== 'playing' && next !== 'paused';
+    pauseButton.textContent =
+      (next === 'paused' ? msg.resumeLabel : msg.pauseLabel) ?? '';
+  }
+
+  function frame(time: number) {
+    rafId = 0;
+    if (mode !== 'playing') return;
+    const dt = lastTime ? Math.min(time - lastTime, 250) : 0;
+    lastTime = time;
+    acc += dt;
+    let moved = false;
+    while (acc >= tickMs(state) && state.status === 'playing') {
+      acc -= tickMs(state);
+      step(state, random);
+      moved = true;
+    }
+    if (state.status !== 'playing') {
+      finish();
+    }
+    if (moved || mode !== 'playing') {
+      renderHud();
+      draw();
+    }
+    if (mode === 'playing') schedule();
+  }
+
+  function schedule() {
+    if (rafId === 0) rafId = requestAnimationFrame(frame);
+  }
+
+  // ゲームオーバーの表示を読む前に、連打で新しいゲームが始まってしまわないようにする
+  const RESTART_GUARD_MS = 800;
+  let overAt = 0;
+  function canRestart() {
+    return mode !== 'over' || performance.now() - overAt >= RESTART_GUARD_MS;
+  }
+
+  function finish() {
+    overAt = performance.now();
+    setMode('over');
+    const template =
+      state.status === 'won'
+        ? msg.won
+        : state.overReason === 'self'
+          ? msg.gameOverSelf
+          : msg.gameOverWall;
+    let text = fill(template, { score: String(state.score) });
+    if (state.score > best) {
+      best = state.score;
+      saveBest();
+      text += ` ${msg.newBest ?? ''}`;
+    }
+    setStatus(text);
+  }
+
+  function startGame() {
+    state = createGame(random);
+    lastTime = 0;
+    acc = 0;
+    setMode('playing');
+    setStatus(msg.started ?? '');
+    renderHud();
+    draw();
+    schedule();
+  }
+
+  function pauseGame() {
+    if (mode !== 'playing') return;
+    setMode('paused');
+    setStatus(msg.paused ?? '');
+    draw();
+  }
+
+  function resumeGame() {
+    if (mode !== 'paused') return;
+    lastTime = 0;
+    setMode('playing');
+    setStatus(msg.resumed ?? '');
+    draw();
+    schedule();
+  }
+
+  function togglePause() {
+    if (mode === 'playing') pauseGame();
+    else if (mode === 'paused') resumeGame();
+  }
+
+  startButton.addEventListener('click', () => {
+    startGame();
+    // 続けてスペースキーで再開できるよう、フォーカスは盤面へ移す
+    canvas.focus({ preventScroll: true });
+  });
+  pauseButton.addEventListener('click', () => {
+    togglePause();
+    pauseButton.blur();
+  });
+
+  // タブを離れる・ウィンドウから離れたときは自動で一時停止する
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) pauseGame();
+  });
+  window.addEventListener('blur', pauseGame);
+
+  // ---- 入力 ----
+
+  const KEY_MAP: Record<string, Dir> = {
+    ArrowUp: 'up',
+    w: 'up',
+    ArrowDown: 'down',
+    s: 'down',
+    ArrowLeft: 'left',
+    a: 'left',
+    ArrowRight: 'right',
+    d: 'right',
+  };
+
+  function boardVisible() {
+    const rect = canvas.getBoundingClientRect();
+    return rect.bottom >= 0 && rect.top <= window.innerHeight;
+  }
+
+  function ignoredTarget(e: KeyboardEvent) {
+    const el = e.target as HTMLElement;
+    return Boolean(
+      el.closest?.(
+        'input, select, textarea, [contenteditable="true"], a, nav, aside',
+      ) || document.querySelector('dialog[open]'),
+    );
+  }
+
+  function turn(dir: Dir) {
+    if (mode === 'paused') {
+      resumeGame();
+    }
+    if (mode === 'playing') queueDirection(state, dir);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.defaultPrevented || e.isComposing) return;
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    if (ignoredTarget(e) || !boardVisible()) return;
+    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    const dir = KEY_MAP[key];
+    const isSpace = key === ' ';
+    const isPause = key === 'p';
+    if (!dir && !isSpace && !isPause) return;
+
+    if (mode === 'idle' || mode === 'over') {
+      // 開始前・終了後は、ゲーム画面や操作ボタンにフォーカスがあるときのスペースキーだけで開始する
+      // （ページ下部を読んでいるときのスクロールなどを奪わない）
+      if (!isSpace || !root.contains(e.target as Node)) return;
+      e.preventDefault();
+      if (!e.repeat && canRestart()) startGame();
+      return;
+    }
+    e.preventDefault();
+    if (e.repeat) return;
+    if (isPause) togglePause();
+    else if (isSpace) {
+      if (mode === 'paused') resumeGame();
+    } else if (dir) turn(dir);
+  });
+
+  // 画面の矢印ボタン
+  root.querySelectorAll<HTMLButtonElement>('[data-control]').forEach((b) => {
+    const dir = b.dataset.control as Dir;
+    b.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      turn(dir);
+    });
+    // キーボード（Tab → Enter/Space）で押したとき。マウス・タッチは pointerdown で処理済み
+    b.addEventListener('click', (e) => {
+      if (e.detail === 0) turn(dir);
+    });
+    b.addEventListener('contextmenu', (e) => e.preventDefault());
+  });
+
+  // 盤面のスワイプ
+  let swipe: { id: number; x: number; y: number } | null = null;
+  canvas.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    swipe = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    if (mode === 'idle' || mode === 'over') {
+      if (canRestart()) startGame();
+    } else if (mode === 'paused') {
+      resumeGame();
+    }
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch {
+      // キャプチャできなくても、盤面の上での動きは拾える
+    }
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (!swipe || swipe.id !== e.pointerId) return;
+    const dx = e.clientX - swipe.x;
+    const dy = e.clientY - swipe.y;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < SWIPE_PX) return;
+    const dir: Dir =
+      Math.abs(dx) > Math.abs(dy)
+        ? dx > 0
+          ? 'right'
+          : 'left'
+        : dy > 0
+          ? 'down'
+          : 'up';
+    turn(dir);
+    swipe.x = e.clientX;
+    swipe.y = e.clientY;
+  });
+  const endSwipe = (e: PointerEvent) => {
+    if (swipe && swipe.id === e.pointerId) swipe = null;
+  };
+  canvas.addEventListener('pointerup', endSwipe);
+  canvas.addEventListener('pointercancel', endSwipe);
+
+  renderHud();
+  draw();
+</script>

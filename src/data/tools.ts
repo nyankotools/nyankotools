@@ -7796,6 +7796,43 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'snake-game',
+    category: 'games',
+    addedAt: '2026-10-16',
+    updatedAt: '2026-10-16',
+    related: ['invaders-game', 'game-2048', 'minesweeper'],
+    translations: {
+      ja: {
+        name: 'スネークゲーム',
+        description:
+          '餌を食べて長くなる蛇を操作する定番のヘビゲーム。矢印キー・WASD・スマホのスワイプや画面ボタンに対応し、ベストスコア記録付き',
+        keywords: [
+          'スネークゲーム',
+          'ヘビゲーム',
+          '蛇ゲーム',
+          'snake',
+          'snake game',
+          'ブラウザゲーム',
+          'ミニゲーム',
+        ],
+      },
+      en: {
+        name: 'Snake Game',
+        description:
+          'The classic Snake game: eat food to grow, avoid walls and your own tail. Arrow keys, WASD, swipes or on-screen buttons, with a saved best score',
+        keywords: [
+          'snake',
+          'snake game',
+          'nokia snake',
+          'arcade game',
+          'browser game',
+          'retro game',
+          'mini game',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

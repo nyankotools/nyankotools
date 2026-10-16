@@ -7759,6 +7759,43 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'touch-tester',
+    category: 'hardware',
+    addedAt: '2026-10-16',
+    updatedAt: '2026-10-16',
+    related: ['dead-pixel-checker', 'refresh-rate-tester', 'mic-tester'],
+    translations: {
+      ja: {
+        name: 'タッチパネルテスト（マルチタッチ・ゴースト確認）',
+        keywords: [
+          'タッチパネル',
+          'マルチタッチ',
+          'ゴーストタッチ',
+          'タッチ反応',
+          '画面診断',
+          'スマホ故障',
+          'タブレット',
+        ],
+        description:
+          '画面をなぞって、同時タッチ数・ドラッグの軌跡・反応しない範囲・勝手に反応するゴースト入力を確認します。スマホ・タブレットの故障診断に。',
+      },
+      en: {
+        name: 'Touch Screen Test (Multi-Touch & Ghost Touch)',
+        keywords: [
+          'touch screen test',
+          'multi-touch',
+          'ghost touch',
+          'touch tester',
+          'screen diagnostics',
+          'phone touch',
+          'tablet',
+        ],
+        description:
+          'Swipe the screen to check simultaneous touch points, drag trails, dead zones and ghost touches. Useful for diagnosing phone and tablet touch problems.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

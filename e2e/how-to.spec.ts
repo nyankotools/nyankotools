@@ -54,6 +54,7 @@ const slugs = [
   'mic-tester',
   'dead-pixel-checker',
   'refresh-rate-tester',
+  'touch-tester',
   'timezone-converter',
   'business-day-calculator',
   'calendar-generator',

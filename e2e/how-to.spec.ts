@@ -32,6 +32,7 @@ const slugs = [
   'morse-code-converter',
   'classical-cipher',
   'gpa-calculator',
+  'loan-calculator',
   'anniversary-calculator',
   'due-date-calculator',
   'css-glassmorphism-generator',

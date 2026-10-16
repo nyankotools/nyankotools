@@ -7641,6 +7641,47 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'loan-calculator',
+    category: 'calc',
+    addedAt: '2026-10-16',
+    updatedAt: '2026-10-16',
+    related: [
+      'mortgage-calculator',
+      'scholarship-repayment-simulator',
+      'investment-simulator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ローン・リボ払い返済シミュレーター',
+        keywords: [
+          'ローン返済',
+          'リボ払い',
+          'リボ手数料',
+          'カードローン',
+          '元利均等',
+          '元金均等',
+          '返済計画表',
+        ],
+        description:
+          '借入額・年率から、元利均等・元金均等・リボ払いの毎月の返済額・総利息・完済までの期間と返済計画表を試算します。',
+      },
+      en: {
+        name: 'Loan & Revolving Payment Calculator',
+        keywords: [
+          'loan calculator',
+          'revolving payment',
+          'credit card revolving',
+          'amortization schedule',
+          'equal principal',
+          'monthly payment',
+        ],
+        description:
+          'Estimate monthly payments, total interest and payoff time for amortizing, equal-principal and revolving credit, with a repayment schedule.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

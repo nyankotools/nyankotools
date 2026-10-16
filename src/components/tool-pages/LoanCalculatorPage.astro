@@ -1,0 +1,361 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { loanCalculatorContent } from '../../i18n/tools/loan-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = loanCalculatorContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-years-months-format={t.yearsMonthsFormat}
+    data-error={t.error}
+    data-revolving-error={t.revolvingError}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-3">
+      <span id="loan-calc-method-label" class="ui-label">
+        {t.methodLegend}
+      </span>
+      <div
+        class="flex flex-col gap-2"
+        role="radiogroup"
+        aria-labelledby="loan-calc-method-label"
+      >
+        <label class="flex items-center gap-1 text-sm">
+          <input
+            type="radio"
+            name="loan-calc-method"
+            value="equalPayment"
+            checked
+          />
+          {t.methodEqualPayment}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="loan-calc-method" value="equalPrincipal" />
+          {t.methodEqualPrincipal}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="loan-calc-method" value="revolving" />
+          {t.methodRevolving}
+        </label>
+      </div>
+    </div>
+
+    <div class="mb-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label for="loan-calc-principal" class="ui-label">
+          {t.principalLabel}
+        </label>
+        <input
+          id="loan-calc-principal"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.principalPlaceholder}
+          class="ui-input h-11 w-40 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label for="loan-calc-rate" class="ui-label">
+          {t.rateLabel}
+        </label>
+        <input
+          id="loan-calc-rate"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="0.01"
+          placeholder={t.ratePlaceholder}
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div id="loan-calc-term-group">
+        <span id="loan-calc-term-label" class="ui-label">
+          {t.termLabel}
+        </span>
+        <div
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="loan-calc-term-label"
+        >
+          <input
+            id="loan-calc-term-years"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            max="50"
+            placeholder={t.yearPlaceholder}
+            aria-label={t.yearAriaLabel}
+            class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.yearUnit}
+          </span>
+          <input
+            id="loan-calc-term-months"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            max="11"
+            placeholder={t.monthPlaceholder}
+            aria-label={t.monthAriaLabel}
+            class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.monthUnit}
+          </span>
+        </div>
+      </div>
+      <div id="loan-calc-payment-group" class="hidden">
+        <label for="loan-calc-payment" class="ui-label">
+          {t.monthlyPaymentLabel}
+        </label>
+        <input
+          id="loan-calc-payment"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.monthlyPaymentPlaceholder}
+          class="ui-input h-11 w-40 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+    </div>
+
+    <p
+      id="loan-calc-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="loan-calc-results" class="mt-4 hidden" aria-live="polite">
+      <h3 class="mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+        {t.resultHeading}
+      </h3>
+      <dl class="grid grid-cols-1 gap-3 rounded-lg bg-blue-50 p-3 sm:grid-cols-2 dark:bg-blue-950">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.firstPaymentLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="loan-calc-first"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.lastPaymentLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="loan-calc-last"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.termResultLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="loan-calc-term"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.totalPaymentLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="loan-calc-total"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.totalInterestLabel}
+          </dt>
+          <dd
+            class="text-lg font-semibold text-blue-700 dark:text-blue-400"
+            id="loan-calc-interest"
+          ></dd>
+        </div>
+      </dl>
+
+      <details class="mt-4">
+        <summary class="cursor-pointer text-sm font-bold">
+          {t.scheduleHeading}
+        </summary>
+        <div class="mt-2 max-h-96 overflow-auto rounded-lg border border-gray-200 dark:border-gray-700">
+          <table class="w-full text-right text-sm">
+            <thead class="sticky top-0 bg-gray-100 dark:bg-gray-800">
+              <tr>
+                <th class="px-2 py-1">{t.colMonth}</th>
+                <th class="px-2 py-1">{t.colPayment}</th>
+                <th class="px-2 py-1">{t.colPrincipal}</th>
+                <th class="px-2 py-1">{t.colInterest}</th>
+                <th class="px-2 py-1">{t.colBalance}</th>
+              </tr>
+            </thead>
+            <tbody id="loan-calc-schedule"></tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    calculateLoan,
+    type LoanMethod,
+  } from '../../lib/tools/loan-calculator';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+  import { fill } from '../../lib/format-template';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
+  const errorMessage = configEl.dataset.error ?? '';
+  const revolvingErrorMessage = configEl.dataset.revolvingError ?? '';
+  const yearsMonthsFormat = configEl.dataset.yearsMonthsFormat ?? '';
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+
+  const principalInput = document.getElementById(
+    'loan-calc-principal',
+  ) as HTMLInputElement;
+  const rateInput = document.getElementById(
+    'loan-calc-rate',
+  ) as HTMLInputElement;
+  const termYearsInput = document.getElementById(
+    'loan-calc-term-years',
+  ) as HTMLInputElement;
+  const termMonthsInput = document.getElementById(
+    'loan-calc-term-months',
+  ) as HTMLInputElement;
+  const paymentInput = document.getElementById(
+    'loan-calc-payment',
+  ) as HTMLInputElement;
+  const termGroup = document.getElementById('loan-calc-term-group')!;
+  const paymentGroup = document.getElementById('loan-calc-payment-group')!;
+  const methodInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="loan-calc-method"]',
+  );
+
+  const errorEl = document.getElementById('loan-calc-error')!;
+  const resultsEl = document.getElementById('loan-calc-results')!;
+  const firstEl = document.getElementById('loan-calc-first')!;
+  const lastEl = document.getElementById('loan-calc-last')!;
+  const termEl = document.getElementById('loan-calc-term')!;
+  const totalEl = document.getElementById('loan-calc-total')!;
+  const interestEl = document.getElementById('loan-calc-interest')!;
+  const scheduleEl = document.getElementById('loan-calc-schedule')!;
+
+  attachCommaFormatting(principalInput);
+  attachCommaFormatting(paymentInput);
+
+  function formatTerm(months: number): string {
+    return fill(yearsMonthsFormat, {
+      y: String(Math.floor(months / 12)),
+      m: String(months % 12),
+    });
+  }
+
+  function selectedMethod(): LoanMethod {
+    return (
+      (Array.from(methodInputs).find((el) => el.checked)
+        ?.value as LoanMethod) || 'equalPayment'
+    );
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    const method = selectedMethod();
+    const isRevolving = method === 'revolving';
+    termGroup.classList.toggle('hidden', isRevolving);
+    paymentGroup.classList.toggle('hidden', !isRevolving);
+
+    if (principalInput.value.trim() === '' || rateInput.value.trim() === '')
+      return;
+    if (isRevolving) {
+      if (paymentInput.value.trim() === '') return;
+    } else if (
+      termYearsInput.value.trim() === '' ||
+      termMonthsInput.value.trim() === ''
+    )
+      return;
+
+    const years = Number(termYearsInput.value);
+    const extraMonths = Number(termMonthsInput.value);
+    if (
+      !isRevolving &&
+      (!Number.isInteger(years) ||
+        !Number.isInteger(extraMonths) ||
+        years < 0 ||
+        extraMonths < 0 ||
+        extraMonths > 11)
+    ) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    const result = calculateLoan({
+      principal: Number(stripCommas(principalInput.value)),
+      annualInterestRate: Number(rateInput.value),
+      method,
+      months: years * 12 + extraMonths,
+      monthlyPayment: Number(stripCommas(paymentInput.value)),
+    });
+
+    if (result === null) {
+      errorEl.textContent = isRevolving ? revolvingErrorMessage : errorMessage;
+      return;
+    }
+
+    firstEl.textContent = yen.format(result.firstPayment);
+    lastEl.textContent = yen.format(result.lastPayment);
+    termEl.textContent = formatTerm(result.totalMonths);
+    totalEl.textContent = yen.format(result.totalPayment);
+    interestEl.textContent = yen.format(result.totalInterest);
+
+    const frag = document.createDocumentFragment();
+    for (const row of result.schedule) {
+      const tr = document.createElement('tr');
+      tr.className = 'border-t border-gray-200 dark:border-gray-700';
+      for (const value of [
+        String(row.month),
+        yen.format(row.payment),
+        yen.format(row.principal),
+        yen.format(row.interest),
+        yen.format(row.balance),
+      ]) {
+        const td = document.createElement('td');
+        td.className = 'px-2 py-1';
+        td.textContent = value;
+        tr.appendChild(td);
+      }
+      frag.appendChild(tr);
+    }
+    scheduleEl.replaceChildren(frag);
+
+    resultsEl.classList.remove('hidden');
+  }
+
+  principalInput.addEventListener('input', render);
+  rateInput.addEventListener('input', render);
+  termYearsInput.addEventListener('input', render);
+  termMonthsInput.addEventListener('input', render);
+  paymentInput.addEventListener('input', render);
+  methodInputs.forEach((el) => el.addEventListener('change', render));
+
+  principalInput.value = formatNumberWithCommas('1000000');
+  rateInput.value = '15.0';
+  termYearsInput.value = '3';
+  termMonthsInput.value = '0';
+  paymentInput.value = formatNumberWithCommas('20000');
+  render();
+</script>

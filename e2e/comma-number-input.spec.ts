@@ -128,6 +128,15 @@ test.describe('カンマ区切り数値入力の共通機能', () => {
     );
   });
 
+  test('ローン・リボ払い返済シミュレーター：借入額に3桁区切りが適用される', async ({
+    page,
+  }) => {
+    await page.goto('/tools/loan-calculator/');
+
+    await page.locator('#loan-calc-principal').fill('2500000');
+    await expect(page.locator('#loan-calc-principal')).toHaveValue('2,500,000');
+  });
+
   test('資産運用シミュレーション：初期投資額と毎月積立額に3桁区切りが適用される', async ({
     page,
   }) => {

@@ -627,6 +627,20 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-16',
+    toolSlugs: ['loan-calculator'],
+    translations: {
+      ja: {
+        summary:
+          'ローン・リボ払い返済シミュレーターを追加しました。借入額・年率から、元利均等・元金均等・リボ払い（定額方式）の毎月の返済額、総利息・手数料、完済までの期間と月ごとの返済計画表を試算できます。',
+      },
+      en: {
+        summary:
+          'Added the Loan & Revolving Payment Calculator. From an amount and annual rate, it estimates the monthly payment, total interest or fees, time to pay off and a month-by-month schedule for amortizing, equal-principal and revolving credit.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

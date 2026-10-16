@@ -1,0 +1,183 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { refreshRateTesterContent } from '../../i18n/tools/refresh-rate-tester';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = refreshRateTesterContent[locale];
+
+const statRows = [
+  { id: 'samples', label: t.statLabels.samples },
+  { id: 'median', label: t.statLabels.medianInterval },
+  { id: 'average', label: t.statLabels.averageInterval },
+  { id: 'min', label: t.statLabels.minInterval },
+  { id: 'max', label: t.statLabels.maxInterval },
+  { id: 'average-hz', label: t.statLabels.averageHz },
+  { id: 'stddev', label: t.statLabels.stdDev },
+  { id: 'dropped', label: t.statLabels.dropped },
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="rrt-root"
+    data-waiting={t.waiting}
+    data-none={t.nearestNone}
+    data-measuring={t.statusMeasuring}
+    data-paused={t.statusPaused}
+    data-pause={t.pauseLabel}
+    data-resume={t.resumeLabel}
+  >
+    <div class="rounded-lg border border-gray-200 p-5 text-center dark:border-gray-800">
+      <p class="text-sm text-gray-600 dark:text-gray-400">{t.currentLabel}</p>
+      <p class="mt-1 font-mono text-5xl font-bold">
+        <span id="rrt-hz">{t.waiting}</span>
+        <span id="rrt-unit" class="text-xl" hidden>
+          {t.unitHz}
+        </span>
+      </p>
+      <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+        {t.nearestLabel}:
+        <span
+          id="rrt-nearest"
+          class="font-mono font-semibold text-gray-900 dark:text-gray-100"
+        >
+          -
+        </span>
+      </p>
+      <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        {t.statusLabel}: <span id="rrt-status">{t.statusMeasuring}</span>
+      </p>
+    </div>
+
+    <div class="mt-4 flex flex-wrap gap-2">
+      <button id="rrt-pause" type="button" class="ui-btn">
+        {t.pauseLabel}
+      </button>
+      <button id="rrt-reset" type="button" class="ui-btn">
+        {t.resetLabel}
+      </button>
+    </div>
+
+    <h2 class="mt-8 mb-2 text-lg font-bold">{t.statsHeading}</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[320px] border-collapse text-sm">
+        <tbody>
+          {statRows.map(({ id, label }) => (
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                {label}
+              </td>
+              <td
+                id={`rrt-stat-${id}`}
+                class="py-2 text-right font-mono text-gray-900 dark:text-gray-100"
+              >
+                -
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    computeStats,
+    toIntervals,
+  } from '../../lib/tools/refresh-rate-tester';
+
+  const WINDOW = 240;
+  const STAT_IDS = [
+    'samples',
+    'median',
+    'average',
+    'min',
+    'max',
+    'average-hz',
+    'stddev',
+    'dropped',
+  ];
+  const root = document.getElementById('rrt-root')!;
+  const $ = (id: string) => document.getElementById(id)!;
+
+  let timestamps: number[] = [];
+  let running = false;
+  let rafId = 0;
+  let lastRender = 0;
+
+  const fmt = (v: number, digits = 2) => v.toFixed(digits);
+  const setStat = (id: string, text: string) => {
+    $(`rrt-stat-${id}`).textContent = text;
+  };
+
+  function renderStats() {
+    const stats = computeStats(toIntervals(timestamps));
+    if (!stats) {
+      $('rrt-hz').textContent = root.dataset.waiting ?? '';
+      $('rrt-unit').hidden = true;
+      $('rrt-nearest').textContent = '-';
+      for (const id of STAT_IDS) setStat(id, '-');
+      return;
+    }
+    $('rrt-hz').textContent = fmt(stats.hz, 1);
+    $('rrt-unit').hidden = false;
+    $('rrt-nearest').textContent =
+      stats.nearestStandard !== null
+        ? `${stats.nearestStandard}Hz`
+        : (root.dataset.none ?? '');
+    setStat('samples', String(stats.samples));
+    setStat('median', `${fmt(stats.medianIntervalMs)} ms`);
+    setStat('average', `${fmt(stats.averageIntervalMs)} ms`);
+    setStat('min', `${fmt(stats.minIntervalMs)} ms`);
+    setStat('max', `${fmt(stats.maxIntervalMs)} ms`);
+    setStat('average-hz', `${fmt(stats.averageHz, 1)} Hz`);
+    setStat('stddev', `${fmt(stats.stdDevMs)} ms`);
+    setStat('dropped', String(stats.droppedFrames));
+  }
+
+  function tick(now: number) {
+    if (!running) return;
+    timestamps.push(now);
+    if (timestamps.length > WINDOW) timestamps.shift();
+    // DOM更新が測定に影響しないよう、表示は約4回/秒に間引く
+    if (now - lastRender > 250) {
+      lastRender = now;
+      renderStats();
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function start() {
+    cancelAnimationFrame(rafId);
+    running = true;
+    timestamps = [];
+    $('rrt-status').textContent = root.dataset.measuring ?? '';
+    $('rrt-pause').textContent = root.dataset.pause ?? '';
+    rafId = requestAnimationFrame(tick);
+  }
+
+  $('rrt-pause').addEventListener('click', () => {
+    if (running) {
+      running = false;
+      cancelAnimationFrame(rafId);
+      renderStats();
+      $('rrt-status').textContent = root.dataset.paused ?? '';
+      $('rrt-pause').textContent = root.dataset.resume ?? '';
+    } else {
+      start();
+    }
+  });
+
+  $('rrt-reset').addEventListener('click', () => {
+    start();
+    renderStats();
+  });
+
+  start();
+</script>

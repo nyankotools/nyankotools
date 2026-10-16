@@ -7641,6 +7641,284 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'loan-calculator',
+    category: 'calc',
+    addedAt: '2026-10-16',
+    updatedAt: '2026-10-16',
+    related: [
+      'mortgage-calculator',
+      'scholarship-repayment-simulator',
+      'investment-simulator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ローン・リボ払い返済シミュレーター',
+        keywords: [
+          'ローン返済',
+          'リボ払い',
+          'リボ手数料',
+          'カードローン',
+          '元利均等',
+          '元金均等',
+          '返済計画表',
+        ],
+        description:
+          '借入額・年率から、元利均等・元金均等・リボ払いの毎月の返済額・総利息・完済までの期間と返済計画表を試算します。',
+      },
+      en: {
+        name: 'Loan & Revolving Payment Calculator',
+        keywords: [
+          'loan calculator',
+          'revolving payment',
+          'credit card revolving',
+          'amortization schedule',
+          'equal principal',
+          'monthly payment',
+        ],
+        description:
+          'Estimate monthly payments, total interest and payoff time for amortizing, equal-principal and revolving credit, with a repayment schedule.',
+      },
+    },
+  },
+  {
+    slug: 'size-converter',
+    category: 'calc',
+    addedAt: '2026-10-16',
+    updatedAt: '2026-10-16',
+    related: ['unit-converter', 'bmi-calculator', 'screen-size-calculator'],
+    translations: {
+      ja: {
+        name: 'サイズ変換（服・靴・指輪）',
+        keywords: [
+          'サイズ換算',
+          '服サイズ',
+          '靴サイズ',
+          '指輪サイズ',
+          'US EU UK',
+          '海外通販',
+          'サイズ表',
+        ],
+        description:
+          'レディース・メンズの服・靴・指輪のサイズを、日本・US・EU・UKの間で換算します。海外通販や個人輸入のサイズ選びの目安に。',
+      },
+      en: {
+        name: 'Size Converter (Clothing, Shoes & Rings)',
+        keywords: [
+          'size chart',
+          'clothing size',
+          'shoe size',
+          'ring size',
+          'US EU UK size',
+          'Japan size',
+        ],
+        description:
+          'Convert women’s and men’s clothing, shoe and ring sizes between Japan, US, EU and UK. A handy guide for overseas shopping.',
+      },
+    },
+  },
+  {
+    slug: 'refresh-rate-tester',
+    category: 'hardware',
+    addedAt: '2026-10-16',
+    updatedAt: '2026-10-16',
+    related: [
+      'dead-pixel-checker',
+      'viewport-checker',
+      'screen-size-calculator',
+    ],
+    translations: {
+      ja: {
+        name: 'リフレッシュレート測定（60/120/144Hz）',
+        keywords: [
+          'リフレッシュレート',
+          'Hz',
+          '60Hz',
+          '144Hz',
+          'fps',
+          'モニター確認',
+          '画面更新',
+        ],
+        description:
+          'ブラウザのフレーム間隔から、モニター・スマホの画面のリフレッシュレート（Hz）を実測します。60Hz・120Hz・144Hzなどを自動判定。',
+      },
+      en: {
+        name: 'Refresh Rate Test (60/120/144Hz)',
+        keywords: [
+          'refresh rate',
+          'Hz',
+          '60Hz',
+          '144Hz',
+          'fps test',
+          'monitor test',
+          'screen refresh',
+        ],
+        description:
+          'Measure your monitor or phone refresh rate in Hz from browser frame timing and see whether it is 60Hz, 120Hz, 144Hz and more.',
+      },
+    },
+  },
+  {
+    slug: 'touch-tester',
+    category: 'hardware',
+    addedAt: '2026-10-16',
+    updatedAt: '2026-10-16',
+    related: ['dead-pixel-checker', 'refresh-rate-tester', 'mic-tester'],
+    translations: {
+      ja: {
+        name: 'タッチパネルテスト（マルチタッチ・ゴースト確認）',
+        keywords: [
+          'タッチパネル',
+          'マルチタッチ',
+          'ゴーストタッチ',
+          'タッチ反応',
+          '画面診断',
+          'スマホ故障',
+          'タブレット',
+        ],
+        description:
+          '画面をなぞって、同時タッチ数・ドラッグの軌跡・反応しない範囲・勝手に反応するゴースト入力を確認します。スマホ・タブレットの故障診断に。',
+      },
+      en: {
+        name: 'Touch Screen Test (Multi-Touch & Ghost Touch)',
+        keywords: [
+          'touch screen test',
+          'multi-touch',
+          'ghost touch',
+          'touch tester',
+          'screen diagnostics',
+          'phone touch',
+          'tablet',
+        ],
+        description:
+          'Swipe the screen to check simultaneous touch points, drag trails, dead zones and ghost touches. Useful for diagnosing phone and tablet touch problems.',
+      },
+    },
+  },
+  {
+    slug: 'snake-game',
+    category: 'games',
+    addedAt: '2026-10-16',
+    updatedAt: '2026-10-16',
+    related: ['invaders-game', 'game-2048', 'minesweeper'],
+    translations: {
+      ja: {
+        name: 'スネークゲーム',
+        description:
+          '餌を食べて長くなる蛇を操作する定番のヘビゲーム。矢印キー・WASD・スマホのスワイプや画面ボタンに対応し、ベストスコア記録付き',
+        keywords: [
+          'スネークゲーム',
+          'ヘビゲーム',
+          '蛇ゲーム',
+          'snake',
+          'snake game',
+          'ブラウザゲーム',
+          'ミニゲーム',
+        ],
+      },
+      en: {
+        name: 'Snake Game',
+        description:
+          'The classic Snake game: eat food to grow, avoid walls and your own tail. Arrow keys, WASD, swipes or on-screen buttons, with a saved best score',
+        keywords: [
+          'snake',
+          'snake game',
+          'nokia snake',
+          'arcade game',
+          'browser game',
+          'retro game',
+          'mini game',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'htaccess-generator',
+    category: 'dev',
+    addedAt: '2026-10-16',
+    updatedAt: '2026-10-16',
+    related: [
+      'http-status-codes',
+      'robots-txt-generator',
+      'http-header-analyzer',
+    ],
+    translations: {
+      ja: {
+        name: '.htaccess生成（リダイレクト・HTTPS強制・www統一）',
+        description:
+          'HTTPS強制・www有無の統一・個別URLの301/302リダイレクト・エラーページ指定の.htaccessを生成。ループの警告と確認手順つき',
+        keywords: [
+          'htaccess',
+          'リダイレクト',
+          '301',
+          'HTTPS強制',
+          'www統一',
+          'Apache',
+          '末尾スラッシュ',
+          'ErrorDocument',
+        ],
+      },
+      en: {
+        name: '.htaccess Generator (Redirects, Force HTTPS, www)',
+        description:
+          'Generate .htaccess rules for forcing HTTPS, www canonicalization, per-URL 301/302 redirects and error pages, with loop warnings',
+        keywords: [
+          'htaccess',
+          'redirect',
+          '301 redirect',
+          'force https',
+          'www redirect',
+          'Apache',
+          'trailing slash',
+          'ErrorDocument',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'figlet-text',
+    category: 'image',
+    addedAt: '2026-10-16',
+    updatedAt: '2026-10-16',
+    related: [
+      'image-ascii-art',
+      'unicode-decorator',
+      'cat-logo-text-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'ASCIIアート文字（FIGlet風テキストバナー）',
+        description:
+          '英数字を大きなASCIIアート文字（テキストバナー）に変換。Standard・Slant・Doomなど8書体（日本語のドット書体はひらがな・カタカナ・漢字に対応）、字間の調整、コードのコメント形式でのコピーに対応',
+        keywords: [
+          'ASCIIアート',
+          'FIGlet',
+          'テキストバナー',
+          'アスキーアート',
+          'ドット文字',
+          '日本語 アスキーアート',
+          'ひらがな',
+          '漢字',
+        ],
+      },
+      en: {
+        name: 'ASCII Art Text Generator (FIGlet-style Banner)',
+        description:
+          'Turn text into big ASCII art lettering (text banners) with 8 fonts such as Standard, Slant and Doom (including a dot font for Japanese), adjustable spacing and code-comment output',
+        keywords: [
+          'ascii art',
+          'figlet',
+          'text banner',
+          'ascii text',
+          'text to ascii',
+          'japanese ascii art',
+          'kanji',
+          'pixel text',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

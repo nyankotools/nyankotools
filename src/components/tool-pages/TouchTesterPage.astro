@@ -1,0 +1,294 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { touchTesterContent } from '../../i18n/tools/touch-tester';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = touchTesterContent[locale];
+
+const statRows = [
+  { id: 'current', label: t.statLabels.current },
+  { id: 'max', label: t.statLabels.max },
+  { id: 'total', label: t.statLabels.total },
+  { id: 'coverage', label: t.statLabels.coverage },
+  { id: 'device-max', label: t.statLabels.deviceMax },
+  { id: 'type', label: t.statLabels.pointerType },
+  { id: 'pressure', label: t.statLabels.pressure },
+];
+---
+
+<ToolShell t={t}>
+  <div id="tt-root" data-unsupported={t.unsupported}>
+    <div class="mb-3 flex flex-wrap items-center gap-2">
+      <button id="tt-reset" type="button" class="ui-btn">
+        {t.resetLabel}
+      </button>
+    </div>
+
+    <div class="relative h-[60vh] min-h-80 w-full overflow-hidden rounded-lg border border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
+      <canvas
+        id="tt-pad"
+        class="absolute inset-0 h-full w-full touch-none select-none"
+        aria-label={t.padLabel}
+        role="img"
+      ></canvas>
+      <p
+        id="tt-hint"
+        class="pointer-events-none absolute inset-0 flex items-center justify-center px-4 text-center text-sm text-gray-500 dark:text-gray-400"
+      >
+        {t.padHint}
+      </p>
+    </div>
+
+    <h2 class="mt-8 mb-2 text-lg font-bold">{t.statsHeading}</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[320px] border-collapse text-sm">
+        <tbody>
+          {statRows.map(({ id, label }) => (
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                {label}
+              </td>
+              <td
+                id={`tt-stat-${id}`}
+                class="py-2 text-right font-mono text-gray-900 dark:text-gray-100"
+              >
+                -
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    GRID_COLS,
+    GRID_ROWS,
+    coveragePercent,
+    createState,
+    pointerDown,
+    pointerMove,
+    pointerUp,
+    type PointerInfo,
+  } from '../../lib/tools/touch-tester';
+
+  const COLORS = [
+    '#ef4444',
+    '#f59e0b',
+    '#22c55e',
+    '#06b6d4',
+    '#3b82f6',
+    '#8b5cf6',
+    '#ec4899',
+    '#84cc16',
+    '#14b8a6',
+    '#f97316',
+  ];
+  const MAX_TRAIL_POINTS = 600;
+  const MAX_TRAILS = 100;
+
+  const root = document.getElementById('tt-root')!;
+  const canvas = document.getElementById('tt-pad') as HTMLCanvasElement;
+  const hint = document.getElementById('tt-hint')!;
+  const ctx = canvas.getContext('2d')!;
+  const $ = (id: string) => document.getElementById(id)!;
+
+  let state = createState();
+  // ポインターIDごとの軌跡（指を離しても残して途切れを確認できるようにする）
+  let trails: { id: number; points: { x: number; y: number }[] }[] = [];
+  let width = 0;
+  let height = 0;
+  let dpr = 1;
+  let scheduled = false;
+  let lastType = '-';
+  let lastPressure = '-';
+
+  const color = (id: number) => COLORS[Math.abs(id) % COLORS.length];
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    dpr = window.devicePixelRatio || 1;
+    width = rect.width;
+    height = rect.height;
+    canvas.width = Math.round(width * dpr);
+    canvas.height = Math.round(height * dpr);
+    schedule();
+  }
+
+  function draw() {
+    scheduled = false;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+
+    const cw = width / GRID_COLS;
+    const ch = height / GRID_ROWS;
+    // 触れたセルを薄く塗る
+    ctx.fillStyle = 'rgba(34, 197, 94, 0.22)';
+    for (const idx of state.touchedCells) {
+      ctx.fillRect(
+        (idx % GRID_COLS) * cw,
+        Math.floor(idx / GRID_COLS) * ch,
+        cw,
+        ch,
+      );
+    }
+    // グリッド線
+    ctx.strokeStyle = 'rgba(128, 128, 128, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let c = 1; c < GRID_COLS; c++) {
+      ctx.moveTo(c * cw, 0);
+      ctx.lineTo(c * cw, height);
+    }
+    for (let r = 1; r < GRID_ROWS; r++) {
+      ctx.moveTo(0, r * ch);
+      ctx.lineTo(width, r * ch);
+    }
+    ctx.stroke();
+
+    // 軌跡
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    for (const trail of trails) {
+      if (trail.points.length === 0) continue;
+      ctx.strokeStyle = color(trail.id);
+      ctx.beginPath();
+      ctx.moveTo(trail.points[0].x, trail.points[0].y);
+      for (const p of trail.points) ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    }
+
+    // 押下中の点
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for (const p of state.active.values()) {
+      ctx.fillStyle = color(p.id);
+      ctx.globalAlpha = 0.35;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 32, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#9ca3af';
+      ctx.fillText(String(p.id), p.x, p.y - 44);
+    }
+  }
+
+  function schedule() {
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(draw);
+  }
+
+  function renderStats() {
+    $('tt-stat-current').textContent = String(state.active.size);
+    $('tt-stat-max').textContent = String(state.maxSimultaneous);
+    $('tt-stat-total').textContent = String(state.totalTouches);
+    $('tt-stat-coverage').textContent = `${coveragePercent(state).toFixed(1)}%`;
+    $('tt-stat-type').textContent = lastType;
+    $('tt-stat-pressure').textContent = lastPressure;
+  }
+
+  function infoOf(e: PointerEvent): PointerInfo {
+    const rect = canvas.getBoundingClientRect();
+    lastType = e.pointerType || '-';
+    lastPressure = e.pressure.toFixed(2);
+    return {
+      id: e.pointerId,
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+      pointerType: e.pointerType,
+      pressure: e.pressure,
+    };
+  }
+
+  function trailOf(id: number) {
+    for (let i = trails.length - 1; i >= 0; i--) {
+      if (trails[i].id === id) return trails[i];
+    }
+    return undefined;
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    hint.hidden = true;
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch {
+      // 取得できなくても測定は続ける
+    }
+    const info = infoOf(e);
+    pointerDown(state, info, width, height);
+    trails.push({ id: info.id, points: [{ x: info.x, y: info.y }] });
+    if (trails.length > MAX_TRAILS) trails.shift();
+    renderStats();
+    schedule();
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (!state.active.has(e.pointerId)) return;
+    // 高頻度で届くイベントを取りこぼさないよう、合体されたイベントも使う
+    const events = e.getCoalescedEvents?.() ?? [];
+    const list = events.length > 0 ? events : [e];
+    for (const ev of list) {
+      const info = infoOf(ev);
+      pointerMove(state, info, width, height);
+      const trail = trailOf(info.id);
+      if (trail) {
+        trail.points.push({ x: info.x, y: info.y });
+        if (trail.points.length > MAX_TRAIL_POINTS) trail.points.shift();
+      }
+    }
+    renderStats();
+    schedule();
+  });
+
+  function end(e: PointerEvent) {
+    pointerUp(state, e.pointerId);
+    renderStats();
+    schedule();
+  }
+  canvas.addEventListener('pointerup', end);
+  canvas.addEventListener('pointercancel', end);
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  $('tt-reset').addEventListener('click', () => {
+    state = createState();
+    trails = [];
+    lastType = '-';
+    lastPressure = '-';
+    hint.hidden = false;
+    for (const id of [
+      'current',
+      'max',
+      'total',
+      'coverage',
+      'type',
+      'pressure',
+    ])
+      $(`tt-stat-${id}`).textContent = '-';
+    renderStats();
+    schedule();
+  });
+
+  const maxTouch = navigator.maxTouchPoints;
+  $('tt-stat-device-max').textContent =
+    typeof maxTouch === 'number'
+      ? String(maxTouch)
+      : (root.dataset.unsupported ?? '');
+
+  new ResizeObserver(resize).observe(canvas);
+  resize();
+  renderStats();
+</script>

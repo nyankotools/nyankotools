@@ -1,0 +1,172 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { sizeConverterContent } from '../../i18n/tools/size-converter';
+import { sizeCategories } from '../../lib/tools/size-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = sizeConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-column-names={JSON.stringify(t.columnNames)}
+    data-column-overrides={JSON.stringify(t.columnNameOverrides)}
+    data-empty={t.empty}
+    id="size-converter"
+  >
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div>
+        <label for="size-category-select" class="ui-label">
+          {t.categoryLabel}
+        </label>
+        <select
+          id="size-category-select"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          {sizeCategories.map((category) => (
+            <option value={category}>{t.categoryNames[category]}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="size-column-select" class="ui-label">
+          {t.fromLabel}
+        </label>
+        <select
+          id="size-column-select"
+          data-no-persist
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        ></select>
+      </div>
+      <div>
+        <label for="size-value-select" class="ui-label">
+          {t.valueLabel}
+        </label>
+        <select
+          id="size-value-select"
+          data-no-persist
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        ></select>
+      </div>
+    </div>
+
+    <div class="mt-6">
+      <h2 class="mb-2 text-base font-semibold">{t.resultHeading}</h2>
+      <dl
+        id="size-result"
+        class="grid grid-cols-1 gap-x-6 gap-y-1 text-sm sm:grid-cols-2"
+        aria-live="polite"
+      ></dl>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    findRow,
+    getColumns,
+    getValues,
+    type SizeCategory,
+    type SizeColumn,
+  } from '../../lib/tools/size-converter';
+
+  const section = document.getElementById('size-converter')!;
+  const columnNames: Record<string, string> = JSON.parse(
+    section.dataset.columnNames ?? '{}',
+  );
+  const overrides: Record<string, Record<string, string>> = JSON.parse(
+    section.dataset.columnOverrides ?? '{}',
+  );
+  const emptyMessage = section.dataset.empty ?? '';
+
+  const categorySelect = document.getElementById(
+    'size-category-select',
+  ) as HTMLSelectElement;
+  const columnSelect = document.getElementById(
+    'size-column-select',
+  ) as HTMLSelectElement;
+  const valueSelect = document.getElementById(
+    'size-value-select',
+  ) as HTMLSelectElement;
+  const resultEl = document.getElementById('size-result')!;
+
+  const category = () => categorySelect.value as SizeCategory;
+
+  function columnName(column: SizeColumn): string {
+    return overrides[category()]?.[column] ?? columnNames[column] ?? column;
+  }
+
+  function fill(select: HTMLSelectElement, items: [string, string][]) {
+    select.replaceChildren(
+      ...items.map(([value, label]) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = label;
+        return option;
+      }),
+    );
+  }
+
+  function populateColumns() {
+    const cols = getColumns(category());
+    fill(
+      columnSelect,
+      cols.map((c) => [c, columnName(c)]),
+    );
+    columnSelect.value = cols[0];
+  }
+
+  function populateValues() {
+    const values = getValues(category(), columnSelect.value as SizeColumn);
+    fill(
+      valueSelect,
+      values.map((v) => [v, v]),
+    );
+  }
+
+  function render() {
+    resultEl.replaceChildren();
+    const row = findRow(
+      category(),
+      columnSelect.value as SizeColumn,
+      valueSelect.value,
+    );
+    if (!row) {
+      resultEl.textContent = emptyMessage;
+      return;
+    }
+    for (const column of getColumns(category())) {
+      const dt = document.createElement('dt');
+      dt.className = 'text-gray-600 dark:text-gray-400';
+      dt.textContent = columnName(column);
+      const dd = document.createElement('dd');
+      dd.className = 'mb-1 font-semibold break-all';
+      dd.textContent = row[column] ?? '—';
+      dd.dataset.column = column;
+      const wrap = document.createElement('div');
+      wrap.append(dt, dd);
+      resultEl.append(wrap);
+    }
+  }
+
+  categorySelect.addEventListener('change', () => {
+    populateColumns();
+    populateValues();
+    render();
+  });
+  columnSelect.addEventListener('change', () => {
+    populateValues();
+    render();
+  });
+  valueSelect.addEventListener('change', render);
+
+  populateColumns();
+  populateValues();
+  render();
+</script>

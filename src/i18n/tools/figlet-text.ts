@@ -37,10 +37,10 @@ export const figletTextContent: Record<Locale, FigletTextPageContent> = {
   ja: {
     title: 'ASCIIアート文字（FIGlet風テキストバナー）生成',
     description:
-      '英数字を大きなASCIIアート文字（FIGletのテキストバナー）に変換する無料ツールです。Standard・Slant・Doomなど7種の書体を選べ、コードのコメント形式でコピーもできます。データはブラウザ内で処理され、サーバーには送信されません。',
+      '英数字を大きなASCIIアート文字（FIGletのテキストバナー）に変換する無料ツールです。Standard・Slant・Doomなど8種の書体を選べ、日本語ドット書体ならひらがな・カタカナ・漢字も変換できます。コードのコメント形式でコピーもできます。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'ASCIIアート文字（テキストバナー）生成',
     introHtml:
-      '英数字を入力すると、記号の組み合わせで描いた大きな文字（FIGlet形式のテキストバナー）に変換します。READMEやソースコードの見出し、ターミナルの起動メッセージに使えます。画像をASCIIアートにしたいときは<a href="/tools/image-ascii-art/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像→ASCIIアート変換</a>をご利用ください。',
+      '英数字（日本語ドット書体ならひらがな・カタカナ・漢字も）を入力すると、記号の組み合わせで描いた大きな文字（FIGlet形式のテキストバナー）に変換します。READMEやソースコードの見出し、ターミナルの起動メッセージに使えます。画像をASCIIアートにしたいときは<a href="/tools/image-ascii-art/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">画像→ASCIIアート変換</a>をご利用ください。',
     inputLabel: 'テキスト',
     inputPlaceholder: '変換したい英数字を入力（改行すると複数行になります）',
     initialText: 'Nyanko',
@@ -54,6 +54,7 @@ export const figletTextContent: Record<Locale, FigletTextPageContent> = {
       mini: 'Mini（極小）',
       doom: 'Doom（角ばった太字）',
       block: 'Block（ブロック █）',
+      misaki: 'ドット（日本語対応・美咲フォント）',
     },
     layoutLabel: '字間',
     layouts: {
@@ -78,15 +79,16 @@ export const figletTextContent: Record<Locale, FigletTextPageContent> = {
     loadError: '書体の読み込みに失敗しました。ページを再読み込みしてください。',
     tooLong: '入力が長すぎるため、先頭の {max} 文字だけを変換しています。',
     skippedFormat:
-      '対応していない文字は表示していません: {chars}（半角の英数字と記号のみ使えます）',
+      '選んだ書体に字形がない文字は表示していません: {chars}（日本語は「ドット（日本語対応）」書体で変換できます）',
     emptyOutput: 'テキストを入力すると、ここにアート文字が表示されます。',
     notesHeading: '注意事項',
     notes: [
-      '使えるのは半角の英数字と記号です。日本語・全角文字・絵文字は表示できないため、入力しても無視されます。',
+      '日本語（ひらがな・カタカナ・漢字）に対応しているのは「ドット（日本語対応）」書体だけです。ほかの書体は半角の英数字と記号のみで、日本語・全角文字・絵文字は表示されません。',
       "Blockは英数字と一部の記号（! ? . , : - _ + = / ( ) ' * #）だけに対応し、英小文字は大文字と同じ字形になります。",
       '等幅フォントで表示・貼り付けることを前提にしています。比例フォント（メールの本文やチャットなど）では形が崩れることがあります。',
       'コメント形式を選ぶと、各行の先頭に // や # を付けたり、/* */ や <!-- --> で囲んだりします。アートの中に */ や --> があるとコメントが途中で閉じてしまうため、間に空白を入れています。',
       'Standard・Small・Slant・Big・Miniは、FIGletに同梱されている書体（作者: Glenn Chappell、Ian Chai ほか）、Doomは Frans P. de Vries 氏の書体です。いずれも書体の配布条件に従い、元のコメントを残して同梱しています。Blockは当サイトの自作です。',
+      '「ドット（日本語対応）」は、8×8ドットの日本語フォント「美咲フォント」（作者: Num Kadoma 氏）をもとにしています。JIS第1・第2水準の漢字まで対応しますが、画数の多い漢字は小さなドットでは読みにくくなります。「𠮟」「﨑」などJIS第3水準以降の字は表示できません。漢字データ（約45KB）は、初めて漢字を入力したときだけ読み込みます。',
     ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
@@ -105,7 +107,7 @@ export const figletTextContent: Record<Locale, FigletTextPageContent> = {
   en: {
     title: 'ASCII Art Text Generator (FIGlet-style Banner)',
     description:
-      'Turn text into big ASCII art lettering (FIGlet-style banners) in 7 fonts, and copy it as a code comment. Runs in your browser; nothing is sent to a server.',
+      'Turn text, including Japanese, into big ASCII art lettering (FIGlet-style) in 8 fonts, copyable as code comments. Runs in your browser; nothing is uploaded.',
     h1: 'ASCII Art Text Generator (Text Banner)',
     introHtml:
       'Type some text and it is drawn as large lettering made of plain characters, in the FIGlet banner style. Handy for README headings, source-file headers and terminal splash messages. To turn a picture into ASCII art instead, use the <a href="/en/tools/image-ascii-art/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Image to ASCII Art Converter</a>.',
@@ -123,6 +125,7 @@ export const figletTextContent: Record<Locale, FigletTextPageContent> = {
       mini: 'Mini (tiny)',
       doom: 'Doom (bold, angular)',
       block: 'Block (█)',
+      misaki: 'Dot (Japanese, Misaki font)',
     },
     layoutLabel: 'Letter spacing',
     layouts: {
@@ -148,15 +151,16 @@ export const figletTextContent: Record<Locale, FigletTextPageContent> = {
     tooLong:
       'The input is too long, so only the first {max} characters are converted.',
     skippedFormat:
-      'These characters are not supported and were left out: {chars} (only ASCII letters, digits and symbols work)',
+      'The selected font has no shapes for these characters, so they were left out: {chars} (use the "Dot (Japanese)" font for Japanese text)',
     emptyOutput: 'Enter some text and the lettering appears here.',
     notesHeading: 'Notes',
     notes: [
-      'Only ASCII letters, digits and symbols are supported. Japanese, full-width characters and emoji cannot be drawn and are ignored.',
+      'Only the "Dot (Japanese)" font supports Japanese (hiragana, katakana and kanji). The other fonts cover ASCII letters, digits and symbols only; Japanese, full-width characters and emoji are left out.',
       "Block covers letters, digits and a few symbols (! ? . , : - _ + = / ( ) ' * #); lowercase letters use the same shapes as uppercase.",
       'The result is meant for a monospaced font. In proportional fonts (email bodies, chat apps) the shapes may fall apart.',
       'A comment style adds // or # to each line, or wraps the art in /* */ or <!-- -->. If the art contains */ or -->, a space is inserted so it cannot close the comment early.',
       'Standard, Small, Slant, Big and Mini are fonts bundled with FIGlet (by Glenn Chappell, Ian Chai and others) and Doom is by Frans P. de Vries. They are included under their distribution terms with the original comments kept. Block is our own design.',
+      '"Dot (Japanese)" is based on the 8×8-dot Japanese font "Misaki Font" by Num Kadoma. It covers JIS level 1 and 2 kanji, but complex kanji are hard to read at such a small size, and characters outside those levels (such as 𠮟 and 﨑) cannot be drawn. The kanji data (about 45KB) is loaded only when you first enter a kanji.',
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

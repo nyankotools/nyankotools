@@ -1,7 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   FONT_IDS,
   createBlockFont,
+  decodeBitmapFont,
   loadFont,
   parseFlf,
   renderFiglet,
@@ -201,5 +202,78 @@ describe('wrapInComment', () => {
 
   it('空文字はそのまま返す', () => {
     expect(wrapInComment('', 'slash')).toBe('');
+  });
+});
+
+describe('日本語ドット書体（美咲フォント由来）', () => {
+  const NL = String.fromCharCode(10);
+
+  it('ひらがな・カタカナ・全角英数・句読点を描画できる（漢字を含まなければ漢字データは読まない）', async () => {
+    const font = await loadFont('misaki');
+    const result = renderFiglet(font, 'あいうアイウー、。ＡＢ１');
+    expect(result.skipped).toEqual([]);
+    // 最下行は字形に使われないため、末尾の空行は削られて7行になる
+    expect(result.text.split(NL).length).toBe(7);
+    expect(result.text).toContain('█');
+  });
+
+  it('漢字は text に漢字を含めて読み込んだときだけ描画できる', async () => {
+    const font = await loadFont('misaki', '猫');
+    const result = renderFiglet(font, '猫と犬と鬱');
+    expect(result.skipped).toEqual([]);
+    expect(result.text).toContain('█');
+  });
+
+  it('全字形の行が8行で幅が揃い、幅は4（半角）か8（全角）', async () => {
+    const font = await loadFont('misaki', '漢');
+    expect(font.glyphs.size).toBeGreaterThan(7000);
+    for (const [code, rows] of font.glyphs) {
+      expect(rows.length, `code ${code}`).toBe(8);
+      const widths = new Set(rows.map((r) => r.length));
+      expect(widths.size, `code ${code}`).toBe(1);
+      expect([4, 8]).toContain(rows[0].length);
+    }
+  });
+
+  it('JIS第3水準以降の字（𠮟）と絵文字は未対応として返る', async () => {
+    const font = await loadFont('misaki', '猫');
+    expect(renderFiglet(font, '𠮟😀').skipped).toEqual(['𠮟', '😀']);
+  });
+
+  it('同じ文字の字形は決まった形になる（あ の1行目が空でなく、全角の幅が8）', async () => {
+    const font = await loadFont('misaki');
+    expect(font.glyphs.get(0x3042)?.[0].length).toBe(8);
+    expect(font.glyphs.get(0x3042)?.some((r) => r.includes('█'))).toBe(true);
+  });
+});
+
+describe('decodeBitmapFont', () => {
+  it('幅8・幅4の字形を展開し、文字コードは差分で積算する', () => {
+    // 'A'(65): 8行すべて 0x80（左端1ドット）・幅8、続く 'B'(66): 差分1・幅4・8行すべて 0xf0
+    const data = `${'80'.repeat(8)}8${(65).toString(36)};${'f0'.repeat(8)}41`;
+    const glyphs = decodeBitmapFont(data);
+    expect([...glyphs.keys()]).toEqual([65, 66]);
+    expect(glyphs.get(65)?.[0]).toBe('█       ');
+    expect(glyphs.get(66)?.[7]).toBe('████');
+  });
+
+  it('空エントリは読み飛ばす', () => {
+    expect(decodeBitmapFont('').size).toBe(0);
+    expect(decodeBitmapFont(`;${'00'.repeat(8)}41;`).size).toBe(1);
+  });
+});
+
+describe('日本語ドット書体の並行読み込み', () => {
+  it('漢字なしと漢字ありを同時に呼んでも、漢字が取りこぼされない', async () => {
+    vi.resetModules();
+    const fresh = await import('./figlet-text');
+    const [a, b] = await Promise.all([
+      fresh.loadFont('misaki'),
+      fresh.loadFont('misaki', '猫'),
+    ]);
+    const again = await fresh.loadFont('misaki', '猫');
+    expect(a).toBe(b);
+    expect(again.glyphs.has('猫'.codePointAt(0)!)).toBe(true);
+    expect(fresh.renderFiglet(again, '猫').skipped).toEqual([]);
   });
 });

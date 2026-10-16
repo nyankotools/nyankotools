@@ -108,7 +108,7 @@ test.describe('ASCIIアート文字（日本語版）', () => {
 
     await expect(page.locator(NOTICE)).toBeVisible();
     await expect(page.locator(NOTICE)).toContainText(
-      '対応していない文字は表示していません',
+      '選んだ書体に字形がない文字は表示していません',
     );
     await expect(page.locator(NOTICE)).toContainText('に');
     await expect(page.locator(OUTPUT)).toHaveText(
@@ -220,7 +220,7 @@ test.describe('ASCII Art Text Generator (English)', () => {
 
     await expect(page.locator(NOTICE)).toBeVisible();
     await expect(page.locator(NOTICE)).toContainText(
-      'These characters are not supported',
+      'The selected font has no shapes for these characters',
     );
   });
 
@@ -232,5 +232,160 @@ test.describe('ASCII Art Text Generator (English)', () => {
     await expect(page.locator(NOTICE)).toContainText(
       'only the first 200 characters are converted',
     );
+  });
+});
+
+// 日本語ドット書体（misaki）。漢字データは misaki-kanji.*.js として別チャンクで配信される
+const KANJI_CHUNK = 'misaki-kanji';
+const CSP_PATTERN = /Content Security|CSP|Refused to/i;
+
+test.describe('ASCIIアート文字（ドット書体・日本語）', () => {
+  test('ドット書体はかな・カタカナを変換でき、漢字を入力したときだけ漢字データを読み込む（CSP違反なし）', async ({
+    page,
+  }) => {
+    const consoleErrors: string[] = [];
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') consoleErrors.push(msg.text());
+    });
+    page.on('pageerror', (err) => consoleErrors.push(err.message));
+    const kanjiRequests: string[] = [];
+    page.on('request', (req) => {
+      if (req.url().includes(KANJI_CHUNK)) kanjiRequests.push(req.url());
+    });
+
+    await page.goto('/tools/figlet-text/');
+    await expect(page.locator(OUTPUT)).toContainText('_|');
+    await page.locator('#fig-font').selectOption('misaki');
+    await expect(page.locator(OUTPUT)).toContainText('█');
+    // 初期値（Nyanko）は漢字を含まないので、漢字データはまだ読まれない
+    expect(kanjiRequests).toEqual([]);
+
+    // かな・カタカナだけでは未対応通知は出ず、漢字データも読まない
+    const beforeKana = await page.locator(OUTPUT).textContent();
+    await page.locator('#fig-input').fill('にゃんこ ネコ');
+    await expect(page.locator(OUTPUT)).not.toHaveText(beforeKana!);
+    await expect(page.locator(OUTPUT)).toContainText('█');
+    await expect(page.locator(NOTICE)).toBeHidden();
+    expect(kanjiRequests).toEqual([]);
+
+    // 漢字を入力すると漢字データが追加で読み込まれ、未対応通知は出ない
+    const kanjiResponse = page.waitForResponse((res) =>
+      res.url().includes(KANJI_CHUNK),
+    );
+    const beforeKanji = await page.locator(OUTPUT).textContent();
+    await page.locator('#fig-input').fill('猫の道具');
+    expect((await kanjiResponse).ok()).toBe(true);
+    await expect(page.locator(OUTPUT)).not.toHaveText(beforeKanji!);
+    await expect(page.locator(OUTPUT)).toContainText('█');
+    await expect(page.locator(NOTICE)).toBeHidden();
+    // ドット書体は8行の高さで描画される（先頭・末尾の空行は除かれるので上限で見る）
+    const dotRows = (await page.locator(OUTPUT).textContent())!.split('\n');
+    expect(dotRows.length).toBeGreaterThanOrEqual(6);
+    expect(dotRows.length).toBeLessThanOrEqual(8);
+    expect(kanjiRequests).toHaveLength(1);
+
+    expect(consoleErrors.filter((e) => CSP_PATTERN.test(e))).toEqual([]);
+    expect(consoleErrors).toEqual([]);
+  });
+
+  test('ドット書体で字形のない文字（𠮟・絵文字）を入れると、未対応の通知が出る', async ({
+    page,
+  }) => {
+    await page.goto('/tools/figlet-text/');
+    await expect(page.locator(OUTPUT)).toContainText('_|');
+    await page.locator('#fig-font').selectOption('misaki');
+    await expect(page.locator(OUTPUT)).toContainText('█');
+
+    const before = await page.locator(OUTPUT).textContent();
+    await page.locator('#fig-input').fill('猫𠮟');
+    await expect(page.locator(NOTICE)).toBeVisible();
+    await expect(page.locator(NOTICE)).toContainText(
+      '選んだ書体に字形がない文字は表示していません: 𠮟',
+    );
+    // 字形のある「猫」は描画され、出力は変わる
+    await expect(page.locator(OUTPUT)).not.toHaveText(before!);
+    await expect(page.locator(OUTPUT)).toContainText('█');
+
+    await page.locator('#fig-input').fill('猫😺');
+    await expect(page.locator(NOTICE)).toContainText('😺');
+    await expect(page.locator(NOTICE)).not.toContainText('𠮟');
+  });
+
+  test('ドット以外の書体では、日本語は従来どおり未対応の通知になり漢字データは読まない', async ({
+    page,
+  }) => {
+    const kanjiRequests: string[] = [];
+    page.on('request', (req) => {
+      if (req.url().includes(KANJI_CHUNK)) kanjiRequests.push(req.url());
+    });
+    await page.goto('/tools/figlet-text/');
+    await expect(page.locator(OUTPUT)).toContainText('_|');
+
+    for (const font of ['standard', 'slant', 'block']) {
+      // 前回の通知が残って誤判定しないよう、いったん空にしてから入力する
+      await page.locator('#fig-input').fill('');
+      await expect(page.locator(NOTICE)).toBeHidden();
+      await page.locator('#fig-font').selectOption(font);
+      await page.locator('#fig-input').fill('猫の道具');
+      await expect(page.locator(NOTICE)).toBeVisible();
+      await expect(page.locator(NOTICE)).toContainText(
+        '選んだ書体に字形がない文字は表示していません: 猫 の 道 具',
+      );
+    }
+    expect(kanjiRequests).toEqual([]);
+  });
+
+  test('375px幅で全角8文字のドット出力は #fig-output 内で横スクロールになり、ページははみ出さない', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.goto('/tools/figlet-text/');
+    await expect(page.locator(OUTPUT)).toContainText('_|');
+    await page.locator('#fig-font').selectOption('misaki');
+    await expect(page.locator(OUTPUT)).toContainText('█');
+
+    const before = await page.locator(OUTPUT).textContent();
+    await page.locator('#fig-input').fill('猫の道具猫の道具');
+    await expect(page.locator(OUTPUT)).not.toHaveText(before!);
+
+    const metrics = await page.locator(OUTPUT).evaluate((el) => ({
+      overflowX: getComputedStyle(el).overflowX,
+      clientWidth: el.clientWidth,
+      scrollWidth: el.scrollWidth,
+      right: el.getBoundingClientRect().right,
+      longest: Math.max(...el.textContent!.split('\n').map((l) => l.length)),
+      pageOverflow:
+        document.documentElement.scrollWidth > window.innerWidth + 1,
+    }));
+    // 全角8文字 × 8セル = 64桁（行末の空白は除くため、余裕を見て下限を置く）
+    expect(metrics.longest).toBeGreaterThanOrEqual(56);
+    expect(metrics.overflowX).toBe('auto');
+    expect(metrics.scrollWidth).toBeGreaterThan(metrics.clientWidth);
+    expect(metrics.right).toBeLessThanOrEqual(375);
+    expect(metrics.pageOverflow).toBe(false);
+
+    // 出力の中で横にスクロールして末尾まで見られる
+    const scrolled = await page.locator(OUTPUT).evaluate((el) => {
+      el.scrollLeft = el.scrollWidth;
+      return el.scrollLeft;
+    });
+    expect(scrolled).toBeGreaterThan(0);
+  });
+});
+
+test.describe('ASCII Art Text Generator (English, dot font)', () => {
+  test('英語版でもドット書体の未対応通知は英語で出る', async ({ page }) => {
+    await page.goto('/en/tools/figlet-text/');
+    await expect(page.locator(OUTPUT)).toContainText('_|');
+    await page.locator('#fig-font').selectOption('misaki');
+    await expect(page.locator(OUTPUT)).toContainText('█');
+
+    await page.locator('#fig-input').fill('Cat😺');
+    await expect(page.locator(NOTICE)).toBeVisible();
+    await expect(page.locator(NOTICE)).toContainText(
+      'The selected font has no shapes for these characters',
+    );
+    await expect(page.locator(NOTICE)).toContainText('😺');
+    await expect(page.locator(OUTPUT)).toContainText('█');
   });
 });

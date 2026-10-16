@@ -165,9 +165,18 @@ const selectClass = 'ui-input h-11 w-full bg-white px-3 dark:bg-gray-900';
     const layout: Layout = pick(layoutSelect.value, LAYOUTS);
     const comment: CommentStyle = pick(commentSelect.value, COMMENT_STYLES);
 
+    const messages: string[] = [];
+    let text = input.value;
+    if (text.length > MAX_INPUT_LENGTH) {
+      text = text.slice(0, MAX_INPUT_LENGTH);
+      messages.push(
+        fill(notice.dataset.tooLong ?? '', { max: String(MAX_INPUT_LENGTH) }),
+      );
+    }
+
     let font;
     try {
-      font = await loadFont(fontId);
+      font = await loadFont(fontId, text);
     } catch {
       if (token !== renderToken) return;
       currentText = '';
@@ -177,14 +186,6 @@ const selectClass = 'ui-input h-11 w-full bg-white px-3 dark:bg-gray-900';
     }
     if (token !== renderToken) return;
 
-    const messages: string[] = [];
-    let text = input.value;
-    if (text.length > MAX_INPUT_LENGTH) {
-      text = text.slice(0, MAX_INPUT_LENGTH);
-      messages.push(
-        fill(notice.dataset.tooLong ?? '', { max: String(MAX_INPUT_LENGTH) }),
-      );
-    }
     const result = renderFiglet(font, text, layout);
     if (result.skipped.length > 0) {
       messages.push(

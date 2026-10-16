@@ -8,6 +8,7 @@ export const FONT_IDS = [
   'mini',
   'doom',
   'block',
+  'misaki',
 ] as const;
 export type FontId = (typeof FONT_IDS)[number];
 
@@ -164,8 +165,36 @@ export function createBlockFont(): FigFont {
   return { height: 5, hardblank: '\x00', smushMode: 0, glyphs };
 }
 
+/**
+ * 美咲フォント由来のドット書体データを FigFont の字形に展開する。
+ * データは「8行ぶんの16進（1行1バイト、左端が最上位ビット）＋幅（4 or 8）＋直前の文字コードとの差（36進）」を `;` でつないだ形式。
+ */
+export function decodeBitmapFont(
+  data: string,
+  glyphs: Map<number, string[]> = new Map(),
+): Map<number, string[]> {
+  let code = 0;
+  for (const entry of data.split(';')) {
+    if (entry.length < 18) continue;
+    const width = Number(entry[16]);
+    code += parseInt(entry.slice(17), 36);
+    const rows: string[] = [];
+    for (let r = 0; r < 8; r++) {
+      const byte = parseInt(entry.slice(r * 2, r * 2 + 2), 16);
+      let row = '';
+      for (let c = 0; c < width; c++) row += byte & (0x80 >> c) ? '█' : ' ';
+      rows.push(row);
+    }
+    glyphs.set(code, rows);
+  }
+  return glyphs;
+}
+
+const KANJI_PATTERN = /[一-鿿]/;
+const KANJI_SENTINEL = 0x4e00;
+
 const FONT_LOADERS: Record<
-  Exclude<FontId, 'block'>,
+  Exclude<FontId, 'block' | 'misaki'>,
   () => Promise<{ default: string }>
 > = {
   standard: () => import('./figlet-fonts/standard'),
@@ -178,15 +207,41 @@ const FONT_LOADERS: Record<
 
 const fontCache = new Map<FontId, FigFont>();
 
-/** 書体を読み込む（初回のみ動的 import。以降はキャッシュ） */
-export async function loadFont(id: FontId): Promise<FigFont> {
-  const cached = fontCache.get(id);
-  if (cached) return cached;
-  const font =
-    id === 'block'
-      ? createBlockFont()
-      : parseFlf((await FONT_LOADERS[id]()).default);
-  fontCache.set(id, font);
+async function createMisakiFont(): Promise<FigFont> {
+  const glyphs = decodeBitmapFont(
+    (await import('./figlet-fonts/misaki-base')).default,
+  );
+  return { height: 8, hardblank: '\x00', smushMode: 0, glyphs };
+}
+
+/**
+ * 書体を読み込む（初回のみ動的 import。以降はキャッシュ）。
+ * 日本語ドット書体（misaki）は、漢字のデータが大きいため、`text` に漢字が含まれるときだけ追加で読み込む。
+ */
+export async function loadFont(id: FontId, text = ''): Promise<FigFont> {
+  let font = fontCache.get(id);
+  if (!font) {
+    const created =
+      id === 'block'
+        ? createBlockFont()
+        : id === 'misaki'
+          ? await createMisakiFont()
+          : parseFlf((await FONT_LOADERS[id]()).default);
+    // 並行して読み込んだ呼び出しがあれば、先にキャッシュされた書体を使う（漢字の追加読込を取りこぼさないため）
+    font = fontCache.get(id) ?? created;
+    fontCache.set(id, font);
+  }
+  // 漢字の読込済みは、書体自身が漢字の字形（「一」）を持っているかで判定する
+  if (
+    id === 'misaki' &&
+    !font.glyphs.has(KANJI_SENTINEL) &&
+    KANJI_PATTERN.test(text)
+  ) {
+    decodeBitmapFont(
+      (await import('./figlet-fonts/misaki-kanji')).default,
+      font.glyphs,
+    );
+  }
   return font;
 }
 

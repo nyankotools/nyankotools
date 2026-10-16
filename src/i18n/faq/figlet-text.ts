@@ -3,9 +3,9 @@ import type { FaqContent } from '../faq';
 export const faq: FaqContent = {
   ja: [
     {
-      question: '日本語や全角文字をアート文字にできますか？',
+      question: '日本語（ひらがな・カタカナ・漢字）をアート文字にできますか？',
       answer:
-        'できません。FIGletの書体は半角の英数字と記号（ASCII）の字形しか持たないためです。日本語・全角文字・絵文字は表示されず、画面に「対応していない文字」として知らせます。日本語の見た目を飾りたい場合は、ローマ字に直してから入力してください。',
+        '「ドット（日本語対応・美咲フォント）」書体なら、ひらがな・カタカナ・漢字（JIS第1・第2水準）を変換できます。ほかの書体は半角の英数字と記号（ASCII）の字形しか持たないため、日本語・全角文字・絵文字は表示されず、画面に「字形がない文字」として知らせます。ドット書体でも「𠮟」「﨑」などJIS第3水準以降の字や、絵文字は表示できません。',
     },
     {
       question: '貼り付けた先で形が崩れるのはなぜですか？',
@@ -25,9 +25,10 @@ export const faq: FaqContent = {
   ],
   en: [
     {
-      question: 'Can I turn Japanese or other non-ASCII text into ASCII art?',
+      question:
+        'Can I turn Japanese text (hiragana, katakana, kanji) into ASCII art?',
       answer:
-        'No. FIGlet fonts only contain shapes for ASCII letters, digits and symbols. Japanese, full-width characters and emoji are left out, and the tool lists which characters were skipped. Romanize the text first if you want to use it.',
+        'Yes, with the "Dot (Japanese, Misaki font)" font, which covers hiragana, katakana and kanji (JIS level 1 and 2). The other fonts only contain ASCII letters, digits and symbols, so Japanese, full-width characters and emoji are left out and the tool lists which characters were skipped. Even the dot font cannot draw emoji or characters outside JIS level 2, such as 𠮟 and 﨑.',
     },
     {
       question: 'Why does the banner look broken after I paste it?',

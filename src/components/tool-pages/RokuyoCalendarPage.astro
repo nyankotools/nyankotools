@@ -1,0 +1,464 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { rokuyoCalendarContent } from '../../i18n/tools/rokuyo-calendar';
+import { businessDayCalculatorContent } from '../../i18n/tools/business-day-calculator';
+import {
+  MAX_YEAR,
+  MIN_YEAR,
+  ROKUYO_ORDER,
+} from '../../lib/tools/rokuyo-calendar';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = rokuyoCalendarContent[locale];
+const holidayNames = businessDayCalculatorContent[locale].holidayNames;
+
+const monthFormat = new Intl.DateTimeFormat(t.dateLocale, {
+  timeZone: 'UTC',
+  month: 'long',
+});
+const monthNames = Array.from({ length: 12 }, (_, i) =>
+  monthFormat.format(new Date(Date.UTC(2023, i, 1))),
+);
+---
+
+<ToolShell t={t}>
+  <section
+    id="rk"
+    data-date-locale={t.dateLocale}
+    data-holiday-names={JSON.stringify(holidayNames)}
+    data-rokuyo-names={JSON.stringify(t.rokuyoNames)}
+    data-rokuyo-short={JSON.stringify(t.rokuyoShort)}
+    data-term-names={JSON.stringify(t.solarTermNames)}
+    data-leap-full={t.leapFull}
+    data-leap-short={t.leapShort}
+    data-lunar-full={t.lunarFull}
+    data-list-rokuyo-heading={t.listRokuyoHeading}
+    data-list-terms-heading={t.listTermsHeading}
+    data-list-term-item={t.listTermItem}
+    data-new-year-text={t.newYearText}
+    data-lookup-result={t.lookupResult}
+    data-lookup-term-suffix={t.lookupTermSuffix}
+    data-lookup-out-of-range={t.lookupOutOfRange}
+    data-error-year={t.errorYear}
+    data-min-year={MIN_YEAR}
+    data-max-year={MAX_YEAR}
+    class="space-y-4"
+  >
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="rk-year" class="ui-label">
+          {t.yearLabel}
+        </label>
+        <input
+          id="rk-year"
+          type="number"
+          inputmode="numeric"
+          min={MIN_YEAR}
+          max={MAX_YEAR}
+          step="1"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="rk-month" class="ui-label">
+          {t.monthLabel}
+        </label>
+        <select id="rk-month" class="ui-input h-11 px-3 dark:bg-gray-900">
+          {monthNames.map((name, i) => (
+            <option value={String(i + 1)}>{name}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="rk-week-start" class="ui-label">
+          {t.weekStartLabel}
+        </label>
+        <select id="rk-week-start" class="ui-input h-11 px-3 dark:bg-gray-900">
+          <option value="0" selected>
+            {t.weekStartSun}
+          </option>
+          <option value="1">{t.weekStartMon}</option>
+        </select>
+      </div>
+      <div>
+        <label for="rk-highlight" class="ui-label">
+          {t.highlightLabel}
+        </label>
+        <select id="rk-highlight" class="ui-input h-11 px-3 dark:bg-gray-900">
+          <option value="">{t.highlightNone}</option>
+          {ROKUYO_ORDER.map((key) => (
+            <option value={key} selected={key === 'taian'}>
+              {t.rokuyoNames[key]}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-x-6">
+      <label class="ui-check">
+        <input id="rk-holidays" type="checkbox" checked={t.holidaysDefault} />
+        {t.holidaysLabel}
+      </label>
+      <label class="ui-check">
+        <input id="rk-lunar" type="checkbox" checked />
+        {t.lunarLabel}
+      </label>
+      <label class="ui-check">
+        <input id="rk-today" type="checkbox" checked />
+        {t.todayLabel}
+      </label>
+    </div>
+
+    <p id="rk-error" class="ui-error empty:hidden" aria-live="polite"></p>
+
+    <div id="rk-output"></div>
+
+    <div id="rk-lists" class="space-y-4 text-sm"></div>
+
+    <div class="space-y-2 border-t border-gray-200 pt-4 dark:border-gray-700">
+      <h2 class="text-lg font-semibold">{t.lookupHeading}</h2>
+      <div>
+        <label for="rk-lookup-date" class="ui-label">
+          {t.lookupDateLabel}
+        </label>
+        <input
+          id="rk-lookup-date"
+          type="date"
+          min={`${MIN_YEAR}-01-01`}
+          max={`${MAX_YEAR}-12-31`}
+          class="ui-input h-11 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <p id="rk-lookup-result" class="text-sm" aria-live="polite"></p>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    getLunarDate,
+    getLunarNewYear,
+    getRokuyoMonth,
+    getSolarTerm,
+    groupByRokuyo,
+    isValidYear,
+    ROKUYO_ORDER,
+    type RokuyoKey,
+    type SolarTermKey,
+  } from '../../lib/tools/rokuyo-calendar';
+  import {
+    buildMonth,
+    weekdayOrder,
+    type WeekStart,
+  } from '../../lib/tools/calendar-generator';
+  import { fill } from '../../lib/format-template';
+  import type { HolidayKey } from '../../lib/tools/business-day-calculator';
+
+  const root = document.getElementById('rk')!;
+  const d = root.dataset;
+  const dateLocale = d.dateLocale ?? 'en-US';
+  const holidayNames: Record<HolidayKey, string> = JSON.parse(
+    d.holidayNames ?? '{}',
+  );
+  const rokuyoNames: Record<RokuyoKey, string> = JSON.parse(
+    d.rokuyoNames ?? '{}',
+  );
+  const rokuyoShort: Record<RokuyoKey, string> = JSON.parse(
+    d.rokuyoShort ?? '{}',
+  );
+  const termNames: Record<SolarTermKey, string> = JSON.parse(
+    d.termNames ?? '{}',
+  );
+  const leapFull = d.leapFull ?? '';
+  const leapShort = d.leapShort ?? '';
+  const lunarFull = d.lunarFull ?? '';
+  const rokuyoListHeading = d.listRokuyoHeading ?? '';
+  const termsHeading = d.listTermsHeading ?? '';
+  const listTermItem = d.listTermItem ?? '';
+  const newYearText = d.newYearText ?? '';
+  const lookupResultText = d.lookupResult ?? '';
+  const lookupTermSuffix = d.lookupTermSuffix ?? '';
+  const lookupOutOfRange = d.lookupOutOfRange ?? '';
+  const errorYear = d.errorYear ?? '';
+  const minYear = Number(d.minYear);
+  const maxYear = Number(d.maxYear);
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const yearInput = $<HTMLInputElement>('rk-year');
+  const monthSelect = $<HTMLSelectElement>('rk-month');
+  const weekStartSelect = $<HTMLSelectElement>('rk-week-start');
+  const highlightSelect = $<HTMLSelectElement>('rk-highlight');
+  const holidaysCheck = $<HTMLInputElement>('rk-holidays');
+  const lunarCheck = $<HTMLInputElement>('rk-lunar');
+  const todayCheck = $<HTMLInputElement>('rk-today');
+  const errorEl = $('rk-error');
+  const output = $('rk-output');
+  const lists = $('rk-lists');
+  const lookupInput = $<HTMLInputElement>('rk-lookup-date');
+  const lookupResult = $('rk-lookup-result');
+
+  const monthTitleFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: 'long',
+  });
+  const weekdayFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    weekday: 'short',
+  });
+  const dayFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    month: 'short',
+    day: 'numeric',
+    weekday: 'short',
+  });
+  const fullDateFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+  });
+
+  const utcDate = (year: number, month: number, day = 1) => {
+    const date = new Date(Date.UTC(2000, month - 1, day));
+    date.setUTCFullYear(year);
+    return date;
+  };
+  const pad = (n: number, w = 2) => String(n).padStart(w, '0');
+
+  const now = new Date();
+  const todayIso = `${pad(now.getFullYear(), 4)}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+  const weekdayLabel = (dow: number) =>
+    weekdayFormat.format(new Date(Date.UTC(2023, 0, 1 + dow)));
+
+  const dayColor = (dow: number, holiday: boolean) =>
+    holiday || dow === 0
+      ? 'text-red-700 dark:text-red-400'
+      : dow === 6
+        ? 'text-blue-700 dark:text-blue-400'
+        : '';
+
+  const lunarText = (lunar: { month: number; leap: boolean; day: number }) =>
+    fill(lunarFull, {
+      leap: lunar.leap ? leapFull : '',
+      month: String(lunar.month),
+      day: String(lunar.day),
+    });
+
+  function div(className: string, text: string): HTMLElement {
+    const el = document.createElement('div');
+    el.className = className;
+    el.textContent = text;
+    return el;
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    output.replaceChildren();
+    lists.replaceChildren();
+    const year = Number(yearInput.value);
+    const month = Number(monthSelect.value);
+    if (yearInput.value.trim() === '' || !isValidYear(year)) {
+      if (yearInput.value.trim() !== '') {
+        errorEl.textContent = fill(errorYear, {
+          min: String(minYear),
+          max: String(maxYear),
+        });
+      }
+      return;
+    }
+    const weekStart = Number(weekStartSelect.value) as WeekStart;
+    const cal = buildMonth(year, month, {
+      weekStart,
+      holidays: holidaysCheck.checked,
+    });
+    const days = getRokuyoMonth(year, month);
+    if (!cal || !days) return;
+    const highlight = highlightSelect.value as RokuyoKey | '';
+    const showLunar = lunarCheck.checked;
+
+    const table = document.createElement('table');
+    table.className = 'w-full table-fixed border-collapse text-center';
+    const caption = document.createElement('caption');
+    caption.className = 'mb-2 text-left text-2xl font-bold';
+    caption.textContent = monthTitleFormat.format(utcDate(year, month));
+    table.append(caption);
+
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+    for (const dow of weekdayOrder(weekStart)) {
+      const th = document.createElement('th');
+      th.scope = 'col';
+      th.className = `border border-gray-300 py-1 text-xs font-medium dark:border-gray-600 ${dayColor(dow, false)}`;
+      th.textContent = weekdayLabel(dow);
+      headRow.append(th);
+    }
+    thead.append(headRow);
+    table.append(thead);
+
+    const tbody = document.createElement('tbody');
+    for (const week of cal.weeks) {
+      const tr = document.createElement('tr');
+      for (const day of week.days) {
+        const td = document.createElement('td');
+        td.className =
+          'h-16 border border-gray-300 p-0.5 align-top dark:border-gray-600 sm:h-24 sm:p-1';
+        if (day) {
+          const info = days[day.day - 1];
+          const lunar = info.lunar;
+          if (highlight && lunar.rokuyo === highlight) {
+            td.classList.add('bg-amber-100', 'dark:bg-amber-900/40');
+          }
+          const isToday = todayCheck.checked && day.iso === todayIso;
+          const num = document.createElement('span');
+          // 今日のバッジは白文字固定（曜日色と併用すると背景と同系色になり、コントラストが落ちるため）
+          num.className = `text-sm sm:text-base ${
+            isToday
+              ? 'inline-block min-w-6 rounded-full bg-blue-600 px-1 text-white'
+              : dayColor(day.dow, day.holiday !== null)
+          }`;
+          num.textContent = String(day.day);
+          td.append(num);
+          td.append(
+            div(
+              'text-[10px] font-medium leading-tight sm:text-xs',
+              rokuyoShort[lunar.rokuyo],
+            ),
+          );
+          if (showLunar) {
+            td.append(
+              div(
+                'text-[10px] leading-tight text-gray-600 dark:text-gray-400',
+                `${lunar.leap ? leapShort : ''}${lunar.month}/${lunar.day}`,
+              ),
+            );
+          }
+          if (info.term) {
+            td.append(
+              div(
+                'hidden text-[10px] leading-tight text-green-800 sm:block dark:text-green-400',
+                termNames[info.term],
+              ),
+            );
+          }
+          if (day.holiday) {
+            td.append(
+              div(
+                'hidden text-[10px] leading-tight text-red-700 sm:block dark:text-red-400',
+                holidayNames[day.holiday],
+              ),
+            );
+          }
+        }
+        tr.append(td);
+      }
+      tbody.append(tr);
+    }
+    table.append(tbody);
+    output.append(table);
+
+    // 六曜ごとの日
+    const grouped = groupByRokuyo(days);
+    const rokuyoBlock = document.createElement('div');
+    const rokuyoHeading = document.createElement('h2');
+    rokuyoHeading.className = 'mb-1 font-semibold';
+    rokuyoHeading.textContent = rokuyoListHeading;
+    const dl = document.createElement('dl');
+    dl.className = 'space-y-0.5';
+    for (const key of ROKUYO_ORDER) {
+      const row = document.createElement('div');
+      row.className = 'flex flex-wrap gap-x-2';
+      const dt = document.createElement('dt');
+      dt.className = 'font-medium';
+      dt.textContent = rokuyoNames[key];
+      const dd = document.createElement('dd');
+      dd.textContent = grouped[key].join(', ');
+      row.append(dt, dd);
+      dl.append(row);
+    }
+    rokuyoBlock.append(rokuyoHeading, dl);
+    lists.append(rokuyoBlock);
+
+    // 二十四節気
+    const termDays = days.filter((x) => x.term);
+    if (termDays.length > 0) {
+      const block = document.createElement('div');
+      const heading = document.createElement('h2');
+      heading.className = 'mb-1 font-semibold';
+      heading.textContent = termsHeading;
+      const ul = document.createElement('ul');
+      ul.className = 'space-y-0.5';
+      for (const x of termDays) {
+        const li = document.createElement('li');
+        li.textContent = fill(listTermItem, {
+          date: dayFormat.format(utcDate(year, month, x.day)),
+          name: termNames[x.term!],
+        });
+        ul.append(li);
+      }
+      block.append(heading, ul);
+      lists.append(block);
+    }
+
+    // 旧正月
+    const newYear = getLunarNewYear(year);
+    if (newYear) {
+      const [ny, nm, nd] = newYear.split('-').map(Number);
+      const p = document.createElement('p');
+      p.textContent = fill(newYearText, {
+        year: String(year),
+        date: fullDateFormat.format(utcDate(ny, nm, nd)),
+      });
+      lists.append(p);
+    }
+  }
+
+  function renderLookup() {
+    lookupResult.textContent = '';
+    const value = lookupInput.value;
+    if (!value) return;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    const lunar = m ? getLunarDate(+m[1], +m[2], +m[3]) : null;
+    if (!m || !lunar) {
+      lookupResult.textContent = lookupOutOfRange;
+      return;
+    }
+    let text = fill(lookupResultText, {
+      date: fullDateFormat.format(utcDate(+m[1], +m[2], +m[3])),
+      lunar: lunarText(lunar),
+      rokuyo: rokuyoNames[lunar.rokuyo],
+    });
+    const term = getSolarTerm(+m[1], +m[2], +m[3]);
+    if (term) text += fill(lookupTermSuffix, { term: termNames[term] });
+    lookupResult.textContent = text;
+  }
+
+  [monthSelect, weekStartSelect, highlightSelect].forEach((el) =>
+    el.addEventListener('change', render),
+  );
+  [holidaysCheck, lunarCheck, todayCheck].forEach((el) =>
+    el.addEventListener('change', render),
+  );
+  // 入力途中（4桁未満）の値でエラーを出さないよう、input では4桁以上のときだけ描画する
+  yearInput.addEventListener('input', () => {
+    if (yearInput.value.trim().length >= 4) render();
+  });
+  yearInput.addEventListener('change', render);
+  lookupInput.addEventListener('input', renderLookup);
+  lookupInput.addEventListener('change', renderLookup);
+
+  yearInput.value = String(now.getFullYear());
+  monthSelect.value = String(now.getMonth() + 1);
+  lookupInput.value = todayIso;
+  render();
+  renderLookup();
+</script>

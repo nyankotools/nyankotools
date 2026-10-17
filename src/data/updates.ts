@@ -649,6 +649,20 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-17',
+    toolSlugs: ['rokuyo-calendar'],
+    translations: {
+      ja: {
+        summary:
+          '六曜・旧暦カレンダーを追加しました。月間カレンダーに、各日の六曜（大安・友引・先勝・先負・仏滅・赤口）と旧暦の日付、二十四節気、祝日を表示します。大安などの日に色を付けたり、日付を入れて六曜・旧暦を調べたりでき、結婚式や引っ越しの日取り選びに使えます。1900〜2100年に対応しています。',
+      },
+      en: {
+        summary:
+          'Added the Rokuyo & Lunar Calendar. A monthly calendar shows each day’s rokuyo (Taian, Tomobiki, Sensho, Senbu, Butsumetsu, Shakko), lunar date, 24 solar terms and Japanese holidays. Highlight lucky days such as Taian or look up any date from 1900 to 2100 to help pick a day for a wedding or a move.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

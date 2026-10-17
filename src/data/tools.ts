@@ -7919,6 +7919,49 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'rokuyo-calendar',
+    category: 'datetime',
+    addedAt: '2026-10-17',
+    updatedAt: '2026-10-17',
+    related: [
+      'calendar-generator',
+      'japanese-era-converter',
+      'business-day-calculator',
+    ],
+    translations: {
+      ja: {
+        name: '六曜・旧暦カレンダー（大安・仏滅・二十四節気）',
+        description:
+          '月間カレンダーに六曜（大安・仏滅など）と旧暦、二十四節気、祝日を表示。日付を入れて六曜・旧暦を調べることもできます（1900〜2100年）',
+        keywords: [
+          '六曜',
+          '大安',
+          '仏滅',
+          '旧暦',
+          '暦注',
+          '二十四節気',
+          '友引',
+          '閏月',
+        ],
+      },
+      en: {
+        name: 'Rokuyo & Lunar Calendar (Taian, Butsumetsu, Solar Terms)',
+        description:
+          'A monthly calendar showing rokuyo lucky days (Taian, Butsumetsu…), old lunar dates, 24 solar terms and holidays, plus a date lookup (1900–2100)',
+        keywords: [
+          'rokuyo',
+          'taian',
+          'butsumetsu',
+          'lunar calendar',
+          'japanese lucky days',
+          'solar terms',
+          'leap month',
+          'old calendar',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

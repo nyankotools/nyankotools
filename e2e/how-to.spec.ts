@@ -90,6 +90,7 @@ const slugs = [
   'csv-excel-converter',
   'video-to-gif',
   'metronome-bpm',
+  'instrument-tuner',
   'random-generator',
   'file-type-detector',
   'image-ascii-art',

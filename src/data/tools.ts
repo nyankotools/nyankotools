@@ -7962,6 +7962,46 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'instrument-tuner',
+    category: 'media',
+    addedAt: '2026-10-17',
+    updatedAt: '2026-10-17',
+    related: ['metronome-bpm', 'mic-tester', 'speaker-tester'],
+    sensitive: true,
+    needsCamera: true,
+    translations: {
+      ja: {
+        name: '楽器チューナー（ギター・ベース・ウクレレ）',
+        description:
+          'マイクの音から音程を検出してチューニング。ギター・ベース・ウクレレのプリセットと半音階に対応し、音名とセントのずれをメーターで確認できます',
+        keywords: [
+          'チューナー',
+          'ギターチューナー',
+          'ベースチューナー',
+          'ウクレレチューナー',
+          'チューニング',
+          '音程',
+          'ピッチ',
+          'セント',
+        ],
+      },
+      en: {
+        name: 'Instrument Tuner (Guitar, Bass, Ukulele)',
+        description:
+          'Tune with your microphone using live pitch detection. Presets for guitar, bass and ukulele plus chromatic mode, with a cents meter',
+        keywords: [
+          'guitar tuner',
+          'bass tuner',
+          'ukulele tuner',
+          'chromatic tuner',
+          'online tuner',
+          'pitch detector',
+          'tuning',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -1,0 +1,421 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { instrumentTunerContent } from '../../i18n/tools/instrument-tuner';
+import { DEFAULT_A4, MAX_A4, MIN_A4 } from '../../lib/tools/instrument-tuner';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = instrumentTunerContent[locale];
+
+const selectClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+
+const instruments = Object.entries(t.instruments);
+---
+
+<ToolShell t={t}>
+  <div
+    id="tun-root"
+    data-start-label={t.startLabel}
+    data-stop-label={t.stopLabel}
+    data-listening={t.listening}
+    data-state-in-tune={t.stateInTune}
+    data-state-low={t.stateLow}
+    data-state-high={t.stateHigh}
+    data-string-button-label={t.stringButtonLabel}
+    data-auto-hint={t.autoHint}
+    data-fixed-hint={t.fixedHint}
+    data-error-permission-denied={t.errors['permission-denied']}
+    data-error-not-found={t.errors['not-found']}
+    data-error-in-use={t.errors['in-use']}
+    data-error-constraints={t.errors.constraints}
+    data-error-insecure={t.errors.insecure}
+    data-error-unsupported={t.errors.unsupported}
+    data-error-unknown={t.errors.unknown}
+  >
+    <div class="grid max-w-xl gap-4 sm:grid-cols-[1fr_9rem]">
+      <div>
+        <label for="tun-instrument" class="ui-label">
+          {t.instrumentLabel}
+        </label>
+        <select id="tun-instrument" class={selectClass}>
+          {instruments.map(([id, label]) => (
+            <option value={id} selected={id === 'guitar'}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="tun-a4" class="ui-label">
+          {t.a4Label}
+        </label>
+        <div class="flex items-center gap-2">
+          <input
+            id="tun-a4"
+            type="number"
+            inputmode="numeric"
+            min={MIN_A4}
+            max={MAX_A4}
+            step="1"
+            value={DEFAULT_A4}
+            class="ui-input h-11 min-w-0 flex-1 px-3 text-center"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">Hz</span>
+        </div>
+      </div>
+    </div>
+
+    <button id="tun-toggle" type="button" class="ui-btn-primary mt-4 h-12">
+      {t.startLabel}
+    </button>
+    <p id="tun-error" hidden role="alert" class="ui-error mt-4 max-w-2xl"></p>
+
+    <p id="tun-idle" class="mt-5 text-sm text-gray-600 dark:text-gray-400">
+      {t.idleMessage}
+    </p>
+
+    <div id="tun-panel" hidden class="mt-5 max-w-xl">
+      <div class="rounded-xl border border-gray-200 p-4 text-center dark:border-gray-800">
+        <p
+          id="tun-note"
+          data-state="idle"
+          class="text-6xl font-bold text-gray-400 data-[state=high]:text-red-600 data-[state=in-tune]:text-green-600 data-[state=low]:text-amber-600 dark:data-[state=high]:text-red-400 dark:data-[state=in-tune]:text-green-400 dark:data-[state=low]:text-amber-400"
+        >
+          --
+        </p>
+        <p
+          id="tun-state"
+          role="status"
+          class="mt-1 min-h-6 text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          {t.listening}
+        </p>
+
+        <div
+          id="tun-meter"
+          role="meter"
+          aria-label={t.meterLabel}
+          aria-valuemin="-50"
+          aria-valuemax="50"
+          aria-valuenow="0"
+          class="relative mx-auto mt-4 h-8 w-full max-w-md overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800"
+        >
+          <div class="absolute top-0 left-1/2 h-full w-[10%] -translate-x-1/2 bg-green-500/30"></div>
+          <div class="absolute top-0 left-1/2 h-full w-px bg-gray-500 dark:bg-gray-400"></div>
+          <div
+            id="tun-needle"
+            class="absolute top-0 left-1/2 h-full w-1.5 -translate-x-1/2 rounded bg-gray-400 transition-[left] duration-100"
+          ></div>
+        </div>
+        <p class="mx-auto mt-1 flex max-w-md justify-between text-xs text-gray-500 dark:text-gray-400">
+          <span>-50</span>
+          <span>0</span>
+          <span>+50</span>
+        </p>
+
+        <p class="mt-3 text-sm text-gray-700 dark:text-gray-300">
+          <span id="tun-cents">-</span>
+          {t.centsUnit}
+          <span class="mx-2 text-gray-400">|</span>
+          {t.detectedLabel}: <span id="tun-freq">-</span>
+        </p>
+      </div>
+
+      <div id="tun-strings-wrap" class="mt-5">
+        <p class="ui-label">{t.stringsLabel}</p>
+        <div id="tun-strings" class="flex flex-wrap gap-2"></div>
+        <p
+          id="tun-string-hint"
+          class="mt-2 text-xs text-gray-600 dark:text-gray-400"
+        >
+          {t.autoHint}
+        </p>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    TUNINGS,
+    clampA4,
+    detectPitch,
+    frequencyToNote,
+    midiToFrequency,
+    centsBetween,
+    nearestStringIndex,
+    noteLabel,
+    tuneState,
+  } from '../../lib/tools/instrument-tuner';
+  import { classifyMediaError } from '../../lib/tools/webcam-tester';
+  import type { MediaErrorKind } from '../../lib/tools/webcam-tester';
+
+  /** 解析の間隔（ミリ秒）。自己相関は計算量が大きいため間引く */
+  const ANALYZE_INTERVAL_MS = 60;
+  /** 音が途切れても、この時間は直前の表示を保つ */
+  const HOLD_MS = 500;
+  /** 前回との差がこの範囲（セント）なら、表示を平滑化する */
+  const SMOOTH_RANGE_CENTS = 60;
+
+  const root = document.getElementById('tun-root')!;
+  const d = root.dataset;
+  const instrumentSelect = document.getElementById(
+    'tun-instrument',
+  ) as HTMLSelectElement;
+  const a4Input = document.getElementById('tun-a4') as HTMLInputElement;
+  const toggle = document.getElementById('tun-toggle') as HTMLButtonElement;
+  const errorEl = document.getElementById('tun-error')!;
+  const idleEl = document.getElementById('tun-idle')!;
+  const panel = document.getElementById('tun-panel')!;
+  const noteEl = document.getElementById('tun-note')!;
+  const stateEl = document.getElementById('tun-state')!;
+  const meter = document.getElementById('tun-meter')!;
+  const needle = document.getElementById('tun-needle')!;
+  const centsEl = document.getElementById('tun-cents')!;
+  const freqEl = document.getElementById('tun-freq')!;
+  const stringsWrap = document.getElementById('tun-strings-wrap')!;
+  const stringsEl = document.getElementById('tun-strings')!;
+  const stringHint = document.getElementById('tun-string-hint')!;
+
+  const ERROR_TEXT: Record<MediaErrorKind, string> = {
+    'permission-denied': d.errorPermissionDenied ?? '',
+    'not-found': d.errorNotFound ?? '',
+    'in-use': d.errorInUse ?? '',
+    constraints: d.errorConstraints ?? '',
+    insecure: d.errorInsecure ?? '',
+    unsupported: d.errorUnsupported ?? '',
+    unknown: d.errorUnknown ?? '',
+  };
+
+  let stream: MediaStream | null = null;
+  let audioContext: AudioContext | null = null;
+  let frame = 0;
+  let sessionId = 0;
+  let active = false;
+  let a4 = clampA4(Number(a4Input.value));
+  /** 手動で選んだ弦の位置。null なら弾いた音に近い弦を自動で選ぶ */
+  let fixedString: number | null = null;
+  let lastDetectedAt = 0;
+  let smoothed: { frequency: number } | null = null;
+
+  function strings(): readonly number[] {
+    return TUNINGS.find((t) => t.id === instrumentSelect.value)?.strings ?? [];
+  }
+
+  function showError(kind: MediaErrorKind) {
+    errorEl.textContent = ERROR_TEXT[kind];
+    errorEl.hidden = false;
+  }
+
+  function renderStrings() {
+    const list = strings();
+    stringsWrap.hidden = list.length === 0;
+    stringsEl.replaceChildren(
+      ...list.map((midi, i) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className =
+          'ui-btn h-11 min-w-14 px-3 data-[target=true]:border-blue-600 data-[target=true]:bg-blue-50 data-[target=true]:font-bold dark:data-[target=true]:border-blue-400 dark:data-[target=true]:bg-blue-950';
+        button.dataset.index = String(i);
+        button.dataset.target = 'false';
+        button.textContent = noteLabel(midi);
+        button.setAttribute(
+          'aria-label',
+          (d.stringButtonLabel ?? '').replace('{note}', noteLabel(midi)),
+        );
+        button.setAttribute('aria-pressed', 'false');
+        button.addEventListener('click', () => {
+          fixedString = fixedString === i ? null : i;
+          markTarget(fixedString);
+          stringHint.textContent =
+            (fixedString === null ? d.autoHint : d.fixedHint) ?? '';
+        });
+        return button;
+      }),
+    );
+    fixedString = null;
+    stringHint.textContent = d.autoHint ?? '';
+  }
+
+  function markTarget(index: number | null) {
+    stringsEl.querySelectorAll<HTMLElement>('[data-index]').forEach((el) => {
+      const on = Number(el.dataset.index) === index;
+      el.dataset.target = String(on);
+      el.setAttribute('aria-pressed', String(on && fixedString !== null));
+    });
+  }
+
+  function resetDisplay() {
+    smoothed = null;
+    noteEl.textContent = '--';
+    noteEl.dataset.state = 'idle';
+    stateEl.textContent = d.listening ?? '';
+    centsEl.textContent = '-';
+    freqEl.textContent = '-';
+    needle.style.left = '50%';
+    needle.className = needle.className.replace(/bg-\S+/g, '') + ' bg-gray-400';
+    meter.setAttribute('aria-valuenow', '0');
+    markTarget(fixedString);
+  }
+
+  function show(frequency: number) {
+    const list = strings();
+    let label: string;
+    let cents: number;
+    if (list.length === 0) {
+      const note = frequencyToNote(frequency, a4);
+      label = `${note.name}${note.octave}`;
+      cents = note.cents;
+    } else {
+      const index = fixedString ?? nearestStringIndex(frequency, list, a4);
+      label = noteLabel(list[index]);
+      cents = centsBetween(frequency, midiToFrequency(list[index], a4));
+      markTarget(index);
+    }
+    const state = tuneState(cents);
+    const shown = Math.max(-50, Math.min(50, cents));
+    const stateText =
+      (state === 'in-tune'
+        ? d.stateInTune
+        : state === 'low'
+          ? d.stateLow
+          : d.stateHigh) ?? '';
+    // 同じ文言を毎回書き換えると、スクリーンリーダーが繰り返し読み上げるため、変わったときだけ更新する
+    if (noteEl.textContent !== label) noteEl.textContent = label;
+    noteEl.dataset.state = state;
+    if (stateEl.textContent !== stateText) stateEl.textContent = stateText;
+    centsEl.textContent = `${cents > 0 ? '+' : ''}${cents.toFixed(1)}`;
+    freqEl.textContent = `${frequency.toFixed(1)} Hz`;
+    needle.style.left = `${50 + shown}%`;
+    needle.className =
+      needle.className.replace(/bg-\S+/g, '') +
+      (state === 'in-tune'
+        ? ' bg-green-600'
+        : state === 'low'
+          ? ' bg-amber-600'
+          : ' bg-red-600');
+    meter.setAttribute('aria-valuenow', String(Math.round(shown)));
+  }
+
+  function stopAll() {
+    sessionId++;
+    cancelAnimationFrame(frame);
+    stream?.getTracks().forEach((track) => track.stop());
+    stream = null;
+    void audioContext?.close();
+    audioContext = null;
+    active = false;
+    toggle.textContent = d.startLabel ?? '';
+    panel.hidden = true;
+    idleEl.hidden = false;
+    resetDisplay();
+  }
+
+  function startAnalysis(media: MediaStream, id: number) {
+    panel.hidden = false;
+    idleEl.hidden = true;
+    resetDisplay();
+    const ctx = new AudioContext();
+    void ctx.resume();
+    audioContext = ctx;
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 4096;
+    // 出力（destination）には繋がない。繋ぐとハウリングする
+    ctx.createMediaStreamSource(media).connect(analyser);
+    const samples = new Float32Array(analyser.fftSize);
+    let lastRun = 0;
+    lastDetectedAt = 0;
+
+    const tick = (now: number) => {
+      if (id !== sessionId) return;
+      frame = requestAnimationFrame(tick);
+      if (now - lastRun < ANALYZE_INTERVAL_MS) return;
+      lastRun = now;
+      analyser.getFloatTimeDomainData(samples);
+      const pitch = detectPitch(samples, ctx.sampleRate);
+      if (pitch) {
+        lastDetectedAt = now;
+        // 近い値なら平滑化して針の揺れを抑える。大きく変わったら（別の弦など）すぐ追従する
+        if (
+          smoothed &&
+          Math.abs(centsBetween(pitch.frequency, smoothed.frequency)) <
+            SMOOTH_RANGE_CENTS
+        ) {
+          smoothed.frequency = smoothed.frequency * 0.6 + pitch.frequency * 0.4;
+        } else {
+          smoothed = { frequency: pitch.frequency };
+        }
+        show(smoothed.frequency);
+      } else if (lastDetectedAt && now - lastDetectedAt > HOLD_MS) {
+        lastDetectedAt = 0;
+        resetDisplay();
+      }
+    };
+    frame = requestAnimationFrame(tick);
+  }
+
+  async function start() {
+    stopAll();
+    errorEl.hidden = true;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showError(window.isSecureContext ? 'unsupported' : 'insecure');
+      return;
+    }
+    const id = sessionId;
+    active = true;
+    toggle.textContent = d.stopLabel ?? '';
+    try {
+      // 音程がゆがまないよう、音声の自動補正は切る
+      const media = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        },
+      });
+      if (id !== sessionId) {
+        media.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      stream = media;
+      startAnalysis(media, id);
+    } catch (error) {
+      if (id !== sessionId) return;
+      stopAll();
+      showError(classifyMediaError((error as DOMException | undefined)?.name));
+    }
+  }
+
+  toggle.addEventListener('click', () => {
+    if (active) stopAll();
+    else void start();
+  });
+  instrumentSelect.addEventListener('change', () => {
+    renderStrings();
+    resetDisplay();
+  });
+  a4Input.addEventListener('input', () => {
+    const raw = Number(a4Input.value);
+    if (!Number.isFinite(raw) || raw < 100) return;
+    a4 = clampA4(raw);
+  });
+  a4Input.addEventListener('change', () => {
+    a4 = clampA4(Number(a4Input.value));
+    a4Input.value = String(a4);
+  });
+
+  // 画面を離れたらマイクを解放する
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden && active) stopAll();
+  });
+  window.addEventListener('pagehide', () => {
+    if (active) stopAll();
+  });
+
+  renderStrings();
+</script>

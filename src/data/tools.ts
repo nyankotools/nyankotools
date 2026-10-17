@@ -7834,6 +7834,43 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'tetris-game',
+    category: 'games',
+    addedAt: '2026-10-17',
+    updatedAt: '2026-10-17',
+    related: ['snake-game', 'game-2048', 'minesweeper'],
+    translations: {
+      ja: {
+        name: '落ち物パズル（ブロックを揃えてラインを消す）',
+        description:
+          '落ちてくるブロックを回転・移動して横一列を揃えて消す定番の落ち物パズル。ホールド・ネクスト表示・落下位置ガイド付きで、キーボードとスマホの画面ボタンに対応',
+        keywords: [
+          '落ち物パズル',
+          'テトリス風',
+          'ブロックパズル',
+          '落ちものゲーム',
+          'falling block puzzle',
+          'ブラウザゲーム',
+          'ミニゲーム',
+        ],
+      },
+      en: {
+        name: 'Falling Block Puzzle',
+        description:
+          'The classic falling block puzzle: rotate and stack blocks to clear lines. Hold, next preview and landing guide, with keyboard and on-screen buttons',
+        keywords: [
+          'falling block puzzle',
+          'block stacking game',
+          'tetris-like',
+          'puzzle game',
+          'browser game',
+          'retro game',
+          'mini game',
+        ],
+      },
+    },
+  },
+  {
     slug: 'htaccess-generator',
     category: 'dev',
     addedAt: '2026-10-16',

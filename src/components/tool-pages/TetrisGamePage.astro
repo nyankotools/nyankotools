@@ -1,0 +1,633 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { tetrisGameContent } from '../../i18n/tools/tetris-game';
+import { COLS, ROWS, NEXT_COUNT } from '../../lib/tools/tetris-game';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = tetrisGameContent[locale];
+
+const CELL = 30;
+const PREVIEW_CELL = 20;
+const PREVIEW_W = PREVIEW_CELL * 5;
+const SLOT_H = PREVIEW_CELL * 3;
+
+const buttonClass =
+  'ui-btn h-14 touch-none px-1 text-sm leading-tight select-none';
+---
+
+<ToolShell t={t}>
+  <section
+    id="tetris-root"
+    data-mode="idle"
+    data-overlay-ready={t.overlayReady}
+    data-overlay-paused={t.overlayPaused}
+    data-overlay-over={t.overlayOver}
+    data-started={t.started}
+    data-paused={t.paused}
+    data-resumed={t.resumed}
+    data-game-over={t.gameOver}
+    data-new-best={t.newBest}
+    data-pause-label={t.pauseButton}
+    data-resume-label={t.resumeButton}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <button id="tetris-start-button" type="button" class="ui-btn-primary">
+        {t.startButton}
+      </button>
+      <button id="tetris-pause-button" type="button" class="ui-btn" disabled>
+        {t.pauseButton}
+      </button>
+    </div>
+
+    <div class="mt-3 flex items-start gap-3">
+      <canvas
+        id="tetris-canvas"
+        width={COLS * CELL}
+        height={ROWS * CELL}
+        role="application"
+        tabindex="0"
+        aria-label={t.boardLabel}
+        class="block aspect-[1/2] w-full max-w-[300px] min-w-0 flex-1 touch-none rounded-lg bg-gray-950 select-none"
+      ></canvas>
+
+      <div class="w-28 shrink-0 text-sm text-gray-700 dark:text-gray-300">
+        <p class="font-medium">{t.holdLabel}</p>
+        <canvas
+          id="tetris-hold"
+          width={PREVIEW_W}
+          height={SLOT_H}
+          aria-hidden="true"
+          class="mt-1 block w-full rounded-lg bg-gray-950"
+        ></canvas>
+        <p class="mt-3 font-medium">{t.nextLabel}</p>
+        <canvas
+          id="tetris-next"
+          width={PREVIEW_W}
+          height={SLOT_H * NEXT_COUNT}
+          aria-hidden="true"
+          class="mt-1 block w-full rounded-lg bg-gray-950"
+        ></canvas>
+        <dl class="mt-3 space-y-1">
+          <div>
+            <dt>{t.scoreLabel}</dt>
+            <dd id="tetris-score" class="font-semibold tabular-nums">
+              0
+            </dd>
+          </div>
+          <div>
+            <dt>{t.bestLabel}</dt>
+            <dd id="tetris-best" class="font-semibold tabular-nums">
+              0
+            </dd>
+          </div>
+          <div>
+            <dt>{t.linesLabel}</dt>
+            <dd id="tetris-lines" class="font-semibold tabular-nums">
+              0
+            </dd>
+          </div>
+          <div>
+            <dt>{t.levelLabel}</dt>
+            <dd id="tetris-level" class="font-semibold tabular-nums">
+              1
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+
+    <div
+      role="group"
+      aria-label={t.controlsLabel}
+      class="mt-3 grid max-w-sm grid-cols-3 gap-2"
+    >
+      <button type="button" class={buttonClass} data-control="left">
+        {t.leftButton}
+      </button>
+      <button type="button" class={buttonClass} data-control="rotate">
+        {t.rotateButton}
+      </button>
+      <button type="button" class={buttonClass} data-control="right">
+        {t.rightButton}
+      </button>
+      <button type="button" class={buttonClass} data-control="hold">
+        {t.holdButton}
+      </button>
+      <button type="button" class={buttonClass} data-control="down">
+        {t.downButton}
+      </button>
+      <button type="button" class={buttonClass} data-control="drop">
+        {t.dropButton}
+      </button>
+    </div>
+
+    <p
+      id="tetris-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    COLS,
+    NEXT_COUNT,
+    ROWS,
+    createGame,
+    dropMs,
+    ghostY,
+    gravityStep,
+    hardDrop,
+    holdPiece,
+    moveHorizontal,
+    parseBest,
+    pieceCells,
+    rotate,
+    serializeBest,
+    softDrop,
+    spawnPiece,
+    type PieceType,
+    type TetrisState,
+  } from '../../lib/tools/tetris-game';
+
+  const STORAGE_KEY = 'tetris-game-best';
+  const CELL = 30;
+  const PREVIEW_CELL = 20;
+  const PREVIEW_W = PREVIEW_CELL * 5;
+  const SLOT_H = PREVIEW_CELL * 3;
+  const REPEAT_DELAY_MS = 170;
+  const REPEAT_INTERVAL_MS = 55;
+
+  const COLORS: Record<PieceType, string> = {
+    I: '#22d3ee',
+    O: '#facc15',
+    T: '#c084fc',
+    S: '#4ade80',
+    Z: '#f87171',
+    J: '#60a5fa',
+    L: '#fb923c',
+  };
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('tetris-root');
+  const msg = root.dataset;
+  const canvas = $<HTMLCanvasElement>('tetris-canvas');
+  const ctx = canvas.getContext('2d')!;
+  const holdCtx = $<HTMLCanvasElement>('tetris-hold').getContext('2d')!;
+  const nextCtx = $<HTMLCanvasElement>('tetris-next').getContext('2d')!;
+  const statusEl = $('tetris-status');
+  const scoreEl = $('tetris-score');
+  const bestEl = $('tetris-best');
+  const linesEl = $('tetris-lines');
+  const levelEl = $('tetris-level');
+  const startButton = $<HTMLButtonElement>('tetris-start-button');
+  const pauseButton = $<HTMLButtonElement>('tetris-pause-button');
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  function random() {
+    return crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32;
+  }
+
+  type Mode = 'idle' | 'playing' | 'paused' | 'over';
+  let mode: Mode = 'idle';
+  let state: TetrisState = createGame(random);
+  let best = loadBest();
+  let rafId = 0;
+  let lastTime = 0;
+  let acc = 0;
+
+  function loadBest() {
+    try {
+      return parseBest(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      return 0;
+    }
+  }
+
+  function saveBest() {
+    try {
+      localStorage.setItem(STORAGE_KEY, serializeBest(best));
+    } catch {
+      // 保存できない環境では、このページを開いている間だけの記録にする
+    }
+  }
+
+  function setStatus(text: string) {
+    statusEl.textContent = text;
+  }
+
+  // ---- 描画 ----
+
+  function drawBlock(
+    c: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    size: number,
+    color: string,
+    alpha = 1,
+  ) {
+    c.globalAlpha = alpha;
+    c.fillStyle = color;
+    c.fillRect(x + 1, y + 1, size - 2, size - 2);
+    c.globalAlpha = 1;
+  }
+
+  /** プレビュー用の小さな枠の中央にミノを描く */
+  function drawPreview(
+    c: CanvasRenderingContext2D,
+    type: PieceType,
+    slotTop: number,
+  ) {
+    const cells = pieceCells({ ...spawnPiece(type), x: 0, y: 0 });
+    const minX = Math.min(...cells.map((p) => p.x));
+    const maxX = Math.max(...cells.map((p) => p.x));
+    const minY = Math.min(...cells.map((p) => p.y));
+    const maxY = Math.max(...cells.map((p) => p.y));
+    const w = (maxX - minX + 1) * PREVIEW_CELL;
+    const h = (maxY - minY + 1) * PREVIEW_CELL;
+    const ox = (PREVIEW_W - w) / 2 - minX * PREVIEW_CELL;
+    const oy = slotTop + (SLOT_H - h) / 2 - minY * PREVIEW_CELL;
+    for (const p of cells) {
+      drawBlock(
+        c,
+        ox + p.x * PREVIEW_CELL,
+        oy + p.y * PREVIEW_CELL,
+        PREVIEW_CELL,
+        COLORS[type],
+      );
+    }
+  }
+
+  function drawSide() {
+    holdCtx.fillStyle = '#0b1020';
+    holdCtx.fillRect(0, 0, PREVIEW_W, SLOT_H);
+    if (state.hold) {
+      holdCtx.globalAlpha = state.canHold ? 1 : 0.4;
+      drawPreview(holdCtx, state.hold, 0);
+      holdCtx.globalAlpha = 1;
+    }
+    nextCtx.fillStyle = '#0b1020';
+    nextCtx.fillRect(0, 0, PREVIEW_W, SLOT_H * NEXT_COUNT);
+    for (let i = 0; i < NEXT_COUNT; i++) {
+      drawPreview(nextCtx, state.queue[i], i * SLOT_H);
+    }
+  }
+
+  function draw() {
+    const w = COLS * CELL;
+    const h = ROWS * CELL;
+    ctx.fillStyle = '#0b1020';
+    ctx.fillRect(0, 0, w, h);
+
+    // 方眼
+    ctx.fillStyle = '#111a30';
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        if ((x + y) % 2 === 0) ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
+      }
+    }
+
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const v = state.board[y][x];
+        if (v) drawBlock(ctx, x * CELL, y * CELL, CELL, COLORS[v]);
+      }
+    }
+
+    if (state.status === 'playing') {
+      const gy = ghostY(state);
+      for (const p of pieceCells({ ...state.current, y: gy })) {
+        drawBlock(
+          ctx,
+          p.x * CELL,
+          p.y * CELL,
+          CELL,
+          COLORS[state.current.type],
+          0.25,
+        );
+      }
+      for (const p of pieceCells(state.current)) {
+        drawBlock(
+          ctx,
+          p.x * CELL,
+          p.y * CELL,
+          CELL,
+          COLORS[state.current.type],
+        );
+      }
+    }
+
+    const text =
+      mode === 'idle'
+        ? msg.overlayReady
+        : mode === 'paused'
+          ? msg.overlayPaused
+          : mode === 'over'
+            ? msg.overlayOver
+            : '';
+    if (text) {
+      ctx.fillStyle = 'rgba(11, 16, 32, 0.7)';
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 28px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, w / 2, h / 2, w - 20);
+    }
+    drawSide();
+  }
+
+  function renderHud() {
+    scoreEl.textContent = String(state.score);
+    bestEl.textContent = String(Math.max(best, state.score));
+    linesEl.textContent = String(state.lines);
+    levelEl.textContent = String(state.level);
+  }
+
+  function render() {
+    renderHud();
+    draw();
+  }
+
+  // ---- 進行 ----
+
+  function setMode(next: Mode) {
+    mode = next;
+    root.dataset.mode = next;
+    stopRepeat();
+    pauseButton.disabled = next !== 'playing' && next !== 'paused';
+    pauseButton.textContent =
+      (next === 'paused' ? msg.resumeLabel : msg.pauseLabel) ?? '';
+  }
+
+  function frame(time: number) {
+    rafId = 0;
+    if (mode !== 'playing') return;
+    const dt = lastTime ? Math.min(time - lastTime, 250) : 0;
+    lastTime = time;
+    acc += dt;
+    let moved = false;
+    while (acc >= dropMs(state.level) && state.status === 'playing') {
+      acc -= dropMs(state.level);
+      gravityStep(state, random);
+      moved = true;
+    }
+    if (state.status !== 'playing') finish();
+    if (moved || mode !== 'playing') render();
+    if (mode === 'playing') schedule();
+  }
+
+  function schedule() {
+    if (rafId === 0) rafId = requestAnimationFrame(frame);
+  }
+
+  // ゲームオーバーの表示を読む前に、連打で新しいゲームが始まってしまわないようにする
+  const RESTART_GUARD_MS = 800;
+  let overAt = 0;
+  function canRestart() {
+    return mode !== 'over' || performance.now() - overAt >= RESTART_GUARD_MS;
+  }
+
+  function finish() {
+    overAt = performance.now();
+    setMode('over');
+    let text = fill(msg.gameOver, {
+      score: String(state.score),
+      lines: String(state.lines),
+    });
+    if (state.score > best) {
+      best = state.score;
+      saveBest();
+      text += ` ${msg.newBest ?? ''}`;
+    }
+    setStatus(text);
+  }
+
+  function startGame() {
+    state = createGame(random);
+    lastTime = 0;
+    acc = 0;
+    setMode('playing');
+    setStatus(msg.started ?? '');
+    render();
+    schedule();
+  }
+
+  function pauseGame() {
+    if (mode !== 'playing') return;
+    setMode('paused');
+    setStatus(msg.paused ?? '');
+    draw();
+  }
+
+  function resumeGame() {
+    if (mode !== 'paused') return;
+    lastTime = 0;
+    setMode('playing');
+    setStatus(msg.resumed ?? '');
+    draw();
+    schedule();
+  }
+
+  function togglePause() {
+    if (mode === 'playing') pauseGame();
+    else if (mode === 'paused') resumeGame();
+  }
+
+  startButton.addEventListener('click', () => {
+    startGame();
+    // 続けてスペースキーで操作できるよう、フォーカスは盤面へ移す
+    canvas.focus({ preventScroll: true });
+  });
+  pauseButton.addEventListener('click', () => {
+    togglePause();
+    pauseButton.blur();
+  });
+
+  // タブを離れる・ウィンドウから離れたときは自動で一時停止する
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) pauseGame();
+  });
+  window.addEventListener('blur', pauseGame);
+
+  // ---- 操作 ----
+
+  type Action =
+    'left' | 'right' | 'rotate' | 'rotateCcw' | 'down' | 'drop' | 'hold';
+
+  function act(action: Action) {
+    if (mode !== 'playing') return;
+    switch (action) {
+      case 'left':
+        moveHorizontal(state, -1);
+        break;
+      case 'right':
+        moveHorizontal(state, 1);
+        break;
+      case 'rotate':
+        rotate(state, 1);
+        break;
+      case 'rotateCcw':
+        rotate(state, -1);
+        break;
+      case 'down':
+        if (softDrop(state)) acc = 0;
+        break;
+      case 'drop':
+        hardDrop(state, random);
+        acc = 0;
+        break;
+      case 'hold':
+        if (holdPiece(state, random)) acc = 0;
+        break;
+    }
+    if (state.status !== 'playing') finish();
+    render();
+  }
+
+  const KEY_MAP: Record<string, Action> = {
+    ArrowLeft: 'left',
+    a: 'left',
+    ArrowRight: 'right',
+    d: 'right',
+    ArrowDown: 'down',
+    s: 'down',
+    ArrowUp: 'rotate',
+    w: 'rotate',
+    x: 'rotate',
+    z: 'rotateCcw',
+    ' ': 'drop',
+    c: 'hold',
+    Shift: 'hold',
+  };
+  /** キーを押しっぱなしにしたとき、繰り返し動かしてよい操作 */
+  const REPEATABLE: Action[] = ['left', 'right', 'down'];
+
+  function boardVisible() {
+    const rect = canvas.getBoundingClientRect();
+    return rect.bottom >= 0 && rect.top <= window.innerHeight;
+  }
+
+  function ignoredTarget(e: KeyboardEvent) {
+    const el = e.target as HTMLElement;
+    return Boolean(
+      el.closest?.(
+        'input, select, textarea, [contenteditable="true"], a, nav, aside',
+      ) || document.querySelector('dialog[open]'),
+    );
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.defaultPrevented || e.isComposing) return;
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    if (ignoredTarget(e) || !boardVisible()) return;
+    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    const action = KEY_MAP[key];
+    const isSpace = key === ' ';
+    const isPause = key === 'p';
+    if (!action && !isPause) return;
+    // Shift は単独で押したとき（ホールド）だけ扱い、Shift+文字は他の用途に任せる
+    if (e.shiftKey && key !== 'Shift') return;
+
+    if (mode === 'idle' || mode === 'over') {
+      // 開始前・終了後は、ゲーム画面や操作ボタンにフォーカスがあるときのスペースキーだけで開始する
+      // （ページ下部を読んでいるときのスクロールなどを奪わない）
+      if (!isSpace || !root.contains(e.target as Node)) return;
+      e.preventDefault();
+      if (!e.repeat && canRestart()) startGame();
+      return;
+    }
+    if (key === 'Shift') {
+      // Shift は単独で押したときだけ反応し、ブラウザの動作は妨げない
+      if (!e.repeat) act('hold');
+      return;
+    }
+    // 一時停止中は、再開に使うキー以外のスクロールを奪わない
+    if (mode !== 'paused' || isSpace || isPause) e.preventDefault();
+    if (isPause) {
+      if (!e.repeat) togglePause();
+      return;
+    }
+    if (mode === 'paused') {
+      if (isSpace && !e.repeat) resumeGame();
+      return;
+    }
+    if (e.repeat && !REPEATABLE.includes(action)) return;
+    act(action);
+  });
+
+  // 画面のボタン（左右・下は押し続けると繰り返す）
+  let repeatDelay = 0;
+  let repeatTimer = 0;
+  function stopRepeat() {
+    clearTimeout(repeatDelay);
+    clearInterval(repeatTimer);
+    repeatDelay = 0;
+    repeatTimer = 0;
+  }
+
+  const CONTROL_ACTION: Record<string, Action> = {
+    left: 'left',
+    right: 'right',
+    rotate: 'rotate',
+    down: 'down',
+    drop: 'drop',
+    hold: 'hold',
+  };
+
+  root.querySelectorAll<HTMLButtonElement>('[data-control]').forEach((b) => {
+    const action = CONTROL_ACTION[b.dataset.control ?? ''];
+    b.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      e.preventDefault();
+      if (mode === 'paused') {
+        resumeGame();
+        return;
+      }
+      act(action);
+      stopRepeat();
+      if (REPEATABLE.includes(action)) {
+        repeatDelay = window.setTimeout(() => {
+          repeatTimer = window.setInterval(
+            () => act(action),
+            REPEAT_INTERVAL_MS,
+          );
+        }, REPEAT_DELAY_MS);
+      }
+    });
+    for (const type of ['pointerup', 'pointercancel', 'pointerleave']) {
+      b.addEventListener(type, stopRepeat);
+    }
+    // キーボード（Tab → Enter/Space）で押したとき。マウス・タッチは pointerdown で処理済み
+    b.addEventListener('click', (e) => {
+      if (e.detail !== 0) return;
+      if (mode === 'paused') resumeGame();
+      else act(action);
+    });
+    b.addEventListener('contextmenu', (e) => e.preventDefault());
+  });
+
+  // 盤面をタップ/クリックしたとき、開始前・終了後・一時停止中なら始める/再開する
+  canvas.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (mode === 'idle' || mode === 'over') {
+      if (canRestart()) startGame();
+    } else if (mode === 'paused') {
+      resumeGame();
+    }
+  });
+
+  render();
+</script>

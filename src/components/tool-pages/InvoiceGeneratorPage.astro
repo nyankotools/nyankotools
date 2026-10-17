@@ -1,0 +1,1003 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { invoiceGeneratorContent } from '../../i18n/tools/invoice-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = invoiceGeneratorContent[locale];
+
+const docTypeIds = ['invoice', 'quote', 'receipt', 'delivery'] as const;
+
+// スクリプトで使う文言だけをDOM経由で渡す
+const config = {
+  numberLocale: t.numberLocale,
+  dateLocale: t.dateLocale,
+  docTypes: t.docTypes,
+  honorifics: t.honorifics,
+  issuerSavedMessage: t.issuerSavedMessage,
+  issuerClearedMessage: t.issuerClearedMessage,
+  errorRegistration: t.errorRegistration,
+  errorNoItems: t.errorNoItems,
+  errorTooManyItems: t.errorTooManyItems,
+  errorInvalidItem: t.errorInvalidItem,
+  errorTooLarge: t.errorTooLarge,
+  itemNameLabel: t.itemNameLabel,
+  itemNamePlaceholder: t.itemNamePlaceholder,
+  itemQuantityLabel: t.itemQuantityLabel,
+  itemUnitPriceLabel: t.itemUnitPriceLabel,
+  itemTaxRateLabel: t.itemTaxRateLabel,
+  taxRate10: t.taxRate10,
+  taxRate8: t.taxRate8,
+  taxRate0: t.taxRate0,
+  itemAmountLabel: t.itemAmountLabel,
+  removeItemButton: t.removeItemButton,
+  paperRegistrationPrefix: t.paperRegistrationPrefix,
+  paperColName: t.paperColName,
+  paperColQuantity: t.paperColQuantity,
+  paperColUnitExcl: t.paperColUnitExcl,
+  paperColUnitIncl: t.paperColUnitIncl,
+  paperColRate: t.paperColRate,
+  paperColAmount: t.paperColAmount,
+  paperTaxableRow: t.paperTaxableRow,
+  paperTaxableRow0: t.paperTaxableRow0,
+  paperTaxRow: t.paperTaxRow,
+  paperSubtotalLabel: t.paperSubtotalLabel,
+  paperTaxTotalLabel: t.paperTaxTotalLabel,
+  paperTotalLabel: t.paperTotalLabel,
+  paperTaxIncludedSuffix: t.paperTaxIncludedSuffix,
+  paperReducedNote: t.paperReducedNote,
+  paperBankHeading: t.paperBankHeading,
+  paperNotesHeading: t.paperNotesHeading,
+};
+const field =
+  'ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500';
+const area =
+  'ui-input w-full px-3 py-2 dark:bg-gray-900 dark:placeholder-gray-500';
+---
+
+<ToolShell t={t}>
+  <section id="inv" data-config={JSON.stringify(config)} class="space-y-6">
+    <div id="inv-form" class="space-y-6 print:hidden">
+      <div>
+        <span id="inv-type-label" class="ui-label">
+          {t.docTypeLegend}
+        </span>
+        <div
+          class="ui-seg w-fit max-w-full flex-wrap"
+          role="group"
+          aria-labelledby="inv-type-label"
+        >
+          {docTypeIds.map((id) => (
+            <button
+              type="button"
+              id={`inv-type-${id}`}
+              data-type={id}
+              class="ui-seg-btn"
+              aria-pressed={id === 'invoice' ? 'true' : 'false'}
+            >
+              {t.docTypes[id].label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+        <h2 class="mb-3 text-lg font-bold">{t.sectionBasicHeading}</h2>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label
+              id="inv-number-label"
+              for="inv-number"
+              class="ui-label"
+            ></label>
+            <input
+              id="inv-number"
+              type="text"
+              placeholder={t.documentNumberPlaceholder}
+              class={field}
+            />
+          </div>
+          <div>
+            <label id="inv-date-label" for="inv-date" class="ui-label"></label>
+            <input id="inv-date" type="date" class={field} />
+          </div>
+          <div id="inv-due-field">
+            <label id="inv-due-label" for="inv-due" class="ui-label"></label>
+            <input id="inv-due" type="date" class={field} />
+          </div>
+          <div class="sm:col-span-2">
+            <label
+              id="inv-subject-label"
+              for="inv-subject"
+              class="ui-label"
+            ></label>
+            <input id="inv-subject" type="text" class={field} />
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+        <h2 class="mb-3 text-lg font-bold">{t.sectionPartiesHeading}</h2>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label for="inv-recipient" class="ui-label">
+              {t.recipientLabel}
+            </label>
+            <input
+              id="inv-recipient"
+              type="text"
+              placeholder={t.recipientPlaceholder}
+              class={field}
+            />
+          </div>
+          {t.honorifics.length > 1 && (
+            <div>
+              <label for="inv-honorific" class="ui-label">
+                {t.honorificLabel}
+              </label>
+              <select id="inv-honorific" class={`${field} sm:w-40`}>
+                {t.honorifics.map((h) => (
+                  <option value={h.value}>{h.label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+        <hr class="my-4 border-gray-200 dark:border-gray-700" />
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label for="inv-issuer-name" class="ui-label">
+              {t.issuerNameLabel}
+            </label>
+            <input
+              id="inv-issuer-name"
+              type="text"
+              placeholder={t.issuerNamePlaceholder}
+              class={field}
+            />
+          </div>
+          <div>
+            <label for="inv-issuer-contact" class="ui-label">
+              {t.issuerContactLabel}
+            </label>
+            <input
+              id="inv-issuer-contact"
+              type="text"
+              placeholder={t.issuerContactPlaceholder}
+              class={field}
+            />
+          </div>
+          <div class="sm:col-span-2">
+            <label for="inv-issuer-address" class="ui-label">
+              {t.issuerAddressLabel}
+            </label>
+            <textarea
+              id="inv-issuer-address"
+              rows="2"
+              placeholder={t.issuerAddressPlaceholder}
+              class={area}
+            ></textarea>
+          </div>
+          <div class="sm:col-span-2">
+            <label for="inv-registration" class="ui-label">
+              {t.registrationLabel}
+            </label>
+            <input
+              id="inv-registration"
+              type="text"
+              autocomplete="off"
+              placeholder={t.registrationPlaceholder}
+              class={`${field} sm:w-64`}
+            />
+            <p
+              id="inv-registration-error"
+              class="ui-error mt-2 empty:hidden"
+              aria-live="polite"
+            ></p>
+          </div>
+          <div id="inv-bank-field" class="sm:col-span-2">
+            <label for="inv-bank" class="ui-label">
+              {t.bankLabel}
+            </label>
+            <textarea
+              id="inv-bank"
+              rows="2"
+              placeholder={t.bankPlaceholder}
+              class={area}
+            ></textarea>
+          </div>
+        </div>
+        <div class="mt-3 flex flex-wrap items-center gap-3">
+          <button id="inv-issuer-save" type="button" class="ui-btn">
+            {t.saveIssuerButton}
+          </button>
+          <button id="inv-issuer-clear" type="button" class="ui-btn">
+            {t.clearIssuerButton}
+          </button>
+          <span
+            id="inv-issuer-status"
+            class="text-sm text-gray-600 dark:text-gray-400"
+            aria-live="polite"
+          ></span>
+        </div>
+      </section>
+
+      <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+        <h2 class="mb-3 text-lg font-bold">{t.sectionItemsHeading}</h2>
+        <div
+          id="inv-items"
+          class="space-y-3"
+          aria-label={t.itemsListLabel}
+        ></div>
+        <button id="inv-add-item" type="button" class="ui-btn mt-3">
+          {t.addItemButton}
+        </button>
+      </section>
+
+      <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+        <h2 class="mb-3 text-lg font-bold">{t.sectionOptionsHeading}</h2>
+        <div class="flex flex-wrap gap-x-8 gap-y-3">
+          <div>
+            <span id="inv-price-mode-label" class="ui-label">
+              {t.priceModeLegend}
+            </span>
+            <div
+              class="flex flex-wrap gap-3"
+              role="radiogroup"
+              aria-labelledby="inv-price-mode-label"
+            >
+              <label class="flex items-center gap-1 text-sm">
+                <input
+                  type="radio"
+                  name="inv-price-mode"
+                  value="exclusive"
+                  checked
+                />
+                {t.priceExclusive}
+              </label>
+              <label class="flex items-center gap-1 text-sm">
+                <input type="radio" name="inv-price-mode" value="inclusive" />
+                {t.priceInclusive}
+              </label>
+            </div>
+          </div>
+          <div>
+            <span id="inv-rounding-label" class="ui-label">
+              {t.roundingLegend}
+            </span>
+            <div
+              class="flex flex-wrap gap-3"
+              role="radiogroup"
+              aria-labelledby="inv-rounding-label"
+            >
+              <label class="flex items-center gap-1 text-sm">
+                <input type="radio" name="inv-rounding" value="floor" checked />
+                {t.roundingFloor}
+              </label>
+              <label class="flex items-center gap-1 text-sm">
+                <input type="radio" name="inv-rounding" value="round" />
+                {t.roundingRound}
+              </label>
+              <label class="flex items-center gap-1 text-sm">
+                <input type="radio" name="inv-rounding" value="ceil" />
+                {t.roundingCeil}
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="mt-3">
+          <label for="inv-notes" class="ui-label">
+            {t.notesInputLabel}
+          </label>
+          <textarea
+            id="inv-notes"
+            rows="2"
+            placeholder={t.notesInputPlaceholder}
+            class={area}
+          ></textarea>
+        </div>
+      </section>
+
+      <p id="inv-error" class="ui-error empty:hidden" aria-live="polite"></p>
+
+      <div class="flex flex-wrap items-center gap-3">
+        <button
+          id="inv-print-button"
+          type="button"
+          class="ui-btn ui-btn-primary"
+        >
+          {t.printButton}
+        </button>
+        <p class="text-sm text-gray-600 dark:text-gray-400">{t.printHint}</p>
+      </div>
+    </div>
+
+    <div>
+      <h2 class="mb-3 text-lg font-bold print:hidden">{t.previewHeading}</h2>
+      <div class="overflow-x-auto print:overflow-visible">
+        <article
+          id="inv-paper"
+          class="min-w-[600px] border border-gray-300 bg-white p-6 text-sm text-gray-900 print:min-w-0 print:border-0 print:p-0"
+        >
+          <p
+            id="inv-p-title"
+            class="mb-4 text-center text-2xl font-bold tracking-widest"
+          ></p>
+          <div class="flex justify-between gap-6">
+            <div class="min-w-0 flex-1">
+              <p
+                id="inv-p-recipient"
+                class="inline-block break-words border-b border-gray-900 pb-1 text-lg font-semibold"
+              ></p>
+            </div>
+            <div class="min-w-0 flex-1 text-right">
+              <p id="inv-p-number"></p>
+              <p id="inv-p-date"></p>
+              <p id="inv-p-due"></p>
+              <p
+                id="inv-p-issuer-name"
+                class="mt-3 break-words text-base font-semibold"
+              ></p>
+              <p
+                id="inv-p-issuer-address"
+                class="whitespace-pre-line break-words"
+              ></p>
+              <p id="inv-p-issuer-contact" class="break-words"></p>
+              <p id="inv-p-registration"></p>
+            </div>
+          </div>
+          <div id="inv-p-head" class="my-5 space-y-2"></div>
+          <table class="w-full border-collapse text-xs">
+            <thead>
+              <tr id="inv-p-thead" class="bg-gray-100 print:bg-gray-100"></tr>
+            </thead>
+            <tbody id="inv-p-tbody"></tbody>
+          </table>
+          <p id="inv-p-reduced-note" class="mt-1 text-xs"></p>
+          <table class="ml-auto mt-4 w-72 border-collapse text-xs">
+            <tbody id="inv-p-summary"></tbody>
+          </table>
+          <div id="inv-p-bank" class="mt-5 hidden">
+            <p id="inv-p-bank-heading" class="font-semibold"></p>
+            <p id="inv-p-bank-body" class="whitespace-pre-line break-words"></p>
+          </div>
+          <div id="inv-p-notes" class="mt-4 hidden">
+            <p id="inv-p-notes-heading" class="font-semibold"></p>
+            <p
+              id="inv-p-notes-body"
+              class="whitespace-pre-line break-words"
+            ></p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<style is:global>
+  @media print {
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+    /* 印刷は書類（プレビュー）だけにする。見出し・説明文・使い方・注意事項・FAQなどは出さない */
+    [data-tool-page] > :not(#inv) {
+      display: none;
+    }
+    #inv-paper {
+      color: #000;
+      background: #fff;
+    }
+  }
+</style>
+
+<script>
+  import {
+    calculateInvoice,
+    isValidRegistrationNumber,
+    normalizeRegistrationNumber,
+    MAX_ITEMS,
+    type DocumentType,
+    type InvoiceError,
+    type InvoiceItemInput,
+    type InvoiceResult,
+    type RoundingMode,
+    type TaxRate,
+  } from '../../lib/tools/invoice-generator';
+  import {
+    attachCommaFormatting,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+  import { fill } from '../../lib/format-template';
+  import type { InvoiceGeneratorPageContent } from '../../i18n/tools/invoice-generator';
+
+  type Config = Pick<
+    InvoiceGeneratorPageContent,
+    | 'numberLocale'
+    | 'dateLocale'
+    | 'docTypes'
+    | 'honorifics'
+    | 'issuerSavedMessage'
+    | 'issuerClearedMessage'
+    | 'errorRegistration'
+    | 'errorNoItems'
+    | 'errorTooManyItems'
+    | 'errorInvalidItem'
+    | 'errorTooLarge'
+    | 'itemNameLabel'
+    | 'itemNamePlaceholder'
+    | 'itemQuantityLabel'
+    | 'itemUnitPriceLabel'
+    | 'itemTaxRateLabel'
+    | 'taxRate10'
+    | 'taxRate8'
+    | 'taxRate0'
+    | 'itemAmountLabel'
+    | 'removeItemButton'
+    | 'paperRegistrationPrefix'
+    | 'paperColName'
+    | 'paperColQuantity'
+    | 'paperColUnitExcl'
+    | 'paperColUnitIncl'
+    | 'paperColRate'
+    | 'paperColAmount'
+    | 'paperTaxableRow'
+    | 'paperTaxableRow0'
+    | 'paperTaxRow'
+    | 'paperSubtotalLabel'
+    | 'paperTaxTotalLabel'
+    | 'paperTotalLabel'
+    | 'paperTaxIncludedSuffix'
+    | 'paperReducedNote'
+    | 'paperBankHeading'
+    | 'paperNotesHeading'
+  >;
+
+  const STORAGE_KEY = 'nyankotools:invoice-issuer';
+
+  const root = document.getElementById('inv')!;
+  const cfg = JSON.parse(root.dataset.config ?? '{}') as Config;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const form = $('inv-form');
+  const numberInput = $<HTMLInputElement>('inv-number');
+  const dateInput = $<HTMLInputElement>('inv-date');
+  const dueInput = $<HTMLInputElement>('inv-due');
+  const dueField = $('inv-due-field');
+  const subjectInput = $<HTMLInputElement>('inv-subject');
+  const recipientInput = $<HTMLInputElement>('inv-recipient');
+  const honorificSelect = document.getElementById(
+    'inv-honorific',
+  ) as HTMLSelectElement | null;
+  const issuerNameInput = $<HTMLInputElement>('inv-issuer-name');
+  const issuerAddressInput = $<HTMLTextAreaElement>('inv-issuer-address');
+  const issuerContactInput = $<HTMLInputElement>('inv-issuer-contact');
+  const registrationInput = $<HTMLInputElement>('inv-registration');
+  const registrationError = $('inv-registration-error');
+  const bankField = $('inv-bank-field');
+  const bankInput = $<HTMLTextAreaElement>('inv-bank');
+  const notesInput = $<HTMLTextAreaElement>('inv-notes');
+  const itemsEl = $('inv-items');
+  const errorEl = $('inv-error');
+  const issuerStatus = $('inv-issuer-status');
+  const printButton = $<HTMLButtonElement>('inv-print-button');
+
+  const yen = new Intl.NumberFormat(cfg.numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  // 単価は小数を許すため、小数部を残して表示する
+  const unitYen = new Intl.NumberFormat(cfg.numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 4,
+  });
+  const plain = new Intl.NumberFormat(cfg.numberLocale, {
+    maximumFractionDigits: 6,
+  });
+  const dateFormat = new Intl.DateTimeFormat(cfg.dateLocale, {
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  let currentType: DocumentType = 'invoice';
+  let hasError = false;
+  let rowCounter = 0;
+
+  function formatDate(value: string): string {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    if (!m) return '';
+    return dateFormat.format(new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])));
+  }
+
+  function todayString(): string {
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  function radioValue(name: string): string {
+    return (
+      document.querySelector<HTMLInputElement>(`input[name="${name}"]:checked`)
+        ?.value ?? ''
+    );
+  }
+
+  function el<K extends keyof HTMLElementTagNameMap>(
+    tag: K,
+    className = '',
+    text = '',
+  ): HTMLElementTagNameMap[K] {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text) node.textContent = text;
+    return node;
+  }
+
+  // --- 明細行 ---
+
+  function rateLabel(rate: TaxRate): string {
+    return rate === 10
+      ? cfg.taxRate10
+      : rate === 8
+        ? cfg.taxRate8
+        : cfg.taxRate0;
+  }
+
+  function addRow(): HTMLElement {
+    const n = ++rowCounter;
+    const row = el(
+      'div',
+      'rounded-lg border border-gray-200 p-3 dark:border-gray-700',
+    );
+    row.dataset.itemRow = '';
+
+    const labelOf = (text: string, forId: string) => {
+      const label = el('label', 'ui-label', text);
+      label.htmlFor = forId;
+      return label;
+    };
+    const fieldClass =
+      'ui-input h-11 px-3 dark:bg-gray-900 dark:placeholder-gray-500';
+
+    const nameWrap = el('div', 'mb-3');
+    const name = el('input', `${fieldClass} w-full`);
+    name.id = `inv-item-${n}-name`;
+    name.type = 'text';
+    name.placeholder = cfg.itemNamePlaceholder;
+    name.dataset.field = 'name';
+    nameWrap.append(labelOf(cfg.itemNameLabel, name.id), name);
+
+    const line = el('div', 'flex flex-wrap items-end gap-3');
+
+    const qtyWrap = el('div');
+    const qty = el('input', `${fieldClass} w-20`);
+    qty.id = `inv-item-${n}-qty`;
+    qty.type = 'number';
+    qty.inputMode = 'decimal';
+    qty.min = '0';
+    qty.step = 'any';
+    qty.value = '1';
+    qty.dataset.field = 'qty';
+    qtyWrap.append(labelOf(cfg.itemQuantityLabel, qty.id), qty);
+
+    const priceWrap = el('div');
+    const price = el('input', `${fieldClass} w-32`);
+    price.id = `inv-item-${n}-price`;
+    price.type = 'text';
+    price.inputMode = 'decimal';
+    price.dataset.field = 'price';
+    attachCommaFormatting(price);
+    priceWrap.append(labelOf(cfg.itemUnitPriceLabel, price.id), price);
+
+    const rateWrap = el('div');
+    const rate = el('select', `${fieldClass}`);
+    rate.id = `inv-item-${n}-rate`;
+    rate.dataset.field = 'rate';
+    for (const r of [10, 8, 0] as const) {
+      const option = el('option', '', rateLabel(r));
+      option.value = String(r);
+      rate.append(option);
+    }
+    rateWrap.append(labelOf(cfg.itemTaxRateLabel, rate.id), rate);
+
+    const amountWrap = el('div', 'min-w-24');
+    const amountLabel = el('span', 'ui-label', cfg.itemAmountLabel);
+    const amount = el('output', 'flex h-11 items-center text-sm font-semibold');
+    amount.dataset.field = 'amount';
+    amountWrap.append(amountLabel, amount);
+
+    const remove = el('button', 'ui-btn ml-auto', cfg.removeItemButton);
+    remove.type = 'button';
+    remove.dataset.action = 'remove';
+
+    line.append(qtyWrap, priceWrap, rateWrap, amountWrap, remove);
+    row.append(nameWrap, line);
+    itemsEl.append(row);
+    return row;
+  }
+
+  function rows(): HTMLElement[] {
+    return Array.from(itemsEl.querySelectorAll<HTMLElement>('[data-item-row]'));
+  }
+
+  function rowField<T extends HTMLElement>(row: HTMLElement, field: string): T {
+    return row.querySelector<T>(`[data-field="${field}"]`)!;
+  }
+
+  // --- 書類の種類 ---
+
+  function applyType() {
+    const dt = cfg.docTypes[currentType];
+    $('inv-number-label').textContent = dt.numberLabel;
+    $('inv-date-label').textContent = dt.dateLabel;
+    $('inv-subject-label').textContent = dt.subjectLabel;
+    subjectInput.placeholder = dt.subjectPlaceholder;
+    if (dt.dueLabel === null) {
+      dueField.classList.add('hidden');
+    } else {
+      dueField.classList.remove('hidden');
+      $('inv-due-label').textContent = dt.dueLabel;
+    }
+    bankField.classList.toggle('hidden', !dt.showBank);
+    document
+      .querySelectorAll<HTMLButtonElement>('[data-type]')
+      .forEach((b) =>
+        b.setAttribute('aria-pressed', String(b.dataset.type === currentType)),
+      );
+  }
+
+  // --- 発行者情報の保存 ---
+
+  function loadIssuer() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw) as Record<string, unknown>;
+      const str = (key: string) =>
+        typeof data[key] === 'string' ? (data[key] as string) : '';
+      issuerNameInput.value = str('name');
+      issuerAddressInput.value = str('address');
+      issuerContactInput.value = str('contact');
+      registrationInput.value = str('registration');
+      bankInput.value = str('bank');
+    } catch {
+      // 保存領域が使えない・壊れている場合は何もしない
+    }
+  }
+
+  function setIssuerStatus(message: string) {
+    issuerStatus.textContent = message;
+  }
+
+  $('inv-issuer-save').addEventListener('click', () => {
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          name: issuerNameInput.value,
+          address: issuerAddressInput.value,
+          contact: issuerContactInput.value,
+          registration: registrationInput.value,
+          bank: bankInput.value,
+        }),
+      );
+      setIssuerStatus(cfg.issuerSavedMessage);
+    } catch {
+      setIssuerStatus('');
+    }
+  });
+  $('inv-issuer-clear').addEventListener('click', () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // 何もしない
+    }
+    setIssuerStatus(cfg.issuerClearedMessage);
+  });
+
+  // --- 書類（プレビュー）の描画 ---
+
+  function setText(id: string, text: string) {
+    const node = $(id);
+    node.textContent = text;
+    node.classList.toggle('hidden', text === '');
+  }
+
+  function line(label: string, value: string): string {
+    return value === '' ? '' : `${label}: ${value}`;
+  }
+
+  const emptyResult: InvoiceResult = {
+    lines: [],
+    groups: [],
+    subtotal: 0,
+    taxAmount: 0,
+    total: 0,
+  };
+
+  function cell(
+    tag: 'td' | 'th',
+    text: string,
+    className: string,
+  ): HTMLTableCellElement {
+    return el(tag, `border border-gray-400 px-2 py-1 ${className}`, text);
+  }
+
+  function renderPaper(result: InvoiceResult, priceIncludesTax: boolean) {
+    const dt = cfg.docTypes[currentType];
+    setText('inv-p-title', dt.title);
+    setText('inv-p-number', line(dt.numberLabel, numberInput.value.trim()));
+    setText('inv-p-date', line(dt.dateLabel, formatDate(dateInput.value)));
+    setText(
+      'inv-p-due',
+      dt.dueLabel === null ? '' : line(dt.dueLabel, formatDate(dueInput.value)),
+    );
+
+    const recipient = recipientInput.value.trim();
+    const honorific = honorificSelect?.value ?? '';
+    setText(
+      'inv-p-recipient',
+      recipient === ''
+        ? ''
+        : honorific
+          ? `${recipient} ${honorific}`
+          : recipient,
+    );
+    setText('inv-p-issuer-name', issuerNameInput.value.trim());
+    setText('inv-p-issuer-address', issuerAddressInput.value.trim());
+    setText('inv-p-issuer-contact', issuerContactInput.value.trim());
+    const registration = normalizeRegistrationNumber(registrationInput.value);
+    setText(
+      'inv-p-registration',
+      registration !== '' && isValidRegistrationNumber(registration)
+        ? `${cfg.paperRegistrationPrefix}: ${registration}`
+        : '',
+    );
+
+    // 件名・導入文・合計金額。領収書は「上記」を受けるため金額が先に来る
+    const head = $('inv-p-head');
+    head.replaceChildren();
+    const subject = subjectInput.value.trim();
+    const subjectEl = subject
+      ? el('p', 'break-words', fill(dt.subjectFormat, { subject }))
+      : null;
+    const leadEl = el('p', '', dt.lead);
+    const totalEl = el(
+      'div',
+      'flex items-baseline justify-between gap-4 border-b-2 border-gray-900 pb-1',
+    );
+    totalEl.append(
+      el('span', 'font-semibold', dt.totalLabel),
+      el(
+        'span',
+        'text-xl font-bold',
+        `${yen.format(result.total)}${cfg.paperTaxIncludedSuffix}`,
+      ),
+    );
+    if (currentType === 'receipt') {
+      head.append(totalEl);
+      if (subjectEl) head.append(subjectEl);
+      head.append(leadEl);
+    } else {
+      if (subjectEl) head.append(subjectEl);
+      head.append(leadEl, totalEl);
+    }
+
+    // 明細表
+    const thead = $('inv-p-thead');
+    thead.replaceChildren(
+      cell('th', cfg.paperColName, 'text-left font-medium'),
+      cell('th', cfg.paperColQuantity, 'w-14 text-right font-medium'),
+      cell(
+        'th',
+        priceIncludesTax ? cfg.paperColUnitIncl : cfg.paperColUnitExcl,
+        'w-24 text-right font-medium',
+      ),
+      cell('th', cfg.paperColRate, 'w-16 text-right font-medium'),
+      cell('th', cfg.paperColAmount, 'w-24 text-right font-medium'),
+    );
+    const tbody = $('inv-p-tbody');
+    tbody.replaceChildren();
+    let hasReduced = false;
+    for (const l of result.lines) {
+      if (l.taxRate === 8) hasReduced = true;
+      const tr = el('tr');
+      tr.append(
+        cell('td', l.taxRate === 8 ? `※ ${l.name}` : l.name, 'break-words'),
+        cell('td', plain.format(l.quantity), 'text-right'),
+        cell('td', unitYen.format(l.unitPrice), 'text-right'),
+        cell(
+          'td',
+          l.taxRate === 0 ? cfg.taxRate0 : `${l.taxRate}%`,
+          'text-right',
+        ),
+        cell('td', yen.format(l.amount), 'text-right'),
+      );
+      tbody.append(tr);
+    }
+    setText('inv-p-reduced-note', hasReduced ? cfg.paperReducedNote : '');
+
+    // 税率ごとの集計
+    const summary = $('inv-p-summary');
+    summary.replaceChildren();
+    const addSummary = (label: string, value: number, strong = false) => {
+      const tr = el('tr', strong ? 'font-bold' : '');
+      tr.append(
+        cell('td', label, 'text-left'),
+        cell('td', yen.format(value), 'text-right'),
+      );
+      summary.append(tr);
+    };
+    for (const g of result.groups) {
+      addSummary(
+        g.taxRate === 0
+          ? cfg.paperTaxableRow0
+          : fill(cfg.paperTaxableRow, { rate: String(g.taxRate) }),
+        g.taxableAmount,
+      );
+      if (g.taxRate !== 0) {
+        addSummary(
+          fill(cfg.paperTaxRow, { rate: String(g.taxRate) }),
+          g.taxAmount,
+        );
+      }
+    }
+    addSummary(cfg.paperSubtotalLabel, result.subtotal);
+    addSummary(cfg.paperTaxTotalLabel, result.taxAmount);
+    addSummary(cfg.paperTotalLabel, result.total, true);
+
+    // 振込先・備考
+    const showBank = dt.showBank && bankInput.value.trim() !== '';
+    $('inv-p-bank').classList.toggle('hidden', !showBank);
+    $('inv-p-bank-heading').textContent = cfg.paperBankHeading;
+    $('inv-p-bank-body').textContent = bankInput.value.trim();
+    const hasNotes = notesInput.value.trim() !== '';
+    $('inv-p-notes').classList.toggle('hidden', !hasNotes);
+    $('inv-p-notes-heading').textContent = cfg.paperNotesHeading;
+    $('inv-p-notes-body').textContent = notesInput.value.trim();
+  }
+
+  function errorMessage(error: InvoiceError, rowNumbers: number[]): string {
+    switch (error.kind) {
+      case 'no-items':
+        return cfg.errorNoItems;
+      case 'too-many-items':
+        return cfg.errorTooManyItems;
+      case 'too-large':
+        return cfg.errorTooLarge;
+      case 'invalid-item':
+        return fill(cfg.errorInvalidItem, {
+          n: String(rowNumbers[error.index] ?? error.index + 1),
+        });
+    }
+  }
+
+  function render() {
+    hasError = false;
+    errorEl.textContent = '';
+
+    const registrationOk = isValidRegistrationNumber(registrationInput.value);
+    registrationError.textContent = registrationOk ? '' : cfg.errorRegistration;
+    if (!registrationOk) hasError = true;
+
+    const items: InvoiceItemInput[] = [];
+    const targetRows: HTMLElement[] = [];
+    const rowNumbers: number[] = [];
+    rows().forEach((row, i) => {
+      rowField<HTMLOutputElement>(row, 'amount').textContent = '';
+      const name = rowField<HTMLInputElement>(row, 'name').value.trim();
+      const priceText = stripCommas(
+        rowField<HTMLInputElement>(row, 'price').value,
+      ).trim();
+      // 品名も単価も空の行は、下書きの空行として無視する
+      if (name === '' && priceText === '') return;
+      const qtyText = rowField<HTMLInputElement>(row, 'qty').value.trim();
+      items.push({
+        name,
+        quantity: qtyText === '' ? NaN : Number(qtyText),
+        unitPrice: priceText === '' ? NaN : Number(priceText),
+        taxRate: Number(
+          rowField<HTMLSelectElement>(row, 'rate').value,
+        ) as TaxRate,
+      });
+      targetRows.push(row);
+      rowNumbers.push(i + 1);
+    });
+
+    const priceIncludesTax = radioValue('inv-price-mode') === 'inclusive';
+    if (items.length === 0) {
+      renderPaper(emptyResult, priceIncludesTax);
+      return;
+    }
+
+    const calculated = calculateInvoice({
+      items,
+      priceIncludesTax,
+      rounding: (radioValue('inv-rounding') || 'floor') as RoundingMode,
+    });
+    if (!calculated.ok) {
+      errorEl.textContent = errorMessage(calculated.error, rowNumbers);
+      hasError = true;
+      return;
+    }
+    calculated.result.lines.forEach((l, i) => {
+      rowField<HTMLOutputElement>(targetRows[i], 'amount').textContent =
+        yen.format(l.amount);
+    });
+    renderPaper(calculated.result, priceIncludesTax);
+  }
+
+  // --- イベント ---
+
+  document.querySelectorAll<HTMLButtonElement>('[data-type]').forEach((b) =>
+    b.addEventListener('click', () => {
+      currentType = b.dataset.type as DocumentType;
+      applyType();
+      render();
+    }),
+  );
+
+  form.addEventListener('input', render);
+  form.addEventListener('change', render);
+
+  $('inv-add-item').addEventListener('click', () => {
+    if (rows().length >= MAX_ITEMS) {
+      errorEl.textContent = cfg.errorTooManyItems;
+      return;
+    }
+    const row = addRow();
+    rowField<HTMLInputElement>(row, 'name').focus();
+    render();
+  });
+
+  itemsEl.addEventListener('click', (event) => {
+    const target = (event.target as HTMLElement).closest<HTMLElement>(
+      '[data-action="remove"]',
+    );
+    if (!target) return;
+    target.closest('[data-item-row]')?.remove();
+    // 最後の1行を消した場合も、入力できる空行を残す
+    if (rows().length === 0) addRow();
+    render();
+  });
+
+  // 印刷（PDF保存）。PDFの既定ファイル名はページタイトルになるため、印刷中だけ書類名にする
+  const originalTitle = document.title;
+  window.addEventListener('afterprint', () => {
+    document.title = originalTitle;
+  });
+  printButton.addEventListener('click', () => {
+    render();
+    if (hasError) return;
+    if (
+      rows().every(
+        (r) =>
+          rowField<HTMLInputElement>(r, 'name').value.trim() === '' &&
+          rowField<HTMLInputElement>(r, 'price').value.trim() === '',
+      )
+    ) {
+      errorEl.textContent = cfg.errorNoItems;
+      return;
+    }
+    const dt = cfg.docTypes[currentType];
+    const suffix = numberInput.value.trim() || dateInput.value;
+    document.title = suffix ? `${dt.label}_${suffix}` : dt.label;
+    window.print();
+  });
+
+  // 初期化
+  dateInput.value = todayString();
+  loadIssuer();
+  addRow();
+  applyType();
+  render();
+</script>

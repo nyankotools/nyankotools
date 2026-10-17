@@ -7834,6 +7834,43 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'tetris-game',
+    category: 'games',
+    addedAt: '2026-10-17',
+    updatedAt: '2026-10-17',
+    related: ['snake-game', 'game-2048', 'minesweeper'],
+    translations: {
+      ja: {
+        name: '落ち物パズル（ブロックを揃えてラインを消す）',
+        description:
+          '落ちてくるブロックを回転・移動して横一列を揃えて消す定番の落ち物パズル。ホールド・ネクスト表示・落下位置ガイド付きで、キーボードとスマホの画面ボタンに対応',
+        keywords: [
+          '落ち物パズル',
+          'テトリス風',
+          'ブロックパズル',
+          '落ちものゲーム',
+          'falling block puzzle',
+          'ブラウザゲーム',
+          'ミニゲーム',
+        ],
+      },
+      en: {
+        name: 'Falling Block Puzzle',
+        description:
+          'The classic falling block puzzle: rotate and stack blocks to clear lines. Hold, next preview and landing guide, with keyboard and on-screen buttons',
+        keywords: [
+          'falling block puzzle',
+          'block stacking game',
+          'tetris-like',
+          'puzzle game',
+          'browser game',
+          'retro game',
+          'mini game',
+        ],
+      },
+    },
+  },
+  {
     slug: 'htaccess-generator',
     category: 'dev',
     addedAt: '2026-10-16',
@@ -7915,6 +7952,133 @@ export const tools: Tool[] = [
           'japanese ascii art',
           'kanji',
           'pixel text',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'rokuyo-calendar',
+    category: 'datetime',
+    addedAt: '2026-10-17',
+    updatedAt: '2026-10-17',
+    related: [
+      'calendar-generator',
+      'japanese-era-converter',
+      'business-day-calculator',
+    ],
+    translations: {
+      ja: {
+        name: '六曜・旧暦カレンダー（大安・仏滅・二十四節気）',
+        description:
+          '月間カレンダーに六曜（大安・仏滅など）と旧暦、二十四節気、祝日を表示。日付を入れて六曜・旧暦を調べることもできます（1900〜2100年）',
+        keywords: [
+          '六曜',
+          '大安',
+          '仏滅',
+          '旧暦',
+          '暦注',
+          '二十四節気',
+          '友引',
+          '閏月',
+        ],
+      },
+      en: {
+        name: 'Rokuyo & Lunar Calendar (Taian, Butsumetsu, Solar Terms)',
+        description:
+          'A monthly calendar showing rokuyo lucky days (Taian, Butsumetsu…), old lunar dates, 24 solar terms and holidays, plus a date lookup (1900–2100)',
+        keywords: [
+          'rokuyo',
+          'taian',
+          'butsumetsu',
+          'lunar calendar',
+          'japanese lucky days',
+          'solar terms',
+          'leap month',
+          'old calendar',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'instrument-tuner',
+    category: 'media',
+    addedAt: '2026-10-17',
+    updatedAt: '2026-10-17',
+    related: ['metronome-bpm', 'mic-tester', 'speaker-tester'],
+    sensitive: true,
+    needsCamera: true,
+    translations: {
+      ja: {
+        name: '楽器チューナー（ギター・ベース・ウクレレ）',
+        description:
+          'マイクの音から音程を検出してチューニング。ギター・ベース・ウクレレのプリセットと半音階に対応し、音名とセントのずれをメーターで確認できます',
+        keywords: [
+          'チューナー',
+          'ギターチューナー',
+          'ベースチューナー',
+          'ウクレレチューナー',
+          'チューニング',
+          '音程',
+          'ピッチ',
+          'セント',
+        ],
+      },
+      en: {
+        name: 'Instrument Tuner (Guitar, Bass, Ukulele)',
+        description:
+          'Tune with your microphone using live pitch detection. Presets for guitar, bass and ukulele plus chromatic mode, with a cents meter',
+        keywords: [
+          'guitar tuner',
+          'bass tuner',
+          'ukulele tuner',
+          'chromatic tuner',
+          'online tuner',
+          'pitch detector',
+          'tuning',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'invoice-generator',
+    category: 'calc',
+    addedAt: '2026-10-17',
+    updatedAt: '2026-10-17',
+    related: [
+      'tax-calculator',
+      'freelance-income-calculator',
+      'split-bill-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '請求書・見積書・領収書・納品書作成',
+        description:
+          'インボイス制度に沿った請求書・見積書・領収書・納品書を作成し、印刷またはPDFで保存。登録番号の表示、税率ごとの消費税集計、端数処理の選択に対応',
+        keywords: [
+          '請求書',
+          '見積書',
+          '領収書',
+          '納品書',
+          'インボイス',
+          '適格請求書',
+          '登録番号',
+          'PDF',
+        ],
+      },
+      en: {
+        name: 'Invoice, Quotation, Receipt & Delivery Note Generator',
+        description:
+          'Create invoices, quotations, receipts and delivery notes in Japan’s qualified invoice layout and save them as PDF, with per-rate tax totals and rounding options',
+        keywords: [
+          'invoice generator',
+          'quotation',
+          'estimate',
+          'receipt maker',
+          'delivery note',
+          'qualified invoice',
+          'Japan invoice system',
+          'PDF',
         ],
       },
     },

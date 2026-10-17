@@ -6,7 +6,7 @@ function correctFloatingPointError(value: number): number {
   return Math.round(value * 1e6) / 1e6;
 }
 
-function roundBy(value: number, rounding: RoundingMode): number {
+export function roundBy(value: number, rounding: RoundingMode): number {
   const corrected = correctFloatingPointError(value);
   switch (rounding) {
     case 'floor':

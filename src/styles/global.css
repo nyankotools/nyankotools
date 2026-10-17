@@ -11,6 +11,15 @@
   navigation: auto;
 }
 
+/* 標準部品（date入力のカレンダーアイコンなど）の配色を、OSではなくサイトのテーマに合わせる */
+:root {
+  color-scheme: light;
+}
+
+:root.dark {
+  color-scheme: dark;
+}
+
 #sidebar {
   view-transition-name: sidebar;
 }

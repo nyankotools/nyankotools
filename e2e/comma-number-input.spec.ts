@@ -61,6 +61,16 @@ test.describe('カンマ区切り数値入力の共通機能', () => {
     await expect(page.locator('#tax-calc-result-tax')).toHaveText('￥5,000');
   });
 
+  test('請求書作成：単価入力欄に3桁区切りが適用される', async ({ page }) => {
+    await page.goto('/tools/invoice-generator/');
+
+    await page.locator('#inv-item-1-name').fill('商品');
+    await page.locator('#inv-item-1-price').fill('1234567');
+
+    await expect(page.locator('#inv-item-1-price')).toHaveValue('1,234,567');
+    await expect(page.locator('#inv-p-head')).toContainText('￥1,358,023');
+  });
+
   test('税計算機：割引元の価格と割引値入力欄に3桁区切りが適用される', async ({
     page,
   }) => {

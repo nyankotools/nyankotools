@@ -265,11 +265,10 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
             day.iso ===
               `${String(todayParts.y).padStart(4, '0')}-${String(todayParts.m).padStart(2, '0')}-${String(todayParts.d).padStart(2, '0')}`;
           const span = document.createElement('span');
-          span.className = `${dayColor(day.dow, day.holiday !== null)} ${
-            isToday
-              ? 'inline-block min-w-6 rounded-full bg-blue-600 px-1 text-white print:bg-transparent print:text-inherit print:ring-1 print:ring-gray-500'
-              : ''
-          }`;
+          // 今日のバッジは白文字固定（曜日色と併用すると背景と同系色になり、コントラストが落ちるため）
+          span.className = isToday
+            ? 'inline-block min-w-6 rounded-full bg-blue-600 px-1 text-white print:bg-transparent print:text-inherit print:ring-1 print:ring-gray-500'
+            : dayColor(day.dow, day.holiday !== null);
           span.textContent = String(day.day);
           td.append(span);
           if (day.holiday && large) {

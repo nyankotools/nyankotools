@@ -8039,6 +8039,50 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'invoice-generator',
+    category: 'calc',
+    addedAt: '2026-10-17',
+    updatedAt: '2026-10-17',
+    related: [
+      'tax-calculator',
+      'freelance-income-calculator',
+      'split-bill-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '請求書・見積書・領収書・納品書作成',
+        description:
+          'インボイス制度に沿った請求書・見積書・領収書・納品書を作成し、印刷またはPDFで保存。登録番号の表示、税率ごとの消費税集計、端数処理の選択に対応',
+        keywords: [
+          '請求書',
+          '見積書',
+          '領収書',
+          '納品書',
+          'インボイス',
+          '適格請求書',
+          '登録番号',
+          'PDF',
+        ],
+      },
+      en: {
+        name: 'Invoice, Quotation, Receipt & Delivery Note Generator',
+        description:
+          'Create invoices, quotations, receipts and delivery notes in Japan’s qualified invoice layout and save them as PDF, with per-rate tax totals and rounding options',
+        keywords: [
+          'invoice generator',
+          'quotation',
+          'estimate',
+          'receipt maker',
+          'delivery note',
+          'qualified invoice',
+          'Japan invoice system',
+          'PDF',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

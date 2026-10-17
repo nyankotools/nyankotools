@@ -651,15 +651,20 @@ export const updates: UpdateEntry[] = [
   },
   {
     date: '2026-10-17',
-    toolSlugs: ['rokuyo-calendar', 'instrument-tuner', 'tetris-game'],
+    toolSlugs: [
+      'rokuyo-calendar',
+      'instrument-tuner',
+      'tetris-game',
+      'invoice-generator',
+    ],
     translations: {
       ja: {
         summary:
-          '六曜・旧暦カレンダーを追加しました。月間カレンダーに、各日の六曜（大安・友引・先勝・先負・仏滅・赤口）と旧暦の日付、二十四節気、祝日を表示します。大安などの日に色を付けたり、日付を入れて六曜・旧暦を調べたりでき、結婚式や引っ越しの日取り選びに使えます。1900〜2100年に対応しています。さらに、楽器チューナーを追加しました。マイクの音から音程を検出し、ギター・ベース・ウクレレのプリセットと半音階で、音名と±セントのずれをメーターで確認できます。さらに、落ち物パズルを追加しました。落ちてくるブロックを回転・移動して横一列を揃えて消すパズルで、ホールド・ネクスト表示・落下位置のガイド・ハードドロップに対応し、キーボードでもスマホの画面ボタンでも遊べます。',
+          '六曜・旧暦カレンダーを追加しました。月間カレンダーに、各日の六曜（大安・友引・先勝・先負・仏滅・赤口）と旧暦の日付、二十四節気、祝日を表示します。大安などの日に色を付けたり、日付を入れて六曜・旧暦を調べたりでき、結婚式や引っ越しの日取り選びに使えます。1900〜2100年に対応しています。さらに、楽器チューナーを追加しました。マイクの音から音程を検出し、ギター・ベース・ウクレレのプリセットと半音階で、音名と±セントのずれをメーターで確認できます。さらに、落ち物パズルを追加しました。落ちてくるブロックを回転・移動して横一列を揃えて消すパズルで、ホールド・ネクスト表示・落下位置のガイド・ハードドロップに対応し、キーボードでもスマホの画面ボタンでも遊べます。さらに、請求書・見積書・領収書・納品書作成を追加しました。宛先・明細・発行者情報を入力すると、インボイス制度（適格請求書）の記載事項に沿った書類を作れます。登録番号の表示、税率（10%・8%）ごとの消費税の集計、端数処理の選択に対応し、印刷画面から「PDFに保存」できます。',
       },
       en: {
         summary:
-          'Added the Rokuyo & Lunar Calendar. A monthly calendar shows each day’s rokuyo (Taian, Tomobiki, Sensho, Senbu, Butsumetsu, Shakko), lunar date, 24 solar terms and Japanese holidays. Highlight lucky days such as Taian or look up any date from 1900 to 2100 to help pick a day for a wedding or a move. The new Instrument Tuner detects pitch from your microphone and shows the note and cents off pitch on a meter, with presets for guitar, bass and ukulele plus a chromatic mode. The new Falling Block Puzzle lets you rotate and stack falling blocks to clear lines, with hold, a next-block preview, a landing guide and hard drop, playable with the keyboard or on-screen buttons.',
+          'Added the Rokuyo & Lunar Calendar. A monthly calendar shows each day’s rokuyo (Taian, Tomobiki, Sensho, Senbu, Butsumetsu, Shakko), lunar date, 24 solar terms and Japanese holidays. Highlight lucky days such as Taian or look up any date from 1900 to 2100 to help pick a day for a wedding or a move. The new Instrument Tuner detects pitch from your microphone and shows the note and cents off pitch on a meter, with presets for guitar, bass and ukulele plus a chromatic mode. The new Falling Block Puzzle lets you rotate and stack falling blocks to clear lines, with hold, a next-block preview, a landing guide and hard drop, playable with the keyboard or on-screen buttons. The new Invoice, Quotation, Receipt & Delivery Note Generator builds documents in Japan’s qualified invoice layout from the recipient, line items and your details, with the registration number, consumption tax totals per rate (10% / 8%) and a choice of rounding, and lets you save them as PDF from the print dialog.',
       },
     },
   },

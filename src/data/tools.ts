@@ -8232,6 +8232,158 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'ascii-table-generator',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['csv-markdown-table', 'csv-json-converter', 'char-counter'],
+    translations: {
+      ja: {
+        name: '罫線表（ASCII・Unicode）作成',
+        description:
+          'CSV・TSV・Excelの表をASCII／Unicode罫線の表に整形。README・コードコメント用。全角幅にも対応。',
+        keywords: [
+          'ASCII表',
+          'テキスト表',
+          '罫線',
+          'ボックス描画',
+          'CSV 表 整形',
+          'README 表',
+        ],
+      },
+      en: {
+        name: 'ASCII Table Generator',
+        description:
+          'Turn CSV, TSV or Excel cells into an ASCII or Unicode box-drawing text table for READMEs and code comments.',
+        keywords: [
+          'ascii table',
+          'text table',
+          'box drawing',
+          'unicode table',
+          'csv to table',
+          'plain text table',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'code-string-escaper',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['html-escape', 'url-encode', 'regex-tester'],
+    translations: {
+      ja: {
+        name: 'シェル・正規表現・SQL・CSV・JSON文字列エスケープ',
+        keywords: [
+          'エスケープ',
+          'アンエスケープ',
+          'シェル',
+          '正規表現',
+          'SQL',
+          'CSV',
+          'JSON',
+          '引用符',
+        ],
+        description:
+          'シェル・正規表現・SQL・CSV・JSON文字列の引用符や特殊文字を、言語別にエスケープ・アンエスケープします。',
+      },
+      en: {
+        name: 'Shell, Regex, SQL, CSV & JSON String Escape',
+        keywords: [
+          'escape',
+          'unescape',
+          'shell quote',
+          'regex escape',
+          'sql escape',
+          'csv quote',
+          'json string',
+        ],
+        description:
+          'Escape and unescape quotes and special characters for shell, regex, SQL, CSV and JSON strings.',
+      },
+    },
+  },
+  {
+    slug: 'slug-generator',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: [
+      'text-case-converter',
+      'romaji-kana-converter',
+      'zenkaku-hankaku',
+    ],
+    translations: {
+      ja: {
+        name: 'URLスラッグ生成',
+        keywords: [
+          'スラッグ',
+          'パーマリンク',
+          'URL',
+          'ローマ字',
+          'ハイフン',
+          'SEO',
+          'ブログ',
+        ],
+        description:
+          '記事タイトルなどの日本語を、URLに使えるローマ字・英数字とハイフンのスラッグに変換します。記号除去・文字数制限・複数行の一括変換に対応。',
+      },
+      en: {
+        name: 'URL Slug Generator',
+        keywords: [
+          'slug',
+          'permalink',
+          'url slug',
+          'romaji',
+          'kebab-case',
+          'seo',
+          'japanese to romaji',
+        ],
+        description:
+          'Turn titles, including Japanese, into clean URL slugs: kana to romaji, symbols stripped, hyphen-separated, with a length limit.',
+      },
+    },
+  },
+  {
+    slug: 'memorization-sheet',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['char-counter', 'word-frequency', 'indent-converter'],
+    translations: {
+      ja: {
+        name: '暗記シート作成',
+        description:
+          '覚えたい語を ** で囲むだけで、赤シートで隠せる暗記用プリントを作成。クリックで答えを確認でき、隠した状態・答え入りで印刷もできます。',
+        keywords: [
+          '暗記シート',
+          '赤シート',
+          '穴埋め',
+          '暗記プリント',
+          '単語帳',
+          '一問一答',
+          'テスト勉強',
+          'red sheet',
+        ],
+      },
+      en: {
+        name: 'Memorization Sheet Maker',
+        description:
+          'Wrap key terms in ** to hide them like a red study sheet. Click to reveal answers and print hidden or revealed.',
+        keywords: [
+          'red sheet',
+          'memorization',
+          'study sheet',
+          'fill in the blank',
+          'flashcards',
+          'cloze',
+          'cheat sheet',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

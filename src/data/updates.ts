@@ -675,15 +675,19 @@ export const updates: UpdateEntry[] = [
       'unicode-normalizer',
       'text-extractor',
       'indent-converter',
+      'ascii-table-generator',
+      'code-string-escaper',
+      'slug-generator',
+      'memorization-sheet',
     ],
     translations: {
       ja: {
         summary:
-          '単語・文字の出現頻度カウントを追加しました。日本語は文字単位、英語は単語単位で出現回数と割合をランキング表示し、上位N件の絞り込みとCSV出力に対応しています。さらに、Unicode正規化を追加しました。NFC・NFD・NFKC・NFKDへ変換でき、Macのファイル名で起きる濁点の分離も直せます。さらに、メール・URL・電話番号の一括抽出を追加しました。文章からメールアドレス・URL・電話番号・日付などをまとめて抜き出し、重複も除去します。さらに、インデント変換を追加しました。行頭のインデントをタブとスペースで相互に変換し、幅も変更できます。',
+          '単語・文字の出現頻度カウントを追加しました。日本語は文字単位、英語は単語単位で出現回数と割合をランキング表示し、上位N件の絞り込みとCSV出力に対応しています。さらに、Unicode正規化を追加しました。NFC・NFD・NFKC・NFKDへ変換でき、Macのファイル名で起きる濁点の分離も直せます。さらに、メール・URL・電話番号の一括抽出を追加しました。文章からメールアドレス・URL・電話番号・日付などをまとめて抜き出し、重複も除去します。さらに、インデント変換を追加しました。行頭のインデントをタブとスペースで相互に変換し、幅も変更できます。さらに、罫線表（ASCII・Unicode）作成を追加しました。CSVやExcelの表を全角幅も考慮した罫線表に整形します。さらに、シェル・正規表現・SQL・CSV・JSON文字列のエスケープを追加しました。さらに、URLスラッグ生成を追加しました。日本語のタイトルをローマ字のスラッグに変換します。さらに、暗記シート作成を追加しました。`**` で囲んだ語を赤シートで隠せます。',
       },
       en: {
         summary:
-          'Added the Word Frequency Counter, which ranks how often each word or character appears with counts and percentages, with a top-N limit and CSV export. The new Unicode Normalizer converts text to NFC, NFD, NFKC or NFKD and fixes decomposed dakuten from macOS filenames. The new Text Extractor pulls emails, URLs, phone numbers and dates out of text and removes duplicates. The new Indent Converter switches leading indentation between tabs and spaces and changes the indent width.',
+          'Added the Word Frequency Counter, which ranks how often each word or character appears with counts and percentages, with a top-N limit and CSV export. The new Unicode Normalizer converts text to NFC, NFD, NFKC or NFKD and fixes decomposed dakuten from macOS filenames. The new Text Extractor pulls emails, URLs, phone numbers and dates out of text and removes duplicates. The new Indent Converter switches leading indentation between tabs and spaces and changes the indent width. The new ASCII Table Generator formats CSV or Excel cells into a box-drawing text table. The new Code String Escaper escapes and unescapes strings for shell, regex, SQL, CSV and JSON. The new URL Slug Generator turns titles, including Japanese, into clean slugs. The new Memorization Sheet Maker hides terms wrapped in ** like a red study sheet.',
       },
     },
   },

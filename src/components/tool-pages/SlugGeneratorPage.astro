@@ -1,0 +1,168 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { slugGeneratorContent } from '../../i18n/tools/slug-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = slugGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="slug-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="slug-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      class="ui-input h-32 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="slug-separator" class="ui-label">
+        {t.separatorLabel}
+      </label>
+      <select
+        id="slug-separator"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      >
+        <option value="-">{t.separatorHyphen}</option>
+        <option value="_">{t.separatorUnderscore}</option>
+      </select>
+    </div>
+    <div>
+      <label for="slug-kanji" class="ui-label">
+        {t.kanjiLabel}
+      </label>
+      <select
+        id="slug-kanji"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      >
+        <option value="remove">{t.kanjiRemove}</option>
+        <option value="keep">{t.kanjiKeep}</option>
+      </select>
+    </div>
+    <div>
+      <label for="slug-max-length" class="ui-label">
+        {t.maxLengthLabel}
+        <span class="font-normal text-gray-600 dark:text-gray-400">
+          ({t.maxLengthHint})
+        </span>
+      </label>
+      <input
+        id="slug-max-length"
+        type="number"
+        min="0"
+        step="1"
+        value="0"
+        inputmode="numeric"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      />
+    </div>
+    <div class="flex flex-col justify-end">
+      <label class="ui-check">
+        <input id="slug-kana" type="checkbox" checked />
+        {t.kanaLabel}
+      </label>
+      <label class="ui-check">
+        <input id="slug-cut-at-word" type="checkbox" checked />
+        {t.cutAtWordLabel}
+      </label>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <label for="slug-output" class="ui-label">
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="slug-output"
+      readonly
+      data-no-count
+      data-empty-hint={t.emptyHint}
+      class="min-h-24 w-full rounded-lg border border-gray-300 bg-gray-50 p-3 font-mono text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      placeholder={t.emptyHint}
+    ></textarea>
+  </div>
+
+  <div class="mt-3 flex items-center gap-3">
+    <button
+      id="slug-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn ui-btn-primary px-4"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="slug-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    generateSlugs,
+    type KanjiMode,
+    type SlugSeparator,
+  } from '../../lib/tools/slug-generator';
+
+  const input = document.getElementById('slug-input') as HTMLTextAreaElement;
+  const output = document.getElementById('slug-output') as HTMLTextAreaElement;
+  const separator = document.getElementById(
+    'slug-separator',
+  ) as HTMLSelectElement;
+  const kanji = document.getElementById('slug-kanji') as HTMLSelectElement;
+  const maxLength = document.getElementById(
+    'slug-max-length',
+  ) as HTMLInputElement;
+  const kana = document.getElementById('slug-kana') as HTMLInputElement;
+  const cutAtWord = document.getElementById(
+    'slug-cut-at-word',
+  ) as HTMLInputElement;
+  const copyButton = document.getElementById(
+    'slug-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('slug-status')!;
+
+  function update() {
+    const max = Math.max(0, Math.floor(Number(maxLength.value) || 0));
+    output.value = generateSlugs(input.value, {
+      separator: separator.value as SlugSeparator,
+      kanji: kanji.value as KanjiMode,
+      convertKana: kana.checked,
+      cutAtWord: cutAtWord.checked,
+      maxLength: max,
+    }).join('\n');
+    statusEl.textContent = '';
+  }
+
+  onTextInput(input, update);
+  [separator, kanji, kana, cutAtWord].forEach((el) =>
+    el.addEventListener('change', update),
+  );
+  maxLength.addEventListener('input', update);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  update();
+</script>

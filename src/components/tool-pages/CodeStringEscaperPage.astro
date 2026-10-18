@@ -1,0 +1,184 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { codeStringEscaperContent } from '../../i18n/tools/code-string-escaper';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = codeStringEscaperContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-end gap-3">
+    <div>
+      <label for="code-string-escaper-language" class="ui-label">
+        {t.languageLabel}
+      </label>
+      <select
+        id="code-string-escaper-language"
+        class="ui-input h-11 px-3 dark:bg-gray-900"
+      >
+        <option value="shell">{t.languageShell}</option>
+        <option value="regex">{t.languageRegex}</option>
+        <option value="sql">{t.languageSql}</option>
+        <option value="sql-mysql">{t.languageSqlMysql}</option>
+        <option value="csv">{t.languageCsv}</option>
+        <option value="json">{t.languageJson}</option>
+      </select>
+    </div>
+    <div
+      id="code-string-escaper-direction"
+      class="ui-seg flex-wrap gap-1"
+      role="group"
+      aria-label={t.directionLabel}
+    >
+      <button
+        type="button"
+        data-direction="escape"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.directionEscape}
+      </button>
+      <button
+        type="button"
+        data-direction="unescape"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.directionUnescape}
+      </button>
+    </div>
+    <button
+      id="code-string-escaper-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="code-string-escaper-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <p
+    id="code-string-escaper-error"
+    class="ui-error mt-3"
+    role="alert"
+    hidden
+    data-unterminated-quote={t.errorUnterminatedQuote}
+    data-invalid-json={t.errorInvalidJson}
+    data-invalid-csv={t.errorInvalidCsv}
+  ></p>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="code-string-escaper-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="code-string-escaper-input"
+        data-query-target="text"
+        data-sample={t.sampleText}
+        class="ui-input h-64 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label for="code-string-escaper-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="code-string-escaper-output"
+        readonly
+        class="ui-input h-64 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    convertCodeString,
+    type EscapeDirection,
+    type EscapeLanguage,
+  } from '../../lib/tools/code-string-escaper';
+
+  const input = document.getElementById(
+    'code-string-escaper-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'code-string-escaper-output',
+  ) as HTMLTextAreaElement;
+  const languageSelect = document.getElementById(
+    'code-string-escaper-language',
+  ) as HTMLSelectElement;
+  const directionButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#code-string-escaper-direction [data-direction]',
+  );
+  const copyButton = document.getElementById(
+    'code-string-escaper-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('code-string-escaper-status')!;
+  const errorEl = document.getElementById('code-string-escaper-error')!;
+
+  let direction: EscapeDirection = 'escape';
+
+  function convert() {
+    statusEl.textContent = '';
+    errorEl.hidden = true;
+    if (input.value === '') {
+      output.value = '';
+      return;
+    }
+    const result = convertCodeString(
+      input.value,
+      languageSelect.value as EscapeLanguage,
+      direction,
+    );
+    if (result.ok) {
+      output.value = result.value;
+    } else {
+      output.value = '';
+      const messages: Record<string, string | undefined> = {
+        'unterminated-quote': errorEl.dataset.unterminatedQuote,
+        'invalid-json': errorEl.dataset.invalidJson,
+        'invalid-csv': errorEl.dataset.invalidCsv,
+      };
+      errorEl.textContent = messages[result.error] ?? '';
+      errorEl.hidden = false;
+    }
+  }
+
+  onTextInput(input, convert);
+  languageSelect.addEventListener('change', convert);
+
+  directionButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      direction = button.dataset.direction as EscapeDirection;
+      directionButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  convert();
+</script>

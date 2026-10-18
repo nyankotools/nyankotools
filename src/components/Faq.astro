@@ -16,7 +16,9 @@ const { items, heading } = Astro.props;
       <summary class="cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300">
         {item.question}
       </summary>
-      <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{item.answer}</p>
+      <p class="mt-2 text-sm break-words text-gray-600 dark:text-gray-400">
+        {item.answer}
+      </p>
     </details>
   ))}
 </div>

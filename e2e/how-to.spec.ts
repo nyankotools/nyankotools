@@ -48,6 +48,8 @@ const slugs = [
   'exif-viewer',
   'curl-converter',
   'file-hash-calculator',
+  'checksum-calculator',
+  'text-binary-converter',
   'svg-to-png',
   'ogp-image-generator',
   'image-cropper',

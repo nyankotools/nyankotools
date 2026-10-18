@@ -8384,6 +8384,149 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'vertical-text-converter',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['unicode-normalizer', 'indent-converter', 'slug-generator'],
+    translations: {
+      ja: {
+        name: '縦書き変換',
+        description:
+          '横書きの文章をSNS用の縦書き文字に変換。句読点・長音・括弧を縦書き字形にし、1文字1行や右から左の列に整形、縦書きプレビューも表示',
+        keywords: [
+          '縦書き',
+          '縦書き変換',
+          '縦書き文字',
+          'SNS',
+          'プレビュー',
+          '縦書きプレビュー',
+          'tategaki',
+          'vertical text',
+        ],
+      },
+      en: {
+        name: 'Vertical Text Converter',
+        description:
+          'Convert horizontal Japanese into vertical text for social posts, with vertical punctuation, one-per-line or column layouts, and a vertical preview.',
+        keywords: [
+          'vertical text',
+          'tategaki',
+          'vertical japanese',
+          'writing-mode',
+          'vertical writing',
+          'social media',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'base-n-encoder',
+    category: 'encode',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['base64', 'base-converter', 'totp-generator'],
+    translations: {
+      ja: {
+        name: 'Base32/58/62/85・16進 変換',
+        description:
+          'テキストをBase16(16進)・Base32・Base58・Base62・Base85にエンコード/デコード。不正文字の位置も表示。',
+        keywords: [
+          'Base32',
+          'Base58',
+          'Base62',
+          'Base85',
+          'Ascii85',
+          '16進',
+          'hex',
+          'デコード',
+        ],
+      },
+      en: {
+        name: 'Base32/58/62/85 & Hex Encoder',
+        description:
+          'Encode or decode text as Base16 (hex), Base32, Base58, Base62 or Base85 in your browser.',
+        keywords: [
+          'base32',
+          'base58',
+          'base62',
+          'base85',
+          'ascii85',
+          'hex',
+          'encoder',
+          'decoder',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'text-binary-converter',
+    category: 'encode',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['base-converter', 'encoding-converter', 'base64'],
+    translations: {
+      ja: {
+        name: 'テキスト⇔2進数・16進数変換',
+        description:
+          'テキストをUTF-8・UTF-16・Shift_JISのバイト列として2進数・8進数・16進数に変換し、逆変換もできる',
+        keywords: [
+          'テキスト 2進数',
+          'テキスト 16進数',
+          'バイナリ変換',
+          'バイト列',
+          'UTF-8 16進数',
+          'Shift_JIS バイト',
+          'hex',
+          'binary',
+        ],
+      },
+      en: {
+        name: 'Text to Binary / Hex Converter',
+        description:
+          'Convert text to binary, octal or hex bytes in UTF-8, UTF-16 or Shift_JIS, and back',
+        keywords: [
+          'text to binary',
+          'text to hex',
+          'string to bytes',
+          'utf-8 hex',
+          'shift_jis bytes',
+          'binary to text',
+          'hex to text',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'checksum-calculator',
+    category: 'generate',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['hash-generator', 'file-hash-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'チェックサム計算',
+        keywords: [
+          'CRC32',
+          'CRC16',
+          'Adler-32',
+          'Fletcher',
+          'チェックサム',
+          'CRC',
+        ],
+        description:
+          'テキストやファイルのCRC-32・CRC-16・Adler-32・Fletcherチェックサムを一括計算します。',
+      },
+      en: {
+        name: 'Checksum Calculator',
+        keywords: ['checksum', 'CRC32', 'CRC16', 'Adler-32', 'Fletcher', 'CRC'],
+        description:
+          'Calculates CRC-32, CRC-16, Adler-32, and Fletcher checksums of text or files.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

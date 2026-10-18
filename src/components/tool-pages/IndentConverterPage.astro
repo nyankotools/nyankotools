@@ -1,0 +1,252 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { indentConverterContent } from '../../i18n/tools/indent-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = indentConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="ic-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="ic-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      class="ui-input h-52 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+      wrap="off"
+    ></textarea>
+    <p
+      id="ic-stats"
+      data-template={t.statsTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+  </div>
+
+  <div class="mt-4">
+    <span class="ui-label">{t.modeLabel}</span>
+    <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+      <label class="flex min-h-11 items-center gap-2">
+        <input
+          type="radio"
+          name="ic-mode"
+          value="tabs-to-spaces"
+          id="ic-mode-t2s"
+          class="h-4 w-4"
+          checked
+        />
+        <span class="text-gray-700 dark:text-gray-300">
+          {t.modeTabsToSpaces}
+        </span>
+      </label>
+      <label class="flex min-h-11 items-center gap-2">
+        <input
+          type="radio"
+          name="ic-mode"
+          value="spaces-to-tabs"
+          id="ic-mode-s2t"
+          class="h-4 w-4"
+        />
+        <span class="text-gray-700 dark:text-gray-300">
+          {t.modeSpacesToTabs}
+        </span>
+      </label>
+      <label class="flex min-h-11 items-center gap-2">
+        <input
+          type="radio"
+          name="ic-mode"
+          value="change-width"
+          id="ic-mode-width"
+          class="h-4 w-4"
+        />
+        <span class="text-gray-700 dark:text-gray-300">
+          {t.modeChangeWidth}
+        </span>
+      </label>
+    </div>
+  </div>
+
+  <div class="mt-2 flex flex-wrap gap-4">
+    <div>
+      <label
+        for="ic-width"
+        id="ic-width-label"
+        class="ui-label"
+        data-tab-label={t.tabWidthLabel}
+        data-from-label={t.fromWidthLabel}
+      >
+        {t.tabWidthLabel}
+      </label>
+      <input
+        id="ic-width"
+        type="number"
+        min="1"
+        max="16"
+        step="1"
+        value="4"
+        inputmode="numeric"
+        class="ui-input h-11 w-28"
+      />
+    </div>
+    <div id="ic-to-wrap" hidden>
+      <label for="ic-to-width" class="ui-label">
+        {t.toWidthLabel}
+      </label>
+      <input
+        id="ic-to-width"
+        type="number"
+        min="1"
+        max="16"
+        step="1"
+        value="4"
+        inputmode="numeric"
+        class="ui-input h-11 w-28"
+      />
+    </div>
+  </div>
+
+  <div
+    class="mt-4 flex flex-wrap items-center gap-4"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-downloaded={t.downloaded}
+  >
+    <button
+      id="ic-copy-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.copyButton}
+    </button>
+    <button
+      id="ic-download-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.downloadButton}
+    </button>
+    <span
+      id="ic-status"
+      class="text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4">
+    <span class="ui-label">{t.resultLabel}</span>
+    <pre
+      id="ic-output"
+      class="h-52 w-full overflow-auto rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm whitespace-pre dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      tabindex="0"
+    ></pre>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    analyzeIndent,
+    convertIndent,
+    normalizeWidth,
+    type IndentMode,
+  } from '../../lib/tools/indent-converter';
+
+  const input = document.getElementById('ic-input') as HTMLTextAreaElement;
+  const statsEl = document.getElementById('ic-stats')!;
+  const outputEl = document.getElementById('ic-output')!;
+  const widthInput = document.getElementById('ic-width') as HTMLInputElement;
+  const widthLabel = document.getElementById('ic-width-label')!;
+  const toWrap = document.getElementById('ic-to-wrap')!;
+  const toWidthInput = document.getElementById(
+    'ic-to-width',
+  ) as HTMLInputElement;
+  const copyButton = document.getElementById(
+    'ic-copy-button',
+  ) as HTMLButtonElement;
+  const downloadButton = document.getElementById(
+    'ic-download-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('ic-status')!;
+  const actionsEl = copyButton.closest('div')!;
+  const modeRadios = document.querySelectorAll<HTMLInputElement>(
+    'input[name="ic-mode"]',
+  );
+
+  const statsTemplate = statsEl.dataset.template ?? '';
+  const copied = actionsEl.dataset.copied ?? '';
+  const copyFailed = actionsEl.dataset.copyFailed ?? '';
+  const downloaded = actionsEl.dataset.downloaded ?? '';
+
+  let converted = '';
+
+  function getMode(): IndentMode {
+    return (
+      (Array.from(modeRadios).find((r) => r.checked)?.value as IndentMode) ??
+      'tabs-to-spaces'
+    );
+  }
+
+  function process() {
+    statusEl.textContent = '';
+    const mode = getMode();
+    const isWidth = mode === 'change-width';
+    toWrap.hidden = !isWidth;
+    widthLabel.textContent =
+      (isWidth ? widthLabel.dataset.fromLabel : widthLabel.dataset.tabLabel) ??
+      '';
+
+    const text = input.value;
+    const stats = analyzeIndent(text);
+    statsEl.textContent =
+      text === ''
+        ? ''
+        : statsTemplate
+            .replace('{total}', String(stats.totalLines))
+            .replace('{none}', String(stats.unindentedLines))
+            .replace('{tab}', String(stats.tabLines))
+            .replace('{space}', String(stats.spaceLines))
+            .replace('{mixed}', String(stats.mixedLines));
+
+    converted = convertIndent(text, {
+      mode,
+      width: normalizeWidth(Number(widthInput.value)),
+      toWidth: normalizeWidth(Number(toWidthInput.value)),
+    });
+    outputEl.textContent = converted;
+    copyButton.disabled = converted === '';
+    downloadButton.disabled = converted === '';
+  }
+
+  input.addEventListener('input', process);
+  widthInput.addEventListener('input', process);
+  toWidthInput.addEventListener('input', process);
+  modeRadios.forEach((radio) => radio.addEventListener('change', process));
+
+  copyButton.addEventListener('click', async () => {
+    if (!converted) return;
+    statusEl.textContent = (await copyText(converted)) ? copied : copyFailed;
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (!converted) return;
+    downloadBlob(
+      new Blob([converted], { type: 'text/plain' }),
+      'indent-converted.txt',
+    );
+    statusEl.textContent = downloaded;
+  });
+
+  process();
+</script>

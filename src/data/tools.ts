@@ -8083,6 +8083,155 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'word-frequency',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['char-counter', 'text-diff'],
+    translations: {
+      ja: {
+        name: '単語・文字の出現頻度カウント',
+        description:
+          'テキスト中の文字や単語の出現回数・割合をランキング表示。上位N件の絞り込みやCSV出力にも対応',
+        keywords: [
+          '出現頻度',
+          '頻度分析',
+          '単語カウント',
+          '文字カウント',
+          'ランキング',
+          'ワードカウント',
+          'word frequency',
+          'CSV',
+        ],
+      },
+      en: {
+        name: 'Word Frequency Counter',
+        description:
+          'Count how often each word or character appears in your text, rank the top results and export as CSV',
+        keywords: [
+          'word frequency',
+          'word count',
+          'character frequency',
+          'letter frequency',
+          'top words',
+          'keyword counter',
+          'csv',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'unicode-normalizer',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['zenkaku-hankaku', 'char-counter'],
+    translations: {
+      ja: {
+        name: 'Unicode正規化',
+        description:
+          'テキストをNFC・NFD・NFKC・NFKDに変換。Macのファイル名で起きる濁点の分離を検出して直し、変換箇所も一覧表示します。',
+        keywords: [
+          'Unicode正規化',
+          'NFC',
+          'NFD',
+          'NFKC',
+          'NFKD',
+          '濁点分離',
+          'Mac ファイル名',
+          '濁点',
+        ],
+      },
+      en: {
+        name: 'Unicode Normalizer',
+        description:
+          'Convert text to Unicode NFC, NFD, NFKC or NFKD, fix decomposed dakuten, and see which characters changed.',
+        keywords: [
+          'unicode normalize',
+          'NFC',
+          'NFD',
+          'NFKC',
+          'NFKD',
+          'dakuten',
+          'macOS filename',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'text-extractor',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['regex-tester', 'char-counter'],
+    translations: {
+      ja: {
+        name: 'メール・URL・電話番号の一括抽出',
+        description:
+          '文章からメールアドレス・URL・電話番号・日付などをまとめて抽出し、重複も除去。',
+        keywords: [
+          '抽出',
+          'メールアドレス抽出',
+          'URL抽出',
+          '電話番号抽出',
+          '日付抽出',
+          'テキスト抽出',
+          '正規表現',
+        ],
+      },
+      en: {
+        name: 'Text Extractor (Emails, URLs, Phones)',
+        description:
+          'Extract emails, URLs, phone numbers, dates and hashtags from text, with duplicate removal.',
+        keywords: [
+          'extract email',
+          'extract url',
+          'phone number extractor',
+          'date extractor',
+          'regex extract',
+          'dedupe',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'indent-converter',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['line-ending-converter', 'text-diff'],
+    translations: {
+      ja: {
+        name: 'インデント変換',
+        description:
+          'コードやテキストの行頭インデントをタブ⇔スペースに一括変換し、2スペース⇔4スペースなど幅も変更できます。',
+        keywords: [
+          'インデント',
+          'タブ',
+          'スペース',
+          'tab',
+          'space',
+          'indent',
+          'タブ変換',
+          '字下げ',
+        ],
+      },
+      en: {
+        name: 'Indent Converter',
+        description:
+          'Convert leading indentation between tabs and spaces, or change the indent width. Only line-start whitespace changes.',
+        keywords: [
+          'indent',
+          'tabs to spaces',
+          'spaces to tabs',
+          'tab',
+          'indentation',
+          'indent width',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

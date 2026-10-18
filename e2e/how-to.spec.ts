@@ -59,6 +59,7 @@ const slugs = [
   'snake-game',
   'tetris-game',
   'invoice-generator',
+  'word-frequency',
   'rokuyo-calendar',
   'timezone-converter',
   'business-day-calculator',

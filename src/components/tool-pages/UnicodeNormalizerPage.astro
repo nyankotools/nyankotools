@@ -1,0 +1,216 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { unicodeNormalizerContent } from '../../i18n/tools/unicode-normalizer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = unicodeNormalizerContent[locale];
+const forms = [
+  { value: 'NFC', label: t.formNfc },
+  { value: 'NFD', label: t.formNfd },
+  { value: 'NFKC', label: t.formNfkc },
+  { value: 'NFKD', label: t.formNfkd },
+];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="un-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="un-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      class="ui-input h-40 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+    <p
+      id="un-stats"
+      data-template={t.statsTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="un-warning"
+      data-template={t.decomposedWarningTemplate}
+      class="mt-1 text-sm text-amber-700 dark:text-amber-400"
+    ></p>
+  </div>
+
+  <div class="mt-4">
+    <span class="ui-label">{t.formLabel}</span>
+    <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+      {forms.map((f, i) => (
+        <label class="flex min-h-11 items-center gap-2">
+          <input
+            type="radio"
+            name="un-form"
+            value={f.value}
+            id={`un-form-${f.value.toLowerCase()}`}
+            class="h-4 w-4"
+            checked={i === 0}
+          />
+          <span class="text-gray-700 dark:text-gray-300">{f.label}</span>
+        </label>
+      ))}
+    </div>
+  </div>
+
+  <div
+    class="mt-4 flex flex-wrap items-center gap-4"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <button
+      id="un-copy-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.copyButton}
+    </button>
+    <span
+      id="un-status"
+      class="text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4">
+    <span class="ui-label">{t.resultLabel}</span>
+    <pre
+      id="un-output"
+      class="h-40 w-full overflow-auto rounded-lg border border-gray-300 bg-gray-50 p-4 font-mono text-sm whitespace-pre-wrap dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    >
+    </pre>
+    <p
+      id="un-unchanged"
+      class="mt-1 hidden text-sm text-gray-600 dark:text-gray-400"
+    >
+      {t.unchangedMessage}
+    </p>
+  </div>
+
+  <div
+    id="un-changes"
+    class="mt-4 hidden"
+    data-count-template={t.changeCountTemplate}
+    data-truncated-template={t.truncatedTemplate}
+  >
+    <h2 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.changesHeading}
+      <span
+        id="un-change-count"
+        class="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400"
+      ></span>
+    </h2>
+    <ul id="un-change-list" class="mt-2 space-y-1 text-sm"></ul>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    analyzeNormalization,
+    type NormalForm,
+  } from '../../lib/tools/unicode-normalizer';
+
+  const input = document.getElementById('un-input') as HTMLTextAreaElement;
+  const statsEl = document.getElementById('un-stats')!;
+  const warningEl = document.getElementById('un-warning')!;
+  const outputEl = document.getElementById('un-output') as HTMLPreElement;
+  const unchangedEl = document.getElementById('un-unchanged')!;
+  const changesEl = document.getElementById('un-changes')!;
+  const changeCountEl = document.getElementById('un-change-count')!;
+  const changeListEl = document.getElementById('un-change-list')!;
+  const copyButton = document.getElementById(
+    'un-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('un-status')!;
+  const actionsEl = copyButton.closest('div')!;
+  const radios = document.querySelectorAll<HTMLInputElement>(
+    'input[name="un-form"]',
+  );
+
+  const copied = actionsEl.dataset.copied ?? '';
+  const copyFailed = actionsEl.dataset.copyFailed ?? '';
+  let output = '';
+
+  function getForm(): NormalForm {
+    return (Array.from(radios).find((r) => r.checked)?.value ??
+      'NFC') as NormalForm;
+  }
+
+  function fill(template: string, values: Record<string, string | number>) {
+    return template.replace(/\{(\w+)\}/g, (m, key: string) =>
+      key in values ? String(values[key]) : m,
+    );
+  }
+
+  function process() {
+    statusEl.textContent = '';
+    const text = input.value;
+    const r = analyzeNormalization(text, getForm());
+    output = r.output;
+    outputEl.textContent = output;
+    copyButton.disabled = output === '';
+
+    statsEl.textContent =
+      text === ''
+        ? ''
+        : fill(statsEl.dataset.template ?? '', {
+            codePoints: r.before.codePoints,
+            utf16: r.before.utf16Length,
+            decomposed: r.before.decomposedKana,
+          });
+    warningEl.textContent =
+      r.before.decomposedKana > 0
+        ? fill(warningEl.dataset.template ?? '', {
+            count: r.before.decomposedKana,
+          })
+        : '';
+
+    unchangedEl.classList.toggle('hidden', text === '' || r.changed);
+
+    changeListEl.replaceChildren();
+    if (r.changeCount === 0) {
+      changesEl.classList.add('hidden');
+      return;
+    }
+    changesEl.classList.remove('hidden');
+    let label = fill(changesEl.dataset.countTemplate ?? '', {
+      count: r.changeCount,
+    });
+    if (r.changeCount > r.changes.length) {
+      label +=
+        ' ' +
+        fill(changesEl.dataset.truncatedTemplate ?? '', {
+          shown: r.changes.length,
+          count: r.changeCount,
+        });
+    }
+    changeCountEl.textContent = label;
+    for (const c of r.changes) {
+      const li = document.createElement('li');
+      li.className =
+        'rounded border border-gray-200 px-3 py-2 font-mono text-xs break-all dark:border-gray-700';
+      li.textContent = `${c.before} → ${c.after}   (${c.beforeCodes} → ${c.afterCodes})`;
+      changeListEl.appendChild(li);
+    }
+  }
+
+  input.addEventListener('input', process);
+  radios.forEach((radio) => radio.addEventListener('change', process));
+
+  copyButton.addEventListener('click', async () => {
+    if (!output) return;
+    statusEl.textContent = (await copyText(output)) ? copied : copyFailed;
+  });
+
+  process();
+</script>

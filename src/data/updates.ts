@@ -668,6 +668,25 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-18',
+    toolSlugs: [
+      'word-frequency',
+      'unicode-normalizer',
+      'text-extractor',
+      'indent-converter',
+    ],
+    translations: {
+      ja: {
+        summary:
+          '単語・文字の出現頻度カウントを追加しました。日本語は文字単位、英語は単語単位で出現回数と割合をランキング表示し、上位N件の絞り込みとCSV出力に対応しています。さらに、Unicode正規化を追加しました。NFC・NFD・NFKC・NFKDへ変換でき、Macのファイル名で起きる濁点の分離も直せます。さらに、メール・URL・電話番号の一括抽出を追加しました。文章からメールアドレス・URL・電話番号・日付などをまとめて抜き出し、重複も除去します。さらに、インデント変換を追加しました。行頭のインデントをタブとスペースで相互に変換し、幅も変更できます。',
+      },
+      en: {
+        summary:
+          'Added the Word Frequency Counter, which ranks how often each word or character appears with counts and percentages, with a top-N limit and CSV export. The new Unicode Normalizer converts text to NFC, NFD, NFKC or NFKD and fixes decomposed dakuten from macOS filenames. The new Text Extractor pulls emails, URLs, phone numbers and dates out of text and removes duplicates. The new Indent Converter switches leading indentation between tabs and spaces and changes the indent width.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

@@ -1,0 +1,223 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { textExtractorContent } from '../../i18n/tools/text-extractor';
+import { EXTRACT_TYPES } from '../../lib/tools/text-extractor';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = textExtractorContent[locale];
+
+const typeLabels = {
+  email: t.typeEmail,
+  url: t.typeUrl,
+  phone: t.typePhone,
+  date: t.typeDate,
+  ipv4: t.typeIpv4,
+  postal: t.typePostal,
+  hashtag: t.typeHashtag,
+};
+const defaultChecked = new Set(['email', 'url', 'phone', 'date']);
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="te-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="te-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      class="ui-input h-56 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <fieldset class="mt-4">
+    <legend class="ui-label">{t.typesLegend}</legend>
+    <div class="flex flex-wrap gap-x-6 gap-y-1">
+      {EXTRACT_TYPES.map((type) => (
+        <label class="ui-check">
+          <input
+            id={`te-type-${type}`}
+            type="checkbox"
+            data-type={type}
+            checked={defaultChecked.has(type)}
+            class="h-4 w-4"
+          />
+          <span id={`te-label-${type}`}>{typeLabels[type]}</span>
+        </label>
+      ))}
+    </div>
+  </fieldset>
+
+  <fieldset class="mt-3">
+    <legend class="ui-label">{t.optionsLegend}</legend>
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-1">
+      <label class="ui-check">
+        <input id="te-unique" type="checkbox" checked class="h-4 w-4" />
+        <span>{t.uniqueLabel}</span>
+      </label>
+      <label class="ui-check">
+        <input id="te-ignore-case" type="checkbox" checked class="h-4 w-4" />
+        <span>{t.ignoreCaseLabel}</span>
+      </label>
+      <label class="ui-check">
+        <input id="te-sort" type="checkbox" class="h-4 w-4" />
+        <span>{t.sortLabel}</span>
+      </label>
+      <div class="flex items-center gap-2">
+        <label for="te-join" class="text-sm text-gray-700 dark:text-gray-300">
+          {t.joinLabel}
+        </label>
+        <select id="te-join" class="ui-input h-11 px-3 dark:bg-gray-900">
+          <option value="newline">{t.joinNewline}</option>
+          <option value="comma">{t.joinComma}</option>
+          <option value="tab">{t.joinTab}</option>
+        </select>
+      </div>
+    </div>
+  </fieldset>
+
+  <div class="mt-4">
+    <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
+      <label
+        for="te-output"
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.outputLabel}
+      </label>
+      <span
+        id="te-summary"
+        data-summary={t.summaryTemplate}
+        data-summary-unique={t.summaryUniqueTemplate}
+        data-empty={t.emptyMessage}
+        data-no-type={t.noTypeMessage}
+        class="text-xs text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></span>
+    </div>
+    <textarea
+      id="te-output"
+      readonly
+      class="ui-input h-52 w-full bg-gray-50 p-4 font-mono whitespace-pre-wrap dark:bg-gray-900"
+    ></textarea>
+    <ul
+      id="te-counts"
+      class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-400"
+    ></ul>
+  </div>
+
+  <div class="mt-3 flex flex-wrap items-center gap-3">
+    <button
+      id="te-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="te-status"
+      class="text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    EXTRACT_TYPES,
+    extractFromText,
+    formatItems,
+    type ExtractType,
+    type JoinMode,
+  } from '../../lib/tools/text-extractor';
+
+  const input = document.getElementById('te-input') as HTMLTextAreaElement;
+  const output = document.getElementById('te-output') as HTMLTextAreaElement;
+  const summaryEl = document.getElementById('te-summary')!;
+  const countsEl = document.getElementById('te-counts')!;
+  const statusEl = document.getElementById('te-status')!;
+  const copyButton = document.getElementById('te-copy-button')!;
+  const uniqueEl = document.getElementById('te-unique') as HTMLInputElement;
+  const ignoreCaseEl = document.getElementById(
+    'te-ignore-case',
+  ) as HTMLInputElement;
+  const sortEl = document.getElementById('te-sort') as HTMLInputElement;
+  const joinEl = document.getElementById('te-join') as HTMLSelectElement;
+  const typeEls = EXTRACT_TYPES.map(
+    (type) => document.getElementById(`te-type-${type}`) as HTMLInputElement,
+  );
+
+  function update() {
+    statusEl.textContent = '';
+    countsEl.replaceChildren();
+    const types = typeEls
+      .filter((el) => el.checked)
+      .map((el) => el.dataset.type as ExtractType);
+    ignoreCaseEl.disabled = !uniqueEl.checked;
+
+    if (types.length === 0) {
+      output.value = '';
+      summaryEl.textContent = summaryEl.dataset.noType ?? '';
+      return;
+    }
+
+    const result = extractFromText(input.value, {
+      types,
+      unique: uniqueEl.checked,
+      ignoreCase: ignoreCaseEl.checked,
+      sort: sortEl.checked,
+    });
+    output.value = formatItems(result.items, joinEl.value as JoinMode);
+
+    if (result.items.length === 0) {
+      summaryEl.textContent = input.value
+        ? (summaryEl.dataset.empty ?? '')
+        : '';
+      return;
+    }
+    let summary = (summaryEl.dataset.summary ?? '').replace(
+      '{n}',
+      String(result.items.length),
+    );
+    if (result.totalFound !== result.items.length) {
+      summary += (summaryEl.dataset.summaryUnique ?? '').replace(
+        '{n}',
+        String(result.totalFound),
+      );
+    }
+    summaryEl.textContent = summary;
+
+    for (const type of types) {
+      if (result.counts[type] === 0) continue;
+      const li = document.createElement('li');
+      const label = document.getElementById(`te-label-${type}`)!.textContent;
+      li.textContent = `${label}: ${result.counts[type]}`;
+      countsEl.appendChild(li);
+    }
+  }
+
+  onTextInput(input, update);
+  for (const el of [...typeEls, uniqueEl, ignoreCaseEl, sortEl, joinEl]) {
+    el.addEventListener('change', update);
+  }
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  update();
+</script>

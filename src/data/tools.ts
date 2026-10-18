@@ -8083,6 +8083,450 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'word-frequency',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['char-counter', 'text-diff'],
+    translations: {
+      ja: {
+        name: '単語・文字の出現頻度カウント',
+        description:
+          'テキスト中の文字や単語の出現回数・割合をランキング表示。上位N件の絞り込みやCSV出力にも対応',
+        keywords: [
+          '出現頻度',
+          '頻度分析',
+          '単語カウント',
+          '文字カウント',
+          'ランキング',
+          'ワードカウント',
+          'word frequency',
+          'CSV',
+        ],
+      },
+      en: {
+        name: 'Word Frequency Counter',
+        description:
+          'Count how often each word or character appears in your text, rank the top results and export as CSV',
+        keywords: [
+          'word frequency',
+          'word count',
+          'character frequency',
+          'letter frequency',
+          'top words',
+          'keyword counter',
+          'csv',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'unicode-normalizer',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['zenkaku-hankaku', 'char-counter'],
+    translations: {
+      ja: {
+        name: 'Unicode正規化',
+        description:
+          'テキストをNFC・NFD・NFKC・NFKDに変換。Macのファイル名で起きる濁点の分離を検出して直し、変換箇所も一覧表示します。',
+        keywords: [
+          'Unicode正規化',
+          'NFC',
+          'NFD',
+          'NFKC',
+          'NFKD',
+          '濁点分離',
+          'Mac ファイル名',
+          '濁点',
+        ],
+      },
+      en: {
+        name: 'Unicode Normalizer',
+        description:
+          'Convert text to Unicode NFC, NFD, NFKC or NFKD, fix decomposed dakuten, and see which characters changed.',
+        keywords: [
+          'unicode normalize',
+          'NFC',
+          'NFD',
+          'NFKC',
+          'NFKD',
+          'dakuten',
+          'macOS filename',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'text-extractor',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['regex-tester', 'char-counter'],
+    translations: {
+      ja: {
+        name: 'メール・URL・電話番号の一括抽出',
+        description:
+          '文章からメールアドレス・URL・電話番号・日付などをまとめて抽出し、重複も除去。',
+        keywords: [
+          '抽出',
+          'メールアドレス抽出',
+          'URL抽出',
+          '電話番号抽出',
+          '日付抽出',
+          'テキスト抽出',
+          '正規表現',
+        ],
+      },
+      en: {
+        name: 'Text Extractor (Emails, URLs, Phones)',
+        description:
+          'Extract emails, URLs, phone numbers, dates and hashtags from text, with duplicate removal.',
+        keywords: [
+          'extract email',
+          'extract url',
+          'phone number extractor',
+          'date extractor',
+          'regex extract',
+          'dedupe',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'indent-converter',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['line-ending-converter', 'text-diff'],
+    translations: {
+      ja: {
+        name: 'インデント変換',
+        description:
+          'コードやテキストの行頭インデントをタブ⇔スペースに一括変換し、2スペース⇔4スペースなど幅も変更できます。',
+        keywords: [
+          'インデント',
+          'タブ',
+          'スペース',
+          'tab',
+          'space',
+          'indent',
+          'タブ変換',
+          '字下げ',
+        ],
+      },
+      en: {
+        name: 'Indent Converter',
+        description:
+          'Convert leading indentation between tabs and spaces, or change the indent width. Only line-start whitespace changes.',
+        keywords: [
+          'indent',
+          'tabs to spaces',
+          'spaces to tabs',
+          'tab',
+          'indentation',
+          'indent width',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'ascii-table-generator',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['csv-markdown-table', 'csv-json-converter', 'char-counter'],
+    translations: {
+      ja: {
+        name: '罫線表（ASCII・Unicode）作成',
+        description:
+          'CSV・TSV・Excelの表をASCII／Unicode罫線の表に整形。README・コードコメント用。全角幅にも対応。',
+        keywords: [
+          'ASCII表',
+          'テキスト表',
+          '罫線',
+          'ボックス描画',
+          'CSV 表 整形',
+          'README 表',
+        ],
+      },
+      en: {
+        name: 'ASCII Table Generator',
+        description:
+          'Turn CSV, TSV or Excel cells into an ASCII or Unicode box-drawing text table for READMEs and code comments.',
+        keywords: [
+          'ascii table',
+          'text table',
+          'box drawing',
+          'unicode table',
+          'csv to table',
+          'plain text table',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'code-string-escaper',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['html-escape', 'url-encode', 'regex-tester'],
+    translations: {
+      ja: {
+        name: 'シェル・正規表現・SQL・CSV・JSON文字列エスケープ',
+        keywords: [
+          'エスケープ',
+          'アンエスケープ',
+          'シェル',
+          '正規表現',
+          'SQL',
+          'CSV',
+          'JSON',
+          '引用符',
+        ],
+        description:
+          'シェル・正規表現・SQL・CSV・JSON文字列の引用符や特殊文字を、言語別にエスケープ・アンエスケープします。',
+      },
+      en: {
+        name: 'Shell, Regex, SQL, CSV & JSON String Escape',
+        keywords: [
+          'escape',
+          'unescape',
+          'shell quote',
+          'regex escape',
+          'sql escape',
+          'csv quote',
+          'json string',
+        ],
+        description:
+          'Escape and unescape quotes and special characters for shell, regex, SQL, CSV and JSON strings.',
+      },
+    },
+  },
+  {
+    slug: 'slug-generator',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: [
+      'text-case-converter',
+      'romaji-kana-converter',
+      'zenkaku-hankaku',
+    ],
+    translations: {
+      ja: {
+        name: 'URLスラッグ生成',
+        keywords: [
+          'スラッグ',
+          'パーマリンク',
+          'URL',
+          'ローマ字',
+          'ハイフン',
+          'SEO',
+          'ブログ',
+        ],
+        description:
+          '記事タイトルなどの日本語を、URLに使えるローマ字・英数字とハイフンのスラッグに変換します。記号除去・文字数制限・複数行の一括変換に対応。',
+      },
+      en: {
+        name: 'URL Slug Generator',
+        keywords: [
+          'slug',
+          'permalink',
+          'url slug',
+          'romaji',
+          'kebab-case',
+          'seo',
+          'japanese to romaji',
+        ],
+        description:
+          'Turn titles, including Japanese, into clean URL slugs: kana to romaji, symbols stripped, hyphen-separated, with a length limit.',
+      },
+    },
+  },
+  {
+    slug: 'memorization-sheet',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['char-counter', 'word-frequency', 'indent-converter'],
+    translations: {
+      ja: {
+        name: '暗記シート作成',
+        description:
+          '覚えたい語を ** で囲むだけで、赤シートで隠せる暗記用プリントを作成。クリックで答えを確認でき、隠した状態・答え入りで印刷もできます。',
+        keywords: [
+          '暗記シート',
+          '赤シート',
+          '穴埋め',
+          '暗記プリント',
+          '単語帳',
+          '一問一答',
+          'テスト勉強',
+          'red sheet',
+        ],
+      },
+      en: {
+        name: 'Memorization Sheet Maker',
+        description:
+          'Wrap key terms in ** to hide them like a red study sheet. Click to reveal answers and print hidden or revealed.',
+        keywords: [
+          'red sheet',
+          'memorization',
+          'study sheet',
+          'fill in the blank',
+          'flashcards',
+          'cloze',
+          'cheat sheet',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'vertical-text-converter',
+    category: 'text',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['unicode-normalizer', 'indent-converter', 'slug-generator'],
+    translations: {
+      ja: {
+        name: '縦書き変換',
+        description:
+          '横書きの文章をSNS用の縦書き文字に変換。句読点・長音・括弧を縦書き字形にし、1文字1行や右から左の列に整形、縦書きプレビューも表示',
+        keywords: [
+          '縦書き',
+          '縦書き変換',
+          '縦書き文字',
+          'SNS',
+          'プレビュー',
+          '縦書きプレビュー',
+          'tategaki',
+          'vertical text',
+        ],
+      },
+      en: {
+        name: 'Vertical Text Converter',
+        description:
+          'Convert horizontal Japanese into vertical text for social posts, with vertical punctuation, one-per-line or column layouts, and a vertical preview.',
+        keywords: [
+          'vertical text',
+          'tategaki',
+          'vertical japanese',
+          'writing-mode',
+          'vertical writing',
+          'social media',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'base-n-encoder',
+    category: 'encode',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['base64', 'base-converter', 'totp-generator'],
+    translations: {
+      ja: {
+        name: 'Base32/58/62/85・16進 変換',
+        description:
+          'テキストをBase16(16進)・Base32・Base58・Base62・Base85にエンコード/デコード。不正文字の位置も表示。',
+        keywords: [
+          'Base32',
+          'Base58',
+          'Base62',
+          'Base85',
+          'Ascii85',
+          '16進',
+          'hex',
+          'デコード',
+        ],
+      },
+      en: {
+        name: 'Base32/58/62/85 & Hex Encoder',
+        description:
+          'Encode or decode text as Base16 (hex), Base32, Base58, Base62 or Base85 in your browser.',
+        keywords: [
+          'base32',
+          'base58',
+          'base62',
+          'base85',
+          'ascii85',
+          'hex',
+          'encoder',
+          'decoder',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'text-binary-converter',
+    category: 'encode',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['base-converter', 'encoding-converter', 'base64'],
+    translations: {
+      ja: {
+        name: 'テキスト⇔2進数・16進数変換',
+        description:
+          'テキストをUTF-8・UTF-16・Shift_JISのバイト列として2進数・8進数・16進数に変換し、逆変換もできる',
+        keywords: [
+          'テキスト 2進数',
+          'テキスト 16進数',
+          'バイナリ変換',
+          'バイト列',
+          'UTF-8 16進数',
+          'Shift_JIS バイト',
+          'hex',
+          'binary',
+        ],
+      },
+      en: {
+        name: 'Text to Binary / Hex Converter',
+        description:
+          'Convert text to binary, octal or hex bytes in UTF-8, UTF-16 or Shift_JIS, and back',
+        keywords: [
+          'text to binary',
+          'text to hex',
+          'string to bytes',
+          'utf-8 hex',
+          'shift_jis bytes',
+          'binary to text',
+          'hex to text',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'checksum-calculator',
+    category: 'generate',
+    addedAt: '2026-10-18',
+    updatedAt: '2026-10-18',
+    related: ['hash-generator', 'file-hash-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'チェックサム計算',
+        keywords: [
+          'CRC32',
+          'CRC16',
+          'Adler-32',
+          'Fletcher',
+          'チェックサム',
+          'CRC',
+        ],
+        description:
+          'テキストやファイルのCRC-32・CRC-16・Adler-32・Fletcherチェックサムを一括計算します。',
+      },
+      en: {
+        name: 'Checksum Calculator',
+        keywords: ['checksum', 'CRC32', 'CRC16', 'Adler-32', 'Fletcher', 'CRC'],
+        description:
+          'Calculates CRC-32, CRC-16, Adler-32, and Fletcher checksums of text or files.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

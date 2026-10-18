@@ -1,0 +1,310 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { textBinaryConverterContent } from '../../i18n/tools/text-binary-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = textBinaryConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="tbc-root"
+    data-byte-count={t.byteCountTemplate}
+    data-unmappable={t.unmappableTemplate}
+    data-replaced={t.replacedWarning}
+    data-err-invalid={t.invalidCharError}
+    data-err-range={t.outOfRangeError}
+    data-err-length={t.badLengthError}
+    data-label-encode={t.inputLabelEncode}
+    data-label-decode={t.inputLabelDecode}
+    data-ph-encode={t.inputPlaceholderEncode}
+    data-ph-decode={t.inputPlaceholderDecode}
+  >
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <span class="ui-label">{t.modeLabel}</span>
+        <div id="tbc-mode" class="ui-seg" role="group" aria-label={t.modeLabel}>
+          <button
+            type="button"
+            data-mode="encode"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            {t.modeEncode}
+          </button>
+          <button
+            type="button"
+            data-mode="decode"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.modeDecode}
+          </button>
+        </div>
+      </div>
+      <div>
+        <label for="tbc-encoding" class="ui-label">
+          {t.encodingLabel}
+        </label>
+        <select
+          id="tbc-encoding"
+          class="ui-input h-11 w-full max-w-44 px-3 dark:bg-gray-900"
+        >
+          {t.encodingOptions.map((option) => (
+            <option value={option.value}>{option.label}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <span class="ui-label">{t.radixLabel}</span>
+        <div
+          id="tbc-radix"
+          class="ui-seg"
+          role="group"
+          aria-label={t.radixLabel}
+        >
+          {t.radixOptions.map((option) => (
+            <button
+              type="button"
+              data-radix={option.value}
+              aria-pressed={option.value === '16' ? 'true' : 'false'}
+              class="ui-seg-btn"
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-2 flex flex-wrap items-center gap-x-6">
+      <label class="ui-check">
+        <input id="tbc-separator" type="checkbox" class="h-4 w-4" checked />
+        {t.separatorLabel}
+      </label>
+      <label class="ui-check">
+        <input id="tbc-uppercase" type="checkbox" class="h-4 w-4" checked />
+        {t.uppercaseLabel}
+      </label>
+      <label class="ui-check">
+        <input id="tbc-bom" type="checkbox" class="h-4 w-4" />
+        {t.bomLabel}
+      </label>
+    </div>
+
+    <div class="mt-2 grid gap-4 lg:grid-cols-2">
+      <div>
+        <label for="tbc-input" id="tbc-input-label" class="ui-label">
+          {t.inputLabelEncode}
+        </label>
+        <textarea
+          id="tbc-input"
+          data-query-target="text"
+          class="ui-input h-64 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.inputPlaceholderEncode}
+          spellcheck="false"
+        ></textarea>
+      </div>
+      <div>
+        <label for="tbc-output" class="ui-label">
+          {t.outputLabel}
+        </label>
+        <textarea
+          id="tbc-output"
+          readonly
+          class="ui-input h-64 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button
+        id="tbc-copy-button"
+        type="button"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="ui-btn"
+      >
+        {t.copy}
+      </button>
+      <span
+        id="tbc-status"
+        class="text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+      <span
+        id="tbc-info"
+        class="text-sm text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></span>
+    </div>
+    <p
+      id="tbc-warning"
+      hidden
+      class="mt-3 max-w-2xl text-sm text-amber-800 dark:text-amber-300"
+    ></p>
+    <p id="tbc-error" hidden class="ui-error mt-3 max-w-2xl"></p>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    radixToText,
+    textToRadix,
+    type Radix,
+    type TextBinaryEncoding,
+  } from '../../lib/tools/text-binary-converter';
+
+  type Mode = 'encode' | 'decode';
+
+  const root = document.getElementById('tbc-root')!;
+  const input = document.getElementById('tbc-input') as HTMLTextAreaElement;
+  const output = document.getElementById('tbc-output') as HTMLTextAreaElement;
+  const inputLabel = document.getElementById('tbc-input-label')!;
+  const encodingSelect = document.getElementById(
+    'tbc-encoding',
+  ) as HTMLSelectElement;
+  const separator = document.getElementById(
+    'tbc-separator',
+  ) as HTMLInputElement;
+  const uppercase = document.getElementById(
+    'tbc-uppercase',
+  ) as HTMLInputElement;
+  const bom = document.getElementById('tbc-bom') as HTMLInputElement;
+  const copyButton = document.getElementById(
+    'tbc-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('tbc-status')!;
+  const infoEl = document.getElementById('tbc-info')!;
+  const warningEl = document.getElementById('tbc-warning')!;
+  const errorEl = document.getElementById('tbc-error')!;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#tbc-mode [data-mode]',
+  );
+  const radixButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#tbc-radix [data-radix]',
+  );
+
+  let mode: Mode = 'encode';
+  let radix: Radix = 16;
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(
+      /\{(\w+)\}/g,
+      (_, key: string) => values[key] ?? '',
+    );
+  }
+
+  function clearMessages() {
+    statusEl.textContent = '';
+    infoEl.textContent = '';
+    warningEl.hidden = true;
+    warningEl.textContent = '';
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function updateControls() {
+    const encoding = encodingSelect.value;
+    const isEncode = mode === 'encode';
+    separator.disabled = !isEncode;
+    uppercase.disabled = !isEncode || radix !== 16;
+    bom.disabled = !isEncode || encoding === 'shift_jis';
+    inputLabel.textContent =
+      (mode === 'encode'
+        ? root.dataset.labelEncode
+        : root.dataset.labelDecode) ?? '';
+    input.placeholder =
+      (mode === 'encode' ? root.dataset.phEncode : root.dataset.phDecode) ?? '';
+  }
+
+  function convert() {
+    clearMessages();
+    updateControls();
+    const encoding = encodingSelect.value as TextBinaryEncoding;
+    if (input.value === '') {
+      output.value = '';
+      return;
+    }
+    if (mode === 'encode') {
+      const result = textToRadix(input.value, encoding, radix, {
+        separator: separator.checked ? 'space' : 'none',
+        uppercase: uppercase.checked,
+        bom: bom.checked,
+      });
+      output.value = result.output;
+      infoEl.textContent = fill(root.dataset.byteCount, {
+        n: String(result.byteCount),
+      });
+      if (result.unmappable.length > 0) {
+        warningEl.textContent = fill(root.dataset.unmappable, {
+          chars: result.unmappable.join(' '),
+        });
+        warningEl.hidden = false;
+      }
+      return;
+    }
+    const result = radixToText(input.value, encoding, radix);
+    if (!result.ok) {
+      output.value = '';
+      const template =
+        result.reason === 'invalid-char'
+          ? root.dataset.errInvalid
+          : result.reason === 'out-of-range'
+            ? root.dataset.errRange
+            : root.dataset.errLength;
+      errorEl.textContent = fill(template, { token: result.token });
+      errorEl.hidden = false;
+      return;
+    }
+    output.value = result.text;
+    if (result.errorCount > 0) {
+      warningEl.textContent = fill(root.dataset.replaced, {
+        n: String(result.errorCount),
+      });
+      warningEl.hidden = false;
+    }
+  }
+
+  onTextInput(input, convert);
+  encodingSelect.addEventListener('change', convert);
+  [separator, uppercase, bom].forEach((el) =>
+    el.addEventListener('change', convert),
+  );
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as Mode;
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      convert();
+    });
+  });
+
+  radixButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      radix = Number(button.dataset.radix) as Radix;
+      radixButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  convert();
+</script>

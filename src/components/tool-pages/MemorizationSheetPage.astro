@@ -1,0 +1,378 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { memorizationSheetContent } from '../../i18n/tools/memorization-sheet';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = memorizationSheetContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="ms-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="ms-input"
+      class="ui-input h-44 w-full p-4 dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+    <div class="mt-2 flex flex-wrap items-center gap-2">
+      <button id="ms-wrap-button" type="button" class="ui-btn">
+        {t.wrapButton}
+      </button>
+      <button
+        id="ms-sample-button"
+        type="button"
+        class="ui-btn"
+        data-sample={t.sampleText}
+      >
+        {t.sampleButton}
+      </button>
+    </div>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.wrapHint}</p>
+  </div>
+
+  <div class="mt-4 flex flex-wrap gap-x-8 gap-y-2">
+    <div>
+      <span class="ui-label">{t.styleLabel}</span>
+      <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        <label class="flex min-h-11 items-center gap-2">
+          <input
+            type="radio"
+            name="ms-style"
+            value="red"
+            id="ms-style-red"
+            class="h-4 w-4"
+            checked
+          />
+          <span class="text-gray-700 dark:text-gray-300">{t.styleRed}</span>
+        </label>
+        <label class="flex min-h-11 items-center gap-2">
+          <input
+            type="radio"
+            name="ms-style"
+            value="blank"
+            id="ms-style-blank"
+            class="h-4 w-4"
+          />
+          <span class="text-gray-700 dark:text-gray-300">{t.styleBlank}</span>
+        </label>
+      </div>
+    </div>
+    <div>
+      <span class="ui-label">{t.printLabel}</span>
+      <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        <label class="flex min-h-11 items-center gap-2">
+          <input
+            type="radio"
+            name="ms-print"
+            value="hidden"
+            id="ms-print-hidden"
+            class="h-4 w-4"
+            checked
+          />
+          <span class="text-gray-700 dark:text-gray-300">{t.printHidden}</span>
+        </label>
+        <label class="flex min-h-11 items-center gap-2">
+          <input
+            type="radio"
+            name="ms-print"
+            value="shown"
+            id="ms-print-shown"
+            class="h-4 w-4"
+          />
+          <span class="text-gray-700 dark:text-gray-300">{t.printShown}</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="mt-4 flex flex-wrap items-center gap-3"
+    id="ms-actions"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <button id="ms-hide-button" type="button" class="ui-btn">
+      {t.hideAllButton}
+    </button>
+    <button id="ms-show-button" type="button" class="ui-btn">
+      {t.showAllButton}
+    </button>
+    <button id="ms-print-button" type="button" class="ui-btn">
+      {t.printButton}
+    </button>
+    <button
+      id="ms-copy-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.copyAnswersButton}
+    </button>
+    <span
+      id="ms-status"
+      class="text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4">
+    <span class="ui-label" id="ms-preview-label">
+      {t.previewLabel}
+    </span>
+    <p
+      id="ms-count"
+      class="mb-1 text-xs text-gray-600 dark:text-gray-400"
+      data-template={t.countTemplate}
+    ></p>
+    <div
+      id="ms-preview"
+      class="ms-preview rounded-lg border border-gray-300 p-4 leading-8 break-words"
+      data-style="red"
+      data-print="hidden"
+      data-empty={t.previewEmpty}
+      data-mark-label={t.markAriaLabel}
+      role="group"
+      aria-labelledby="ms-preview-label"
+    ></div>
+  </div>
+</ToolShell>
+
+<style is:global>
+  .ms-preview {
+    background: #fff;
+    color: #111827;
+  }
+  .ms-preview .ms-line {
+    min-height: 2rem;
+    white-space: pre-wrap;
+  }
+  .ms-preview .ms-empty {
+    color: #4b5563;
+  }
+  .ms-mark {
+    cursor: pointer;
+    background: #dc2626;
+    padding: 0 0.15em;
+    border-radius: 2px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .ms-mark:focus-visible {
+    outline: 2px solid #1d4ed8;
+    outline-offset: 2px;
+  }
+  .ms-mark .ms-word {
+    visibility: hidden;
+  }
+  .ms-mark[aria-pressed='true'] {
+    background: transparent;
+  }
+  .ms-mark[aria-pressed='true'] .ms-word {
+    visibility: visible;
+    color: #b91c1c;
+    font-weight: 600;
+  }
+  .ms-preview[data-style='blank'] .ms-mark {
+    background: #fff;
+    border-bottom: 2px solid #4b5563;
+    border-radius: 0;
+  }
+  .ms-preview[data-style='blank'] .ms-mark[aria-pressed='true'] {
+    border-bottom-color: #b91c1c;
+  }
+
+  @media print {
+    body *:not(.ms-preview):not(:has(.ms-preview)):not(.ms-preview *) {
+      display: none !important;
+    }
+    .ms-preview {
+      border: 0;
+      padding: 0;
+    }
+    .ms-preview[data-print='hidden'] .ms-mark {
+      background: #dc2626;
+    }
+    .ms-preview[data-print='hidden'][data-style='blank'] .ms-mark {
+      background: #fff;
+      border-bottom: 2px solid #111827;
+    }
+    .ms-preview[data-print='hidden'] .ms-mark .ms-word {
+      visibility: hidden;
+    }
+    .ms-preview[data-print='shown'] .ms-mark,
+    .ms-preview[data-print='shown'][data-style='blank'] .ms-mark {
+      background: transparent;
+      border-bottom: 0;
+    }
+    .ms-preview[data-print='shown'] .ms-mark .ms-word {
+      visibility: visible;
+      color: #b91c1c;
+      font-weight: 600;
+    }
+  }
+</style>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    parseSheet,
+    extractAnswers,
+    toggleMarker,
+  } from '../../lib/tools/memorization-sheet';
+
+  const input = document.getElementById('ms-input') as HTMLTextAreaElement;
+  const preview = document.getElementById('ms-preview')!;
+  const countEl = document.getElementById('ms-count')!;
+  const statusEl = document.getElementById('ms-status')!;
+  const actionsEl = document.getElementById('ms-actions')!;
+  const wrapButton = document.getElementById('ms-wrap-button')!;
+  const sampleButton = document.getElementById('ms-sample-button')!;
+  const hideButton = document.getElementById('ms-hide-button')!;
+  const showButton = document.getElementById('ms-show-button')!;
+  const printButton = document.getElementById('ms-print-button')!;
+  const copyButton = document.getElementById(
+    'ms-copy-button',
+  ) as HTMLButtonElement;
+  const styleRadios = document.querySelectorAll<HTMLInputElement>(
+    'input[name="ms-style"]',
+  );
+  const printRadios = document.querySelectorAll<HTMLInputElement>(
+    'input[name="ms-print"]',
+  );
+
+  const countTemplate = countEl.dataset.template ?? '';
+  const markLabel = preview.dataset.markLabel ?? '';
+  let answers: string[] = [];
+
+  function marks(): HTMLElement[] {
+    return Array.from(preview.querySelectorAll<HTMLElement>('.ms-mark'));
+  }
+
+  function updateCount() {
+    const all = marks();
+    const revealed = all.filter(
+      (m) => m.getAttribute('aria-pressed') === 'true',
+    ).length;
+    countEl.textContent =
+      all.length === 0
+        ? ''
+        : countTemplate
+            .replace('{count}', String(all.length))
+            .replace('{revealed}', String(revealed));
+  }
+
+  function toggle(mark: HTMLElement) {
+    mark.setAttribute(
+      'aria-pressed',
+      mark.getAttribute('aria-pressed') === 'true' ? 'false' : 'true',
+    );
+    updateCount();
+  }
+
+  function render() {
+    statusEl.textContent = '';
+    const lines = parseSheet(input.value);
+    answers = extractAnswers(lines);
+    preview.replaceChildren();
+    if (lines.length === 0) {
+      const p = document.createElement('p');
+      p.className = 'ms-empty';
+      p.textContent = preview.dataset.empty ?? '';
+      preview.append(p);
+    }
+    // 入力は textContent / createTextNode だけで組み立てる（innerHTML は使わない）
+    for (const line of lines) {
+      const div = document.createElement('div');
+      div.className = 'ms-line';
+      for (const seg of line) {
+        if (!seg.hidden) {
+          div.append(document.createTextNode(seg.text));
+          continue;
+        }
+        const mark = document.createElement('span');
+        mark.className = 'ms-mark';
+        mark.setAttribute('role', 'button');
+        mark.setAttribute('tabindex', '0');
+        mark.setAttribute('aria-pressed', 'false');
+        mark.setAttribute('aria-label', markLabel);
+        const word = document.createElement('span');
+        word.className = 'ms-word';
+        word.textContent = seg.text;
+        mark.append(word);
+        div.append(mark);
+      }
+      preview.append(div);
+    }
+    copyButton.disabled = answers.length === 0;
+    updateCount();
+  }
+
+  function setAll(revealed: boolean) {
+    marks().forEach((m) => m.setAttribute('aria-pressed', String(revealed)));
+    updateCount();
+  }
+
+  preview.addEventListener('click', (e) => {
+    const mark = (e.target as HTMLElement).closest<HTMLElement>('.ms-mark');
+    if (mark) toggle(mark);
+  });
+  preview.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const mark = (e.target as HTMLElement).closest<HTMLElement>('.ms-mark');
+    if (!mark) return;
+    e.preventDefault();
+    toggle(mark);
+  });
+
+  function syncOptions() {
+    preview.dataset.style =
+      Array.from(styleRadios).find((r) => r.checked)?.value ?? 'red';
+    preview.dataset.print =
+      Array.from(printRadios).find((r) => r.checked)?.value ?? 'hidden';
+  }
+
+  input.addEventListener('input', render);
+  styleRadios.forEach((r) => r.addEventListener('change', syncOptions));
+  printRadios.forEach((r) => r.addEventListener('change', syncOptions));
+  hideButton.addEventListener('click', () => setAll(false));
+  showButton.addEventListener('click', () => setAll(true));
+  printButton.addEventListener('click', () => window.print());
+
+  sampleButton.addEventListener('click', () => {
+    input.value = sampleButton.dataset.sample ?? '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+  });
+
+  wrapButton.addEventListener('click', () => {
+    const r = toggleMarker(
+      input.value,
+      input.selectionStart,
+      input.selectionEnd,
+    );
+    input.value = r.text;
+    input.setSelectionRange(r.start, r.end);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (answers.length === 0) return;
+    statusEl.textContent = (await copyText(answers.join('\n')))
+      ? (actionsEl.dataset.copied ?? '')
+      : (actionsEl.dataset.copyFailed ?? '');
+  });
+
+  syncOptions();
+  render();
+</script>

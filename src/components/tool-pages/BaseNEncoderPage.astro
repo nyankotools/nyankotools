@@ -1,0 +1,226 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { baseNEncoderContent } from '../../i18n/tools/base-n-encoder';
+import { baseNFormats } from '../../lib/tools/base-n-encoder';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = baseNEncoderContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-3">
+    <div id="bne-mode" class="ui-seg" role="group" aria-label={t.modeLabel}>
+      <button
+        type="button"
+        data-mode="encode"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.modeEncode}
+      </button>
+      <button
+        type="button"
+        data-mode="decode"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeDecode}
+      </button>
+    </div>
+    <label for="bne-format" class="ui-label !mb-0">
+      {t.formatLabel}
+    </label>
+    <select
+      id="bne-format"
+      class="ui-input h-11 w-full max-w-60 px-3 dark:bg-gray-900"
+    >
+      {baseNFormats.map((f) => (
+        <option value={f}>{t.formatNames[f]}</option>
+      ))}
+    </select>
+    <div id="bne-padding-wrap" hidden>
+      <label class="ui-check">
+        <input type="checkbox" id="bne-padding" checked />
+        {t.paddingLabel}
+      </label>
+    </div>
+    <div id="bne-uppercase-wrap" hidden>
+      <label class="ui-check">
+        <input type="checkbox" id="bne-uppercase" />
+        {t.uppercaseLabel}
+      </label>
+    </div>
+    <button
+      id="bne-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="bne-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="bne-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="bne-input"
+        class="ui-input h-64 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+        data-query-target="text"
+      ></textarea>
+    </div>
+    <div>
+      <label for="bne-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="bne-output"
+        readonly
+        class="ui-input h-64 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="bne-error"
+    hidden
+    data-invalid-char={t.errorInvalidChar}
+    data-invalid-length={t.errorInvalidLength}
+    data-overflow={t.errorOverflow}
+    data-invalid-utf8={t.errorInvalidUtf8}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    decodeText,
+    encodeText,
+    type BaseNFormat,
+  } from '../../lib/tools/base-n-encoder';
+
+  type Mode = 'encode' | 'decode';
+
+  const input = document.getElementById('bne-input') as HTMLTextAreaElement;
+  const output = document.getElementById('bne-output') as HTMLTextAreaElement;
+  const formatSelect = document.getElementById(
+    'bne-format',
+  ) as HTMLSelectElement;
+  const padding = document.getElementById('bne-padding') as HTMLInputElement;
+  const uppercase = document.getElementById(
+    'bne-uppercase',
+  ) as HTMLInputElement;
+  const paddingWrap = document.getElementById('bne-padding-wrap')!;
+  const uppercaseWrap = document.getElementById('bne-uppercase-wrap')!;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#bne-mode [data-mode]',
+  );
+  const copyButton = document.getElementById(
+    'bne-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('bne-status')!;
+  const errorEl = document.getElementById('bne-error')!;
+
+  let mode: Mode = 'encode';
+
+  function showError(message: string) {
+    output.value = '';
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function showOutput(value: string) {
+    output.value = value;
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function updateOptions() {
+    const format = formatSelect.value;
+    paddingWrap.hidden = !(mode === 'encode' && format === 'base32');
+    uppercaseWrap.hidden = !(mode === 'encode' && format === 'base16');
+  }
+
+  function convert() {
+    statusEl.textContent = '';
+    updateOptions();
+    if (input.value === '') {
+      showOutput('');
+      return;
+    }
+    const format = formatSelect.value as BaseNFormat;
+    if (mode === 'encode') {
+      showOutput(
+        encodeText(format, input.value, {
+          padding: padding.checked,
+          uppercase: uppercase.checked,
+        }),
+      );
+      return;
+    }
+    const result = decodeText(format, input.value);
+    if (result.success) {
+      showOutput(result.output);
+      return;
+    }
+    const d = errorEl.dataset;
+    switch (result.error.kind) {
+      case 'invalid-char':
+        showError(
+          (d.invalidChar ?? '')
+            .replace('{char}', result.error.char ?? '')
+            .replace('{pos}', String((result.error.index ?? 0) + 1)),
+        );
+        break;
+      case 'invalid-length':
+        showError(d.invalidLength ?? '');
+        break;
+      case 'overflow':
+        showError(d.overflow ?? '');
+        break;
+      default:
+        showError(d.invalidUtf8 ?? '');
+    }
+  }
+
+  onTextInput(input, convert);
+  formatSelect.addEventListener('change', convert);
+  padding.addEventListener('change', convert);
+  uppercase.addEventListener('change', convert);
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as Mode;
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  convert();
+</script>

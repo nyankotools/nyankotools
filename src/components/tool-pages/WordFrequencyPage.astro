@@ -1,0 +1,298 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { wordFrequencyContent } from '../../i18n/tools/word-frequency';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = wordFrequencyContent[locale];
+const isChar = t.defaultUnit === 'char';
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="wf-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="wf-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      class="ui-input h-52 w-full p-4 dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-x-8 gap-y-2">
+    <fieldset>
+      <legend class="ui-label">{t.unitLabel}</legend>
+      <div class="flex flex-wrap gap-x-6 text-sm">
+        <label class="ui-check">
+          <input
+            id="wf-unit-char"
+            type="radio"
+            name="wf-unit"
+            value="char"
+            class="h-4 w-4"
+            checked={isChar}
+          />
+          <span>{t.unitChar}</span>
+        </label>
+        <label class="ui-check">
+          <input
+            id="wf-unit-word"
+            type="radio"
+            name="wf-unit"
+            value="word"
+            class="h-4 w-4"
+            checked={!isChar}
+          />
+          <span>{t.unitWord}</span>
+        </label>
+      </div>
+    </fieldset>
+    <div>
+      <label for="wf-top-n" class="ui-label">
+        {t.topNLabel}
+      </label>
+      <input
+        id="wf-top-n"
+        type="number"
+        min="0"
+        step="1"
+        value="20"
+        class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        aria-describedby="wf-top-n-hint"
+      />
+    </div>
+  </div>
+  <p id="wf-top-n-hint" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+    {t.topNHint}
+  </p>
+
+  <div class="mt-2 flex flex-wrap gap-x-6">
+    <label class="ui-check">
+      <input
+        id="wf-ignore-case"
+        type="checkbox"
+        class="h-4 w-4"
+        data-option="ignore-case"
+        checked
+      />
+      <span>{t.ignoreCaseLabel}</span>
+    </label>
+    <label class="ui-check">
+      <input
+        id="wf-skip-symbols"
+        type="checkbox"
+        class="h-4 w-4"
+        data-option="skip-symbols"
+        checked
+      />
+      <span>{t.skipSymbolsLabel}</span>
+    </label>
+  </div>
+
+  <div
+    class="mt-4 flex flex-wrap items-center gap-4"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-downloaded={t.downloaded}
+    data-column-rank={t.columnRank}
+    data-column-item={t.columnItem}
+    data-column-count={t.columnCount}
+    data-column-percent={t.columnPercent}
+    id="wf-actions"
+  >
+    <button
+      id="wf-copy-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.copyCsvButton}
+    </button>
+    <button
+      id="wf-download-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.downloadCsvButton}
+    </button>
+    <span
+      id="wf-status"
+      class="text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <p
+    id="wf-summary"
+    data-template={t.summaryTemplate}
+    class="mt-4 text-sm text-gray-600 dark:text-gray-400"
+  ></p>
+  <p
+    id="wf-empty"
+    class="mt-2 text-sm text-gray-500 dark:text-gray-400"
+    data-message={t.emptyMessage}
+  >
+    {t.emptyMessage}
+  </p>
+  <div id="wf-table-wrap" class="mt-2 hidden max-w-2xl overflow-x-auto">
+    <table class="w-full text-left text-sm">
+      <caption class="sr-only">{t.resultCaption}</caption>
+      <thead>
+        <tr class="border-b border-gray-300 text-gray-700 dark:border-gray-700 dark:text-gray-300">
+          <th scope="col" class="px-3 py-2 font-medium">
+            {t.columnRank}
+          </th>
+          <th scope="col" class="px-3 py-2 font-medium">
+            {t.columnItem}
+          </th>
+          <th scope="col" class="px-3 py-2 text-right font-medium">
+            {t.columnCount}
+          </th>
+          <th scope="col" class="px-3 py-2 text-right font-medium">
+            {t.columnPercent}
+          </th>
+        </tr>
+      </thead>
+      <tbody id="wf-tbody"></tbody>
+    </table>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    countFrequency,
+    toCsv,
+    type FrequencyEntry,
+    type FrequencyUnit,
+  } from '../../lib/tools/word-frequency';
+
+  const input = document.getElementById('wf-input') as HTMLTextAreaElement;
+  const topN = document.getElementById('wf-top-n') as HTMLInputElement;
+  const ignoreCase = document.getElementById(
+    'wf-ignore-case',
+  ) as HTMLInputElement;
+  const skipSymbols = document.getElementById(
+    'wf-skip-symbols',
+  ) as HTMLInputElement;
+  const unitRadios = document.querySelectorAll<HTMLInputElement>(
+    'input[name="wf-unit"]',
+  );
+  const actions = document.getElementById('wf-actions')!;
+  const copyButton = document.getElementById(
+    'wf-copy-button',
+  ) as HTMLButtonElement;
+  const downloadButton = document.getElementById(
+    'wf-download-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('wf-status')!;
+  const summaryEl = document.getElementById('wf-summary')!;
+  const emptyEl = document.getElementById('wf-empty')!;
+  const tableWrap = document.getElementById('wf-table-wrap')!;
+  const tbody = document.getElementById('wf-tbody')!;
+
+  let entries: FrequencyEntry[] = [];
+
+  function getUnit(): FrequencyUnit {
+    return (
+      (Array.from(unitRadios).find((r) => r.checked)?.value as FrequencyUnit) ??
+      'word'
+    );
+  }
+
+  function cell(text: string, className: string): HTMLTableCellElement {
+    const td = document.createElement('td');
+    td.textContent = text;
+    td.className = className;
+    return td;
+  }
+
+  function update() {
+    statusEl.textContent = '';
+    const unit = getUnit();
+    skipSymbols.disabled = unit !== 'char';
+    const raw = topN.value.trim();
+    const result = countFrequency(input.value, {
+      unit,
+      ignoreCase: ignoreCase.checked,
+      skipSymbols: skipSymbols.checked,
+      topN: raw === '' ? 0 : Number(raw),
+    });
+    entries = result.entries;
+
+    tbody.textContent = '';
+    const rows = document.createDocumentFragment();
+    entries.forEach((e, i) => {
+      const tr = document.createElement('tr');
+      tr.className =
+        'border-b border-gray-200 text-gray-800 dark:border-gray-800 dark:text-gray-200';
+      tr.append(
+        cell(String(i + 1), 'px-3 py-2'),
+        cell(
+          e.item.replace(/\r?\n|\r/g, '↵').replace(/\t/g, '⇥'),
+          'px-3 py-2 font-mono break-all whitespace-pre-wrap',
+        ),
+        cell(String(e.count), 'px-3 py-2 text-right tabular-nums'),
+        cell(`${e.percent.toFixed(1)}%`, 'px-3 py-2 text-right tabular-nums'),
+      );
+      rows.append(tr);
+    });
+    tbody.append(rows);
+
+    const has = entries.length > 0;
+    tableWrap.classList.toggle('hidden', !has);
+    emptyEl.classList.toggle('hidden', has);
+    summaryEl.textContent = has
+      ? summaryEl.dataset
+          .template!.replace('{total}', String(result.total))
+          .replace('{unique}', String(result.unique))
+      : '';
+    copyButton.disabled = !has;
+    downloadButton.disabled = !has;
+  }
+
+  function csv(): string {
+    return toCsv(entries, {
+      rank: actions.dataset.columnRank!,
+      item: actions.dataset.columnItem!,
+      count: actions.dataset.columnCount!,
+      percent: actions.dataset.columnPercent! + '(%)',
+    });
+  }
+
+  onTextInput(input, update);
+  topN.addEventListener('input', update);
+  ignoreCase.addEventListener('change', update);
+  skipSymbols.addEventListener('change', update);
+  unitRadios.forEach((r) => r.addEventListener('change', update));
+
+  copyButton.addEventListener('click', async () => {
+    if (entries.length === 0) return;
+    statusEl.textContent = (await copyText(csv()))
+      ? actions.dataset.copied!
+      : actions.dataset.copyFailed!;
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (entries.length === 0) return;
+    // Excelで文字化けしないよう、BOM付きUTF-8にする
+    downloadBlob(
+      new Blob(['\uFEFF', csv()], { type: 'text/csv;charset=utf-8' }),
+      'word-frequency.csv',
+    );
+    statusEl.textContent = actions.dataset.downloaded!;
+  });
+
+  update();
+</script>

@@ -1,0 +1,184 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { asciiTableGeneratorContent } from '../../i18n/tools/ascii-table-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = asciiTableGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-3">
+    <label
+      for="ascii-table-generator-delimiter"
+      class="text-sm text-gray-700 dark:text-gray-300"
+    >
+      {t.delimiterLabel}
+    </label>
+    <select
+      id="ascii-table-generator-delimiter"
+      class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+    >
+      <option value="auto">{t.delimiterAuto}</option>
+      <option value=",">{t.delimiterComma}</option>
+      <option value={'\t'}>{t.delimiterTab}</option>
+      <option value=";">{t.delimiterSemicolon}</option>
+    </select>
+    <label
+      for="ascii-table-generator-style"
+      class="text-sm text-gray-700 dark:text-gray-300"
+    >
+      {t.styleLabel}
+    </label>
+    <select
+      id="ascii-table-generator-style"
+      class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+    >
+      <option value="ascii">{t.styleAscii}</option>
+      <option value="single">{t.styleSingle}</option>
+      <option value="rounded">{t.styleRounded}</option>
+      <option value="double">{t.styleDouble}</option>
+    </select>
+    <label
+      for="ascii-table-generator-align"
+      class="text-sm text-gray-700 dark:text-gray-300"
+    >
+      {t.alignLabel}
+    </label>
+    <select
+      id="ascii-table-generator-align"
+      class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+    >
+      <option value="left">{t.alignLeft}</option>
+      <option value="center">{t.alignCenter}</option>
+      <option value="right">{t.alignRight}</option>
+    </select>
+    <label class="ui-check">
+      <input type="checkbox" id="ascii-table-generator-header" checked />
+      {t.headerLabel}
+    </label>
+    <label class="ui-check">
+      <input type="checkbox" id="ascii-table-generator-rows" />
+      {t.rowSeparatorsLabel}
+    </label>
+    <button
+      id="ascii-table-generator-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="ascii-table-generator-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="ascii-table-generator-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="ascii-table-generator-input"
+        data-query-target="text"
+        class="ui-input h-80 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label for="ascii-table-generator-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="ascii-table-generator-output"
+        readonly
+        wrap="off"
+        class="ui-input h-80 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="ascii-table-generator-error"
+    hidden
+    data-unterminated-quote={t.unterminatedQuoteError}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    csvToAsciiTable,
+    type Align,
+    type BorderStyle,
+    type DelimiterOption,
+  } from '../../lib/tools/ascii-table-generator';
+
+  const get = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`ascii-table-generator-${id}`) as T;
+  const input = get<HTMLTextAreaElement>('input');
+  const output = get<HTMLTextAreaElement>('output');
+  const delimiterSelect = get<HTMLSelectElement>('delimiter');
+  const styleSelect = get<HTMLSelectElement>('style');
+  const alignSelect = get<HTMLSelectElement>('align');
+  const headerCheck = get<HTMLInputElement>('header');
+  const rowsCheck = get<HTMLInputElement>('rows');
+  const copyButton = get<HTMLButtonElement>('copy-button');
+  const statusEl = get<HTMLElement>('status');
+  const errorEl = get<HTMLElement>('error');
+
+  function convert() {
+    statusEl.textContent = '';
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    if (input.value.trim() === '') {
+      output.value = '';
+      return;
+    }
+    const result = csvToAsciiTable(input.value, {
+      delimiter: delimiterSelect.value as DelimiterOption,
+      style: styleSelect.value as BorderStyle,
+      align: alignSelect.value as Align,
+      header: headerCheck.checked,
+      rowSeparators: rowsCheck.checked,
+    });
+    if (result.success) {
+      output.value = result.output;
+    } else {
+      output.value = '';
+      errorEl.textContent = errorEl.dataset.unterminatedQuote ?? '';
+      errorEl.hidden = false;
+    }
+  }
+
+  onTextInput(input, convert);
+  for (const el of [
+    delimiterSelect,
+    styleSelect,
+    alignSelect,
+    headerCheck,
+    rowsCheck,
+  ]) {
+    el.addEventListener('change', convert);
+  }
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  convert();
+</script>

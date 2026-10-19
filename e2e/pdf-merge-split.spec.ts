@@ -104,6 +104,8 @@ test.describe('PDF結合・分割・ページ抽出ツール（日本語版）',
 
     try {
       await page.locator('#pdf-file').setInputFiles([pdfPath]);
+      // 読み込みは非同期（pdf-lib を動的importする）なので、一覧に出るまで待ってから実行する
+      await expect(page.locator('#pdf-list li')).toHaveCount(1);
       await page.locator('#pdf-run').click();
 
       const error = page.locator('#pdf-error');
@@ -165,6 +167,7 @@ test.describe('PDF結合・分割・ページ抽出ツール（日本語版）',
 
     try {
       await page.locator('#pdf-file').setInputFiles([pdf1Path, pdf2Path]);
+      await expect(page.locator('#pdf-list li')).toHaveCount(2);
 
       const runButton = page.locator('#pdf-run');
       await runButton.click();
@@ -215,6 +218,7 @@ test.describe('PDF結合・分割・ページ抽出ツール（日本語版）',
       await radioButtons.nth(1).click();
 
       await page.locator('#pdf-file').setInputFiles([pdfPath]);
+      await expect(page.locator('#pdf-list li')).toHaveCount(1);
 
       // Set page range to extract pages 1-3
       await page.locator('#pdf-range').fill('1-3');
@@ -247,6 +251,7 @@ test.describe('PDF結合・分割・ページ抽出ツール（日本語版）',
       await radioButtons.nth(1).click();
 
       await page.locator('#pdf-file').setInputFiles([pdfPath]);
+      await expect(page.locator('#pdf-list li')).toHaveCount(1);
 
       // Set invalid page range (out of bounds)
       await page.locator('#pdf-range').fill('10');
@@ -286,6 +291,7 @@ test.describe('PDF結合・分割・ページ抽出ツール（日本語版）',
       await radioButtons.nth(2).click();
 
       await page.locator('#pdf-file').setInputFiles([pdfPath]);
+      await expect(page.locator('#pdf-list li')).toHaveCount(1);
 
       // Set split count to 2
       await page.locator('#pdf-split-n').fill('2');

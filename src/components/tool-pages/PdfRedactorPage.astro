@@ -145,8 +145,7 @@ const selectClass =
 <script>
   import { fill } from '../../lib/format-template';
   import { paren } from '../../lib/paren';
-  import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
-  import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
+  import { loadPdfjs } from '../../lib/pdfjs-loader';
   import { getPageCount, PdfToolError } from '../../lib/tools/pdf-merge-split';
   import {
     clampScale,
@@ -167,8 +166,7 @@ const selectClass =
     type RedactRect,
   } from '../../lib/tools/pdf-redactor';
   import { enableFileDrop } from '../../lib/file-drop';
-
-  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+  import { preloadPdfLibs } from '../../lib/pdf-preload';
 
   const $ = <T extends HTMLElement>(id: string) =>
     document.getElementById(id) as T;
@@ -192,7 +190,9 @@ const selectClass =
   const resultSummary = $('rd-result-summary');
   const resultList = $('rd-result-list');
 
-  enableFileDrop($('rd-drop'), fileInput);
+  enableFileDrop($('rd-drop'), fileInput, () =>
+    preloadPdfLibs({ pdfLib: true, pdfjs: true }),
+  );
 
   const BOX_CLASS =
     'absolute border border-red-500 bg-black/80 dark:border-red-400';
@@ -253,6 +253,7 @@ const selectClass =
 
   async function openPdf(bytes: Uint8Array) {
     // pdf.js は渡したバッファを worker に転送（detach）するためコピーを渡す
+    const pdfjs = await loadPdfjs();
     const task = pdfjs.getDocument({ data: bytes.slice() });
     try {
       return { doc: await task.promise, task };

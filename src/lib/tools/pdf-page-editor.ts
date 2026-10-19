@@ -1,4 +1,5 @@
-import { degrees, PDFDocument } from 'pdf-lib';
+// pdf-lib は大きいため、PDFを実際に処理するまで読み込まない（ページ初期表示のJSを小さく保つ）
+import type { PDFDocument } from 'pdf-lib';
 import { PdfToolError } from './pdf-merge-split';
 
 /** 編集中の1ページ。index は元PDFの0始まりのページ添字、rotation は追加する回転角（0/90/180/270） */
@@ -37,6 +38,7 @@ export async function buildEditedPdf(
   pages: EditPage[],
 ): Promise<Uint8Array> {
   if (pages.length === 0) throw new PdfToolError('emptyRange');
+  const { degrees, PDFDocument } = await import('pdf-lib');
   let src: PDFDocument;
   try {
     src = await PDFDocument.load(bytes);

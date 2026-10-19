@@ -1,4 +1,3 @@
-import { PDFDocument } from 'pdf-lib';
 import { ImageToPdfError } from './pdf-image-converter';
 
 export type CompressPreset = 'high' | 'medium' | 'low';
@@ -26,6 +25,7 @@ export async function rasterPagesToPdf(
   pages: RasterPage[],
 ): Promise<Uint8Array> {
   if (pages.length === 0) throw new ImageToPdfError('noImage');
+  const { PDFDocument } = await import('pdf-lib');
   const doc = await PDFDocument.create();
   for (const p of pages) {
     let embedded;

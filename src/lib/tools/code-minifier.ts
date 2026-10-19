@@ -1,11 +1,3 @@
-import * as prettier from 'prettier/standalone';
-import prettierBabel from 'prettier/plugins/babel';
-import prettierEstree from 'prettier/plugins/estree';
-import prettierHtml from 'prettier/plugins/html';
-import prettierPostcss from 'prettier/plugins/postcss';
-import { minify as minifyJs } from 'terser';
-import { minify as minifyCss } from 'csso';
-
 export type CodeLanguage = 'css' | 'javascript' | 'html';
 
 export interface FormatCodeOptions {
@@ -19,12 +11,38 @@ const PRETTIER_PARSERS: Record<CodeLanguage, string> = {
   html: 'html',
 };
 
-const PRETTIER_PLUGINS = [
-  prettierBabel,
-  prettierEstree,
-  prettierHtml,
-  prettierPostcss,
-];
+// prettier・terser・csso は大きいため、使う言語・操作のぶんだけ動的に読み込む
+// （ページ初期表示のJSを小さく保つ）。HTML は埋め込みの script / style も整形するため全プラグインを使う。
+async function loadPrettierPlugins(language: CodeLanguage) {
+  switch (language) {
+    case 'css':
+      return [(await import('prettier/plugins/postcss')).default];
+    case 'javascript':
+      return Promise.all([
+        import('prettier/plugins/babel'),
+        import('prettier/plugins/estree'),
+      ]).then((modules) => modules.map((m) => m.default));
+    case 'html':
+      return Promise.all([
+        import('prettier/plugins/babel'),
+        import('prettier/plugins/estree'),
+        import('prettier/plugins/html'),
+        import('prettier/plugins/postcss'),
+      ]).then((modules) => modules.map((m) => m.default));
+  }
+}
+
+/** 整形に使うライブラリを先読みする（入力の操作前に呼び、最初の整形・コピーの待ちを短くする。失敗は実処理側で再試行される） */
+export function preloadFormatter(language: CodeLanguage): void {
+  void import('prettier/standalone').catch(() => {});
+  void loadPrettierPlugins(language).catch(() => {});
+}
+
+/** 圧縮に使うライブラリを先読みする（CSS・JS のみ。HTML の圧縮は自前処理） */
+export function preloadMinifier(language: CodeLanguage): void {
+  if (language === 'css') void import('csso').catch(() => {});
+  if (language === 'javascript') void import('terser').catch(() => {});
+}
 
 export async function formatCode(
   input: string,
@@ -32,9 +50,13 @@ export async function formatCode(
   options: FormatCodeOptions = {},
 ): Promise<string> {
   const { tabWidth = 2, useTabs = false } = options;
+  const [prettier, plugins] = await Promise.all([
+    import('prettier/standalone'),
+    loadPrettierPlugins(language),
+  ]);
   return prettier.format(input, {
     parser: PRETTIER_PARSERS[language],
-    plugins: PRETTIER_PLUGINS,
+    plugins,
     tabWidth,
     useTabs,
   });
@@ -45,10 +67,13 @@ export async function minifyCode(
   language: CodeLanguage,
 ): Promise<string> {
   switch (language) {
-    case 'css':
-      return minifyCss(input).css;
+    case 'css': {
+      const { minify } = await import('csso');
+      return minify(input).css;
+    }
     case 'javascript': {
-      const result = await minifyJs(input);
+      const { minify } = await import('terser');
+      const result = await minify(input);
       return result.code ?? '';
     }
     case 'html':

@@ -162,8 +162,7 @@ const options = [
   import { paren } from '../../lib/paren';
   import { downloadBlob } from '../../lib/download';
   import { copyText } from '../../lib/clipboard';
-  import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
-  import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
+  import { loadPdfjs } from '../../lib/pdfjs-loader';
   import type { PDFPageProxy } from 'pdfjs-dist/legacy/build/pdf.mjs';
   import {
     convertPagesToMarkdown,
@@ -171,8 +170,7 @@ const options = [
     type PdfTextItem,
   } from '../../lib/tools/pdf-to-markdown';
   import { enableFileDrop } from '../../lib/file-drop';
-
-  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+  import { preloadPdfLibs } from '../../lib/pdf-preload';
 
   const $ = <T extends HTMLElement>(id: string) =>
     document.getElementById(id) as T;
@@ -194,7 +192,9 @@ const options = [
   const downloadButton = $<HTMLButtonElement>('md-download');
   const copyStatus = $('md-copy-status');
 
-  enableFileDrop($('md-drop'), fileInput);
+  enableFileDrop($('md-drop'), fileInput, () =>
+    preloadPdfLibs({ pdfjs: true }),
+  );
 
   let pdfBytes: Uint8Array | null = null;
   let pdfName = '';
@@ -261,6 +261,7 @@ const options = [
 
   async function extractPages(bytes: Uint8Array): Promise<PdfPageInput[]> {
     // pdf.js は渡したバッファを worker に転送（detach）するためコピーを渡す
+    const pdfjs = await loadPdfjs();
     const task = pdfjs.getDocument({ data: bytes.slice() });
     try {
       const doc = await task.promise;

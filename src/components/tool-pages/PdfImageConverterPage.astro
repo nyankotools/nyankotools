@@ -203,8 +203,7 @@ const selectClass =
 
 <script>
   import { paren } from '../../lib/paren';
-  import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
-  import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
+  import { loadPdfjs } from '../../lib/pdfjs-loader';
   import {
     getPageCount,
     parsePageRange,
@@ -220,8 +219,7 @@ const selectClass =
   } from '../../lib/tools/pdf-image-converter';
 
   import { enableFileDrop } from '../../lib/file-drop';
-
-  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+  import { preloadPdfLibs } from '../../lib/pdf-preload';
 
   interface ImageItem {
     name: string;
@@ -255,8 +253,13 @@ const selectClass =
   const resultEl = $('conv-result');
   const resultList = $('conv-result-list');
 
-  enableFileDrop($('conv-pdf-drop'), pdfFile);
-  enableFileDrop($('conv-image-drop'), imageFile);
+  enableFileDrop($('conv-pdf-drop'), pdfFile, () =>
+    preloadPdfLibs({ pdfLib: true, pdfjs: true }),
+  );
+
+  enableFileDrop($('conv-image-drop'), imageFile, () =>
+    preloadPdfLibs({ pdfLib: true }),
+  );
 
   let pdfBytes: Uint8Array | null = null;
   let pdfName = '';
@@ -313,6 +316,7 @@ const selectClass =
 
   async function openPdf(bytes: Uint8Array) {
     // pdf.js は渡したバッファを worker に転送（detach）するためコピーを渡す
+    const pdfjs = await loadPdfjs();
     const task = pdfjs.getDocument({ data: bytes.slice() });
     try {
       return { doc: await task.promise, task };

@@ -130,8 +130,7 @@ const smallButtonClass =
 </ToolShell>
 
 <script>
-  import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
-  import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
+  import { loadPdfjs } from '../../lib/pdfjs-loader';
   import { getPageCount, PdfToolError } from '../../lib/tools/pdf-merge-split';
   import { clampScale } from '../../lib/tools/pdf-image-converter';
   import {
@@ -147,8 +146,7 @@ const smallButtonClass =
     type EditPage,
   } from '../../lib/tools/pdf-page-editor';
   import { enableFileDrop } from '../../lib/file-drop';
-
-  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+  import { preloadPdfLibs } from '../../lib/pdf-preload';
 
   const $ = <T extends HTMLElement>(id: string) =>
     document.getElementById(id) as T;
@@ -166,7 +164,9 @@ const smallButtonClass =
   const resultEl = $('pe-result');
   const resultList = $('pe-result-list');
 
-  enableFileDrop($('pe-drop'), fileInput);
+  enableFileDrop($('pe-drop'), fileInput, () =>
+    preloadPdfLibs({ pdfLib: true, pdfjs: true }),
+  );
 
   let pdfBytes: Uint8Array | null = null;
   let pdfName = '';
@@ -314,6 +314,7 @@ const smallButtonClass =
   /** パスワードでPDFを開き、各ページを画像化して暗号化のないPDFに作り直す */
   async function unlock(bytes: Uint8Array, password: string) {
     // pdf.js は渡したバッファを worker に転送（detach）するためコピーを渡す
+    const pdfjs = await loadPdfjs();
     const task = pdfjs.getDocument({ data: bytes.slice(), password });
     const rasters: RasterPage[] = [];
     try {

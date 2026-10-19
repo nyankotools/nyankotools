@@ -156,6 +156,7 @@ const smallButtonClass =
   } from '../../lib/tools/pdf-merge-split';
 
   import { enableFileDrop } from '../../lib/file-drop';
+  import { preloadPdfLibs } from '../../lib/pdf-preload';
 
   interface Item {
     name: string;
@@ -179,7 +180,9 @@ const smallButtonClass =
   const resultEl = document.getElementById('pdf-result')!;
   const resultList = document.getElementById('pdf-result-list')!;
 
-  enableFileDrop(document.getElementById('pdf-drop')!, fileInput);
+  enableFileDrop(document.getElementById('pdf-drop')!, fileInput, () =>
+    preloadPdfLibs({ pdfLib: true }),
+  );
 
   let items: Item[] = [];
   let urls: string[] = [];

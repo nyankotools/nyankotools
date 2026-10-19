@@ -104,6 +104,8 @@ const t = codeMinifierContent[locale];
   import {
     formatCode,
     minifyCode,
+    preloadFormatter,
+    preloadMinifier,
     type CodeLanguage,
   } from '../../lib/tools/code-minifier';
 
@@ -195,6 +197,16 @@ const t = codeMinifierContent[locale];
       showError(message.split('\n')[0]);
     }
   }
+
+  // 入力欄にフォーカスした時点で整形ライブラリ、圧縮ボタンに触れた時点で圧縮ライブラリを先読みする
+  const language = () => languageSelect.value as CodeLanguage;
+  input.addEventListener('focus', () => preloadFormatter(language()), {
+    once: true,
+  });
+  languageSelect.addEventListener('change', () => preloadFormatter(language()));
+  ['pointerenter', 'focus'].forEach((type) =>
+    minifyButton.addEventListener(type, () => preloadMinifier(language())),
+  );
 
   onTextInput(input, format);
   languageSelect.addEventListener('change', format);

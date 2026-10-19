@@ -40,6 +40,9 @@ export function enableDragScroll(el: HTMLElement): void {
   el.addEventListener('pointerup', end);
   el.addEventListener('pointercancel', end);
 
+  // リンク（a）はブラウザ標準のURLドラッグが始まるため、止めてスクロールを優先する
+  el.addEventListener('dragstart', (event) => event.preventDefault());
+
   // ドラッグ直後のクリック（ボタンの誤選択）を打ち消す
   el.addEventListener(
     'click',

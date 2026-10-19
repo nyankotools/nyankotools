@@ -48,12 +48,13 @@ export function initHomePage(): void {
     originalSlugs.set(section, slugs);
   }
 
-  const categoryGroup =
-    document.querySelector<HTMLElement>('[data-drag-scroll]');
-  if (categoryGroup) {
-    enableDragScroll(categoryGroup);
-    enableScrollFade(categoryGroup);
-  }
+  document.querySelectorAll<HTMLElement>('[data-drag-scroll]').forEach((el) => {
+    enableDragScroll(el);
+    enableScrollFade(el);
+  });
+  const categoryGroup = document.querySelector<HTMLElement>(
+    '[role="group"][data-drag-scroll]',
+  );
 
   let activeCategory: CategoryId | 'all' = 'all';
   const expanded = new Set<HTMLElement>();

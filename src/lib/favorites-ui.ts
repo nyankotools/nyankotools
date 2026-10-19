@@ -4,11 +4,7 @@ import {
   moveFavorite,
   toggleFavorite,
 } from './favorites';
-import {
-  getLocalizedTools,
-  type Locale,
-  type LocalizedTool,
-} from '../data/tools';
+import type { Locale } from '../data/tools';
 import { useTranslations } from '../i18n/ui';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -34,8 +30,21 @@ function updateToggleButtons(slug: string, active: boolean): void {
     });
 }
 
+/** サイドバーのリンクからツール名を引く（ツール登録簿をクライアントJSに含めないため、描画済みのDOMを使う） */
+function readToolNames(): Map<string, string> {
+  const names = new Map<string, string>();
+  document.querySelectorAll<HTMLElement>('nav li').forEach((li) => {
+    if (li.parentElement?.id === 'sidebar-favorites-list') return;
+    const slug = li.querySelector<HTMLElement>('[data-favorite-toggle]')
+      ?.dataset.favoriteToggle;
+    const name = li.querySelector(':scope > a')?.textContent?.trim();
+    if (slug && name) names.set(slug, name);
+  });
+  return names;
+}
+
 /** お気に入りに登録済みのツールを先頭（登録順）に、それ以外を元の順序のまま並べ替える */
-function reorderHomepageGrid(tools: LocalizedTool[]): void {
+function reorderHomepageGrid(originalOrder: string[]): void {
   const container = document.getElementById('tool-grid');
   if (!container) return;
   const items = container.querySelectorAll<HTMLElement>('[data-tool-slug]');
@@ -52,9 +61,9 @@ function reorderHomepageGrid(tools: LocalizedTool[]): void {
   const favoriteElements = favoriteSlugs
     .map((slug) => elementBySlug.get(slug))
     .filter((el): el is HTMLElement => el !== undefined);
-  const restElements = tools
-    .filter((tool) => !favoriteSet.has(tool.slug))
-    .map((tool) => elementBySlug.get(tool.slug))
+  const restElements = originalOrder
+    .filter((slug) => !favoriteSet.has(slug))
+    .map((slug) => elementBySlug.get(slug))
     .filter((el): el is HTMLElement => el !== undefined);
 
   container.append(...favoriteElements, ...restElements);
@@ -84,20 +93,24 @@ function createChevronIcon(direction: 'up' | 'down'): SVGSVGElement {
 export function initFavorites(): void {
   const locale: Locale = document.documentElement.lang === 'en' ? 'en' : 'ja';
   const t = useTranslations(locale);
-  const tools = getLocalizedTools(locale);
-  const toolBySlug = new Map(tools.map((tool) => [tool.slug, tool]));
+  const nameBySlug = readToolNames();
+  // トップのグリッドは登録順に描画されているので、並べ替え前のDOM順を元の順序として保持する
+  const originalOrder = Array.from(
+    document.querySelectorAll<HTMLElement>('#tool-grid [data-tool-slug]'),
+  ).flatMap((el) => (el.dataset.toolSlug ? [el.dataset.toolSlug] : []));
   const favoritesSection = document.getElementById('sidebar-favorites');
   const favoritesList = document.getElementById('sidebar-favorites-list');
 
-  function getOrderedFavoriteTools(): LocalizedTool[] {
-    return getFavoriteSlugs()
-      .map((slug) => toolBySlug.get(slug))
-      .filter((tool): tool is LocalizedTool => tool !== undefined);
+  function getOrderedFavoriteTools(): { slug: string; name: string }[] {
+    return getFavoriteSlugs().flatMap((slug) => {
+      const name = nameBySlug.get(slug);
+      return name ? [{ slug, name }] : [];
+    });
   }
 
   function applyOrderChange() {
     renderFavoritesList();
-    reorderHomepageGrid(tools);
+    reorderHomepageGrid(originalOrder);
   }
 
   /** 並び替え後、操作したボタン（無効化されていれば反対方向のボタン）にフォーカスを戻す */
@@ -221,5 +234,5 @@ export function initFavorites(): void {
   }
 
   renderFavoritesList();
-  reorderHomepageGrid(tools);
+  reorderHomepageGrid(originalOrder);
 }

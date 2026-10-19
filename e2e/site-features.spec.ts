@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test';
 import { test, expect } from './helpers/test';
 
 // サイト機能 Step 3: バッジ（No.150）・ショートカット（No.151）・コマンドパレット（No.152）・
@@ -305,4 +306,184 @@ test.describe('URLクエリ（全対象ツール）', () => {
       await expect.poll(() => new URL(page.url()).search).toBe('?utm_source=x');
     });
   }
+});
+
+test.describe('コマンドパレットのツール登録簿の遅延読み込み', () => {
+  // トップは自身のスクリプトが登録簿を静的に読むため、登録簿を読まないツールページで確認する
+  const emptyText = {
+    '/tools/char-counter/': '該当するツールがありません',
+    '/en/tools/char-counter/': 'No matching tools',
+  } as const;
+
+  for (const path of [
+    '/tools/char-counter/',
+    '/en/tools/char-counter/',
+  ] as const) {
+    test(`${path}: 登録簿の読み込み中は「該当なし」を出さず、読み込み後に出す`, async ({
+      page,
+    }) => {
+      let held = false;
+      let release!: () => void;
+      const gate = new Promise<void>((resolve) => (release = resolve));
+      // 登録簿チャンク（tools.*.js）の取得を保留して、読み込み中の表示を確認する
+      await page.route('**/_astro/tools.*.js', async (route) => {
+        held = true;
+        await gate;
+        await route.continue();
+      });
+      await page.goto(path);
+      await page.keyboard.press('Control+k');
+      await expect(page.locator('#command-palette')).toBeVisible();
+      await page.locator('#palette-input').fill('zzzzzz');
+      await expect.poll(() => held).toBe(true);
+      await expect(page.locator('#palette-empty')).toBeHidden();
+      await expect(page.locator('#palette-list [role="option"]')).toHaveCount(
+        0,
+      );
+
+      release();
+      await expect(page.locator('#palette-empty')).toBeVisible();
+      await expect(page.locator('#palette-empty')).toContainText(
+        emptyText[path],
+      );
+    });
+  }
+
+  test('読み込みに失敗しても「該当なし」は出ず、次に開いたときに再試行して結果が出る', async ({
+    page,
+  }) => {
+    let attempts = 0;
+    await page.route('**/_astro/tools.*.js', async (route) => {
+      attempts += 1;
+      if (attempts === 1) await route.abort();
+      else await route.continue();
+    });
+    await page.goto('/tools/char-counter/');
+    await page.keyboard.press('Control+k');
+    await page.locator('#palette-input').fill('文字数');
+    await expect.poll(() => attempts).toBe(1);
+    await expect(page.locator('#palette-empty')).toBeHidden();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#command-palette')).toBeHidden();
+
+    await page.keyboard.press('Control+k');
+    await expect(page.locator('#palette-input')).toHaveValue('');
+    await page.locator('#palette-input').fill('文字数');
+    await expect(
+      page.locator('#palette-list [role="option"]').first(),
+    ).toHaveText(/文字数カウント/);
+    expect(attempts).toBe(2);
+  });
+});
+
+test.describe('お気に入りとツール一覧の同期（ja/en）', () => {
+  const gridSlugs = (page: Page): Promise<string[]> =>
+    page
+      .locator('#tool-grid [data-tool-slug]')
+      .evaluateAll((els) =>
+        els.map((el) => (el as HTMLElement).dataset.toolSlug ?? ''),
+      );
+
+  for (const path of ['/', '/en/'] as const) {
+    test(`${path}: サイドバーのお気に入り名はツール一覧の名前と一致する`, async ({
+      page,
+    }) => {
+      await page.goto(path);
+      const slugs = ['html-escape', 'char-counter', 'base64'];
+      for (const slug of slugs) {
+        await page
+          .locator(
+            `[data-tool-slug="${slug}"] [data-favorite-toggle="${slug}"]`,
+          )
+          .click();
+      }
+      const favLinks = await page
+        .locator('#sidebar-favorites-list a')
+        .evaluateAll((els) =>
+          els.map((a) => ({
+            href: a.getAttribute('href'),
+            text: (a.textContent ?? '').trim(),
+          })),
+        );
+      expect(favLinks).toHaveLength(slugs.length);
+      const categoryNames = await page
+        .locator('nav details[data-category] ul a')
+        .evaluateAll((els) =>
+          Object.fromEntries(
+            els.map((a) => [
+              a.getAttribute('href'),
+              (a.textContent ?? '').trim(),
+            ]),
+          ),
+        );
+      for (const link of favLinks) {
+        expect(link.text).not.toBe('');
+        expect(link.text).toBe(categoryNames[link.href ?? '']);
+      }
+    });
+
+    test(`${path}: お気に入りはトップのグリッドの先頭に来て、解除すると元の順に戻る（リロード後も同じ）`, async ({
+      page,
+    }) => {
+      await page.goto(path);
+      const original = await gridSlugs(page);
+      expect(original.length).toBeGreaterThan(3);
+
+      const fav = ['password-generator', 'char-counter'];
+      for (const slug of fav) {
+        await page
+          .locator(
+            `[data-tool-slug="${slug}"] [data-favorite-toggle="${slug}"]`,
+          )
+          .click();
+      }
+      const rest = original.filter((s) => !fav.includes(s));
+      await expect.poll(() => gridSlugs(page)).toEqual([...fav, ...rest]);
+
+      await page.reload();
+      await expect.poll(() => gridSlugs(page)).toEqual([...fav, ...rest]);
+
+      for (const slug of fav) {
+        await page
+          .locator(
+            `[data-tool-slug="${slug}"] [data-favorite-toggle="${slug}"]`,
+          )
+          .click();
+      }
+      await expect.poll(() => gridSlugs(page)).toEqual(original);
+    });
+  }
+
+  test('ja: サイドバーで並べ替えると、トップのグリッドの先頭も同じ順になる', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const original = await gridSlugs(page);
+    await page
+      .locator(
+        '[data-tool-slug="password-generator"] [data-favorite-toggle="password-generator"]',
+      )
+      .click();
+    await page
+      .locator(
+        '[data-tool-slug="char-counter"] [data-favorite-toggle="char-counter"]',
+      )
+      .click();
+    const rest = original.filter(
+      (s) => s !== 'password-generator' && s !== 'char-counter',
+    );
+    await expect
+      .poll(() => gridSlugs(page))
+      .toEqual(['password-generator', 'char-counter', ...rest]);
+
+    // 2番目（char-counter）を上に移動 → グリッドの先頭も char-counter になる
+    await page
+      .locator('#sidebar-favorites-list li')
+      .nth(1)
+      .getByLabel('上に移動')
+      .click();
+    await expect
+      .poll(() => gridSlugs(page))
+      .toEqual(['char-counter', 'password-generator', ...rest]);
+  });
 });

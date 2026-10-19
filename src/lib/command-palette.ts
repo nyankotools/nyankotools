@@ -1,4 +1,4 @@
-import { getLocalizedTools, type LocalizedTool } from '../data/tools';
+import type { LocalizedTool } from '../data/tools';
 import { normalize } from './home-filter';
 
 /**
@@ -50,7 +50,23 @@ export function initCommandPalette(): void {
   });
 
   const locale = document.documentElement.lang === 'en' ? 'en' : 'ja';
-  const tools = getLocalizedTools(locale);
+  // ツール登録簿（説明文・キーワードで約60KB）は全ページで読み込まれないよう、初めて開くときに読み込む
+  let tools: LocalizedTool[] = [];
+  let loaded = false;
+  let toolsLoading: Promise<void> | null = null;
+  function loadTools(): Promise<void> {
+    toolsLoading ??= import('../data/tools').then(
+      (mod) => {
+        tools = mod.getLocalizedTools(locale);
+        loaded = true;
+      },
+      () => {
+        // 一時的な通信断などで失敗しても、次に開いたときに再試行できるようにする
+        toolsLoading = null;
+      },
+    );
+    return toolsLoading;
+  }
   const prefix = locale === 'en' ? '/en/tools/' : '/tools/';
   let results: LocalizedTool[] = [];
   let active = 0;
@@ -90,7 +106,8 @@ export function initCommandPalette(): void {
         return li;
       }),
     );
-    empty!.hidden = results.length > 0;
+    // 登録簿の読み込み中は「該当なし」を出さない
+    empty!.hidden = !loaded || results.length > 0;
     select(0);
   }
 
@@ -100,6 +117,9 @@ export function initCommandPalette(): void {
     render();
     dialog!.showModal();
     input!.focus();
+    void loadTools().then(() => {
+      if (dialog!.open) render();
+    });
   }
 
   document.addEventListener('keydown', (event) => {
@@ -116,9 +136,12 @@ export function initCommandPalette(): void {
     }
   });
 
-  document
-    .querySelectorAll('[data-palette-open]')
-    .forEach((el) => el.addEventListener('click', open));
+  document.querySelectorAll('[data-palette-open]').forEach((el) => {
+    el.addEventListener('click', open);
+    // 開く操作の前に読み込みを始めて、体感の遅延をなくす
+    el.addEventListener('pointerenter', () => void loadTools(), { once: true });
+    el.addEventListener('focus', () => void loadTools(), { once: true });
+  });
 
   input.addEventListener('input', render);
   input.addEventListener('keydown', (event) => {

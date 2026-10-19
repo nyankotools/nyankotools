@@ -239,6 +239,9 @@ const jsonLd: Record<string, unknown> | null = noindex
           // ここに書く名前は、query-init.ts の除去対象（data-query-target の値）と揃えること。
           const gaUrl = new URL(location.href);
           gaUrl.searchParams.delete('text');
+          // トップの絞り込み（?q=検索語&c=カテゴリ）も、検索語を計測に載せない
+          gaUrl.searchParams.delete('q');
+          gaUrl.searchParams.delete('c');
           gtag('config', GA_MEASUREMENT_ID, { page_location: gaUrl.href });
         </script>
       </>

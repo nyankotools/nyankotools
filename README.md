@@ -24,6 +24,7 @@
 - **多数のツール**: テキスト処理・データ変換・エンコード/デコード・生成系・開発支援・計算機・PDFなど。
 - **日本語 / 英語対応**: 全ページが `ja`（`/tools/...`）・`en`（`/en/tools/...`）の両ロケールを提供。
 - **SEO志向**: ツールごとに個別の title/description、内部リンク、構造化データ、サイトマップを整備。
+- **使いやすさ**: トップの検索・カテゴリ絞り込み、コマンドパレット（`Ctrl/⌘+K`）、お気に入り（端末内のみ保存）、キーボードショートカット（`/shortcuts`）、更新情報（`/updates`）。詳細は [`docs/spec.md`](./docs/spec.md)。
 - **レスポンシブ**: モバイル（375px前後）でも崩れないレイアウト。
 
 ## 技術的なこだわり
@@ -80,6 +81,8 @@ pnpm test             # Vitest（一括実行）
 pnpm run test:watch   # Vitest（ウォッチモード）
 pnpm run test:e2e     # Playwright E2E
 pnpm run test:e2e:ui  # Playwright E2E（UIモード）
+pnpm qa <slug…>       # 対象ツールのspecだけを実行するQA用ラッパー（scripts/qa.mjs）
+pnpm run check:bundle # JSバンドル予算のチェック（scripts/bundle-budget.mjs）
 ```
 
 ## ディレクトリ構成

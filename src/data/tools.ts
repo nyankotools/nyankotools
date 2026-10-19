@@ -9127,6 +9127,165 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'clipboard-inspector',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['html-escape', 'unicode-inspector', 'char-counter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'クリップボード内容確認',
+        description:
+          '貼り付けたクリップボードのMIME種別・HTMLソース・画像・ファイルを一覧表示',
+        keywords: [
+          'クリップボード',
+          'paste',
+          'MIME',
+          'DataTransfer',
+          'text/html',
+          'デバッグ',
+        ],
+      },
+      en: {
+        name: 'Clipboard Inspector',
+        description:
+          'List pasted clipboard formats: MIME types, HTML source, images and files',
+        keywords: [
+          'clipboard',
+          'paste event',
+          'MIME type',
+          'DataTransfer',
+          'text/html',
+          'debug',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'snowflake-id-decoder',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['uuid-generator', 'ulid-nanoid-generator', 'unix-timestamp'],
+    translations: {
+      ja: {
+        name: 'Snowflake ID・ObjectID・UUID生成時刻デコード',
+        description:
+          'Snowflake ID・MongoDB ObjectID・UUID v1/v6/v7・ULIDから生成時刻と構成要素を読み取る。複数行の一括デコード対応',
+        keywords: [
+          'Snowflake',
+          'スノーフレーク',
+          'ObjectID',
+          'UUID v7',
+          'ULID',
+          'Discord ID',
+          'Twitter ID',
+          '生成時刻',
+        ],
+      },
+      en: {
+        name: 'Snowflake ID, ObjectID & UUID Timestamp Decoder',
+        description:
+          'Decode the creation time and parts of Snowflake IDs, MongoDB ObjectIDs, UUID v1/v6/v7 and ULIDs. Batch decoding supported.',
+        keywords: [
+          'snowflake id',
+          'objectid',
+          'uuid v7',
+          'uuid v1',
+          'ulid',
+          'discord id',
+          'twitter id',
+          'id timestamp',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'license-generator',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: [
+      'robots-txt-generator',
+      'htaccess-generator',
+      'semver-calculator',
+    ],
+    translations: {
+      ja: {
+        name: 'OSSライセンス文生成',
+        description:
+          'MIT・Apache-2.0・BSDなどのライセンス文を著作者名と年つきで生成。SPDX識別子と比較表つき。',
+        keywords: [
+          'ライセンス',
+          'LICENSE',
+          'MIT',
+          'Apache',
+          'BSD',
+          'GPL',
+          'SPDX',
+          'OSS',
+        ],
+      },
+      en: {
+        name: 'Open Source License Generator',
+        description:
+          'Generate MIT, Apache-2.0, BSD, ISC and other license text with your name and year, plus SPDX IDs.',
+        keywords: [
+          'license',
+          'LICENSE file',
+          'MIT',
+          'Apache',
+          'BSD',
+          'GPL',
+          'SPDX',
+          'open source',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'tree-diagram-generator',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: [
+      'ascii-table-generator',
+      'markdown-table-editor',
+      'json-tree-viewer',
+    ],
+    translations: {
+      ja: {
+        name: 'ディレクトリツリー図作成',
+        description:
+          'インデントや箇条書きで書いたフォルダ構成を、READMEに貼れる├──└──のツリー図に変換。コメント桁揃え・深さ折りたたみ・逆変換対応。',
+        keywords: [
+          'ツリー図',
+          'ディレクトリツリー',
+          'tree',
+          'フォルダ構成',
+          'README',
+          '├──',
+          'インデント',
+        ],
+      },
+      en: {
+        name: 'Directory Tree Diagram Generator',
+        description:
+          'Turn an indented folder list into a ├── └── tree for your README. Aligned comments, depth folding, ASCII style and reverse conversion.',
+        keywords: [
+          'tree diagram',
+          'directory tree',
+          'tree command',
+          'folder structure',
+          'README',
+          'indent to tree',
+          'box drawing',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

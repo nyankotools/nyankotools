@@ -1,0 +1,362 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { clipboardInspectorContent } from '../../i18n/tools/clipboard-inspector';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = clipboardInspectorContent[locale];
+const labelsJson = JSON.stringify({
+  summary: t.summaryTemplate,
+  type: t.typeLabel,
+  size: t.sizeLabel,
+  file: t.fileLabel,
+  categories: t.categoryLabels,
+  textStats: t.textStatsTemplate,
+  htmlStats: t.htmlStatsTemplate,
+  htmlScript: t.htmlScriptWarning,
+  htmlFragment: t.htmlFragmentNote,
+  htmlSource: t.htmlSourceHeading,
+  jsonPretty: t.jsonPrettyHeading,
+  uriList: t.uriListHeading,
+  imagePreview: t.imagePreviewHeading,
+  imageSize: t.imageSizeTemplate,
+  imageFailed: t.imageFailed,
+  noFormats: t.noFormats,
+  copyEntry: t.copyEntry,
+});
+---
+
+<ToolShell t={t}>
+  <label for="clip-zone" class="ui-label">
+    {t.pasteZoneLabel}
+  </label>
+  <textarea
+    id="clip-zone"
+    rows="4"
+    placeholder={t.pasteZoneHint}
+    spellcheck="false"
+    autocomplete="off"
+    data-no-persist
+    class="ui-input w-full min-w-0 border-2 border-dashed p-3 dark:bg-gray-900 dark:placeholder-gray-400"
+  ></textarea>
+
+  <div class="mt-3 flex flex-wrap items-center gap-2">
+    <button type="button" id="clip-copy-button" class="ui-btn" disabled>
+      {t.copyAll}
+    </button>
+    <button type="button" id="clip-clear-button" class="ui-btn" disabled>
+      {t.clearButton}
+    </button>
+    <span
+      id="clip-status"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <p
+    id="clip-summary"
+    class="mt-4 text-sm text-gray-700 dark:text-gray-300"
+    aria-live="polite"
+  >
+    {t.emptyMessage}
+  </p>
+  <div id="clip-result" class="mt-2 space-y-4" data-labels={labelsJson}></div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    buildReport,
+    describeEntry,
+    formatBytes,
+    parseUriList,
+    prettyJson,
+    summarizeHtml,
+    summarizeText,
+    type ClipEntry,
+  } from '../../lib/tools/clipboard-inspector';
+
+  const zone = document.getElementById('clip-zone') as HTMLTextAreaElement;
+  const resultEl = document.getElementById('clip-result')!;
+  const summaryEl = document.getElementById('clip-summary')!;
+  const statusEl = document.getElementById('clip-status')!;
+  const copyAllButton = document.getElementById(
+    'clip-copy-button',
+  ) as HTMLButtonElement;
+  const clearButton = document.getElementById(
+    'clip-clear-button',
+  ) as HTMLButtonElement;
+  const emptyMessage = summaryEl.textContent ?? '';
+
+  const L = JSON.parse(resultEl.dataset.labels ?? '{}') as {
+    summary: string;
+    type: string;
+    size: string;
+    file: string;
+    categories: Record<string, string>;
+    textStats: string;
+    htmlStats: string;
+    htmlScript: string;
+    htmlFragment: string;
+    htmlSource: string;
+    jsonPretty: string;
+    uriList: string;
+    imagePreview: string;
+    imageSize: string;
+    imageFailed: string;
+    noFormats: string;
+    copyEntry: string;
+  };
+
+  let entries: ClipEntry[] = [];
+  let objectUrls: string[] = [];
+
+  function fill(template: string, values: Record<string, string | number>) {
+    return template.replace(/\{(\w+)\}/g, (_, k: string) =>
+      String(values[k] ?? ''),
+    );
+  }
+
+  function el<K extends keyof HTMLElementTagNameMap>(
+    tag: K,
+    cls = '',
+    text?: string,
+  ) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function pre(text: string) {
+    return el(
+      'pre',
+      'mt-1 max-h-64 overflow-auto rounded-lg bg-gray-100 p-3 text-xs break-all whitespace-pre-wrap text-gray-900 dark:bg-gray-800 dark:text-gray-100',
+      text,
+    );
+  }
+
+  function heading(text: string) {
+    return el(
+      'p',
+      'mt-3 text-sm font-medium text-gray-700 dark:text-gray-300',
+      text,
+    );
+  }
+
+  function note(text: string, cls: string) {
+    return el('p', `mt-2 text-sm ${cls}`, text);
+  }
+
+  function revokeAll() {
+    for (const u of objectUrls) URL.revokeObjectURL(u);
+    objectUrls = [];
+  }
+
+  function renderEntry(e: ClipEntry, file: File | null): HTMLElement {
+    const info = describeEntry(e);
+    const card = el(
+      'section',
+      'clip-entry rounded-lg border border-gray-200 p-4 dark:border-gray-700',
+    );
+    card.dataset.type = e.type;
+
+    const head = el('div', 'flex flex-wrap items-center gap-2');
+    head.append(
+      el(
+        'span',
+        'rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-900 dark:bg-blue-900 dark:text-blue-100',
+        L.categories[info.category] ?? '',
+      ),
+      el(
+        'code',
+        'clip-type font-mono text-sm break-all text-gray-900 dark:text-gray-100',
+        e.type,
+      ),
+    );
+    card.append(head);
+    card.append(
+      el(
+        'p',
+        'clip-size mt-1 text-sm text-gray-600 dark:text-gray-400',
+        `${L.size}: ${formatBytes(info.bytes)} (${info.bytes} B)`,
+      ),
+    );
+
+    if (e.kind === 'file') {
+      card.append(
+        el(
+          'p',
+          'clip-file mt-1 text-sm break-all text-gray-700 dark:text-gray-300',
+          `${L.file}: ${e.fileName ?? ''}`,
+        ),
+      );
+      if (info.category === 'image' && file) {
+        const url = URL.createObjectURL(file);
+        objectUrls.push(url);
+        card.append(heading(L.imagePreview));
+        const img = el(
+          'img',
+          'clip-image mt-1 max-h-64 max-w-full rounded border border-gray-200 bg-white dark:border-gray-700',
+        );
+        img.alt = '';
+        const dims = note(
+          '',
+          'clip-image-size text-gray-600 dark:text-gray-400',
+        );
+        img.addEventListener('load', () => {
+          dims.textContent = fill(L.imageSize, {
+            w: img.naturalWidth,
+            h: img.naturalHeight,
+          });
+        });
+        img.addEventListener('error', () => {
+          img.remove();
+          dims.textContent = L.imageFailed;
+        });
+        img.src = url;
+        card.append(img, dims);
+      }
+    } else {
+      const text = e.text ?? '';
+      const stats = summarizeText(text);
+      card.append(
+        note(
+          fill(L.textStats, {
+            chars: stats.characters,
+            lines: stats.lines,
+            bytes: formatBytes(stats.bytes),
+          }),
+          'text-gray-600 dark:text-gray-400',
+        ),
+      );
+      if (info.category === 'html') {
+        const h = summarizeHtml(text);
+        card.append(
+          note(
+            fill(L.htmlStats, {
+              tags: h.tags,
+              images: h.images,
+              links: h.links,
+              top:
+                h.topTags.map((x) => `${x.name}×${x.count}`).join(', ') || '-',
+            }),
+            'text-gray-600 dark:text-gray-400',
+          ),
+        );
+        if (h.hasScript) {
+          card.append(note(L.htmlScript, 'text-red-700 dark:text-red-300'));
+        }
+        if (h.hasFragmentMarker) {
+          card.append(note(L.htmlFragment, 'text-gray-600 dark:text-gray-400'));
+        }
+        card.append(heading(L.htmlSource));
+      }
+      if (info.category === 'json') {
+        const pretty = prettyJson(text);
+        if (pretty !== null && pretty !== text) {
+          card.append(heading(L.jsonPretty), pre(pretty));
+        }
+      }
+      if (info.category === 'uri-list') {
+        card.append(heading(L.uriList), pre(parseUriList(text).join('\n')));
+      }
+      card.append(pre(text));
+    }
+
+    const copyBtn = el('button', 'ui-btn mt-3', L.copyEntry);
+    copyBtn.type = 'button';
+    copyBtn.addEventListener('click', async () => {
+      const value = e.kind === 'file' ? (e.fileName ?? '') : (e.text ?? '');
+      statusEl.textContent = (await copyText(value))
+        ? (statusEl.dataset.copied ?? '')
+        : (statusEl.dataset.copyFailed ?? '');
+    });
+    card.append(copyBtn);
+    return card;
+  }
+
+  function render(files: Map<ClipEntry, File>) {
+    resultEl.textContent = '';
+    revokeAll();
+    statusEl.textContent = '';
+    if (entries.length === 0) {
+      summaryEl.textContent = L.noFormats;
+    } else {
+      summaryEl.textContent = fill(L.summary, { n: entries.length });
+    }
+    for (const e of entries) {
+      resultEl.append(renderEntry(e, files.get(e) ?? null));
+    }
+    copyAllButton.disabled = entries.length === 0;
+    clearButton.disabled = false;
+  }
+
+  document.addEventListener('paste', (ev) => {
+    const target = ev.target as HTMLElement | null;
+    if (
+      target &&
+      target !== zone &&
+      target.closest('input, textarea, [contenteditable]')
+    ) {
+      return;
+    }
+    const dt = ev.clipboardData;
+    if (!dt) return;
+    ev.preventDefault();
+    const next: ClipEntry[] = [];
+    const files = new Map<ClipEntry, File>();
+    for (const type of Array.from(dt.types)) {
+      if (type === 'Files') continue;
+      next.push({ type, kind: 'string', text: dt.getData(type) });
+    }
+    for (const item of Array.from(dt.items)) {
+      if (item.kind !== 'file') continue;
+      const f = item.getAsFile();
+      if (!f) continue;
+      const entry: ClipEntry = {
+        type: f.type || item.type || 'application/octet-stream',
+        kind: 'file',
+        fileName: f.name,
+        fileSize: f.size,
+      };
+      next.push(entry);
+      files.set(entry, f);
+    }
+    entries = next;
+    render(files);
+  });
+
+  zone.addEventListener('input', () => {
+    zone.value = '';
+  });
+
+  copyAllButton.addEventListener('click', async () => {
+    if (entries.length === 0) return;
+    const text = buildReport(entries, {
+      type: L.type,
+      size: L.size,
+      file: L.file,
+    });
+    statusEl.textContent = (await copyText(text))
+      ? (statusEl.dataset.copied ?? '')
+      : (statusEl.dataset.copyFailed ?? '');
+  });
+
+  clearButton.addEventListener('click', () => {
+    entries = [];
+    resultEl.textContent = '';
+    revokeAll();
+    summaryEl.textContent = emptyMessage;
+    statusEl.textContent = '';
+    copyAllButton.disabled = true;
+    clearButton.disabled = true;
+  });
+</script>

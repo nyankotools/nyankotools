@@ -1,0 +1,326 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { licenseGeneratorContent } from '../../i18n/tools/license-generator';
+import {
+  DEFAULT_LICENSE,
+  LICENSES,
+  currentYear,
+} from '../../lib/tools/license-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = licenseGeneratorContent[locale];
+const copyleftLabel = {
+  none: t.copyleftNone,
+  weak: t.copyleftWeak,
+  strong: t.copyleftStrong,
+};
+---
+
+<ToolShell t={t}>
+  <section>
+    <div class="flex flex-wrap gap-4">
+      <div>
+        <label for="license-generator-license" class="ui-label">
+          {t.licenseLabel}
+        </label>
+        <select
+          id="license-generator-license"
+          class="ui-input h-11 max-w-full px-3 dark:bg-gray-900"
+        >
+          {LICENSES.map((l) => (
+            <option value={l.id} selected={l.id === DEFAULT_LICENSE}>
+              {l.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="license-generator-holder" class="ui-label">
+          {t.holderLabel}
+        </label>
+        <input
+          id="license-generator-holder"
+          type="text"
+          autocomplete="name"
+          class="ui-input h-11 w-64 max-w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.holderPlaceholder}
+        />
+      </div>
+      <div>
+        <label for="license-generator-year" class="ui-label">
+          {t.yearLabel}
+        </label>
+        <input
+          id="license-generator-year"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          value={currentYear()}
+          class="ui-input h-11 w-32 px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+    <p
+      id="license-generator-year-invalid"
+      hidden
+      class="mt-1 text-sm text-amber-800 dark:text-amber-300"
+    >
+      {t.yearInvalid}
+    </p>
+
+    <p class="mt-3 text-sm text-gray-700 dark:text-gray-300">
+      {t.spdxLabel}:
+      <code
+        id="license-generator-spdx"
+        class="rounded bg-gray-100 px-1.5 py-0.5 dark:bg-gray-800"
+      ></code>
+    </p>
+    <p
+      id="license-generator-full-note"
+      class="mt-1 max-w-2xl text-sm text-gray-600 dark:text-gray-400"
+    >
+      {t.fullTextNote}
+    </p>
+    <p
+      id="license-generator-notice-note"
+      hidden
+      class="mt-1 max-w-2xl text-sm text-gray-600 dark:text-gray-400"
+    >
+      {t.noticeOnly}
+    </p>
+    <p class="mt-1 text-sm">
+      <a
+        id="license-generator-official"
+        href="https://opensource.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+      >
+        {t.officialLink}
+      </a>
+    </p>
+
+    <div class="mt-4">
+      <label for="license-generator-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="license-generator-output"
+        rows="14"
+        readonly
+        wrap="off"
+        class="ui-input w-full bg-gray-50 px-3 py-2 font-mono text-sm dark:bg-gray-900"
+      ></textarea>
+      <div class="mt-2 flex flex-wrap items-center gap-2">
+        <button
+          id="license-generator-copy-button"
+          type="button"
+          data-copied={t.copied}
+          data-copy-failed={t.copyFailed}
+          class="ui-btn ui-btn-primary"
+        >
+          {t.copy}
+        </button>
+        <button
+          id="license-generator-download-button"
+          type="button"
+          class="ui-btn"
+        >
+          {t.download}
+        </button>
+        <span
+          id="license-generator-status"
+          class="text-sm text-green-600 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+
+    <h2 class="mt-8 text-lg font-semibold">{t.snippetsHeading}</h2>
+    <div class="mt-2 grid max-w-2xl gap-3">
+      <div>
+        <label for="license-generator-package" class="ui-label">
+          {t.packageJsonLabel}
+        </label>
+        <input
+          id="license-generator-package"
+          type="text"
+          readonly
+          class="ui-input w-full bg-gray-50 px-3 font-mono text-sm dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="license-generator-header" class="ui-label">
+          {t.spdxHeaderLabel}
+        </label>
+        <textarea
+          id="license-generator-header"
+          rows="2"
+          readonly
+          wrap="off"
+          class="ui-input w-full bg-gray-50 px-3 py-2 font-mono text-sm dark:bg-gray-900"
+        ></textarea>
+      </div>
+    </div>
+
+    <h2 class="mt-8 text-lg font-semibold">{t.tableHeading}</h2>
+    <div class="mt-2 overflow-x-auto">
+      <table class="w-full min-w-[40rem] border-collapse text-sm">
+        <caption class="pb-2 text-left text-gray-600 dark:text-gray-400">
+          {t.tableCaption}
+        </caption>
+        <thead>
+          <tr class="bg-gray-100 text-left dark:bg-gray-800">
+            <th
+              scope="col"
+              class="border border-gray-300 px-2 py-1.5 dark:border-gray-700"
+            >
+              {t.colLicense}
+            </th>
+            <th
+              scope="col"
+              class="border border-gray-300 px-2 py-1.5 dark:border-gray-700"
+            >
+              {t.colSpdx}
+            </th>
+            <th
+              scope="col"
+              class="border border-gray-300 px-2 py-1.5 dark:border-gray-700"
+            >
+              {t.colCommercial}
+            </th>
+            <th
+              scope="col"
+              class="border border-gray-300 px-2 py-1.5 dark:border-gray-700"
+            >
+              {t.colModify}
+            </th>
+            <th
+              scope="col"
+              class="border border-gray-300 px-2 py-1.5 dark:border-gray-700"
+            >
+              {t.colRedistribute}
+            </th>
+            <th
+              scope="col"
+              class="border border-gray-300 px-2 py-1.5 dark:border-gray-700"
+            >
+              {t.colPatent}
+            </th>
+            <th
+              scope="col"
+              class="border border-gray-300 px-2 py-1.5 dark:border-gray-700"
+            >
+              {t.colCopyleft}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {LICENSES.map((l) => (
+            <tr>
+              <th
+                scope="row"
+                class="border border-gray-300 px-2 py-1.5 text-left font-medium dark:border-gray-700"
+              >
+                {l.name}
+              </th>
+              <td class="border border-gray-300 px-2 py-1.5 font-mono dark:border-gray-700">
+                {l.spdx}
+              </td>
+              <td class="border border-gray-300 px-2 py-1.5 dark:border-gray-700">
+                {t.allowed}
+              </td>
+              <td class="border border-gray-300 px-2 py-1.5 dark:border-gray-700">
+                {t.allowed}
+              </td>
+              <td class="border border-gray-300 px-2 py-1.5 dark:border-gray-700">
+                {t.allowed}
+              </td>
+              <td class="border border-gray-300 px-2 py-1.5 dark:border-gray-700">
+                {l.patent ? t.patentYes : t.patentNo}
+              </td>
+              <td class="border border-gray-300 px-2 py-1.5 dark:border-gray-700">
+                {copyleftLabel[l.copyleft]}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="mt-2 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
+      {t.tableNote}
+    </p>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    generateLicenseText,
+    getLicense,
+    isValidYear,
+    licenseFilename,
+    packageJsonSnippet,
+    spdxHeader,
+    type LicenseId,
+  } from '../../lib/tools/license-generator';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`license-generator-${id}`) as T;
+  const licenseEl = $<HTMLSelectElement>('license');
+  const holderEl = $<HTMLInputElement>('holder');
+  const yearEl = $<HTMLInputElement>('year');
+  yearEl.value = String(new Date().getFullYear());
+  const yearInvalid = $<HTMLElement>('year-invalid');
+  const spdxEl = $<HTMLElement>('spdx');
+  const fullNote = $<HTMLElement>('full-note');
+  const noticeNote = $<HTMLElement>('notice-note');
+  const official = $<HTMLAnchorElement>('official');
+  const output = $<HTMLTextAreaElement>('output');
+  const packageEl = $<HTMLInputElement>('package');
+  const headerEl = $<HTMLTextAreaElement>('header');
+  const copyButton = $<HTMLButtonElement>('copy-button');
+  const downloadButton = $<HTMLButtonElement>('download-button');
+  const statusEl = $<HTMLElement>('status');
+
+  function update() {
+    const id = licenseEl.value as LicenseId;
+    const info = getLicense(id);
+    if (!info) return;
+    const input = { year: yearEl.value, holder: holderEl.value };
+    yearInvalid.hidden =
+      yearEl.value.trim() === '' || isValidYear(yearEl.value);
+    spdxEl.textContent = info.spdx;
+    fullNote.hidden = !info.fullText;
+    noticeNote.hidden = info.fullText;
+    official.href = info.officialUrl;
+    output.value = generateLicenseText(id, input);
+    packageEl.value = packageJsonSnippet(id);
+    headerEl.value = spdxHeader(id, input);
+    statusEl.textContent = '';
+  }
+
+  licenseEl.addEventListener('change', update);
+  holderEl.addEventListener('input', update);
+  yearEl.addEventListener('input', update);
+  update();
+
+  copyButton.addEventListener('click', async () => {
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  downloadButton.addEventListener('click', () => {
+    downloadBlob(
+      new Blob([output.value], { type: 'text/plain;charset=utf-8' }),
+      licenseFilename(licenseEl.value as LicenseId),
+    );
+  });
+</script>

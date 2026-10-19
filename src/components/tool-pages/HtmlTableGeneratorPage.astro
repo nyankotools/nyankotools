@@ -1,0 +1,602 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { htmlTableGeneratorContent } from '../../i18n/tools/html-table-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = htmlTableGeneratorContent[locale];
+const numberInput = 'ui-input h-11 w-24 px-2 dark:bg-gray-900';
+---
+
+<ToolShell t={t}>
+  <section>
+    <h2 class="mb-2 text-base font-semibold">{t.sizeHeading}</h2>
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label for="html-table-generator-rows" class="ui-label">
+          {t.rowsLabel}
+        </label>
+        <input
+          id="html-table-generator-rows"
+          type="number"
+          min="1"
+          max="50"
+          value="4"
+          class={numberInput}
+        />
+      </div>
+      <div>
+        <label for="html-table-generator-columns" class="ui-label">
+          {t.columnsLabel}
+        </label>
+        <input
+          id="html-table-generator-columns"
+          type="number"
+          min="1"
+          max="20"
+          value="3"
+          class={numberInput}
+        />
+      </div>
+    </div>
+
+    <div class="mt-4">
+      <label for="html-table-generator-import" class="ui-label">
+        {t.importLabel}
+      </label>
+      <textarea
+        id="html-table-generator-import"
+        class="ui-input h-24 w-full p-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.importPlaceholder}
+        spellcheck="false"
+        wrap="off"
+        data-no-persist
+      ></textarea>
+      <div class="mt-2 flex flex-wrap items-center gap-3">
+        <button
+          id="html-table-generator-import-button"
+          type="button"
+          class="ui-btn"
+        >
+          {t.importButton}
+        </button>
+        <span
+          id="html-table-generator-import-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+      <p
+        id="html-table-generator-import-error"
+        hidden
+        class="ui-error mt-2 max-w-2xl"
+      >
+        {t.importError}
+      </p>
+    </div>
+  </section>
+
+  <section class="mt-6">
+    <p class="ui-label">{t.editorLabel}</p>
+    <div
+      id="html-table-generator-labels"
+      hidden
+      data-header-cell={t.headerCell}
+      data-body-cell={t.bodyCell}
+      data-imported={t.imported}
+      data-merged={t.merged}
+      data-unmerged={t.unmerged}
+    ></div>
+    <div
+      class="max-w-full overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700"
+      tabindex="0"
+      role="region"
+      aria-label={t.editorLabel}
+    >
+      <table
+        id="html-table-generator-grid"
+        class="border-collapse text-sm"
+      ></table>
+    </div>
+  </section>
+
+  <section class="mt-6">
+    <h2 class="mb-2 text-base font-semibold">{t.mergeHeading}</h2>
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label for="html-table-generator-row-from" class="ui-label">
+          {t.mergeRowFrom}
+        </label>
+        <input
+          id="html-table-generator-row-from"
+          type="number"
+          min="1"
+          value="1"
+          class={numberInput}
+          data-no-persist
+        />
+      </div>
+      <div>
+        <label for="html-table-generator-row-to" class="ui-label">
+          {t.mergeRowTo}
+        </label>
+        <input
+          id="html-table-generator-row-to"
+          type="number"
+          min="1"
+          value="1"
+          class={numberInput}
+          data-no-persist
+        />
+      </div>
+      <div>
+        <label for="html-table-generator-column-from" class="ui-label">
+          {t.mergeColumnFrom}
+        </label>
+        <input
+          id="html-table-generator-column-from"
+          type="number"
+          min="1"
+          value="1"
+          class={numberInput}
+          data-no-persist
+        />
+      </div>
+      <div>
+        <label for="html-table-generator-column-to" class="ui-label">
+          {t.mergeColumnTo}
+        </label>
+        <input
+          id="html-table-generator-column-to"
+          type="number"
+          min="1"
+          value="2"
+          class={numberInput}
+          data-no-persist
+        />
+      </div>
+    </div>
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button id="html-table-generator-merge" type="button" class="ui-btn">
+        {t.mergeButton}
+      </button>
+      <button id="html-table-generator-unmerge" type="button" class="ui-btn">
+        {t.unmergeButton}
+      </button>
+      <span
+        id="html-table-generator-merge-status"
+        class="text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+    <p
+      id="html-table-generator-merge-error"
+      hidden
+      class="ui-error mt-2 max-w-2xl"
+    >
+      {t.mergeInvalid}
+    </p>
+  </section>
+
+  <section class="mt-6">
+    <h2 class="mb-2 text-base font-semibold">{t.styleHeading}</h2>
+    <label class="ui-check">
+      <input type="checkbox" id="html-table-generator-header" checked />
+      {t.headerLabel}
+    </label>
+    <div class="mt-3 grid max-w-2xl gap-4 sm:grid-cols-2">
+      <div>
+        <label for="html-table-generator-preset" class="ui-label">
+          {t.presetLabel}
+        </label>
+        <select
+          id="html-table-generator-preset"
+          class="ui-input h-11 w-full bg-white px-2 dark:bg-gray-900"
+        >
+          <option value="simple" selected>
+            {t.presetSimple}
+          </option>
+          <option value="striped">{t.presetStriped}</option>
+          <option value="minimal">{t.presetMinimal}</option>
+          <option value="none">{t.presetNone}</option>
+        </select>
+      </div>
+      <div>
+        <label for="html-table-generator-mode" class="ui-label">
+          {t.modeLabel}
+        </label>
+        <select
+          id="html-table-generator-mode"
+          class="ui-input h-11 w-full bg-white px-2 dark:bg-gray-900"
+        >
+          <option value="style" selected>
+            {t.modeStyle}
+          </option>
+          <option value="inline">{t.modeInline}</option>
+        </select>
+      </div>
+      <div>
+        <label for="html-table-generator-padding" class="ui-label">
+          {t.paddingLabel}
+        </label>
+        <input
+          id="html-table-generator-padding"
+          type="number"
+          min="0"
+          max="64"
+          value="8"
+          class={numberInput}
+        />
+      </div>
+      <div>
+        <label for="html-table-generator-color" class="ui-label">
+          {t.borderColorLabel}
+        </label>
+        <input
+          id="html-table-generator-color"
+          type="color"
+          value="#cccccc"
+          class="ui-input h-11 w-24 cursor-pointer bg-white p-1 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="html-table-generator-class" class="ui-label">
+          {t.classNameLabel}
+        </label>
+        <input
+          id="html-table-generator-class"
+          type="text"
+          value="data-table"
+          maxlength="40"
+          spellcheck="false"
+          class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="html-table-generator-caption" class="ui-label">
+          {t.captionLabel}
+        </label>
+        <input
+          id="html-table-generator-caption"
+          type="text"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+    <label class="ui-check mt-3">
+      <input type="checkbox" id="html-table-generator-full-width" />
+      {t.fullWidthLabel}
+    </label>
+  </section>
+
+  <section class="mt-6">
+    <p class="ui-label">{t.previewLabel}</p>
+    <div
+      id="html-table-generator-preview"
+      class="max-w-full overflow-x-auto rounded-lg border border-gray-200 bg-white p-3 text-gray-900 dark:border-gray-700"
+      tabindex="0"
+      role="region"
+      aria-label={t.previewLabel}
+    ></div>
+  </section>
+
+  <section class="mt-6">
+    <div class="mb-2 flex flex-wrap items-center gap-3">
+      <button
+        id="html-table-generator-copy-button"
+        type="button"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="ui-btn ui-btn-primary"
+      >
+        {t.copy}
+      </button>
+      <button
+        id="html-table-generator-download-button"
+        type="button"
+        class="ui-btn"
+      >
+        {t.download}
+      </button>
+      <span
+        id="html-table-generator-status"
+        class="text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+    <label for="html-table-generator-output" class="ui-label">
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="html-table-generator-output"
+      readonly
+      wrap="off"
+      spellcheck="false"
+      class="ui-input h-64 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+    ></textarea>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    buildStyles,
+    createTable,
+    generateHtml,
+    layoutTable,
+    mergeCells,
+    parseTabular,
+    resizeTable,
+    sanitizeClassName,
+    sanitizeColor,
+    setCellText,
+    unmergeCell,
+    type CssMode,
+    type HtmlTableOptions,
+    type StylePreset,
+    type TableModel,
+  } from '../../lib/tools/html-table-generator';
+
+  const $ = (id: string) =>
+    document.getElementById(`html-table-generator-${id}`)!;
+  const input = (id: string) => $(id) as HTMLInputElement;
+  const labels = $('labels').dataset;
+  const grid = $('grid') as HTMLTableElement;
+  const preview = $('preview');
+  const output = $('output') as HTMLTextAreaElement;
+  const copyButton = $('copy-button') as HTMLButtonElement;
+  const statusEl = $('status');
+  const mergeStatus = $('merge-status');
+  const mergeError = $('merge-error');
+  const importStatus = $('import-status');
+  const importError = $('import-error');
+
+  let model: TableModel = createTable(
+    Number(input('rows').value),
+    Number(input('columns').value),
+  );
+
+  function readOptions(): HtmlTableOptions {
+    const padding = Number(input('padding').value);
+    return {
+      headerRow: input('header').checked,
+      preset: ($('preset') as HTMLSelectElement).value as StylePreset,
+      cssMode: ($('mode') as HTMLSelectElement).value as CssMode,
+      padding: Number.isFinite(padding) ? padding : 8,
+      borderColor: sanitizeColor(input('color').value),
+      fullWidth: input('full-width').checked,
+      className: sanitizeClassName(input('class').value),
+      caption: input('caption').value,
+    };
+  }
+
+  function appendText(parent: HTMLElement, text: string) {
+    text
+      .replace(/\r\n?/g, '\n')
+      .split('\n')
+      .forEach((line, i) => {
+        if (i > 0) parent.append(document.createElement('br'));
+        parent.append(document.createTextNode(line));
+      });
+  }
+
+  // プレビューはDOM構築のみで行う（HTML文字列は流し込まない）
+  function renderPreview(options: HtmlTableOptions) {
+    const styles = buildStyles(options);
+    const layout = layoutTable(model, options.headerRow);
+    const table = document.createElement('table');
+    table.style.cssText = styles.table.join('; ');
+    if (options.caption.trim()) {
+      const caption = document.createElement('caption');
+      appendText(caption, options.caption.trim());
+      table.append(caption);
+    }
+    const thead = options.headerRow ? table.createTHead() : null;
+    const tbody = table.createTBody();
+    model.cells.forEach((line, r) => {
+      const isHeader = options.headerRow && r === 0;
+      const tr = (isHeader ? thead! : tbody).insertRow();
+      const bodyIndex = r - (options.headerRow ? 1 : 0);
+      if (!isHeader && bodyIndex % 2 === 1) {
+        tr.style.cssText = styles.stripe.join('; ');
+      }
+      line.forEach((cell, c) => {
+        const info = layout[r][c];
+        if (info.covered) return;
+        const el = document.createElement(isHeader ? 'th' : 'td');
+        if (info.colspan > 1) el.colSpan = info.colspan;
+        if (info.rowspan > 1) el.rowSpan = info.rowspan;
+        el.style.cssText = (
+          isHeader ? [...styles.cell, ...styles.th] : styles.cell
+        ).join('; ');
+        appendText(el, cell.text);
+        tr.append(el);
+      });
+    });
+    preview.replaceChildren(table);
+  }
+
+  function refresh() {
+    const options = readOptions();
+    output.value = generateHtml(model, options);
+    renderPreview(options);
+    statusEl.textContent = '';
+  }
+
+  function cellAt(row: number, column: number) {
+    return grid.querySelector<HTMLTextAreaElement>(
+      `textarea[data-row="${row}"][data-column="${column}"]`,
+    );
+  }
+
+  function makeCell(row: number, column: number) {
+    const textarea = document.createElement('textarea');
+    textarea.rows = 1;
+    textarea.value = model.cells[row][column].text;
+    textarea.dataset.row = String(row);
+    textarea.dataset.column = String(column);
+    textarea.setAttribute(
+      'aria-label',
+      input('header').checked && row === 0
+        ? `${labels.headerCell} ${column + 1}`
+        : `${labels.bodyCell} ${row + 1}-${column + 1}`,
+    );
+    textarea.spellcheck = false;
+    textarea.className =
+      'block min-w-28 resize-none border-0 bg-transparent px-2 py-1.5 font-mono text-sm focus:bg-blue-50 focus:outline-2 focus:outline-blue-500 dark:focus:bg-gray-800' +
+      (input('header').checked && row === 0 ? ' font-bold' : '');
+    textarea.style.setProperty('field-sizing', 'content');
+    textarea.addEventListener('input', () => {
+      model = setCellText(model, row, column, textarea.value);
+      refresh();
+    });
+    textarea.addEventListener('keydown', (event) => {
+      if (event.isComposing || event.key !== 'Enter' || event.shiftKey) return;
+      event.preventDefault();
+      cellAt(row + 1, column)?.focus();
+    });
+    return textarea;
+  }
+
+  function renderGrid() {
+    grid.textContent = '';
+    const rows = model.cells.length;
+    const columns = model.cells[0].length;
+    const headerRow = input('header').checked;
+    const layout = layoutTable(model, headerRow);
+    const border = 'border border-gray-200 dark:border-gray-700';
+    const gutter = `${border} bg-gray-50 px-2 py-1 text-center text-xs font-normal text-gray-700 dark:bg-gray-800 dark:text-gray-300`;
+
+    const head = grid.insertRow();
+    const corner = document.createElement('td');
+    corner.className = gutter;
+    head.append(corner);
+    for (let c = 0; c < columns; c++) {
+      const th = document.createElement('th');
+      th.scope = 'col';
+      th.className = gutter;
+      th.textContent = String(c + 1);
+      head.append(th);
+    }
+    for (let r = 0; r < rows; r++) {
+      const tr = grid.insertRow();
+      const th = document.createElement('th');
+      th.scope = 'row';
+      th.className = gutter;
+      th.textContent = String(r + 1);
+      tr.append(th);
+      for (let c = 0; c < columns; c++) {
+        const info = layout[r][c];
+        if (info.covered) continue;
+        const td = tr.insertCell();
+        td.className =
+          border +
+          (headerRow && r === 0 ? ' bg-gray-50 dark:bg-gray-800/60' : '');
+        if (info.colspan > 1) td.colSpan = info.colspan;
+        if (info.rowspan > 1) td.rowSpan = info.rowspan;
+        td.append(makeCell(r, c));
+      }
+    }
+  }
+
+  function renderAll() {
+    renderGrid();
+    refresh();
+  }
+
+  function applySize() {
+    const rows = Number(input('rows').value);
+    const columns = Number(input('columns').value);
+    if (!Number.isInteger(rows) || !Number.isInteger(columns)) return;
+    if (rows < 1 || columns < 1) return;
+    model = resizeTable(model, rows, columns);
+    renderAll();
+  }
+
+  input('rows').addEventListener('input', applySize);
+  input('columns').addEventListener('input', applySize);
+
+  $('import-button').addEventListener('click', () => {
+    importStatus.textContent = '';
+    const parsed = parseTabular(
+      (
+        document.getElementById(
+          'html-table-generator-import',
+        ) as HTMLTextAreaElement
+      ).value,
+    );
+    importError.hidden = parsed !== null;
+    if (!parsed) return;
+    model = parsed;
+    input('rows').value = String(parsed.cells.length);
+    input('columns').value = String(parsed.cells[0].length);
+    renderAll();
+    importStatus.textContent = labels.imported ?? '';
+  });
+
+  function readRange() {
+    const n = (id: string) => Number(input(id).value) - 1;
+    const values = [
+      n('row-from'),
+      n('column-from'),
+      n('row-to'),
+      n('column-to'),
+    ];
+    if (values.some((v) => !Number.isInteger(v))) return null;
+    return values;
+  }
+
+  $('merge').addEventListener('click', () => {
+    mergeStatus.textContent = '';
+    const range = readRange();
+    const next = range
+      ? mergeCells(model, ...(range as [number, number, number, number]))
+      : model;
+    mergeError.hidden = next !== model;
+    if (next === model) return;
+    model = next;
+    renderAll();
+    mergeStatus.textContent = labels.merged ?? '';
+  });
+
+  $('unmerge').addEventListener('click', () => {
+    mergeStatus.textContent = '';
+    const range = readRange();
+    mergeError.hidden = true;
+    if (!range) return;
+    const next = unmergeCell(model, range[0], range[1]);
+    if (next === model) return;
+    model = next;
+    renderAll();
+    mergeStatus.textContent = labels.unmerged ?? '';
+  });
+
+  input('header').addEventListener('change', renderAll);
+  for (const id of ['preset', 'mode', 'padding', 'color', 'class', 'caption']) {
+    $(id).addEventListener('input', refresh);
+    $(id).addEventListener('change', refresh);
+  }
+  input('full-width').addEventListener('change', refresh);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  $('download-button').addEventListener('click', () => {
+    if (!output.value) return;
+    downloadBlob(
+      new Blob([output.value + '\n'], { type: 'text/html;charset=utf-8' }),
+      'table.html',
+    );
+  });
+
+  renderAll();
+</script>

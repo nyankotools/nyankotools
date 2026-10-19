@@ -1,0 +1,276 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { treeDiagramGeneratorContent } from '../../i18n/tools/tree-diagram-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = treeDiagramGeneratorContent[locale];
+const selectClass = 'ui-input bg-white px-3 py-2 dark:bg-gray-900';
+const labelClass = 'text-sm text-gray-700 dark:text-gray-300';
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-3">
+    <label for="tree-diagram-generator-direction" class={labelClass}>
+      {t.directionLabel}
+    </label>
+    <select id="tree-diagram-generator-direction" class={selectClass}>
+      <option value="forward">{t.directionForward}</option>
+      <option value="reverse">{t.directionReverse}</option>
+    </select>
+    <label for="tree-diagram-generator-indent" class={labelClass}>
+      {t.indentLabel}
+    </label>
+    <select id="tree-diagram-generator-indent" class={selectClass}>
+      <option value="auto">{t.indentAuto}</option>
+      <option value="2">{t.indent2}</option>
+      <option value="4">{t.indent4}</option>
+      <option value="tab">{t.indentTab}</option>
+    </select>
+  </div>
+
+  <div
+    id="tree-diagram-generator-forward-options"
+    class="mt-3 flex flex-wrap items-center gap-3"
+  >
+    <label for="tree-diagram-generator-style" class={labelClass}>
+      {t.styleLabel}
+    </label>
+    <select id="tree-diagram-generator-style" class={selectClass}>
+      <option value="unicode">{t.styleUnicode}</option>
+      <option value="ascii">{t.styleAscii}</option>
+    </select>
+    <label class="ui-check">
+      <input type="checkbox" id="tree-diagram-generator-root" checked />
+      {t.showRootLabel}
+    </label>
+    <label for="tree-diagram-generator-depth" class={labelClass}>
+      {t.maxDepthLabel}
+    </label>
+    <input
+      id="tree-diagram-generator-depth"
+      type="number"
+      min="0"
+      max="99"
+      value="0"
+      class="ui-input h-11 w-20 px-3 dark:bg-gray-900"
+    />
+    <label class="ui-check">
+      <input type="checkbox" id="tree-diagram-generator-comments" checked />
+      {t.commentsLabel}
+    </label>
+    <label for="tree-diagram-generator-marker" class={labelClass}>
+      {t.commentMarkerLabel}
+    </label>
+    <select id="tree-diagram-generator-marker" class={selectClass}>
+      <option value="#">{t.commentMarkerHash}</option>
+      <option value="//">{t.commentMarkerSlash}</option>
+    </select>
+  </div>
+
+  <div
+    id="tree-diagram-generator-reverse-options"
+    hidden
+    class="mt-3 flex flex-wrap items-center gap-3"
+  >
+    <label class="ui-check">
+      <input type="checkbox" id="tree-diagram-generator-bullets" />
+      {t.bulletsLabel}
+    </label>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label
+        for="tree-diagram-generator-input"
+        id="tree-diagram-generator-input-label"
+        class="ui-label"
+        data-forward={t.inputLabelForward}
+        data-reverse={t.inputLabelReverse}
+      >
+        {t.inputLabelForward}
+      </label>
+      <textarea
+        id="tree-diagram-generator-input"
+        data-query-target="text"
+        data-sample={t.sampleText}
+        class="ui-input h-80 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+        wrap="off"
+      ></textarea>
+    </div>
+    <div>
+      <label
+        for="tree-diagram-generator-output"
+        id="tree-diagram-generator-output-label"
+        class="ui-label"
+        data-forward={t.outputLabelForward}
+        data-reverse={t.outputLabelReverse}
+      >
+        {t.outputLabelForward}
+      </label>
+      <textarea
+        id="tree-diagram-generator-output"
+        readonly
+        wrap="off"
+        class="ui-input h-80 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="tree-diagram-generator-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <button
+      id="tree-diagram-generator-download-button"
+      type="button"
+      class="ui-btn"
+    >
+      {t.download}
+    </button>
+    <span
+      id="tree-diagram-generator-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <p
+    id="tree-diagram-generator-error"
+    hidden
+    data-inconsistent-indent={t.errorInconsistentIndent}
+    data-skipped-level={t.errorSkippedLevel}
+    data-bad-first-indent={t.errorBadFirstIndent}
+    data-empty-name={t.errorEmptyName}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    indentedTextToTree,
+    treeToIndentedText,
+    type CommentMarker,
+    type IndentUnit,
+    type TreeStyle,
+  } from '../../lib/tools/tree-diagram-generator';
+
+  const get = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`tree-diagram-generator-${id}`) as T;
+  const input = get<HTMLTextAreaElement>('input');
+  const output = get<HTMLTextAreaElement>('output');
+  const directionSelect = get<HTMLSelectElement>('direction');
+  const indentSelect = get<HTMLSelectElement>('indent');
+  const styleSelect = get<HTMLSelectElement>('style');
+  const rootCheck = get<HTMLInputElement>('root');
+  const depthInput = get<HTMLInputElement>('depth');
+  const commentsCheck = get<HTMLInputElement>('comments');
+  const markerSelect = get<HTMLSelectElement>('marker');
+  const bulletsCheck = get<HTMLInputElement>('bullets');
+  const forwardOptions = get<HTMLElement>('forward-options');
+  const reverseOptions = get<HTMLElement>('reverse-options');
+  const inputLabel = get<HTMLElement>('input-label');
+  const outputLabel = get<HTMLElement>('output-label');
+  const copyButton = get<HTMLButtonElement>('copy-button');
+  const downloadButton = get<HTMLButtonElement>('download-button');
+  const statusEl = get<HTMLElement>('status');
+  const errorEl = get<HTMLElement>('error');
+
+  const errorKeys = {
+    'inconsistent-indent': 'inconsistentIndent',
+    'skipped-level': 'skippedLevel',
+    'bad-first-indent': 'badFirstIndent',
+    'empty-name': 'emptyName',
+  } as const;
+
+  function convert() {
+    const reverse = directionSelect.value === 'reverse';
+    forwardOptions.hidden = reverse;
+    reverseOptions.hidden = !reverse;
+    inputLabel.textContent =
+      (reverse ? inputLabel.dataset.reverse : inputLabel.dataset.forward) ?? '';
+    outputLabel.textContent =
+      (reverse ? outputLabel.dataset.reverse : outputLabel.dataset.forward) ??
+      '';
+    statusEl.textContent = '';
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    if (input.value.trim() === '') {
+      output.value = '';
+      return;
+    }
+    const indent = indentSelect.value as IndentUnit;
+    if (reverse) {
+      output.value = treeToIndentedText(input.value, {
+        indent,
+        bullets: bulletsCheck.checked,
+      }).output;
+      return;
+    }
+    const depth = Math.max(0, Math.floor(Number(depthInput.value)) || 0);
+    const result = indentedTextToTree(input.value, {
+      style: styleSelect.value as TreeStyle,
+      indent,
+      showRoot: rootCheck.checked,
+      maxDepth: depth,
+      comments: commentsCheck.checked,
+      commentMarker: markerSelect.value as CommentMarker,
+    });
+    if (result.success) {
+      output.value = result.output;
+    } else {
+      output.value = '';
+      errorEl.textContent = (
+        errorEl.dataset[errorKeys[result.reason]] ?? ''
+      ).replace('{line}', String(result.line));
+      errorEl.hidden = false;
+    }
+  }
+
+  onTextInput(input, convert);
+  for (const el of [
+    directionSelect,
+    indentSelect,
+    styleSelect,
+    rootCheck,
+    depthInput,
+    commentsCheck,
+    markerSelect,
+    bulletsCheck,
+  ]) {
+    el.addEventListener('change', convert);
+  }
+  depthInput.addEventListener('input', convert);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (!output.value) return;
+    downloadBlob(
+      new Blob([output.value + '\n'], { type: 'text/plain;charset=utf-8' }),
+      directionSelect.value === 'reverse' ? 'structure.txt' : 'tree.txt',
+    );
+  });
+
+  convert();
+</script>

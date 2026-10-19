@@ -8527,6 +8527,765 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'punycode-converter',
+    category: 'encode',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['url-encode', 'base-n-encoder'],
+    translations: {
+      ja: {
+        name: 'Punycode変換',
+        description: '日本語ドメイン（IDN）とxn--形式のPunycodeを相互に変換',
+        keywords: [
+          'Punycode',
+          'IDN',
+          '国際化ドメイン',
+          '日本語ドメイン',
+          'xn--',
+          'ピュニコード',
+        ],
+      },
+      en: {
+        name: 'Punycode Converter',
+        description: 'Convert IDN domains to xn-- Punycode and back',
+        keywords: [
+          'punycode',
+          'idn',
+          'xn--',
+          'internationalized domain name',
+          'domain converter',
+          'rfc 3492',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'json5-converter',
+    category: 'data',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['json-formatter', 'yaml-json-converter', 'env-json-converter'],
+    translations: {
+      ja: {
+        name: 'JSON5⇔JSON変換',
+        description:
+          'JSON5・JavaScriptのオブジェクトリテラルとJSONを相互に変換。コメント・末尾カンマ・クォート無しキー・16進数に対応し、エラーは行・列つきで表示します。',
+        keywords: [
+          'JSON5',
+          'JSON5変換',
+          'オブジェクトリテラル',
+          'コメント付きJSON',
+          '末尾カンマ',
+          'JSONC',
+          'JS object',
+        ],
+      },
+      en: {
+        name: 'JSON5 ⇔ JSON Converter',
+        description:
+          'Convert JSON5 or JS object literals to JSON and back. Handles comments, trailing commas, unquoted keys and hex numbers, with line and column errors.',
+        keywords: [
+          'JSON5',
+          'JSON5 to JSON',
+          'JSON to JSON5',
+          'JSON with comments',
+          'JSONC',
+          'trailing comma',
+          'object literal',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'markdown-table-editor',
+    category: 'data',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['csv-markdown-table', 'csv-json-converter'],
+    translations: {
+      ja: {
+        name: 'Markdownテーブルエディタ',
+        description:
+          'Markdownの表をセル編集・行列の追加削除・並べ替え・列ごとの配置で編集し、整形して出力',
+        keywords: [
+          'Markdown',
+          'テーブル',
+          '表',
+          'マークダウン',
+          'GFM',
+          'README',
+          '表整形',
+          'エディタ',
+        ],
+      },
+      en: {
+        name: 'Markdown Table Editor',
+        description:
+          'Edit a Markdown table in a grid: add, delete and reorder rows and columns, set alignment, copy padded output',
+        keywords: [
+          'markdown table',
+          'table editor',
+          'GFM table',
+          'format table',
+          'README',
+          'align columns',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'janken-game',
+    category: 'games',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['roulette-dice'],
+    translations: {
+      ja: {
+        name: 'じゃんけんゲーム',
+        description:
+          'グー・チョキ・パーでCPUとじゃんけん対戦。連勝数・最高連勝・通算の勝敗を記録できる。',
+        keywords: [
+          'じゃんけん',
+          'ジャンケン',
+          'グーチョキパー',
+          '連勝',
+          'CPU対戦',
+          'ミニゲーム',
+        ],
+      },
+      en: {
+        name: 'Rock Paper Scissors Game',
+        description:
+          'Play rock paper scissors against the CPU and track your win streak, best streak and total record.',
+        keywords: [
+          'rock paper scissors',
+          'janken',
+          'roshambo',
+          'win streak',
+          'vs CPU',
+          'mini game',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'ip-address-converter',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['cidr-calculator', 'base-converter'],
+    translations: {
+      ja: {
+        name: 'IPアドレス変換',
+        description:
+          'IPv4を10進整数・16進・2進に相互変換し、IPv6の短縮・展開・完全展開表記にそろえます。入力形式は自動判別。',
+        keywords: [
+          'IPアドレス',
+          'IPv4',
+          'IPv6',
+          '10進',
+          '16進',
+          '2進',
+          '短縮',
+          '展開',
+        ],
+      },
+      en: {
+        name: 'IP Address Converter',
+        description:
+          'Convert IPv4 to decimal, hex and binary, and compress or expand IPv6 addresses. The input format is detected automatically.',
+        keywords: [
+          'IP address',
+          'IPv4',
+          'IPv6',
+          'decimal',
+          'hex',
+          'binary',
+          'compress',
+          'expand',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'semver-calculator',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['regex-tester', 'json-path-tester', 'cidr-calculator'],
+    translations: {
+      ja: {
+        name: 'セマンティックバージョン比較・範囲判定',
+        description:
+          'semverのバージョン比較・ソートと、^ ~ >= || x ハイフン範囲の適合判定。prereleaseにも対応',
+        keywords: [
+          'semver',
+          'セマンティックバージョニング',
+          'バージョン比較',
+          'バージョン範囲',
+          'npm',
+          'package.json',
+          'キャレット',
+          'チルダ',
+        ],
+      },
+      en: {
+        name: 'Semver Calculator',
+        description:
+          'Compare semver versions and check ranges (^ ~ >= || x, hyphen) with prerelease support, npm-compatible.',
+        keywords: [
+          'semver',
+          'semantic versioning',
+          'version compare',
+          'version range',
+          'npm',
+          'package.json',
+          'caret',
+          'tilde',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'jsonld-generator',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['meta-tag-generator', 'json-formatter', 'sitemap-generator'],
+    translations: {
+      ja: {
+        name: 'JSON-LD構造化データ生成',
+        description:
+          'FAQ・記事・商品・パンくずリストのJSON-LD構造化データをフォームから生成し、scriptタグごとコピーできます。',
+        keywords: [
+          'JSON-LD',
+          '構造化データ',
+          'schema.org',
+          'FAQPage',
+          'リッチリザルト',
+          'パンくずリスト',
+          'SEO',
+        ],
+      },
+      en: {
+        name: 'JSON-LD Structured Data Generator',
+        description:
+          'Generate JSON-LD structured data for FAQ, Article, Product and BreadcrumbList from a form, and copy the script tag.',
+        keywords: [
+          'JSON-LD',
+          'structured data',
+          'schema.org',
+          'FAQPage',
+          'rich results',
+          'breadcrumb',
+          'SEO',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'utm-builder',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['url-parser', 'url-encode'],
+    translations: {
+      ja: {
+        name: 'UTMビルダー（UTMパラメータ付きURL作成）',
+        description:
+          '広告・メルマガ・SNS用にUTMパラメータ付きURLを作成。プリセット・複数URLの一括生成・履歴に対応',
+        keywords: [
+          'UTM',
+          'UTMパラメータ',
+          'utm_source',
+          'utm_campaign',
+          'キャンペーンURL',
+          'GA4',
+          'アクセス解析',
+          '計測URL',
+        ],
+      },
+      en: {
+        name: 'UTM Builder',
+        description:
+          'Build campaign URLs with UTM parameters. Presets, bulk URLs and history. Runs in your browser.',
+        keywords: [
+          'utm',
+          'utm builder',
+          'utm_source',
+          'utm_campaign',
+          'campaign url',
+          'url builder',
+          'ga4',
+          'tracking link',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'htpasswd-generator',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['bcrypt-generator', 'htaccess-generator', 'base64'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '.htpasswd生成（Basic認証・bcrypt/SHA-1）',
+        description:
+          'Basic認証用の.htpasswdをbcrypt/SHA-1で生成。複数ユーザーとAuthorizationヘッダーの出力にも対応',
+        keywords: [
+          'htpasswd',
+          'Basic認証',
+          'ベーシック認証',
+          'bcrypt',
+          'SHA-1',
+          'Apache',
+          'Authorizationヘッダー',
+        ],
+      },
+      en: {
+        name: 'Htpasswd Generator (Basic Auth, bcrypt/SHA-1)',
+        description:
+          'Generate .htpasswd lines for Basic auth with bcrypt or SHA-1, for multiple users, plus Authorization headers.',
+        keywords: [
+          'htpasswd',
+          'basic auth',
+          'bcrypt',
+          'sha1',
+          'apache',
+          'authorization header',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'nginx-redirect-generator',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['htaccess-generator', 'http-status-codes'],
+    translations: {
+      ja: {
+        name: 'nginxリダイレクト設定生成',
+        description:
+          'HTTPS強制・www統一・末尾スラッシュ・個別URLの301/302をnginxのserverブロック断片で生成',
+        keywords: [
+          'nginx',
+          'リダイレクト',
+          'rewrite',
+          'return 301',
+          'HTTPS強制',
+          'www統一',
+          'server_name',
+          'location',
+        ],
+      },
+      en: {
+        name: 'nginx Redirect Generator',
+        description:
+          'Generate nginx config for forced HTTPS, www canonical, trailing slashes and 301/302 redirects',
+        keywords: [
+          'nginx',
+          'redirect',
+          'rewrite',
+          'return 301',
+          'force https',
+          'www redirect',
+          'server block',
+          'location',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'port-number-lookup',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['http-status-codes', 'ip-address-converter'],
+    translations: {
+      ja: {
+        name: 'ポート番号一覧・検索',
+        description:
+          '22・80・443・3306 など主要なポート番号を、番号・範囲・サービス名で検索。TCP/UDP の区別と用途つき。',
+        keywords: [
+          'ポート番号',
+          'ポート一覧',
+          'well-known ポート',
+          'TCP',
+          'UDP',
+          'ssh ポート',
+          'mysql ポート',
+        ],
+      },
+      en: {
+        name: 'Port Number List & Search',
+        description:
+          'Look up TCP/UDP port numbers like 22, 80, 443, and 3306 by number, range, or service name, with their uses.',
+        keywords: [
+          'port number',
+          'port list',
+          'well-known ports',
+          'tcp',
+          'udp',
+          'ssh port',
+          'mysql port',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'html-table-generator',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['html-table-to-csv', 'markdown-table-editor', 'html-escape'],
+    translations: {
+      ja: {
+        name: 'HTMLテーブル生成',
+        description:
+          '行数・列数を指定してHTMLのtableタグを作成。セル結合（colspan・rowspan）、見出し行（thead）、罫線・縞模様のCSS付き出力とプレビューに対応。',
+        keywords: [
+          'HTML',
+          'table',
+          'テーブル',
+          '表',
+          'セル結合',
+          'colspan',
+          'rowspan',
+          'thead',
+        ],
+      },
+      en: {
+        name: 'HTML Table Generator',
+        description:
+          'Build an HTML table by choosing rows and columns. Merge cells with colspan and rowspan, add a header row, and copy the code with CSS.',
+        keywords: [
+          'html table',
+          'table generator',
+          'colspan',
+          'rowspan',
+          'merge cells',
+          'thead',
+          'table css',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'date-format-builder',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['unix-timestamp', 'date-calculator'],
+    translations: {
+      ja: {
+        name: '日付フォーマット文字列ビルダー',
+        description:
+          '例文から strftime・Java・PHP・Day.js/Moment.js・.NET の日付書式文字列を生成し、相互変換します。',
+        keywords: [
+          'strftime',
+          'DateTimeFormatter',
+          'date format',
+          '日付書式',
+          'yyyy-MM-dd',
+          'フォーマット変換',
+          'Moment.js',
+        ],
+      },
+      en: {
+        name: 'Date Format String Builder',
+        description:
+          'Builds date format strings for strftime, Java, PHP, Day.js/Moment.js and .NET from a sample, and converts between them.',
+        keywords: [
+          'strftime',
+          'DateTimeFormatter',
+          'date format',
+          'yyyy-MM-dd',
+          'format converter',
+          'moment.js',
+          'php date',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'regex-pattern-library',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['regex-tester'],
+    translations: {
+      ja: {
+        name: '正規表現パターン集',
+        description:
+          '郵便番号・電話番号・メール・全角カタカナ・日付・IPアドレスなど、よく使う正規表現をコピーして使えるパターン集。一致／不一致の例つき。',
+        keywords: [
+          '正規表現',
+          'regex',
+          '郵便番号',
+          '電話番号',
+          'メールアドレス',
+          'カタカナ',
+          'バリデーション',
+          'パターン集',
+        ],
+      },
+      en: {
+        name: 'Regex Pattern Library',
+        description:
+          'Copy-ready regex patterns for Japanese postal codes, phone numbers, katakana, email, URL, IPv4, dates, and UUIDs, with match and non-match examples.',
+        keywords: [
+          'regex',
+          'regular expression',
+          'pattern',
+          'cheat sheet',
+          'validation',
+          'postal code',
+          'phone number',
+          'email regex',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'bitwise-calculator',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['base-converter', 'ieee754-viewer'],
+    translations: {
+      ja: {
+        name: 'ビット演算計算機',
+        description:
+          'AND・OR・XOR・NOT・シフト・ローテートを8/16/32/64bitで計算。結果を2進・10進・16進で並べ、ビットごとに可視化。2の補数にも対応。',
+        keywords: [
+          'ビット演算',
+          'AND',
+          'OR',
+          'XOR',
+          'NOT',
+          'シフト',
+          '2の補数',
+          'ビットシフト',
+        ],
+      },
+      en: {
+        name: 'Bitwise Calculator',
+        description:
+          "Calculate AND, OR, XOR, NOT, shifts and rotates for 8/16/32/64-bit values, with a bit-by-bit view and two's complement.",
+        keywords: [
+          'bitwise',
+          'bit operations',
+          'AND OR XOR',
+          'bit shift',
+          "two's complement",
+          'rotate',
+          'bitmask',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'ieee754-viewer',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['base-converter', 'bitwise-calculator'],
+    translations: {
+      ja: {
+        name: '浮動小数点（IEEE 754）ビット表示',
+        description:
+          '数値をfloat32・float64の符号・指数部・仮数部のビット列と16進に変換。逆変換や0.1+0.2の誤差確認、NaN・Infinity・非正規化数にも対応。',
+        keywords: [
+          'IEEE 754',
+          '浮動小数点',
+          'float32',
+          'float64',
+          '単精度',
+          '倍精度',
+          'ビット列',
+          '0.1+0.2',
+        ],
+      },
+      en: {
+        name: 'IEEE 754 Float Viewer',
+        description:
+          'View float32/float64 sign, exponent and mantissa bits, convert from bits, and see why 0.1+0.2 is off. Handles NaN, Infinity, subnormals.',
+        keywords: [
+          'IEEE 754',
+          'floating point',
+          'float32',
+          'float64',
+          'single precision',
+          'double precision',
+          'bits',
+          '0.1+0.2',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'clipboard-inspector',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['html-escape', 'unicode-inspector', 'char-counter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'クリップボード内容確認',
+        description:
+          '貼り付けたクリップボードのMIME種別・HTMLソース・画像・ファイルを一覧表示',
+        keywords: [
+          'クリップボード',
+          'paste',
+          'MIME',
+          'DataTransfer',
+          'text/html',
+          'デバッグ',
+        ],
+      },
+      en: {
+        name: 'Clipboard Inspector',
+        description:
+          'List pasted clipboard formats: MIME types, HTML source, images and files',
+        keywords: [
+          'clipboard',
+          'paste event',
+          'MIME type',
+          'DataTransfer',
+          'text/html',
+          'debug',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'snowflake-id-decoder',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['uuid-generator', 'ulid-nanoid-generator', 'unix-timestamp'],
+    translations: {
+      ja: {
+        name: 'Snowflake ID・ObjectID・UUID生成時刻デコード',
+        description:
+          'Snowflake ID・MongoDB ObjectID・UUID v1/v6/v7・ULIDから生成時刻と構成要素を読み取る。複数行の一括デコード対応',
+        keywords: [
+          'Snowflake',
+          'スノーフレーク',
+          'ObjectID',
+          'UUID v7',
+          'ULID',
+          'Discord ID',
+          'Twitter ID',
+          '生成時刻',
+        ],
+      },
+      en: {
+        name: 'Snowflake ID, ObjectID & UUID Timestamp Decoder',
+        description:
+          'Decode the creation time and parts of Snowflake IDs, MongoDB ObjectIDs, UUID v1/v6/v7 and ULIDs. Batch decoding supported.',
+        keywords: [
+          'snowflake id',
+          'objectid',
+          'uuid v7',
+          'uuid v1',
+          'ulid',
+          'discord id',
+          'twitter id',
+          'id timestamp',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'license-generator',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: [
+      'robots-txt-generator',
+      'htaccess-generator',
+      'semver-calculator',
+    ],
+    translations: {
+      ja: {
+        name: 'OSSライセンス文生成',
+        description:
+          'MIT・Apache-2.0・BSDなどのライセンス文を著作者名と年つきで生成。SPDX識別子と比較表つき。',
+        keywords: [
+          'ライセンス',
+          'LICENSE',
+          'MIT',
+          'Apache',
+          'BSD',
+          'GPL',
+          'SPDX',
+          'OSS',
+        ],
+      },
+      en: {
+        name: 'Open Source License Generator',
+        description:
+          'Generate MIT, Apache-2.0, BSD, ISC and other license text with your name and year, plus SPDX IDs.',
+        keywords: [
+          'license',
+          'LICENSE file',
+          'MIT',
+          'Apache',
+          'BSD',
+          'GPL',
+          'SPDX',
+          'open source',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'tree-diagram-generator',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: [
+      'ascii-table-generator',
+      'markdown-table-editor',
+      'json-tree-viewer',
+    ],
+    translations: {
+      ja: {
+        name: 'ディレクトリツリー図作成',
+        description:
+          'インデントや箇条書きで書いたフォルダ構成を、READMEに貼れる├──└──のツリー図に変換。コメント桁揃え・深さ折りたたみ・逆変換対応。',
+        keywords: [
+          'ツリー図',
+          'ディレクトリツリー',
+          'tree',
+          'フォルダ構成',
+          'README',
+          '├──',
+          'インデント',
+        ],
+      },
+      en: {
+        name: 'Directory Tree Diagram Generator',
+        description:
+          'Turn an indented folder list into a ├── └── tree for your README. Aligned comments, depth folding, ASCII style and reverse conversion.',
+        keywords: [
+          'tree diagram',
+          'directory tree',
+          'tree command',
+          'folder structure',
+          'README',
+          'indent to tree',
+          'box drawing',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

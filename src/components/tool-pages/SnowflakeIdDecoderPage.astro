@@ -1,0 +1,217 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { snowflakeIdDecoderContent } from '../../i18n/tools/snowflake-id-decoder';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = snowflakeIdDecoderContent[locale];
+const labelsJson = JSON.stringify({
+  time: t.timeLabels,
+  kinds: t.kindLabels,
+  fields: t.fieldLabels,
+  errors: t.errors,
+  truncated: t.truncatedMessage,
+});
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="snowflake-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="snowflake-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      data-no-count
+      rows="6"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+      autocomplete="off"
+      class="ui-input w-full p-3 font-mono dark:bg-gray-900"
+    ></textarea>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-4">
+    <div>
+      <label for="snowflake-epoch" class="ui-label">
+        {t.epochLabel}
+      </label>
+      <select id="snowflake-epoch" class="ui-input h-11 px-3 dark:bg-gray-900">
+        <option value="twitter" selected>
+          {t.epochTwitter}
+        </option>
+        <option value="discord">{t.epochDiscord}</option>
+        <option value="custom">{t.epochCustom}</option>
+      </select>
+    </div>
+    <div id="snowflake-custom-wrap" class="hidden">
+      <label for="snowflake-custom-epoch" class="ui-label">
+        {t.customEpochLabel}
+      </label>
+      <input
+        id="snowflake-custom-epoch"
+        type="number"
+        step="1"
+        value="0"
+        class="ui-input h-11 w-48 px-3 font-mono dark:bg-gray-900"
+      />
+    </div>
+    <button
+      id="snowflake-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copyResult}
+    </button>
+    <span
+      id="snowflake-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-6">
+    <h2 class="ui-label">{t.resultsLabel}</h2>
+    <p id="snowflake-truncated" class="ui-error hidden"></p>
+    <p id="snowflake-empty" class="text-sm text-gray-600 dark:text-gray-400">
+      {t.emptyResult}
+    </p>
+    <div
+      id="snowflake-results"
+      class="space-y-4"
+      data-labels={labelsJson}
+    ></div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    decodeMany,
+    resultsToTsv,
+    type DecodeResult,
+    type EpochPreset,
+  } from '../../lib/tools/snowflake-id-decoder';
+
+  interface Labels {
+    time: Record<string, string>;
+    kinds: Record<string, string>;
+    fields: Record<string, string>;
+    errors: Record<string, string>;
+    truncated: string;
+  }
+
+  const input = document.getElementById(
+    'snowflake-input',
+  ) as HTMLTextAreaElement;
+  const epochSelect = document.getElementById(
+    'snowflake-epoch',
+  ) as HTMLSelectElement;
+  const customWrap = document.getElementById('snowflake-custom-wrap')!;
+  const customEpoch = document.getElementById(
+    'snowflake-custom-epoch',
+  ) as HTMLInputElement;
+  const resultsEl = document.getElementById('snowflake-results')!;
+  const emptyEl = document.getElementById('snowflake-empty')!;
+  const truncatedEl = document.getElementById('snowflake-truncated')!;
+  const copyButton = document.getElementById(
+    'snowflake-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('snowflake-status')!;
+  const labels = JSON.parse(resultsEl.dataset.labels ?? '{}') as Labels;
+
+  let current: DecodeResult[] = [];
+
+  function addRow(dl: HTMLElement, label: string, value: string, mono = true) {
+    const row = document.createElement('div');
+    row.className = 'flex flex-col gap-0.5 sm:flex-row sm:gap-3';
+    const dt = document.createElement('dt');
+    dt.className = 'shrink-0 text-gray-600 sm:w-56 dark:text-gray-400';
+    dt.textContent = label;
+    const dd = document.createElement('dd');
+    dd.className = (mono ? 'font-mono ' : '') + 'min-w-0 break-all';
+    dd.textContent = value;
+    row.append(dt, dd);
+    dl.append(row);
+  }
+
+  function render() {
+    customWrap.classList.toggle('hidden', epochSelect.value !== 'custom');
+    statusEl.textContent = '';
+    const { results, truncated } = decodeMany(input.value, {
+      epochPreset: epochSelect.value as EpochPreset,
+      customEpochMs: Number(customEpoch.value),
+    });
+    current = results;
+    resultsEl.replaceChildren();
+    emptyEl.classList.toggle('hidden', results.length > 0);
+    truncatedEl.classList.toggle('hidden', !truncated);
+    truncatedEl.textContent = truncated ? labels.truncated : '';
+    copyButton.disabled = results.length === 0;
+
+    for (const r of results) {
+      const card = document.createElement('section');
+      card.className =
+        'rounded-lg border border-gray-200 p-4 dark:border-gray-700';
+      const head = document.createElement('p');
+      head.className = 'break-all font-mono text-sm font-semibold';
+      head.textContent = r.input;
+      card.append(head);
+
+      if (!r.ok) {
+        const err = document.createElement('p');
+        err.className = 'ui-error mt-2';
+        err.textContent = labels.errors[r.error] ?? '';
+        card.append(err);
+        resultsEl.append(card);
+        continue;
+      }
+
+      const kind = document.createElement('p');
+      kind.className = 'mt-1 text-sm text-gray-600 dark:text-gray-400';
+      kind.textContent = labels.kinds[r.kind] ?? r.kind;
+      card.append(kind);
+
+      const dl = document.createElement('dl');
+      dl.className = 'mt-3 space-y-1 text-sm';
+      if (r.time) {
+        addRow(dl, labels.time.iso, r.time.iso);
+        addRow(dl, labels.time.jst, r.time.jst);
+        addRow(dl, labels.time.unixMs, String(r.time.unixMs));
+        addRow(dl, labels.time.unixSec, String(r.time.unixSec));
+      } else {
+        addRow(
+          dl,
+          '',
+          r.kind === 'uuid' ? labels.time.noTime : labels.time.outOfRange,
+          false,
+        );
+      }
+      for (const f of r.fields) {
+        addRow(dl, labels.fields[f.key] ?? f.key, f.value);
+      }
+      card.append(dl);
+      resultsEl.append(card);
+    }
+  }
+
+  input.addEventListener('input', render);
+  epochSelect.addEventListener('change', render);
+  customEpoch.addEventListener('input', render);
+
+  copyButton.addEventListener('click', async () => {
+    if (current.length === 0) return;
+    statusEl.textContent = (await copyText(resultsToTsv(current)))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  render();
+</script>

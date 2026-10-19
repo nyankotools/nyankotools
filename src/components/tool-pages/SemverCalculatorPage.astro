@@ -1,0 +1,321 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { semverCalculatorContent } from '../../i18n/tools/semver-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = semverCalculatorContent[locale];
+---
+
+<ToolShell t={t}>
+  <section aria-labelledby="sv-compare-heading">
+    <h2
+      id="sv-compare-heading"
+      class="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100"
+    >
+      {t.compareHeading}
+    </h2>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="sv-a" class="ui-label">
+          {t.versionALabel}
+        </label>
+        <input
+          id="sv-a"
+          type="text"
+          value="1.2.3"
+          placeholder={t.versionAPlaceholder}
+          spellcheck="false"
+          autocomplete="off"
+          class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label for="sv-b" class="ui-label">
+          {t.versionBLabel}
+        </label>
+        <input
+          id="sv-b"
+          type="text"
+          value="1.10.0-rc.1"
+          placeholder={t.versionBPlaceholder}
+          spellcheck="false"
+          autocomplete="off"
+          class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+    </div>
+    <p
+      id="sv-compare-error"
+      data-message={t.invalidVersion}
+      class="mt-2 text-sm text-red-700 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+    <div
+      id="sv-compare-result"
+      class="mt-3 text-sm text-gray-900 dark:text-gray-100"
+      data-less={t.compareLess}
+      data-equal={t.compareEqual}
+      data-greater={t.compareGreater}
+      data-diff-label={t.diffLabel}
+      data-diff-same={t.diffSame}
+      data-diff-major={t.diffMajor}
+      data-diff-minor={t.diffMinor}
+      data-diff-patch={t.diffPatch}
+      data-diff-prerelease={t.diffPrerelease}
+      aria-live="polite"
+    >
+      <p id="sv-compare-text" class="font-medium"></p>
+      <p id="sv-compare-diff" class="mt-1 text-gray-600 dark:text-gray-400"></p>
+    </div>
+  </section>
+
+  <section class="mt-10" aria-labelledby="sv-range-heading">
+    <h2
+      id="sv-range-heading"
+      class="mb-3 text-lg font-semibold text-gray-900 dark:text-gray-100"
+    >
+      {t.rangeHeading}
+    </h2>
+    <div>
+      <label for="sv-range" class="ui-label">
+        {t.rangeLabel}
+      </label>
+      <input
+        id="sv-range"
+        type="text"
+        value="^1.2.3"
+        placeholder={t.rangePlaceholder}
+        spellcheck="false"
+        autocomplete="off"
+        class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+    </div>
+    <p
+      id="sv-range-error"
+      data-message={t.rangeInvalid}
+      class="mt-2 text-sm text-red-700 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+    <p
+      id="sv-normalized-row"
+      class="mt-2 hidden text-sm text-gray-700 dark:text-gray-300"
+    >
+      {t.normalizedLabel}:{' '}
+      <code id="sv-normalized" class="font-mono break-all"></code>
+    </p>
+
+    <div class="mt-4">
+      <label for="sv-versions" class="ui-label">
+        {t.versionsLabel}
+      </label>
+      <textarea
+        id="sv-versions"
+        rows="6"
+        placeholder={t.versionsPlaceholder}
+        spellcheck="false"
+        class="ui-input w-full min-w-0 p-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      >1.0.0
+1.2.3
+1.10.0
+1.11.0-beta.1
+2.0.0-beta.1
+2.0.0</textarea>
+    </div>
+
+    <div class="mt-2 flex flex-wrap items-center gap-x-6 gap-y-2">
+      <label class="ui-check">
+        <input id="sv-prerelease" type="checkbox" class="h-5 w-5" />
+        {t.includePrereleaseLabel}
+      </label>
+      <div class="flex items-center gap-2">
+        <label for="sv-sort" class="text-sm text-gray-700 dark:text-gray-300">
+          {t.sortLabel}
+        </label>
+        <select id="sv-sort" class="ui-input h-11 px-3 dark:bg-gray-900">
+          <option value="input">{t.sortInput}</option>
+          <option value="asc">{t.sortAsc}</option>
+          <option value="desc">{t.sortDesc}</option>
+        </select>
+      </div>
+    </div>
+
+    <div
+      id="sv-result"
+      class="mt-4"
+      data-yes={t.matchYes}
+      data-no={t.matchNo}
+      data-invalid={t.matchInvalid}
+      data-no-match={t.noMatch}
+      data-highest-label={t.highestLabel}
+      data-lowest-label={t.lowestLabel}
+      data-normalized-label={t.normalizedLabel}
+    >
+      <p
+        id="sv-summary"
+        class="mb-2 text-sm text-gray-900 dark:text-gray-100"
+        aria-live="polite"
+      ></p>
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[360px] border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-gray-300 text-left text-gray-700 dark:border-gray-700 dark:text-gray-300">
+              <th class="py-2 pr-4 font-medium">{t.columnVersion}</th>
+              <th class="py-2 pr-4 font-medium">{t.columnNormalized}</th>
+              <th class="py-2 font-medium">{t.columnResult}</th>
+            </tr>
+          </thead>
+          <tbody id="sv-rows"></tbody>
+        </table>
+      </div>
+      <button type="button" id="sv-copy-button" class="ui-btn mt-4">
+        {t.copyResult}
+      </button>
+      <span
+        id="sv-status"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="ml-2 text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    compareVersions,
+    diffVersions,
+    evaluateVersionList,
+    parseVersion,
+    type SortOrder,
+    type VersionListResult,
+  } from '../../lib/tools/semver-calculator';
+
+  const $ = (id: string) => document.getElementById(id)!;
+  const inputA = $('sv-a') as HTMLInputElement;
+  const inputB = $('sv-b') as HTMLInputElement;
+  const compareError = $('sv-compare-error');
+  const compareResult = $('sv-compare-result');
+  const compareText = $('sv-compare-text');
+  const compareDiff = $('sv-compare-diff');
+
+  function updateCompare() {
+    compareText.textContent = '';
+    compareDiff.textContent = '';
+    const a = inputA.value.trim();
+    const b = inputB.value.trim();
+    const va = a === '' ? null : parseVersion(a);
+    const vb = b === '' ? null : parseVersion(b);
+    const invalid = (a !== '' && !va) || (b !== '' && !vb);
+    compareError.textContent = invalid
+      ? (compareError.dataset.message ?? '')
+      : '';
+    if (!va || !vb) return;
+    const d = compareResult.dataset;
+    const c = compareVersions(va, vb);
+    compareText.textContent =
+      (c < 0 ? d.less : c > 0 ? d.greater : d.equal) ?? '';
+    const diff = diffVersions(va, vb);
+    const diffNames: Record<string, string | undefined> = {
+      same: d.diffSame,
+      major: d.diffMajor,
+      minor: d.diffMinor,
+      patch: d.diffPatch,
+      prerelease: d.diffPrerelease,
+    };
+    compareDiff.textContent = `${d.diffLabel}: ${diffNames[diff] ?? ''}`;
+  }
+
+  onTextInput(inputA, updateCompare);
+  onTextInput(inputB, updateCompare);
+
+  const rangeInput = $('sv-range') as HTMLInputElement;
+  const versionsInput = $('sv-versions') as HTMLTextAreaElement;
+  const prereleaseInput = $('sv-prerelease') as HTMLInputElement;
+  const sortSelect = $('sv-sort') as HTMLSelectElement;
+  const rangeError = $('sv-range-error');
+  const normalizedRow = $('sv-normalized-row');
+  const normalizedEl = $('sv-normalized');
+  const resultEl = $('sv-result');
+  const summaryEl = $('sv-summary');
+  const rowsEl = $('sv-rows');
+  const statusEl = $('sv-status');
+  const copyButton = $('sv-copy-button') as HTMLButtonElement;
+
+  let lastResult: VersionListResult | null = null;
+
+  function matchLabel(matches: boolean | null): string {
+    const d = resultEl.dataset;
+    if (matches === null) return d.invalid ?? '';
+    return (matches ? d.yes : d.no) ?? '';
+  }
+
+  function summaryText(r: VersionListResult): string {
+    const d = resultEl.dataset;
+    const none = d.noMatch ?? '';
+    return `${d.highestLabel}: ${r.highestMatch ?? none} / ${d.lowestLabel}: ${r.lowestMatch ?? none}`;
+  }
+
+  function updateRange() {
+    statusEl.textContent = '';
+    const r = evaluateVersionList(versionsInput.value, rangeInput.value, {
+      includePrerelease: prereleaseInput.checked,
+      sort: sortSelect.value as SortOrder,
+    });
+    lastResult = r;
+    rangeError.textContent = r.rangeInvalid
+      ? (rangeError.dataset.message ?? '')
+      : '';
+    normalizedRow.classList.toggle('hidden', r.rangeInvalid);
+    normalizedEl.textContent = r.rangeNormalized;
+    summaryEl.textContent = r.rangeInvalid ? '' : summaryText(r);
+    rowsEl.replaceChildren(
+      ...r.rows.map((row) => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-gray-100 dark:border-gray-800';
+        const cells = [row.input, row.normalized, matchLabel(row.matches)];
+        cells.forEach((text, i) => {
+          const td = document.createElement('td');
+          td.className = 'py-2 pr-4 font-mono';
+          if (i === 2) {
+            td.className = 'py-2 font-sans font-medium';
+            if (row.matches === true) {
+              td.classList.add('text-green-700', 'dark:text-green-400');
+            } else {
+              td.classList.add('text-gray-700', 'dark:text-gray-300');
+            }
+          }
+          td.textContent = text;
+          tr.appendChild(td);
+        });
+        return tr;
+      }),
+    );
+  }
+
+  onTextInput(rangeInput, updateRange);
+  onTextInput(versionsInput, updateRange);
+  prereleaseInput.addEventListener('change', updateRange);
+  sortSelect.addEventListener('change', updateRange);
+
+  copyButton.addEventListener('click', async () => {
+    if (!lastResult) return;
+    const lines = lastResult.rows.map(
+      (row) => `${row.input}\t${matchLabel(row.matches)}`,
+    );
+    if (!lastResult.rangeInvalid) lines.push('', summaryText(lastResult));
+    statusEl.textContent = (await copyText(lines.join('\n')))
+      ? (statusEl.dataset.copied ?? '')
+      : (statusEl.dataset.copyFailed ?? '');
+  });
+
+  updateCompare();
+  updateRange();
+</script>

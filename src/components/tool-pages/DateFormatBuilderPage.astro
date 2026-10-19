@@ -1,0 +1,266 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { dateFormatBuilderContent } from '../../i18n/tools/date-format-builder';
+import type { Locale } from '../../data/tools';
+import { FORMAT_IDS } from '../../lib/tools/date-format-builder';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = dateFormatBuilderContent[locale];
+
+const sections = ['sample', 'convert'] as const;
+---
+
+<ToolShell t={t}>
+  <div
+    id="dfb"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-no-detect={t.noDetect}
+    data-ambiguous-note={t.ambiguousNote}
+    data-warning-unsupported={t.warningUnsupported}
+    data-warning-dropped={t.warningDropped}
+    data-token-names={JSON.stringify(t.tokenNames)}
+    data-format-names={JSON.stringify(t.formats)}
+  >
+    <section class="mb-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-bold">{t.sampleHeading}</h2>
+      <label for="dfb-sample" class="ui-label">
+        {t.sampleLabel}
+      </label>
+      <input
+        id="dfb-sample"
+        type="text"
+        value={t.sampleDefault}
+        placeholder={t.samplePlaceholder}
+        autocomplete="off"
+        spellcheck="false"
+        data-query-target="text"
+        class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+      <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+        {t.sampleHint}
+      </p>
+    </section>
+
+    <section class="mb-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-bold">{t.convertHeading}</h2>
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="dfb-source" class="ui-label">
+            {t.sourceFormatLabel}
+          </label>
+          <select
+            id="dfb-source"
+            class="ui-input h-11 max-w-full bg-white px-3 dark:bg-gray-900"
+          >
+            {FORMAT_IDS.map((f) => (
+              <option value={f}>{t.formats[f]}</option>
+            ))}
+          </select>
+        </div>
+        <div class="min-w-0 flex-1">
+          <label for="dfb-format" class="ui-label">
+            {t.formatLabel}
+          </label>
+          <input
+            id="dfb-format"
+            type="text"
+            value={t.formatDefault}
+            placeholder={t.formatPlaceholder}
+            autocomplete="off"
+            spellcheck="false"
+            class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+        </div>
+      </div>
+      <p class="mt-3 text-sm">
+        <span class="text-gray-600 dark:text-gray-400">{t.previewLabel}:</span>
+        <code id="dfb-preview" class="ml-1 font-mono break-all"></code>
+      </p>
+    </section>
+
+    <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-bold">{t.resultsHeading}</h2>
+      {sections.map((s) => (
+        <div id={`dfb-${s}-block`} class={s === 'convert' ? 'mt-6' : ''}>
+          <h3 class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+            {s === 'sample' ? t.sampleHeading : t.convertHeading}
+          </h3>
+          <p
+            id={`dfb-${s}-message`}
+            class="mb-2 hidden text-sm text-gray-700 dark:text-gray-300"
+            role="status"
+          ></p>
+          <ul class="space-y-3">
+            {FORMAT_IDS.map((f) => (
+              <li>
+                <div class="text-xs text-gray-600 dark:text-gray-400">
+                  {t.formats[f]}
+                </div>
+                <div class="mt-1 flex flex-wrap items-center gap-2">
+                  <code
+                    id={`dfb-${s}-out-${f}`}
+                    class="min-h-9 min-w-0 flex-1 rounded border border-gray-200 bg-gray-50 px-3 py-1.5 font-mono text-sm break-all dark:border-gray-700 dark:bg-gray-900"
+                  ></code>
+                  <button
+                    type="button"
+                    id={`dfb-${s}-copy-${f}`}
+                    data-copy-target={`dfb-${s}-out-${f}`}
+                    class="ui-btn shrink-0"
+                  >
+                    {t.copyButton}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <ul
+            id={`dfb-${s}-warnings`}
+            class="mt-3 list-disc space-y-1 pl-5 text-sm text-amber-800 dark:text-amber-300"
+          ></ul>
+        </div>
+      ))}
+      <span
+        id="dfb-status"
+        class="mt-3 block text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </section>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    FORMAT_IDS,
+    detectFromSample,
+    formatSegments,
+    getDateParts,
+    parseFormat,
+    renderAll,
+    type FormatId,
+    type Segment,
+    type TokenId,
+  } from '../../lib/tools/date-format-builder';
+
+  const root = document.getElementById('dfb')!;
+  const tokenNames = JSON.parse(root.dataset.tokenNames ?? '{}') as Record<
+    TokenId,
+    string
+  >;
+  const formatNames = JSON.parse(root.dataset.formatNames ?? '{}') as Record<
+    FormatId,
+    string
+  >;
+  const copied = root.dataset.copied ?? '';
+  const copyFailed = root.dataset.copyFailed ?? '';
+  const noDetect = root.dataset.noDetect ?? '';
+  const warningUnsupported = root.dataset.warningUnsupported ?? '';
+  const warningDropped = root.dataset.warningDropped ?? '';
+  const ambiguousNote = root.dataset.ambiguousNote ?? '';
+
+  const sampleInput = document.getElementById('dfb-sample') as HTMLInputElement;
+  const sourceSelect = document.getElementById(
+    'dfb-source',
+  ) as HTMLSelectElement;
+  const formatInput = document.getElementById('dfb-format') as HTMLInputElement;
+  const previewEl = document.getElementById('dfb-preview')!;
+  const statusEl = document.getElementById('dfb-status')!;
+
+  function renderResults(
+    prefix: 'sample' | 'convert',
+    segments: Segment[],
+    emptyMessage: string,
+  ) {
+    const results = renderAll(segments);
+    const warnings: string[] = [];
+    const dropped = new Set<string>();
+    for (const f of FORMAT_IDS) {
+      const r = results[f];
+      const out = document.getElementById(`dfb-${prefix}-out-${f}`)!;
+      const btn = document.getElementById(
+        `dfb-${prefix}-copy-${f}`,
+      ) as HTMLButtonElement;
+      out.textContent = r.text;
+      btn.disabled = r.text === '';
+      if (r.unsupported.length > 0) {
+        warnings.push(
+          warningUnsupported
+            .replace('{format}', formatNames[f])
+            .replace(
+              '{items}',
+              r.unsupported.map((token) => tokenNames[token]).join(', '),
+            ),
+        );
+      }
+      r.dropped.forEach((d) => dropped.add(d));
+    }
+    if (dropped.size > 0) {
+      warnings.push(warningDropped.replace('{items}', [...dropped].join(' ')));
+    }
+    const list = document.getElementById(`dfb-${prefix}-warnings`)!;
+    list.replaceChildren(
+      ...warnings.map((w) => {
+        const li = document.createElement('li');
+        li.textContent = w;
+        return li;
+      }),
+    );
+    const message = document.getElementById(`dfb-${prefix}-message`)!;
+    message.textContent = emptyMessage;
+    message.classList.toggle('hidden', emptyMessage === '');
+  }
+
+  function renderSample() {
+    const text = sampleInput.value;
+    if (text.trim() === '') {
+      renderResults('sample', [], '');
+      return;
+    }
+    const detected = detectFromSample(text);
+    if (detected.tokenCount === 0) {
+      renderResults('sample', [], noDetect);
+      return;
+    }
+    renderResults(
+      'sample',
+      detected.segments,
+      detected.ambiguous ? ambiguousNote : '',
+    );
+  }
+
+  function renderConvert() {
+    const source = sourceSelect.value as FormatId;
+    const segments = parseFormat(formatInput.value, source);
+    renderResults('convert', segments, '');
+    const now = new Date();
+    previewEl.textContent = formatSegments(
+      segments,
+      getDateParts(now, -now.getTimezoneOffset()),
+    );
+  }
+
+  onTextInput(sampleInput, renderSample);
+  onTextInput(formatInput, renderConvert);
+  sourceSelect.addEventListener('change', renderConvert);
+
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-copy-target]')
+    .forEach((button) => {
+      button.addEventListener('click', async () => {
+        const target = document.getElementById(button.dataset.copyTarget!);
+        if (!target?.textContent) return;
+        statusEl.textContent = (await copyText(target.textContent))
+          ? copied
+          : copyFailed;
+      });
+    });
+
+  renderSample();
+  renderConvert();
+</script>

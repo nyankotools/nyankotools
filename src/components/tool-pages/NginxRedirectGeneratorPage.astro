@@ -1,0 +1,280 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { nginxRedirectGeneratorContent } from '../../i18n/tools/nginx-redirect-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = nginxRedirectGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="nrg-root"
+    data-issue-messages={JSON.stringify(t.issueMessages)}
+    data-error-prefix={t.errorPrefix}
+    data-warning-prefix={t.warningPrefix}
+    data-no-issues={t.noIssues}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-downloaded={t.downloaded}
+  >
+    <div
+      class="mb-6 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+      role="note"
+    >
+      <p class="mb-1 font-bold">{t.warningHeading}</p>
+      <p>{t.warningText}</p>
+    </div>
+
+    <h2 class="mb-2 text-lg font-bold">{t.httpsHeading}</h2>
+    <div class="mb-6">
+      <label class="ui-check">
+        <input id="nrg-force-https" type="checkbox" checked />
+        {t.forceHttpsLabel}
+      </label>
+      <label class="ui-check mt-2">
+        <input id="nrg-behind-proxy" type="checkbox" />
+        {t.behindProxyLabel}
+      </label>
+      <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        {t.behindProxyHint}
+      </p>
+    </div>
+
+    <h2 class="mb-2 text-lg font-bold">{t.hostHeading}</h2>
+    <div class="mb-6 grid gap-3 sm:grid-cols-2">
+      <div class="sm:col-span-2">
+        <label for="nrg-www" class="ui-label">
+          {t.wwwLabel}
+        </label>
+        <select
+          id="nrg-www"
+          class="ui-input h-11 w-full bg-white px-3 dark:bg-gray-900"
+        >
+          {t.wwwOptions.map((o) => (
+            <option value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      </div>
+      <div class="sm:col-span-2">
+        <label for="nrg-domain" class="ui-label">
+          {t.domainLabel}
+        </label>
+        <input
+          id="nrg-domain"
+          type="text"
+          spellcheck="false"
+          autocomplete="off"
+          placeholder={t.domainPlaceholder}
+          class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+        />
+      </div>
+    </div>
+
+    <h2 class="mb-2 text-lg font-bold">{t.pathHeading}</h2>
+    <div class="mb-6">
+      <label for="nrg-slash" class="ui-label">
+        {t.slashLabel}
+      </label>
+      <select
+        id="nrg-slash"
+        class="ui-input h-11 w-full bg-white px-3 dark:bg-gray-900"
+      >
+        {t.slashOptions.map((o) => (
+          <option value={o.value}>{o.label}</option>
+        ))}
+      </select>
+      <label class="ui-check mt-3">
+        <input id="nrg-remove-index" type="checkbox" />
+        {t.removeIndexLabel}
+      </label>
+    </div>
+
+    <h2 class="mb-2 text-lg font-bold">{t.redirectHeading}</h2>
+    <div class="mb-6">
+      <label for="nrg-redirects" class="ui-label">
+        {t.redirectsLabel}
+      </label>
+      <textarea
+        id="nrg-redirects"
+        rows="5"
+        spellcheck="false"
+        placeholder={t.redirectsPlaceholder}
+        class="ui-input w-full resize-y p-3 font-mono dark:bg-gray-900"
+      ></textarea>
+      <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        {t.redirectsHint}
+      </p>
+      <label for="nrg-redirect-match" class="ui-label mt-3">
+        {t.redirectMatchLabel}
+      </label>
+      <select
+        id="nrg-redirect-match"
+        class="ui-input h-11 w-full bg-white px-3 dark:bg-gray-900"
+      >
+        {t.redirectMatchOptions.map((o) => (
+          <option value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </div>
+
+    <h2 class="mb-2 text-lg font-bold">{t.issuesHeading}</h2>
+    <ul
+      id="nrg-issues"
+      class="mb-6 list-disc space-y-1 pl-5 text-sm"
+      aria-live="polite"
+    ></ul>
+
+    <div class="mb-8">
+      <label for="nrg-output" class="ui-label">
+        {t.outputHeading}
+      </label>
+      <textarea
+        id="nrg-output"
+        readonly
+        rows="12"
+        placeholder={t.outputEmpty}
+        class="ui-input w-full resize-y bg-gray-50 p-3 font-mono dark:bg-gray-900"
+      ></textarea>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <button id="nrg-copy-button" type="button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <button id="nrg-download-button" type="button" class="ui-btn">
+          {t.downloadButton}
+        </button>
+      </div>
+      <span
+        id="nrg-status"
+        class="mt-2 block text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+
+    <h2 class="mb-2 text-lg font-bold">{t.verifyHeading}</h2>
+    <ol class="mb-3 list-decimal space-y-1 pl-5 text-sm">
+      {t.verifySteps.map((s) => (
+        <li>{s}</li>
+      ))}
+    </ol>
+    <pre
+      class="overflow-x-auto rounded-md bg-gray-100 p-3 text-xs dark:bg-gray-800"
+      tabindex="0"
+    ><code>{t.verifyCommand}</code></pre>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import { fill } from '../../lib/format-template';
+  import {
+    analyzeNginx,
+    buildNginx,
+    type NginxInput,
+    type NginxIssueCode,
+    type RedirectMatchMode,
+    type SlashMode,
+    type WwwMode,
+  } from '../../lib/tools/nginx-redirect-generator';
+
+  const root = document.getElementById('nrg-root')!;
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const forceHttps = $<HTMLInputElement>('nrg-force-https');
+  const behindProxy = $<HTMLInputElement>('nrg-behind-proxy');
+  const www = $<HTMLSelectElement>('nrg-www');
+  const domain = $<HTMLInputElement>('nrg-domain');
+  const slash = $<HTMLSelectElement>('nrg-slash');
+  const removeIndex = $<HTMLInputElement>('nrg-remove-index');
+  const redirects = $<HTMLTextAreaElement>('nrg-redirects');
+  const redirectMatch = $<HTMLSelectElement>('nrg-redirect-match');
+  const issuesEl = $('nrg-issues');
+  const output = $<HTMLTextAreaElement>('nrg-output');
+  const statusEl = $('nrg-status');
+
+  const issueMessages = JSON.parse(
+    root.dataset.issueMessages ?? '{}',
+  ) as Record<NginxIssueCode, string>;
+  const errorPrefix = root.dataset.errorPrefix ?? '';
+  const warningPrefix = root.dataset.warningPrefix ?? '';
+  const noIssues = root.dataset.noIssues ?? '';
+  const copied = root.dataset.copied ?? '';
+  const copyFailed = root.dataset.copyFailed ?? '';
+  const downloaded = root.dataset.downloaded ?? '';
+
+  function readInput(): NginxInput {
+    return {
+      forceHttps: forceHttps.checked,
+      behindProxy: behindProxy.checked,
+      www: www.value as WwwMode,
+      domain: domain.value,
+      trailingSlash: slash.value as SlashMode,
+      removeIndex: removeIndex.checked,
+      redirectsText: redirects.value,
+      redirectMatch: redirectMatch.value as RedirectMatchMode,
+    };
+  }
+
+  function update() {
+    const input = readInput();
+    output.value = buildNginx(input);
+
+    const issues = analyzeNginx(input);
+    issuesEl.textContent = '';
+    if (issues.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'list-none -ml-5 text-gray-700 dark:text-gray-300';
+      li.textContent = noIssues;
+      issuesEl.appendChild(li);
+      return;
+    }
+    for (const issue of issues) {
+      const li = document.createElement('li');
+      const isError = issue.severity === 'error';
+      li.className = isError
+        ? 'text-red-700 dark:text-red-400'
+        : 'text-amber-800 dark:text-amber-300';
+      const message = fill(issueMessages[issue.code] ?? issue.code, {
+        line: String(issue.line ?? ''),
+        value: issue.value ?? '',
+      });
+      li.textContent = `${isError ? errorPrefix : warningPrefix}: ${message}`;
+      issuesEl.appendChild(li);
+    }
+  }
+
+  for (const el of [
+    forceHttps,
+    behindProxy,
+    www,
+    domain,
+    slash,
+    removeIndex,
+    redirects,
+    redirectMatch,
+  ]) {
+    el.addEventListener('input', update);
+    el.addEventListener('change', update);
+  }
+
+  $('nrg-copy-button').addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value)) ? copied : copyFailed;
+  });
+
+  $('nrg-download-button').addEventListener('click', () => {
+    if (!output.value) return;
+    downloadBlob(
+      new Blob([output.value], { type: 'text/plain;charset=utf-8' }),
+      'nginx-redirect.conf',
+    );
+    statusEl.textContent = downloaded;
+  });
+
+  update();
+</script>

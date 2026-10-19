@@ -1,0 +1,361 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { markdownTableEditorContent } from '../../i18n/tools/markdown-table-editor';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = markdownTableEditorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="markdown-table-editor-import" class="ui-label">
+      {t.importLabel}
+    </label>
+    <textarea
+      id="markdown-table-editor-import"
+      class="ui-input h-28 w-full p-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.importPlaceholder}
+      spellcheck="false"
+      wrap="off"
+      data-imported={t.imported}
+      data-no-persist
+    ></textarea>
+    <div class="mt-2 flex flex-wrap items-center gap-3">
+      <button
+        id="markdown-table-editor-import-button"
+        type="button"
+        class="ui-btn"
+      >
+        {t.importButton}
+      </button>
+      <span
+        id="markdown-table-editor-import-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+    <p
+      id="markdown-table-editor-import-error"
+      hidden
+      class="ui-error mt-2 max-w-2xl"
+    >
+      {t.importError}
+    </p>
+  </div>
+
+  <div class="mt-6">
+    <p class="ui-label">{t.editorLabel}</p>
+    <div class="mb-2 flex flex-wrap items-center gap-2">
+      <button id="markdown-table-editor-add-row" type="button" class="ui-btn">
+        {t.addRow}
+      </button>
+      <button
+        id="markdown-table-editor-add-column"
+        type="button"
+        class="ui-btn"
+      >
+        {t.addColumn}
+      </button>
+    </div>
+    <div
+      id="markdown-table-editor-labels"
+      hidden
+      data-align-label={t.alignLabel}
+      data-align-none={t.alignNone}
+      data-align-left={t.alignLeft}
+      data-align-center={t.alignCenter}
+      data-align-right={t.alignRight}
+      data-header-cell={t.headerCell}
+      data-body-cell={t.bodyCell}
+      data-move-row-up={t.moveRowUp}
+      data-move-row-down={t.moveRowDown}
+      data-delete-row={t.deleteRow}
+      data-move-column-left={t.moveColumnLeft}
+      data-move-column-right={t.moveColumnRight}
+      data-delete-column={t.deleteColumn}
+    ></div>
+    <div class="max-w-full overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+      <table
+        id="markdown-table-editor-grid"
+        class="border-collapse text-sm"
+      ></table>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="mb-2 flex flex-wrap items-center gap-3">
+      <label class="ui-check">
+        <input type="checkbox" id="markdown-table-editor-pad" checked />
+        {t.padLabel}
+      </label>
+      <button
+        id="markdown-table-editor-copy-button"
+        type="button"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="ui-btn ui-btn-primary"
+      >
+        {t.copy}
+      </button>
+      <span
+        id="markdown-table-editor-status"
+        class="text-sm text-green-600 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+    <label for="markdown-table-editor-output" class="ui-label">
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="markdown-table-editor-output"
+      readonly
+      wrap="off"
+      class="ui-input h-48 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+    ></textarea>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    createTable,
+    deleteColumn,
+    deleteRow,
+    formatMarkdownTable,
+    insertColumn,
+    insertRow,
+    moveColumn,
+    moveRow,
+    parseMarkdownTable,
+    setAlign,
+    setCell,
+    type Align,
+    type TableModel,
+  } from '../../lib/tools/markdown-table-editor';
+
+  const $ = (id: string) =>
+    document.getElementById(`markdown-table-editor-${id}`)!;
+  const grid = $('grid') as HTMLTableElement;
+  const labels = $('labels').dataset;
+  const output = $('output') as HTMLTextAreaElement;
+  const padCheck = $('pad') as HTMLInputElement;
+  const copyButton = $('copy-button') as HTMLButtonElement;
+  const statusEl = $('status');
+  const importInput = $('import') as HTMLTextAreaElement;
+  const importStatus = $('import-status');
+  const importError = $('import-error');
+
+  let model: TableModel = createTable(3, 2);
+
+  function refreshOutput() {
+    output.value = formatMarkdownTable(model, { pad: padCheck.checked });
+    statusEl.textContent = '';
+  }
+
+  function cellAt(row: number, column: number) {
+    return grid.querySelector<HTMLTextAreaElement>(
+      `textarea[data-row="${row}"][data-column="${column}"]`,
+    );
+  }
+
+  function iconButton(
+    text: string,
+    label: string,
+    disabled: boolean,
+    onClick: () => void,
+  ) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className =
+      'inline-flex h-8 w-8 items-center justify-center rounded border border-gray-300 text-sm hover:bg-gray-100 disabled:opacity-40 dark:border-gray-600 dark:hover:bg-gray-800';
+    button.textContent = text;
+    button.setAttribute('aria-label', label);
+    button.title = label;
+    button.disabled = disabled;
+    button.addEventListener('click', onClick);
+    return button;
+  }
+
+  function apply(next: TableModel, focus?: { row: number; column: number }) {
+    model = next;
+    render();
+    refreshOutput();
+    if (focus) cellAt(focus.row, focus.column)?.focus();
+  }
+
+  function onCellKeydown(event: KeyboardEvent, row: number, column: number) {
+    if (event.isComposing) return;
+    const lastRow = model.cells.length - 1;
+    const lastColumn = model.aligns.length - 1;
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      if (row < lastRow) {
+        cellAt(row + 1, column)?.focus();
+      } else {
+        apply(insertRow(model, model.cells.length), {
+          row: row + 1,
+          column,
+        });
+      }
+    } else if (
+      event.key === 'Tab' &&
+      !event.shiftKey &&
+      row === lastRow &&
+      column === lastColumn
+    ) {
+      event.preventDefault();
+      apply(insertRow(model, model.cells.length), {
+        row: row + 1,
+        column: 0,
+      });
+    }
+  }
+
+  function makeCell(row: number, column: number) {
+    const textarea = document.createElement('textarea');
+    textarea.rows = 1;
+    textarea.value = model.cells[row][column];
+    textarea.dataset.row = String(row);
+    textarea.dataset.column = String(column);
+    textarea.setAttribute(
+      'aria-label',
+      row === 0
+        ? `${labels.headerCell} ${column + 1}`
+        : `${labels.bodyCell} ${row}-${column + 1}`,
+    );
+    textarea.spellcheck = false;
+    textarea.className =
+      'block min-w-32 resize-none border-0 bg-transparent px-2 py-1.5 font-mono text-sm focus:bg-blue-50 focus:outline-2 focus:outline-blue-500 dark:focus:bg-gray-800' +
+      (row === 0 ? ' font-bold' : '');
+    textarea.style.setProperty('field-sizing', 'content');
+    textarea.style.textAlign =
+      model.aligns[column] === 'none' ? 'left' : model.aligns[column];
+    textarea.addEventListener('input', () => {
+      model = setCell(model, row, column, textarea.value);
+      refreshOutput();
+    });
+    textarea.addEventListener('keydown', (event) =>
+      onCellKeydown(event, row, column),
+    );
+    return textarea;
+  }
+
+  function render() {
+    grid.textContent = '';
+    const columns = model.aligns.length;
+    const lastRow = model.cells.length - 1;
+    const border = 'border border-gray-200 dark:border-gray-700';
+
+    // 列の操作行
+    const controlRow = grid.insertRow();
+    controlRow.insertCell().className = border;
+    for (let c = 0; c < columns; c++) {
+      const cell = controlRow.insertCell();
+      cell.className = `${border} p-1 align-top`;
+      const wrap = document.createElement('div');
+      wrap.className = 'flex flex-wrap items-center gap-1';
+      const select = document.createElement('select');
+      select.className =
+        'ui-input min-w-0 bg-white px-1 py-1 text-xs dark:bg-gray-900';
+      select.setAttribute('aria-label', `${labels.alignLabel} ${c + 1}`);
+      const aligns: [Align, string | undefined][] = [
+        ['none', labels.alignNone],
+        ['left', labels.alignLeft],
+        ['center', labels.alignCenter],
+        ['right', labels.alignRight],
+      ];
+      for (const [value, text] of aligns) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = text ?? value;
+        select.append(option);
+      }
+      select.value = model.aligns[c];
+      select.addEventListener('change', () => {
+        apply(setAlign(model, c, select.value as Align));
+        select.focus();
+      });
+      wrap.append(
+        select,
+        iconButton('←', labels.moveColumnLeft ?? '', c === 0, () =>
+          apply(moveColumn(model, c, -1)),
+        ),
+        iconButton('→', labels.moveColumnRight ?? '', c === columns - 1, () =>
+          apply(moveColumn(model, c, 1)),
+        ),
+        iconButton('×', labels.deleteColumn ?? '', columns <= 1, () =>
+          apply(deleteColumn(model, c)),
+        ),
+      );
+      cell.append(wrap);
+    }
+
+    // 見出し行 + 本文行
+    for (let r = 0; r <= lastRow; r++) {
+      const tr = grid.insertRow();
+      const control = tr.insertCell();
+      control.className = `${border} p-1 align-middle`;
+      if (r > 0) {
+        const wrap = document.createElement('div');
+        wrap.className = 'flex items-center gap-1';
+        wrap.append(
+          iconButton('↑', labels.moveRowUp ?? '', r === 1, () =>
+            apply(moveRow(model, r, -1)),
+          ),
+          iconButton('↓', labels.moveRowDown ?? '', r === lastRow, () =>
+            apply(moveRow(model, r, 1)),
+          ),
+          iconButton('×', labels.deleteRow ?? '', false, () =>
+            apply(deleteRow(model, r)),
+          ),
+        );
+        control.append(wrap);
+      }
+      for (let c = 0; c < columns; c++) {
+        const cell = tr.insertCell();
+        cell.className =
+          border + (r === 0 ? ' bg-gray-50 dark:bg-gray-800/60' : '');
+        cell.append(makeCell(r, c));
+      }
+    }
+  }
+
+  $('add-row').addEventListener('click', () =>
+    apply(insertRow(model, model.cells.length), {
+      row: model.cells.length,
+      column: 0,
+    }),
+  );
+  $('add-column').addEventListener('click', () =>
+    apply(insertColumn(model, model.aligns.length), {
+      row: 0,
+      column: model.aligns.length,
+    }),
+  );
+
+  $('import-button').addEventListener('click', () => {
+    importStatus.textContent = '';
+    const parsed = parseMarkdownTable(importInput.value);
+    importError.hidden = parsed !== null;
+    if (!parsed) return;
+    apply(parsed);
+    importStatus.textContent = importInput.dataset.imported ?? '';
+  });
+
+  padCheck.addEventListener('change', refreshOutput);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  render();
+  refreshOutput();
+</script>

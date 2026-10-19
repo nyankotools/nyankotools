@@ -1,0 +1,300 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { json5ConverterContent } from '../../i18n/tools/json5-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = json5ConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-3">
+    <div
+      id="json5-converter-mode"
+      class="ui-seg"
+      role="group"
+      aria-label={t.modeAriaLabel}
+    >
+      <button
+        type="button"
+        data-mode="json5ToJson"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.modeJson5ToJson}
+      </button>
+      <button
+        type="button"
+        data-mode="jsonToJson5"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeJsonToJson5}
+      </button>
+    </div>
+    <button
+      id="json5-converter-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="json5-converter-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+    <div class="flex items-center gap-2">
+      <label
+        for="json5-converter-indent"
+        class="text-sm text-gray-700 dark:text-gray-300"
+      >
+        {t.indentLabel}
+      </label>
+      <select
+        id="json5-converter-indent"
+        class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+      >
+        <option value="2">{t.indentOption2}</option>
+        <option value="4">{t.indentOption4}</option>
+        <option value="tab">{t.indentOptionTab}</option>
+        <option value="0">{t.indentOptionCompact}</option>
+      </select>
+    </div>
+    <div id="json5-converter-opts-to-json" class="flex items-center gap-2">
+      <label
+        for="json5-converter-nonfinite"
+        class="text-sm text-gray-700 dark:text-gray-300"
+      >
+        {t.nonFiniteLabel}
+      </label>
+      <select
+        id="json5-converter-nonfinite"
+        class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+      >
+        <option value="null">{t.nonFiniteNull}</option>
+        <option value="string">{t.nonFiniteString}</option>
+      </select>
+    </div>
+    <div
+      id="json5-converter-opts-to-json5"
+      class="flex flex-wrap items-center gap-x-4 gap-y-2"
+      hidden
+    >
+      <div class="flex items-center gap-2">
+        <label
+          for="json5-converter-quote"
+          class="text-sm text-gray-700 dark:text-gray-300"
+        >
+          {t.quoteLabel}
+        </label>
+        <select
+          id="json5-converter-quote"
+          class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+        >
+          <option value="single">{t.quoteSingle}</option>
+          <option value="double">{t.quoteDouble}</option>
+        </select>
+      </div>
+      <label class="ui-check">
+        <input
+          id="json5-converter-unquote"
+          type="checkbox"
+          checked
+          class="h-4 w-4"
+        />
+        {t.unquoteKeys}
+      </label>
+      <label class="ui-check">
+        <input id="json5-converter-trailing" type="checkbox" class="h-4 w-4" />
+        {t.trailingComma}
+      </label>
+    </div>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="json5-converter-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="json5-converter-input"
+        data-query-target="text"
+        data-sample={t.sampleText}
+        data-no-count
+        data-placeholder-json5-to-json={t.inputPlaceholderJson5ToJson}
+        data-placeholder-json-to-json5={t.inputPlaceholderJsonToJson5}
+        class="ui-input h-80 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholderJson5ToJson}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label for="json5-converter-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="json5-converter-output"
+        readonly
+        class="ui-input h-80 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="json5-converter-warning"
+    hidden
+    data-template={t.nonFiniteWarning}
+    class="mt-4 max-w-2xl text-sm text-amber-700 dark:text-amber-400"
+  ></p>
+  <p
+    id="json5-converter-error"
+    hidden
+    data-prefix={t.errorPrefix}
+    data-location={t.errorLocation}
+    data-messages={JSON.stringify(t.errorMessages)}
+    class="ui-error mt-4 max-w-2xl whitespace-pre-line"
+  ></p>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    json5ToJson,
+    jsonToJson5,
+    type ConvertOutcome,
+    type IndentOption,
+  } from '../../lib/tools/json5-converter';
+
+  type Mode = 'json5ToJson' | 'jsonToJson5';
+
+  const $ = (id: string) => document.getElementById(id)!;
+  const input = $('json5-converter-input') as HTMLTextAreaElement;
+  const output = $('json5-converter-output') as HTMLTextAreaElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#json5-converter-mode [data-mode]',
+  );
+  const indentSelect = $('json5-converter-indent') as HTMLSelectElement;
+  const nonFiniteSelect = $('json5-converter-nonfinite') as HTMLSelectElement;
+  const quoteSelect = $('json5-converter-quote') as HTMLSelectElement;
+  const unquoteCheck = $('json5-converter-unquote') as HTMLInputElement;
+  const trailingCheck = $('json5-converter-trailing') as HTMLInputElement;
+  const optsToJson = $('json5-converter-opts-to-json');
+  const optsToJson5 = $('json5-converter-opts-to-json5');
+  const copyButton = $('json5-converter-copy-button') as HTMLButtonElement;
+  const statusEl = $('json5-converter-status');
+  const errorEl = $('json5-converter-error');
+  const warningEl = $('json5-converter-warning');
+
+  const messages = JSON.parse(errorEl.dataset.messages ?? '{}') as Record<
+    string,
+    string
+  >;
+
+  let mode: Mode = 'json5ToJson';
+
+  const placeholders: Record<Mode, string> = {
+    json5ToJson: input.dataset.placeholderJson5ToJson ?? '',
+    jsonToJson5: input.dataset.placeholderJsonToJson5 ?? '',
+  };
+
+  function clearMessages() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    warningEl.hidden = true;
+    warningEl.textContent = '';
+  }
+
+  function render(result: ConvertOutcome) {
+    clearMessages();
+    if (result.success) {
+      output.value = result.output;
+      if (result.nonFiniteCount > 0) {
+        warningEl.textContent = (warningEl.dataset.template ?? '').replace(
+          '{count}',
+          String(result.nonFiniteCount),
+        );
+        warningEl.hidden = false;
+      }
+      return;
+    }
+    output.value = '';
+    const { code, line, column, found } = result.error;
+    const location = (errorEl.dataset.location ?? '')
+      .replace('{line}', String(line))
+      .replace('{column}', String(column));
+    const detail = (messages[code] ?? code).replace('{found}', found);
+    errorEl.textContent = `${errorEl.dataset.prefix ?? ''} (${location}): ${detail}`;
+    errorEl.hidden = false;
+  }
+
+  function convert() {
+    statusEl.textContent = '';
+    if (input.value.trim() === '') {
+      clearMessages();
+      output.value = '';
+      return;
+    }
+    const raw = indentSelect.value;
+    const indent: IndentOption =
+      raw === 'tab' ? 'tab' : (Number(raw) as 0 | 2 | 4);
+    if (mode === 'json5ToJson') {
+      render(
+        json5ToJson(input.value, {
+          indent,
+          nonFinite: nonFiniteSelect.value === 'string' ? 'string' : 'null',
+        }),
+      );
+    } else {
+      render(
+        jsonToJson5(input.value, {
+          indent,
+          quote: quoteSelect.value === 'double' ? 'double' : 'single',
+          unquoteKeys: unquoteCheck.checked,
+          trailingComma: trailingCheck.checked,
+        }),
+      );
+    }
+  }
+
+  onTextInput(input, convert);
+  [
+    indentSelect,
+    nonFiniteSelect,
+    quoteSelect,
+    unquoteCheck,
+    trailingCheck,
+  ].forEach((el) => el.addEventListener('change', convert));
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      mode = button.dataset.mode as Mode;
+      modeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      optsToJson.hidden = mode !== 'json5ToJson';
+      optsToJson5.hidden = mode !== 'jsonToJson5';
+      input.placeholder = placeholders[mode];
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  convert();
+</script>

@@ -1,0 +1,228 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { punycodeConverterContent } from '../../i18n/tools/punycode-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = punycodeConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-3">
+    <div
+      id="puny-direction"
+      class="ui-seg"
+      role="group"
+      aria-label={t.directionLabel}
+    >
+      <button
+        type="button"
+        data-direction="encode"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.directionEncode}
+      </button>
+      <button
+        type="button"
+        data-direction="decode"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.directionDecode}
+      </button>
+    </div>
+    <div id="puny-scope" class="ui-seg" role="group" aria-label={t.scopeLabel}>
+      <button
+        type="button"
+        data-scope="domain"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.scopeDomain}
+      </button>
+      <button
+        type="button"
+        data-scope="raw"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.scopeRaw}
+      </button>
+    </div>
+    <button
+      id="puny-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="puny-status"
+      class="text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="puny-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="puny-input"
+        class="ui-input h-48 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholderDomain}
+        data-placeholder-domain={t.inputPlaceholderDomain}
+        data-placeholder-raw={t.inputPlaceholderRaw}
+        spellcheck="false"
+        data-query-target="text"
+      ></textarea>
+    </div>
+    <div>
+      <label for="puny-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="puny-output"
+        readonly
+        class="ui-input h-48 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="puny-error"
+    hidden
+    data-invalid-char={t.errorInvalidChar}
+    data-invalid-input={t.errorInvalidInput}
+    data-overflow={t.errorOverflow}
+    data-label-too-long={t.errorLabelTooLong}
+    data-domain-too-long={t.errorDomainTooLong}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    decodePunycode,
+    domainToAscii,
+    domainToUnicode,
+    encodePunycode,
+  } from '../../lib/tools/punycode-converter';
+
+  type Direction = 'encode' | 'decode';
+  type Scope = 'domain' | 'raw';
+
+  const input = document.getElementById('puny-input') as HTMLTextAreaElement;
+  const output = document.getElementById('puny-output') as HTMLTextAreaElement;
+  const directionButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#puny-direction [data-direction]',
+  );
+  const scopeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#puny-scope [data-scope]',
+  );
+  const copyButton = document.getElementById(
+    'puny-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('puny-status')!;
+  const errorEl = document.getElementById('puny-error')!;
+
+  let direction: Direction = 'encode';
+  let scope: Scope = 'domain';
+
+  function showError(message: string) {
+    output.value = '';
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function showOutput(value: string) {
+    output.value = value;
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function convert() {
+    statusEl.textContent = '';
+    input.placeholder =
+      (scope === 'domain'
+        ? input.dataset.placeholderDomain
+        : input.dataset.placeholderRaw) ?? '';
+    if (input.value.trim() === '') {
+      showOutput('');
+      return;
+    }
+    const fn =
+      scope === 'domain'
+        ? direction === 'encode'
+          ? domainToAscii
+          : domainToUnicode
+        : direction === 'encode'
+          ? encodePunycode
+          : decodePunycode;
+    const result = fn(input.value);
+    if (result.success) {
+      showOutput(result.output);
+      return;
+    }
+    const d = errorEl.dataset;
+    switch (result.error.kind) {
+      case 'invalid-char':
+        showError(
+          (d.invalidChar ?? '').replace('{char}', result.error.char ?? ''),
+        );
+        break;
+      case 'overflow':
+        showError(d.overflow ?? '');
+        break;
+      case 'label-too-long':
+        showError(d.labelTooLong ?? '');
+        break;
+      case 'domain-too-long':
+        showError(d.domainTooLong ?? '');
+        break;
+      default:
+        showError(d.invalidInput ?? '');
+    }
+  }
+
+  onTextInput(input, convert);
+
+  directionButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      direction = button.dataset.direction as Direction;
+      directionButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      convert();
+    });
+  });
+
+  scopeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      scope = button.dataset.scope as Scope;
+      scopeButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === button));
+      });
+      convert();
+    });
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  convert();
+</script>

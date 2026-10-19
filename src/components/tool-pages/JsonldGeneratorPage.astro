@@ -1,0 +1,285 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { jsonldGeneratorContent } from '../../i18n/tools/jsonld-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = jsonldGeneratorContent[locale];
+
+interface Field {
+  id: string;
+  label: string;
+  placeholder?: string;
+  wide?: boolean;
+}
+
+const articleFields: Field[] = [
+  {
+    id: 'jld-headline',
+    label: t.headlineLabel,
+    placeholder: t.headlinePlaceholder,
+    wide: true,
+  },
+  {
+    id: 'jld-article-description',
+    label: t.articleDescriptionLabel,
+    wide: true,
+  },
+  { id: 'jld-article-image', label: t.articleImageLabel },
+  { id: 'jld-article-url', label: t.articleUrlLabel },
+  { id: 'jld-author-name', label: t.authorNameLabel },
+  { id: 'jld-author-url', label: t.authorUrlLabel },
+  { id: 'jld-publisher-name', label: t.publisherNameLabel },
+  { id: 'jld-publisher-logo', label: t.publisherLogoLabel },
+  { id: 'jld-date-published', label: t.datePublishedLabel },
+  { id: 'jld-date-modified', label: t.dateModifiedLabel },
+];
+
+const productFields: Field[] = [
+  {
+    id: 'jld-product-name',
+    label: t.productNameLabel,
+    placeholder: t.productNamePlaceholder,
+    wide: true,
+  },
+  {
+    id: 'jld-product-description',
+    label: t.productDescriptionLabel,
+    wide: true,
+  },
+  { id: 'jld-product-image', label: t.productImageLabel },
+  { id: 'jld-product-url', label: t.productUrlLabel },
+  { id: 'jld-brand', label: t.brandLabel },
+  { id: 'jld-sku', label: t.skuLabel },
+  { id: 'jld-price', label: t.priceLabel, placeholder: '1980' },
+  { id: 'jld-currency', label: t.currencyLabel, placeholder: 'JPY' },
+];
+---
+
+<ToolShell t={t}>
+  <div class="mb-6 grid gap-4 sm:grid-cols-2">
+    <label class="text-sm text-gray-700 sm:col-span-2 dark:text-gray-300">
+      <span class="mb-1 block">{t.typeLabel}</span>
+      <select id="jld-type" class="ui-input h-11 w-full px-3 dark:bg-gray-900">
+        <option value="faq">{t.typeFaq}</option>
+        <option value="article">{t.typeArticle}</option>
+        <option value="product">{t.typeProduct}</option>
+        <option value="breadcrumb">{t.typeBreadcrumb}</option>
+      </select>
+    </label>
+  </div>
+
+  <section id="jld-section-faq" class="mb-6" data-section="faq">
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.faqLabel}</span>
+      <textarea
+        id="jld-faq"
+        rows="10"
+        placeholder={t.faqPlaceholder}
+        class="ui-input w-full p-3 dark:bg-gray-900"
+      ></textarea>
+    </label>
+    <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{t.faqHint}</p>
+  </section>
+
+  <section id="jld-section-article" class="mb-6" data-section="article" hidden>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <label class="text-sm text-gray-700 sm:col-span-2 dark:text-gray-300">
+        <span class="mb-1 block">{t.articleTypeLabel}</span>
+        <select
+          id="jld-article-type"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          <option value="Article">Article</option>
+          <option value="BlogPosting">BlogPosting</option>
+          <option value="NewsArticle">NewsArticle</option>
+        </select>
+      </label>
+      {articleFields.map((f) => (
+        <label
+          class:list={[
+            'text-sm text-gray-700 dark:text-gray-300',
+            f.wide && 'sm:col-span-2',
+          ]}
+        >
+          <span class="mb-1 block">{f.label}</span>
+          <input
+            id={f.id}
+            type="text"
+            placeholder={f.placeholder}
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </label>
+      ))}
+    </div>
+    <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{t.dateHint}</p>
+  </section>
+
+  <section id="jld-section-product" class="mb-6" data-section="product" hidden>
+    <div class="grid gap-4 sm:grid-cols-2">
+      {productFields.map((f) => (
+        <label
+          class:list={[
+            'text-sm text-gray-700 dark:text-gray-300',
+            f.wide && 'sm:col-span-2',
+          ]}
+        >
+          <span class="mb-1 block">{f.label}</span>
+          <input
+            id={f.id}
+            type="text"
+            placeholder={f.placeholder}
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </label>
+      ))}
+      <label class="text-sm text-gray-700 dark:text-gray-300">
+        <span class="mb-1 block">{t.availabilityLabel}</span>
+        <select
+          id="jld-availability"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          <option value="InStock">{t.availabilityInStock}</option>
+          <option value="OutOfStock">{t.availabilityOutOfStock}</option>
+          <option value="PreOrder">{t.availabilityPreOrder}</option>
+          <option value="Discontinued">{t.availabilityDiscontinued}</option>
+        </select>
+      </label>
+    </div>
+  </section>
+
+  <section
+    id="jld-section-breadcrumb"
+    class="mb-6"
+    data-section="breadcrumb"
+    hidden
+  >
+    <label class="text-sm text-gray-700 dark:text-gray-300">
+      <span class="mb-1 block">{t.breadcrumbLabel}</span>
+      <textarea
+        id="jld-breadcrumb"
+        rows="6"
+        placeholder={t.breadcrumbPlaceholder}
+        class="ui-input w-full p-3 dark:bg-gray-900"
+      ></textarea>
+    </label>
+    <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+      {t.breadcrumbHint}
+    </p>
+  </section>
+
+  <div data-copied={t.copied} data-copy-failed={t.copyFailed}>
+    <label class="ui-check" for="jld-minify">
+      <input id="jld-minify" type="checkbox" />
+      {t.minifyLabel}
+    </label>
+    <label for="jld-output" class="ui-label">
+      {t.outputHeading}
+    </label>
+    <div class="flex gap-2">
+      <textarea
+        id="jld-output"
+        readonly
+        rows="12"
+        placeholder={t.outputEmpty}
+        class="h-72 w-full min-w-0 resize-none rounded-lg border border-gray-300 bg-gray-50 p-3 font-mono text-xs focus:border-blue-600 focus:outline-2 focus:outline-blue-600 sm:text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:outline-blue-400"
+      ></textarea>
+      <button
+        id="jld-copy-button"
+        type="button"
+        class="ui-btn shrink-0 self-start"
+      >
+        {t.copyButton}
+      </button>
+    </div>
+    <span
+      id="jld-status"
+      class="mt-2 block text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    createEmptyInput,
+    generateJsonLd,
+    type JsonLdInput,
+    type JsonLdType,
+    type ProductAvailability,
+  } from '../../lib/tools/jsonld-generator';
+
+  const el = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const val = (id: string) =>
+    (document.getElementById(id) as HTMLInputElement).value;
+
+  const typeSelect = el<HTMLSelectElement>('jld-type');
+  const minify = el<HTMLInputElement>('jld-minify');
+  const output = el<HTMLTextAreaElement>('jld-output');
+  const copyButton = el<HTMLButtonElement>('jld-copy-button');
+  const statusEl = el('jld-status');
+  const copyContainer = output.closest('[data-copied]') as HTMLElement;
+  const copied = copyContainer.dataset.copied ?? '';
+  const copyFailed = copyContainer.dataset.copyFailed ?? '';
+
+  function readInput(): JsonLdInput {
+    return {
+      ...createEmptyInput(),
+      type: typeSelect.value as JsonLdType,
+      faqText: val('jld-faq'),
+      articleType: val('jld-article-type') as JsonLdInput['articleType'],
+      headline: val('jld-headline'),
+      articleDescription: val('jld-article-description'),
+      articleImage: val('jld-article-image'),
+      articleUrl: val('jld-article-url'),
+      authorName: val('jld-author-name'),
+      authorUrl: val('jld-author-url'),
+      publisherName: val('jld-publisher-name'),
+      publisherLogo: val('jld-publisher-logo'),
+      datePublished: val('jld-date-published'),
+      dateModified: val('jld-date-modified'),
+      productName: val('jld-product-name'),
+      productDescription: val('jld-product-description'),
+      productImage: val('jld-product-image'),
+      productUrl: val('jld-product-url'),
+      brand: val('jld-brand'),
+      sku: val('jld-sku'),
+      price: val('jld-price'),
+      currency: val('jld-currency'),
+      availability: val('jld-availability') as ProductAvailability,
+      breadcrumbText: val('jld-breadcrumb'),
+    };
+  }
+
+  function update() {
+    document.querySelectorAll<HTMLElement>('[data-section]').forEach((s) => {
+      s.hidden = s.dataset.section !== typeSelect.value;
+    });
+    output.value = generateJsonLd(readInput(), minify.checked);
+  }
+
+  document
+    .querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
+      'section[data-section] input, section[data-section] textarea',
+    )
+    .forEach((input) => onTextInput(input, update));
+  document
+    .querySelectorAll<HTMLSelectElement>('section[data-section] select')
+    .forEach((s) => s.addEventListener('change', update));
+  typeSelect.addEventListener('change', update);
+  minify.addEventListener('change', update);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value)) ? copied : copyFailed;
+  });
+
+  update();
+</script>

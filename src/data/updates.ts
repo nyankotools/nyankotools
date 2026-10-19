@@ -702,15 +702,19 @@ export const updates: UpdateEntry[] = [
       'json5-converter',
       'markdown-table-editor',
       'janken-game',
+      'ip-address-converter',
+      'semver-calculator',
+      'jsonld-generator',
+      'utm-builder',
     ],
     translations: {
       ja: {
         summary:
-          'Punycode変換を追加しました。日本語ドメイン（IDN）とxn--形式を相互に変換します。さらに、JSON5⇔JSON変換を追加しました。コメントや末尾カンマ、クォート無しキーのあるデータをJSONにできます。さらに、Markdownテーブルエディタを追加しました。表をセル編集し、整形したMarkdownで出力できます。さらに、じゃんけんゲームを追加しました。CPUと対戦して連勝記録に挑戦できます。',
+          'Punycode変換を追加しました。日本語ドメイン（IDN）とxn--形式を相互に変換します。さらに、JSON5⇔JSON変換を追加しました。コメントや末尾カンマ、クォート無しキーのあるデータをJSONにできます。さらに、Markdownテーブルエディタを追加しました。表をセル編集し、整形したMarkdownで出力できます。さらに、じゃんけんゲームを追加しました。CPUと対戦して連勝記録に挑戦できます。さらに、IPアドレス変換を追加しました。IPv4を10進・16進・2進に変換し、IPv6を短縮・展開できます。さらに、セマンティックバージョン比較・範囲判定を追加しました。^や~などの範囲式に対する適合を確認できます。さらに、JSON-LD構造化データ生成を追加しました。FAQ・記事・商品・パンくずリストをフォームから作れます。さらに、UTMビルダーを追加しました。UTMパラメータ付きURLをプリセットや一括生成で作成できます。',
       },
       en: {
         summary:
-          'Added the Punycode Converter, which converts internationalized domain names to xn-- form and back. The new JSON5 ⇔ JSON Converter turns data with comments, trailing commas and unquoted keys into JSON. The new Markdown Table Editor lets you edit a table cell by cell and copy neatly padded Markdown. The new Rock Paper Scissors Game lets you play the CPU and chase a win streak.',
+          'Added the Punycode Converter, which converts internationalized domain names to xn-- form and back. The new JSON5 ⇔ JSON Converter turns data with comments, trailing commas and unquoted keys into JSON. The new Markdown Table Editor lets you edit a table cell by cell and copy neatly padded Markdown. The new Rock Paper Scissors Game lets you play the CPU and chase a win streak. Added the IP Address Converter, which converts IPv4 to decimal, hex and binary and compresses or expands IPv6. The new Semver Calculator compares versions and checks them against ranges such as ^ and ~. The new JSON-LD Generator builds FAQ, Article, Product and BreadcrumbList structured data from a form. The new UTM Builder creates campaign URLs with presets and bulk generation.',
       },
     },
   },

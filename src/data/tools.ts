@@ -8669,6 +8669,160 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'ip-address-converter',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['cidr-calculator', 'base-converter'],
+    translations: {
+      ja: {
+        name: 'IPアドレス変換',
+        description:
+          'IPv4を10進整数・16進・2進に相互変換し、IPv6の短縮・展開・完全展開表記にそろえます。入力形式は自動判別。',
+        keywords: [
+          'IPアドレス',
+          'IPv4',
+          'IPv6',
+          '10進',
+          '16進',
+          '2進',
+          '短縮',
+          '展開',
+        ],
+      },
+      en: {
+        name: 'IP Address Converter',
+        description:
+          'Convert IPv4 to decimal, hex and binary, and compress or expand IPv6 addresses. The input format is detected automatically.',
+        keywords: [
+          'IP address',
+          'IPv4',
+          'IPv6',
+          'decimal',
+          'hex',
+          'binary',
+          'compress',
+          'expand',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'semver-calculator',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['regex-tester', 'json-path-tester', 'cidr-calculator'],
+    translations: {
+      ja: {
+        name: 'セマンティックバージョン比較・範囲判定',
+        description:
+          'semverのバージョン比較・ソートと、^ ~ >= || x ハイフン範囲の適合判定。prereleaseにも対応',
+        keywords: [
+          'semver',
+          'セマンティックバージョニング',
+          'バージョン比較',
+          'バージョン範囲',
+          'npm',
+          'package.json',
+          'キャレット',
+          'チルダ',
+        ],
+      },
+      en: {
+        name: 'Semver Calculator',
+        description:
+          'Compare semver versions and check ranges (^ ~ >= || x, hyphen) with prerelease support, npm-compatible.',
+        keywords: [
+          'semver',
+          'semantic versioning',
+          'version compare',
+          'version range',
+          'npm',
+          'package.json',
+          'caret',
+          'tilde',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'jsonld-generator',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['meta-tag-generator', 'json-formatter', 'sitemap-generator'],
+    translations: {
+      ja: {
+        name: 'JSON-LD構造化データ生成',
+        description:
+          'FAQ・記事・商品・パンくずリストのJSON-LD構造化データをフォームから生成し、scriptタグごとコピーできます。',
+        keywords: [
+          'JSON-LD',
+          '構造化データ',
+          'schema.org',
+          'FAQPage',
+          'リッチリザルト',
+          'パンくずリスト',
+          'SEO',
+        ],
+      },
+      en: {
+        name: 'JSON-LD Structured Data Generator',
+        description:
+          'Generate JSON-LD structured data for FAQ, Article, Product and BreadcrumbList from a form, and copy the script tag.',
+        keywords: [
+          'JSON-LD',
+          'structured data',
+          'schema.org',
+          'FAQPage',
+          'rich results',
+          'breadcrumb',
+          'SEO',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'utm-builder',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['url-parser', 'url-encode'],
+    translations: {
+      ja: {
+        name: 'UTMビルダー（UTMパラメータ付きURL作成）',
+        description:
+          '広告・メルマガ・SNS用にUTMパラメータ付きURLを作成。プリセット・複数URLの一括生成・履歴に対応',
+        keywords: [
+          'UTM',
+          'UTMパラメータ',
+          'utm_source',
+          'utm_campaign',
+          'キャンペーンURL',
+          'GA4',
+          'アクセス解析',
+          '計測URL',
+        ],
+      },
+      en: {
+        name: 'UTM Builder',
+        description:
+          'Build campaign URLs with UTM parameters. Presets, bulk URLs and history. Runs in your browser.',
+        keywords: [
+          'utm',
+          'utm builder',
+          'utm_source',
+          'utm_campaign',
+          'campaign url',
+          'url builder',
+          'ga4',
+          'tracking link',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

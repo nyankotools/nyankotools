@@ -52,6 +52,8 @@ const slugs = [
   'text-binary-converter',
   'punycode-converter',
   'markdown-table-editor',
+  'jsonld-generator',
+  'utm-builder',
   'svg-to-png',
   'ogp-image-generator',
   'image-cropper',

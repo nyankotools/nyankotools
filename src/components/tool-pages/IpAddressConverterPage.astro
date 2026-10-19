@@ -1,0 +1,166 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { ipAddressConverterContent } from '../../i18n/tools/ip-address-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = ipAddressConverterContent[locale];
+const labelsJson = JSON.stringify({
+  rows: t.rowLabels,
+  formats: t.formatLabels,
+  types: t.typeLabels,
+  detected: t.detectedLabel,
+  type: t.typeLabel,
+});
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="ipconv-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <input
+      id="ipconv-input"
+      type="text"
+      value={t.defaultInput}
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+      autocomplete="off"
+      data-query-target="text"
+      data-no-count
+      class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+    />
+  </div>
+
+  <p
+    id="ipconv-error"
+    data-error-message={t.errorMessage}
+    class="mt-2 text-sm text-red-600 dark:text-red-400"
+    aria-live="polite"
+  ></p>
+
+  <div id="ipconv-result" class="mt-6" data-labels={labelsJson}>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[420px] border-collapse text-sm">
+        <tbody id="ipconv-rows"></tbody>
+      </table>
+    </div>
+
+    <button type="button" id="ipconv-copy-button" class="ui-btn mt-4">
+      {t.copyResult}
+    </button>
+    <span
+      id="ipconv-status"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ml-2 text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    convertIpAddress,
+    type IpConversion,
+  } from '../../lib/tools/ip-address-converter';
+
+  const input = document.getElementById('ipconv-input') as HTMLInputElement;
+  const errorEl = document.getElementById('ipconv-error')!;
+  const resultEl = document.getElementById('ipconv-result')!;
+  const rowsEl = document.getElementById('ipconv-rows')!;
+  const statusEl = document.getElementById('ipconv-status')!;
+  const copyButton = document.getElementById(
+    'ipconv-copy-button',
+  ) as HTMLButtonElement;
+
+  const labels = JSON.parse(resultEl.dataset.labels ?? '{}') as {
+    rows: Record<string, string>;
+    formats: Record<string, string>;
+    types: Record<string, string>;
+    detected: string;
+    type: string;
+  };
+
+  function toLines(
+    result: IpConversion,
+  ): { id: string; label: string; value: string }[] {
+    return [
+      {
+        id: 'format',
+        label: labels.detected,
+        value: labels.formats[result.inputFormat] ?? '',
+      },
+      {
+        id: 'type',
+        label: labels.type,
+        value: labels.types[result.type] ?? '',
+      },
+      ...result.rows.map((r) => ({
+        id: r.key,
+        label: labels.rows[r.key] ?? r.key,
+        value: r.value,
+      })),
+    ];
+  }
+
+  let lastLines: ReturnType<typeof toLines> | null = null;
+
+  function render(lines: ReturnType<typeof toLines>) {
+    rowsEl.textContent = '';
+    for (const line of lines) {
+      const tr = document.createElement('tr');
+      tr.className = 'border-b border-gray-100 dark:border-gray-800';
+      const th = document.createElement('td');
+      th.className = 'py-2 pr-4 text-gray-600 dark:text-gray-400 align-top';
+      th.textContent = line.label;
+      const td = document.createElement('td');
+      td.id = `ipconv-${line.id}`;
+      td.className =
+        'py-2 text-right font-mono text-gray-900 dark:text-gray-100 break-all';
+      td.textContent = line.value;
+      tr.append(th, td);
+      rowsEl.append(tr);
+    }
+    resultEl.classList.remove('hidden');
+  }
+
+  function update() {
+    statusEl.textContent = '';
+    const value = input.value.trim();
+    if (value === '') {
+      errorEl.textContent = '';
+      resultEl.classList.add('hidden');
+      lastLines = null;
+      return;
+    }
+    const result = convertIpAddress(value);
+    if (!result) {
+      errorEl.textContent = errorEl.dataset.errorMessage ?? '';
+      resultEl.classList.add('hidden');
+      lastLines = null;
+      return;
+    }
+    errorEl.textContent = '';
+    lastLines = toLines(result);
+    render(lastLines);
+  }
+
+  onTextInput(input, update);
+
+  copyButton.addEventListener('click', async () => {
+    if (!lastLines) return;
+    const text = lastLines.map((l) => `${l.label}: ${l.value}`).join('\n');
+    statusEl.textContent = (await copyText(text))
+      ? (statusEl.dataset.copied ?? '')
+      : (statusEl.dataset.copyFailed ?? '');
+  });
+
+  update();
+</script>

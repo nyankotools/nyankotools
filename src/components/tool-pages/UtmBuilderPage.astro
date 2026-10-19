@@ -1,0 +1,384 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { utmBuilderContent } from '../../i18n/tools/utm-builder';
+import {
+  CAMPAIGN_PRESETS,
+  SOURCE_MEDIUM_PRESETS,
+} from '../../lib/tools/utm-builder';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = utmBuilderContent[locale];
+
+const fields = [
+  { name: 'source', label: t.sourceLabel, placeholder: t.sourcePlaceholder },
+  { name: 'medium', label: t.mediumLabel, placeholder: t.mediumPlaceholder },
+  {
+    name: 'campaign',
+    label: t.campaignLabel,
+    placeholder: t.campaignPlaceholder,
+  },
+  { name: 'term', label: t.termLabel, placeholder: t.termPlaceholder },
+  { name: 'content', label: t.contentLabel, placeholder: t.contentPlaceholder },
+];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="utm-builder-urls" class="ui-label">
+      {t.urlsLabel}
+    </label>
+    <textarea
+      id="utm-builder-urls"
+      class="ui-input h-28 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.urlsPlaceholder}
+      spellcheck="false"
+      autocomplete="off"
+    ></textarea>
+    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{t.urlsHint}</p>
+  </div>
+
+  <h2 class="mt-6 text-lg font-semibold">{t.presetHeading}</h2>
+  <div class="mt-2 flex flex-wrap gap-2">
+    {SOURCE_MEDIUM_PRESETS.map((p) => (
+      <button
+        type="button"
+        class="ui-btn"
+        data-preset-source={p.source}
+        data-preset-medium={p.medium}
+      >
+        {p.source} / {p.medium}
+      </button>
+    ))}
+  </div>
+  <h2 class="mt-6 text-lg font-semibold">{t.campaignPresetHeading}</h2>
+  <div class="mt-2 flex flex-wrap gap-2">
+    {CAMPAIGN_PRESETS.map((c) => (
+      <button type="button" class="ui-btn" data-preset-campaign={c}>
+        {c}
+      </button>
+    ))}
+  </div>
+
+  <div class="mt-6 grid gap-3 sm:grid-cols-2">
+    {fields.map((f) => (
+      <div>
+        <label for={`utm-builder-${f.name}`} class="ui-label">
+          {f.label}
+        </label>
+        <input
+          id={`utm-builder-${f.name}`}
+          data-field={f.name}
+          type="text"
+          class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={f.placeholder}
+          spellcheck="false"
+          autocomplete="off"
+        />
+      </div>
+    ))}
+  </div>
+  <label class="ui-check mt-3">
+    <input id="utm-builder-lowercase" type="checkbox" />
+    {t.lowercase}
+  </label>
+
+  <p
+    id="utm-builder-missing"
+    hidden
+    data-prefix={t.missingNotice}
+    class="mt-3 text-sm text-amber-700 dark:text-amber-400"
+  ></p>
+  <p
+    id="utm-builder-replaced"
+    hidden
+    data-prefix={t.replacedNotice}
+    class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+  ></p>
+  <ul
+    id="utm-builder-errors"
+    hidden
+    class="ui-error mt-3 max-w-3xl list-disc space-y-1 pl-5"
+    role="alert"
+    data-line-label={t.lineLabel}
+    data-empty={t.errorEmpty}
+    data-invalid={t.errorInvalid}
+    data-missing-scheme={t.errorMissingScheme}
+    data-unsupported-scheme={t.errorUnsupportedScheme}
+    data-no-params={t.errorNoParams}
+  ></ul>
+
+  <div class="mt-6">
+    <label for="utm-builder-output" class="ui-label">
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="utm-builder-output"
+      readonly
+      class="ui-input h-40 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+    ></textarea>
+  </div>
+  <div class="mt-3 flex flex-wrap items-center gap-3">
+    <button
+      id="utm-builder-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn ui-btn-primary"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="utm-builder-summary"
+      data-template={t.summary}
+      class="text-sm text-gray-600 dark:text-gray-400"
+    ></span>
+    <span
+      id="utm-builder-status"
+      class="text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <h2 class="mt-8 text-lg font-semibold">{t.historyHeading}</h2>
+  <p
+    id="utm-builder-history-empty"
+    class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+  >
+    {t.historyEmpty}
+  </p>
+  <p
+    id="utm-builder-history-unavailable"
+    hidden
+    class="mt-2 text-sm text-amber-700 dark:text-amber-400"
+  >
+    {t.historyUnavailable}
+  </p>
+  <ul
+    id="utm-builder-history"
+    class="mt-2 grid gap-2"
+    data-load={t.historyLoad}
+  ></ul>
+  <button
+    id="utm-builder-history-clear"
+    type="button"
+    class="ui-btn mt-3"
+    hidden
+  >
+    {t.historyClear}
+  </button>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    UTM_FIELDS,
+    addHistory,
+    buildBulk,
+    emptyUtm,
+    extractUtm,
+    findMissingRecommended,
+    joinSuccessUrls,
+    parseHistory,
+    serializeHistory,
+    type HistoryEntry,
+    type UtmParams,
+  } from '../../lib/tools/utm-builder';
+
+  const STORAGE_KEY = 'nyankotools:utm-builder:history';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const urlsInput = $<HTMLTextAreaElement>('utm-builder-urls');
+  const lowercaseCheck = $<HTMLInputElement>('utm-builder-lowercase');
+  const missingEl = $<HTMLParagraphElement>('utm-builder-missing');
+  const replacedEl = $<HTMLParagraphElement>('utm-builder-replaced');
+  const errorsEl = $<HTMLUListElement>('utm-builder-errors');
+  const output = $<HTMLTextAreaElement>('utm-builder-output');
+  const copyButton = $<HTMLButtonElement>('utm-builder-copy-button');
+  const summaryEl = $<HTMLSpanElement>('utm-builder-summary');
+  const statusEl = $<HTMLSpanElement>('utm-builder-status');
+  const historyEl = $<HTMLUListElement>('utm-builder-history');
+  const historyEmptyEl = $<HTMLParagraphElement>('utm-builder-history-empty');
+  const historyUnavailableEl = $<HTMLParagraphElement>(
+    'utm-builder-history-unavailable',
+  );
+  const historyClear = $<HTMLButtonElement>('utm-builder-history-clear');
+  const fieldInputs = Object.fromEntries(
+    Array.from(document.querySelectorAll<HTMLInputElement>('[data-field]')).map(
+      (el) => [el.dataset.field!, el],
+    ),
+  ) as Record<(typeof UTM_FIELDS)[number], HTMLInputElement>;
+
+  function readUtm(): UtmParams {
+    const utm = emptyUtm();
+    for (const f of UTM_FIELDS) utm[f] = fieldInputs[f].value;
+    return utm;
+  }
+
+  const errorMessages: Record<string, string | undefined> = {
+    empty: errorsEl.dataset.empty,
+    invalid: errorsEl.dataset.invalid,
+    missingScheme: errorsEl.dataset.missingScheme,
+    unsupportedScheme: errorsEl.dataset.unsupportedScheme,
+    noParams: errorsEl.dataset.noParams,
+  };
+
+  function render() {
+    statusEl.textContent = '';
+    const utm = readUtm();
+    const hasInput = urlsInput.value.trim() !== '';
+    const items = buildBulk(urlsInput.value, utm, {
+      lowercase: lowercaseCheck.checked,
+    });
+
+    output.value = joinSuccessUrls(items);
+
+    // 未入力の推奨項目
+    const missing = findMissingRecommended(utm);
+    missingEl.hidden = !(hasInput && missing.length > 0);
+    missingEl.textContent = missingEl.hidden
+      ? ''
+      : `${missingEl.dataset.prefix ?? ''}${missing.map((f) => `utm_${f}`).join(', ')}`;
+
+    // 置き換えた既存パラメータ
+    const replaced = new Set<string>();
+    for (const item of items) {
+      if (item.result.success)
+        item.result.replaced.forEach((k) => replaced.add(k));
+    }
+    replacedEl.hidden = replaced.size === 0;
+    replacedEl.textContent =
+      replaced.size === 0
+        ? ''
+        : `${replacedEl.dataset.prefix ?? ''}${Array.from(replaced).join(', ')}`;
+
+    // エラー一覧
+    errorsEl.textContent = '';
+    let ng = 0;
+    const lineLabel = errorsEl.dataset.lineLabel ?? '';
+    for (const item of items) {
+      if (item.result.success) continue;
+      ng++;
+      const li = document.createElement('li');
+      li.textContent = `${lineLabel} ${item.line}: ${errorMessages[item.result.error] ?? ''} - ${item.input}`;
+      errorsEl.append(li);
+    }
+    errorsEl.hidden = ng === 0;
+
+    const ok = items.length - ng;
+    summaryEl.textContent = hasInput
+      ? (summaryEl.dataset.template ?? '')
+          .replace('{ok}', String(ok))
+          .replace('{ng}', String(ng))
+      : '';
+  }
+
+  // 履歴（localStorage が使えない環境でも壊れないように try/catch で包む）
+  let storageAvailable = true;
+  let history: HistoryEntry[] = [];
+
+  function loadHistory() {
+    try {
+      history = parseHistory(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      storageAvailable = false;
+      history = [];
+    }
+  }
+
+  function saveHistory() {
+    try {
+      localStorage.setItem(STORAGE_KEY, serializeHistory(history));
+    } catch {
+      storageAvailable = false;
+    }
+  }
+
+  function renderHistory() {
+    historyEl.textContent = '';
+    historyEmptyEl.hidden = history.length > 0 || !storageAvailable;
+    historyUnavailableEl.hidden = storageAvailable;
+    historyClear.hidden = history.length === 0;
+    for (const entry of history) {
+      const li = document.createElement('li');
+      li.className =
+        'flex flex-col gap-2 rounded-lg border border-gray-200 p-3 dark:border-gray-700 sm:flex-row sm:items-center';
+      const text = document.createElement('code');
+      text.className = 'min-w-0 flex-1 break-all text-sm';
+      text.textContent = entry.url;
+      const load = document.createElement('button');
+      load.type = 'button';
+      load.className = 'ui-btn shrink-0';
+      load.textContent = historyEl.dataset.load ?? '';
+      load.addEventListener('click', () => {
+        urlsInput.value = entry.url;
+        const utm = extractUtm(entry.url);
+        if (utm) for (const f of UTM_FIELDS) fieldInputs[f].value = utm[f];
+        render();
+      });
+      li.append(text, load);
+      historyEl.append(li);
+    }
+  }
+
+  function setField(name: (typeof UTM_FIELDS)[number], value: string) {
+    fieldInputs[name].value = value;
+  }
+
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-preset-source]')
+    .forEach((b) =>
+      b.addEventListener('click', () => {
+        setField('source', b.dataset.presetSource ?? '');
+        setField('medium', b.dataset.presetMedium ?? '');
+        render();
+      }),
+    );
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-preset-campaign]')
+    .forEach((b) =>
+      b.addEventListener('click', () => {
+        setField('campaign', b.dataset.presetCampaign ?? '');
+        render();
+      }),
+    );
+
+  onTextInput(urlsInput, render);
+  Object.values(fieldInputs).forEach((el) =>
+    el.addEventListener('input', render),
+  );
+  lowercaseCheck.addEventListener('change', render);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    const ok = await copyText(output.value);
+    statusEl.textContent = ok
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+    if (ok) {
+      history = addHistory(
+        history,
+        output.value.split('\n').reverse(),
+        Date.now(),
+      );
+      saveHistory();
+      renderHistory();
+    }
+  });
+
+  historyClear.addEventListener('click', () => {
+    history = [];
+    saveHistory();
+    renderHistory();
+  });
+
+  loadHistory();
+  renderHistory();
+  render();
+</script>

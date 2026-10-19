@@ -221,7 +221,9 @@ test.describe('お気に入り機能', () => {
     );
   });
 
-  test('サイドバーのお気に入り一覧で並び替えができる', async ({ page }) => {
+  test('サイドバーのお気に入り一覧でドラッグして並び替えができる', async ({
+    page,
+  }) => {
     await page.goto('/');
 
     await page
@@ -241,17 +243,67 @@ test.describe('お気に入り機能', () => {
     await expect(items.nth(0).locator('a')).toHaveText('文字数カウント');
     await expect(items.nth(1).locator('a')).toHaveText('JSON整形');
 
-    // 2番目（JSON整形）を上に移動する
-    await items.nth(1).getByLabel('上に移動').click();
+    // 2番目（JSON整形）のハンドルを1番目の上半分までドラッグする
+    const handle = favoritesList.locator('[data-move-slug="json-formatter"]');
+    const handleBox = await handle.boundingBox();
+    const firstBox = await items.nth(0).boundingBox();
+    if (!handleBox || !firstBox) throw new Error('boundingBox not found');
+    await page.mouse.move(
+      handleBox.x + handleBox.width / 2,
+      handleBox.y + handleBox.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(handleBox.x + handleBox.width / 2, firstBox.y + 2, {
+      steps: 5,
+    });
+    await page.mouse.up();
 
     await expect(items.nth(0).locator('a')).toHaveText('JSON整形');
     await expect(items.nth(1).locator('a')).toHaveText('文字数カウント');
 
-    // 先頭要素の「上に移動」は無効化されている
-    await expect(items.nth(0).getByLabel('上に移動')).toBeDisabled();
+    // リロードしても並び順が保持される
+    await page.reload();
+    await expect(items.nth(0).locator('a')).toHaveText('JSON整形');
   });
 
-  test('並び替え後、操作したボタンにフォーカスが残る', async ({ page }) => {
+  test('ドラッグで離した位置まで一度に複数段移動できる', async ({ page }) => {
+    await page.goto('/');
+
+    for (const slug of ['char-counter', 'json-formatter', 'html-escape']) {
+      await page
+        .locator(`[data-tool-slug="${slug}"] [data-favorite-toggle="${slug}"]`)
+        .click();
+    }
+
+    const favoritesList = page.locator('#sidebar-favorites-list');
+    const items = favoritesList.locator('li');
+    await expect(items).toHaveCount(3);
+
+    // 先頭（文字数カウント）のハンドルを末尾の下半分までドラッグする
+    const handleBox = await favoritesList
+      .locator('[data-move-slug="char-counter"]')
+      .boundingBox();
+    const lastBox = await items.nth(2).boundingBox();
+    if (!handleBox || !lastBox) throw new Error('boundingBox not found');
+    await page.mouse.move(
+      handleBox.x + handleBox.width / 2,
+      handleBox.y + handleBox.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(
+      handleBox.x + handleBox.width / 2,
+      lastBox.y + lastBox.height - 2,
+      { steps: 10 },
+    );
+    await page.mouse.up();
+
+    await expect(items.nth(2).locator('a')).toHaveText('文字数カウント');
+    await expect(items.nth(0).locator('a')).toHaveText('JSON整形');
+  });
+
+  test('ハンドルにフォーカスして上下キーで並び替えでき、フォーカスが残る', async ({
+    page,
+  }) => {
     await page.goto('/');
 
     await page
@@ -266,23 +318,17 @@ test.describe('お気に入り機能', () => {
       .click();
 
     const favoritesList = page.locator('#sidebar-favorites-list');
-    const downButton = favoritesList
-      .locator('li')
-      .nth(0)
-      .getByLabel('下に移動');
-    await downButton.focus();
-    await downButton.click();
+    const handle = favoritesList.locator('[data-move-slug="char-counter"]');
+    await handle.focus();
+    await page.keyboard.press('ArrowDown');
 
-    // DOMが作り直されてもフォーカスが失われず、同じslugのボタンに残る。
-    // char-counterは末尾に移動して「下に移動」が無効化されるため、
-    // フォールバックで「上に移動」ボタンにフォーカスが移る。
+    // DOMが作り直されてもフォーカスが失われず、同じslugのハンドルに残る
     await expect(page.locator(':focus')).toHaveAttribute(
       'data-move-slug',
       'char-counter',
     );
-    await expect(page.locator(':focus')).toHaveAttribute(
-      'data-move-direction',
-      'up',
+    await expect(favoritesList.locator('li').nth(1).locator('a')).toHaveText(
+      '文字数カウント',
     );
   });
 
@@ -452,6 +498,130 @@ test.describe('お気に入り機能', () => {
     await expect(button).toBeVisible();
 
     // ボタンの右端がスクロールを引き起こさない
+    const hasHorizontalOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth + 1,
+    );
+    expect(hasHorizontalOverflow).toBe(false);
+  });
+
+  test('英語版では並び替えハンドルのラベルが英語になり、上下キーで並び替えできる', async ({
+    page,
+  }) => {
+    await page.goto('/en/');
+
+    await page
+      .locator(
+        '[data-tool-slug="char-counter"] [data-favorite-toggle="char-counter"]',
+      )
+      .click();
+    await page
+      .locator(
+        '[data-tool-slug="json-formatter"] [data-favorite-toggle="json-formatter"]',
+      )
+      .click();
+
+    const favoritesList = page.locator('#sidebar-favorites-list');
+    const items = favoritesList.locator('li');
+    const handle = favoritesList.locator('[data-move-slug="json-formatter"]');
+    await expect(handle).toHaveAttribute(
+      'aria-label',
+      'Drag to reorder (or use the up/down arrow keys)',
+    );
+
+    await handle.focus();
+    await page.keyboard.press('ArrowUp');
+
+    await expect(items.nth(0).locator('a')).toHaveText('JSON Formatter');
+    await expect(items.nth(1).locator('a')).toHaveText('Character Counter');
+    await expect(page.locator(':focus')).toHaveAttribute(
+      'data-move-slug',
+      'json-formatter',
+    );
+  });
+
+  test('旧の上下ボタン（data-move-direction）は残っておらず、ハンドルはタッチ操作を奪う設定（touch-action: none）になっている', async ({
+    page,
+  }) => {
+    await page.goto('/');
+
+    await page
+      .locator(
+        '[data-tool-slug="char-counter"] [data-favorite-toggle="char-counter"]',
+      )
+      .click();
+    await page
+      .locator(
+        '[data-tool-slug="json-formatter"] [data-favorite-toggle="json-formatter"]',
+      )
+      .click();
+
+    const favoritesList = page.locator('#sidebar-favorites-list');
+    await expect(favoritesList.locator('li')).toHaveCount(2);
+    await expect(favoritesList.locator('[data-move-direction]')).toHaveCount(0);
+    await expect(favoritesList.locator('button')).toHaveCount(2);
+
+    const touchAction = await favoritesList
+      .locator('[data-move-slug="char-counter"]')
+      .evaluate((el) => window.getComputedStyle(el).touchAction);
+    expect(touchAction).toBe('none');
+  });
+
+  test('375px幅のサイドバーでもハンドルをドラッグして並び替えでき、並び順がリロード後も保持される', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.goto('/');
+
+    await page
+      .locator(
+        '[data-tool-slug="char-counter"] [data-favorite-toggle="char-counter"]',
+      )
+      .click();
+    await page
+      .locator(
+        '[data-tool-slug="json-formatter"] [data-favorite-toggle="json-formatter"]',
+      )
+      .click();
+
+    // 小画面ではサイドバーは開閉式なので開いてから操作する。
+    // スライドイン（transition 200ms）中の座標でドラッグすると位置がずれるため、位置が確定するまで待つ
+    const toggle = page.locator('#sidebar-toggle');
+    const openSidebarOnMobile = async () => {
+      if ((await toggle.getAttribute('aria-expanded')) !== 'true') {
+        await toggle.click();
+      }
+      await page.waitForFunction(
+        () =>
+          document.getElementById('sidebar')?.getBoundingClientRect().left ===
+          0,
+      );
+    };
+    await openSidebarOnMobile();
+
+    const favoritesList = page.locator('#sidebar-favorites-list');
+    const items = favoritesList.locator('li');
+    const handleBox = await favoritesList
+      .locator('[data-move-slug="json-formatter"]')
+      .boundingBox();
+    const firstBox = await items.nth(0).boundingBox();
+    if (!handleBox || !firstBox) throw new Error('boundingBox not found');
+    await page.mouse.move(
+      handleBox.x + handleBox.width / 2,
+      handleBox.y + handleBox.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(handleBox.x + handleBox.width / 2, firstBox.y + 2, {
+      steps: 5,
+    });
+    await page.mouse.up();
+
+    await expect(items.nth(0).locator('a')).toHaveText('JSON整形');
+
+    await page.reload();
+    await openSidebarOnMobile();
+    await expect(items.nth(0).locator('a')).toHaveText('JSON整形');
+    await expect(items.nth(1).locator('a')).toHaveText('文字数カウント');
+
     const hasHorizontalOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth + 1,
     );

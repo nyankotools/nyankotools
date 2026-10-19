@@ -40,6 +40,20 @@ export function toggleFavorite(slug: string): boolean {
   return !isCurrentlyFavorite;
 }
 
+/**
+ * 指定した並び順でお気に入りを保存し、保存後の並び順を返す。
+ * 登録されていないslugは無視し、指定に含まれない登録済みslugは末尾に残す（ドラッグ後の並びの反映用）。
+ */
+export function setFavoriteOrder(ordered: string[]): string[] {
+  const current = readFavorites();
+  const currentSet = new Set(current);
+  const picked = [...new Set(ordered)].filter((s) => currentSet.has(s));
+  const pickedSet = new Set(picked);
+  const next = [...picked, ...current.filter((s) => !pickedSet.has(s))];
+  writeFavorites(next);
+  return next;
+}
+
 /** お気に入りの並び順を1つ前後に入れ替え、変更後の並び順を返す（対象外・端の場合は変更なし） */
 export function moveFavorite(slug: string, direction: 'up' | 'down'): string[] {
   const current = readFavorites();

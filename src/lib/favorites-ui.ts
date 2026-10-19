@@ -2,6 +2,7 @@ import {
   getFavoriteSlugs,
   isFavorite,
   moveFavorite,
+  setFavoriteOrder,
   toggleFavorite,
 } from './favorites';
 import type { Locale } from '../data/tools';
@@ -63,12 +64,13 @@ function reorderHomepageGrid(originalOrder: string[]): void {
   container.append(...favoriteElements, ...restElements);
 }
 
-function createChevronIcon(direction: 'up' | 'down'): SVGSVGElement {
+/** ドラッグハンドル（6点のグリップ）。点は丸いストロークの0長線で描く */
+function createGripIcon(): SVGSVGElement {
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('viewBox', '0 0 24 24');
   svg.setAttribute('fill', 'none');
   svg.setAttribute('stroke', 'currentColor');
-  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-width', '3');
   svg.setAttribute('aria-hidden', 'true');
   svg.classList.add('h-4', 'w-4');
   const path = document.createElementNS(SVG_NS, 'path');
@@ -76,9 +78,7 @@ function createChevronIcon(direction: 'up' | 'down'): SVGSVGElement {
   path.setAttribute('stroke-linejoin', 'round');
   path.setAttribute(
     'd',
-    direction === 'up'
-      ? 'M4.5 15.75l7.5-7.5 7.5 7.5'
-      : 'M4.5 8.25l7.5 7.5 7.5-7.5',
+    'M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01',
   );
   svg.appendChild(path);
   return svg;
@@ -107,22 +107,75 @@ export function initFavorites(): void {
     reorderHomepageGrid(originalOrder);
   }
 
-  /** 並び替え後、操作したボタン（無効化されていれば反対方向のボタン）にフォーカスを戻す */
-  function focusMoveButton(slug: string, direction: 'up' | 'down'): void {
-    if (!favoritesList) return;
-    const primary = favoritesList.querySelector<HTMLButtonElement>(
-      `[data-move-slug="${slug}"][data-move-direction="${direction}"]`,
-    );
-    if (primary && !primary.disabled) {
-      primary.focus();
-      return;
-    }
-    const fallbackDirection = direction === 'up' ? 'down' : 'up';
+  /** 一覧を作り直すとフォーカスが失われるため、並び替え後に操作したハンドルへ戻す */
+  function focusHandle(slug: string): void {
     favoritesList
-      .querySelector<HTMLButtonElement>(
-        `[data-move-slug="${slug}"][data-move-direction="${fallbackDirection}"]`,
-      )
+      ?.querySelector<HTMLButtonElement>(`[data-move-slug="${slug}"]`)
       ?.focus();
+  }
+
+  /** ハンドルのドラッグ操作。ドラッグ中はliを直接並べ替え、離した時点で保存する */
+  function attachDrag(
+    handle: HTMLButtonElement,
+    li: HTMLLIElement,
+    slug: string,
+  ): void {
+    let pointerId: number | null = null;
+
+    // 並べ替え中にliを動かすとDOMから外れてポインターキャプチャが解除されるため、
+    // 移動・終了はハンドルではなくwindowで受ける
+    const onMove = (event: PointerEvent) => {
+      if (event.pointerId !== pointerId || !favoritesList) return;
+      const target = Array.from(favoritesList.children).find((child) => {
+        if (child === li) return false;
+        const rect = child.getBoundingClientRect();
+        return event.clientY < rect.top + rect.height / 2;
+      });
+      const next = target ?? null;
+      if (li.nextElementSibling !== next) {
+        favoritesList.insertBefore(li, next);
+        // タッチは暗黙のキャプチャが外れるため取り直す
+        try {
+          handle.setPointerCapture(event.pointerId);
+        } catch {
+          // 取れない環境ではwindowのリスナーに任せる
+        }
+      }
+    };
+
+    const finish = (event: PointerEvent) => {
+      if (event.pointerId !== pointerId || !favoritesList) return;
+      pointerId = null;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', finish);
+      window.removeEventListener('pointercancel', finish);
+      const ordered = Array.from(
+        favoritesList.querySelectorAll<HTMLElement>('[data-move-slug]'),
+      ).flatMap((el) => (el.dataset.moveSlug ? [el.dataset.moveSlug] : []));
+      setFavoriteOrder(ordered);
+      applyOrderChange();
+      focusHandle(slug);
+    };
+
+    handle.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      if (pointerId !== null) return;
+      event.preventDefault();
+      pointerId = event.pointerId;
+      li.classList.add('opacity-60', 'bg-blue-50', 'dark:bg-gray-800');
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', finish);
+      window.addEventListener('pointercancel', finish);
+    });
+
+    // キーボード操作: ハンドルにフォーカスして上下キーで1つずつ移動
+    handle.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+      event.preventDefault();
+      moveFavorite(slug, event.key === 'ArrowUp' ? 'up' : 'down');
+      applyOrderChange();
+      focusHandle(slug);
+    });
   }
 
   function renderFavoritesList() {
@@ -130,7 +183,7 @@ export function initFavorites(): void {
     const favoriteTools = getOrderedFavoriteTools();
 
     favoritesList.replaceChildren(
-      ...favoriteTools.map((tool, index) => {
+      ...favoriteTools.map((tool) => {
         const href =
           locale === 'en' ? `/en/tools/${tool.slug}/` : `/tools/${tool.slug}/`;
         const li = document.createElement('li');
@@ -145,38 +198,15 @@ export function initFavorites(): void {
         }
         li.appendChild(a);
 
-        const moveButtonClass =
-          'shrink-0 rounded p-3 text-gray-400 hover:text-blue-600 disabled:pointer-events-none disabled:opacity-25 dark:text-gray-500 dark:hover:text-blue-400';
-
-        const upButton = document.createElement('button');
-        upButton.type = 'button';
-        upButton.appendChild(createChevronIcon('up'));
-        upButton.setAttribute('aria-label', t('favorite.moveUp'));
-        upButton.dataset.moveSlug = tool.slug;
-        upButton.dataset.moveDirection = 'up';
-        upButton.className = moveButtonClass;
-        upButton.disabled = index === 0;
-        upButton.addEventListener('click', () => {
-          moveFavorite(tool.slug, 'up');
-          applyOrderChange();
-          focusMoveButton(tool.slug, 'up');
-        });
-        li.appendChild(upButton);
-
-        const downButton = document.createElement('button');
-        downButton.type = 'button';
-        downButton.appendChild(createChevronIcon('down'));
-        downButton.setAttribute('aria-label', t('favorite.moveDown'));
-        downButton.dataset.moveSlug = tool.slug;
-        downButton.dataset.moveDirection = 'down';
-        downButton.className = moveButtonClass;
-        downButton.disabled = index === favoriteTools.length - 1;
-        downButton.addEventListener('click', () => {
-          moveFavorite(tool.slug, 'down');
-          applyOrderChange();
-          focusMoveButton(tool.slug, 'down');
-        });
-        li.appendChild(downButton);
+        const handle = document.createElement('button');
+        handle.type = 'button';
+        handle.appendChild(createGripIcon());
+        handle.setAttribute('aria-label', t('favorite.reorder'));
+        handle.dataset.moveSlug = tool.slug;
+        handle.className =
+          'shrink-0 cursor-grab touch-none rounded p-3 text-gray-400 hover:text-blue-600 active:cursor-grabbing dark:text-gray-500 dark:hover:text-blue-400';
+        attachDrag(handle, li, tool.slug);
+        li.prepend(handle);
 
         return li;
       }),

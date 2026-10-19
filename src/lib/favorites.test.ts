@@ -3,6 +3,7 @@ import {
   getFavoriteSlugs,
   isFavorite,
   moveFavorite,
+  setFavoriteOrder,
   toggleFavorite,
 } from './favorites';
 
@@ -102,6 +103,28 @@ describe('moveFavorite', () => {
 
   it('登録されていないslugを指定しても変化しない', () => {
     expect(moveFavorite('not-registered', 'up')).toEqual(['a', 'b', 'c']);
+  });
+});
+
+describe('setFavoriteOrder', () => {
+  beforeEach(() => {
+    toggleFavorite('a');
+    toggleFavorite('b');
+    toggleFavorite('c');
+  });
+
+  it('指定した並び順で保存される', () => {
+    expect(setFavoriteOrder(['c', 'a', 'b'])).toEqual(['c', 'a', 'b']);
+    expect(getFavoriteSlugs()).toEqual(['c', 'a', 'b']);
+  });
+
+  it('未登録slugと重複は無視され、指定に含まれない登録済みslugは末尾に残る', () => {
+    expect(setFavoriteOrder(['c', 'x', 'c'])).toEqual(['c', 'a', 'b']);
+  });
+
+  it('空配列を指定すると現在の並びがそのまま保たれる', () => {
+    expect(setFavoriteOrder([])).toEqual(['a', 'b', 'c']);
+    expect(getFavoriteSlugs()).toEqual(['a', 'b', 'c']);
   });
 });
 

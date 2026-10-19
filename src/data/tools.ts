@@ -8823,6 +8823,157 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'htpasswd-generator',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['bcrypt-generator', 'htaccess-generator', 'base64'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '.htpasswd生成（Basic認証・bcrypt/SHA-1）',
+        description:
+          'Basic認証用の.htpasswdをbcrypt/SHA-1で生成。複数ユーザーとAuthorizationヘッダーの出力にも対応',
+        keywords: [
+          'htpasswd',
+          'Basic認証',
+          'ベーシック認証',
+          'bcrypt',
+          'SHA-1',
+          'Apache',
+          'Authorizationヘッダー',
+        ],
+      },
+      en: {
+        name: 'Htpasswd Generator (Basic Auth, bcrypt/SHA-1)',
+        description:
+          'Generate .htpasswd lines for Basic auth with bcrypt or SHA-1, for multiple users, plus Authorization headers.',
+        keywords: [
+          'htpasswd',
+          'basic auth',
+          'bcrypt',
+          'sha1',
+          'apache',
+          'authorization header',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'nginx-redirect-generator',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['htaccess-generator', 'http-status-codes'],
+    translations: {
+      ja: {
+        name: 'nginxリダイレクト設定生成',
+        description:
+          'HTTPS強制・www統一・末尾スラッシュ・個別URLの301/302をnginxのserverブロック断片で生成',
+        keywords: [
+          'nginx',
+          'リダイレクト',
+          'rewrite',
+          'return 301',
+          'HTTPS強制',
+          'www統一',
+          'server_name',
+          'location',
+        ],
+      },
+      en: {
+        name: 'nginx Redirect Generator',
+        description:
+          'Generate nginx config for forced HTTPS, www canonical, trailing slashes and 301/302 redirects',
+        keywords: [
+          'nginx',
+          'redirect',
+          'rewrite',
+          'return 301',
+          'force https',
+          'www redirect',
+          'server block',
+          'location',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'port-number-lookup',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['http-status-codes', 'ip-address-converter'],
+    translations: {
+      ja: {
+        name: 'ポート番号一覧・検索',
+        description:
+          '22・80・443・3306 など主要なポート番号を、番号・範囲・サービス名で検索。TCP/UDP の区別と用途つき。',
+        keywords: [
+          'ポート番号',
+          'ポート一覧',
+          'well-known ポート',
+          'TCP',
+          'UDP',
+          'ssh ポート',
+          'mysql ポート',
+        ],
+      },
+      en: {
+        name: 'Port Number List & Search',
+        description:
+          'Look up TCP/UDP port numbers like 22, 80, 443, and 3306 by number, range, or service name, with their uses.',
+        keywords: [
+          'port number',
+          'port list',
+          'well-known ports',
+          'tcp',
+          'udp',
+          'ssh port',
+          'mysql port',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'html-table-generator',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['html-table-to-csv', 'markdown-table-editor', 'html-escape'],
+    translations: {
+      ja: {
+        name: 'HTMLテーブル生成',
+        description:
+          '行数・列数を指定してHTMLのtableタグを作成。セル結合（colspan・rowspan）、見出し行（thead）、罫線・縞模様のCSS付き出力とプレビューに対応。',
+        keywords: [
+          'HTML',
+          'table',
+          'テーブル',
+          '表',
+          'セル結合',
+          'colspan',
+          'rowspan',
+          'thead',
+        ],
+      },
+      en: {
+        name: 'HTML Table Generator',
+        description:
+          'Build an HTML table by choosing rows and columns. Merge cells with colspan and rowspan, add a header row, and copy the code with CSS.',
+        keywords: [
+          'html table',
+          'table generator',
+          'colspan',
+          'rowspan',
+          'merge cells',
+          'thead',
+          'table css',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

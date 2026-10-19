@@ -706,15 +706,19 @@ export const updates: UpdateEntry[] = [
       'semver-calculator',
       'jsonld-generator',
       'utm-builder',
+      'htpasswd-generator',
+      'nginx-redirect-generator',
+      'port-number-lookup',
+      'html-table-generator',
     ],
     translations: {
       ja: {
         summary:
-          'Punycode変換を追加しました。日本語ドメイン（IDN）とxn--形式を相互に変換します。さらに、JSON5⇔JSON変換を追加しました。コメントや末尾カンマ、クォート無しキーのあるデータをJSONにできます。さらに、Markdownテーブルエディタを追加しました。表をセル編集し、整形したMarkdownで出力できます。さらに、じゃんけんゲームを追加しました。CPUと対戦して連勝記録に挑戦できます。さらに、IPアドレス変換を追加しました。IPv4を10進・16進・2進に変換し、IPv6を短縮・展開できます。さらに、セマンティックバージョン比較・範囲判定を追加しました。^や~などの範囲式に対する適合を確認できます。さらに、JSON-LD構造化データ生成を追加しました。FAQ・記事・商品・パンくずリストをフォームから作れます。さらに、UTMビルダーを追加しました。UTMパラメータ付きURLをプリセットや一括生成で作成できます。',
+          'Punycode変換を追加しました。日本語ドメイン（IDN）とxn--形式を相互に変換します。さらに、JSON5⇔JSON変換を追加しました。コメントや末尾カンマ、クォート無しキーのあるデータをJSONにできます。さらに、Markdownテーブルエディタを追加しました。表をセル編集し、整形したMarkdownで出力できます。さらに、じゃんけんゲームを追加しました。CPUと対戦して連勝記録に挑戦できます。さらに、IPアドレス変換を追加しました。IPv4を10進・16進・2進に変換し、IPv6を短縮・展開できます。さらに、セマンティックバージョン比較・範囲判定を追加しました。^や~などの範囲式に対する適合を確認できます。さらに、JSON-LD構造化データ生成を追加しました。FAQ・記事・商品・パンくずリストをフォームから作れます。さらに、UTMビルダーを追加しました。UTMパラメータ付きURLをプリセットや一括生成で作成できます。さらに、.htpasswd生成を追加しました。Basic認証用のbcrypt/SHA-1行とAuthorizationヘッダーを作れます。さらに、nginxリダイレクト設定生成を追加しました。HTTPS強制やwww統一、個別の301/302を出力します。さらに、ポート番号一覧・検索を追加しました。番号・範囲・サービス名で調べられます。さらに、HTMLテーブル生成を追加しました。セル結合やCSS付きでtableタグを作成できます。',
       },
       en: {
         summary:
-          'Added the Punycode Converter, which converts internationalized domain names to xn-- form and back. The new JSON5 ⇔ JSON Converter turns data with comments, trailing commas and unquoted keys into JSON. The new Markdown Table Editor lets you edit a table cell by cell and copy neatly padded Markdown. The new Rock Paper Scissors Game lets you play the CPU and chase a win streak. Added the IP Address Converter, which converts IPv4 to decimal, hex and binary and compresses or expands IPv6. The new Semver Calculator compares versions and checks them against ranges such as ^ and ~. The new JSON-LD Generator builds FAQ, Article, Product and BreadcrumbList structured data from a form. The new UTM Builder creates campaign URLs with presets and bulk generation.',
+          'Added the Punycode Converter, which converts internationalized domain names to xn-- form and back. The new JSON5 ⇔ JSON Converter turns data with comments, trailing commas and unquoted keys into JSON. The new Markdown Table Editor lets you edit a table cell by cell and copy neatly padded Markdown. The new Rock Paper Scissors Game lets you play the CPU and chase a win streak. Added the IP Address Converter, which converts IPv4 to decimal, hex and binary and compresses or expands IPv6. The new Semver Calculator compares versions and checks them against ranges such as ^ and ~. The new JSON-LD Generator builds FAQ, Article, Product and BreadcrumbList structured data from a form. The new UTM Builder creates campaign URLs with presets and bulk generation. The new Htpasswd Generator creates bcrypt or SHA-1 lines for Basic auth plus Authorization headers. The new nginx Redirect Generator outputs forced HTTPS, www canonical and 301/302 redirects. The new Port Number List & Search looks up ports by number, range or service name. The new HTML Table Generator builds table markup with merged cells and CSS.',
       },
     },
   },

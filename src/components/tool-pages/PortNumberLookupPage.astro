@@ -1,0 +1,222 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { portNumberLookupContent } from '../../i18n/tools/port-number-lookup';
+import type { Locale } from '../../data/tools';
+import { PORTS, PORT_CATEGORIES } from '../../lib/tools/port-number-lookup';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = portNumberLookupContent[locale];
+
+const protocolButtons = [
+  { value: 'tcp', label: 'TCP' },
+  { value: 'udp', label: 'UDP' },
+];
+
+const rows = PORTS.map((p) => ({
+  ...p,
+  official: 'official' in p ? p.official !== false : true,
+  description: t.ports[p.id],
+}));
+---
+
+<ToolShell t={t}>
+  <section id="pnl" data-count-template={t.countTemplate}>
+    <label for="pnl-query" class="ui-label">
+      {t.searchLabel}
+    </label>
+    <input
+      id="pnl-query"
+      type="search"
+      class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.searchPlaceholder}
+      autocomplete="off"
+      spellcheck="false"
+      data-query-target="text"
+    />
+    <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{t.searchHint}</p>
+
+    <div
+      id="pnl-category"
+      class="ui-seg mt-3 flex-wrap"
+      role="group"
+      aria-label={t.categoryLabel}
+    >
+      <button
+        type="button"
+        data-category="all"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.allLabel}
+      </button>
+      {PORT_CATEGORIES.map((c) => (
+        <button
+          type="button"
+          data-category={c}
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.categories[c]}
+        </button>
+      ))}
+    </div>
+
+    <div
+      id="pnl-protocol"
+      class="ui-seg mt-2"
+      role="group"
+      aria-label={t.protocolLabel}
+    >
+      <button
+        type="button"
+        data-protocol="all"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.allLabel}
+      </button>
+      {protocolButtons.map((b) => (
+        <button
+          type="button"
+          data-protocol={b.value}
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {b.label}
+        </button>
+      ))}
+    </div>
+
+    <p
+      id="pnl-count"
+      class="mt-3 text-sm text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+    <p
+      id="pnl-empty"
+      class="mt-3 hidden text-sm text-gray-700 dark:text-gray-300"
+      role="status"
+    >
+      {t.noResults}
+    </p>
+
+    <ul id="pnl-list" class="mt-3 space-y-3">
+      {rows.map((r) => (
+        <li
+          data-port={r.port}
+          data-category={r.category}
+          data-protocols={r.protocols.join(' ')}
+          data-search={[
+            r.name,
+            r.id,
+            r.protocols.join(' '),
+            t.categories[r.category],
+            r.description,
+          ].join(' ')}
+          class="rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+        >
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="font-mono text-lg font-semibold">{r.port}</h2>
+            {r.protocols.map((proto) => (
+              <span class="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                {proto.toUpperCase()}
+              </span>
+            ))}
+            <span class="text-sm font-medium break-words">{r.name}</span>
+            <span class="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+              {t.categories[r.category]}
+            </span>
+            {!r.official && (
+              <span
+                class="rounded bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                title={t.unofficialNote}
+              >
+                {t.unofficialBadge}
+              </span>
+            )}
+          </div>
+          <p class="mt-2 text-sm">{r.description}</p>
+        </li>
+      ))}
+    </ul>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    matchesPort,
+    type CategoryFilter,
+    type ProtocolFilter,
+    type PortInfo,
+  } from '../../lib/tools/port-number-lookup';
+
+  const section = document.getElementById('pnl')!;
+  const queryEl = document.getElementById('pnl-query') as HTMLInputElement;
+  const countEl = document.getElementById('pnl-count')!;
+  const emptyEl = document.getElementById('pnl-empty')!;
+  const items = Array.from(
+    document.querySelectorAll<HTMLLIElement>('#pnl-list > li'),
+  );
+  const categoryButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#pnl-category [data-category]',
+  );
+  const protocolButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#pnl-protocol [data-protocol]',
+  );
+  const countTemplate = section.dataset.countTemplate ?? '{shown} / {total}';
+
+  const entries = items.map((li) => ({
+    info: {
+      port: Number(li.dataset.port),
+      protocols: (li.dataset.protocols ?? '').split(
+        ' ',
+      ) as PortInfo['protocols'],
+      category: li.dataset.category as PortInfo['category'],
+    },
+    haystack: li.dataset.search ?? '',
+  }));
+
+  let category: CategoryFilter = 'all';
+  let protocol: ProtocolFilter = 'all';
+
+  function render() {
+    const query = queryEl.value;
+    let shown = 0;
+    items.forEach((li, i) => {
+      const e = entries[i];
+      const match = matchesPort(e.info, e.haystack, query, category, protocol);
+      li.classList.toggle('hidden', !match);
+      if (match) shown++;
+    });
+    countEl.textContent = countTemplate
+      .replace('{shown}', String(shown))
+      .replace('{total}', String(items.length));
+    emptyEl.classList.toggle('hidden', shown > 0);
+  }
+
+  queryEl.addEventListener('input', render);
+  categoryButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      category = button.dataset.category as CategoryFilter;
+      categoryButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === button)),
+      );
+      render();
+    });
+  });
+  protocolButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      protocol = button.dataset.protocol as ProtocolFilter;
+      protocolButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === button)),
+      );
+      render();
+    });
+  });
+
+  render();
+</script>

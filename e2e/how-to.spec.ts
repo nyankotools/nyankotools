@@ -50,6 +50,8 @@ const slugs = [
   'file-hash-calculator',
   'checksum-calculator',
   'text-binary-converter',
+  'punycode-converter',
+  'markdown-table-editor',
   'svg-to-png',
   'ogp-image-generator',
   'image-cropper',

@@ -1,0 +1,206 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { jankenGameContent } from '../../i18n/tools/janken-game';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = jankenGameContent[locale];
+const hands = [
+  { id: 'rock', emoji: '✊', label: t.rock },
+  { id: 'scissors', emoji: '✌️', label: t.scissors },
+  { id: 'paper', emoji: '🖐️', label: t.paper },
+];
+const stats = [
+  { id: 'streak', label: t.streakLabel },
+  { id: 'best', label: t.bestStreakLabel },
+  { id: 'wins', label: t.winsLabel },
+  { id: 'losses', label: t.lossesLabel },
+  { id: 'draws', label: t.drawsLabel },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    id="jk-root"
+    data-rock={t.rock}
+    data-scissors={t.scissors}
+    data-paper={t.paper}
+    data-emoji-rock="✊"
+    data-emoji-scissors="✌️"
+    data-emoji-paper="🖐️"
+    data-win={t.win}
+    data-lose={t.lose}
+    data-draw={t.draw}
+    data-result-text={t.resultText}
+    data-history-empty={t.historyEmpty}
+    data-reset-done={t.resetDone}
+  >
+    <span class="ui-label">{t.chooseLabel}</span>
+    <div
+      id="jk-hands"
+      class="grid grid-cols-3 gap-2 sm:max-w-md"
+      role="group"
+      aria-label={t.chooseLabel}
+    >
+      {hands.map((hand) => (
+        <button
+          type="button"
+          data-hand={hand.id}
+          class="ui-btn-primary flex-col gap-1 py-3"
+        >
+          <span class="text-3xl leading-none" aria-hidden="true">
+            {hand.emoji}
+          </span>
+          <span>{hand.label}</span>
+        </button>
+      ))}
+    </div>
+
+    <div
+      id="jk-result"
+      class="mt-4 rounded-lg border-2 border-gray-300 p-4 text-center text-lg font-bold break-words text-gray-900 dark:border-gray-600 dark:text-gray-100"
+      role="status"
+      aria-live="polite"
+    >
+      {t.waiting}
+    </div>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.statsHeading}</h2>
+    <dl class="grid grid-cols-2 gap-2 sm:grid-cols-5">
+      {stats.map((s) => (
+        <div class="rounded-lg border border-gray-300 p-3 text-center dark:border-gray-600">
+          <dt class="text-xs text-gray-600 dark:text-gray-400">{s.label}</dt>
+          <dd
+            id={`jk-${s.id}`}
+            class="text-2xl font-bold text-gray-900 dark:text-gray-100"
+          >
+            0
+          </dd>
+        </div>
+      ))}
+    </dl>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.historyHeading}</h2>
+    <ol
+      id="jk-history"
+      class="list-inside list-decimal space-y-1 break-words"
+    ></ol>
+    <p id="jk-history-empty" class="text-sm text-gray-600 dark:text-gray-400">
+      {t.historyEmpty}
+    </p>
+
+    <div class="mt-4">
+      <button id="jk-reset-button" type="button" class="ui-btn">
+        {t.reset}
+      </button>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    addHistory,
+    applyOutcome,
+    emptyStats,
+    judge,
+    parseStats,
+    pickCpuHand,
+    serializeStats,
+  } from '../../lib/tools/janken-game';
+  import type { GameState, Hand, Round } from '../../lib/tools/janken-game';
+
+  const STORAGE_KEY = 'janken-game-stats';
+
+  const root = document.getElementById('jk-root')!;
+  const msg = root.dataset as Record<string, string | undefined>;
+  const $ = (id: string) => document.getElementById(id)!;
+  const resultEl = $('jk-result');
+  const historyEl = $('jk-history');
+  const historyEmpty = $('jk-history-empty');
+  const handButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#jk-hands [data-hand]',
+  );
+
+  function loadStats() {
+    try {
+      return parseStats(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      // localStorageが使えない環境では、このページを開いている間だけの記録にする
+      return emptyStats();
+    }
+  }
+
+  function saveStats() {
+    try {
+      localStorage.setItem(STORAGE_KEY, serializeStats(state.stats));
+    } catch {
+      // 保存できない環境では今回の表示だけ反映する
+    }
+  }
+
+  let state: GameState = { stats: loadStats(), streak: 0 };
+  let history: Round[] = [];
+
+  const handName = (h: Hand) => msg[h] ?? h;
+  const handEmoji = (h: Hand) =>
+    msg[`emoji${h[0].toUpperCase()}${h.slice(1)}`] ?? '';
+  const outcomeName = (o: Round['outcome']) => msg[o] ?? o;
+
+  function describe(round: Round): string {
+    return (msg.resultText ?? '')
+      .replace(
+        '{player}',
+        `${handEmoji(round.player)} ${handName(round.player)}`,
+      )
+      .replace('{cpu}', `${handEmoji(round.cpu)} ${handName(round.cpu)}`)
+      .replace('{outcome}', outcomeName(round.outcome));
+  }
+
+  function render() {
+    $('jk-streak').textContent = String(state.streak);
+    $('jk-best').textContent = String(state.stats.bestStreak);
+    $('jk-wins').textContent = String(state.stats.wins);
+    $('jk-losses').textContent = String(state.stats.losses);
+    $('jk-draws').textContent = String(state.stats.draws);
+    historyEl.replaceChildren(
+      ...history.map((round) => {
+        const li = document.createElement('li');
+        li.textContent = describe(round);
+        return li;
+      }),
+    );
+    historyEmpty.hidden = history.length > 0;
+  }
+
+  handButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const player = button.dataset.hand as Hand;
+      const cpu = pickCpuHand();
+      const outcome = judge(player, cpu);
+      const round: Round = { player, cpu, outcome };
+      state = applyOutcome(state, outcome);
+      history = addHistory(history, round);
+      saveStats();
+      resultEl.textContent = describe(round);
+      render();
+    });
+  });
+
+  $('jk-reset-button').addEventListener('click', () => {
+    state = { stats: emptyStats(), streak: 0 };
+    history = [];
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // 削除できない環境でも画面の記録は消す
+    }
+    resultEl.textContent = msg.resetDone ?? '';
+    render();
+  });
+
+  render();
+</script>

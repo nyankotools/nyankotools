@@ -695,6 +695,25 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-19',
+    toolSlugs: [
+      'punycode-converter',
+      'json5-converter',
+      'markdown-table-editor',
+      'janken-game',
+    ],
+    translations: {
+      ja: {
+        summary:
+          'Punycode変換を追加しました。日本語ドメイン（IDN）とxn--形式を相互に変換します。さらに、JSON5⇔JSON変換を追加しました。コメントや末尾カンマ、クォート無しキーのあるデータをJSONにできます。さらに、Markdownテーブルエディタを追加しました。表をセル編集し、整形したMarkdownで出力できます。さらに、じゃんけんゲームを追加しました。CPUと対戦して連勝記録に挑戦できます。',
+      },
+      en: {
+        summary:
+          'Added the Punycode Converter, which converts internationalized domain names to xn-- form and back. The new JSON5 ⇔ JSON Converter turns data with comments, trailing commas and unquoted keys into JSON. The new Markdown Table Editor lets you edit a table cell by cell and copy neatly padded Markdown. The new Rock Paper Scissors Game lets you play the CPU and chase a win streak.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

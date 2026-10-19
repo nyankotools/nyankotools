@@ -8527,6 +8527,148 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'punycode-converter',
+    category: 'encode',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['url-encode', 'base-n-encoder'],
+    translations: {
+      ja: {
+        name: 'Punycode変換',
+        description: '日本語ドメイン（IDN）とxn--形式のPunycodeを相互に変換',
+        keywords: [
+          'Punycode',
+          'IDN',
+          '国際化ドメイン',
+          '日本語ドメイン',
+          'xn--',
+          'ピュニコード',
+        ],
+      },
+      en: {
+        name: 'Punycode Converter',
+        description: 'Convert IDN domains to xn-- Punycode and back',
+        keywords: [
+          'punycode',
+          'idn',
+          'xn--',
+          'internationalized domain name',
+          'domain converter',
+          'rfc 3492',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'json5-converter',
+    category: 'data',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['json-formatter', 'yaml-json-converter', 'env-json-converter'],
+    translations: {
+      ja: {
+        name: 'JSON5⇔JSON変換',
+        description:
+          'JSON5・JavaScriptのオブジェクトリテラルとJSONを相互に変換。コメント・末尾カンマ・クォート無しキー・16進数に対応し、エラーは行・列つきで表示します。',
+        keywords: [
+          'JSON5',
+          'JSON5変換',
+          'オブジェクトリテラル',
+          'コメント付きJSON',
+          '末尾カンマ',
+          'JSONC',
+          'JS object',
+        ],
+      },
+      en: {
+        name: 'JSON5 ⇔ JSON Converter',
+        description:
+          'Convert JSON5 or JS object literals to JSON and back. Handles comments, trailing commas, unquoted keys and hex numbers, with line and column errors.',
+        keywords: [
+          'JSON5',
+          'JSON5 to JSON',
+          'JSON to JSON5',
+          'JSON with comments',
+          'JSONC',
+          'trailing comma',
+          'object literal',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'markdown-table-editor',
+    category: 'data',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['csv-markdown-table', 'csv-json-converter'],
+    translations: {
+      ja: {
+        name: 'Markdownテーブルエディタ',
+        description:
+          'Markdownの表をセル編集・行列の追加削除・並べ替え・列ごとの配置で編集し、整形して出力',
+        keywords: [
+          'Markdown',
+          'テーブル',
+          '表',
+          'マークダウン',
+          'GFM',
+          'README',
+          '表整形',
+          'エディタ',
+        ],
+      },
+      en: {
+        name: 'Markdown Table Editor',
+        description:
+          'Edit a Markdown table in a grid: add, delete and reorder rows and columns, set alignment, copy padded output',
+        keywords: [
+          'markdown table',
+          'table editor',
+          'GFM table',
+          'format table',
+          'README',
+          'align columns',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'janken-game',
+    category: 'games',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['roulette-dice'],
+    translations: {
+      ja: {
+        name: 'じゃんけんゲーム',
+        description:
+          'グー・チョキ・パーでCPUとじゃんけん対戦。連勝数・最高連勝・通算の勝敗を記録できる。',
+        keywords: [
+          'じゃんけん',
+          'ジャンケン',
+          'グーチョキパー',
+          '連勝',
+          'CPU対戦',
+          'ミニゲーム',
+        ],
+      },
+      en: {
+        name: 'Rock Paper Scissors Game',
+        description:
+          'Play rock paper scissors against the CPU and track your win streak, best streak and total record.',
+        keywords: [
+          'rock paper scissors',
+          'janken',
+          'roshambo',
+          'win streak',
+          'vs CPU',
+          'mini game',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

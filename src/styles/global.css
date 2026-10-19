@@ -47,6 +47,11 @@
   html.sidebar-collapsed #sidebar-expand {
     display: flex;
   }
+
+  /* 固定の展開ボタン（左上 12〜52px）が本文の先頭に被らないよう余白を足す */
+  html.sidebar-collapsed #main-content {
+    padding-left: 4.5rem;
+  }
 }
 
 ::view-transition-group(sidebar),

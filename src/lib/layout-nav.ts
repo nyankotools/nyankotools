@@ -185,6 +185,8 @@ export function initSidebarScroll(): void {
     // sessionStorageが使えない場合は無視する
   }
   window.addEventListener('pagehide', () => {
+    // 折りたたみ中は display:none で scrollTop が 0 になるため、保存位置を上書きしない
+    if (sidebar.getClientRects().length === 0) return;
     try {
       sessionStorage.setItem(SIDEBAR_SCROLL_KEY, String(sidebar.scrollTop));
     } catch {

@@ -17,6 +17,8 @@ export const ui = {
   ja: {
     'site.name': 'にゃんこツール',
     'nav.menu.open': 'メニューを開く',
+    'nav.sidebar.collapse': 'サイドバーを閉じる',
+    'nav.sidebar.expand': 'サイドバーを開く',
     'nav.skip': '本文へスキップ',
     'nav.backToTop': 'ページの先頭に戻る',
     'nav.language': '言語',
@@ -96,6 +98,8 @@ export const ui = {
   en: {
     'site.name': 'NyankoTools',
     'nav.menu.open': 'Open menu',
+    'nav.sidebar.collapse': 'Close sidebar',
+    'nav.sidebar.expand': 'Open sidebar',
     'nav.skip': 'Skip to main content',
     'nav.backToTop': 'Back to top',
     'nav.language': 'Language',

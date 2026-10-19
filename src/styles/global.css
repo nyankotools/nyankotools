@@ -34,6 +34,21 @@
   scrollbar-color: rgb(156 163 175 / 0.6) transparent;
 }
 
+/* PC幅でのサイドバー開閉。状態は html.sidebar-collapsed（theme-init.js で初回描画前に付与） */
+#sidebar-expand {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  html.sidebar-collapsed #sidebar {
+    display: none;
+  }
+
+  html.sidebar-collapsed #sidebar-expand {
+    display: flex;
+  }
+}
+
 ::view-transition-group(sidebar),
 ::view-transition-old(sidebar),
 ::view-transition-new(sidebar) {

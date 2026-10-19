@@ -77,6 +77,27 @@ export function initSidebar(): void {
     if (hadFocus && !event.matches) toggle?.focus();
   });
   syncInert();
+
+  // PC幅の開閉（状態は html.sidebar-collapsed と localStorage。初期反映は theme-init.js）
+  const collapseBtn = document.getElementById('sidebar-collapse');
+  const expandBtn = document.getElementById('sidebar-expand');
+  function setCollapsed(collapsed: boolean) {
+    document.documentElement.classList.toggle('sidebar-collapsed', collapsed);
+    try {
+      if (collapsed) localStorage.setItem('sidebar-collapsed', '1');
+      else localStorage.removeItem('sidebar-collapsed');
+    } catch {
+      // 保存できなくても、そのページ内では開閉できる
+    }
+  }
+  collapseBtn?.addEventListener('click', () => {
+    setCollapsed(true);
+    expandBtn?.focus();
+  });
+  expandBtn?.addEventListener('click', () => {
+    setCollapsed(false);
+    collapseBtn?.focus();
+  });
 }
 
 type Theme = 'light' | 'dark' | 'system';

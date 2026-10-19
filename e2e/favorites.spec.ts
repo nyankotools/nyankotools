@@ -628,3 +628,68 @@ test.describe('お気に入り機能', () => {
     expect(hasHorizontalOverflow).toBe(false);
   });
 });
+
+test.describe('トップのカテゴリ別セクションと「もっと見る」', () => {
+  for (const { path, more } of [
+    { path: '/', more: /もっと見る/ },
+    { path: '/en/', more: /Show more/ },
+  ]) {
+    test(`${path}: カテゴリごとに分かれ、超過分は「もっと見る」で展開できる`, async ({
+      page,
+    }) => {
+      await page.goto(path);
+
+      const section = page
+        .locator('[data-home-section]:not([data-home-section="favorites"])')
+        .filter({ has: page.locator('[data-show-more]:not([hidden])') })
+        .first();
+      const cards = section.locator('[data-tool-slug]');
+      const button = section.locator('[data-show-more]');
+      await expect(button).toHaveText(more);
+      await expect(cards.locator('visible=true')).toHaveCount(6);
+
+      await button.click();
+      expect(await cards.locator('visible=true').count()).toBeGreaterThan(6);
+      await expect(button).toHaveAttribute('aria-expanded', 'true');
+
+      await button.click();
+      await expect(cards.locator('visible=true')).toHaveCount(6);
+    });
+
+    test(`${path}: 検索中は折りたたまれず、お気に入りがない間は先頭セクションが隠れる`, async ({
+      page,
+    }) => {
+      await page.goto(path);
+      await expect(page.locator('#home-favorites')).toBeHidden();
+
+      await page.locator('#tool-search').fill('json');
+      await expect(page.locator('[data-show-more]:visible')).toHaveCount(0);
+    });
+  }
+
+  test('お気に入りに追加したツールはお気に入りセクションに移り、解除でカテゴリに戻る', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const card = page.locator('[data-tool-slug="char-counter"]');
+    await card.locator('[data-favorite-toggle]').click();
+
+    const favorites = page.locator('#home-favorites');
+    await expect(favorites).toBeVisible();
+    await expect(
+      favorites.locator('[data-tool-slug="char-counter"]'),
+    ).toBeVisible();
+    // 先頭のセクションがお気に入りで、カテゴリ側とは重複しない
+    await expect(page.locator('[data-tool-slug="char-counter"]')).toHaveCount(
+      1,
+    );
+
+    await card.locator('[data-favorite-toggle]').click();
+    await expect(favorites).toBeHidden();
+    await expect(
+      page
+        .locator('[data-home-section]:not([data-home-section="favorites"])')
+        .locator('[data-tool-slug="char-counter"]'),
+    ).toHaveCount(1);
+  });
+});

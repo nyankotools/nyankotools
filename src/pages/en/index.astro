@@ -3,7 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import { getLocalizedTools } from '../../data/tools';
 import { groupByCategory } from '../../lib/home-filter';
 import { useTranslations } from '../../i18n/ui';
-import HomeToolCard from '../../components/HomeToolCard.astro';
+import HomeToolSections from '../../components/HomeToolSections.astro';
 
 const t = useTranslations('en');
 const tools = getLocalizedTools('en');
@@ -73,11 +73,7 @@ const toolCountParts = [countBefore, '', countAfter];
     {t('home.noResults')}
   </p>
 
-  <ul id="tool-grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    {tools.map((tool) => (
-      <HomeToolCard tool={tool} locale="en" />
-    ))}
-  </ul>
+  <HomeToolSections tools={tools} locale="en" />
   <nav class="mt-10" aria-labelledby="home-categories-heading">
     <h2 id="home-categories-heading" class="mb-3 text-lg font-semibold">
       {t('category.viewAll')}
@@ -98,111 +94,7 @@ const toolCountParts = [countBefore, '', countAfter];
 </Layout>
 
 <script>
-  import { getLocalizedTools, type CategoryId } from '../../data/tools';
-  import { enableDragScroll, enableScrollFade } from '../../lib/drag-scroll';
-  import { filterTools } from '../../lib/home-filter';
+  import { initHomePage } from '../../lib/home-page';
 
-  const tools = getLocalizedTools(
-    document.documentElement.lang === 'en' ? 'en' : 'ja',
-  );
-
-  const searchInput = document.getElementById(
-    'tool-search',
-  ) as HTMLInputElement | null;
-  const categoryButtons = document.querySelectorAll<HTMLButtonElement>(
-    '[data-category-filter]',
-  );
-  const items = document.querySelectorAll<HTMLLIElement>('[data-tool-slug]');
-  const noResults = document.getElementById('no-results');
-
-  const categoryGroup =
-    document.querySelector<HTMLElement>('[data-drag-scroll]');
-  if (categoryGroup) {
-    enableDragScroll(categoryGroup);
-    enableScrollFade(categoryGroup);
-  }
-
-  let activeCategory: CategoryId | 'all' = 'all';
-
-  function applyFilter() {
-    const query = searchInput?.value ?? '';
-    const visibleSlugs = new Set(
-      filterTools(tools, { query, category: activeCategory }).map(
-        (tool) => tool.slug,
-      ),
-    );
-
-    let visibleCount = 0;
-    items.forEach((item) => {
-      const slug = item.dataset.toolSlug;
-      const visible = slug !== undefined && visibleSlugs.has(slug);
-      item.hidden = !visible;
-      if (visible) visibleCount++;
-    });
-
-    if (noResults) {
-      noResults.hidden = visibleCount > 0;
-    }
-  }
-
-  function setCategory(category: CategoryId | 'all') {
-    activeCategory = category;
-    categoryButtons.forEach((b) => {
-      b.setAttribute(
-        'aria-pressed',
-        String(b.dataset.categoryFilter === category),
-      );
-    });
-  }
-
-  // 絞り込み状態をURLのクエリ（?q=…&c=…）に保存し、戻る操作や再訪問で復元する
-  function syncUrl() {
-    const params = new URLSearchParams();
-    const query = searchInput?.value.trim() ?? '';
-    if (query) params.set('q', query);
-    if (activeCategory !== 'all') params.set('c', activeCategory);
-    const search = params.toString();
-    history.replaceState(
-      history.state,
-      '',
-      location.pathname + (search ? '?' + search : '') + location.hash,
-    );
-  }
-
-  searchInput?.addEventListener('input', () => {
-    applyFilter();
-    syncUrl();
-  });
-
-  categoryButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      setCategory(
-        (button.dataset.categoryFilter ?? 'all') as CategoryId | 'all',
-      );
-      applyFilter();
-      syncUrl();
-    });
-  });
-
-  const initial = new URLSearchParams(location.search);
-  const initialCategory = initial.get('c');
-  if (
-    initialCategory &&
-    Array.from(categoryButtons).some(
-      (b) => b.dataset.categoryFilter === initialCategory,
-    )
-  ) {
-    setCategory(initialCategory as CategoryId);
-    // 横スクロール時に、復元したカテゴリのボタンが見える位置へ寄せる
-    const pressed = categoryGroup?.querySelector<HTMLElement>(
-      '[aria-pressed="true"]',
-    );
-    if (categoryGroup && pressed) {
-      categoryGroup.scrollLeft =
-        pressed.offsetLeft -
-        (categoryGroup.clientWidth - pressed.offsetWidth) / 2;
-    }
-  }
-  if (searchInput) searchInput.value = initial.get('q') ?? '';
-  applyFilter();
+  initHomePage();
 </script>

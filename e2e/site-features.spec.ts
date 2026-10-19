@@ -480,8 +480,8 @@ test.describe('お気に入りとツール一覧の同期（ja/en）', () => {
     await page
       .locator('#sidebar-favorites-list li')
       .nth(1)
-      .getByLabel('上に移動')
-      .click();
+      .locator('[data-move-slug]')
+      .press('ArrowUp');
     await expect
       .poll(() => gridSlugs(page))
       .toEqual(['char-counter', 'password-generator', ...rest]);

@@ -1,4 +1,5 @@
 import {
+  FAVORITES_CHANGED_EVENT,
   getFavoriteSlugs,
   isFavorite,
   moveFavorite,
@@ -38,32 +39,6 @@ function readToolNames(): Map<string, string> {
   return names;
 }
 
-/** お気に入りに登録済みのツールを先頭（登録順）に、それ以外を元の順序のまま並べ替える */
-function reorderHomepageGrid(originalOrder: string[]): void {
-  const container = document.getElementById('tool-grid');
-  if (!container) return;
-  const items = container.querySelectorAll<HTMLElement>('[data-tool-slug]');
-  if (items.length === 0) return;
-
-  const elementBySlug = new Map<string, HTMLElement>();
-  items.forEach((el) => {
-    const slug = el.dataset.toolSlug;
-    if (slug) elementBySlug.set(slug, el);
-  });
-
-  const favoriteSlugs = getFavoriteSlugs();
-  const favoriteSet = new Set(favoriteSlugs);
-  const favoriteElements = favoriteSlugs
-    .map((slug) => elementBySlug.get(slug))
-    .filter((el): el is HTMLElement => el !== undefined);
-  const restElements = originalOrder
-    .filter((slug) => !favoriteSet.has(slug))
-    .map((slug) => elementBySlug.get(slug))
-    .filter((el): el is HTMLElement => el !== undefined);
-
-  container.append(...favoriteElements, ...restElements);
-}
-
 /** ドラッグハンドル（6点のグリップ）。点は丸いストロークの0長線で描く */
 function createGripIcon(): SVGSVGElement {
   const svg = document.createElementNS(SVG_NS, 'svg');
@@ -88,10 +63,6 @@ export function initFavorites(): void {
   const locale: Locale = document.documentElement.lang === 'en' ? 'en' : 'ja';
   const t = useTranslations(locale);
   const nameBySlug = readToolNames();
-  // トップのグリッドは登録順に描画されているので、並べ替え前のDOM順を元の順序として保持する
-  const originalOrder = Array.from(
-    document.querySelectorAll<HTMLElement>('#tool-grid [data-tool-slug]'),
-  ).flatMap((el) => (el.dataset.toolSlug ? [el.dataset.toolSlug] : []));
   const favoritesSection = document.getElementById('sidebar-favorites');
   const favoritesList = document.getElementById('sidebar-favorites-list');
 
@@ -104,7 +75,7 @@ export function initFavorites(): void {
 
   function applyOrderChange() {
     renderFavoritesList();
-    reorderHomepageGrid(originalOrder);
+    document.dispatchEvent(new Event(FAVORITES_CHANGED_EVENT));
   }
 
   /** 一覧を作り直すとフォーカスが失われるため、並び替え後に操作したハンドルへ戻す */
@@ -257,5 +228,4 @@ export function initFavorites(): void {
   }
 
   renderFavoritesList();
-  reorderHomepageGrid(originalOrder);
 }

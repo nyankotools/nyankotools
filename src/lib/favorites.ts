@@ -1,5 +1,8 @@
 const FAVORITES_KEY = 'favorite-tools';
 
+/** お気に入りの変更（トグル・並び替え）を知らせるdocumentイベント。トップの一覧が再描画に使う */
+export const FAVORITES_CHANGED_EVENT = 'favorites-changed';
+
 function readFavorites(): string[] {
   try {
     const raw = localStorage.getItem(FAVORITES_KEY);

@@ -135,7 +135,7 @@ test.describe('お問い合わせページ（日本語版）', () => {
 
     const status = page.locator('#contact-status');
     await expect(status).toHaveText('コピーしました');
-    await expect(status).toHaveClass(/text-green-600/);
+    await expect(status).toHaveClass(/text-green-700/);
 
     // OSのクリップボード実装（特にWindows）はテキスト書き込み時に改行コードを
     // CRLFへ正規化することがあるため、比較前にLFへ正規化して環境差を吸収する。
@@ -163,7 +163,7 @@ test.describe('お問い合わせページ（日本語版）', () => {
 
     const status = page.locator('#contact-status');
     await expect(status).toHaveText('メールアドレスをコピーしました');
-    await expect(status).toHaveClass(/text-green-600/);
+    await expect(status).toHaveClass(/text-green-700/);
 
     const clipboardText = await page.evaluate(() =>
       navigator.clipboard.readText(),

@@ -8974,6 +8974,159 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'date-format-builder',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['unix-timestamp', 'date-calculator'],
+    translations: {
+      ja: {
+        name: '日付フォーマット文字列ビルダー',
+        description:
+          '例文から strftime・Java・PHP・Day.js/Moment.js・.NET の日付書式文字列を生成し、相互変換します。',
+        keywords: [
+          'strftime',
+          'DateTimeFormatter',
+          'date format',
+          '日付書式',
+          'yyyy-MM-dd',
+          'フォーマット変換',
+          'Moment.js',
+        ],
+      },
+      en: {
+        name: 'Date Format String Builder',
+        description:
+          'Builds date format strings for strftime, Java, PHP, Day.js/Moment.js and .NET from a sample, and converts between them.',
+        keywords: [
+          'strftime',
+          'DateTimeFormatter',
+          'date format',
+          'yyyy-MM-dd',
+          'format converter',
+          'moment.js',
+          'php date',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'regex-pattern-library',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['regex-tester'],
+    translations: {
+      ja: {
+        name: '正規表現パターン集',
+        description:
+          '郵便番号・電話番号・メール・全角カタカナ・日付・IPアドレスなど、よく使う正規表現をコピーして使えるパターン集。一致／不一致の例つき。',
+        keywords: [
+          '正規表現',
+          'regex',
+          '郵便番号',
+          '電話番号',
+          'メールアドレス',
+          'カタカナ',
+          'バリデーション',
+          'パターン集',
+        ],
+      },
+      en: {
+        name: 'Regex Pattern Library',
+        description:
+          'Copy-ready regex patterns for Japanese postal codes, phone numbers, katakana, email, URL, IPv4, dates, and UUIDs, with match and non-match examples.',
+        keywords: [
+          'regex',
+          'regular expression',
+          'pattern',
+          'cheat sheet',
+          'validation',
+          'postal code',
+          'phone number',
+          'email regex',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'bitwise-calculator',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['base-converter', 'ieee754-viewer'],
+    translations: {
+      ja: {
+        name: 'ビット演算計算機',
+        description:
+          'AND・OR・XOR・NOT・シフト・ローテートを8/16/32/64bitで計算。結果を2進・10進・16進で並べ、ビットごとに可視化。2の補数にも対応。',
+        keywords: [
+          'ビット演算',
+          'AND',
+          'OR',
+          'XOR',
+          'NOT',
+          'シフト',
+          '2の補数',
+          'ビットシフト',
+        ],
+      },
+      en: {
+        name: 'Bitwise Calculator',
+        description:
+          "Calculate AND, OR, XOR, NOT, shifts and rotates for 8/16/32/64-bit values, with a bit-by-bit view and two's complement.",
+        keywords: [
+          'bitwise',
+          'bit operations',
+          'AND OR XOR',
+          'bit shift',
+          "two's complement",
+          'rotate',
+          'bitmask',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'ieee754-viewer',
+    category: 'dev',
+    addedAt: '2026-10-19',
+    updatedAt: '2026-10-19',
+    related: ['base-converter', 'bitwise-calculator'],
+    translations: {
+      ja: {
+        name: '浮動小数点（IEEE 754）ビット表示',
+        description:
+          '数値をfloat32・float64の符号・指数部・仮数部のビット列と16進に変換。逆変換や0.1+0.2の誤差確認、NaN・Infinity・非正規化数にも対応。',
+        keywords: [
+          'IEEE 754',
+          '浮動小数点',
+          'float32',
+          'float64',
+          '単精度',
+          '倍精度',
+          'ビット列',
+          '0.1+0.2',
+        ],
+      },
+      en: {
+        name: 'IEEE 754 Float Viewer',
+        description:
+          'View float32/float64 sign, exponent and mantissa bits, convert from bits, and see why 0.1+0.2 is off. Handles NaN, Infinity, subnormals.',
+        keywords: [
+          'IEEE 754',
+          'floating point',
+          'float32',
+          'float64',
+          'single precision',
+          'double precision',
+          'bits',
+          '0.1+0.2',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

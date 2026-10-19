@@ -1,0 +1,285 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { bitwiseCalculatorContent } from '../../i18n/tools/bitwise-calculator';
+import { bitOps, bitWidths } from '../../lib/tools/bitwise-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = bitwiseCalculatorContent[locale];
+const labelsJson = JSON.stringify({
+  a: t.rowOperandA,
+  b: t.rowOperandB,
+  shift: t.rowShiftCount,
+  result: t.rowResult,
+  values: t.valueLabels,
+  errorInvalid: t.errorInvalid,
+  errorOutOfRange: t.errorOutOfRange,
+});
+---
+
+<ToolShell t={t}>
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="bitop-width" class="ui-label">
+        {t.widthLabel}
+      </label>
+      <select
+        id="bitop-width"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      >
+        {bitWidths.map((w) => (
+          <option value={w} selected={w === 32}>
+            {w}bit
+          </option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label for="bitop-op" class="ui-label">
+        {t.opLabel}
+      </label>
+      <select id="bitop-op" class="ui-input h-11 w-full px-3 dark:bg-gray-900">
+        {bitOps.map((op) => (
+          <option value={op}>{t.opNames[op]}</option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label for="bitop-a" class="ui-label">
+        {t.operandALabel}
+      </label>
+      <input
+        id="bitop-a"
+        type="text"
+        value="0xF0F0"
+        placeholder={t.operandPlaceholder}
+        spellcheck="false"
+        autocomplete="off"
+        data-query-target="text"
+        data-no-count
+        class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+    </div>
+    <div>
+      <label
+        for="bitop-b"
+        id="bitop-b-label"
+        class="ui-label"
+        data-value-label={t.operandBLabel}
+        data-shift-label={t.operandBShiftLabel}
+      >
+        {t.operandBLabel}
+      </label>
+      <input
+        id="bitop-b"
+        type="text"
+        value="0xFF00"
+        placeholder={t.operandPlaceholder}
+        spellcheck="false"
+        autocomplete="off"
+        data-no-count
+        class="ui-input h-11 w-full min-w-0 px-3 font-mono disabled:opacity-50 dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+    </div>
+  </div>
+
+  <p
+    id="bitop-error"
+    class="mt-2 text-sm text-red-600 dark:text-red-400"
+    aria-live="polite"
+  ></p>
+
+  <div id="bitop-result" class="mt-6" data-labels={labelsJson}>
+    <h2 class="mb-3 text-lg font-semibold">{t.resultHeading}</h2>
+    <div id="bitop-bits" class="space-y-4"></div>
+    <p class="mt-3 text-xs text-gray-600 dark:text-gray-400">{t.bitsNote}</p>
+
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full min-w-[320px] border-collapse text-sm">
+        <tbody id="bitop-values"></tbody>
+      </table>
+    </div>
+
+    <button type="button" id="bitop-copy-button" class="ui-btn mt-4">
+      {t.copyResult}
+    </button>
+    <span
+      id="bitop-status"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ml-2 text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    compute,
+    describeValue,
+    groupBits,
+    isShift,
+    isUnary,
+    parseOperand,
+    popCount,
+    type BitOp,
+    type BitWidth,
+  } from '../../lib/tools/bitwise-calculator';
+
+  const widthEl = document.getElementById('bitop-width') as HTMLSelectElement;
+  const opEl = document.getElementById('bitop-op') as HTMLSelectElement;
+  const aEl = document.getElementById('bitop-a') as HTMLInputElement;
+  const bEl = document.getElementById('bitop-b') as HTMLInputElement;
+  const bLabel = document.getElementById('bitop-b-label')!;
+  const errorEl = document.getElementById('bitop-error')!;
+  const resultEl = document.getElementById('bitop-result')!;
+  const bitsEl = document.getElementById('bitop-bits')!;
+  const valuesEl = document.getElementById('bitop-values')!;
+  const statusEl = document.getElementById('bitop-status')!;
+  const copyButton = document.getElementById(
+    'bitop-copy-button',
+  ) as HTMLButtonElement;
+
+  const labels = JSON.parse(resultEl.dataset.labels ?? '{}') as {
+    a: string;
+    b: string;
+    shift: string;
+    result: string;
+    values: Record<string, string>;
+    errorInvalid: string;
+    errorOutOfRange: string;
+  };
+
+  let copyLines: string[] = [];
+
+  function bitRow(title: string, bits: string, id: string): HTMLElement {
+    const wrap = document.createElement('div');
+    const caption = document.createElement('div');
+    caption.className =
+      'mb-1 text-sm font-medium text-gray-700 dark:text-gray-300';
+    caption.textContent = `${title}  ${groupBits(bits)}`;
+    const grid = document.createElement('div');
+    grid.id = id;
+    grid.className = 'flex flex-wrap gap-x-3 gap-y-1';
+    for (let i = 0; i < bits.length; i += 8) {
+      const byte = document.createElement('div');
+      byte.className = 'flex gap-0.5';
+      for (const ch of bits.slice(i, i + 8)) {
+        const cell = document.createElement('span');
+        cell.className =
+          ch === '1'
+            ? 'inline-flex h-6 w-5 items-center justify-center rounded-sm bg-blue-700 font-mono text-xs text-white'
+            : 'inline-flex h-6 w-5 items-center justify-center rounded-sm bg-gray-200 font-mono text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+        cell.textContent = ch;
+        byte.append(cell);
+      }
+      grid.append(byte);
+    }
+    wrap.append(caption, grid);
+    return wrap;
+  }
+
+  function addValueRow(label: string, value: string, id: string) {
+    const tr = document.createElement('tr');
+    tr.className = 'border-b border-gray-100 dark:border-gray-800';
+    const th = document.createElement('td');
+    th.className = 'py-2 pr-4 align-top text-gray-600 dark:text-gray-400';
+    th.textContent = label;
+    const td = document.createElement('td');
+    td.id = id;
+    td.className =
+      'py-2 text-right font-mono break-all text-gray-900 dark:text-gray-100';
+    td.textContent = value;
+    tr.append(th, td);
+    valuesEl.append(tr);
+    copyLines.push(`${label}: ${value}`);
+  }
+
+  function hideResult(message: string) {
+    errorEl.textContent = message;
+    resultEl.classList.add('hidden');
+    copyLines = [];
+  }
+
+  function update() {
+    statusEl.textContent = '';
+    const width = Number(widthEl.value) as BitWidth;
+    const op = opEl.value as BitOp;
+    const unary = isUnary(op);
+    const shift = isShift(op);
+    bEl.disabled = unary;
+    bLabel.textContent =
+      (shift ? bLabel.dataset.shiftLabel : bLabel.dataset.valueLabel) ?? '';
+
+    const aText = aEl.value.trim();
+    if (aText === '' || (!unary && bEl.value.trim() === '')) {
+      hideResult('');
+      return;
+    }
+    const a = parseOperand(aText, width);
+    const b = unary
+      ? { ok: true as const, value: 0n }
+      : parseOperand(bEl.value, width);
+    for (const r of [a, b]) {
+      if (!r.ok) {
+        hideResult(
+          r.reason === 'out-of-range'
+            ? labels.errorOutOfRange
+            : labels.errorInvalid,
+        );
+        return;
+      }
+    }
+    if (!a.ok || !b.ok) return;
+
+    errorEl.textContent = '';
+    const out = compute(op, a.value, b.value, width);
+    const aView = describeValue(a.value, width);
+    const rView = describeValue(out, width);
+
+    copyLines = [];
+    bitsEl.textContent = '';
+    bitsEl.append(bitRow(labels.a, aView.bits, 'bitop-bits-a'));
+    if (!unary) {
+      const bView = describeValue(b.value, width);
+      if (shift) {
+        copyLines.push(`${labels.shift}: ${b.value.toString(10)}`);
+      } else {
+        bitsEl.append(bitRow(labels.b, bView.bits, 'bitop-bits-b'));
+      }
+    }
+    bitsEl.append(bitRow(labels.result, rView.bits, 'bitop-bits-result'));
+
+    valuesEl.textContent = '';
+    const rows: [string, string, string][] = [
+      [labels.values.unsigned, rView.unsigned, 'bitop-unsigned'],
+      [labels.values.signed, rView.signed, 'bitop-signed'],
+      [labels.values.hex, rView.hex, 'bitop-hex'],
+      [labels.values.octal, rView.octal, 'bitop-octal'],
+      [labels.values.binary, groupBits(rView.bits), 'bitop-binary'],
+      [labels.values.popcount, String(popCount(out)), 'bitop-popcount'],
+    ];
+    for (const [label, value, id] of rows) addValueRow(label, value, id);
+    resultEl.classList.remove('hidden');
+  }
+
+  onTextInput(aEl, update);
+  onTextInput(bEl, update);
+  widthEl.addEventListener('change', update);
+  opEl.addEventListener('change', update);
+
+  copyButton.addEventListener('click', async () => {
+    if (copyLines.length === 0) return;
+    statusEl.textContent = (await copyText(copyLines.join('\n')))
+      ? (statusEl.dataset.copied ?? '')
+      : (statusEl.dataset.copyFailed ?? '');
+  });
+
+  update();
+</script>

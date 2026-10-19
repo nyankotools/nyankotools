@@ -1,0 +1,276 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { ieee754ViewerContent } from '../../i18n/tools/ieee754-viewer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = ieee754ViewerContent[locale];
+const labelsJson = JSON.stringify({
+  rows: t.rowLabels,
+  kinds: t.kindLabels,
+  categories: t.categoryLabels,
+  kind: t.kindLabel,
+  category: t.categoryLabel,
+  positive: t.signPositive,
+  negative: t.signNegative,
+});
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-end gap-3">
+    <div>
+      <label for="ieee-precision" class="ui-label">
+        {t.precisionLabel}
+      </label>
+      <select id="ieee-precision" class="ui-input h-11 px-3 dark:bg-gray-900">
+        <option value="32">{t.precisionOptions['32']}</option>
+        <option value="64" selected>
+          {t.precisionOptions['64']}
+        </option>
+      </select>
+    </div>
+    <div class="min-w-0 flex-1 basis-64">
+      <label for="ieee-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <input
+        id="ieee-input"
+        type="text"
+        value={t.defaultInput}
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+        autocomplete="off"
+        data-query-target="text"
+        data-no-count
+        class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+    </div>
+  </div>
+
+  <div class="mt-3 flex flex-wrap items-center gap-2" id="ieee-samples">
+    <span class="text-sm text-gray-600 dark:text-gray-400">
+      {t.samplesLabel}
+    </span>
+    {t.samples.map((s) => (
+      <button
+        type="button"
+        class="ui-btn"
+        data-value={s.value}
+        data-precision={s.precision}
+      >
+        {s.label}
+      </button>
+    ))}
+  </div>
+
+  <p
+    id="ieee-error"
+    data-error-message={t.errorMessage}
+    class="mt-2 text-sm text-red-600 dark:text-red-400"
+    aria-live="polite"
+  ></p>
+
+  <div id="ieee-result" class="mt-6" data-labels={labelsJson}>
+    <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+      <span class="text-red-700 dark:text-red-300">■ {t.signLegend}</span>
+      <span class="text-blue-700 dark:text-blue-300">■ {t.exponentLegend}</span>
+      <span class="text-green-700 dark:text-green-300">
+        ■ {t.mantissaLegend}
+      </span>
+    </div>
+    <p
+      id="ieee-bits"
+      class="mt-2 font-mono text-lg break-all text-gray-900 dark:text-gray-100"
+    ></p>
+
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full min-w-[420px] border-collapse text-sm">
+        <tbody id="ieee-rows"></tbody>
+      </table>
+    </div>
+
+    <button type="button" id="ieee-copy-button" class="ui-btn mt-4">
+      {t.copyResult}
+    </button>
+    <span
+      id="ieee-status"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ml-2 text-sm text-green-600 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    analyze,
+    type Ieee754Result,
+    type Precision,
+  } from '../../lib/tools/ieee754-viewer';
+
+  const input = document.getElementById('ieee-input') as HTMLInputElement;
+  const precisionEl = document.getElementById(
+    'ieee-precision',
+  ) as HTMLSelectElement;
+  const errorEl = document.getElementById('ieee-error')!;
+  const resultEl = document.getElementById('ieee-result')!;
+  const rowsEl = document.getElementById('ieee-rows')!;
+  const bitsEl = document.getElementById('ieee-bits')!;
+  const statusEl = document.getElementById('ieee-status')!;
+  const copyButton = document.getElementById(
+    'ieee-copy-button',
+  ) as HTMLButtonElement;
+  const samplesEl = document.getElementById('ieee-samples')!;
+
+  const labels = JSON.parse(resultEl.dataset.labels ?? '{}') as {
+    rows: Record<string, string>;
+    kinds: Record<string, string>;
+    categories: Record<string, string>;
+    kind: string;
+    category: string;
+    positive: string;
+    negative: string;
+  };
+
+  interface Line {
+    id: string;
+    label: string;
+    value: string;
+  }
+
+  function toLines(r: Ieee754Result): Line[] {
+    const lines: Line[] = [
+      { id: 'kind', label: labels.kind, value: labels.kinds[r.kind] ?? '' },
+      {
+        id: 'category',
+        label: labels.category,
+        value: labels.categories[r.category] ?? '',
+      },
+      { id: 'value', label: labels.rows.value, value: r.shortest },
+    ];
+    if (r.exact !== null) {
+      lines.push({ id: 'exact', label: labels.rows.exact, value: r.exact });
+    }
+    lines.push(
+      { id: 'hex', label: labels.rows.hex, value: r.hex },
+      { id: 'binary', label: labels.rows.binary, value: r.binary },
+      {
+        id: 'sign',
+        label: labels.rows.sign,
+        value: r.sign === 1 ? labels.negative : labels.positive,
+      },
+      {
+        id: 'exponent-field',
+        label: labels.rows.exponentField,
+        value: `${r.exponentField} (${r.exponentBits})`,
+      },
+    );
+    if (r.exponent !== null) {
+      lines.push(
+        {
+          id: 'exponent',
+          label: labels.rows.exponent,
+          value: `${r.exponentField} - ${r.bias} = ${r.exponent}`,
+        },
+        {
+          id: 'leading-bit',
+          label: labels.rows.leadingBit,
+          value: String(r.leadingBit),
+        },
+      );
+    }
+    lines.push({
+      id: 'mantissa',
+      label: labels.rows.mantissa,
+      value: r.mantissaBits,
+    });
+    return lines;
+  }
+
+  let lastLines: Line[] | null = null;
+
+  function span(text: string, cls: string) {
+    const s = document.createElement('span');
+    s.className = cls;
+    s.textContent = text;
+    return s;
+  }
+
+  function render(r: Ieee754Result, lines: Line[]) {
+    bitsEl.textContent = '';
+    bitsEl.append(
+      span(String(r.sign), 'text-red-700 dark:text-red-300'),
+      ' ',
+      span(r.exponentBits, 'text-blue-700 dark:text-blue-300'),
+      ' ',
+      span(r.mantissaBits, 'text-green-700 dark:text-green-300'),
+    );
+    rowsEl.textContent = '';
+    for (const line of lines) {
+      const tr = document.createElement('tr');
+      tr.className = 'border-b border-gray-100 dark:border-gray-800';
+      const th = document.createElement('td');
+      th.className = 'py-2 pr-4 text-gray-600 dark:text-gray-400 align-top';
+      th.textContent = line.label;
+      const td = document.createElement('td');
+      td.id = `ieee-${line.id}`;
+      td.className =
+        'py-2 text-right font-mono text-gray-900 dark:text-gray-100 break-all';
+      td.textContent = line.value;
+      tr.append(th, td);
+      rowsEl.append(tr);
+    }
+    resultEl.classList.remove('hidden');
+  }
+
+  function update() {
+    statusEl.textContent = '';
+    const value = input.value.trim();
+    if (value === '') {
+      errorEl.textContent = '';
+      resultEl.classList.add('hidden');
+      lastLines = null;
+      return;
+    }
+    const precision = Number(precisionEl.value) as Precision;
+    const result = analyze(value, precision);
+    if (!result) {
+      errorEl.textContent = errorEl.dataset.errorMessage ?? '';
+      resultEl.classList.add('hidden');
+      lastLines = null;
+      return;
+    }
+    errorEl.textContent = '';
+    lastLines = toLines(result);
+    render(result, lastLines);
+  }
+
+  input.addEventListener('input', update);
+  precisionEl.addEventListener('change', update);
+
+  samplesEl.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(
+      'button[data-value]',
+    );
+    if (!btn) return;
+    input.value = btn.dataset.value ?? '';
+    precisionEl.value = btn.dataset.precision ?? '64';
+    update();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!lastLines) return;
+    const text = lastLines.map((l) => `${l.label}: ${l.value}`).join('\n');
+    statusEl.textContent = (await copyText(text))
+      ? (statusEl.dataset.copied ?? '')
+      : (statusEl.dataset.copyFailed ?? '');
+  });
+
+  update();
+</script>

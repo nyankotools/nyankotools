@@ -82,12 +82,12 @@ export const ui = {
     'home.category.all': 'すべて',
     'home.category.groupLabel': 'カテゴリで絞り込み',
     'home.noResults': '条件に一致するツールが見つかりませんでした。',
-    'home.toolCount': '全{count}ツール',
+    'home.toolCount': '{count}個の無料ツール',
     'home.favorites': 'お気に入り',
     'home.showMore': 'もっと見る（残り{count}件）',
     'home.showLess': '閉じる',
     'home.meta.description':
-      'にゃんこツールは、JSON整形やBase64変換などの定番ツールから、かな変換・全角半角変換など日本語処理まで揃った、ブラウザ完結・登録不要の無料Webツール集です。',
+      'にゃんこツールは、{count}個のツールを揃えた無料Webツール集。JSON整形やBase64変換などの定番ツールから、かな変換・全角半角変換など日本語処理までブラウザ完結・登録不要で使えます。',
     '404.title': '404 - ページが見つかりません',
     '404.description':
       'お探しのページは見つかりませんでした。URLをご確認いただくか、トップページからツールをお探しください。',
@@ -162,12 +162,12 @@ export const ui = {
     'home.category.all': 'All',
     'home.category.groupLabel': 'Filter by category',
     'home.noResults': 'No tools match your search.',
-    'home.toolCount': '{count} tools',
+    'home.toolCount': '{count} free tools',
     'home.favorites': 'Favorites',
     'home.showMore': 'Show more ({count} more)',
     'home.showLess': 'Show less',
     'home.meta.description':
-      'NyankoTools is a free, browser-only toolkit covering everyday developer tools like JSON formatting and Base64 conversion, plus careful support for Japanese text processing such as kana and full-width/half-width conversion.',
+      'NyankoTools is a free, browser-only toolkit with {count} tools, covering everyday developer tools like JSON formatting and Base64 conversion, plus careful support for Japanese text processing such as kana and full-width/half-width conversion.',
     '404.title': '404 - Page Not Found',
     '404.description':
       "The page you're looking for could not be found. Please check the URL or find a tool from the homepage.",

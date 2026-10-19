@@ -124,3 +124,45 @@
     resize: none;
   }
 }
+
+/*
+ * お気に入りの星ボタン。アイコンは子要素ではなく ::before の mask で描き、
+ * ツール数ぶん繰り返されるサイドバー・ホームのHTMLとDOMを小さく保つ。
+ * 登録済み（aria-pressed=true）は塗りつぶしの星＋黄色にする。
+ * 色指定は各所のユーティリティクラス（text-gray-300 等）に勝つ必要があるためレイヤー外に置く。
+ */
+.fav-toggle::before {
+  content: '';
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  background-color: currentColor;
+  mask: url('/icons/star-outline.svg') center / contain no-repeat;
+}
+
+.fav-toggle[aria-pressed='true'] {
+  color: var(--color-yellow-500);
+}
+
+.fav-toggle[aria-pressed='true']::before {
+  mask-image: url('/icons/star-filled.svg');
+}
+
+:root.dark .fav-toggle[aria-pressed='true'] {
+  color: var(--color-yellow-400);
+}
+
+/* サイドバー（Layout.astro）。ツール数ぶん繰り返すリンクの長いクラス列をここにまとめる */
+@layer components {
+  .sidebar-link {
+    @apply block flex-1 rounded px-3 py-2 text-sm font-normal text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=page]:bg-blue-50 aria-[current=page]:font-semibold aria-[current=page]:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=page]:bg-blue-950/40 dark:aria-[current=page]:text-blue-400;
+  }
+}
+
+nav summary {
+  list-style: none;
+}
+
+nav summary::-webkit-details-marker {
+  display: none;
+}

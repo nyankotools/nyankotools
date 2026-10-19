@@ -9,24 +9,18 @@ import { useTranslations } from '../i18n/ui';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-function updateToggleButtons(slug: string, active: boolean): void {
+function updateToggleButtons(
+  slug: string,
+  active: boolean,
+  t: ReturnType<typeof useTranslations>,
+): void {
+  const label = t(active ? 'favorite.remove' : 'favorite.add');
   document
     .querySelectorAll<HTMLElement>(`[data-favorite-toggle="${slug}"]`)
     .forEach((button) => {
       button.setAttribute('aria-pressed', String(active));
-      const label = active
-        ? button.dataset.labelRemove
-        : button.dataset.labelAdd;
-      if (label) {
-        button.setAttribute('aria-label', label);
-        button.setAttribute('title', label);
-      }
-      button
-        .querySelector<HTMLElement>('[data-star-outline]')
-        ?.classList.toggle('hidden', active);
-      button
-        .querySelector<HTMLElement>('[data-star-filled]')
-        ?.classList.toggle('hidden', !active);
+      button.setAttribute('aria-label', label);
+      button.setAttribute('title', label);
     });
 }
 
@@ -145,8 +139,7 @@ export function initFavorites(): void {
         const a = document.createElement('a');
         a.href = href;
         a.textContent = tool.name;
-        a.className =
-          'block flex-1 rounded px-3 py-2 text-sm font-normal text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=page]:bg-blue-50 aria-[current=page]:font-semibold aria-[current=page]:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=page]:bg-blue-950/40 dark:aria-[current=page]:text-blue-400';
+        a.className = 'sidebar-link';
         if (window.location.pathname === href) {
           a.setAttribute('aria-current', 'page');
         }
@@ -211,10 +204,10 @@ export function initFavorites(): void {
     .forEach((button) => {
       const slug = button.dataset.favoriteToggle;
       if (!slug) return;
-      updateToggleButtons(slug, isFavorite(slug));
+      updateToggleButtons(slug, isFavorite(slug), t);
       button.addEventListener('click', () => {
         const active = toggleFavorite(slug);
-        updateToggleButtons(slug, active);
+        updateToggleButtons(slug, active, t);
         applyOrderChange();
       });
     });

@@ -343,95 +343,97 @@ const jsonLd: Record<string, unknown> | null = noindex
       <aside
         id="sidebar"
         tabindex="-1"
-        class="print:hidden focus:outline-none fixed inset-y-0 left-0 z-40 w-72 max-w-[80%] -translate-x-full overflow-y-auto border-r border-gray-200 bg-white p-4 transition-transform duration-200 ease-in-out dark:border-gray-800 dark:bg-gray-900 md:sticky md:top-0 md:z-auto md:h-screen md:w-64 md:translate-x-0 md:self-start md:border-r"
+        class="print:hidden focus:outline-none fixed inset-y-0 left-0 z-40 w-72 max-w-[80%] -translate-x-full overflow-y-auto border-r border-gray-200 bg-white px-4 pb-4 transition-transform duration-200 ease-in-out dark:border-gray-800 dark:bg-gray-900 md:sticky md:top-0 md:z-auto md:h-screen md:w-64 md:translate-x-0 md:self-start md:border-r"
       >
-        <a href={localePath(lang, '/')} class="mb-4 hidden md:block">
-          <img
-            src="/logo.png"
-            alt={siteName}
-            class="h-auto w-full"
-            width="1376"
-            height="280"
-          />
-        </a>
-        <div class="mb-4 hidden border-b border-gray-200 pb-4 dark:border-gray-800 md:block">
-          <span class="sr-only">{t('nav.language')}</span>
-          <div
-            class="flex gap-2 text-sm"
-            data-lang-switch-desktop
-            role="group"
-            aria-label={t('nav.language')}
-          >
-            <a
-              href={jaURL.pathname}
-              hreflang="ja"
-              aria-current={lang === 'ja' ? 'true' : undefined}
-              class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=true]:font-semibold aria-[current=true]:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=true]:text-blue-400"
-            >
-              {languageNames.ja}
-            </a>
-            <span class="text-gray-300 dark:text-gray-700" aria-hidden="true">
-              |
-            </span>
-            <a
-              href={enURL.pathname}
-              hreflang="en"
-              aria-current={lang === 'en' ? 'true' : undefined}
-              class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=true]:font-semibold aria-[current=true]:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=true]:text-blue-400"
-            >
-              {languageNames.en}
-            </a>
-          </div>
-
-          <div class="mt-3">
-            <span class="sr-only">{t('nav.theme')}</span>
+        <div class="-mx-4 bg-white px-4 pt-4 dark:bg-gray-900 [@media(min-height:600px)]:sticky [@media(min-height:600px)]:top-0 [@media(min-height:600px)]:z-10">
+          <a href={localePath(lang, '/')} class="mb-4 hidden md:block">
+            <img
+              src="/logo.png"
+              alt={siteName}
+              class="h-auto w-full"
+              width="1376"
+              height="280"
+            />
+          </a>
+          <div class="mb-4 hidden border-b border-gray-200 pb-4 dark:border-gray-800 md:block">
+            <span class="sr-only">{t('nav.language')}</span>
             <div
-              id="theme-switcher"
-              class="flex gap-1 text-sm"
+              class="flex gap-2 text-sm"
+              data-lang-switch-desktop
               role="group"
-              aria-label={t('nav.theme')}
+              aria-label={t('nav.language')}
             >
-              <button
-                type="button"
-                data-theme-option="light"
-                aria-pressed="false"
-                class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-pressed:font-semibold aria-pressed:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-pressed:text-blue-400"
+              <a
+                href={jaURL.pathname}
+                hreflang="ja"
+                aria-current={lang === 'ja' ? 'true' : undefined}
+                class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=true]:font-semibold aria-[current=true]:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=true]:text-blue-400"
               >
-                {t('nav.theme.light')}
-              </button>
-              <button
-                type="button"
-                data-theme-option="dark"
-                aria-pressed="false"
-                class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-pressed:font-semibold aria-pressed:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-pressed:text-blue-400"
+                {languageNames.ja}
+              </a>
+              <span class="text-gray-300 dark:text-gray-700" aria-hidden="true">
+                |
+              </span>
+              <a
+                href={enURL.pathname}
+                hreflang="en"
+                aria-current={lang === 'en' ? 'true' : undefined}
+                class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=true]:font-semibold aria-[current=true]:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=true]:text-blue-400"
               >
-                {t('nav.theme.dark')}
-              </button>
-              <button
-                type="button"
-                data-theme-option="system"
-                aria-pressed="false"
-                class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-pressed:font-semibold aria-pressed:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-pressed:text-blue-400"
+                {languageNames.en}
+              </a>
+            </div>
+
+            <div class="mt-3">
+              <span class="sr-only">{t('nav.theme')}</span>
+              <div
+                id="theme-switcher"
+                class="flex gap-1 text-sm"
+                role="group"
+                aria-label={t('nav.theme')}
               >
-                {t('nav.theme.system')}
-              </button>
+                <button
+                  type="button"
+                  data-theme-option="light"
+                  aria-pressed="false"
+                  class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-pressed:font-semibold aria-pressed:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-pressed:text-blue-400"
+                >
+                  {t('nav.theme.light')}
+                </button>
+                <button
+                  type="button"
+                  data-theme-option="dark"
+                  aria-pressed="false"
+                  class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-pressed:font-semibold aria-pressed:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-pressed:text-blue-400"
+                >
+                  {t('nav.theme.dark')}
+                </button>
+                <button
+                  type="button"
+                  data-theme-option="system"
+                  aria-pressed="false"
+                  class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-pressed:font-semibold aria-pressed:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-pressed:text-blue-400"
+                >
+                  {t('nav.theme.system')}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <button
-          type="button"
-          data-palette-open
-          class="mb-3 flex min-h-11 w-full items-center justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-500 hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-400 dark:hover:border-blue-500 dark:hover:text-blue-400"
-        >
-          <span>{t('palette.open')}</span>
-          <kbd
-            data-palette-kbd
-            class="hidden rounded border border-gray-300 px-1.5 text-xs md:inline dark:border-gray-600"
+          <button
+            type="button"
+            data-palette-open
+            class="mb-3 flex min-h-11 w-full items-center justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-500 hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-400 dark:hover:border-blue-500 dark:hover:text-blue-400"
           >
-            Ctrl K
-          </kbd>
-        </button>
+            <span>{t('palette.open')}</span>
+            <kbd
+              data-palette-kbd
+              class="hidden rounded border border-gray-300 px-1.5 text-xs md:inline dark:border-gray-600"
+            >
+              Ctrl K
+            </kbd>
+          </button>
+        </div>
 
         <nav>
           <details

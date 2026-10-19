@@ -22,6 +22,16 @@
 
 #sidebar {
   view-transition-name: sidebar;
+  /* 端までスクロールしても本文に連動させない。バーは普段隠し、ホバー中だけ細く出す */
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  /* バーの有無で内容幅が変わらないよう、常にバー分の幅を確保する */
+  scrollbar-gutter: stable;
+  scrollbar-color: transparent transparent;
+}
+
+#sidebar:hover {
+  scrollbar-color: rgb(156 163 175 / 0.6) transparent;
 }
 
 ::view-transition-group(sidebar),

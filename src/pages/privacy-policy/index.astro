@@ -1,7 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 
-const lastUpdated = '2026年9月28日';
+const lastUpdated = '2026年10月20日';
 ---
 
 <Layout
@@ -43,6 +43,12 @@ const lastUpdated = '2026年9月28日';
       <p class="mt-2">
         なお、ページの再読み込みや言語切替のあとに入力を復元するため、入力内容を利用者のブラウザのセッションストレージへ一時的に保存します（タブを閉じると消えます。サーバーには送信されません。パスワード・トークンなど機微なデータを扱うツールでは保存しません）。
       </p>
+      <p class="mt-2">
+        カメラ・マイク・画面共有・ゲームパッドを使うツール（Webカメラテスト、マイクテスト、画面録画、QRコード読み取りなど）は、ブラウザの許可を得たうえで映像・音声・入力を端末内でのみ処理します。サーバーへの送信や当サイトによる保存は行いません。許可はブラウザの設定からいつでも取り消せます。
+      </p>
+      <p class="mt-2">
+        お問い合わせページはメールソフトを起動する方式（mailto）で、入力内容が当サイトのサーバーを経由することはありません。メールはご利用のメールサービスを通じて運営者に届き、返信のためにのみ利用します。X・Facebookなどの共有ボタンは、クリックしたときに限り各サービスへ移動し、自動的な情報送信は行いません。
+      </p>
     </section>
 
     <section>
@@ -59,15 +65,64 @@ const lastUpdated = '2026年9月28日';
       <p class="mb-2">
         当サイトは、サイト改善のためのアクセス解析ツールとして Google
         アナリティクス（GA4）および Cloudflare Web Analytics
-        を導入しています。また、今後、運営維持のために Google AdSense
-        等の第三者配信の広告サービスを利用する可能性があります。
+        を導入しています。なお、現時点で広告配信サービスは利用していませんが、今後、運営維持のために
+        Google AdSense
+        等の第三者配信の広告サービスを利用する可能性があります。その場合は本ポリシーを事前に更新します。
       </p>
       <p class="mb-2">
-        これらのサービスはトラフィックデータの収集のために Cookie
-        を使用することがあります。Cookie
+        Google アナリティクスは、トラフィックデータの収集のために Cookie
+        を使用します。Cookie
         により収集されるデータは匿名であり、個人を特定するものではありません。この機能は
         Cookie
-        を無効にすることで収集を拒否することができます。設定方法はお使いのブラウザのヘルプをご確認ください。
+        を無効にすることで収集を拒否することができます。設定方法はお使いのブラウザのヘルプをご確認ください。Cloudflare
+        Web Analytics は Cookie を使用せず、個人を追跡しない方式で集計します。
+      </p>
+      <p class="mb-2">
+        利用者の情報が外部の事業者へ送信される内容（外部送信）は、次のとおりです。ツールに入力したテキストやファイルの内容、ファイル名は、いずれにも含まれません。
+      </p>
+      <div class="mb-2 overflow-x-auto">
+        <table class="w-full border-collapse text-left text-sm">
+          <thead>
+            <tr class="border-b border-gray-300 dark:border-gray-700">
+              <th class="py-2 pr-3 font-semibold">送信先・サービス</th>
+              <th class="py-2 pr-3 font-semibold">送信される情報</th>
+              <th class="py-2 font-semibold">利用目的</th>
+            </tr>
+          </thead>
+          <tbody class="align-top">
+            <tr class="border-b border-gray-200 dark:border-gray-800">
+              <td class="py-2 pr-3">Google LLC（Google アナリティクス 4）</td>
+              <td class="py-2 pr-3">
+                閲覧したページのURLとタイトル、参照元、IPアドレス、端末・ブラウザ・OS・言語などの情報、Cookie等の識別子、コピー・ダウンロードの実行、エラーの発生（ツール名のみ）
+              </td>
+              <td class="py-2">サイトの利用状況の分析とツールの改善</td>
+            </tr>
+            <tr class="border-b border-gray-200 dark:border-gray-800">
+              <td class="py-2 pr-3">
+                Cloudflare, Inc.（Cloudflare Web Analytics）
+              </td>
+              <td class="py-2 pr-3">
+                閲覧したページ、参照元、端末・ブラウザの種類、表示速度などの情報（Cookieなし）
+              </td>
+              <td class="py-2">アクセス状況の集計とサイトの表示速度の改善</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="mb-2">
+        検索語を含むURLパラメータ（<span class="font-mono">?text=</span>、
+        <span class="font-mono">?q=</span>、<span class="font-mono">?c=</span>
+        ）は、Google アナリティクスへ送信する前に除いています。Google
+        アナリティクスのオプトアウトは、
+        <a
+          href="https://tools.google.com/dlpage/gaoptout"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-blue-700 underline hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+        >
+          Google アナリティクス オプトアウト アドオン
+        </a>
+        から行えます。
       </p>
       <p>
         Google アナリティクスおよび Cloudflare Web
@@ -78,8 +133,21 @@ const lastUpdated = '2026年9月28日';
     <section>
       <h2 class="mb-2 text-lg font-semibold">5. Cookie について</h2>
       <p>
-        Cookieとは、ウェブサイトが利用者のブラウザに送信し、端末に保存される小さなデータファイルです。当サイトでは、上記のアクセス解析・広告配信サービスによりCookieを使用しています。利用者は、ブラウザの設定によりCookieの受け取りを拒否したり、既に保存されたCookieを削除したりすることができます。ただし、Cookieを無効にした場合、当サイトの一部機能が正しく動作しない可能性があります。
+        Cookieとは、ウェブサイトが利用者のブラウザに送信し、端末に保存される小さなデータファイルです。当サイトでは、上記のアクセス解析・広告配信サービスによりCookieを使用しています（Cookieを使用するのはGoogle
+        アナリティクスです）。利用者は、ブラウザの設定によりCookieの受け取りを拒否したり、既に保存されたCookieを削除したりすることができます。
       </p>
+      <p class="mt-2">
+        また、当サイトは利便性のため、利用者のブラウザのローカルストレージに次の情報を保存します。いずれもサーバーには送信されず、ブラウザのサイトデータを削除すると消えます。
+      </p>
+      <ul class="mt-2 list-disc space-y-1 pl-6">
+        <li>
+          お気に入りに登録したツール、テーマ（ライト/ダーク）、サイドバーの開閉状態
+        </li>
+        <li>ゲーム系ツールのベスト記録、じゃんけんの戦績</li>
+        <li>
+          請求書ジェネレーターで「保存」を押した発行者情報、UTMビルダーの履歴
+        </li>
+      </ul>
     </section>
 
     <section>
@@ -113,7 +181,7 @@ const lastUpdated = '2026年9月28日';
     <section>
       <h2 class="mb-2 text-lg font-semibold">8. 未成年者の個人情報について</h2>
       <p>
-        当サイトは、13歳未満の子どもを含む未成年者を対象として、意図的に個人情報を収集することはありません。
+        当サイトは、未成年者（特に保護者の同意が必要な年齢の子ども）から、意図的に個人情報を収集することはありません。未成年の方は、保護者の同意のうえでご利用ください。
       </p>
     </section>
 

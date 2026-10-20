@@ -34,7 +34,7 @@ interface Props {
 const {
   title,
   description,
-  ogImage = 'https://nyankotools.com/ogp.png',
+  ogImage: ogImageProp,
   noindex = false,
   languageSwitchToHome = false,
   structuredName = title,
@@ -98,6 +98,13 @@ if (showAds) {
   Astro.csp?.insertDirective(`connect-src ${AD_CSP.connect.join(' ')}`);
   Astro.csp?.insertDirective(`frame-src ${AD_CSP.frame.join(' ')}`);
 }
+
+// ツールページは scripts/ogp/generate.mjs がビルド時に作るツール別画像、それ以外は共通画像
+const ogImage =
+  ogImageProp ??
+  (currentTool
+    ? `https://nyankotools.com/ogp/${lang === 'en' ? 'en/' : ''}${currentTool.slug}.png`
+    : 'https://nyankotools.com/ogp.png');
 
 const homeURL = new URL(localePath(lang, '/'), Astro.site);
 

@@ -5,7 +5,14 @@
 // node_modules/.cache/ogp/ にキャッシュし、変更のないツールは再描画しない。
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, copyFile, access } from 'node:fs/promises';
+import {
+  mkdir,
+  readFile,
+  readdir,
+  copyFile,
+  access,
+  rm,
+} from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import process from 'node:process';
@@ -274,6 +281,7 @@ export async function generateOgpImages(outDir) {
 
   await mkdir(cacheDir, { recursive: true });
   let rendered = 0;
+  const used = new Set();
   for (const { locale, tool } of jobs) {
     const key = createHash('sha256')
       .update(
@@ -289,6 +297,7 @@ export async function generateOgpImages(outDir) {
       .digest('hex')
       .slice(0, 24);
     const cached = path.join(cacheDir, `${key}.png`);
+    used.add(`${key}.png`);
     if (!(await exists(cached))) {
       const svg = await satori(template({ ...tool, logoUri, fonts }), {
         width: WIDTH,
@@ -308,6 +317,10 @@ export async function generateOgpImages(outDir) {
     );
     await mkdir(path.dirname(dest), { recursive: true });
     await copyFile(cached, dest);
+  }
+  // 今回使われなかった古いキャッシュを掃除する（CIのキャッシュが際限なく育たないように）
+  for (const file of await readdir(cacheDir)) {
+    if (!used.has(file)) await rm(path.join(cacheDir, file), { force: true });
   }
   return { total: jobs.length, rendered };
 }

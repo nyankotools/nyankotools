@@ -53,6 +53,7 @@ export const ui = {
     'share.copied': 'コピーしました',
     'share.copyFailed': 'コピーに失敗しました',
     'share.native': '共有',
+    'ads.label': '広告',
     'badge.local': '🔒 ブラウザ内で完結・入力データはサーバーに送信されません',
     'palette.open': 'ツールを検索',
     'palette.placeholder': 'ツール名・キーワードで検索',
@@ -134,6 +135,7 @@ export const ui = {
     'share.copied': 'Copied',
     'share.copyFailed': 'Copy failed',
     'share.native': 'Share',
+    'ads.label': 'Advertisement',
     'badge.local':
       '🔒 Runs in your browser · Your data is never sent to a server',
     'palette.open': 'Search tools',

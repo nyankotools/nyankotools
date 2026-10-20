@@ -14,6 +14,8 @@ import ShareButtons from '../components/ShareButtons.astro';
 import FavoriteToggle from '../components/FavoriteToggle.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import Faq from '../components/Faq.astro';
+import AdSlot from '../components/AdSlot.astro';
+import { AD_CSP, shouldShowAds } from '../lib/ads';
 import { getFaqItems } from '../i18n/faq';
 
 interface Props {
@@ -25,6 +27,8 @@ interface Props {
   languageSwitchToHome?: boolean;
   /** 構造化データ（BreadcrumbList / SoftwareApplication）の name。省略時は title */
   structuredName?: string;
+  /** 広告を出してよい静的ページ（トップ・カテゴリ一覧など）。ツールページは tools.ts の ads/sensitive で判定 */
+  adPage?: boolean;
 }
 
 const {
@@ -34,6 +38,7 @@ const {
   noindex = false,
   languageSwitchToHome = false,
   structuredName = title,
+  adPage = false,
 } = Astro.props;
 
 const lang = resolveLocale(Astro.currentLocale);
@@ -78,6 +83,21 @@ const toolMatch = pathname.match(/^\/(?:en\/)?tools\/([^/]+)\/?$/);
 const currentTool = toolMatch
   ? tools.find((tool) => tool.slug === toolMatch[1])
   : undefined;
+
+const showAds = shouldShowAds({
+  tool: toolMatch ? (currentTool ?? { sensitive: true }) : undefined,
+  isAdPage: adPage,
+  noindex,
+});
+
+// 広告を出すページだけCSPに広告ドメインを足す。広告なしのページは従来の厳格なCSPのまま。
+if (showAds) {
+  for (const resource of AD_CSP.script)
+    Astro.csp?.insertScriptResource(resource);
+  Astro.csp?.insertDirective(`img-src ${AD_CSP.img.join(' ')}`);
+  Astro.csp?.insertDirective(`connect-src ${AD_CSP.connect.join(' ')}`);
+  Astro.csp?.insertDirective(`frame-src ${AD_CSP.frame.join(' ')}`);
+}
 
 const homeURL = new URL(localePath(lang, '/'), Astro.site);
 
@@ -532,6 +552,7 @@ const jsonLd: Record<string, unknown> | null = noindex
             />
           )}
           <slot />
+          {showAds && <AdSlot />}
           {faqItems.length > 0 && (
             <Faq items={faqItems} heading={t('faq.heading')} />
           )}

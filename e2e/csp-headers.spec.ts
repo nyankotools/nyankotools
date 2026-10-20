@@ -100,7 +100,9 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
     const context = await browser.newContext({ baseURL: BASE_URL });
     await blockAnalytics(context);
     const page = await context.newPage();
-    await page.goto('/tools/char-counter/');
+    // 広告を出すページ（char-counter等）では広告ドメインがCSPに追加されるため、
+    // 厳格なCSPの形を検証する対象は広告が出ない sensitive ツール（base64）にする
+    await page.goto('/tools/base64/');
 
     const metaCsp = await page
       .locator('meta[http-equiv="content-security-policy" i]')
@@ -116,6 +118,34 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
       /script-src 'self' 'wasm-unsafe-eval'(?: https:\/\/www\.googletagmanager\.com)?(?: https:\/\/static\.cloudflareinsights\.com)?(?: 'sha256-[^']+')+/,
     );
     expect(metaCsp).toMatch(/style-src 'self'(?: 'sha256-[^']+')+/);
+
+    await context.close();
+  });
+
+  test('広告なしページ（sensitiveツール・トップ）のCSPに広告ドメインが含まれず、広告枠も出ない', async ({
+    browser,
+  }) => {
+    // 広告の出し分け（src/lib/ads.ts の shouldShowAds）の回帰防止。
+    // 機密データを扱うツールとトップページには、広告用ドメインも広告枠も出してはならない。
+    // （広告を出すページのCSPは ADS_ENABLED=true のときだけ広がる。ここでは広がらないことを見る）
+    const context = await browser.newContext({ baseURL: BASE_URL });
+    await blockAnalytics(context);
+    const page = await context.newPage();
+
+    for (const path of ['/tools/base64/', '/']) {
+      await page.goto(path);
+      const metaCsp = await page
+        .locator('meta[http-equiv="content-security-policy" i]')
+        .getAttribute('content');
+
+      expect(metaCsp, `${path} のCSP`).toBeTruthy();
+      expect(metaCsp, `${path} のCSP`).not.toContain('googlesyndication');
+      expect(metaCsp, `${path} のCSP`).not.toContain('doubleclick');
+      await expect(
+        page.locator('[data-ad-slot]'),
+        `${path} の広告枠`,
+      ).toHaveCount(0);
+    }
 
     await context.close();
   });

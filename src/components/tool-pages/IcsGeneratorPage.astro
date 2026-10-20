@@ -1,0 +1,556 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { icsGeneratorContent } from '../../i18n/tools/ics-generator';
+import {
+  MAX_COUNT,
+  MAX_INTERVAL,
+  WEEKDAY_CODES,
+} from '../../lib/tools/ics-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = icsGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="ics"
+    data-errors={JSON.stringify(t.errors)}
+    data-copied={t.copiedMessage}
+    data-copy-failed={t.copyFailedMessage}
+    class="space-y-5"
+  >
+    <div class="space-y-4">
+      <div>
+        <label for="ics-summary" class="ui-label">
+          {t.summaryLabel}
+        </label>
+        <input
+          id="ics-summary"
+          type="text"
+          maxlength="200"
+          placeholder={t.summaryPlaceholder}
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="ics-description" class="ui-label">
+          {t.descriptionLabel}
+        </label>
+        <textarea
+          id="ics-description"
+          rows="3"
+          class="ui-input w-full px-3 py-2 dark:bg-gray-900"
+          data-no-count
+        ></textarea>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="ics-location" class="ui-label">
+            {t.locationLabel}
+          </label>
+          <input
+            id="ics-location"
+            type="text"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ics-url" class="ui-label">
+            {t.urlLabel}
+          </label>
+          <input
+            id="ics-url"
+            type="url"
+            inputmode="url"
+            placeholder="https://"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+
+      <label class="ui-check">
+        <input id="ics-all-day" type="checkbox" />
+        {t.allDayLabel}
+      </label>
+
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="ics-start-date" class="ui-label">
+            {t.startDateLabel}
+          </label>
+          <input
+            id="ics-start-date"
+            type="date"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div class="ics-time-field">
+          <label for="ics-start-time" class="ui-label">
+            {t.startTimeLabel}
+          </label>
+          <input
+            id="ics-start-time"
+            type="time"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="ics-end-date" class="ui-label">
+            {t.endDateLabel}
+          </label>
+          <input
+            id="ics-end-date"
+            type="date"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div class="ics-time-field">
+          <label for="ics-end-time" class="ui-label">
+            {t.endTimeLabel}
+          </label>
+          <input
+            id="ics-end-time"
+            type="time"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+
+      <div id="ics-zone-group" class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="ics-mode" class="ui-label">
+            {t.timeZoneModeLabel}
+          </label>
+          <select id="ics-mode" class="ui-input h-11 px-3 dark:bg-gray-900">
+            <option value="tzid" selected>
+              {t.modeTzid}
+            </option>
+            <option value="utc">{t.modeUtc}</option>
+            <option value="floating">{t.modeFloating}</option>
+          </select>
+        </div>
+        <div id="ics-zone-field">
+          <label for="ics-tz" class="ui-label">
+            {t.timeZoneLabel}
+          </label>
+          <input
+            id="ics-tz"
+            type="text"
+            list="ics-tz-list"
+            autocomplete="off"
+            spellcheck="false"
+            class="ui-input h-11 w-60 max-w-full px-3 dark:bg-gray-900"
+          />
+          <datalist id="ics-tz-list"></datalist>
+        </div>
+      </div>
+
+      <fieldset class="space-y-3 rounded-lg border border-gray-300 p-3 dark:border-gray-600">
+        <div class="flex flex-wrap items-end gap-3">
+          <div>
+            <label for="ics-freq" class="ui-label">
+              {t.repeatLabel}
+            </label>
+            <select id="ics-freq" class="ui-input h-11 px-3 dark:bg-gray-900">
+              <option value="none" selected>
+                {t.repeatNone}
+              </option>
+              <option value="daily">{t.repeatDaily}</option>
+              <option value="weekly">{t.repeatWeekly}</option>
+              <option value="monthly">{t.repeatMonthly}</option>
+              <option value="yearly">{t.repeatYearly}</option>
+            </select>
+          </div>
+          <div class="ics-repeat-field">
+            <label for="ics-interval" class="ui-label">
+              {t.intervalLabel}
+            </label>
+            <input
+              id="ics-interval"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              max={MAX_INTERVAL}
+              step="1"
+              value="1"
+              class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+            />
+          </div>
+          <div class="ics-repeat-field">
+            <label for="ics-end-type" class="ui-label">
+              {t.repeatEndLabel}
+            </label>
+            <select
+              id="ics-end-type"
+              class="ui-input h-11 px-3 dark:bg-gray-900"
+            >
+              <option value="never" selected>
+                {t.repeatEndNever}
+              </option>
+              <option value="count">{t.repeatEndCount}</option>
+              <option value="until">{t.repeatEndUntil}</option>
+            </select>
+          </div>
+          <div id="ics-count-field">
+            <label for="ics-count" class="ui-label">
+              {t.countLabel}
+            </label>
+            <input
+              id="ics-count"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              max={MAX_COUNT}
+              step="1"
+              value="10"
+              class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+            />
+          </div>
+          <div id="ics-until-field">
+            <label for="ics-until" class="ui-label">
+              {t.untilLabel}
+            </label>
+            <input
+              id="ics-until"
+              type="date"
+              class="ui-input h-11 px-3 dark:bg-gray-900"
+            />
+          </div>
+        </div>
+        <div id="ics-weekdays-field">
+          <span class="ui-label">{t.weekdaysLabel}</span>
+          <div class="flex flex-wrap gap-x-4 gap-y-1">
+            {WEEKDAY_CODES.map((code, i) => (
+              <label class="ui-check">
+                <input
+                  type="checkbox"
+                  data-option={`ics-wd-${code}`}
+                  data-weekday={code}
+                />
+                {t.weekdayNames[i]}
+              </label>
+            ))}
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="space-y-3">
+        <label class="ui-check">
+          <input id="ics-reminder" type="checkbox" />
+          {t.reminderLabel}
+        </label>
+        <div id="ics-reminder-fields" class="flex flex-wrap items-end gap-3">
+          <div>
+            <label for="ics-reminder-value" class="ui-label">
+              {t.reminderValueLabel}
+            </label>
+            <input
+              id="ics-reminder-value"
+              type="number"
+              inputmode="numeric"
+              min="0"
+              step="1"
+              value="15"
+              class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+            />
+          </div>
+          <div>
+            <label for="ics-reminder-unit" class="ui-label">
+              {t.reminderUnitLabel}
+            </label>
+            <select
+              id="ics-reminder-unit"
+              class="ui-input h-11 px-3 dark:bg-gray-900"
+            >
+              <option value="1" selected>
+                {t.unitMinutes}
+              </option>
+              <option value="60">{t.unitHours}</option>
+              <option value="1440">{t.unitDays}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p id="ics-error" class="ui-error empty:hidden" aria-live="polite"></p>
+
+    <div id="ics-result" class="space-y-4" hidden>
+      <div class="flex flex-wrap gap-2">
+        <button
+          id="ics-download-button"
+          type="button"
+          class="ui-btn ui-btn-primary"
+        >
+          {t.downloadButton}
+        </button>
+        <button id="ics-copy-button" type="button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <span
+          id="ics-status"
+          class="self-center text-sm text-gray-600 dark:text-gray-300"
+          aria-live="polite"
+        ></span>
+      </div>
+      <div>
+        <label for="ics-preview" class="ui-label">
+          {t.previewLabel}
+        </label>
+        <textarea
+          id="ics-preview"
+          rows="10"
+          readonly
+          wrap="off"
+          class="ui-input w-full px-3 py-2 font-mono text-xs dark:bg-gray-900"
+          data-no-count
+          data-no-persist
+        ></textarea>
+      </div>
+      <div>
+        <label for="ics-google-url" class="ui-label">
+          {t.googleLinkLabel}
+        </label>
+        <input
+          id="ics-google-url"
+          type="text"
+          readonly
+          class="ui-input h-11 w-full px-3 font-mono text-xs dark:bg-gray-900"
+          data-no-persist
+        />
+        <div class="mt-2 flex flex-wrap gap-2">
+          <a
+            id="ics-google-open"
+            href="https://calendar.google.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="ui-btn inline-flex items-center justify-center"
+          >
+            {t.googleOpenButton}
+          </a>
+          <button id="ics-google-copy-button" type="button" class="ui-btn">
+            {t.googleCopyButton}
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    generateIcs,
+    icsFileName,
+    makeUid,
+    WEEKDAY_CODES,
+    type Frequency,
+    type IcsErrorCode,
+    type IcsEventInput,
+    type RecurrenceEnd,
+    type TimeZoneMode,
+  } from '../../lib/tools/ics-generator';
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+
+  const root = document.getElementById('ics')!;
+  const errors: Record<IcsErrorCode, string> = JSON.parse(
+    root.dataset.errors ?? '{}',
+  );
+  const copiedMessage = root.dataset.copied ?? '';
+  const copyFailedMessage = root.dataset.copyFailed ?? '';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const summary = $<HTMLInputElement>('ics-summary');
+  const description = $<HTMLTextAreaElement>('ics-description');
+  const location = $<HTMLInputElement>('ics-location');
+  const url = $<HTMLInputElement>('ics-url');
+  const allDay = $<HTMLInputElement>('ics-all-day');
+  const startDate = $<HTMLInputElement>('ics-start-date');
+  const startTime = $<HTMLInputElement>('ics-start-time');
+  const endDate = $<HTMLInputElement>('ics-end-date');
+  const endTime = $<HTMLInputElement>('ics-end-time');
+  const zoneGroup = $('ics-zone-group');
+  const zoneField = $('ics-zone-field');
+  const mode = $<HTMLSelectElement>('ics-mode');
+  const tz = $<HTMLInputElement>('ics-tz');
+  const tzList = $<HTMLDataListElement>('ics-tz-list');
+  const freq = $<HTMLSelectElement>('ics-freq');
+  const interval = $<HTMLInputElement>('ics-interval');
+  const endType = $<HTMLSelectElement>('ics-end-type');
+  const count = $<HTMLInputElement>('ics-count');
+  const countField = $('ics-count-field');
+  const until = $<HTMLInputElement>('ics-until');
+  const untilField = $('ics-until-field');
+  const weekdaysField = $('ics-weekdays-field');
+  const reminder = $<HTMLInputElement>('ics-reminder');
+  const reminderFields = $('ics-reminder-fields');
+  const reminderValue = $<HTMLInputElement>('ics-reminder-value');
+  const reminderUnit = $<HTMLSelectElement>('ics-reminder-unit');
+  const errorEl = $('ics-error');
+  const result = $('ics-result');
+  const preview = $<HTMLTextAreaElement>('ics-preview');
+  const googleUrl = $<HTMLInputElement>('ics-google-url');
+  const googleOpen = $<HTMLAnchorElement>('ics-google-open');
+  const downloadButton = $<HTMLButtonElement>('ics-download-button');
+  const copyButton = $<HTMLButtonElement>('ics-copy-button');
+  const googleCopyButton = $<HTMLButtonElement>('ics-google-copy-button');
+  const status = $('ics-status');
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const dateValue = (d: Date) =>
+    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const timeValue = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+  // 初期値: 次の正時から1時間、タイムゾーンはブラウザの設定
+  const startInit = new Date();
+  startInit.setHours(startInit.getHours() + 1, 0, 0, 0);
+  const endInit = new Date(startInit.getTime() + 3600_000);
+  startDate.value = dateValue(startInit);
+  startTime.value = timeValue(startInit);
+  endDate.value = dateValue(endInit);
+  endTime.value = timeValue(endInit);
+  until.value = dateValue(
+    new Date(
+      startInit.getFullYear(),
+      startInit.getMonth() + 3,
+      startInit.getDate(),
+    ),
+  );
+  tz.value = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  try {
+    const names = (
+      Intl as unknown as { supportedValuesOf?: (key: string) => string[] }
+    ).supportedValuesOf?.('timeZone');
+    for (const name of names ?? []) {
+      const option = document.createElement('option');
+      option.value = name;
+      tzList.append(option);
+    }
+  } catch {
+    // 候補が出せなくても手入力はできる
+  }
+
+  let prevStartDate = startDate.value;
+
+  function readInput(): IcsEventInput {
+    return {
+      summary: summary.value,
+      description: description.value,
+      location: location.value,
+      url: url.value,
+      allDay: allDay.checked,
+      startDate: startDate.value,
+      startTime: startTime.value,
+      endDate: endDate.value,
+      endTime: endTime.value,
+      mode: mode.value as TimeZoneMode,
+      timeZone: tz.value,
+      freq: freq.value as Frequency,
+      interval: Number(interval.value),
+      byDay: WEEKDAY_CODES.filter(
+        (code) =>
+          root.querySelector<HTMLInputElement>(`[data-weekday="${code}"]`)
+            ?.checked,
+      ),
+      endType: endType.value as RecurrenceEnd,
+      count: Number(count.value),
+      untilDate: until.value,
+      reminderMinutes: reminder.checked
+        ? reminderValue.value.trim() === ''
+          ? Number.NaN
+          : Number(reminderValue.value) * Number(reminderUnit.value)
+        : null,
+    };
+  }
+
+  function toggleFields() {
+    const isAllDay = allDay.checked;
+    document
+      .querySelectorAll('.ics-time-field')
+      .forEach((el) => el.classList.toggle('hidden', isAllDay));
+    zoneGroup.classList.toggle('hidden', isAllDay);
+    zoneField.classList.toggle('hidden', mode.value === 'floating');
+    const repeating = freq.value !== 'none';
+    document
+      .querySelectorAll('.ics-repeat-field')
+      .forEach((el) => el.classList.toggle('hidden', !repeating));
+    countField.classList.toggle(
+      'hidden',
+      !repeating || endType.value !== 'count',
+    );
+    untilField.classList.toggle(
+      'hidden',
+      !repeating || endType.value !== 'until',
+    );
+    weekdaysField.classList.toggle('hidden', freq.value !== 'weekly');
+    reminderFields.classList.toggle('hidden', !reminder.checked);
+  }
+
+  const uid = makeUid(crypto.randomUUID());
+  let currentIcs = '';
+  let currentGoogle = '';
+
+  function update() {
+    status.textContent = '';
+    toggleFields();
+    const input = readInput();
+    const r = generateIcs(input, uid);
+    if (!r.ok) {
+      // 入力途中の「タイトル未入力」は初期状態では責めない
+      errorEl.textContent =
+        r.error === 'summaryRequired' && input.summary.trim() === ''
+          ? ''
+          : (errors[r.error] ?? '');
+      result.hidden = true;
+      currentIcs = '';
+      currentGoogle = '';
+      return;
+    }
+    errorEl.textContent = '';
+    currentIcs = r.ics;
+    currentGoogle = r.googleUrl;
+    preview.value = r.ics.replace(/\r\n/g, '\n');
+    googleUrl.value = r.googleUrl;
+    googleOpen.href = r.googleUrl;
+    result.hidden = false;
+  }
+
+  function onStartChange() {
+    // 終了日が開始日と同じだったときは、開始日の変更に追従させる
+    if (endDate.value === prevStartDate) endDate.value = startDate.value;
+    prevStartDate = startDate.value;
+  }
+
+  startDate.addEventListener('change', onStartChange);
+  root.addEventListener('input', update);
+  root.addEventListener('change', update);
+
+  async function copyWithStatus(text: string) {
+    if (!text) return;
+    const ok = await copyText(text);
+    status.textContent = ok ? copiedMessage : copyFailedMessage;
+  }
+
+  downloadButton.addEventListener('click', () => {
+    if (!currentIcs) return;
+    // CRLF を保つため、文字列をそのまま Blob にする（BOM は付けない）
+    downloadBlob(
+      new Blob([currentIcs], { type: 'text/calendar;charset=utf-8' }),
+      icsFileName(summary.value),
+    );
+  });
+  copyButton.addEventListener('click', () => copyWithStatus(currentIcs));
+  googleCopyButton.addEventListener('click', () =>
+    copyWithStatus(currentGoogle),
+  );
+
+  update();
+</script>

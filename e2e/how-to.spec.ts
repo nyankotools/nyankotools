@@ -129,6 +129,10 @@ const slugs = [
   'css-transform-generator',
   'css-specificity-calculator',
   'css-button-generator',
+  'css-pattern-background',
+  'mailto-link-generator',
+  'ics-generator',
+  'vcard-generator',
 ];
 
 const locales = [

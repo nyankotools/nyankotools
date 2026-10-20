@@ -9448,6 +9448,152 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'css-pattern-background',
+    category: 'dev',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: [
+      'css-gradient-generator',
+      'svg-wave-generator',
+      'css-filter-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSSパターン背景ジェネレーター',
+        description:
+          'ストライプ・ドット・チェック柄の背景をCSSグラデーションやSVGで生成し、プレビューしてコピー。',
+        keywords: [
+          'パターン背景',
+          'ストライプ',
+          '水玉',
+          'ドット',
+          'チェック',
+          '市松模様',
+          '背景パターン',
+          'repeating-linear-gradient',
+        ],
+      },
+      en: {
+        name: 'CSS Pattern Background Generator',
+        description:
+          'Generate stripe, polka dot and checkerboard backgrounds as CSS gradients or SVG, preview them and copy the code.',
+        keywords: [
+          'pattern background',
+          'stripes',
+          'polka dots',
+          'checkerboard',
+          'repeating gradient',
+          'svg pattern',
+          'background pattern',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'mailto-link-generator',
+    category: 'dev',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['url-encode', 'qr-generator', 'vcard-generator'],
+    translations: {
+      ja: {
+        name: 'mailto・tel・SMSリンク生成',
+        description:
+          '件名・本文・CC/BCC付きのmailto、telリンク、SMSリンクを生成。URLエンコード済みのhrefとHTMLアンカーをコピーできる。',
+        keywords: [
+          'mailto',
+          'メールリンク',
+          '電話リンク',
+          'tel',
+          'SMS',
+          'リンク作成',
+          'メール本文 改行',
+        ],
+      },
+      en: {
+        name: 'mailto, tel & SMS Link Generator',
+        description:
+          'Generate mailto, tel and SMS links with subject, body, CC and BCC. Get an encoded href and an HTML anchor tag.',
+        keywords: [
+          'mailto',
+          'mailto link',
+          'tel link',
+          'sms link',
+          'email link generator',
+          'href',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'ics-generator',
+    category: 'generate',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['calendar-generator', 'unix-timestamp', 'qr-generator'],
+    translations: {
+      ja: {
+        name: 'ICSファイル作成',
+        description:
+          'カレンダー予定の.icsファイルとGoogleカレンダー追加リンクを作成。繰り返し・リマインダー・終日に対応。',
+        keywords: [
+          'ics',
+          'icalendar',
+          'カレンダー',
+          '予定',
+          'Googleカレンダー',
+          'リマインダー',
+          '繰り返し',
+          'RRULE',
+        ],
+      },
+      en: {
+        name: 'ICS File Generator',
+        description:
+          'Create an .ics calendar event file or Google Calendar link with recurrence, reminders and all-day events.',
+        keywords: [
+          'ics',
+          'ical',
+          'icalendar',
+          'calendar event',
+          'google calendar link',
+          'rrule',
+          'valarm',
+          'reminder',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'vcard-generator',
+    category: 'generate',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['qr-generator', 'mailto-link-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'vCard作成（連絡先.vcf・QR）',
+        description:
+          '名前・電話・メール・住所・会社名からvCard（.vcf）ファイルと連絡先QRコードを作成。',
+        keywords: ['vcard', 'vcf', '連絡先', '名刺', 'QRコード', 'アドレス帳'],
+      },
+      en: {
+        name: 'vCard Generator (.vcf & QR)',
+        description:
+          'Create a vCard (.vcf) contact file and a contact QR code from name, phone, email and address.',
+        keywords: [
+          'vcard',
+          'vcf',
+          'contact',
+          'business card',
+          'qr code',
+          'address book',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

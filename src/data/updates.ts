@@ -737,15 +737,19 @@ export const updates: UpdateEntry[] = [
       'css-transform-generator',
       'css-specificity-calculator',
       'css-button-generator',
+      'css-pattern-background',
+      'mailto-link-generator',
+      'ics-generator',
+      'vcard-generator',
     ],
     translations: {
       ja: {
         summary:
-          'CSS filterジェネレーターを追加しました。blurやgrayscale、drop-shadowなどをプレビューしながら組み立てられます。さらに、CSS transformジェネレーターを追加しました。移動・回転・拡大縮小・傾き・3D回転をプレビュー付きで生成します。さらに、CSS詳細度計算機を追加しました。複数のセレクタの詳細度を比較し、優先されるものを判定します。さらに、CSSボタン・トグルスイッチ・三角形ジェネレーターを追加しました。テーマ色とホバー効果を指定してHTMLとCSSを作れます。',
+          'CSS filterジェネレーターを追加しました。blurやgrayscale、drop-shadowなどをプレビューしながら組み立てられます。さらに、CSS transformジェネレーターを追加しました。移動・回転・拡大縮小・傾き・3D回転をプレビュー付きで生成します。さらに、CSS詳細度計算機を追加しました。複数のセレクタの詳細度を比較し、優先されるものを判定します。さらに、CSSボタン・トグルスイッチ・三角形ジェネレーターを追加しました。テーマ色とホバー効果を指定してHTMLとCSSを作れます。さらに、CSSパターン背景ジェネレーターを追加しました。ストライプ・ドット・チェック柄をCSSグラデーションやSVGで生成します。さらに、mailto・tel・SMSリンク生成を追加しました。件名・本文・CC付きのURLエンコード済みリンクとHTMLアンカーを作れます。さらに、ICSファイル作成を追加しました。繰り返し・リマインダー・終日に対応した.icsとGoogleカレンダー追加リンクを作れます。さらに、vCard作成を追加しました。連絡先の.vcfファイルとQRコードを作成できます。',
       },
       en: {
         summary:
-          'Added the CSS Filter Generator, which builds blur, grayscale, drop-shadow and other filters with a live preview. The new CSS Transform Generator creates translate, rotate, scale, skew and 3D transforms with a preview. The new CSS Specificity Calculator compares selector specificity and shows which rule wins. The new CSS Button & Toggle Switch Generator creates HTML and CSS for buttons, toggles and triangles with your theme color and hover effect.',
+          'Added the CSS Filter Generator, which builds blur, grayscale, drop-shadow and other filters with a live preview. The new CSS Transform Generator creates translate, rotate, scale, skew and 3D transforms with a preview. The new CSS Specificity Calculator compares selector specificity and shows which rule wins. The new CSS Button & Toggle Switch Generator creates HTML and CSS for buttons, toggles and triangles with your theme color and hover effect. The new CSS Pattern Background Generator creates stripe, dot and checkerboard backgrounds as CSS gradients or SVG. The new mailto, tel & SMS Link Generator builds encoded links with subject, body and CC, plus an HTML anchor. The new ICS File Generator creates .ics files and Google Calendar links with recurrence, reminders and all-day events. The new vCard Generator creates a .vcf contact file and a contact QR code.',
       },
     },
   },

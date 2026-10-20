@@ -1,0 +1,488 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { deviceMockupContent } from '../../i18n/tools/device-mockup';
+import {
+  DEFAULT_OUTPUT_WIDTH,
+  DEVICE_DEFAULT_COLORS,
+  MAX_DIMENSION,
+  MAX_OUTPUT_WIDTH,
+  MAX_PADDING,
+  MIN_OUTPUT_WIDTH,
+} from '../../lib/tools/device-mockup';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = deviceMockupContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="mockup-root"
+    data-output-info={t.outputInfo}
+    data-downloaded={t.downloaded}
+    data-default-colors={JSON.stringify(DEVICE_DEFAULT_COLORS)}
+    data-error-not-image={t.errorNotImage}
+    data-error-too-large={t.errorTooLarge.replace(
+      '{max}',
+      String(MAX_DIMENSION),
+    )}
+    data-error-output-too-large={t.errorOutputTooLarge.replace(
+      '{max}',
+      String(MAX_DIMENSION),
+    )}
+    data-error-load-failed={t.errorLoadFailed}
+    data-error-export-failed={t.errorExportFailed}
+  >
+    <label for="mockup-file" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="mockup-dropzone" class="ui-dropzone">
+      <input id="mockup-file" type="file" accept="image/*" class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="mockup-error"
+      role="alert"
+      hidden
+      class="mt-3 text-sm text-red-600 dark:text-red-400"
+    ></p>
+
+    <div id="mockup-workspace" hidden class="mt-6 grid gap-6 md:grid-cols-2">
+      <div>
+        <label for="mockup-device" class="ui-label">
+          {t.deviceLabel}
+        </label>
+        <select id="mockup-device" class="ui-input h-11 px-3 dark:bg-gray-900">
+          {t.deviceOptions.map(({ value, label, selected }) => (
+            <option value={value} selected={selected}>
+              {label}
+            </option>
+          ))}
+        </select>
+
+        <label class="ui-check mt-3 h-11">
+          <input id="mockup-landscape" type="checkbox" />
+          <span>{t.landscapeLabel}</span>
+        </label>
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          {t.landscapeHint}
+        </p>
+
+        <div class="mt-4">
+          <label for="mockup-fit" class="ui-label">
+            {t.fitLabel}
+          </label>
+          <select id="mockup-fit" class="ui-input h-11 px-3 dark:bg-gray-900">
+            {t.fitOptions.map(({ value, label, selected }) => (
+              <option value={value} selected={selected}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div class="mt-4 flex flex-wrap items-end gap-4">
+          <div>
+            <label for="mockup-body-color" class="ui-label">
+              {t.bodyColorLabel}
+            </label>
+            <input
+              id="mockup-body-color"
+              type="color"
+              value={DEVICE_DEFAULT_COLORS.phone}
+              class="h-11 w-20 cursor-pointer rounded border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900"
+            />
+          </div>
+          <div>
+            <label for="mockup-bg-color" class="ui-label">
+              {t.backgroundColorLabel}
+            </label>
+            <input
+              id="mockup-bg-color"
+              type="color"
+              value="#ffffff"
+              class="h-11 w-20 cursor-pointer rounded border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900"
+            />
+          </div>
+        </div>
+
+        <div class="mt-2 flex flex-wrap gap-x-6">
+          <label class="ui-check h-11">
+            <input id="mockup-transparent" type="checkbox" checked />
+            <span>{t.transparentLabel}</span>
+          </label>
+          <label class="ui-check h-11">
+            <input id="mockup-shadow" type="checkbox" checked />
+            <span>{t.shadowLabel}</span>
+          </label>
+        </div>
+
+        <div class="mt-2">
+          <label for="mockup-padding" class="ui-label">
+            {t.paddingLabel}
+            <span id="mockup-padding-value">8</span>
+          </label>
+          <input
+            id="mockup-padding"
+            type="range"
+            min="0"
+            max={MAX_PADDING}
+            step="1"
+            value="8"
+            class="h-11 w-full"
+          />
+        </div>
+
+        <div class="mt-2">
+          <label for="mockup-width" class="ui-label">
+            {t.outputWidthLabel}
+            <span id="mockup-width-value">{DEFAULT_OUTPUT_WIDTH}</span>
+          </label>
+          <input
+            id="mockup-width"
+            type="range"
+            min={MIN_OUTPUT_WIDTH}
+            max={MAX_OUTPUT_WIDTH}
+            step="50"
+            value={DEFAULT_OUTPUT_WIDTH}
+            class="h-11 w-full"
+          />
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center gap-3">
+        <p class="ui-label self-start">{t.previewLabel}</p>
+        <div
+          class="w-fit max-w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700"
+          style="background-image: conic-gradient(#e5e7eb 25%, #fff 0 50%, #e5e7eb 0 75%, #fff 0); background-size: 16px 16px;"
+        >
+          <canvas
+            id="mockup-canvas"
+            role="img"
+            aria-label={t.previewLabel}
+            class="block max-h-[70vh] max-w-full"
+          ></canvas>
+        </div>
+        <p
+          id="mockup-size"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></p>
+        <button
+          id="mockup-download"
+          type="button"
+          disabled
+          class="ui-btn-primary"
+        >
+          {t.downloadButton}
+        </button>
+        <span
+          id="mockup-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    DEVICE_TYPES,
+    FIT_MODES,
+    PREVIEW_MAX_EDGE,
+    isWithinLimit,
+    mockupFileName,
+    planMockup,
+    supportsOrientation,
+    type DeviceType,
+    type FitMode,
+    type MockupOptions,
+    type MockupPlan,
+    type Shape,
+  } from '../../lib/tools/device-mockup';
+
+  const root = document.getElementById('mockup-root')!;
+  const fileInput = document.getElementById('mockup-file') as HTMLInputElement;
+  const dropzone = document.getElementById('mockup-dropzone')!;
+  const errorEl = document.getElementById('mockup-error')!;
+  const workspace = document.getElementById('mockup-workspace')!;
+  const canvas = document.getElementById('mockup-canvas') as HTMLCanvasElement;
+  const deviceSelect = document.getElementById(
+    'mockup-device',
+  ) as HTMLSelectElement;
+  const landscapeInput = document.getElementById(
+    'mockup-landscape',
+  ) as HTMLInputElement;
+  const fitSelect = document.getElementById('mockup-fit') as HTMLSelectElement;
+  const bodyColorInput = document.getElementById(
+    'mockup-body-color',
+  ) as HTMLInputElement;
+  const bgColorInput = document.getElementById(
+    'mockup-bg-color',
+  ) as HTMLInputElement;
+  const transparentInput = document.getElementById(
+    'mockup-transparent',
+  ) as HTMLInputElement;
+  const shadowInput = document.getElementById(
+    'mockup-shadow',
+  ) as HTMLInputElement;
+  const paddingInput = document.getElementById(
+    'mockup-padding',
+  ) as HTMLInputElement;
+  const paddingValue = document.getElementById('mockup-padding-value')!;
+  const widthInput = document.getElementById(
+    'mockup-width',
+  ) as HTMLInputElement;
+  const widthValue = document.getElementById('mockup-width-value')!;
+  const sizeEl = document.getElementById('mockup-size')!;
+  const statusEl = document.getElementById('mockup-status')!;
+  const downloadButton = document.getElementById(
+    'mockup-download',
+  ) as HTMLButtonElement;
+
+  const d = root.dataset;
+  const defaultColors = JSON.parse(d.defaultColors ?? '{}') as Record<
+    DeviceType,
+    string
+  >;
+  let bitmap: ImageBitmap | null = null;
+  let sourceName: string | null = null;
+  // 画像の読み込みは非同期なので、古い読み込みが新しい選択を上書きしないよう世代で管理する
+  let generation = 0;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  function currentDevice(): DeviceType {
+    const v = deviceSelect.value as DeviceType;
+    return DEVICE_TYPES.includes(v) ? v : 'phone';
+  }
+
+  function currentOptions(): MockupOptions {
+    const fit = fitSelect.value as FitMode;
+    return {
+      device: currentDevice(),
+      landscape: landscapeInput.checked,
+      fit: FIT_MODES.includes(fit) ? fit : 'cover',
+      bodyColor: bodyColorInput.value,
+      transparentBackground: transparentInput.checked,
+      backgroundColor: bgColorInput.value,
+      shadow: shadowInput.checked,
+      padding: Number(paddingInput.value),
+      outputWidth: Number(widthInput.value),
+    };
+  }
+
+  /** 角丸の四角いパスを作る（ctx.roundRect が無い環境でも動くよう arcTo を使う） */
+  function roundedPath(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    radius: number,
+  ) {
+    const r = Math.max(0, Math.min(radius, w / 2, h / 2));
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function fillShape(ctx: CanvasRenderingContext2D, s: Shape) {
+    roundedPath(ctx, s.x, s.y, s.width, s.height, s.radius);
+    ctx.fillStyle = s.color;
+    ctx.fill();
+  }
+
+  function draw(
+    ctx: CanvasRenderingContext2D,
+    source: ImageBitmap,
+    plan: MockupPlan,
+    scale = 1,
+  ) {
+    const cw = plan.canvas.width * scale;
+    const ch = plan.canvas.height * scale;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, cw, ch);
+    if (plan.background) {
+      ctx.fillStyle = plan.background;
+      ctx.fillRect(0, 0, cw, ch);
+    }
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    if (plan.shadow) {
+      ctx.save();
+      ctx.shadowColor = plan.shadow.color;
+      // shadow系の値は変形の影響を受けないので、倍率を自分でかける
+      ctx.shadowBlur = plan.shadow.blur * scale;
+      ctx.shadowOffsetY = plan.shadow.offsetY * scale;
+      for (const s of plan.shadowShapes)
+        fillShape(ctx, { ...s, color: '#000' });
+      ctx.restore();
+    }
+    for (const s of plan.shapes) fillShape(ctx, s);
+    const { screen, image: im } = plan;
+    ctx.save();
+    roundedPath(
+      ctx,
+      screen.x,
+      screen.y,
+      screen.width,
+      screen.height,
+      screen.radius,
+    );
+    ctx.clip();
+    ctx.drawImage(
+      source,
+      im.sx,
+      im.sy,
+      im.sw,
+      im.sh,
+      im.dx,
+      im.dy,
+      im.dw,
+      im.dh,
+    );
+    ctx.restore();
+    for (const s of plan.overlays) fillShape(ctx, s);
+  }
+
+  /** 入力イベントは連続で来るので、描画は1フレームに1回へまとめる */
+  let renderQueued = false;
+  function scheduleRender() {
+    if (renderQueued) return;
+    renderQueued = true;
+    requestAnimationFrame(() => {
+      renderQueued = false;
+      render();
+    });
+  }
+
+  /** 設定に合わせて、縮小したプレビューをcanvasに描く（実寸の描画は保存時だけ） */
+  function render() {
+    statusEl.textContent = '';
+    paddingValue.textContent = paddingInput.value;
+    widthValue.textContent = widthInput.value;
+    const options = currentOptions();
+    landscapeInput.disabled = !supportsOrientation(options.device);
+    bgColorInput.disabled = options.transparentBackground;
+    if (!bitmap) return;
+    const plan = planMockup(
+      { width: bitmap.width, height: bitmap.height },
+      options,
+    );
+    if (!isWithinLimit(plan.canvas)) {
+      downloadButton.disabled = true;
+      sizeEl.textContent = '';
+      showError(d.errorOutputTooLarge ?? '');
+      return;
+    }
+    showError('');
+    const scale = Math.min(
+      1,
+      PREVIEW_MAX_EDGE / Math.max(plan.canvas.width, plan.canvas.height),
+    );
+    const previewW = Math.max(1, Math.round(plan.canvas.width * scale));
+    const previewH = Math.max(1, Math.round(plan.canvas.height * scale));
+    // サイズが同じなら代入しない（代入のたびにcanvasが作り直されて重くなる）
+    if (canvas.width !== previewW) canvas.width = previewW;
+    if (canvas.height !== previewH) canvas.height = previewH;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return showError(d.errorExportFailed ?? '');
+    draw(ctx, bitmap, plan, scale);
+    sizeEl.textContent = (d.outputInfo ?? '')
+      .replace('{width}', String(plan.canvas.width))
+      .replace('{height}', String(plan.canvas.height));
+    downloadButton.disabled = false;
+  }
+
+  async function loadFile(file: File) {
+    const current = ++generation;
+    showError('');
+    statusEl.textContent = '';
+    if (!file.type.startsWith('image/'))
+      return showError(d.errorNotImage ?? '');
+    let loaded: ImageBitmap;
+    try {
+      loaded = await createImageBitmap(file);
+    } catch {
+      if (current === generation) showError(d.errorLoadFailed ?? '');
+      return;
+    }
+    if (current !== generation) return loaded.close();
+    if (!isWithinLimit({ width: loaded.width, height: loaded.height })) {
+      loaded.close();
+      return showError(d.errorTooLarge ?? '');
+    }
+    bitmap?.close();
+    bitmap = loaded;
+    sourceName = file.name;
+    workspace.hidden = false;
+    render();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  deviceSelect.addEventListener('change', (e) => {
+    // 保存した入力の復元（isTrusted=false）では、復元した値を初期値で上書きしない
+    if (e.isTrusted) {
+      const color = defaultColors[currentDevice()];
+      if (color) bodyColorInput.value = color;
+    }
+    render();
+  });
+  for (const el of [
+    landscapeInput,
+    fitSelect,
+    bodyColorInput,
+    bgColorInput,
+    transparentInput,
+    shadowInput,
+    paddingInput,
+    widthInput,
+  ]) {
+    el.addEventListener('input', scheduleRender);
+    el.addEventListener('change', scheduleRender);
+  }
+  render();
+
+  downloadButton.addEventListener('click', () => {
+    if (!bitmap) return;
+    const plan = planMockup(
+      { width: bitmap.width, height: bitmap.height },
+      currentOptions(),
+    );
+    const target = document.createElement('canvas');
+    target.width = plan.canvas.width;
+    target.height = plan.canvas.height;
+    const ctx = target.getContext('2d');
+    if (!ctx) return showError(d.errorExportFailed ?? '');
+    draw(ctx, bitmap, plan, 1);
+    target.toBlob((blob) => {
+      target.width = target.height = 0;
+      if (!blob || blob.type !== 'image/png') {
+        return showError(d.errorExportFailed ?? '');
+      }
+      showError('');
+      downloadBlob(blob, mockupFileName(sourceName));
+      statusEl.textContent = d.downloaded ?? '';
+    }, 'image/png');
+  });
+</script>

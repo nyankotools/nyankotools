@@ -141,6 +141,10 @@ const slugs = [
   'image-compare-slider',
   'image-frame-maker',
   'gradient-wallpaper',
+  'device-mockup',
+  'avatar-generator',
+  'tailwind-color-scale-generator',
+  'pixel-art-editor',
 ];
 
 const locales = [

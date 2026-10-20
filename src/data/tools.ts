@@ -9910,6 +9910,157 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'device-mockup',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['image-frame-maker', 'image-padding', 'image-round-crop'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'デバイスモックアップ作成',
+        keywords: [
+          'モックアップ',
+          'スマホ 枠',
+          'スクショ 合成',
+          'デバイスフレーム',
+          'ノートPC',
+          'ブラウザ 枠',
+          'mockup',
+        ],
+        description:
+          'スクリーンショットをスマホ・タブレット・ノートPC・ブラウザウィンドウの枠にはめ込み、透明背景や影付きのモックアップ画像をPNGで作成します。',
+      },
+      en: {
+        name: 'Device Mockup Generator (Phone, Laptop & Browser)',
+        keywords: [
+          'device mockup',
+          'phone mockup',
+          'screenshot mockup',
+          'device frame',
+          'laptop mockup',
+          'browser mockup',
+          'app screenshot',
+        ],
+        description:
+          'Put a screenshot into a phone, tablet, laptop or browser frame and save the mockup as a PNG. Transparent background and shadow options.',
+      },
+    },
+  },
+  {
+    slug: 'avatar-generator',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['image-round-crop', 'favicon-generator', 'ogp-image-generator'],
+    translations: {
+      ja: {
+        name: 'アバター・アイコン作成',
+        keywords: [
+          'アバター',
+          'アイコン作成',
+          'イニシャル',
+          'identicon',
+          'プロフィール画像',
+          '文字アイコン',
+        ],
+        description:
+          '名前のイニシャルや、文字列から決まるGitHub風identiconでアバター画像を作成します。背景色・形・フォントを選んでPNG保存できます。',
+      },
+      en: {
+        name: 'Avatar Generator (Initials & Identicon)',
+        keywords: [
+          'avatar generator',
+          'initials avatar',
+          'identicon',
+          'profile picture',
+          'letter avatar',
+        ],
+        description:
+          'Makes avatar icons from initials or a seed string (GitHub-style identicon), with color, shape and font options, and saves them as PNG.',
+      },
+    },
+  },
+  {
+    slug: 'tailwind-color-scale-generator',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['color-palette-generator', 'color-converter', 'contrast-checker'],
+    translations: {
+      ja: {
+        name: 'Tailwindカラースケール生成',
+        description:
+          '基準色から50〜950の11段階カラースケールを生成。CSS変数・Tailwind v4 @theme・tailwind.config.js形式でコピー。',
+        keywords: [
+          'Tailwind',
+          'カラースケール',
+          'カラーパレット',
+          '明度',
+          '50 950',
+          'CSS変数',
+          'shade',
+          'tailwind.config',
+        ],
+      },
+      en: {
+        name: 'Tailwind Color Scale Generator',
+        description:
+          'Generate a Tailwind-style 50-950 color scale from one base color. Copy as CSS variables, Tailwind v4 @theme or tailwind.config.js.',
+        keywords: [
+          'tailwind colors',
+          'color scale',
+          'color shades',
+          '50-950',
+          'tints and shades',
+          'color palette',
+          'css variables',
+          'tailwind.config',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'pixel-art-editor',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: [
+      'image-pixelart-converter',
+      'image-blur-mosaic',
+      'image-palette-extractor',
+    ],
+    translations: {
+      ja: {
+        name: 'ドット絵エディタ',
+        keywords: [
+          'ドット絵',
+          'ピクセルアート',
+          'ドット絵 作成',
+          'お絵かき',
+          'スプライト',
+          'アイコン作成',
+          'PNG書き出し',
+        ],
+        description:
+          'ブラウザでドット絵を描いて、拡大率を指定した透過PNGで保存。ペン・消しゴム・塗りつぶし・スポイト・パレット対応。',
+      },
+      en: {
+        name: 'Pixel Art Editor',
+        keywords: [
+          'pixel art',
+          'pixel editor',
+          'sprite editor',
+          'drawing grid',
+          'icon maker',
+          'png export',
+        ],
+        description:
+          'Draw pixel art in your browser with pen, eraser, fill and picker tools, then export a scaled transparent PNG.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

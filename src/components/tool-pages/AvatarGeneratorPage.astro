@@ -1,0 +1,417 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { avatarGeneratorContent } from '../../i18n/tools/avatar-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = avatarGeneratorContent[locale];
+
+const checker =
+  'background-image: conic-gradient(#e5e7eb 25%, #fff 0 50%, #e5e7eb 0 75%, #fff 0); background-size: 16px 16px;';
+---
+
+<ToolShell t={t}>
+  <div
+    id="av-root"
+    data-output-info={t.outputInfo}
+    data-downloaded={t.downloaded}
+    data-error-export-failed={t.errorExportFailed}
+    data-label-initials={t.textLabelInitials}
+    data-label-identicon={t.textLabelIdenticon}
+    data-placeholder-initials={t.textPlaceholderInitials}
+    data-placeholder-identicon={t.textPlaceholderIdenticon}
+    class="grid gap-6 md:grid-cols-2"
+  >
+    <div>
+      <span class="ui-label">{t.modeLabel}</span>
+      <div
+        id="av-mode"
+        class="ui-seg w-fit"
+        role="group"
+        aria-label={t.modeLabel}
+      >
+        <button
+          type="button"
+          data-mode="initials"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.modeInitials}
+        </button>
+        <button
+          type="button"
+          data-mode="identicon"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.modeIdenticon}
+        </button>
+      </div>
+
+      <div class="mt-4">
+        <label id="av-text-label" for="av-text" class="ui-label">
+          {t.textLabelInitials}
+        </label>
+        <input
+          id="av-text"
+          type="text"
+          autocomplete="off"
+          maxlength="200"
+          value="Nyanko Tools"
+          placeholder={t.textPlaceholderInitials}
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+
+      <div id="av-initials-opts">
+        <div class="mt-4 flex flex-wrap items-end gap-4">
+          <div>
+            <span class="ui-label">{t.countLabel}</span>
+            <div
+              id="av-count"
+              class="ui-seg w-fit"
+              role="group"
+              aria-label={t.countLabel}
+            >
+              <button
+                type="button"
+                data-count="1"
+                aria-pressed="false"
+                class="ui-seg-btn"
+              >
+                {t.count1}
+              </button>
+              <button
+                type="button"
+                data-count="2"
+                aria-pressed="true"
+                class="ui-seg-btn"
+              >
+                {t.count2}
+              </button>
+            </div>
+          </div>
+          <div>
+            <label for="av-font" class="ui-label">
+              {t.fontLabel}
+            </label>
+            <select id="av-font" class="ui-input h-11 px-3 dark:bg-gray-900">
+              {t.fontOptions.map(({ value, label, selected }) => (
+                <option value={value} selected={selected}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <span class="ui-label">{t.shapeLabel}</span>
+        <div
+          id="av-shape"
+          class="ui-seg w-fit"
+          role="group"
+          aria-label={t.shapeLabel}
+        >
+          <button
+            type="button"
+            data-shape="square"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.shapeSquare}
+          </button>
+          <button
+            type="button"
+            data-shape="rounded"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.shapeRounded}
+          </button>
+          <button
+            type="button"
+            data-shape="circle"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            {t.shapeCircle}
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <label for="av-size" class="ui-label">
+          {t.sizeLabel}
+        </label>
+        <select id="av-size" class="ui-input h-11 px-3 dark:bg-gray-900">
+          {t.sizeOptions.map(({ value, label, selected }) => (
+            <option value={value} selected={selected}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div class="mt-4">
+        <label class="ui-check">
+          <input id="av-auto" type="checkbox" checked />
+          <span>{t.autoColorLabel}</span>
+        </label>
+        <div class="mt-3 flex flex-wrap gap-4">
+          <div>
+            <label for="av-bg" class="ui-label">
+              {t.bgLabel}
+            </label>
+            <input
+              id="av-bg"
+              type="color"
+              value="#4f46e5"
+              disabled
+              class="h-11 w-24 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+            />
+          </div>
+          <div>
+            <label for="av-fg" class="ui-label">
+              {t.fgLabel}
+            </label>
+            <input
+              id="av-fg"
+              type="color"
+              value="#ffffff"
+              disabled
+              class="h-11 w-24 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col items-center gap-3">
+      <p class="ui-label self-start">{t.previewLabel}</p>
+      <div
+        class="max-w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700"
+        style={checker}
+      >
+        <canvas
+          id="av-canvas"
+          role="img"
+          aria-label={t.previewLabel}
+          class="block h-auto max-h-80 max-w-full"
+        ></canvas>
+      </div>
+      <p
+        id="av-info"
+        class="text-sm text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></p>
+      <button id="av-download" type="button" class="ui-btn-primary">
+        {t.downloadButton}
+      </button>
+      <p
+        id="av-error"
+        role="alert"
+        hidden
+        class="text-sm text-red-600 dark:text-red-400"
+      ></p>
+      <span
+        id="av-status"
+        class="text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import {
+    FONT_STACKS,
+    IDENTICON_GRID,
+    autoColors,
+    avatarFileName,
+    clampSize,
+    identiconGrid,
+    initialsFontSize,
+    makeInitials,
+    shapeGeometry,
+    type AvatarFont,
+    type AvatarMode,
+    type AvatarShape,
+  } from '../../lib/tools/avatar-generator';
+
+  const root = document.getElementById('av-root')!;
+  const textInput = document.getElementById('av-text') as HTMLInputElement;
+  const textLabel = document.getElementById('av-text-label')!;
+  const initialsOpts = document.getElementById('av-initials-opts')!;
+  const fontSelect = document.getElementById('av-font') as HTMLSelectElement;
+  const sizeSelect = document.getElementById('av-size') as HTMLSelectElement;
+  const autoCheck = document.getElementById('av-auto') as HTMLInputElement;
+  const bgInput = document.getElementById('av-bg') as HTMLInputElement;
+  const fgInput = document.getElementById('av-fg') as HTMLInputElement;
+  const canvas = document.getElementById('av-canvas') as HTMLCanvasElement;
+  const infoEl = document.getElementById('av-info')!;
+  const errorEl = document.getElementById('av-error')!;
+  const statusEl = document.getElementById('av-status')!;
+  const downloadButton = document.getElementById(
+    'av-download',
+  ) as HTMLButtonElement;
+  const modeButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#av-mode [data-mode]'),
+  );
+  const countButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#av-count [data-count]'),
+  );
+  const shapeButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#av-shape [data-shape]'),
+  );
+
+  const d = root.dataset;
+  let mode: AvatarMode = 'initials';
+  let count: 1 | 2 = 2;
+  let shape: AvatarShape = 'circle';
+
+  function setPressed(
+    buttons: HTMLButtonElement[],
+    key: 'mode' | 'count' | 'shape',
+    value: string,
+  ) {
+    for (const b of buttons) {
+      b.setAttribute('aria-pressed', String(b.dataset[key] === value));
+    }
+  }
+
+  function draw() {
+    const size = clampSize(Number(sizeSelect.value));
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const text = textInput.value;
+    const auto = autoCheck.checked;
+    const colors = auto
+      ? autoColors(text, mode)
+      : { background: bgInput.value, foreground: fgInput.value };
+    if (auto) {
+      bgInput.value = colors.background;
+      fgInput.value = colors.foreground;
+    }
+
+    ctx.clearRect(0, 0, size, size);
+    ctx.save();
+    ctx.beginPath();
+    const g = shapeGeometry(shape, size);
+    if (g.kind === 'ellipse') {
+      ctx.ellipse(size / 2, size / 2, size / 2, size / 2, 0, 0, Math.PI * 2);
+    } else {
+      ctx.roundRect(0, 0, size, size, g.radius);
+    }
+    ctx.closePath();
+    ctx.clip();
+    ctx.fillStyle = colors.background;
+    ctx.fillRect(0, 0, size, size);
+
+    ctx.fillStyle = colors.foreground;
+    if (mode === 'identicon') {
+      const grid = identiconGrid(text);
+      // 円形でも模様が欠けにくいよう、周囲に余白を取る
+      const margin = size * 0.16;
+      const cell = (size - margin * 2) / IDENTICON_GRID;
+      grid.forEach((row, r) =>
+        row.forEach((on, c) => {
+          if (!on) return;
+          ctx.fillRect(
+            Math.floor(margin + c * cell),
+            Math.floor(margin + r * cell),
+            Math.ceil(cell),
+            Math.ceil(cell),
+          );
+        }),
+      );
+    } else {
+      const letters = makeInitials(text, count) || '?';
+      const length = Array.from(letters).length;
+      let px = initialsFontSize(length, size);
+      const family = FONT_STACKS[fontSelect.value as AvatarFont];
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = `600 ${px}px ${family}`;
+      // 幅に収まるまで小さくする
+      const maxWidth = size * 0.72;
+      const width = ctx.measureText(letters).width;
+      if (width > maxWidth) {
+        px = Math.floor((px * maxWidth) / width);
+        ctx.font = `600 ${px}px ${family}`;
+      }
+      ctx.fillText(letters, size / 2, size / 2 + px * 0.04);
+    }
+    ctx.restore();
+
+    infoEl.textContent = (d.outputInfo ?? '')
+      .replace('{width}', String(size))
+      .replace('{height}', String(size));
+  }
+
+  function refresh() {
+    const initials = mode === 'initials';
+    initialsOpts.hidden = !initials;
+    textLabel.textContent =
+      (initials ? d.labelInitials : d.labelIdenticon) ?? '';
+    textInput.placeholder =
+      (initials ? d.placeholderInitials : d.placeholderIdenticon) ?? '';
+    bgInput.disabled = autoCheck.checked;
+    fgInput.disabled = autoCheck.checked;
+    statusEl.textContent = '';
+    errorEl.hidden = true;
+    draw();
+  }
+
+  for (const b of modeButtons) {
+    b.addEventListener('click', () => {
+      mode = b.dataset.mode as AvatarMode;
+      setPressed(modeButtons, 'mode', mode);
+      refresh();
+    });
+  }
+  for (const b of countButtons) {
+    b.addEventListener('click', () => {
+      count = b.dataset.count === '1' ? 1 : 2;
+      setPressed(countButtons, 'count', String(count));
+      refresh();
+    });
+  }
+  for (const b of shapeButtons) {
+    b.addEventListener('click', () => {
+      shape = b.dataset.shape as AvatarShape;
+      setPressed(shapeButtons, 'shape', shape);
+      refresh();
+    });
+  }
+  for (const el of [textInput, bgInput, fgInput]) {
+    el.addEventListener('input', refresh);
+  }
+  for (const el of [fontSelect, sizeSelect, autoCheck]) {
+    el.addEventListener('change', refresh);
+  }
+
+  downloadButton.addEventListener('click', () => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        errorEl.textContent = d.errorExportFailed ?? '';
+        errorEl.hidden = false;
+        return;
+      }
+      errorEl.hidden = true;
+      downloadBlob(blob, avatarFileName(mode, textInput.value, canvas.width));
+      statusEl.textContent = d.downloaded ?? '';
+    }, 'image/png');
+  });
+
+  refresh();
+</script>

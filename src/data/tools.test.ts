@@ -6,7 +6,7 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 describe('tools registry', () => {
   it('all tools count should be 255', () => {
-    expect(tools.length).toBe(279);
+    expect(tools.length).toBe(283);
   });
 
   it('slug が重複していない', () => {

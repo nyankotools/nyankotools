@@ -9594,6 +9594,165 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'math-drill-generator',
+    category: 'generate',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['graph-paper-generator', 'calendar-generator'],
+    translations: {
+      ja: {
+        name: '計算ドリル作成',
+        description:
+          'たし算・ひき算・かけ算・わり算の計算ドリルを、桁数・問題数・筆算/横書きを指定して作成。答えシートも印刷できます。',
+        keywords: [
+          '計算ドリル',
+          '計算プリント',
+          '算数',
+          'たし算',
+          'ひき算',
+          'かけ算',
+          'わり算',
+          '筆算',
+        ],
+      },
+      en: {
+        name: 'Math Drill Generator',
+        description:
+          'Make printable addition, subtraction, multiplication and division worksheets with an answer sheet.',
+        keywords: [
+          'math worksheet',
+          'math drill',
+          'arithmetic practice',
+          'printable worksheet',
+          'addition',
+          'multiplication',
+          'long division',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'envelope-printer',
+    category: 'generate',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['vcard-generator', 'graph-paper-generator', 'calendar-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '封筒宛名印刷（長形3号・洋形・縦書き）',
+        description:
+          '長形3号・洋形の封筒に宛名・差出人・郵便番号枠を実寸で印刷。縦書き・横書き、住所の数字は縦中横や漢数字に対応。',
+        keywords: [
+          '封筒',
+          '宛名印刷',
+          '長形3号',
+          '洋形4号',
+          '縦書き',
+          '郵便番号枠',
+          '宛名',
+          '差出人',
+        ],
+      },
+      en: {
+        name: 'Envelope Address Printer',
+        description:
+          'Print recipient and sender addresses on Japanese envelopes at true size, with postal code boxes, vertical or horizontal.',
+        keywords: [
+          'envelope',
+          'address printing',
+          'nagagata 3',
+          'youkei',
+          'vertical writing',
+          'postal code box',
+          'mailing label',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'passphrase-generator',
+    category: 'security',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['password-generator', 'password-strength-checker'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'パスフレーズ生成（Diceware）',
+        description:
+          'EFF大型ワードリスト（7,776語）からDiceware方式で覚えやすく強いパスフレーズを生成します。語数・区切り文字・エントロピー表示に対応。',
+        keywords: [
+          'パスフレーズ',
+          'Diceware',
+          'ダイスウェア',
+          'ワードリスト',
+          'EFF',
+          'パスワード',
+          'ランダム',
+          'エントロピー',
+        ],
+      },
+      en: {
+        name: 'Passphrase Generator (Diceware)',
+        description:
+          'Generate memorable Diceware passphrases from the EFF large wordlist (7,776 words), with word count, separator and entropy options.',
+        keywords: [
+          'passphrase',
+          'diceware',
+          'wordlist',
+          'EFF wordlist',
+          'password',
+          'random words',
+          'entropy',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'dmarc-spf-generator',
+    category: 'security',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: [
+      'http-header-analyzer',
+      'csp-sri-generator',
+      'mailto-link-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'SPF・DMARCレコード生成・チェック',
+        description:
+          'SPF・DMARCのTXTレコードをフォームから作成し、既存レコードの構文やDNSルックアップ10回上限を確認します。DNSには問い合わせません。',
+        keywords: [
+          'SPF',
+          'DMARC',
+          'TXTレコード',
+          'メール認証',
+          'なりすまし対策',
+          'DNSルックアップ',
+          'rua',
+          'DKIM',
+        ],
+      },
+      en: {
+        name: 'SPF & DMARC Record Generator',
+        description:
+          'Build SPF and DMARC TXT records and check existing ones for the 10-lookup limit, +all, and pct errors. No DNS queries.',
+        keywords: [
+          'SPF',
+          'DMARC',
+          'TXT record',
+          'email authentication',
+          'spoofing',
+          'DNS lookup limit',
+          'rua',
+          'DKIM',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

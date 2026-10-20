@@ -1,0 +1,610 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { mathDrillGeneratorContent } from '../../i18n/tools/math-drill-generator';
+import {
+  COLUMNS_MAX,
+  COLUMNS_MIN,
+  COUNT_MAX,
+  COUNT_MIN,
+  DEFAULT_OPTIONS,
+  DIGITS_MAX,
+  DIGITS_MIN,
+  SEED_MAX,
+} from '../../lib/tools/math-drill-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = mathDrillGeneratorContent[locale];
+
+const ops = [
+  { value: 'add', label: t.opAdd },
+  { value: 'sub', label: t.opSub },
+  { value: 'mul', label: t.opMul },
+  { value: 'div', label: t.opDiv },
+];
+const range = (min: number, max: number) =>
+  Array.from({ length: max - min + 1 }, (_, i) => min + i);
+const papers = [
+  { value: 'a4', label: t.paperA4 },
+  { value: 'b5', label: t.paperB5 },
+  { value: 'letter', label: t.paperLetter },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    id="dr"
+    data-summary={t.summary}
+    data-answer-suffix={t.answerSuffix}
+    data-name-label={t.nameLabel}
+    data-date-label={t.dateLabel}
+    data-score-label={t.scoreLabel}
+    data-default-title={t.defaultTitle}
+    data-error-ops={t.errorOps}
+    data-error-digits={t.errorDigits}
+    data-error-count={t.errorCount}
+    data-error-seed={t.errorSeed}
+    data-digits-range={`${DIGITS_MIN},${DIGITS_MAX}`}
+    data-count-range={`${COUNT_MIN},${COUNT_MAX}`}
+    data-seed-range={`0,${SEED_MAX}`}
+    class="space-y-4"
+  >
+    <div class="space-y-4 print:hidden">
+      <fieldset class="flex flex-wrap items-center gap-x-6 gap-y-1">
+        <legend class="ui-label">{t.opsLabel}</legend>
+        {ops.map((o) => (
+          <label class="ui-check">
+            <input
+              id={`dr-op-${o.value}`}
+              type="checkbox"
+              checked={o.value === 'add'}
+            />
+            {o.label}
+          </label>
+        ))}
+      </fieldset>
+
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="dr-digits-a" class="ui-label">
+            {t.digitsALabel}
+          </label>
+          <select id="dr-digits-a" class="ui-input h-11 px-3 dark:bg-gray-900">
+            {range(DIGITS_MIN, DIGITS_MAX).map((n) => (
+              <option value={n} selected={n === DEFAULT_OPTIONS.digitsA}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="dr-digits-b" class="ui-label">
+            {t.digitsBLabel}
+          </label>
+          <select id="dr-digits-b" class="ui-input h-11 px-3 dark:bg-gray-900">
+            {range(DIGITS_MIN, DIGITS_MAX).map((n) => (
+              <option value={n} selected={n === DEFAULT_OPTIONS.digitsB}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="dr-count" class="ui-label">
+            {t.countLabel}
+          </label>
+          <input
+            id="dr-count"
+            type="number"
+            inputmode="numeric"
+            min={COUNT_MIN}
+            max={COUNT_MAX}
+            step="1"
+            value={DEFAULT_OPTIONS.count}
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="dr-layout" class="ui-label">
+            {t.layoutLabel}
+          </label>
+          <select id="dr-layout" class="ui-input h-11 px-3 dark:bg-gray-900">
+            <option value="horizontal">{t.layoutHorizontal}</option>
+            <option value="vertical">{t.layoutVertical}</option>
+          </select>
+        </div>
+        <div>
+          <label for="dr-columns" class="ui-label">
+            {t.columnsLabel}
+          </label>
+          <select id="dr-columns" class="ui-input h-11 px-3 dark:bg-gray-900">
+            {range(COLUMNS_MIN, COLUMNS_MAX).map((n) => (
+              <option value={n} selected={n === 2}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="dr-paper" class="ui-label">
+            {t.paperLabel}
+          </label>
+          <select id="dr-paper" class="ui-input h-11 px-3 dark:bg-gray-900">
+            {papers.map((o) => (
+              <option value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="dr-seed" class="ui-label">
+            {t.seedLabel}
+          </label>
+          <input
+            id="dr-seed"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            max={SEED_MAX}
+            step="1"
+            value={DEFAULT_OPTIONS.seed}
+            class="ui-input h-11 w-48 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <button id="dr-regenerate-button" type="button" class="ui-btn">
+          {t.regenerateButton}
+        </button>
+        <div>
+          <label for="dr-title" class="ui-label">
+            {t.titleLabel}
+          </label>
+          <input
+            id="dr-title"
+            type="text"
+            maxlength="40"
+            value={t.defaultTitle}
+            class="ui-input h-11 w-48 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-x-6">
+        <label class="ui-check">
+          <input id="dr-allow-negative" type="checkbox" />
+          {t.allowNegativeLabel}
+        </label>
+        <label class="ui-check">
+          <input id="dr-header" type="checkbox" checked />
+          {t.headerLabel}
+        </label>
+      </div>
+
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="dr-mode" class="ui-label">
+            {t.modeLabel}
+          </label>
+          <select id="dr-mode" class="ui-input h-11 px-3 dark:bg-gray-900">
+            <option value="problems">{t.modeProblems}</option>
+            <option value="answers">{t.modeAnswers}</option>
+          </select>
+        </div>
+        <button
+          id="dr-print-button"
+          type="button"
+          class="ui-btn ui-btn-primary"
+        >
+          {t.printButton}
+        </button>
+      </div>
+      <p id="dr-error" class="ui-error empty:hidden" aria-live="polite"></p>
+      <p
+        id="dr-summary"
+        class="text-sm text-gray-600 empty:hidden dark:text-gray-400"
+      ></p>
+    </div>
+
+    <div id="dr-output" class="dr-output"></div>
+  </section>
+</ToolShell>
+
+<style is:global>
+  .dr-output {
+    container-type: inline-size;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+  /* 画面では幅に収まるよう縮小し、印刷では 1 単位 = 1mm の実寸にする */
+  .dr-sheet {
+    --u: min(1mm, calc(100cqw / var(--w)));
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: calc(var(--u) * var(--w));
+    height: calc(var(--u) * var(--h));
+    padding: calc(var(--u) * var(--m));
+    overflow: hidden;
+    background: #fff;
+    color: #111;
+    border: 1px solid #d1d5db;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+    font-variant-numeric: tabular-nums;
+  }
+  .dr-head {
+    height: calc(var(--u) * var(--hh));
+    flex: none;
+  }
+  .dr-title {
+    font-size: calc(var(--u) * 6);
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .dr-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: calc(var(--u) * 4);
+    margin-top: calc(var(--u) * 2.5);
+    font-size: calc(var(--u) * 3.6);
+  }
+  .dr-meta span {
+    display: inline-flex;
+    flex: 1;
+    gap: calc(var(--u) * 1.5);
+  }
+  .dr-meta span::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #111;
+  }
+  .dr-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+    grid-auto-rows: calc(var(--u) * var(--row));
+    align-content: start;
+    flex: none;
+  }
+  .dr-cell {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--u) * 1.5);
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: calc(var(--u) * var(--fs));
+  }
+  .dr-cell.dr-vertical {
+    align-items: flex-start;
+    padding-top: calc(var(--u) * 2);
+  }
+  .dr-no {
+    flex: none;
+    font-size: calc(var(--u) * 3.2);
+    color: #6b7280;
+  }
+  .dr-blank {
+    flex: 1;
+    min-width: 2ch;
+    min-height: 1.2em;
+    border-bottom: 1px solid #111;
+    color: #dc2626;
+    font-weight: 700;
+    text-align: center;
+  }
+  .dr-v {
+    display: grid;
+    min-width: calc(var(--n) * 1ch + 2ch);
+    text-align: right;
+    line-height: 1.3;
+  }
+  .dr-v-b {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #111;
+  }
+  .dr-v-ans {
+    min-height: 1.4em;
+    color: #dc2626;
+    font-weight: 700;
+  }
+  .dr-d {
+    display: grid;
+    grid-template-columns: auto auto;
+    line-height: 1.3;
+  }
+  .dr-d-q {
+    grid-column: 2;
+    padding-left: 0.5ch;
+    color: #dc2626;
+    font-weight: 700;
+    min-height: 1.4em;
+  }
+  .dr-d-b {
+    padding-right: 0.6ch;
+    align-self: end;
+  }
+  .dr-d-a {
+    min-width: calc(var(--n) * 1ch + 1ch);
+    padding-left: 0.5ch;
+    border-top: 1px solid #111;
+    border-left: 1px solid #111;
+    border-top-left-radius: 0.6em;
+  }
+  @media print {
+    @page dr-a4 {
+      size: 210mm 297mm;
+      margin: 0;
+    }
+    @page dr-b5 {
+      size: 182mm 257mm;
+      margin: 0;
+    }
+    @page dr-letter {
+      size: 215.9mm 279.4mm;
+      margin: 0;
+    }
+    /* 印刷は用紙だけにする（見出し・説明文・使い方・注意事項・FAQなどは出さない） */
+    [data-tool-page] > :not(#dr) {
+      display: none;
+    }
+    .dr-output {
+      display: block;
+    }
+    /* 端数で空白ページができないよう、高さをわずかに小さくする */
+    .dr-sheet {
+      --u: 1mm;
+      height: calc(var(--h) * 1mm - 0.5mm);
+      border: 0;
+      box-shadow: none;
+      break-after: page;
+    }
+    .dr-sheet:last-child {
+      break-after: auto;
+    }
+  }
+</style>
+
+<script>
+  import {
+    COLUMNS_MAX,
+    COLUMNS_MIN,
+    OP_IDS,
+    OP_SYMBOL,
+    generateProblems,
+    pageLayout,
+    paginate,
+    randomSeed,
+    validateOptions,
+    type DrillLayout,
+    type DrillOptions,
+    type OptionsError,
+    type PageLayout,
+    type PaperId,
+    type Problem,
+  } from '../../lib/tools/math-drill-generator';
+  import { fill } from '../../lib/format-template';
+
+  const root = document.getElementById('dr')!;
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const opChecks = OP_IDS.map((id) => ({
+    id,
+    el: $<HTMLInputElement>(`dr-op-${id}`),
+  }));
+  const digitsA = $<HTMLSelectElement>('dr-digits-a');
+  const digitsB = $<HTMLSelectElement>('dr-digits-b');
+  const countInput = $<HTMLInputElement>('dr-count');
+  const layoutSelect = $<HTMLSelectElement>('dr-layout');
+  const columnsSelect = $<HTMLSelectElement>('dr-columns');
+  const paperSelect = $<HTMLSelectElement>('dr-paper');
+  const seedInput = $<HTMLInputElement>('dr-seed');
+  const titleInput = $<HTMLInputElement>('dr-title');
+  const negativeCheck = $<HTMLInputElement>('dr-allow-negative');
+  const headerCheck = $<HTMLInputElement>('dr-header');
+  const modeSelect = $<HTMLSelectElement>('dr-mode');
+  const regenerateButton = $<HTMLButtonElement>('dr-regenerate-button');
+  const printButton = $<HTMLButtonElement>('dr-print-button');
+  const errorEl = $('dr-error');
+  const summaryEl = $('dr-summary');
+  const output = $('dr-output');
+
+  const errorKeys: Record<OptionsError, string> = {
+    ops: 'errorOps',
+    digits: 'errorDigits',
+    count: 'errorCount',
+    seed: 'errorSeed',
+  };
+  const errorRanges: Partial<Record<OptionsError, string>> = {
+    digits: 'digitsRange',
+    count: 'countRange',
+    seed: 'seedRange',
+  };
+  const range = (key: string) => {
+    const [min, max] = (root.dataset[key] ?? '0,0').split(',');
+    return { min, max };
+  };
+
+  // 初回の問題はランダムなシードで作る（保存された値があれば復元で上書きされる）
+  seedInput.value = String(randomSeed());
+
+  function readOptions(): DrillOptions {
+    const seedText = seedInput.value.trim();
+    return {
+      ops: opChecks.filter((c) => c.el.checked).map((c) => c.id),
+      digitsA: Number(digitsA.value),
+      digitsB: Number(digitsB.value),
+      count: countInput.value.trim() === '' ? NaN : Number(countInput.value),
+      seed: seedText === '' ? NaN : Number(seedText),
+      allowNegative: negativeCheck.checked,
+    };
+  }
+
+  function el(tag: string, cls?: string, text?: string): HTMLElement {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function renderProblem(
+    p: Problem,
+    no: number,
+    layout: DrillLayout,
+    showAnswer: boolean,
+  ): HTMLElement {
+    const cell = el('div', 'dr-cell');
+    cell.append(el('span', 'dr-no', `(${no})`));
+    const answer = showAnswer ? String(p.answer) : '';
+    if (layout === 'horizontal') {
+      cell.append(
+        el('span', '', `${p.a} ${OP_SYMBOL[p.op]} ${p.b} =`),
+        el('span', 'dr-blank', answer),
+      );
+      return cell;
+    }
+    cell.classList.add('dr-vertical');
+    const n = Math.max(String(p.a).length, String(p.b).length, answer.length);
+    if (p.op === 'div') {
+      const box = el('div', 'dr-d');
+      box.style.setProperty('--n', String(String(p.a).length));
+      box.append(
+        el('span', 'dr-d-q', answer),
+        el('span', 'dr-d-b', String(p.b)),
+        el('span', 'dr-d-a', String(p.a)),
+      );
+      cell.append(box);
+      return cell;
+    }
+    const box = el('div', 'dr-v');
+    box.style.setProperty('--n', String(n));
+    const second = el('div', 'dr-v-b');
+    second.append(el('span', '', OP_SYMBOL[p.op]), el('span', '', String(p.b)));
+    box.append(
+      el('div', '', String(p.a)),
+      second,
+      el('div', 'dr-v-ans', answer),
+    );
+    cell.append(box);
+    return cell;
+  }
+
+  function renderSheet(
+    problems: Problem[],
+    firstNo: number,
+    pl: PageLayout,
+    layout: DrillLayout,
+    showAnswer: boolean,
+  ): HTMLElement {
+    const sheet = el('div', 'dr-sheet');
+    sheet.style.setProperty('--w', String(pl.widthMm));
+    sheet.style.setProperty('--h', String(pl.heightMm));
+    sheet.style.setProperty('--m', String(pl.marginMm));
+    sheet.style.setProperty('--hh', String(pl.headerMm));
+    sheet.style.setProperty('--cols', String(pl.columns));
+    sheet.style.setProperty('--row', String(pl.rowMm));
+    const fs =
+      layout === 'vertical'
+        ? 6
+        : pl.columns >= 4
+          ? 3.8
+          : pl.columns === 3
+            ? 4.6
+            : 5.4;
+    sheet.style.setProperty('--fs', String(fs));
+
+    if (pl.headerMm > 0) {
+      const head = el('div', 'dr-head');
+      const title =
+        (titleInput.value.trim() || root.dataset.defaultTitle || '') +
+        (showAnswer ? (root.dataset.answerSuffix ?? '') : '');
+      head.append(el('div', 'dr-title', title));
+      if (!showAnswer) {
+        const meta = el('div', 'dr-meta');
+        meta.append(
+          el('span', '', root.dataset.nameLabel ?? ''),
+          el('span', '', root.dataset.dateLabel ?? ''),
+          el('span', '', root.dataset.scoreLabel ?? ''),
+        );
+        head.append(meta);
+      }
+      sheet.append(head);
+    }
+    const grid = el('div', 'dr-grid');
+    problems.forEach((p, i) =>
+      grid.append(renderProblem(p, firstNo + i, layout, showAnswer)),
+    );
+    sheet.append(grid);
+    return sheet;
+  }
+
+  function render() {
+    const opts = readOptions();
+    const error = validateOptions(opts);
+    errorEl.textContent = '';
+    summaryEl.textContent = '';
+    if (error) {
+      output.replaceChildren();
+      printButton.disabled = true;
+      const template = root.dataset[errorKeys[error]] ?? '';
+      const rangeKey = errorRanges[error];
+      errorEl.textContent = rangeKey
+        ? fill(template, range(rangeKey))
+        : template;
+      return;
+    }
+    printButton.disabled = false;
+    const layout = layoutSelect.value as DrillLayout;
+    const paper = paperSelect.value as PaperId;
+    const columns = Math.min(
+      COLUMNS_MAX,
+      Math.max(COLUMNS_MIN, Number(columnsSelect.value) || COLUMNS_MIN),
+    );
+    const pl = pageLayout(paper, layout, columns, headerCheck.checked);
+    const showAnswer = modeSelect.value === 'answers';
+    const pages = paginate(generateProblems(opts), pl.perPage);
+    output.replaceChildren(
+      ...pages.map((list, i) =>
+        renderSheet(list, i * pl.perPage + 1, pl, layout, showAnswer),
+      ),
+    );
+    // 用紙サイズは静的CSSの named page（@page dr-a4 など）で指定する（実行時の <style> は CSP で禁止）
+    output.style.setProperty('page', `dr-${paper}`);
+    summaryEl.textContent = fill(root.dataset.summary ?? '', {
+      count: String(opts.count),
+      pages: String(pages.length),
+    });
+  }
+
+  [
+    ...opChecks.map((c) => c.el),
+    digitsA,
+    digitsB,
+    layoutSelect,
+    columnsSelect,
+    paperSelect,
+    negativeCheck,
+    headerCheck,
+    modeSelect,
+  ].forEach((e) => e.addEventListener('change', render));
+  [countInput, seedInput, titleInput].forEach((e) =>
+    e.addEventListener('input', render),
+  );
+  regenerateButton.addEventListener('click', () => {
+    seedInput.value = String(randomSeed());
+    render();
+  });
+  printButton.addEventListener('click', () => window.print());
+
+  render();
+</script>

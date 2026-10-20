@@ -1,0 +1,598 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { dmarcSpfGeneratorContent } from '../../i18n/tools/dmarc-spf-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = dmarcSpfGeneratorContent[locale];
+
+const clientText = {
+  lengthTemplate: t.lengthTemplate,
+  checkEmpty: t.checkEmpty,
+  checkOk: t.checkOk,
+  lookupsTemplate: t.lookupsTemplate,
+  severityLabels: t.severityLabels,
+  spfIssues: t.spfIssues,
+  dmarcIssues: t.dmarcIssues,
+  copied: t.copied,
+  copyFailed: t.copyFailed,
+  sampleSpf: t.sampleSpf,
+  sampleDmarc: t.sampleDmarc,
+};
+
+const selectClass = 'ui-input h-11 w-full px-3 dark:bg-gray-900';
+const areaClass = 'ui-input w-full p-3 font-mono text-sm dark:bg-gray-900';
+---
+
+<ToolShell t={t}>
+  <section id="dsg" data-text={JSON.stringify(clientText)}>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <span id="dsg-mode-label" class="ui-label">
+          {t.modeLabel}
+        </span>
+        <div
+          id="dsg-mode"
+          class="ui-seg"
+          role="group"
+          aria-labelledby="dsg-mode-label"
+        >
+          <button
+            type="button"
+            data-mode="spf"
+            aria-pressed="true"
+            class="ui-seg-btn flex-1"
+          >
+            {t.modeSpf}
+          </button>
+          <button
+            type="button"
+            data-mode="dmarc"
+            aria-pressed="false"
+            class="ui-seg-btn flex-1"
+          >
+            {t.modeDmarc}
+          </button>
+        </div>
+      </div>
+      <div>
+        <label for="dsg-domain" class="ui-label">
+          {t.domainLabel}
+        </label>
+        <input
+          id="dsg-domain"
+          type="text"
+          inputmode="url"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder={t.domainPlaceholder}
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+    <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{t.domainHint}</p>
+
+    <!-- SPF 組み立て -->
+    <div id="dsg-spf-form" class="mt-5 space-y-4">
+      <h2 class="text-base font-semibold">{t.spfBuildHeading}</h2>
+      <div>
+        <label for="dsg-spf-include" class="ui-label">
+          {t.spfIncludesLabel}
+        </label>
+        <textarea
+          id="dsg-spf-include"
+          rows="3"
+          placeholder={t.spfIncludesPlaceholder}
+          class={areaClass}
+          spellcheck="false"
+          autocomplete="off"
+        ></textarea>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="dsg-spf-ip4" class="ui-label">
+            {t.spfIp4Label}
+          </label>
+          <textarea
+            id="dsg-spf-ip4"
+            rows="3"
+            placeholder={t.spfIp4Placeholder}
+            class={areaClass}
+            spellcheck="false"
+            autocomplete="off"
+          ></textarea>
+        </div>
+        <div>
+          <label for="dsg-spf-ip6" class="ui-label">
+            {t.spfIp6Label}
+          </label>
+          <textarea
+            id="dsg-spf-ip6"
+            rows="3"
+            placeholder={t.spfIp6Placeholder}
+            class={areaClass}
+            spellcheck="false"
+            autocomplete="off"
+          ></textarea>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-x-6">
+        <label class="ui-check">
+          <input id="dsg-spf-a" type="checkbox" />
+          {t.spfAllowA}
+        </label>
+        <label class="ui-check">
+          <input id="dsg-spf-mx" type="checkbox" />
+          {t.spfAllowMx}
+        </label>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="dsg-spf-all" class="ui-label">
+            {t.spfAllLabel}
+          </label>
+          <select id="dsg-spf-all" class={selectClass}>
+            {t.spfAllOptions.map((o, i) => (
+              <option value={o.value} selected={i === 0}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="dsg-spf-redirect" class="ui-label">
+            {t.spfRedirectLabel}
+          </label>
+          <input
+            id="dsg-spf-redirect"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="example.net"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+      <p class="text-xs text-gray-600 dark:text-gray-400">
+        {t.spfRedirectHint}
+      </p>
+    </div>
+
+    <!-- DMARC 組み立て -->
+    <div id="dsg-dmarc-form" class="mt-5 hidden space-y-4">
+      <h2 class="text-base font-semibold">{t.dmarcBuildHeading}</h2>
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div>
+          <label for="dsg-dmarc-p" class="ui-label">
+            {t.dmarcPolicyLabel}
+          </label>
+          <select id="dsg-dmarc-p" class={selectClass}>
+            {t.dmarcPolicyOptions.map((o, i) => (
+              <option value={o.value} selected={i === 0}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="dsg-dmarc-sp" class="ui-label">
+            {t.dmarcSubPolicyLabel}
+          </label>
+          <select id="dsg-dmarc-sp" class={selectClass}>
+            {t.dmarcSubPolicyOptions.map((o, i) => (
+              <option value={o.value} selected={i === 0}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="dsg-dmarc-pct" class="ui-label">
+            {t.dmarcPctLabel}
+          </label>
+          <input
+            id="dsg-dmarc-pct"
+            type="number"
+            inputmode="numeric"
+            step="1"
+            value="100"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="dsg-dmarc-rua" class="ui-label">
+            {t.dmarcRuaLabel}
+          </label>
+          <textarea
+            id="dsg-dmarc-rua"
+            rows="2"
+            placeholder={t.dmarcRuaPlaceholder}
+            class={areaClass}
+            spellcheck="false"
+            autocomplete="off"
+          ></textarea>
+        </div>
+        <div>
+          <label for="dsg-dmarc-ruf" class="ui-label">
+            {t.dmarcRufLabel}
+          </label>
+          <textarea
+            id="dsg-dmarc-ruf"
+            rows="2"
+            placeholder={t.dmarcRufPlaceholder}
+            class={areaClass}
+            spellcheck="false"
+            autocomplete="off"
+          ></textarea>
+        </div>
+      </div>
+      <p class="text-xs text-gray-600 dark:text-gray-400">
+        {t.dmarcAddressHint}
+      </p>
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div>
+          <label for="dsg-dmarc-adkim" class="ui-label">
+            {t.dmarcAdkimLabel}
+          </label>
+          <select id="dsg-dmarc-adkim" class={selectClass}>
+            {t.dmarcAlignmentOptions.map((o, i) => (
+              <option value={o.value} selected={i === 0}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="dsg-dmarc-aspf" class="ui-label">
+            {t.dmarcAspfLabel}
+          </label>
+          <select id="dsg-dmarc-aspf" class={selectClass}>
+            {t.dmarcAlignmentOptions.map((o, i) => (
+              <option value={o.value} selected={i === 0}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="dsg-dmarc-fo" class="ui-label">
+            {t.dmarcFoLabel}
+          </label>
+          <select id="dsg-dmarc-fo" class={selectClass}>
+            {t.dmarcFoOptions.map((o, i) => (
+              <option value={o.value} selected={i === 0}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 出力 -->
+    <div class="mt-6">
+      <h2 class="mb-2 text-base font-semibold">{t.outputHeading}</h2>
+      <label for="dsg-record" class="ui-label">
+        {t.recordLabel}
+      </label>
+      <textarea
+        id="dsg-record"
+        readonly
+        rows="3"
+        class="ui-input w-full bg-gray-50 p-3 font-mono text-sm dark:bg-gray-900"
+        spellcheck="false"
+      ></textarea>
+      <div class="mt-2 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          id="dsg-copy-button"
+          class="ui-btn ui-btn-primary"
+        >
+          {t.copyButton}
+        </button>
+        <span
+          id="dsg-copy-status"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></span>
+        <span
+          id="dsg-length"
+          class="text-sm text-gray-600 dark:text-gray-400"
+        ></span>
+      </div>
+      <ul id="dsg-build-issues" class="mt-3 space-y-2"></ul>
+
+      <h3 class="mt-5 mb-2 text-sm text-gray-600 dark:text-gray-400">
+        {t.dnsHeading}
+      </h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <tbody>
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <th scope="row" class="py-2 pr-3 align-top font-normal">
+                {t.dnsTypeLabel}
+              </th>
+              <td class="py-2 font-mono">TXT</td>
+            </tr>
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <th scope="row" class="py-2 pr-3 align-top font-normal">
+                {t.dnsHostLabel}
+              </th>
+              <td id="dsg-host" class="py-2 font-mono break-all"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="dsg-quoted-wrap" class="mt-3 hidden">
+        <label for="dsg-quoted" class="ui-label">
+          {t.dnsQuotedLabel}
+        </label>
+        <textarea
+          id="dsg-quoted"
+          readonly
+          rows="4"
+          class="ui-input w-full bg-gray-50 p-3 font-mono text-sm dark:bg-gray-900"
+          spellcheck="false"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- チェック -->
+    <div class="mt-8">
+      <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-base font-semibold">{t.checkHeading}</h2>
+        <button type="button" id="dsg-sample-button" class="ui-btn">
+          {t.checkSampleButton}
+        </button>
+      </div>
+      <label for="dsg-check-input" class="ui-label">
+        {t.checkLabel}
+      </label>
+      <textarea
+        id="dsg-check-input"
+        rows="4"
+        placeholder={t.checkPlaceholder}
+        class={areaClass}
+        spellcheck="false"
+        autocomplete="off"
+      ></textarea>
+      <p
+        id="dsg-lookups"
+        class="mt-2 hidden text-sm font-medium"
+        aria-live="polite"
+      ></p>
+      <ul id="dsg-check-results" class="mt-2 space-y-2" aria-live="polite"></ul>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    buildDmarcRecord,
+    buildSpfRecord,
+    checkDmarc,
+    checkSpf,
+    dmarcHost,
+    formatQuotedTxt,
+    spfHost,
+    splitList,
+    splitTxtChunks,
+    SPF_LOOKUP_LIMIT,
+    type DmarcBuildInput,
+    type DmarcIssueCode,
+    type Issue,
+    type Severity,
+    type SpfAll,
+    type SpfIssueCode,
+  } from '../../lib/tools/dmarc-spf-generator';
+
+  interface ClientText {
+    lengthTemplate: string;
+    checkEmpty: string;
+    checkOk: string;
+    lookupsTemplate: string;
+    severityLabels: Record<Severity, string>;
+    spfIssues: Record<SpfIssueCode, string>;
+    dmarcIssues: Record<DmarcIssueCode, string>;
+    copied: string;
+    copyFailed: string;
+    sampleSpf: string;
+    sampleDmarc: string;
+  }
+
+  type Mode = 'spf' | 'dmarc';
+
+  const section = document.getElementById('dsg')!;
+  const text: ClientText = JSON.parse(section.dataset.text ?? '{}');
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const domain = $<HTMLInputElement>('dsg-domain');
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#dsg-mode [data-mode]',
+  );
+  const spfForm = $('dsg-spf-form');
+  const dmarcForm = $('dsg-dmarc-form');
+  const record = $<HTMLTextAreaElement>('dsg-record');
+  const hostEl = $('dsg-host');
+  const lengthEl = $('dsg-length');
+  const quotedWrap = $('dsg-quoted-wrap');
+  const quoted = $<HTMLTextAreaElement>('dsg-quoted');
+  const buildIssues = $('dsg-build-issues');
+  const copyButton = $('dsg-copy-button');
+  const copyStatus = $('dsg-copy-status');
+  const checkInput = $<HTMLTextAreaElement>('dsg-check-input');
+  const checkResults = $('dsg-check-results');
+  const lookupsEl = $('dsg-lookups');
+  const sampleButton = $('dsg-sample-button');
+
+  let mode: Mode = 'spf';
+
+  const badgeClass: Record<Severity, string> = {
+    error: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+    warn: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
+    info: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+  };
+
+  function messageFor(kind: Mode, issue: Issue<string>): string {
+    const table: Record<string, string> =
+      kind === 'spf' ? text.spfIssues : text.dmarcIssues;
+    return (table[issue.code] ?? issue.code).replace(
+      '{value}',
+      issue.value ?? '',
+    );
+  }
+
+  function renderIssues(
+    target: HTMLElement,
+    kind: Mode,
+    issues: Issue<string>[],
+    showOk: boolean,
+  ) {
+    const items = issues.map((issue) => {
+      const li = document.createElement('li');
+      li.className =
+        'flex flex-wrap items-start gap-2 rounded-lg border border-gray-200 p-3 text-sm dark:border-gray-700';
+      const badge = document.createElement('span');
+      badge.className = `rounded px-2 py-0.5 text-xs font-medium ${badgeClass[issue.severity]}`;
+      badge.textContent = text.severityLabels[issue.severity];
+      const body = document.createElement('span');
+      body.className = 'min-w-0 flex-1 break-words';
+      body.textContent = messageFor(kind, issue);
+      li.append(badge, body);
+      return li;
+    });
+    if (items.length === 0 && showOk) {
+      const li = document.createElement('li');
+      li.className = 'text-sm text-green-700 dark:text-green-400';
+      li.textContent = text.checkOk;
+      items.push(li);
+    }
+    target.replaceChildren(...items);
+  }
+
+  function selectValue(id: string): string {
+    return $<HTMLSelectElement>(id).value;
+  }
+
+  function build() {
+    copyStatus.textContent = '';
+    let value: string;
+    if (mode === 'spf') {
+      value = buildSpfRecord({
+        includes: splitList($<HTMLTextAreaElement>('dsg-spf-include').value),
+        ip4: splitList($<HTMLTextAreaElement>('dsg-spf-ip4').value),
+        ip6: splitList($<HTMLTextAreaElement>('dsg-spf-ip6').value),
+        a: $<HTMLInputElement>('dsg-spf-a').checked,
+        mx: $<HTMLInputElement>('dsg-spf-mx').checked,
+        redirect: $<HTMLInputElement>('dsg-spf-redirect').value,
+        all: selectValue('dsg-spf-all') as SpfAll,
+      });
+      hostEl.textContent = spfHost(domain.value);
+      renderIssues(buildIssues, 'spf', checkSpf(value).issues, false);
+    } else {
+      const pctRaw = $<HTMLInputElement>('dsg-dmarc-pct').value.trim();
+      const input: DmarcBuildInput = {
+        policy: selectValue('dsg-dmarc-p') as DmarcBuildInput['policy'],
+        subPolicy: selectValue('dsg-dmarc-sp') as DmarcBuildInput['subPolicy'],
+        pct: pctRaw === '' ? 100 : Number(pctRaw),
+        rua: splitList($<HTMLTextAreaElement>('dsg-dmarc-rua').value),
+        ruf: splitList($<HTMLTextAreaElement>('dsg-dmarc-ruf').value),
+        adkim: selectValue('dsg-dmarc-adkim') as DmarcBuildInput['adkim'],
+        aspf: selectValue('dsg-dmarc-aspf') as DmarcBuildInput['aspf'],
+        fo: selectValue('dsg-dmarc-fo') as DmarcBuildInput['fo'],
+      };
+      value = buildDmarcRecord(input);
+      hostEl.textContent = dmarcHost(domain.value);
+      renderIssues(buildIssues, 'dmarc', checkDmarc(value).issues, false);
+    }
+    record.value = value;
+    const chunks = splitTxtChunks(value);
+    lengthEl.textContent = text.lengthTemplate
+      .replace('{length}', String(value.length))
+      .replace('{chunks}', String(chunks.length));
+    quotedWrap.classList.toggle('hidden', chunks.length <= 1);
+    quoted.value = chunks.length > 1 ? formatQuotedTxt(value) : '';
+  }
+
+  function detectKind(value: string): Mode {
+    if (/v\s*=\s*DMARC1/i.test(value)) return 'dmarc';
+    if (/v\s*=\s*spf1/i.test(value)) return 'spf';
+    return mode;
+  }
+
+  function check() {
+    const value = checkInput.value;
+    lookupsEl.classList.add('hidden');
+    if (value.trim() === '') {
+      const li = document.createElement('li');
+      li.className = 'text-sm text-gray-600 dark:text-gray-400';
+      li.textContent = text.checkEmpty;
+      checkResults.replaceChildren(li);
+      return;
+    }
+    const kind = detectKind(value);
+    if (kind === 'spf') {
+      const result = checkSpf(value);
+      lookupsEl.textContent = text.lookupsTemplate
+        .replace('{count}', String(result.lookups))
+        .replace('{limit}', String(SPF_LOOKUP_LIMIT));
+      lookupsEl.classList.remove('hidden');
+      renderIssues(checkResults, 'spf', result.issues, true);
+    } else {
+      renderIssues(checkResults, 'dmarc', checkDmarc(value).issues, true);
+    }
+  }
+
+  function setMode(next: Mode) {
+    mode = next;
+    modeButtons.forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.mode === next));
+    });
+    spfForm.classList.toggle('hidden', next !== 'spf');
+    dmarcForm.classList.toggle('hidden', next !== 'dmarc');
+    build();
+    if (checkInput.value.trim() === '') check();
+  }
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () =>
+      setMode(button.dataset.mode as Mode),
+    );
+  });
+
+  section
+    .querySelectorAll('#dsg-spf-form, #dsg-dmarc-form, #dsg-domain')
+    .forEach((el) => {
+      el.addEventListener('input', build);
+      el.addEventListener('change', build);
+    });
+  checkInput.addEventListener('input', check);
+
+  sampleButton.addEventListener('click', () => {
+    checkInput.value = mode === 'spf' ? text.sampleSpf : text.sampleDmarc;
+    check();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    copyStatus.textContent = (await copyText(record.value))
+      ? text.copied
+      : text.copyFailed;
+  });
+
+  // ページ読み込み時と、sessionStorage からの復元後に再計算する
+  build();
+  check();
+  document.addEventListener('DOMContentLoaded', () => {
+    build();
+    check();
+  });
+</script>

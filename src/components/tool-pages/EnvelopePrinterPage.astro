@@ -1,0 +1,550 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { envelopePrinterContent } from '../../i18n/tools/envelope-printer';
+import {
+  ADDRESS_SIZE_MAX,
+  ADDRESS_SIZE_MIN,
+  DEFAULT_OPTIONS,
+  NAME_SIZE_MAX,
+  NAME_SIZE_MIN,
+  SENDER_SIZE_MAX,
+  SENDER_SIZE_MIN,
+} from '../../lib/tools/envelope-printer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = envelopePrinterContent[locale];
+
+const envelopes = [
+  { value: 'nagagata3', label: t.envNagagata3 },
+  { value: 'nagagata4', label: t.envNagagata4 },
+  { value: 'youkei2', label: t.envYoukei2 },
+  { value: 'youkei4', label: t.envYoukei4 },
+];
+const honorifics = [
+  { value: 'sama', label: t.honorificSama },
+  { value: 'onchu', label: t.honorificOnchu },
+  { value: 'yuki', label: t.honorificYuki },
+  { value: 'dono', label: t.honorificDono },
+  { value: 'sensei', label: t.honorificSensei },
+  { value: 'none', label: t.honorificNone },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    id="ep"
+    data-error-postal={t.errorPostal}
+    data-error-address-size={t.errorAddressSize}
+    data-error-name-size={t.errorNameSize}
+    data-error-sender-size={t.errorSenderSize}
+    data-address-range={`${ADDRESS_SIZE_MIN},${ADDRESS_SIZE_MAX}`}
+    data-name-range={`${NAME_SIZE_MIN},${NAME_SIZE_MAX}`}
+    data-sender-range={`${SENDER_SIZE_MIN},${SENDER_SIZE_MAX}`}
+    class="space-y-4"
+  >
+    <div class="space-y-5 print:hidden">
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="ep-envelope" class="ui-label">
+            {t.envelopeLabel}
+          </label>
+          <select id="ep-envelope" class="ui-input h-11 px-3 dark:bg-gray-900">
+            {envelopes.map((o) => (
+              <option value={o.value}>{o.label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="ep-writing" class="ui-label">
+            {t.writingLabel}
+          </label>
+          <select id="ep-writing" class="ui-input h-11 px-3 dark:bg-gray-900">
+            <option value="vertical">{t.writingVertical}</option>
+            <option value="horizontal">{t.writingHorizontal}</option>
+          </select>
+        </div>
+        <div>
+          <label for="ep-numerals" class="ui-label">
+            {t.numeralsLabel}
+          </label>
+          <select id="ep-numerals" class="ui-input h-11 px-3 dark:bg-gray-900">
+            <option value="tcy">{t.numeralsTcy}</option>
+            <option value="kanji">{t.numeralsKanji}</option>
+            <option value="asis">{t.numeralsAsis}</option>
+          </select>
+        </div>
+      </div>
+
+      <fieldset class="space-y-3">
+        <legend class="mb-2 text-base font-semibold">
+          {t.recipientHeading}
+        </legend>
+        <div>
+          <label for="ep-recipient-postal" class="ui-label">
+            {t.recipientPostalLabel}
+          </label>
+          <input
+            id="ep-recipient-postal"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            maxlength="12"
+            placeholder="100-0001"
+            class="ui-input h-11 w-40 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ep-recipient-address" class="ui-label">
+            {t.recipientAddressLabel}
+          </label>
+          <textarea
+            id="ep-recipient-address"
+            rows="3"
+            autocomplete="off"
+            placeholder={t.recipientAddressPlaceholder}
+            class="ui-input w-full px-3 py-2 dark:bg-gray-900"
+          ></textarea>
+        </div>
+        <div class="flex flex-wrap items-end gap-3">
+          <div class="min-w-0 flex-1 basis-56">
+            <label for="ep-recipient-name" class="ui-label">
+              {t.recipientNameLabel}
+            </label>
+            <input
+              id="ep-recipient-name"
+              type="text"
+              autocomplete="off"
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            />
+          </div>
+          <div>
+            <label for="ep-honorific" class="ui-label">
+              {t.honorificLabel}
+            </label>
+            <select
+              id="ep-honorific"
+              class="ui-input h-11 px-3 dark:bg-gray-900"
+            >
+              {honorifics.map((o) => (
+                <option
+                  value={o.value}
+                  selected={o.value === DEFAULT_OPTIONS.honorific}
+                >
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="space-y-3">
+        <legend class="mb-2 text-base font-semibold">{t.senderHeading}</legend>
+        <div>
+          <label for="ep-sender-postal" class="ui-label">
+            {t.senderPostalLabel}
+          </label>
+          <input
+            id="ep-sender-postal"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            maxlength="12"
+            placeholder="100-0002"
+            class="ui-input h-11 w-40 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ep-sender-address" class="ui-label">
+            {t.senderAddressLabel}
+          </label>
+          <textarea
+            id="ep-sender-address"
+            rows="2"
+            autocomplete="off"
+            class="ui-input w-full px-3 py-2 dark:bg-gray-900"
+          ></textarea>
+        </div>
+        <div>
+          <label for="ep-sender-name" class="ui-label">
+            {t.senderNameLabel}
+          </label>
+          <input
+            id="ep-sender-name"
+            type="text"
+            autocomplete="off"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </div>
+      </fieldset>
+
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="ep-address-size" class="ui-label">
+            {t.addressSizeLabel}
+          </label>
+          <input
+            id="ep-address-size"
+            type="number"
+            inputmode="decimal"
+            min={ADDRESS_SIZE_MIN}
+            max={ADDRESS_SIZE_MAX}
+            step="0.5"
+            value={DEFAULT_OPTIONS.addressSizeMm}
+            class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ep-name-size" class="ui-label">
+            {t.nameSizeLabel}
+          </label>
+          <input
+            id="ep-name-size"
+            type="number"
+            inputmode="decimal"
+            min={NAME_SIZE_MIN}
+            max={NAME_SIZE_MAX}
+            step="0.5"
+            value={DEFAULT_OPTIONS.nameSizeMm}
+            class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="ep-sender-size" class="ui-label">
+            {t.senderSizeLabel}
+          </label>
+          <input
+            id="ep-sender-size"
+            type="number"
+            inputmode="decimal"
+            min={SENDER_SIZE_MIN}
+            max={SENDER_SIZE_MAX}
+            step="0.5"
+            value={DEFAULT_OPTIONS.senderSizeMm}
+            class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+
+      <label class="ui-check">
+        <input type="checkbox" id="ep-show-frames" checked />
+        {t.showFramesLabel}
+      </label>
+
+      <div class="flex flex-wrap gap-3">
+        <button
+          id="ep-print-button"
+          type="button"
+          class="ui-btn ui-btn-primary"
+        >
+          {t.printButton}
+        </button>
+      </div>
+      <p id="ep-error" class="ui-error empty:hidden" aria-live="polite"></p>
+      <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+        {t.previewLabel}
+      </p>
+    </div>
+
+    <div
+      id="ep-scroll"
+      role="region"
+      aria-label={t.previewLabel}
+      tabindex="0"
+      class="max-w-full overflow-x-auto print:overflow-visible"
+    >
+      <div id="ep-output" class="ep-sheet"></div>
+    </div>
+  </section>
+</ToolShell>
+
+<style is:global>
+  .ep-sheet {
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    background: #fff;
+    color: #000;
+    border: 1px solid #9ca3af;
+    font-family: 'Hiragino Mincho ProN', 'Yu Mincho', 'MS Mincho', serif;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .ep-sheet .ep-block {
+    position: absolute;
+    box-sizing: border-box;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+  .ep-sheet .ep-v {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+  .ep-sheet .ep-tcy {
+    text-combine-upright: all;
+  }
+  .ep-sheet .ep-upright {
+    text-orientation: upright;
+  }
+  .ep-sheet .ep-center {
+    text-align: center;
+  }
+  .ep-sheet .ep-right {
+    text-align: right;
+  }
+  .ep-sheet .ep-frame {
+    position: absolute;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+  .ep-sheet .ep-frame-line {
+    border: 0.25mm solid #d33;
+  }
+  @media print {
+    @page ep-nagagata3 {
+      size: 235mm 120mm;
+      margin: 0;
+    }
+    @page ep-nagagata4 {
+      size: 205mm 90mm;
+      margin: 0;
+    }
+    @page ep-youkei2 {
+      size: 162mm 114mm;
+      margin: 0;
+    }
+    @page ep-youkei4 {
+      size: 235mm 105mm;
+      margin: 0;
+    }
+    /* 印刷は封筒の面だけにする（見出し・説明文・使い方・注意事項・FAQなどは出さない） */
+    [data-tool-page] > :not(#ep) {
+      display: none;
+    }
+    /* 端数で2ページ目に溢れないよう、実寸よりわずかに小さくする */
+    #ep-output {
+      border: 0;
+      width: var(--ep-width);
+      height: calc(var(--ep-height) - 0.5mm);
+    }
+  }
+</style>
+
+<script>
+  import {
+    ENVELOPES,
+    composeRecipientName,
+    layoutEnvelope,
+    splitLines,
+    validateOptions,
+    verticalSegments,
+    type Box,
+    type EnvelopeId,
+    type EnvelopeOptions,
+    type Frame,
+    type HonorificId,
+    type Numerals,
+    type OptionsError,
+    type Writing,
+  } from '../../lib/tools/envelope-printer';
+  import { fill } from '../../lib/format-template';
+
+  const root = document.getElementById('ep')!;
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const envelopeSelect = $<HTMLSelectElement>('ep-envelope');
+  const writingSelect = $<HTMLSelectElement>('ep-writing');
+  const numeralsSelect = $<HTMLSelectElement>('ep-numerals');
+  const recipientPostal = $<HTMLInputElement>('ep-recipient-postal');
+  const recipientAddress = $<HTMLTextAreaElement>('ep-recipient-address');
+  const recipientName = $<HTMLInputElement>('ep-recipient-name');
+  const honorificSelect = $<HTMLSelectElement>('ep-honorific');
+  const senderPostal = $<HTMLInputElement>('ep-sender-postal');
+  const senderAddress = $<HTMLTextAreaElement>('ep-sender-address');
+  const senderName = $<HTMLInputElement>('ep-sender-name');
+  const addressSize = $<HTMLInputElement>('ep-address-size');
+  const nameSize = $<HTMLInputElement>('ep-name-size');
+  const senderSize = $<HTMLInputElement>('ep-sender-size');
+  const showFrames = $<HTMLInputElement>('ep-show-frames');
+  const printButton = $<HTMLButtonElement>('ep-print-button');
+  const errorEl = $('ep-error');
+  const output = $('ep-output');
+
+  const errorKeys: Record<OptionsError, string> = {
+    recipientPostal: 'errorPostal',
+    senderPostal: 'errorPostal',
+    addressSize: 'errorAddressSize',
+    nameSize: 'errorNameSize',
+    senderSize: 'errorSenderSize',
+  };
+  const errorRanges: Partial<Record<OptionsError, string>> = {
+    addressSize: 'addressRange',
+    nameSize: 'nameRange',
+    senderSize: 'senderRange',
+  };
+
+  function readOptions(): EnvelopeOptions {
+    return {
+      envelope: envelopeSelect.value as EnvelopeId,
+      writing: writingSelect.value as Writing,
+      numerals: numeralsSelect.value as Numerals,
+      recipientPostal: recipientPostal.value,
+      recipientAddress: recipientAddress.value,
+      recipientName: recipientName.value,
+      honorific: honorificSelect.value as HonorificId,
+      senderPostal: senderPostal.value,
+      senderAddress: senderAddress.value,
+      senderName: senderName.value,
+      addressSizeMm: Number(addressSize.value),
+      nameSizeMm: Number(nameSize.value),
+      senderSizeMm: Number(senderSize.value),
+      showFrames: showFrames.checked,
+    };
+  }
+
+  // 位置・寸法は CSSOM（el.style）で設定する。style 属性の文字列は CSP でブロックされうる
+  function place(el: HTMLElement, box: Box) {
+    el.style.left = `${box.leftMm}mm`;
+    el.style.top = `${box.topMm}mm`;
+    el.style.width = `${box.widthMm}mm`;
+    el.style.height = `${box.heightMm}mm`;
+  }
+
+  function textBlock(
+    lines: string[],
+    box: Box,
+    sizeMm: number,
+    writing: Writing,
+    numerals: Numerals,
+    align: '' | 'ep-center' | 'ep-right',
+  ): HTMLElement {
+    const block = document.createElement('div');
+    block.className = `ep-block${writing === 'vertical' ? ' ep-v' : ''}${align ? ` ${align}` : ''}`;
+    block.style.fontSize = `${sizeMm}mm`;
+    place(block, box);
+    for (const line of lines) {
+      const row = document.createElement('div');
+      if (writing === 'vertical') {
+        for (const seg of verticalSegments(line, numerals)) {
+          if (seg.kind === 'plain') {
+            row.append(seg.text);
+          } else {
+            const span = document.createElement('span');
+            span.className = seg.kind === 'tcy' ? 'ep-tcy' : 'ep-upright';
+            span.textContent = seg.text;
+            row.append(span);
+          }
+        }
+      } else {
+        row.textContent = line;
+      }
+      block.append(row);
+    }
+    return block;
+  }
+
+  function frameEls(frames: Frame[], draw: boolean): HTMLElement[] {
+    return frames.map((f) => {
+      const el = document.createElement('div');
+      el.className = `ep-frame${draw ? ' ep-frame-line' : ''}`;
+      el.style.left = `${f.xMm}mm`;
+      el.style.top = `${f.yMm}mm`;
+      el.style.width = `${f.widthMm}mm`;
+      el.style.height = `${f.heightMm}mm`;
+      el.style.fontSize = `${f.heightMm * 0.7}mm`;
+      el.textContent = f.digit;
+      return el;
+    });
+  }
+
+  function render() {
+    const opts = readOptions();
+    const error = validateOptions(opts);
+    errorEl.textContent = '';
+    printButton.disabled = error !== null;
+    if (error) {
+      const template = root.dataset[errorKeys[error]] ?? '';
+      const rangeKey = errorRanges[error];
+      if (rangeKey) {
+        const [min, max] = (root.dataset[rangeKey] ?? '0,0').split(',');
+        errorEl.textContent = fill(template, { min, max });
+      } else {
+        errorEl.textContent = template;
+      }
+      return;
+    }
+    const layout = layoutEnvelope(opts);
+    const { widthMm, heightMm } = ENVELOPES[opts.envelope];
+    const nodes: HTMLElement[] = [
+      ...frameEls(layout.recipientPostal, opts.showFrames),
+      ...frameEls(layout.senderPostal, opts.showFrames),
+    ];
+    const vertical = opts.writing === 'vertical';
+    nodes.push(
+      textBlock(
+        splitLines(opts.recipientAddress),
+        layout.recipientAddress,
+        opts.addressSizeMm,
+        opts.writing,
+        opts.numerals,
+        '',
+      ),
+      textBlock(
+        [composeRecipientName(opts.recipientName, opts.honorific)].filter(
+          (l) => l !== '',
+        ),
+        layout.recipientName,
+        opts.nameSizeMm,
+        opts.writing,
+        opts.numerals,
+        vertical ? '' : 'ep-center',
+      ),
+      textBlock(
+        [...splitLines(opts.senderAddress), ...splitLines(opts.senderName)],
+        layout.sender,
+        opts.senderSizeMm,
+        opts.writing,
+        opts.numerals,
+        vertical ? '' : 'ep-right',
+      ),
+    );
+    output.replaceChildren(...nodes);
+    output.style.width = `${widthMm}mm`;
+    output.style.height = `${heightMm}mm`;
+    output.style.setProperty('--ep-width', `${widthMm}mm`);
+    output.style.setProperty('--ep-height', `${heightMm}mm`);
+    // 用紙サイズは静的CSSの named page（@page ep-nagagata3 など）で指定する。
+    // 実行時に <style> を作ると CSP（style-src 'self'）でブロックされるため
+    output.style.setProperty('page', `ep-${opts.envelope}`);
+  }
+
+  [
+    recipientPostal,
+    recipientAddress,
+    recipientName,
+    senderPostal,
+    senderAddress,
+    senderName,
+    addressSize,
+    nameSize,
+    senderSize,
+  ].forEach((el) => el.addEventListener('input', render));
+  [
+    envelopeSelect,
+    writingSelect,
+    numeralsSelect,
+    honorificSelect,
+    showFrames,
+  ].forEach((el) => el.addEventListener('change', render));
+  printButton.addEventListener('click', () => window.print());
+
+  render();
+</script>

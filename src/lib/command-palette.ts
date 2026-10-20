@@ -124,7 +124,8 @@ export function initCommandPalette(): void {
 
   document.addEventListener('keydown', (event) => {
     if (
-      event.key.toLowerCase() === 'k' &&
+      // オートフィル選択時は key が未定義のkeydownが発火する
+      event.key?.toLowerCase() === 'k' &&
       (isMac ? event.metaKey : event.ctrlKey) &&
       !event.altKey &&
       !event.shiftKey &&

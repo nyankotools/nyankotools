@@ -133,6 +133,10 @@ const slugs = [
   'mailto-link-generator',
   'ics-generator',
   'vcard-generator',
+  'math-drill-generator',
+  'envelope-printer',
+  'passphrase-generator',
+  'dmarc-spf-generator',
 ];
 
 const locales = [

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { rankTools } from './command-palette';
+import { rankTools, withRecentFirst } from './command-palette';
 import type { LocalizedTool } from '../data/tools';
 
 function tool(
@@ -93,5 +93,33 @@ describe('rankTools', () => {
   it('一致が無ければ空、limit で件数を絞る', () => {
     expect(rankTools(tools, 'zzz')).toEqual([]);
     expect(rankTools(tools, 'json', 1)).toHaveLength(1);
+  });
+});
+
+describe('withRecentFirst', () => {
+  const all = [tool('a', 'A'), tool('b', 'B'), tool('c', 'C'), tool('d', 'D')];
+
+  it('最近使ったツールを新しい順に先頭へ、残りは元の順序のまま', () => {
+    expect(withRecentFirst(all, ['c', 'a']).map((t) => t.slug)).toEqual([
+      'c',
+      'a',
+      'b',
+      'd',
+    ]);
+  });
+
+  it('履歴が空・存在しないslugだけなら元のまま', () => {
+    expect(withRecentFirst(all, []).map((t) => t.slug)).toEqual([
+      'a',
+      'b',
+      'c',
+      'd',
+    ]);
+    expect(withRecentFirst(all, ['zzz']).map((t) => t.slug)).toEqual([
+      'a',
+      'b',
+      'c',
+      'd',
+    ]);
   });
 });

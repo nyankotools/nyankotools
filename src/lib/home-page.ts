@@ -2,6 +2,7 @@ import { getLocalizedTools, type CategoryId } from '../data/tools';
 import { enableDragScroll, enableScrollFade } from './drag-scroll';
 import { FAVORITES_CHANGED_EVENT, getFavoriteSlugs } from './favorites';
 import { filterTools } from './home-filter';
+import { getRecentSlugs } from './recent-tools';
 
 /** 絞り込みなしのとき、カテゴリごとに最初に表示するカード数（3列で2行分） */
 const COLLAPSED_LIMIT = 6;
@@ -89,6 +90,36 @@ export function initHomePage(): void {
     return shown;
   }
 
+  /** 「最近使ったツール」を小さなリンクのチップとして並べる。絞り込み中・履歴なしのときは隠す */
+  const recentSection = document.getElementById('home-recent');
+  const recentList = recentSection?.querySelector('[data-recent-list]');
+  const localePrefix = document.documentElement.lang === 'en' ? '/en' : '';
+  function renderRecent(filtering: boolean) {
+    if (!recentSection || !recentList) return;
+    if (filtering) {
+      recentSection.hidden = true;
+      return;
+    }
+    const bySlug = new Map(tools.map((tool) => [tool.slug, tool]));
+    const recent = getRecentSlugs().flatMap((slug) => {
+      const tool = bySlug.get(slug);
+      return tool ? [tool] : [];
+    });
+    recentSection.hidden = recent.length === 0;
+    recentList.replaceChildren(
+      ...recent.map((tool) => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = `${localePrefix}/tools/${tool.slug}/`;
+        a.textContent = tool.name;
+        a.className =
+          'inline-flex min-h-11 items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400';
+        li.append(a);
+        return li;
+      }),
+    );
+  }
+
   function render() {
     const query = searchInput?.value ?? '';
     const visibleSlugs = new Set(
@@ -97,6 +128,7 @@ export function initHomePage(): void {
       ),
     );
     const filtering = query.trim() !== '' || activeCategory !== 'all';
+    renderRecent(filtering);
 
     const favoriteSlugs = getFavoriteSlugs().filter((slug) =>
       cardBySlug.has(slug),

@@ -733,6 +733,7 @@ const jsonLd: Record<string, unknown> | null = noindex
       import { initInputHelpers } from '../lib/input-helpers';
       import { initPrint } from '../lib/print';
       import { initBackToTop } from '../lib/back-to-top';
+      import { recordRecentTool } from '../lib/recent-tools';
 
       initSidebar();
       initTheme();
@@ -743,6 +744,7 @@ const jsonLd: Record<string, unknown> | null = noindex
       initShortcuts();
       initPrint();
       initBackToTop();
+      recordRecentTool();
 
       // 入力値の復元・URLクエリの初期値・入力補助UIは、各ツールのスクリプトが
       // リスナーを付けて初期化を終えた後（DOMContentLoaded）に行い、`input` イベントで

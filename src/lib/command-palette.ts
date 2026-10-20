@@ -1,5 +1,7 @@
 import type { LocalizedTool } from '../data/tools';
 import { normalize, splitQuery } from './home-filter';
+import { getToolSlug } from './analytics';
+import { getRecentSlugs } from './recent-tools';
 
 /**
  * クエリに一致するツールを、関連度の高い順（名前の前方一致 → 名前 → 別名 →
@@ -38,6 +40,20 @@ export function rankTools(
   });
   scored.sort((a, b) => a.score - b.score || a.index - b.index);
   return scored.slice(0, limit).map((s) => s.tool);
+}
+
+/** 最近使ったツール（新しい順）を先頭に移し、残りは元の順序を保つ */
+export function withRecentFirst(
+  tools: LocalizedTool[],
+  recentSlugs: string[],
+): LocalizedTool[] {
+  const bySlug = new Map(tools.map((tool) => [tool.slug, tool]));
+  const recent = recentSlugs.flatMap((slug) => {
+    const tool = bySlug.get(slug);
+    return tool ? [tool] : [];
+  });
+  const recentSet = new Set(recent.map((tool) => tool.slug));
+  return [...recent, ...tools.filter((tool) => !recentSet.has(tool.slug))];
 }
 
 const OPTION_CLASS =
@@ -100,6 +116,15 @@ export function initCommandPalette(): void {
   function render(): void {
     const hasQuery = input!.value.trim() !== '';
     results = rankTools(tools, input!.value, hasQuery ? 20 : tools.length);
+    // クエリが空のときは、最近使ったツールを先頭に出す（残りは登録順のまま）。
+    // 表示中のツール自身は履歴の先頭に入っているので、先頭候補から外す
+    if (!hasQuery) {
+      const current = getToolSlug();
+      results = withRecentFirst(
+        results,
+        getRecentSlugs().filter((slug) => slug !== current),
+      );
+    }
     list!.replaceChildren(
       ...results.map((tool, i) => {
         const li = document.createElement('li');

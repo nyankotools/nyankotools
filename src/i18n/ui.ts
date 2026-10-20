@@ -87,6 +87,7 @@ export const ui = {
     'home.noResults': '条件に一致するツールが見つかりませんでした。',
     'home.toolCount': '{count}個の無料ツール',
     'home.favorites': 'お気に入り',
+    'home.recent': '最近使ったツール',
     'home.showMore': 'もっと見る（残り{count}件）',
     'home.showLess': '閉じる',
     'home.meta.description':
@@ -170,6 +171,7 @@ export const ui = {
     'home.noResults': 'No tools match your search.',
     'home.toolCount': '{count} free tools',
     'home.favorites': 'Favorites',
+    'home.recent': 'Recently used',
     'home.showMore': 'Show more ({count} more)',
     'home.showLess': 'Show less',
     'home.meta.description':

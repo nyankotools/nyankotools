@@ -1,0 +1,386 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { ufoMotionTestContent } from '../../i18n/tools/ufo-motion-test';
+import { SPEEDS, BACKGROUNDS } from '../../lib/tools/ufo-motion-test';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = ufoMotionTestContent[locale];
+
+const resultRows = [
+  { id: 'verdict', label: t.resultLabels.verdict },
+  { id: 'frames', label: t.resultLabels.frames },
+  { id: 'rate', label: t.resultLabels.rate },
+  { id: 'skipped', label: t.resultLabels.skipped },
+  { id: 'events', label: t.resultLabels.events },
+  { id: 'worst', label: t.resultLabels.worst },
+  { id: 'ratio', label: t.resultLabels.ratio },
+  { id: 'perframe', label: t.resultLabels.perFrame },
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="ufo-root"
+    data-verdict-smooth={t.verdicts.smooth}
+    data-verdict-minor={t.verdicts.minor}
+    data-verdict-stutter={t.verdicts.stutter}
+    data-hud-rate={t.hudRate}
+    data-hud-skipped={t.hudSkipped}
+    data-hud-perframe={t.hudPerFrame}
+    data-paused={t.pausedLabel}
+  >
+    <div
+      role="note"
+      class="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+    >
+      <p class="font-bold">{t.warningHeading}</p>
+      <p class="mt-1">{t.warning}</p>
+    </div>
+
+    <div class="mt-5 space-y-4">
+      <div>
+        <p class="ui-label">{t.speedLabel}</p>
+        <div class="ui-seg flex-wrap" role="group" aria-label={t.speedLabel}>
+          {SPEEDS.map((s) => (
+            <button
+              type="button"
+              data-ufo-speed={s}
+              aria-pressed={s === 960 ? 'true' : 'false'}
+              class="ui-seg-btn"
+            >
+              {t.speedNames[String(s) as keyof typeof t.speedNames]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p class="ui-label">{t.backgroundLabel}</p>
+        <div
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-label={t.backgroundLabel}
+        >
+          {BACKGROUNDS.map((b, i) => (
+            <button
+              type="button"
+              data-ufo-bg={i}
+              aria-pressed={i === 0 ? 'true' : 'false'}
+              class="ui-seg-btn"
+            >
+              {t.backgroundNames[b.id]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p class="ui-label">{t.directionLabel}</p>
+        <div
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-label={t.directionLabel}
+        >
+          <button
+            type="button"
+            data-ufo-dir="1"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            {t.directionRight}
+          </button>
+          <button
+            type="button"
+            data-ufo-dir="-1"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.directionLeft}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <button id="ufo-start" type="button" class="ui-btn-primary mt-6 h-12">
+      {t.startLabel}
+    </button>
+    <p class="mt-3 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
+      {t.startHint}
+    </p>
+
+    <h2 class="mt-8 mb-2 text-lg font-bold">{t.resultHeading}</h2>
+    <p id="ufo-empty" class="text-sm text-gray-600 dark:text-gray-400">
+      {t.resultEmpty}
+    </p>
+    <div id="ufo-result" class="overflow-x-auto" hidden>
+      <table class="w-full min-w-[320px] border-collapse text-sm">
+        <tbody>
+          {resultRows.map(({ id, label }) => (
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                {label}
+              </td>
+              <td
+                id={`ufo-res-${id}`}
+                class="py-2 text-right font-mono text-gray-900 dark:text-gray-100"
+              >
+                -
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <div
+      id="ufo-stage"
+      role="dialog"
+      aria-label={t.stageLabel}
+      tabindex="-1"
+      hidden
+      class="fixed inset-0 z-[100] outline-none"
+    >
+      <canvas id="ufo-canvas" class="absolute inset-0 size-full"></canvas>
+      <div class="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center px-4">
+        <p class="rounded-lg bg-black/75 px-4 py-2 text-center font-mono text-xs text-white sm:text-sm">
+          <span id="ufo-hud"></span>
+          <br />
+          <span>{t.stageHint}</span>
+        </p>
+      </div>
+      <button
+        id="ufo-close"
+        type="button"
+        aria-label={t.closeLabel}
+        title={t.closeLabel}
+        class="absolute top-3 right-3 flex size-11 items-center justify-center rounded-full bg-black/60 text-xl text-white opacity-60 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-white"
+      >
+        ×
+      </button>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    BACKGROUNDS,
+    SPEEDS,
+    analyzeFrames,
+    pixelsPerFrame,
+    positionAt,
+    stepSpeed,
+  } from '../../lib/tools/ufo-motion-test';
+
+  const MAX_SAMPLES = 7200;
+  const OBJECT_WIDTH = 72;
+
+  const root = document.getElementById('ufo-root')!;
+  const stage = document.getElementById('ufo-stage')!;
+  const canvas = document.getElementById('ufo-canvas') as HTMLCanvasElement;
+  const hud = document.getElementById('ufo-hud')!;
+  const startButton = document.getElementById('ufo-start') as HTMLButtonElement;
+  const closeButton = document.getElementById('ufo-close') as HTMLButtonElement;
+  const $ = (id: string) => document.getElementById(id)!;
+
+  let speed: number = 960;
+  let bgIndex = 0;
+  let direction: 1 | -1 = 1;
+
+  let open = false;
+  let paused = false;
+  let rafId = 0;
+  let timestamps: number[] = [];
+  let distance = 0;
+  let lastFrame = 0;
+  let lastHud = 0;
+  let opener: HTMLElement | null = null;
+
+  function bindSegment(attr: string, onSelect: (value: string) => void): void {
+    const buttons = [...root.querySelectorAll<HTMLElement>(`[${attr}]`)];
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        buttons.forEach((b) =>
+          b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'),
+        );
+        onSelect(btn.getAttribute(attr) ?? '');
+      });
+    });
+  }
+  bindSegment('data-ufo-speed', (v) => (speed = Number(v)));
+  bindSegment('data-ufo-bg', (v) => (bgIndex = Number(v)));
+  bindSegment('data-ufo-dir', (v) => (direction = Number(v) === -1 ? -1 : 1));
+
+  function syncSpeedButtons() {
+    root.querySelectorAll<HTMLElement>('[data-ufo-speed]').forEach((b) => {
+      b.setAttribute(
+        'aria-pressed',
+        Number(b.getAttribute('data-ufo-speed')) === speed ? 'true' : 'false',
+      );
+    });
+  }
+
+  function resizeCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(window.innerWidth * dpr));
+    canvas.height = Math.max(1, Math.round(window.innerHeight * dpr));
+  }
+
+  function draw() {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const dpr = canvas.width / Math.max(1, window.innerWidth);
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const bg = BACKGROUNDS[bgIndex];
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = bg.bg;
+    ctx.fillRect(0, 0, w, h);
+    // distance は px 単位の移動量。positionAt に「1000px/s × distance ms」として渡す
+    const x = positionAt(distance, 1000, w, OBJECT_WIDTH, direction);
+    const size = Math.min(OBJECT_WIDTH, h / 4);
+    ctx.fillStyle = bg.fg;
+    ctx.fillRect(x, h / 2 - size / 2, OBJECT_WIDTH, size);
+  }
+
+  function renderHud(now: number) {
+    const a = analyzeFrames(timestamps);
+    const parts: string[] = [];
+    if (a) {
+      const ppf = pixelsPerFrame(speed, a.hz);
+      parts.push(`${root.dataset.hudRate}: ${a.hz.toFixed(1)}Hz`);
+      parts.push(`${root.dataset.hudSkipped}: ${a.skippedFrames}`);
+      if (ppf !== null) {
+        parts.push(`${root.dataset.hudPerframe}: ${ppf.toFixed(1)}px`);
+      }
+    }
+    if (paused) parts.push(root.dataset.paused ?? '');
+    hud.textContent = parts.join(' | ');
+    lastHud = now;
+  }
+
+  function tick(now: number) {
+    if (!open) return;
+    rafId = requestAnimationFrame(tick);
+    if (paused) return;
+    timestamps.push(now);
+    if (timestamps.length > MAX_SAMPLES) timestamps.shift();
+    // 長い中断後に図形が飛ばないよう、1フレームの進行時間は上限をかける
+    const dt = lastFrame ? Math.min(now - lastFrame, 100) : 0;
+    lastFrame = now;
+    distance += (speed * dt) / 1000;
+    draw();
+    if (now - lastHud > 500) renderHud(now);
+  }
+
+  function showResult() {
+    const a = analyzeFrames(timestamps);
+    if (!a) return;
+    $('ufo-empty').hidden = true;
+    $('ufo-result').hidden = false;
+    const set = (id: string, text: string) => {
+      $(`ufo-res-${id}`).textContent = text;
+    };
+    const ppf = pixelsPerFrame(speed, a.hz);
+    set('verdict', root.dataset[`verdict${cap(a.verdict)}`] ?? '');
+    set('frames', String(a.frames));
+    set('rate', `${a.hz.toFixed(1)} Hz`);
+    set('skipped', String(a.skippedFrames));
+    set('events', String(a.skipEvents));
+    set('worst', String(a.worstSkip));
+    set('ratio', `${(a.skipRatio * 100).toFixed(2)} %`);
+    set('perframe', ppf === null ? '-' : `${ppf.toFixed(1)} px`);
+  }
+
+  function cap(s: string): string {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function openStage() {
+    opener = document.activeElement as HTMLElement | null;
+    open = true;
+    paused = false;
+    timestamps = [];
+    distance = 0;
+    lastFrame = 0;
+    lastHud = 0;
+    hud.textContent = '';
+    stage.hidden = false;
+    document.body.style.overflow = 'hidden';
+    resizeCanvas();
+    draw();
+    stage.focus();
+    // 全画面に対応しない環境（iPhone Safari等）でも、ウィンドウ全体を覆う表示で使える
+    if (document.fullscreenEnabled) {
+      void stage
+        .requestFullscreen()
+        .then(() => {
+          if (!open && document.fullscreenElement)
+            void document.exitFullscreen();
+        })
+        .catch(() => {});
+    }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function closeStage() {
+    if (!open) return;
+    open = false;
+    cancelAnimationFrame(rafId);
+    stage.hidden = true;
+    document.body.style.overflow = '';
+    if (document.fullscreenElement) void document.exitFullscreen();
+    showResult();
+    (opener ?? startButton).focus();
+  }
+
+  function togglePause() {
+    paused = !paused;
+    // 再開時の間隔が統計に混ざらないよう基準時刻をリセットする
+    lastFrame = 0;
+    renderHud(performance.now());
+  }
+
+  startButton.addEventListener('click', openStage);
+  closeButton.addEventListener('click', closeStage);
+
+  document.addEventListener('keydown', (event) => {
+    if (!open) return;
+    switch (event.key) {
+      case 'ArrowUp':
+        event.preventDefault();
+        speed = stepSpeed(speed, 1);
+        syncSpeedButtons();
+        break;
+      case 'ArrowDown':
+        event.preventDefault();
+        speed = stepSpeed(speed, -1);
+        syncSpeedButtons();
+        break;
+      case ' ':
+        if (document.activeElement === closeButton) return;
+        event.preventDefault();
+        togglePause();
+        break;
+      case 'Escape':
+        closeStage();
+        break;
+    }
+  });
+
+  window.addEventListener('resize', () => {
+    if (open) {
+      resizeCanvas();
+      draw();
+    }
+  });
+  document.addEventListener('fullscreenchange', () => {
+    if (open && !document.fullscreenElement) closeStage();
+  });
+  window.addEventListener('pagehide', closeStage);
+
+  // SPEEDS を参照して未使用 import を避けつつ、初期値が選択肢に含まれることを保証する
+  if (!(SPEEDS as readonly number[]).includes(speed)) speed = SPEEDS[0];
+</script>

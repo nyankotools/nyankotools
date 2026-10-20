@@ -908,13 +908,17 @@ export const updates: UpdateEntry[] = [
       'bpm-delay-calculator',
       'noise-meter',
       'screen-ruler',
+      'spirit-level',
+      'ufo-motion-test',
+      'monitor-gamma-test',
+      'hearing-test',
     ],
     translations: {
       ja: {
-        summary: '4個のツールを追加しました。',
+        summary: '8個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 4 new tools.',
+        summary: 'Added 8 new tools.',
       },
     },
   },

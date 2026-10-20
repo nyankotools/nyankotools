@@ -154,6 +154,9 @@ const slugs = [
   'bpm-delay-calculator',
   'noise-meter',
   'screen-ruler',
+  'spirit-level',
+  'ufo-motion-test',
+  'monitor-gamma-test',
 ];
 
 const locales = [

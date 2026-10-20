@@ -1,0 +1,447 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { spiritLevelContent } from '../../i18n/tools/spirit-level';
+import { DEFAULT_TOLERANCE } from '../../lib/tools/spirit-level';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = spiritLevelContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="sl-root"
+    data-start-label={t.startLabel}
+    data-stop-label={t.stopLabel}
+    data-status-level={t.statusLevel}
+    data-status-tilted={t.statusTilted}
+    data-status-not-measurable={t.statusNotMeasurable}
+    data-hint-flat={t.modeHintFlat}
+    data-hint-upright={t.modeHintUpright}
+    data-error-unsupported={t.errors.unsupported}
+    data-error-denied={t.errors.denied}
+    data-error-no-sensor={t.errors['no-sensor']}
+    data-error-insecure={t.errors.insecure}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <button id="sl-toggle" type="button" class="ui-btn-primary h-12">
+        {t.startLabel}
+      </button>
+      <div id="sl-mode" class="ui-seg" role="group" aria-label={t.modeLabel}>
+        <button
+          type="button"
+          data-mode="flat"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.modeFlat}
+        </button>
+        <button
+          type="button"
+          data-mode="upright"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.modeUpright}
+        </button>
+      </div>
+    </div>
+    <p id="sl-error" hidden role="alert" class="ui-error mt-4 max-w-2xl"></p>
+    <p
+      id="sl-idle"
+      class="mt-3 max-w-2xl text-sm text-gray-600 dark:text-gray-400"
+    >
+      {t.idleMessage}
+    </p>
+    <p
+      id="sl-mode-hint"
+      class="mt-2 max-w-2xl text-sm text-gray-600 dark:text-gray-400"
+    >
+      {t.modeHintFlat}
+    </p>
+
+    <div class="mt-4 flex flex-wrap items-start gap-6">
+      <svg
+        id="sl-bubble-svg"
+        role="img"
+        aria-label={t.bubbleAriaLabel}
+        viewBox="-110 -110 220 220"
+        class="h-64 w-64 max-w-full rounded-full border border-gray-300 bg-white text-gray-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-500"
+      >
+        <circle
+          cx="0"
+          cy="0"
+          r="100"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1"
+        ></circle>
+        <circle
+          cx="0"
+          cy="0"
+          r="50"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1"
+          stroke-opacity="0.6"
+        ></circle>
+        <line
+          x1="-100"
+          y1="0"
+          x2="100"
+          y2="0"
+          stroke="currentColor"
+          stroke-opacity="0.5"
+        ></line>
+        <line
+          x1="0"
+          y1="-100"
+          x2="0"
+          y2="100"
+          stroke="currentColor"
+          stroke-opacity="0.5"
+        ></line>
+        <circle
+          id="sl-target"
+          cx="0"
+          cy="0"
+          r="14"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        ></circle>
+        <circle
+          id="sl-bubble"
+          cx="0"
+          cy="0"
+          r="12"
+          fill="#2563eb"
+          fill-opacity="0.8"
+          stroke="#1e3a8a"
+          stroke-width="1.5"
+        ></circle>
+      </svg>
+
+      <div class="min-w-0 flex-1 basis-60">
+        <p
+          id="sl-status"
+          role="status"
+          class="min-h-7 text-xl font-bold text-gray-800 dark:text-gray-200"
+        ></p>
+        <dl class="mt-3 grid grid-cols-2 gap-3 text-sm">
+          <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+            <dt class="text-gray-600 dark:text-gray-400">{t.angleLabel}</dt>
+            <dd class="text-2xl font-bold tabular-nums">
+              <span id="sl-total">-</span>
+              <span class="text-sm font-normal">{t.degreeUnit}</span>
+            </dd>
+          </div>
+          <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+            <dt class="text-gray-600 dark:text-gray-400">{t.slopeLabel}</dt>
+            <dd class="text-2xl font-bold tabular-nums">
+              <span id="sl-slope">-</span>
+              <span class="text-sm font-normal">%</span>
+            </dd>
+          </div>
+          <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+            <dt class="text-gray-600 dark:text-gray-400">{t.xLabel}</dt>
+            <dd class="text-2xl font-bold tabular-nums">
+              <span id="sl-x">-</span>
+              <span class="text-sm font-normal">{t.degreeUnit}</span>
+            </dd>
+          </div>
+          <div
+            id="sl-y-card"
+            class="rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+          >
+            <dt class="text-gray-600 dark:text-gray-400">{t.yLabel}</dt>
+            <dd class="text-2xl font-bold tabular-nums">
+              <span id="sl-y">-</span>
+              <span class="text-sm font-normal">{t.degreeUnit}</span>
+            </dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.zeroHeading}</h2>
+    <p class="mb-3 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
+      {t.zeroHint}
+    </p>
+    <div class="flex flex-wrap items-end gap-3">
+      <button id="sl-zero" type="button" disabled class="ui-btn h-11">
+        {t.zeroLabel}
+      </button>
+      <button id="sl-zero-reset" type="button" disabled class="ui-btn h-11">
+        {t.zeroResetLabel}
+      </button>
+      <div>
+        <label for="sl-tolerance" class="ui-label">
+          {t.toleranceLabel} (°)
+        </label>
+        <input
+          id="sl-tolerance"
+          type="number"
+          inputmode="decimal"
+          min="0.1"
+          max="5"
+          step="0.1"
+          value={DEFAULT_TOLERANCE}
+          class="ui-input h-11 w-28"
+        />
+      </div>
+    </div>
+    <p
+      id="sl-zero-state"
+      hidden
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    >
+      {t.zeroActive}
+    </p>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    BUBBLE_RANGE,
+    DEFAULT_TOLERANCE,
+    NO_CALIBRATION,
+    bubblePosition,
+    calibrationFrom,
+    computeLevel,
+    detectSupport,
+    formatAngle,
+    formatSlope,
+    isLevel,
+    smoothVector,
+    toUpVector,
+    type Calibration,
+    type LevelMode,
+    type Vec3,
+  } from '../../lib/tools/spirit-level';
+
+  type PermissionState = 'granted' | 'denied';
+  type OrientationCtor = {
+    requestPermission?: () => Promise<PermissionState>;
+  };
+
+  const root = document.getElementById('sl-root')!;
+  const d = root.dataset;
+  const toggle = document.getElementById('sl-toggle') as HTMLButtonElement;
+  const errorEl = document.getElementById('sl-error')!;
+  const idleEl = document.getElementById('sl-idle')!;
+  const hintEl = document.getElementById('sl-mode-hint')!;
+  const statusEl = document.getElementById('sl-status')!;
+  const bubble = document.getElementById('sl-bubble')!;
+  const target = document.getElementById('sl-target')!;
+  const totalEl = document.getElementById('sl-total')!;
+  const slopeEl = document.getElementById('sl-slope')!;
+  const xEl = document.getElementById('sl-x')!;
+  const yEl = document.getElementById('sl-y')!;
+  const yCard = document.getElementById('sl-y-card')!;
+  const zeroButton = document.getElementById('sl-zero') as HTMLButtonElement;
+  const zeroReset = document.getElementById(
+    'sl-zero-reset',
+  ) as HTMLButtonElement;
+  const zeroState = document.getElementById('sl-zero-state')!;
+  const tolInput = document.getElementById('sl-tolerance') as HTMLInputElement;
+  const modeButtons = [
+    ...document.querySelectorAll<HTMLButtonElement>('#sl-mode [data-mode]'),
+  ];
+
+  const NO_SENSOR_TIMEOUT_MS = 2000;
+  const SMOOTHING = 0.25;
+  const LEVEL_COLOR = '#16a34a';
+  const TILT_COLOR = '#2563eb';
+  const SCALE = 100; // SVG 上で気泡が端に届く距離
+
+  let mode: LevelMode = 'flat';
+  let active = false;
+  let up: Vec3 | null = null;
+  let calibrations: Record<LevelMode, Calibration | null> = {
+    flat: null,
+    upright: null,
+  };
+  let noSensorTimer = 0;
+  let frame = 0;
+  let lastLevel: boolean | null = null;
+
+  function tolerance(): number {
+    const v = Number(tolInput.value);
+    return tolInput.value.trim() === '' || !Number.isFinite(v) || v < 0
+      ? DEFAULT_TOLERANCE
+      : v;
+  }
+
+  function showError(key: 'unsupported' | 'denied' | 'no-sensor' | 'insecure') {
+    const map = {
+      unsupported: d.errorUnsupported,
+      denied: d.errorDenied,
+      'no-sensor': d.errorNoSensor,
+      insecure: d.errorInsecure,
+    };
+    errorEl.textContent = map[key] ?? '';
+    errorEl.hidden = false;
+  }
+
+  function resetDisplay() {
+    [totalEl, slopeEl, xEl, yEl].forEach((el) => (el.textContent = '-'));
+    bubble.setAttribute('cx', '0');
+    bubble.setAttribute('cy', '0');
+    bubble.setAttribute('fill', TILT_COLOR);
+    target.setAttribute('stroke', 'currentColor');
+    statusEl.textContent = '';
+    lastLevel = null;
+  }
+
+  function render() {
+    frame = 0;
+    if (!active || !up) return;
+    const cal = calibrations[mode] ?? NO_CALIBRATION;
+    const reading = computeLevel(up, mode, cal);
+    if (!reading.valid) {
+      resetDisplay();
+      statusEl.textContent = d.statusNotMeasurable ?? '';
+      return;
+    }
+    const pos = bubblePosition(reading, mode, BUBBLE_RANGE);
+    const level = isLevel(reading, tolerance());
+    bubble.setAttribute('cx', String(pos.x * SCALE));
+    bubble.setAttribute('cy', String(pos.y * SCALE));
+    bubble.setAttribute('fill', level ? LEVEL_COLOR : TILT_COLOR);
+    target.setAttribute('stroke', level ? LEVEL_COLOR : 'currentColor');
+    totalEl.textContent = formatAngle(reading.total);
+    slopeEl.textContent = formatSlope(reading.total);
+    xEl.textContent = formatAngle(reading.x);
+    yEl.textContent = mode === 'flat' ? formatAngle(reading.y) : '-';
+    // 状態が変わったときだけ文言を更新（読み上げの連呼を避ける）
+    if (level !== lastLevel || statusEl.textContent === d.statusNotMeasurable) {
+      statusEl.textContent = (level ? d.statusLevel : d.statusTilted) ?? '';
+      lastLevel = level;
+    }
+  }
+
+  function schedule() {
+    if (!frame) frame = requestAnimationFrame(render);
+  }
+
+  function onOrientation(event: DeviceOrientationEvent) {
+    const next = toUpVector(event.beta, event.gamma);
+    if (!next) return;
+    if (noSensorTimer) {
+      clearTimeout(noSensorTimer);
+      noSensorTimer = 0;
+    }
+    up = smoothVector(up, next, SMOOTHING);
+    zeroButton.disabled = false;
+    schedule();
+  }
+
+  function stop() {
+    window.removeEventListener('deviceorientation', onOrientation);
+    clearTimeout(noSensorTimer);
+    noSensorTimer = 0;
+    cancelAnimationFrame(frame);
+    frame = 0;
+    active = false;
+    up = null;
+    toggle.textContent = d.startLabel ?? '';
+    idleEl.hidden = false;
+    zeroButton.disabled = true;
+    resetDisplay();
+  }
+
+  let starting = false;
+
+  async function start() {
+    if (starting) return;
+    starting = true;
+    try {
+      await startInner();
+    } finally {
+      starting = false;
+    }
+  }
+
+  async function startInner() {
+    errorEl.hidden = true;
+    if (!window.isSecureContext) {
+      showError('insecure');
+      return;
+    }
+    const ctor = (window as unknown as { DeviceOrientationEvent?: unknown })
+      .DeviceOrientationEvent;
+    const support = detectSupport(ctor);
+    if (support === 'unsupported') {
+      showError('unsupported');
+      return;
+    }
+    if (support === 'needs-permission') {
+      try {
+        // ユーザー操作の中で直接呼ぶ必要がある (iOS)
+        const result = await (ctor as OrientationCtor).requestPermission!();
+        if (result !== 'granted') {
+          showError('denied');
+          return;
+        }
+      } catch {
+        showError('denied');
+        return;
+      }
+    }
+    active = true;
+    up = null;
+    toggle.textContent = d.stopLabel ?? '';
+    idleEl.hidden = true;
+    window.addEventListener('deviceorientation', onOrientation);
+    noSensorTimer = window.setTimeout(() => {
+      stop();
+      showError('no-sensor');
+    }, NO_SENSOR_TIMEOUT_MS);
+  }
+
+  function updateZeroState() {
+    const set = calibrations[mode] !== null;
+    zeroState.hidden = !set;
+    zeroReset.disabled = !set;
+  }
+
+  toggle.addEventListener('click', () => {
+    if (active) stop();
+    else void start();
+  });
+
+  modeButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      mode = btn.dataset.mode === 'upright' ? 'upright' : 'flat';
+      modeButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === btn)),
+      );
+      hintEl.textContent = (mode === 'flat' ? d.hintFlat : d.hintUpright) ?? '';
+      yCard.hidden = mode === 'upright';
+      lastLevel = null;
+      updateZeroState();
+      schedule();
+    });
+  });
+
+  zeroButton.addEventListener('click', () => {
+    if (!up || !computeLevel(up, mode).valid) return;
+    calibrations = { ...calibrations, [mode]: calibrationFrom(up, mode) };
+    updateZeroState();
+    schedule();
+  });
+  zeroReset.addEventListener('click', () => {
+    calibrations = { ...calibrations, [mode]: null };
+    updateZeroState();
+    schedule();
+  });
+  tolInput.addEventListener('input', schedule);
+
+  updateZeroState();
+  window.addEventListener('pagehide', stop);
+</script>

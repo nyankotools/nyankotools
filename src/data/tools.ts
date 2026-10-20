@@ -5713,7 +5713,6 @@ export const tools: Tool[] = [
         keywords: [
           'reaction time',
           'reflex test',
-          'response time',
           'click speed',
           'human benchmark',
           'false start',
@@ -10404,6 +10403,146 @@ export const tools: Tool[] = [
         ],
         description:
           'Show an actual-size cm and inch ruler on screen. Calibrate it by matching the frame to a credit card; horizontal and vertical modes.',
+      },
+    },
+  },
+  {
+    slug: 'spirit-level',
+    category: 'hardware',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['screen-ruler', 'noise-meter'],
+    translations: {
+      ja: {
+        name: '水平器',
+        description:
+          'スマホの傾きセンサーで水平を確認。気泡・角度・傾斜率の表示とゼロ点補正に対応',
+        keywords: [
+          '水平器',
+          '水準器',
+          '傾き',
+          '角度',
+          '傾斜',
+          '気泡',
+          'レベル',
+          'スマホ',
+        ],
+      },
+      en: {
+        name: 'Spirit Level',
+        description:
+          'Check if a surface is level with your phone’s tilt sensor. Bubble, angle and slope, plus zero-point calibration.',
+        keywords: [
+          'spirit level',
+          'bubble level',
+          'inclinometer',
+          'tilt',
+          'angle',
+          'slope',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'ufo-motion-test',
+    category: 'hardware',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['refresh-rate-tester', 'dead-pixel-checker'],
+    translations: {
+      ja: {
+        name: 'モーション・残像テスト',
+        description:
+          '画面を横切る図形で、モニターやスマホの残像・モーションブラー・フレーム飛びを確認',
+        keywords: [
+          '残像',
+          'ゴースト',
+          'モーションブラー',
+          'フレーム飛び',
+          'カクつき',
+          'ディスプレイ',
+          'モニター',
+        ],
+      },
+      en: {
+        name: 'Motion Blur & Frame Skip Test',
+        description:
+          'Check ghosting, motion blur and skipped frames with a moving object in full screen',
+        keywords: [
+          'motion blur',
+          'ghosting',
+          'frame skipping',
+          'frame drop',
+          'stutter',
+          'monitor test',
+          'response time',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'monitor-gamma-test',
+    category: 'hardware',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['dead-pixel-checker', 'refresh-rate-tester', 'color-converter'],
+    translations: {
+      ja: {
+        name: 'モニターのガンマ・階調チェック',
+        keywords: [
+          'ガンマ',
+          '階調',
+          'バンディング',
+          '黒つぶれ',
+          '白飛び',
+          'グレーランプ',
+          'モニターテスト',
+          'ガンマチェッカー',
+        ],
+        description:
+          'モニターのガンマ値や階調を全画面パターンで確認します。グレーランプ、段階パターン、ガンマチェッカー、黒つぶれ・白飛びのチェックに。',
+      },
+      en: {
+        name: 'Monitor Gamma & Banding Test',
+        keywords: [
+          'gamma test',
+          'banding test',
+          'monitor gamma',
+          'grayscale test',
+          'black level',
+          'gray ramp',
+          'gamma checker',
+          'monitor test',
+        ],
+        description:
+          'Check gamma, banding and black/white clipping on your monitor with fullscreen gray ramp, step and gamma checker patterns.',
+      },
+    },
+  },
+  {
+    slug: 'hearing-test',
+    category: 'hardware',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['speaker-tester', 'noise-meter', 'instrument-tuner'],
+    translations: {
+      ja: {
+        name: '可聴域テスト・モスキート音チェック',
+        description:
+          '8kHz〜20kHzの高い音を鳴らして、耳がどこまで聞こえるかを確認。モスキート音テストと年齢の目安つき。',
+        keywords: ['モスキート音', '可聴域', '聴力テスト', '年齢 耳', '高周波'],
+      },
+      en: {
+        name: 'Hearing Test (Mosquito Tone)',
+        description:
+          'Play high-frequency tones from 8 to 20 kHz to check your hearing range, with a rough age guide.',
+        keywords: [
+          'mosquito tone',
+          'hearing range',
+          'hearing test',
+          'audible frequency',
+          'ear age',
+        ],
       },
     },
   },

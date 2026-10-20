@@ -1,0 +1,531 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { pixelArtEditorContent } from '../../i18n/tools/pixel-art-editor';
+import {
+  CANVAS_SIZES,
+  DEFAULT_CANVAS_SIZE,
+  DEFAULT_EXPORT_SCALE,
+  DEFAULT_PALETTE,
+  EXPORT_SCALES,
+} from '../../lib/tools/pixel-art-editor';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const ZOOM_LEVELS = [1, 1.5, 2, 3];
+
+const { locale } = Astro.props;
+const t = pixelArtEditorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-end gap-6">
+    <div>
+      <span class="ui-label">{t.toolLabel}</span>
+      <div id="pa-tool" class="ui-seg" role="group" aria-label={t.toolLabel}>
+        <button
+          type="button"
+          data-tool="pen"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.toolPen}
+        </button>
+        <button
+          type="button"
+          data-tool="eraser"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.toolEraser}
+        </button>
+        <button
+          type="button"
+          data-tool="fill"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.toolFill}
+        </button>
+        <button
+          type="button"
+          data-tool="picker"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.toolPicker}
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <span class="ui-label">{t.sizeLabel}</span>
+      <div id="pa-size" class="ui-seg" role="group" aria-label={t.sizeLabel}>
+        {CANVAS_SIZES.map((size) => (
+          <button
+            type="button"
+            data-size={size}
+            aria-pressed={size === DEFAULT_CANVAS_SIZE ? 'true' : 'false'}
+            class="ui-seg-btn"
+          >
+            {size}
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.sizeHint}</p>
+
+  <div class="mt-4">
+    <span class="ui-label">{t.paletteLabel}</span>
+    <div
+      id="pa-palette"
+      class="flex flex-wrap gap-2"
+      role="group"
+      aria-label={t.paletteLabel}
+    >
+      {DEFAULT_PALETTE.map((hex, i) => (
+        <button
+          type="button"
+          data-color={hex}
+          aria-label={hex}
+          aria-pressed={i === 0 ? 'true' : 'false'}
+          style={`background-color:${hex}`}
+          class="h-9 w-9 rounded border-2 border-gray-300 aria-pressed:border-blue-600 aria-pressed:ring-2 aria-pressed:ring-blue-400 dark:border-gray-600"
+        />
+      ))}
+    </div>
+    <div class="mt-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label for="pa-color" class="ui-label">
+          {t.customColorLabel}
+        </label>
+        <input
+          id="pa-color"
+          type="color"
+          value="#000000"
+          class="h-11 w-20 cursor-pointer rounded border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900"
+        />
+      </div>
+      <button id="pa-add-color" type="button" class="ui-btn">
+        {t.addColorButton}
+      </button>
+    </div>
+  </div>
+
+  <p class="mt-4 text-sm font-medium text-gray-700 dark:text-gray-300">
+    {t.canvasLabel}
+  </p>
+  <p class="mb-2 text-xs text-gray-500 dark:text-gray-400">{t.canvasHint}</p>
+  <div class="mb-2">
+    <span class="ui-label">{t.zoomLabel}</span>
+    <div
+      id="pa-zoom"
+      class="ui-seg w-fit"
+      role="group"
+      aria-label={t.zoomLabel}
+    >
+      {ZOOM_LEVELS.map((z) => (
+        <button
+          type="button"
+          data-zoom={z}
+          aria-pressed={z === 1 ? 'true' : 'false'}
+          class="ui-seg-btn"
+        >
+          ×{z}
+        </button>
+      ))}
+    </div>
+  </div>
+  <div class="max-w-full overflow-auto">
+    <canvas
+      id="pa-canvas"
+      role="img"
+      aria-label={t.canvasLabel}
+      style="touch-action:none;image-rendering:pixelated;width:min(100%,512px)"
+      class="block aspect-square max-w-none cursor-crosshair select-none rounded-lg border border-gray-300 dark:border-gray-700"
+    ></canvas>
+  </div>
+
+  <div class="mt-3 flex flex-wrap items-center gap-3">
+    <button
+      id="pa-undo"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.undoButton}
+    </button>
+    <button
+      id="pa-redo"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.redoButton}
+    </button>
+    <button id="pa-clear" type="button" class="ui-btn">
+      {t.clearButton}
+    </button>
+    <label class="ui-check">
+      <input id="pa-grid" type="checkbox" checked />
+      <span>{t.gridLabel}</span>
+    </label>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-4">
+    <div>
+      <label for="pa-scale" class="ui-label">
+        {t.scaleLabel}
+      </label>
+      <select
+        id="pa-scale"
+        class="ui-input h-11 w-28 bg-white px-3 dark:bg-gray-900"
+      >
+        {EXPORT_SCALES.map((s) => (
+          <option value={s} selected={s === DEFAULT_EXPORT_SCALE}>
+            ×{s}
+          </option>
+        ))}
+      </select>
+    </div>
+    <button id="pa-download" type="button" class="ui-btn ui-btn-primary">
+      {t.downloadButton}
+    </button>
+  </div>
+  <p
+    id="pa-export-info"
+    data-template={t.exportInfoTemplate}
+    class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+  ></p>
+  <p
+    id="pa-error"
+    role="alert"
+    hidden
+    data-export-failed={t.errorExportFailed}
+    class="ui-error mt-2"
+  ></p>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import {
+    buildExportFileName,
+    colorToHex,
+    cloneGrid,
+    createGrid,
+    DEFAULT_CANVAS_SIZE,
+    DEFAULT_PALETTE,
+    drawLine,
+    exportDimension,
+    floodFill,
+    getPixel,
+    gridsEqual,
+    History,
+    inBounds,
+    parseHexColor,
+    renderRgba,
+    resizeGrid,
+    setPixel,
+    type Grid,
+    type Tool,
+  } from '../../lib/tools/pixel-art-editor';
+
+  const canvas = document.getElementById('pa-canvas') as HTMLCanvasElement;
+  const ctx = canvas.getContext('2d')!;
+  const toolButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#pa-tool [data-tool]',
+  );
+  const sizeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#pa-size [data-size]',
+  );
+  const palette = document.getElementById('pa-palette')!;
+  const colorInput = document.getElementById('pa-color') as HTMLInputElement;
+  const addColorButton = document.getElementById('pa-add-color')!;
+  const undoButton = document.getElementById('pa-undo') as HTMLButtonElement;
+  const redoButton = document.getElementById('pa-redo') as HTMLButtonElement;
+  const clearButton = document.getElementById('pa-clear')!;
+  const gridCheck = document.getElementById('pa-grid') as HTMLInputElement;
+  const scaleSelect = document.getElementById('pa-scale') as HTMLSelectElement;
+  const downloadButton = document.getElementById('pa-download')!;
+  const exportInfo = document.getElementById('pa-export-info')!;
+  const errorEl = document.getElementById('pa-error')!;
+
+  const TARGET_PX = 512;
+  const zoomButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#pa-zoom [data-zoom]',
+  );
+
+  function setZoom(z: number) {
+    canvas.style.width = z === 1 ? 'min(100%, 512px)' : `${TARGET_PX * z}px`;
+    zoomButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(Number(b.dataset.zoom) === z)),
+    );
+  }
+  zoomButtons.forEach((b) =>
+    b.addEventListener('click', () => setZoom(Number(b.dataset.zoom))),
+  );
+
+  let grid: Grid = createGrid(DEFAULT_CANVAS_SIZE);
+  const history = new History();
+  let tool: Tool = 'pen';
+  let current = parseHexColor(DEFAULT_PALETTE[0])!;
+
+  let strokeId: number | null = null;
+  let strokeBefore: Grid | null = null;
+  let strokeChanged = false;
+  let last: [number, number] | null = null;
+
+  function cellPx() {
+    return Math.max(1, Math.floor(TARGET_PX / grid.size));
+  }
+
+  function render() {
+    const cell = cellPx();
+    const dim = grid.size * cell;
+    if (canvas.width !== dim || canvas.height !== dim) {
+      canvas.width = dim;
+      canvas.height = dim;
+    }
+    const showGrid = gridCheck.checked && cell >= 8;
+    for (let y = 0; y < grid.size; y++) {
+      for (let x = 0; x < grid.size; x++) {
+        const c = grid.cells[y * grid.size + x];
+        if (c === 0) {
+          ctx.fillStyle = (x + y) % 2 === 0 ? '#ffffff' : '#e5e7eb';
+        } else {
+          ctx.fillStyle = colorToHex(c);
+        }
+        ctx.fillRect(x * cell, y * cell, cell, cell);
+      }
+    }
+    if (showGrid) {
+      ctx.strokeStyle = 'rgba(0,0,0,0.18)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let i = 1; i < grid.size; i++) {
+        ctx.moveTo(i * cell + 0.5, 0);
+        ctx.lineTo(i * cell + 0.5, dim);
+        ctx.moveTo(0, i * cell + 0.5);
+        ctx.lineTo(dim, i * cell + 0.5);
+      }
+      ctx.stroke();
+    }
+  }
+
+  function updateUi() {
+    undoButton.disabled = !history.canUndo();
+    redoButton.disabled = !history.canRedo();
+    sizeButtons.forEach((b) =>
+      b.setAttribute(
+        'aria-pressed',
+        String(Number(b.dataset.size) === grid.size),
+      ),
+    );
+    const scale = Number(scaleSelect.value);
+    const dim = exportDimension(grid.size, scale);
+    exportInfo.textContent = (exportInfo.dataset.template ?? '')
+      .replace('{width}', String(dim))
+      .replace('{height}', String(dim));
+  }
+
+  function paletteButtons() {
+    return palette.querySelectorAll<HTMLButtonElement>('[data-color]');
+  }
+
+  function setCurrent(color: number) {
+    current = color;
+    const hex = colorToHex(color);
+    colorInput.value = hex;
+    paletteButtons().forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.color === hex)),
+    );
+  }
+
+  function setTool(next: Tool) {
+    tool = next;
+    toolButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.tool === next)),
+    );
+  }
+
+  function commit(next: Grid) {
+    history.push(grid);
+    grid = next;
+    render();
+    updateUi();
+  }
+
+  function applyHistory(next: Grid | null) {
+    if (!next) return;
+    grid = next;
+    render();
+    updateUi();
+  }
+
+  function cellFromEvent(e: PointerEvent): [number, number] {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.floor(((e.clientX - rect.left) / rect.width) * grid.size);
+    const y = Math.floor(((e.clientY - rect.top) / rect.height) * grid.size);
+    return [x, y];
+  }
+
+  function drawColor() {
+    return tool === 'eraser' ? 0 : current;
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (strokeId !== null) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    const [x, y] = cellFromEvent(e);
+    if (!inBounds(grid, x, y)) return;
+
+    if (tool === 'picker') {
+      const c = getPixel(grid, x, y);
+      if (c !== 0) setCurrent(c);
+      return;
+    }
+    if (tool === 'fill') {
+      const next = cloneGrid(grid);
+      if (floodFill(next, x, y, current)) commit(next);
+      return;
+    }
+    strokeId = e.pointerId;
+    canvas.setPointerCapture(e.pointerId);
+    strokeBefore = cloneGrid(grid);
+    strokeChanged = setPixel(grid, x, y, drawColor());
+    last = [x, y];
+    if (strokeChanged) render();
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (e.pointerId !== strokeId || !last) return;
+    const [x, y] = cellFromEvent(e);
+    if (x === last[0] && y === last[1]) return;
+    if (drawLine(grid, last[0], last[1], x, y, drawColor())) {
+      strokeChanged = true;
+      render();
+    }
+    last = [x, y];
+  });
+
+  function endStroke(e: PointerEvent) {
+    if (e.pointerId !== strokeId) return;
+    if (strokeChanged && strokeBefore && !gridsEqual(strokeBefore, grid)) {
+      history.push(strokeBefore);
+    }
+    strokeId = null;
+    strokeBefore = null;
+    strokeChanged = false;
+    last = null;
+    updateUi();
+  }
+  canvas.addEventListener('pointerup', endStroke);
+  canvas.addEventListener('pointercancel', endStroke);
+
+  toolButtons.forEach((b) =>
+    b.addEventListener('click', () => setTool(b.dataset.tool as Tool)),
+  );
+
+  palette.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(
+      '[data-color]',
+    );
+    if (!btn) return;
+    const c = parseHexColor(btn.dataset.color ?? '');
+    if (c !== null) {
+      setCurrent(c);
+      if (tool === 'eraser' || tool === 'picker') setTool('pen');
+    }
+  });
+
+  colorInput.addEventListener('input', () => {
+    const c = parseHexColor(colorInput.value);
+    if (c === null) return;
+    current = c;
+    paletteButtons().forEach((b) =>
+      b.setAttribute(
+        'aria-pressed',
+        String(b.dataset.color === colorInput.value),
+      ),
+    );
+  });
+
+  addColorButton.addEventListener('click', () => {
+    const hex = colorToHex(current);
+    const exists = Array.from(paletteButtons()).some(
+      (b) => b.dataset.color === hex,
+    );
+    if (!exists) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.color = hex;
+      b.setAttribute('aria-label', hex);
+      b.setAttribute('aria-pressed', 'false');
+      b.style.backgroundColor = hex;
+      b.className =
+        'h-9 w-9 rounded border-2 border-gray-300 aria-pressed:border-blue-600 aria-pressed:ring-2 aria-pressed:ring-blue-400 dark:border-gray-600';
+      palette.appendChild(b);
+    }
+    setCurrent(current);
+  });
+
+  sizeButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      const size = Number(b.dataset.size);
+      if (size === grid.size) return;
+      commit(resizeGrid(grid, size));
+    }),
+  );
+
+  undoButton.addEventListener('click', () => applyHistory(history.undo(grid)));
+  redoButton.addEventListener('click', () => applyHistory(history.redo(grid)));
+  clearButton.addEventListener('click', () => {
+    commit(createGrid(grid.size));
+  });
+  gridCheck.addEventListener('change', render);
+  scaleSelect.addEventListener('change', updateUi);
+
+  document.addEventListener('keydown', (e) => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('input, select, textarea')) return;
+    const key = e.key.toLowerCase();
+    if (key === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      applyHistory(history.undo(grid));
+    } else if (key === 'y' || (key === 'z' && e.shiftKey)) {
+      e.preventDefault();
+      applyHistory(history.redo(grid));
+    }
+  });
+
+  downloadButton.addEventListener('click', () => {
+    const scale = Number(scaleSelect.value);
+    const dim = exportDimension(grid.size, scale);
+    const out = document.createElement('canvas');
+    out.width = dim;
+    out.height = dim;
+    const outCtx = out.getContext('2d')!;
+    const img = outCtx.createImageData(dim, dim);
+    img.data.set(renderRgba(grid, scale));
+    outCtx.putImageData(img, 0, 0);
+    const name = buildExportFileName(grid.size, scale);
+    out.toBlob((blob) => {
+      if (!blob) {
+        errorEl.textContent = errorEl.dataset.exportFailed ?? '';
+        errorEl.hidden = false;
+        return;
+      }
+      errorEl.hidden = true;
+      downloadBlob(blob, name);
+    }, 'image/png');
+  });
+
+  setCurrent(current);
+  render();
+  updateUi();
+</script>

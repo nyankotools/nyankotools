@@ -1,5 +1,7 @@
-import { getLocalizedTools, type LocalizedTool } from '../data/tools';
-import { normalize } from './home-filter';
+import type { LocalizedTool } from '../data/tools';
+import { normalize, splitQuery } from './home-filter';
+import { getToolSlug } from './analytics';
+import { getRecentSlugs } from './recent-tools';
 
 /**
  * クエリに一致するツールを、関連度の高い順（名前の前方一致 → 名前 → 別名 →
@@ -10,23 +12,48 @@ export function rankTools(
   query: string,
   limit = 20,
 ): LocalizedTool[] {
-  const q = normalize(query.trim());
-  if (!q) return tools;
+  const terms = splitQuery(query);
+  if (terms.length === 0) return tools;
 
   const scored: { tool: LocalizedTool; score: number; index: number }[] = [];
   tools.forEach((tool, index) => {
     const name = normalize(tool.name);
-    let score: number | null = null;
-    if (name.startsWith(q)) score = 0;
-    else if (name.includes(q)) score = 1;
-    else if (tool.keywords.some((k) => normalize(k).includes(q))) score = 2;
-    else if (tool.slug.includes(q) || normalize(tool.category).includes(q))
-      score = 3;
-    else if (normalize(tool.description).includes(q)) score = 4;
+    const keywords = tool.keywords.map(normalize);
+    const category = normalize(tool.category);
+    const description = normalize(tool.description);
+    // すべての語が一致する必要がある（AND検索）。順位は最も弱い一致で決める
+    let score: number | null = 0;
+    for (const q of terms) {
+      let s: number | null = null;
+      if (name.startsWith(q)) s = 0;
+      else if (name.includes(q)) s = 1;
+      else if (keywords.some((k) => k.includes(q))) s = 2;
+      else if (tool.slug.includes(q) || category.includes(q)) s = 3;
+      else if (description.includes(q)) s = 4;
+      if (s === null) {
+        score = null;
+        break;
+      }
+      score = Math.max(score, s);
+    }
     if (score !== null) scored.push({ tool, score, index });
   });
   scored.sort((a, b) => a.score - b.score || a.index - b.index);
   return scored.slice(0, limit).map((s) => s.tool);
+}
+
+/** 最近使ったツール（新しい順）を先頭に移し、残りは元の順序を保つ */
+export function withRecentFirst(
+  tools: LocalizedTool[],
+  recentSlugs: string[],
+): LocalizedTool[] {
+  const bySlug = new Map(tools.map((tool) => [tool.slug, tool]));
+  const recent = recentSlugs.flatMap((slug) => {
+    const tool = bySlug.get(slug);
+    return tool ? [tool] : [];
+  });
+  const recentSet = new Set(recent.map((tool) => tool.slug));
+  return [...recent, ...tools.filter((tool) => !recentSet.has(tool.slug))];
 }
 
 const OPTION_CLASS =
@@ -50,7 +77,23 @@ export function initCommandPalette(): void {
   });
 
   const locale = document.documentElement.lang === 'en' ? 'en' : 'ja';
-  const tools = getLocalizedTools(locale);
+  // ツール登録簿（説明文・キーワードで約60KB）は全ページで読み込まれないよう、初めて開くときに読み込む
+  let tools: LocalizedTool[] = [];
+  let loaded = false;
+  let toolsLoading: Promise<void> | null = null;
+  function loadTools(): Promise<void> {
+    toolsLoading ??= import('../data/tools').then(
+      (mod) => {
+        tools = mod.getLocalizedTools(locale);
+        loaded = true;
+      },
+      () => {
+        // 一時的な通信断などで失敗しても、次に開いたときに再試行できるようにする
+        toolsLoading = null;
+      },
+    );
+    return toolsLoading;
+  }
   const prefix = locale === 'en' ? '/en/tools/' : '/tools/';
   let results: LocalizedTool[] = [];
   let active = 0;
@@ -73,6 +116,15 @@ export function initCommandPalette(): void {
   function render(): void {
     const hasQuery = input!.value.trim() !== '';
     results = rankTools(tools, input!.value, hasQuery ? 20 : tools.length);
+    // クエリが空のときは、最近使ったツールを先頭に出す（残りは登録順のまま）。
+    // 表示中のツール自身は履歴の先頭に入っているので、先頭候補から外す
+    if (!hasQuery) {
+      const current = getToolSlug();
+      results = withRecentFirst(
+        results,
+        getRecentSlugs().filter((slug) => slug !== current),
+      );
+    }
     list!.replaceChildren(
       ...results.map((tool, i) => {
         const li = document.createElement('li');
@@ -90,7 +142,8 @@ export function initCommandPalette(): void {
         return li;
       }),
     );
-    empty!.hidden = results.length > 0;
+    // 登録簿の読み込み中は「該当なし」を出さない
+    empty!.hidden = !loaded || results.length > 0;
     select(0);
   }
 
@@ -100,11 +153,15 @@ export function initCommandPalette(): void {
     render();
     dialog!.showModal();
     input!.focus();
+    void loadTools().then(() => {
+      if (dialog!.open) render();
+    });
   }
 
   document.addEventListener('keydown', (event) => {
     if (
-      event.key.toLowerCase() === 'k' &&
+      // オートフィル選択時は key が未定義のkeydownが発火する
+      event.key?.toLowerCase() === 'k' &&
       (isMac ? event.metaKey : event.ctrlKey) &&
       !event.altKey &&
       !event.shiftKey &&
@@ -116,9 +173,12 @@ export function initCommandPalette(): void {
     }
   });
 
-  document
-    .querySelectorAll('[data-palette-open]')
-    .forEach((el) => el.addEventListener('click', open));
+  document.querySelectorAll('[data-palette-open]').forEach((el) => {
+    el.addEventListener('click', open);
+    // 開く操作の前に読み込みを始めて、体感の遅延をなくす
+    el.addEventListener('pointerenter', () => void loadTools(), { once: true });
+    el.addEventListener('focus', () => void loadTools(), { once: true });
+  });
 
   input.addEventListener('input', render);
   input.addEventListener('keydown', (event) => {

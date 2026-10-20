@@ -1,4 +1,5 @@
-import { PDFDict, PDFHexString, PDFName, PDFRef, PDFString } from 'pdf-lib';
+// pdf-lib は大きいため、PDFを実際に処理するまで読み込まない（ページ初期表示のJSを小さく保つ）
+import type { PDFDict } from 'pdf-lib';
 import { load, PdfToolError } from './pdf-merge-split';
 
 /** 編集対象の文書情報。日付は datetime-local 形式（YYYY-MM-DDTHH:mm、ローカル時刻）、空文字は「なし」 */
@@ -88,6 +89,7 @@ export async function writeMetadata(
   const dates = DATE_FIELDS.map(
     ([field, key]) => [key, localInputToDate(metadata[field])] as const,
   );
+  const { PDFHexString, PDFName, PDFRef, PDFString } = await import('pdf-lib');
   const doc = await load(bytes, { updateMetadata: false });
   // getInfoDict は pdf-lib 上 private だが、Info辞書の削除・生書き込みに必要なため型だけ迂回する
   const info = (doc as unknown as { getInfoDict(): PDFDict }).getInfoDict();

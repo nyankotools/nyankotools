@@ -8,7 +8,7 @@ import Layout from '../../layouts/Layout.astro';
 >
   <h1 class="mb-2 text-2xl font-bold">よくある質問（FAQ）</h1>
   <p class="mb-8 text-gray-600 dark:text-gray-400">
-    にゃんこツールについて、実はまだご質問をいただいたことはないのですが、よくいただきそうなご質問をまとめてみました。解決しない場合は
+    にゃんこツールについて、よくいただくご質問や、気になりそうな点をまとめました。解決しない場合は
     <a
       href="/contact/"
       class="text-blue-700 underline hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
@@ -94,6 +94,49 @@ import Layout from '../../layouts/Layout.astro';
           運営者情報ページ
         </a>
         をご覧ください。
+      </p>
+    </section>
+
+    <section>
+      <h2 class="mb-2 text-lg font-semibold">
+        Q. カメラやマイクを使うツールは、映像や音声を送信しますか？
+      </h2>
+      <p>
+        いいえ。Webカメラ・マイク・画面録画・QRコード読み取りなどは、ブラウザの許可を得たうえで端末内でのみ処理し、サーバーへ送信・保存しません。許可はブラウザの設定からいつでも取り消せます。
+      </p>
+    </section>
+
+    <section>
+      <h2 class="mb-2 text-lg font-semibold">
+        Q. ブラウザに保存されるデータはありますか？
+      </h2>
+      <p>
+        お気に入り、テーマ、ゲームのベスト記録、請求書の発行者情報、UTMビルダーの履歴などがブラウザ内（ローカルストレージ）に保存されます。サーバーには送信されず、ブラウザのサイトデータを削除すると消えます。詳細はプライバシーポリシーをご覧ください。
+      </p>
+    </section>
+
+    <section>
+      <h2 class="mb-2 text-lg font-semibold">
+        Q. ページを再読み込みしても入力が残るのはなぜですか？
+      </h2>
+      <p>
+        再読み込みや言語切替のあとに入力を復元するため、入力内容をタブ内のセッションストレージに一時保存しています。タブを閉じると消えます。パスワードやトークンなど機微なデータを扱うツールでは保存しません。
+      </p>
+    </section>
+
+    <section>
+      <h2 class="mb-2 text-lg font-semibold">
+        Q. 動画や大きな画像を扱うと重くなります。
+      </h2>
+      <p>
+        処理はすべてお使いの端末で行うため、ファイルが大きいほど時間がかかります。まず短いファイルや小さい画像で試し、PCの最新ブラウザ（Chrome・Edge・Firefox・Safari）でのご利用をおすすめします。
+      </p>
+    </section>
+
+    <section>
+      <h2 class="mb-2 text-lg font-semibold">Q. 便利な使い方はありますか？</h2>
+      <p>
+        トップページの検索・カテゴリ絞り込み、ツールのお気に入り登録（ドラッグで並べ替え）、キーボードショートカット（ショートカット一覧ページ）、ライト/ダークテーマの切り替えをご利用いただけます。
       </p>
     </section>
   </div>

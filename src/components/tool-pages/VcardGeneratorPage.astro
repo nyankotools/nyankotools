@@ -1,0 +1,505 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { vcardGeneratorContent } from '../../i18n/tools/vcard-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = vcardGeneratorContent[locale];
+
+const phoneIndexes = [0, 1, 2];
+const emailIndexes = [0, 1];
+const urlIndexes = [0, 1];
+const inputClass = 'ui-input h-11 w-full px-3 dark:bg-gray-900';
+const h2Class = 'mb-3 mt-6 text-base font-semibold first:mt-0';
+---
+
+<ToolShell t={t}>
+  <div
+    id="vcard-generator-root"
+    data-fn-order={t.fnOrder}
+    class="grid gap-8 md:grid-cols-2"
+  >
+    <div>
+      <h2 class={h2Class}>{t.nameHeading}</h2>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="vcard-generator-family" class="ui-label">
+            {t.familyNameLabel}
+          </label>
+          <input
+            id="vcard-generator-family"
+            type="text"
+            class={inputClass}
+            placeholder={t.familyNamePlaceholder}
+            autocomplete="off"
+          />
+        </div>
+        <div>
+          <label for="vcard-generator-given" class="ui-label">
+            {t.givenNameLabel}
+          </label>
+          <input
+            id="vcard-generator-given"
+            type="text"
+            class={inputClass}
+            placeholder={t.givenNamePlaceholder}
+            autocomplete="off"
+          />
+        </div>
+        <div>
+          <label for="vcard-generator-org" class="ui-label">
+            {t.organizationLabel}
+          </label>
+          <input
+            id="vcard-generator-org"
+            type="text"
+            class={inputClass}
+            placeholder={t.organizationPlaceholder}
+            autocomplete="off"
+          />
+        </div>
+        <div>
+          <label for="vcard-generator-title" class="ui-label">
+            {t.titleLabel}
+          </label>
+          <input
+            id="vcard-generator-title"
+            type="text"
+            class={inputClass}
+            placeholder={t.titlePlaceholder}
+            autocomplete="off"
+          />
+        </div>
+      </div>
+
+      <h2 class={h2Class}>{t.contactHeading}</h2>
+      <div class="grid gap-3">
+        {phoneIndexes.map((i) => (
+          <div class="grid grid-cols-[6.5rem_1fr] gap-2">
+            <div>
+              <label for={`vcard-generator-phone-type-${i}`} class="ui-label">
+                {t.phoneTypeLabel} {i + 1}
+              </label>
+              <select
+                id={`vcard-generator-phone-type-${i}`}
+                class="ui-input h-11 w-full px-2 dark:bg-gray-900"
+              >
+                {t.phoneTypes.map(({ value, label, selected }) => (
+                  <option value={value} selected={selected}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label for={`vcard-generator-phone-${i}`} class="ui-label">
+                {t.phoneLabel} {i + 1}
+              </label>
+              <input
+                id={`vcard-generator-phone-${i}`}
+                type="tel"
+                class={inputClass}
+                placeholder={t.phonePlaceholder}
+                autocomplete="off"
+              />
+            </div>
+          </div>
+        ))}
+        {emailIndexes.map((i) => (
+          <div>
+            <label for={`vcard-generator-email-${i}`} class="ui-label">
+              {t.emailLabel} {i + 1}
+            </label>
+            <input
+              id={`vcard-generator-email-${i}`}
+              type="email"
+              class={inputClass}
+              placeholder={t.emailPlaceholder}
+              autocomplete="off"
+            />
+          </div>
+        ))}
+        {urlIndexes.map((i) => (
+          <div>
+            <label for={`vcard-generator-url-${i}`} class="ui-label">
+              {t.urlLabel} {i + 1}
+            </label>
+            <input
+              id={`vcard-generator-url-${i}`}
+              type="url"
+              class={inputClass}
+              placeholder={t.urlPlaceholder}
+              autocomplete="off"
+            />
+          </div>
+        ))}
+      </div>
+
+      <h2 class={h2Class}>{t.addressHeading}</h2>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label for="vcard-generator-address-type" class="ui-label">
+            {t.addressTypeLabel}
+          </label>
+          <select
+            id="vcard-generator-address-type"
+            class="ui-input h-11 w-full px-2 dark:bg-gray-900"
+          >
+            {t.addressTypes.map(({ value, label, selected }) => (
+              <option value={value} selected={selected}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="vcard-generator-postal" class="ui-label">
+            {t.postalCodeLabel}
+          </label>
+          <input
+            id="vcard-generator-postal"
+            type="text"
+            class={inputClass}
+            placeholder={t.postalCodePlaceholder}
+            autocomplete="off"
+          />
+        </div>
+        <div>
+          <label for="vcard-generator-region" class="ui-label">
+            {t.regionLabel}
+          </label>
+          <input
+            id="vcard-generator-region"
+            type="text"
+            class={inputClass}
+            placeholder={t.regionPlaceholder}
+            autocomplete="off"
+          />
+        </div>
+        <div>
+          <label for="vcard-generator-city" class="ui-label">
+            {t.cityLabel}
+          </label>
+          <input
+            id="vcard-generator-city"
+            type="text"
+            class={inputClass}
+            placeholder={t.cityPlaceholder}
+            autocomplete="off"
+          />
+        </div>
+        <div class="col-span-2">
+          <label for="vcard-generator-street" class="ui-label">
+            {t.streetLabel}
+          </label>
+          <input
+            id="vcard-generator-street"
+            type="text"
+            class={inputClass}
+            placeholder={t.streetPlaceholder}
+            autocomplete="off"
+          />
+        </div>
+        <div class="col-span-2">
+          <label for="vcard-generator-country" class="ui-label">
+            {t.countryLabel}
+          </label>
+          <input
+            id="vcard-generator-country"
+            type="text"
+            class={inputClass}
+            placeholder={t.countryPlaceholder}
+            autocomplete="off"
+          />
+        </div>
+      </div>
+
+      <div class="mt-6">
+        <label for="vcard-generator-note" class="ui-label">
+          {t.noteLabel}
+        </label>
+        <textarea
+          id="vcard-generator-note"
+          class="ui-input h-24 w-full p-3 dark:bg-gray-900"
+          spellcheck="false"
+        ></textarea>
+      </div>
+
+      <div class="mt-4">
+        <label for="vcard-generator-level" class="ui-label">
+          {t.levelLabel}
+        </label>
+        <select
+          id="vcard-generator-level"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          {t.levelOptions.map(({ value, label, selected }) => (
+            <option value={value} selected={selected}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <div class="min-w-0">
+      <h2 class={h2Class}>{t.previewHeading}</h2>
+      <p
+        id="vcard-generator-empty"
+        class="text-sm text-gray-600 dark:text-gray-400"
+      >
+        {t.emptyMessage}
+      </p>
+
+      <div id="vcard-generator-result" class="hidden">
+        <div class="flex flex-col items-center gap-3">
+          <canvas
+            id="vcard-generator-canvas"
+            class="h-64 w-64 max-w-full rounded-lg border border-gray-300 bg-white dark:border-gray-700"
+            role="img"
+            aria-label="QR"
+          ></canvas>
+        </div>
+
+        <div id="vcard-generator-warnings" class="mt-3 grid gap-2"></div>
+
+        <label for="vcard-generator-text" class="ui-label mt-4">
+          {t.vcardTextLabel}
+        </label>
+        <textarea
+          id="vcard-generator-text"
+          readonly
+          rows="10"
+          wrap="off"
+          class="ui-input w-full p-3 font-mono text-xs dark:bg-gray-900"
+          spellcheck="false"
+        ></textarea>
+
+        <div class="mt-3 flex flex-wrap gap-3">
+          <button
+            id="vcard-generator-download-button"
+            type="button"
+            class="ui-btn-primary"
+          >
+            {t.downloadVcfButton}
+          </button>
+          <button id="vcard-generator-copy-button" type="button" class="ui-btn">
+            {t.copyButton}
+          </button>
+          <button
+            id="vcard-generator-qr-button"
+            type="button"
+            class="ui-btn disabled:opacity-50"
+          >
+            {t.downloadQrButton}
+          </button>
+        </div>
+        <p
+          id="vcard-generator-status"
+          class="mt-2 text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+          data-copied={t.copied}
+          data-copy-failed={t.copyFailed}
+          data-downloaded-vcf={t.downloadedVcf}
+          data-downloaded-qr={t.downloadedQr}
+        ></p>
+      </div>
+    </div>
+  </div>
+
+  <div
+    id="vcard-generator-messages"
+    class="hidden"
+    data-warning-email={t.warningEmail}
+    data-warning-url={t.warningUrl}
+    data-warning-too-long={t.warningTooLong}
+    data-warning-dense={t.warningDense}
+  ></div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import { generateQrMatrix } from '../../lib/tools/qr-generator';
+  import type {
+    ErrorCorrectionLevel,
+    QrMatrix,
+  } from '../../lib/tools/qr-generator';
+  import {
+    DENSE_MODULE_COUNT,
+    buildFormattedName,
+    buildVCard,
+    vcardFileName,
+    type AddressType,
+    type FnOrder,
+    type PhoneType,
+    type VCardWarning,
+  } from '../../lib/tools/vcard-generator';
+
+  const QUIET_ZONE_MODULES = 4;
+  const QR_SIZE = 512;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`vcard-generator-${id}`) as T;
+  const value = (id: string) => $<HTMLInputElement>(id).value;
+
+  const root = $('root');
+  const fnOrder = (root.dataset.fnOrder ?? 'family-given') as FnOrder;
+  const levelSelect = $<HTMLSelectElement>('level');
+  const emptyEl = $('empty');
+  const resultEl = $('result');
+  const canvas = $<HTMLCanvasElement>('canvas');
+  const ctx = canvas.getContext('2d')!;
+  const warningsEl = $('warnings');
+  const textEl = $<HTMLTextAreaElement>('text');
+  const statusEl = $('status');
+  const qrButton = $<HTMLButtonElement>('qr-button');
+  const messages = $('messages').dataset;
+
+  const phoneIndexes = [0, 1, 2];
+  const emailIndexes = [0, 1];
+  const urlIndexes = [0, 1];
+
+  let currentVcard = '';
+  let currentName = '';
+  let hasQr = false;
+
+  function drawMatrix(matrix: QrMatrix) {
+    const cellSize = Math.max(
+      1,
+      Math.floor(QR_SIZE / (matrix.moduleCount + QUIET_ZONE_MODULES * 2)),
+    );
+    const size = (matrix.moduleCount + QUIET_ZONE_MODULES * 2) * cellSize;
+    canvas.width = size;
+    canvas.height = size;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#000000';
+    for (let row = 0; row < matrix.moduleCount; row++) {
+      for (let col = 0; col < matrix.moduleCount; col++) {
+        if (matrix.isDark(row, col)) {
+          ctx.fillRect(
+            (col + QUIET_ZONE_MODULES) * cellSize,
+            (row + QUIET_ZONE_MODULES) * cellSize,
+            cellSize,
+            cellSize,
+          );
+        }
+      }
+    }
+  }
+
+  function showWarnings(messageList: string[]) {
+    warningsEl.replaceChildren(
+      ...messageList.map((text) => {
+        const p = document.createElement('p');
+        p.className = 'ui-error';
+        p.textContent = text;
+        return p;
+      }),
+    );
+  }
+
+  function update() {
+    statusEl.textContent = '';
+    const input = {
+      familyName: value('family'),
+      givenName: value('given'),
+      organization: value('org'),
+      title: value('title'),
+      phones: phoneIndexes.map((i) => ({
+        type: value(`phone-type-${i}`) as PhoneType,
+        number: value(`phone-${i}`),
+      })),
+      emails: emailIndexes.map((i) => value(`email-${i}`)),
+      urls: urlIndexes.map((i) => value(`url-${i}`)),
+      address: {
+        type: value('address-type') as AddressType,
+        postalCode: value('postal'),
+        region: value('region'),
+        city: value('city'),
+        street: value('street'),
+        country: value('country'),
+      },
+      note: value('note'),
+    };
+
+    const result = buildVCard(input, { fnOrder });
+    if (!result.ok) {
+      emptyEl.classList.remove('hidden');
+      resultEl.classList.add('hidden');
+      currentVcard = '';
+      hasQr = false;
+      return;
+    }
+
+    emptyEl.classList.add('hidden');
+    resultEl.classList.remove('hidden');
+    currentVcard = result.vcard;
+    currentName = buildFormattedName(input, fnOrder);
+    textEl.value = result.vcard.replace(/\r\n/g, '\n');
+
+    const warningMessages: string[] = [];
+    const warningMap: Record<VCardWarning, string | undefined> = {
+      'email-invalid': messages.warningEmail,
+      'url-invalid': messages.warningUrl,
+    };
+    for (const w of result.warnings) {
+      warningMessages.push(warningMap[w] ?? '');
+    }
+
+    const qr = generateQrMatrix(
+      result.qrText,
+      levelSelect.value as ErrorCorrectionLevel,
+    );
+    if (qr.ok) {
+      drawMatrix(qr.matrix);
+      hasQr = true;
+      canvas.classList.remove('hidden');
+      if (qr.matrix.moduleCount >= DENSE_MODULE_COUNT) {
+        warningMessages.push(messages.warningDense ?? '');
+      }
+    } else {
+      hasQr = false;
+      canvas.classList.add('hidden');
+      warningMessages.push(messages.warningTooLong ?? '');
+    }
+    qrButton.disabled = !hasQr;
+    showWarnings(warningMessages);
+  }
+
+  root.addEventListener('input', update);
+  root.addEventListener('change', update);
+
+  $('download-button').addEventListener('click', () => {
+    if (currentVcard === '') return;
+    downloadBlob(
+      new Blob([currentVcard], { type: 'text/vcard;charset=utf-8' }),
+      vcardFileName(currentName),
+    );
+    statusEl.textContent = statusEl.dataset.downloadedVcf ?? '';
+  });
+
+  $('copy-button').addEventListener('click', async () => {
+    if (currentVcard === '') return;
+    const ok = await copyText(currentVcard);
+    statusEl.textContent = ok
+      ? (statusEl.dataset.copied ?? '')
+      : (statusEl.dataset.copyFailed ?? '');
+  });
+
+  qrButton.addEventListener('click', () => {
+    if (!hasQr) return;
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      downloadBlob(blob, 'vcard-qrcode.png');
+      statusEl.textContent = statusEl.dataset.downloadedQr ?? '';
+    }, 'image/png');
+  });
+
+  update();
+</script>

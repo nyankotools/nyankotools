@@ -421,6 +421,10 @@ test.describe('入力状態の保持（QA再指摘）', () => {
     const page = await context.newPage();
     await page.goto('/tools/tax-calculator/');
     await page.emulateMedia({ media: 'print' });
+    // darkクラスの除去はmatchMediaのchangeイベント経由（非同期）なので、外れるのを待つ
+    await page.waitForFunction(
+      () => !document.documentElement.classList.contains('dark'),
+    );
     const scheme = await page.evaluate(
       () => getComputedStyle(document.documentElement).colorScheme,
     );

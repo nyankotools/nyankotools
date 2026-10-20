@@ -77,15 +77,35 @@ export function initSidebar(): void {
     if (hadFocus && !event.matches) toggle?.focus();
   });
   syncInert();
+
+  // PC幅の開閉（状態は html.sidebar-collapsed と localStorage。初期反映は theme-init.js）
+  const collapseBtn = document.getElementById('sidebar-collapse');
+  const expandBtn = document.getElementById('sidebar-expand');
+  function setCollapsed(collapsed: boolean) {
+    document.documentElement.classList.toggle('sidebar-collapsed', collapsed);
+    try {
+      if (collapsed) localStorage.setItem('sidebar-collapsed', '1');
+      else localStorage.removeItem('sidebar-collapsed');
+    } catch {
+      // 保存できなくても、そのページ内では開閉できる
+    }
+  }
+  collapseBtn?.addEventListener('click', () => {
+    setCollapsed(true);
+    expandBtn?.focus();
+  });
+  expandBtn?.addEventListener('click', () => {
+    setCollapsed(false);
+    collapseBtn?.focus();
+  });
 }
 
 type Theme = 'light' | 'dark' | 'system';
 const THEME_KEY = 'theme';
 
 export function initTheme(): void {
-  const themeButtons = document.querySelectorAll<HTMLButtonElement>(
-    '[data-theme-option]',
-  );
+  const themeButtons =
+    document.querySelectorAll<HTMLButtonElement>('[data-theme-cycle]');
   const darkMql = window.matchMedia('(prefers-color-scheme: dark)');
 
   function getStoredTheme(): Theme {
@@ -105,10 +125,15 @@ export function initTheme(): void {
       .querySelector('meta[name="theme-color"]')
       ?.setAttribute('content', isDark ? '#030712' : '#f9fafb');
     themeButtons.forEach((button) => {
-      button.setAttribute(
-        'aria-pressed',
-        String(button.dataset.themeOption === theme),
-      );
+      button.dataset.themeCurrent = theme;
+      button
+        .querySelectorAll<SVGElement>('[data-theme-icon]')
+        .forEach((icon) => {
+          icon.classList.toggle('hidden', icon.dataset.themeIcon !== theme);
+        });
+      const label = `${button.dataset.labelPrefix}: ${button.dataset[`label${theme[0].toUpperCase()}${theme.slice(1)}`]}`;
+      button.setAttribute('aria-label', label);
+      button.title = label;
     });
   }
 
@@ -127,9 +152,14 @@ export function initTheme(): void {
 
   applyTheme(getStoredTheme());
 
+  const nextTheme: Record<Theme, Theme> = {
+    light: 'dark',
+    dark: 'system',
+    system: 'light',
+  };
   themeButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      setTheme(button.dataset.themeOption as Theme);
+      setTheme(nextTheme[button.dataset.themeCurrent as Theme]);
     });
   });
 
@@ -137,14 +167,6 @@ export function initTheme(): void {
     if (getStoredTheme() === 'system') {
       applyTheme('system');
     }
-  });
-
-  const themeToggleMobile = document.getElementById('theme-toggle-mobile');
-  themeToggleMobile?.addEventListener('click', () => {
-    const next = document.documentElement.classList.contains('dark')
-      ? 'light'
-      : 'dark';
-    setTheme(next);
   });
 }
 
@@ -164,6 +186,8 @@ export function initSidebarScroll(): void {
     // sessionStorageが使えない場合は無視する
   }
   window.addEventListener('pagehide', () => {
+    // 折りたたみ中は display:none で scrollTop が 0 になるため、保存位置を上書きしない
+    if (sidebar.getClientRects().length === 0) return;
     try {
       sessionStorage.setItem(SIDEBAR_SCROLL_KEY, String(sidebar.scrollTop));
     } catch {

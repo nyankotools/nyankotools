@@ -22,6 +22,36 @@
 
 #sidebar {
   view-transition-name: sidebar;
+  /* 端までスクロールしても本文に連動させない。バーは普段隠し、ホバー中だけ細く出す */
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  /* バーの有無で内容幅が変わらないよう、常にバー分の幅を確保する */
+  scrollbar-gutter: stable;
+  scrollbar-color: transparent transparent;
+}
+
+#sidebar:hover {
+  scrollbar-color: rgb(156 163 175 / 0.6) transparent;
+}
+
+/* PC幅でのサイドバー開閉。状態は html.sidebar-collapsed（theme-init.js で初回描画前に付与） */
+#sidebar-expand {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  html.sidebar-collapsed #sidebar {
+    display: none;
+  }
+
+  html.sidebar-collapsed #sidebar-expand {
+    display: flex;
+  }
+
+  /* 固定の展開ボタン（左上 12〜52px）が本文の先頭に被らないよう余白を足す */
+  html.sidebar-collapsed #main-content {
+    padding-left: 4.5rem;
+  }
 }
 
 ::view-transition-group(sidebar),
@@ -53,7 +83,7 @@
   }
 
   .ui-btn {
-    @apply min-h-11 rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800;
+    @apply min-h-11 rounded-lg border border-gray-400 px-4 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800;
   }
 
   .ui-btn-primary {
@@ -61,7 +91,7 @@
   }
 
   .ui-input {
-    @apply rounded-lg border border-gray-300 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:text-gray-100;
+    @apply rounded-lg border border-gray-400 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:text-gray-100;
   }
 
   .ui-error {
@@ -69,7 +99,7 @@
   }
 
   .ui-seg {
-    @apply flex rounded-lg border border-gray-300 p-1 text-sm dark:border-gray-700;
+    @apply flex rounded-lg border border-gray-400 p-1 text-sm dark:border-gray-700;
   }
 
   .ui-seg-btn {
@@ -77,7 +107,7 @@
   }
 
   .ui-dropzone {
-    @apply rounded-lg border-2 border-dashed border-gray-300 p-4 text-center transition-colors dark:border-gray-700;
+    @apply rounded-lg border-2 border-dashed border-gray-400 p-4 text-center transition-colors dark:border-gray-700;
   }
 
   .ui-file {
@@ -123,4 +153,66 @@
   textarea {
     resize: none;
   }
+}
+
+/*
+ * お気に入りの星ボタン。アイコンは子要素ではなく ::before の mask で描き、
+ * ツール数ぶん繰り返されるサイドバー・ホームのHTMLとDOMを小さく保つ。
+ * 登録済み（aria-pressed=true）は塗りつぶしの星＋黄色にする。
+ * 色指定は各所のユーティリティクラス（text-gray-300 等）に勝つ必要があるためレイヤー外に置く。
+ */
+.fav-toggle::before {
+  content: '';
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  background-color: currentColor;
+  mask: url('/icons/star-outline.svg') center / contain no-repeat;
+}
+
+.fav-toggle[aria-pressed='true'] {
+  color: var(--color-yellow-600);
+}
+
+.fav-toggle[aria-pressed='true']::before {
+  mask-image: url('/icons/star-filled.svg');
+}
+
+:root.dark .fav-toggle[aria-pressed='true'] {
+  color: var(--color-yellow-400);
+}
+
+/* サイドバー（Layout.astro）。ツール数ぶん繰り返すリンクの長いクラス列をここにまとめる */
+@layer components {
+  .sidebar-link {
+    @apply block flex-1 rounded px-3 py-2 text-sm font-normal text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=page]:bg-blue-50 aria-[current=page]:font-semibold aria-[current=page]:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=page]:bg-blue-950/40 dark:aria-[current=page]:text-blue-400;
+  }
+}
+
+/* ツール数ぶん繰り返される要素のクラス列。HTMLを小さく保つためここにまとめる */
+@layer components {
+  .fav-toggle-side {
+    @apply shrink-0 rounded p-3 text-gray-400 hover:text-yellow-600 dark:text-gray-600 dark:hover:text-yellow-400;
+  }
+  .fav-toggle-card {
+    @apply absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-yellow-600 dark:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-yellow-400;
+  }
+  .home-card-link {
+    @apply block h-full rounded-lg border border-gray-200 bg-white p-4 pr-14 shadow-sm transition hover:border-blue-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-900 dark:hover:border-blue-500;
+  }
+}
+
+/* トップのカテゴリ別セクションは画面外の描画・レイアウトを後回しにする（ツール数が多いため初期描画が重くなる）。
+   高さは概算値で、実描画後はブラウザが記憶する。ページ内検索・アンカー移動・アクセシビリティツリーには影響しない */
+[data-home-section] {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 700px;
+}
+
+nav summary {
+  list-style: none;
+}
+
+nav summary::-webkit-details-marker {
+  display: none;
 }

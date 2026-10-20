@@ -78,6 +78,10 @@ test.describe('CSS/JS/HTMLミニファイ＆整形（日本語版）', () => {
     await page.goto('/tools/code-minifier/');
 
     await page.locator('#code-minifier-input').fill('.a{color:red}');
+    // 整形は非同期（prettierを動的import）なので、出力が入ってからコピーする
+    await expect(page.locator('#code-minifier-output')).toHaveValue(
+      '.a {\n  color: red;\n}\n',
+    );
     await page.locator('#code-minifier-copy-button').click();
 
     await expect(page.locator('#code-minifier-status')).toHaveText(

@@ -132,6 +132,7 @@ const dateFields = [
     type PdfMetadata,
   } from '../../lib/tools/pdf-metadata-editor';
   import { enableFileDrop } from '../../lib/file-drop';
+  import { preloadPdfLibs } from '../../lib/pdf-preload';
 
   const $ = <T extends HTMLElement>(id: string) =>
     document.getElementById(id) as T;
@@ -153,7 +154,9 @@ const dateFields = [
     fieldNames.map((f) => [f, $<HTMLInputElement>(`md-${f}`)]),
   ) as Record<keyof PdfMetadata, HTMLInputElement>;
 
-  enableFileDrop($('md-drop'), fileInput);
+  enableFileDrop($('md-drop'), fileInput, () =>
+    preloadPdfLibs({ pdfLib: true }),
+  );
 
   let pdfBytes: Uint8Array | null = null;
   let pdfName = '';

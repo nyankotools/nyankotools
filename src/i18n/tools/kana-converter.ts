@@ -66,9 +66,9 @@ export const kanaConverterContent: Record<Locale, KanaConverterPageContent> = {
     ],
   },
   en: {
-    title: 'Hiragana / Katakana Converter for Japanese Learners',
+    title: 'Katakana & Hiragana Converter: Switch Kana Online',
     description:
-      'Convert text between hiragana and katakana, including voiced sounds, small tsu, and iteration marks. Runs in your browser; nothing is sent to a server.',
+      'Free katakana and hiragana converter: switch kana between scripts, incl. voiced sounds and small tsu. Converts script only, not meaning.',
     h1: 'Hiragana / Katakana Converter for Japanese Learners',
     introHtml:
       'Paste in Japanese text and instantly see it in the other kana script — handy when you\'re studying vocabulary, making flashcards, or double-checking how a loanword (gairaigo) or name should be written in katakana. Voiced and semi-voiced sounds, contracted sounds (ゃゅょ), the small tsu (っ), "ゔ"/"ヴ", and iteration marks (ゝゞ / ヽヾ) are all converted automatically, while kanji, romaji, and other characters are left untouched. If you\'re also working with half-width katakana, try the <a href="/en/tools/zenkaku-hankaku/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Full-width / Half-width Converter</a> as well.',

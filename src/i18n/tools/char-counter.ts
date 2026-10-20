@@ -114,9 +114,9 @@ export const charCounterContent: Record<Locale, CharCounterPageContent> = {
     ],
   },
   en: {
-    title: 'Character Counter',
+    title: 'Character Counter: Count Characters, Words & Lines Online',
     description:
-      "Count characters, words, and lines in real time, plus your length against X's 280-character limit. Runs in your browser; nothing is sent to a server.",
+      "Free character counter: count characters, words and lines live, and check X's 280-character limit. Runs in your browser.",
     h1: 'Character Counter',
     introHtml:
       'Type or paste text below to see its character count, character count without spaces, word count and line count update in real time. Use it to check length limits for drafts and social media posts. To normalize mixed full-width and half-width text, try the <a href="/en/tools/zenkaku-hankaku/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Full-width / Half-width Converter</a>; to unify line breaks, use the <a href="/en/tools/line-ending-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Line Ending Converter</a>. Your text is processed in the browser and never sent to a server.',

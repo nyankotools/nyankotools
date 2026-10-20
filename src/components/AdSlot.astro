@@ -1,0 +1,13 @@
+---
+import { resolveLocale, useTranslations } from '../i18n/ui';
+
+const t = useTranslations(resolveLocale(Astro.currentLocale));
+---
+
+<aside data-ad-slot aria-label={t('ads.label')} class="my-8 print:hidden">
+  <p aria-hidden="true" class="mb-1 text-xs text-gray-500 dark:text-gray-400">
+    {t('ads.label')}
+  </p>
+  <!-- CLS防止のため高さを固定。広告スクリプト導入時にここへ ins 要素を置く -->
+  <div class="flex h-[280px] w-full max-w-full items-center justify-center overflow-hidden rounded border border-dashed border-gray-300 text-xs text-gray-400 dark:border-gray-700 dark:text-gray-500"></div>
+</aside>

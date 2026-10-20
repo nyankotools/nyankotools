@@ -1,7 +1,7 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
 
-const lastUpdated = 'September 28, 2026';
+const lastUpdated = 'October 20, 2026';
 ---
 
 <Layout
@@ -52,6 +52,20 @@ const lastUpdated = 'September 28, 2026';
         when you close the tab and is never sent to any server). Tools that
         handle sensitive data such as passwords or tokens do not save it.
       </p>
+      <p class="mt-2">
+        Tools that use a camera, microphone, screen sharing, or gamepad (such as
+        the webcam tester, mic tester, screen recorder, and QR code reader)
+        process video, audio, and input only on your device, after you grant
+        permission in your browser. Nothing is sent to a server or stored by the
+        Site. You can revoke permission at any time in your browser settings.
+      </p>
+      <p class="mt-2">
+        The contact page works by opening your email app (mailto), so what you
+        enter never passes through the Site's servers. Your email reaches the
+        operator through your own email service and is used only to reply to
+        you. Share buttons (X, Facebook, etc.) take you to the respective
+        service only when you click them and send nothing automatically.
+      </p>
     </section>
 
     <section>
@@ -72,16 +86,69 @@ const lastUpdated = 'September 28, 2026';
       </h2>
       <p class="mb-2">
         The Site uses Google Analytics (GA4) and Cloudflare Web Analytics as
-        analytics tools to improve the Site. In the future, we may also use
-        third-party services such as Google AdSense to support the Site's
-        continued operation.
+        analytics tools to improve the Site. The Site does not currently use any
+        advertising service, but in the future we may use third-party services
+        such as Google AdSense to support its continued operation. If we do, we
+        will update this policy beforehand.
       </p>
       <p class="mb-2">
-        These services may use cookies to collect traffic data. Data collected
+        Google Analytics uses cookies to collect traffic data. Data collected
         through cookies is anonymous and does not identify you personally. You
         can opt out of this data collection by disabling cookies in your
         browser; please refer to your browser's help documentation for
-        instructions.
+        instructions. Cloudflare Web Analytics does not use cookies and does not
+        track individuals.
+      </p>
+      <p class="mb-2">
+        The information sent to outside providers is listed below. Neither
+        includes the text or files you enter into a tool, or file names.
+      </p>
+      <div class="mb-2 overflow-x-auto">
+        <table class="w-full border-collapse text-left text-sm">
+          <thead>
+            <tr class="border-b border-gray-300 dark:border-gray-700">
+              <th class="py-2 pr-3 font-semibold">Recipient / service</th>
+              <th class="py-2 pr-3 font-semibold">Information sent</th>
+              <th class="py-2 font-semibold">Purpose</th>
+            </tr>
+          </thead>
+          <tbody class="align-top">
+            <tr class="border-b border-gray-200 dark:border-gray-800">
+              <td class="py-2 pr-3">Google LLC (Google Analytics 4)</td>
+              <td class="py-2 pr-3">
+                Page URL and title, referrer, IP address, device / browser / OS
+                / language, identifiers such as cookies, copy and download
+                actions, and errors (tool name only)
+              </td>
+              <td class="py-2">Analyzing site usage and improving the tools</td>
+            </tr>
+            <tr class="border-b border-gray-200 dark:border-gray-800">
+              <td class="py-2 pr-3">
+                Cloudflare, Inc. (Cloudflare Web Analytics)
+              </td>
+              <td class="py-2 pr-3">
+                Pages viewed, referrer, device / browser type, and load
+                performance (no cookies)
+              </td>
+              <td class="py-2">Aggregating traffic and improving page speed</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="mb-2">
+        URL parameters that may contain your input (
+        <span class="font-mono">?text=</span>,<span class="font-mono">?q=</span>
+        , <span class="font-mono">?c=</span>) are removed before being sent to
+        Google Analytics. You can opt out of Google Analytics with the
+        <a
+          href="https://tools.google.com/dlpage/gaoptout"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-blue-700 underline hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+        >
+          Google Analytics opt-out add-on
+        </a>
+        .
       </p>
       <p>
         For the terms of service and privacy policy of Google Analytics and
@@ -98,11 +165,26 @@ const lastUpdated = 'September 28, 2026';
       <p>
         Cookies are small data files that a website sends to your browser and
         that are stored on your device. The Site uses cookies through the
-        analytics and advertising services described above. You can refuse
-        cookies or delete cookies already stored through your browser settings.
-        Note that disabling cookies may cause some features of the Site to stop
-        working correctly.
+        analytics services described above (only Google Analytics sets cookies).
+        You can refuse cookies or delete cookies already stored through your
+        browser settings.
       </p>
+      <p class="mt-2">
+        For convenience, the Site also stores the following in your browser's
+        local storage. None of it is sent to any server, and it is removed when
+        you clear the site's data in your browser.
+      </p>
+      <ul class="mt-2 list-disc space-y-1 pl-6">
+        <li>
+          Favorite tools, recently used tools (tool names only, up to 8), theme
+          (light/dark), and sidebar open/closed state
+        </li>
+        <li>Best scores for game tools and rock-paper-scissors stats</li>
+        <li>
+          Issuer details you save in the Invoice Generator, and the UTM Builder
+          history
+        </li>
+      </ul>
     </section>
 
     <section>
@@ -143,8 +225,9 @@ const lastUpdated = 'September 28, 2026';
     <section>
       <h2 class="mb-2 text-lg font-semibold">8. Children's Privacy</h2>
       <p>
-        The Site does not knowingly collect personal information from minors,
-        including children under the age of 13.
+        The Site does not knowingly collect personal information from minors (in
+        particular, children of an age at which parental consent is required).
+        Minors should use the Site with the consent of a parent or guardian.
       </p>
     </section>
 

@@ -108,8 +108,7 @@ const selectClass =
 <script>
   import { fill } from '../../lib/format-template';
   import { paren } from '../../lib/paren';
-  import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
-  import workerUrl from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
+  import { loadPdfjs } from '../../lib/pdfjs-loader';
   import { getPageCount, PdfToolError } from '../../lib/tools/pdf-merge-split';
   import {
     clampScale,
@@ -124,8 +123,7 @@ const selectClass =
     type RasterPage,
   } from '../../lib/tools/pdf-compressor';
   import { enableFileDrop } from '../../lib/file-drop';
-
-  pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+  import { preloadPdfLibs } from '../../lib/pdf-preload';
 
   const $ = <T extends HTMLElement>(id: string) =>
     document.getElementById(id) as T;
@@ -139,7 +137,9 @@ const selectClass =
   const summary = $('cmp-summary');
   const resultList = $('cmp-result-list');
 
-  enableFileDrop($('cmp-drop'), fileInput);
+  enableFileDrop($('cmp-drop'), fileInput, () =>
+    preloadPdfLibs({ pdfLib: true, pdfjs: true }),
+  );
 
   let pdfBytes: Uint8Array | null = null;
   let pdfName = '';
@@ -187,6 +187,7 @@ const selectClass =
 
   async function openPdf(bytes: Uint8Array) {
     // pdf.js は渡したバッファを worker に転送（detach）するためコピーを渡す
+    const pdfjs = await loadPdfjs();
     const task = pdfjs.getDocument({ data: bytes.slice() });
     try {
       return { doc: await task.promise, task };

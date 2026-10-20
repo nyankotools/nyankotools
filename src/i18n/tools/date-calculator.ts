@@ -150,9 +150,9 @@ export const dateCalculatorContent: Record<Locale, DateCalculatorPageContent> =
         date: '{y}-{mm}-{dd}',
         addWeekday: ' ({w})',
       },
-      title: 'Date Calculator (Difference Between Dates, Days From a Date)',
+      title: 'Date Calculator: Days Between Dates & Add or Subtract Days',
       description:
-        'Calculate the days between two dates, or the date N days before or after a date. Runs in your browser; nothing is sent to a server.',
+        'Free date calculator: count days between two dates or add/subtract days from any date, with an option to include the start day. Runs in your browser.',
       h1: 'Date Calculator',
       introHtml:
         'Calculates the difference in days between two dates, or the date a set number of days before or after a given date, in real time. Handy for checking contract periods or working out deadlines. Everything happens in your browser, and nothing you type is ever sent to a server. If you need to convert a date to the Japanese era calendar, check out the <a href="/en/tools/japanese-era-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Japanese Era Converter</a> as well.',

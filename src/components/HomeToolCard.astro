@@ -1,0 +1,32 @@
+---
+import type { LocalizedTool, Locale } from '../data/tools';
+import { categoryDotClass } from '../lib/category-style';
+import FavoriteToggle from './FavoriteToggle.astro';
+
+interface Props {
+  tool: LocalizedTool;
+  locale: Locale;
+}
+
+const { tool, locale } = Astro.props;
+const href = `${locale === 'en' ? '/en' : ''}/tools/${tool.slug}/`;
+---
+
+<li data-tool-slug={tool.slug} class="relative">
+  <a href={href} class="home-card-link">
+    <span class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+      <span
+        class={`h-2 w-2 shrink-0 rounded-full ${categoryDotClass[tool.categoryId]}`}
+        aria-hidden="true"
+      ></span>
+      {tool.category}
+    </span>
+    <h3 class="mb-1 mt-1 font-semibold text-blue-700 dark:text-blue-400">
+      {tool.name}
+    </h3>
+    <p class="line-clamp-2 text-sm text-gray-600 dark:text-gray-400">
+      {tool.description}
+    </p>
+  </a>
+  <FavoriteToggle slug={tool.slug} locale={locale} class="fav-toggle-card" />
+</li>

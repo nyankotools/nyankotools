@@ -1,0 +1,416 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { virtualPianoContent } from '../../i18n/tools/virtual-piano';
+import {
+  DEFAULT_VOLUME,
+  MAX_OCTAVE,
+  MIN_OCTAVE,
+  TIMBRES,
+} from '../../lib/tools/virtual-piano';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = virtualPianoContent[locale];
+
+const selectClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+---
+
+<ToolShell t={t}>
+  <div
+    id="vp-root"
+    data-range-text={t.rangeText}
+    data-key-label={t.keyButtonLabel}
+    data-no-audio={t.noAudioError}
+    data-min-octave={MIN_OCTAVE}
+    data-max-octave={MAX_OCTAVE}
+  >
+    <div class="grid max-w-2xl gap-4 sm:grid-cols-3">
+      <div>
+        <label for="vp-timbre" class="ui-label">
+          {t.timbreLabel}
+        </label>
+        <select id="vp-timbre" class={selectClass}>
+          {TIMBRES.map((timbre) => (
+            <option value={timbre.id}>{t.timbres[timbre.id]}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <p id="vp-octave-label" class="ui-label">
+          {t.octaveLabel}
+        </p>
+        <div
+          role="group"
+          aria-labelledby="vp-octave-label"
+          class="flex items-center gap-2"
+        >
+          <button
+            id="vp-octave-down"
+            type="button"
+            class="ui-btn w-11 px-0 text-lg"
+            aria-label={t.octaveDownLabel}
+          >
+            −
+          </button>
+          <span
+            id="vp-range"
+            class="min-w-0 flex-1 text-center text-sm text-gray-700 dark:text-gray-300"
+          ></span>
+          <button
+            id="vp-octave-up"
+            type="button"
+            class="ui-btn w-11 px-0 text-lg"
+            aria-label={t.octaveUpLabel}
+          >
+            +
+          </button>
+        </div>
+      </div>
+      <div>
+        <label for="vp-volume" class="ui-label">
+          {t.volumeLabel}: <span id="vp-volume-value">{DEFAULT_VOLUME}</span>
+        </label>
+        <input
+          id="vp-volume"
+          type="range"
+          min="0"
+          max="100"
+          value={DEFAULT_VOLUME}
+          class="h-11 w-full"
+        />
+      </div>
+    </div>
+
+    <div class="mt-2 flex flex-wrap gap-x-6">
+      <label class="ui-check">
+        <input id="vp-show-names" type="checkbox" checked />
+        {t.showNamesLabel}
+      </label>
+      <label class="ui-check">
+        <input id="vp-show-keys" type="checkbox" checked />
+        {t.showKeysLabel}
+      </label>
+    </div>
+
+    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{t.startHint}</p>
+    <p id="vp-error" hidden role="alert" class="ui-error mt-3 max-w-2xl"></p>
+
+    <div
+      id="vp-scroll"
+      role="group"
+      tabindex="0"
+      aria-label={t.keyboardLabel}
+      class="mt-4 overflow-x-auto rounded-lg border border-gray-300 bg-gray-100 p-2 select-none dark:border-gray-700 dark:bg-gray-900"
+    >
+      <div id="vp-keys" class="relative"></div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    DEFAULT_OCTAVE,
+    DEFAULT_VOLUME,
+    baseMidi,
+    buildKeys,
+    clampOctave,
+    clampVolume,
+    codeToSemitone,
+    countWhiteKeys,
+    getTimbre,
+    midiToFrequency,
+    noteLabel,
+    peakGain,
+    periodicWaveCoefficients,
+    releaseStopDelay,
+    semitoneToKeyLabel,
+    shouldIgnoreKey,
+  } from '../../lib/tools/virtual-piano';
+  import type { PianoKey } from '../../lib/tools/virtual-piano';
+
+  const WHITE_W = 44;
+  const WHITE_H = 180;
+  const BLACK_W = 28;
+  const BLACK_H = 112;
+
+  const root = document.getElementById('vp-root')!;
+  const d = root.dataset;
+  const timbreSelect = document.getElementById(
+    'vp-timbre',
+  ) as HTMLSelectElement;
+  const octaveDown = document.getElementById(
+    'vp-octave-down',
+  ) as HTMLButtonElement;
+  const octaveUp = document.getElementById('vp-octave-up') as HTMLButtonElement;
+  const rangeEl = document.getElementById('vp-range')!;
+  const volumeInput = document.getElementById('vp-volume') as HTMLInputElement;
+  const volumeValue = document.getElementById('vp-volume-value')!;
+  const showNames = document.getElementById(
+    'vp-show-names',
+  ) as HTMLInputElement;
+  const showKeys = document.getElementById('vp-show-keys') as HTMLInputElement;
+  const errorEl = document.getElementById('vp-error')!;
+  const keysEl = document.getElementById('vp-keys')!;
+
+  interface Voice {
+    midi: number;
+    osc: OscillatorNode;
+    gain: GainNode;
+    releaseSeconds: number;
+  }
+
+  let octave = DEFAULT_OCTAVE;
+  let volume = DEFAULT_VOLUME;
+  let audio: {
+    ctx: AudioContext;
+    master: GainNode;
+    waves: Map<string, PeriodicWave>;
+  } | null = null;
+  const voices = new Map<string, Voice>();
+  const activeCount = new Map<number, number>();
+  /** midi -> ボタン */
+  let keyButtons = new Map<number, HTMLButtonElement>();
+
+  function ensureAudio() {
+    if (audio) {
+      void audio.ctx.resume();
+      return audio;
+    }
+    const Ctor: typeof AudioContext | undefined =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (!Ctor) {
+      errorEl.textContent = d.noAudio ?? '';
+      errorEl.hidden = false;
+      return null;
+    }
+    const ctx = new Ctor();
+    const master = ctx.createGain();
+    master.gain.value = (volume / 100) ** 2;
+    // 同時に何音か鳴らしても割れにくいよう、軽くコンプレッサーを通す
+    const compressor = ctx.createDynamicsCompressor();
+    master.connect(compressor).connect(ctx.destination);
+    audio = { ctx, master, waves: new Map() };
+    void ctx.resume();
+    return audio;
+  }
+
+  function setActive(midi: number, delta: number) {
+    const next = Math.max(0, (activeCount.get(midi) ?? 0) + delta);
+    activeCount.set(midi, next);
+    const button = keyButtons.get(midi);
+    if (button) {
+      button.dataset.active = String(next > 0);
+      button.setAttribute('aria-pressed', String(next > 0));
+    }
+  }
+
+  function noteOn(source: string, midi: number) {
+    if (voices.has(source)) return;
+    const a = ensureAudio();
+    if (!a) return;
+    const timbre = getTimbre(timbreSelect.value);
+    const { ctx, master } = a;
+    const t = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    if (timbre.wave === 'custom') {
+      let wave = a.waves.get(timbre.id);
+      if (!wave) {
+        const c = periodicWaveCoefficients(timbre.partials);
+        wave = ctx.createPeriodicWave(
+          new Float32Array(c.real),
+          new Float32Array(c.imag),
+        );
+        a.waves.set(timbre.id, wave);
+      }
+      osc.setPeriodicWave(wave);
+    } else {
+      osc.type = timbre.wave;
+    }
+    osc.frequency.value = midiToFrequency(midi);
+    const gain = ctx.createGain();
+    const peak = peakGain(100, timbre);
+    const env = timbre.envelope;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(peak, t + env.attack);
+    gain.gain.setTargetAtTime(
+      peak * env.sustain,
+      t + env.attack,
+      env.decay / 3,
+    );
+    osc.connect(gain).connect(master);
+    osc.start(t);
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
+    };
+    voices.set(source, { midi, osc, gain, releaseSeconds: env.release });
+    setActive(midi, 1);
+  }
+
+  function noteOff(source: string) {
+    const voice = voices.get(source);
+    if (!voice || !audio) return;
+    voices.delete(source);
+    const { ctx } = audio;
+    const now = ctx.currentTime;
+    const g = voice.gain.gain;
+    g.cancelScheduledValues(now);
+    g.setValueAtTime(g.value, now);
+    g.setTargetAtTime(0, now, voice.releaseSeconds / 3);
+    voice.osc.stop(
+      now +
+        releaseStopDelay({
+          attack: 0,
+          decay: 0,
+          sustain: 0,
+          release: voice.releaseSeconds,
+        }),
+    );
+    setActive(voice.midi, -1);
+  }
+
+  function releaseAll() {
+    for (const source of [...voices.keys()]) noteOff(source);
+  }
+
+  function applyLabelVisibility() {
+    keysEl
+      .querySelectorAll<HTMLElement>('[data-role="name"]')
+      .forEach((el) => (el.hidden = !showNames.checked));
+    keysEl
+      .querySelectorAll<HTMLElement>('[data-role="cap"]')
+      .forEach((el) => (el.hidden = !showKeys.checked));
+  }
+
+  function render() {
+    releaseAll();
+    activeCount.clear();
+    const keys = buildKeys(octave);
+    const base = baseMidi(octave);
+    const whites = countWhiteKeys(keys);
+    keysEl.style.width = `${whites * WHITE_W}px`;
+    keysEl.style.height = `${WHITE_H}px`;
+    keyButtons = new Map();
+    const white: HTMLButtonElement[] = [];
+    const black: HTMLButtonElement[] = [];
+    keys.forEach((key: PianoKey) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.tabIndex = -1;
+      button.dataset.midi = String(key.midi);
+      button.dataset.active = 'false';
+      button.setAttribute('aria-pressed', 'false');
+      button.setAttribute(
+        'aria-label',
+        (d.keyLabel ?? '{note}').replace('{note}', key.name),
+      );
+      const cap = semitoneToKeyLabel(key.semitone);
+      const nameHtml = `<span data-role="name" class="block text-[11px] leading-tight">${key.name}</span>`;
+      const capHtml = cap
+        ? `<span data-role="cap" class="mt-0.5 block text-[11px] leading-tight font-bold">${cap}</span>`
+        : '';
+      button.style.touchAction = 'pan-x';
+      if (key.black) {
+        button.className =
+          'absolute top-0 z-10 flex flex-col items-center justify-end rounded-b-md border border-gray-950 bg-gray-900 pb-2 text-gray-200 data-[active=true]:bg-blue-600 data-[active=true]:text-white';
+        button.style.left = `${(key.whiteIndex + 1) * WHITE_W - BLACK_W / 2}px`;
+        button.style.width = `${BLACK_W}px`;
+        button.style.height = `${BLACK_H}px`;
+        black.push(button);
+      } else {
+        button.className =
+          'absolute top-0 flex flex-col items-center justify-end rounded-b-md border border-gray-500 bg-white pb-2 text-gray-800 data-[active=true]:bg-blue-200';
+        button.style.left = `${key.whiteIndex * WHITE_W}px`;
+        button.style.width = `${WHITE_W}px`;
+        button.style.height = `${WHITE_H}px`;
+        white.push(button);
+      }
+      button.innerHTML = nameHtml + capHtml;
+      keyButtons.set(key.midi, button);
+
+      button.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        e.preventDefault();
+        noteOn(`p:${e.pointerId}`, key.midi);
+      });
+      button.addEventListener('pointerenter', (e) => {
+        // マウスを押したまま鍵盤の上をなぞる（グリッサンド）
+        if (e.pointerType === 'mouse' && (e.buttons & 1) === 1) {
+          noteOn(`p:${e.pointerId}`, key.midi);
+        }
+      });
+      const release = (e: PointerEvent) => noteOff(`p:${e.pointerId}`);
+      button.addEventListener('pointerup', release);
+      button.addEventListener('pointercancel', release);
+      button.addEventListener('pointerleave', release);
+      button.addEventListener('contextmenu', (e) => e.preventDefault());
+    });
+    keysEl.replaceChildren(...white, ...black);
+    applyLabelVisibility();
+    rangeEl.textContent = (d.rangeText ?? '')
+      .replace('{from}', noteLabel(base))
+      .replace('{to}', noteLabel(base + keys.length - 1));
+    octaveDown.disabled = octave <= Number(d.minOctave);
+    octaveUp.disabled = octave >= Number(d.maxOctave);
+  }
+
+  function setOctave(next: number) {
+    octave = clampOctave(next);
+    render();
+  }
+
+  octaveDown.addEventListener('click', () => setOctave(octave - 1));
+  octaveUp.addEventListener('click', () => setOctave(octave + 1));
+
+  function onVolume() {
+    volume = clampVolume(Number(volumeInput.value));
+    volumeValue.textContent = String(volume);
+    if (audio) {
+      audio.master.gain.setTargetAtTime(
+        (volume / 100) ** 2,
+        audio.ctx.currentTime,
+        0.01,
+      );
+    }
+  }
+  volumeInput.addEventListener('input', onVolume);
+  volumeInput.addEventListener('change', onVolume);
+  timbreSelect.addEventListener('change', releaseAll);
+  showNames.addEventListener('change', applyLabelVisibility);
+  showKeys.addEventListener('change', applyLabelVisibility);
+
+  // PCキーボード。押した時点の音を記録するので、押している間にオクターブを変えても正しく止まる
+  const heldCodes = new Set<string>();
+  window.addEventListener('keydown', (e) => {
+    const semitone = codeToSemitone(e.code);
+    if (semitone === null || e.isComposing) return;
+    if (shouldIgnoreKey(e, e.target as HTMLElement | null)) return;
+    e.preventDefault();
+    if (e.repeat || heldCodes.has(e.code)) return;
+    heldCodes.add(e.code);
+    noteOn(`k:${e.code}`, baseMidi(octave) + semitone);
+  });
+  window.addEventListener('keyup', (e) => {
+    if (!heldCodes.delete(e.code)) return;
+    noteOff(`k:${e.code}`);
+  });
+  function releaseEverything() {
+    heldCodes.clear();
+    releaseAll();
+  }
+  window.addEventListener('blur', releaseEverything);
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) releaseEverything();
+  });
+
+  // 保存値の復元（input / change）の後でも状態をそろえる
+  onVolume();
+  render();
+</script>

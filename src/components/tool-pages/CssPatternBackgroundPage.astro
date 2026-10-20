@@ -1,0 +1,412 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cssPatternBackgroundContent } from '../../i18n/tools/css-pattern-background';
+import {
+  DEFAULT_PATTERN,
+  OUTPUT_MODES,
+  PATTERN_KINDS,
+  PATTERN_PRESETS,
+  RATIO_MAX,
+  RATIO_MIN,
+  SIZE_MAX,
+  SIZE_MIN,
+} from '../../lib/tools/css-pattern-background';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cssPatternBackgroundContent[locale];
+
+const kindLabels = {
+  stripe: t.kindStripe,
+  dot: t.kindDot,
+  check: t.kindCheck,
+};
+const modeLabels = { css: t.modeCss, svg: t.modeSvg };
+const DEFAULT_MODE = 'css';
+---
+
+<ToolShell t={t}>
+  <div class="mb-5">
+    <span class="ui-label" id="cp-preset-label">
+      {t.presetLabel}
+    </span>
+    <div
+      class="flex flex-wrap gap-2"
+      role="group"
+      aria-labelledby="cp-preset-label"
+    >
+      {PATTERN_PRESETS.map((p) => (
+        <button type="button" class="ui-btn" data-preset={p.id}>
+          {t.presetNames[p.id]}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <div class="mb-5">
+    <span class="ui-label" id="cp-kind-label">
+      {t.kindLabel}
+    </span>
+    <div
+      class="ui-seg w-full sm:w-auto sm:inline-flex"
+      role="group"
+      aria-labelledby="cp-kind-label"
+    >
+      {PATTERN_KINDS.map((k) => (
+        <button
+          type="button"
+          class="ui-seg-btn flex-1 sm:flex-none"
+          data-kind={k}
+          aria-pressed={k === DEFAULT_PATTERN.kind ? 'true' : 'false'}
+        >
+          {kindLabels[k]}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <div class="mb-6 grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="cp-base" class="ui-label">
+        {t.baseColorLabel}
+      </label>
+      <div class="flex items-center gap-2">
+        <input
+          id="cp-base"
+          type="color"
+          value={DEFAULT_PATTERN.baseColor}
+          class="h-11 w-14 shrink-0 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+        />
+        <input
+          id="cp-base-hex"
+          type="text"
+          value={DEFAULT_PATTERN.baseColor}
+          maxlength="7"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label={t.baseColorHexLabel}
+          class="ui-input h-11 w-32 px-2 font-mono"
+        />
+      </div>
+    </div>
+    <div>
+      <label for="cp-pattern" class="ui-label">
+        {t.patternColorLabel}
+      </label>
+      <div class="flex items-center gap-2">
+        <input
+          id="cp-pattern"
+          type="color"
+          value={DEFAULT_PATTERN.patternColor}
+          class="h-11 w-14 shrink-0 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+        />
+        <input
+          id="cp-pattern-hex"
+          type="text"
+          value={DEFAULT_PATTERN.patternColor}
+          maxlength="7"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label={t.patternColorHexLabel}
+          class="ui-input h-11 w-32 px-2 font-mono"
+        />
+      </div>
+    </div>
+    <div>
+      <label for="cp-size" class="ui-label">
+        {t.sizeLabel}:{' '}
+        <span data-val-for="cp-size">{DEFAULT_PATTERN.size}</span>px
+      </label>
+      <input
+        id="cp-size"
+        type="range"
+        min={SIZE_MIN}
+        max={SIZE_MAX}
+        value={DEFAULT_PATTERN.size}
+        class="w-full"
+      />
+    </div>
+    <div data-field="angle">
+      <label for="cp-angle" class="ui-label">
+        {t.angleLabel}:{' '}
+        <span data-val-for="cp-angle">{DEFAULT_PATTERN.angle}</span>°
+      </label>
+      <input
+        id="cp-angle"
+        type="range"
+        min="0"
+        max="359"
+        value={DEFAULT_PATTERN.angle}
+        class="w-full"
+      />
+    </div>
+    <div data-field="ratio">
+      <label for="cp-ratio" class="ui-label">
+        {t.ratioLabel}:{' '}
+        <span data-val-for="cp-ratio">{DEFAULT_PATTERN.ratio}</span>%
+      </label>
+      <input
+        id="cp-ratio"
+        type="range"
+        min={RATIO_MIN}
+        max={RATIO_MAX}
+        value={DEFAULT_PATTERN.ratio}
+        class="w-full"
+      />
+    </div>
+  </div>
+
+  <h2 id="cp-preview-heading" class="mb-2 text-lg font-bold">
+    {t.previewHeading}
+  </h2>
+  <div
+    id="cp-preview"
+    role="img"
+    aria-labelledby="cp-preview-heading"
+    class="mb-6 h-48 w-full rounded-lg border border-gray-300 dark:border-gray-700"
+  ></div>
+
+  <div class="mb-5">
+    <span class="ui-label" id="cp-mode-label">
+      {t.modeLabel}
+    </span>
+    <div
+      class="ui-seg w-full sm:w-auto sm:inline-flex"
+      role="group"
+      aria-labelledby="cp-mode-label"
+    >
+      {OUTPUT_MODES.map((m) => (
+        <button
+          type="button"
+          class="ui-seg-btn flex-1 sm:flex-none"
+          data-mode={m}
+          aria-pressed={m === DEFAULT_MODE ? 'true' : 'false'}
+        >
+          {modeLabels[m]}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <div data-copied={t.copied} data-copy-failed={t.copyFailed} id="cp-outputs">
+    <div data-panel="css" class="mb-4">
+      <label for="cp-css-output" class="ui-label">
+        {t.cssHeading}
+      </label>
+      <textarea
+        id="cp-css-output"
+        readonly
+        rows="5"
+        class="ui-input h-32 w-full min-w-0 resize-none bg-gray-50 p-3 font-mono dark:bg-gray-900"
+      ></textarea>
+      <button id="cp-copy-button" type="button" class="ui-btn mt-2">
+        {t.copyButton}
+      </button>
+    </div>
+    <div data-panel="svg" hidden>
+      <div class="mb-4">
+        <label for="cp-svg-css-output" class="ui-label">
+          {t.svgCssHeading}
+        </label>
+        <textarea
+          id="cp-svg-css-output"
+          readonly
+          rows="6"
+          class="ui-input h-40 w-full min-w-0 resize-none bg-gray-50 p-3 font-mono dark:bg-gray-900"
+        ></textarea>
+        <button id="cp-copy-svg-css-button" type="button" class="ui-btn mt-2">
+          {t.copyButton}
+        </button>
+      </div>
+      <div class="mb-4">
+        <label for="cp-svg-output" class="ui-label">
+          {t.svgHeading}
+        </label>
+        <textarea
+          id="cp-svg-output"
+          readonly
+          rows="6"
+          class="ui-input h-40 w-full min-w-0 resize-none bg-gray-50 p-3 font-mono dark:bg-gray-900"
+        ></textarea>
+        <button id="cp-copy-svg-button" type="button" class="ui-btn mt-2">
+          {t.copySvgButton}
+        </button>
+      </div>
+    </div>
+    <span
+      id="cp-status"
+      class="mt-2 block text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    applicableFields,
+    buildPattern,
+    clampPattern,
+    normalizeHex,
+    PATTERN_PRESETS,
+    type OutputMode,
+    type PatternKind,
+    type PatternParams,
+  } from '../../lib/tools/css-pattern-background';
+
+  const $ = (id: string) => document.getElementById(id) as HTMLInputElement;
+  const area = (id: string) =>
+    document.getElementById(id) as HTMLTextAreaElement;
+
+  const preview = document.getElementById('cp-preview') as HTMLElement;
+  const statusEl = $('cp-status');
+  const box = document.getElementById('cp-outputs') as HTMLElement;
+  const copied = box.dataset.copied ?? '';
+  const copyFailed = box.dataset.copyFailed ?? '';
+  const kindButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-kind]'),
+  );
+  const modeButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-mode]'),
+  );
+
+  let kind: PatternKind = 'stripe';
+  let mode: OutputMode = 'css';
+  let blobUrl = '';
+
+  function readParams(): PatternParams {
+    return clampPattern({
+      kind,
+      baseColor: $('cp-base').value,
+      patternColor: $('cp-pattern').value,
+      size: Number($('cp-size').value),
+      angle: Number($('cp-angle').value),
+      ratio: Number($('cp-ratio').value),
+    });
+  }
+
+  function refreshLabels() {
+    document.querySelectorAll<HTMLElement>('[data-val-for]').forEach((el) => {
+      el.textContent = $(el.dataset.valFor ?? '').value;
+    });
+    const f = applicableFields(kind);
+    document.querySelectorAll<HTMLElement>('[data-field]').forEach((el) => {
+      const name = el.dataset.field as 'angle' | 'ratio';
+      el.hidden = !f[name];
+    });
+    kindButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.kind === kind)),
+    );
+    modeButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.mode === mode)),
+    );
+    document.querySelectorAll<HTMLElement>('[data-panel]').forEach((el) => {
+      el.hidden = el.dataset.panel !== mode;
+    });
+  }
+
+  // CSP（style-src 'self'）でインラインstyle属性が使えないため、
+  // プレビューはCSSOM（element.style）で設定する。data: URIは
+  // img-src で許可されていないので、SVGはblob: URLで表示する。
+  function renderPreview(p: PatternParams) {
+    const r = buildPattern(p);
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
+    blobUrl = '';
+    const s = preview.style;
+    if (mode === 'svg') {
+      blobUrl = URL.createObjectURL(
+        new Blob([r.svg], { type: 'image/svg+xml' }),
+      );
+      s.backgroundColor = '';
+      s.backgroundImage = `url("${blobUrl}")`;
+      s.backgroundSize = '';
+    } else {
+      s.backgroundColor = r.style.backgroundColor;
+      s.backgroundImage = r.style.backgroundImage;
+      s.backgroundSize = r.style.backgroundSize;
+    }
+    area('cp-css-output').value = r.css;
+    area('cp-svg-css-output').value = r.svgCss;
+    area('cp-svg-output').value = r.svg;
+  }
+
+  function update() {
+    refreshLabels();
+    renderPreview(readParams());
+  }
+
+  function setColor(id: string, hex: string) {
+    $(id).value = hex;
+    $(`${id}-hex`).value = hex;
+  }
+
+  function applyPreset(params: Partial<PatternParams>) {
+    if (params.kind) kind = params.kind;
+    if (params.baseColor) setColor('cp-base', params.baseColor);
+    if (params.patternColor) setColor('cp-pattern', params.patternColor);
+    if (params.size !== undefined) $('cp-size').value = String(params.size);
+    if (params.angle !== undefined) $('cp-angle').value = String(params.angle);
+    if (params.ratio !== undefined) $('cp-ratio').value = String(params.ratio);
+    update();
+  }
+
+  kindButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      kind = b.dataset.kind as PatternKind;
+      update();
+    }),
+  );
+  modeButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      mode = b.dataset.mode as OutputMode;
+      update();
+    }),
+  );
+  document.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const preset = PATTERN_PRESETS.find((x) => x.id === b.dataset.preset);
+      if (preset) applyPreset(preset.params);
+    });
+  });
+
+  for (const id of ['cp-base', 'cp-pattern']) {
+    $(id).addEventListener('input', () => {
+      $(`${id}-hex`).value = $(id).value;
+      update();
+    });
+    $(`${id}-hex`).addEventListener('input', () => {
+      const hex = normalizeHex($(`${id}-hex`).value, '');
+      if (hex) {
+        $(id).value = hex;
+        update();
+      }
+    });
+    $(`${id}-hex`).addEventListener('blur', () => {
+      $(`${id}-hex`).value = $(id).value;
+    });
+  }
+  for (const id of ['cp-size', 'cp-angle', 'cp-ratio']) {
+    $(id).addEventListener('input', update);
+    $(id).addEventListener('change', update);
+  }
+
+  async function copy(text: string) {
+    if (!text) return;
+    statusEl.textContent = (await copyText(text)) ? copied : copyFailed;
+  }
+  $('cp-copy-button').addEventListener('click', () =>
+    copy(area('cp-css-output').value),
+  );
+  $('cp-copy-svg-css-button').addEventListener('click', () =>
+    copy(area('cp-svg-css-output').value),
+  );
+  $('cp-copy-svg-button').addEventListener('click', () =>
+    copy(area('cp-svg-output').value),
+  );
+
+  update();
+</script>

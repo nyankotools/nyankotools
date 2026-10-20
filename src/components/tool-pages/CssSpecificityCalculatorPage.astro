@@ -1,0 +1,214 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cssSpecificityCalculatorContent } from '../../i18n/tools/css-specificity-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cssSpecificityCalculatorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="css-spec-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-line-template={t.lineTemplate}
+    data-winner-badge={t.winnerBadge}
+    data-winner-summary={t.winnerSummary}
+    data-tie-summary={t.tieSummary}
+    data-empty-result={t.emptyResult}
+    data-parent-error-template={t.parentErrorTemplate}
+    data-error-detail-template={t.errorDetailTemplate}
+    data-errors={JSON.stringify(t.errors)}
+  >
+    <label for="css-spec-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="css-spec-input"
+      rows="7"
+      spellcheck="false"
+      autocomplete="off"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      data-no-count
+      placeholder={t.inputPlaceholder}
+      class="ui-input w-full min-w-0 px-3 py-2 font-mono text-sm dark:bg-gray-900"
+    ></textarea>
+
+    <div class="mt-4">
+      <label for="css-spec-parent" class="ui-label">
+        {t.parentLabel}
+      </label>
+      <input
+        id="css-spec-parent"
+        type="text"
+        spellcheck="false"
+        autocomplete="off"
+        placeholder={t.parentPlaceholder}
+        class="ui-input h-11 w-full min-w-0 px-3 font-mono sm:max-w-sm dark:bg-gray-900"
+      />
+      <p
+        id="css-spec-parent-error"
+        class="mt-2 text-sm text-red-600 dark:text-red-400"
+        aria-live="polite"
+      ></p>
+    </div>
+
+    <h2 class="mt-6 text-lg font-semibold">{t.resultHeading}</h2>
+    <p
+      id="css-spec-summary"
+      class="mt-2 text-sm text-gray-800 dark:text-gray-200"
+      aria-live="polite"
+    ></p>
+    <ul id="css-spec-list" class="mt-3 space-y-2"></ul>
+
+    <div class="mt-4">
+      <button id="css-spec-copy-button" type="button" class="ui-btn" disabled>
+        {t.copyButton}
+      </button>
+      <span
+        id="css-spec-status"
+        class="ml-3 text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    analyzeSelectors,
+    formatSpecificity,
+    type SpecificityError,
+  } from '../../lib/tools/css-specificity-calculator';
+
+  const root = document.getElementById('css-spec-root')!;
+  const input = document.getElementById(
+    'css-spec-input',
+  ) as HTMLTextAreaElement;
+  const parentInput = document.getElementById(
+    'css-spec-parent',
+  ) as HTMLInputElement;
+  const parentErrorEl = document.getElementById('css-spec-parent-error')!;
+  const summaryEl = document.getElementById('css-spec-summary')!;
+  const listEl = document.getElementById('css-spec-list')!;
+  const copyButton = document.getElementById(
+    'css-spec-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('css-spec-status')!;
+  const d = root.dataset;
+  const errors = JSON.parse(d.errors ?? '{}') as Record<string, string>;
+
+  function fill(template: string | undefined, vars: Record<string, string>) {
+    return Object.entries(vars).reduce(
+      (s, [k, v]) => s.replace(`{${k}}`, () => v),
+      template ?? '',
+    );
+  }
+
+  function errorMessage(e: SpecificityError): string {
+    const message = errors[e.code] ?? e.code;
+    return e.detail
+      ? fill(d.errorDetailTemplate, { message, char: e.detail })
+      : message;
+  }
+
+  let copyLines: string[] = [];
+
+  function update() {
+    statusEl.textContent = '';
+    const analysis = analyzeSelectors(input.value, parentInput.value);
+    listEl.textContent = '';
+    copyLines = [];
+
+    parentErrorEl.textContent = analysis.parentError
+      ? fill(d.parentErrorTemplate, {
+          message: errorMessage(analysis.parentError),
+        })
+      : '';
+
+    if (analysis.rows.length === 0) {
+      summaryEl.textContent = d.emptyResult ?? '';
+      copyButton.disabled = true;
+      return;
+    }
+
+    analysis.rows.forEach((row, i) => {
+      const li = document.createElement('li');
+      const isWinner = i === analysis.winnerIndex;
+      li.className =
+        'rounded-lg border px-3 py-2 ' +
+        (isWinner
+          ? 'border-green-600 bg-green-50 dark:border-green-500 dark:bg-green-950'
+          : 'border-gray-300 dark:border-gray-700');
+
+      const head = document.createElement('div');
+      head.className =
+        'flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-700 dark:text-gray-300';
+      const lineLabel = document.createElement('span');
+      lineLabel.textContent = fill(d.lineTemplate, { line: String(row.line) });
+      head.appendChild(lineLabel);
+      if (isWinner) {
+        const badge = document.createElement('span');
+        badge.className =
+          'rounded bg-green-700 px-2 py-0.5 font-semibold text-white';
+        badge.textContent = d.winnerBadge ?? '';
+        head.appendChild(badge);
+      }
+      li.appendChild(head);
+
+      const sel = document.createElement('code');
+      sel.className = 'mt-1 block break-all font-mono text-sm';
+      sel.textContent = row.selector;
+      li.appendChild(sel);
+
+      const res = document.createElement('p');
+      res.className = 'mt-1 font-mono text-sm';
+      if (row.result.ok) {
+        const text = formatSpecificity(row.result.spec);
+        res.textContent = text;
+        res.classList.add('font-semibold');
+        copyLines.push(`${text}\t${row.selector}`);
+      } else {
+        const msg = errorMessage(row.result);
+        res.textContent = msg;
+        res.className = 'mt-1 text-sm text-red-600 dark:text-red-400';
+        copyLines.push(`error\t${row.selector}`);
+      }
+      li.appendChild(res);
+      listEl.appendChild(li);
+    });
+
+    if (analysis.winnerIndex === null) {
+      summaryEl.textContent = '';
+    } else {
+      const w = analysis.rows[analysis.winnerIndex];
+      summaryEl.textContent = fill(
+        analysis.tie ? d.tieSummary : d.winnerSummary,
+        {
+          line: String(w.line),
+          spec: w.result.ok ? formatSpecificity(w.result.spec) : '',
+        },
+      );
+    }
+    copyButton.disabled = false;
+  }
+
+  input.addEventListener('input', update);
+  parentInput.addEventListener('input', update);
+
+  copyButton.addEventListener('click', async () => {
+    if (copyLines.length === 0) return;
+    statusEl.textContent = (await copyText(copyLines.join('\n')))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+  });
+
+  update();
+</script>

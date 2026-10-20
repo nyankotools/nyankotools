@@ -1,0 +1,244 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { passphraseGeneratorContent } from '../../i18n/tools/passphrase-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = passphraseGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="passphrase-generator-controls"
+    class="flex flex-wrap items-end gap-4"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-strength-template={t.strengthTemplate}
+    data-strength-weak={t.strengthWeak}
+    data-strength-fair={t.strengthFair}
+    data-strength-strong={t.strengthStrong}
+    data-strength-very-strong={t.strengthVeryStrong}
+    data-load-error={t.loadError}
+  >
+    <div>
+      <label for="passphrase-generator-words" class="ui-label">
+        {t.wordCountLabel}
+      </label>
+      <input
+        id="passphrase-generator-words"
+        type="number"
+        min="3"
+        max="12"
+        value="6"
+        class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+      />
+    </div>
+
+    <div>
+      <label for="passphrase-generator-count" class="ui-label">
+        {t.countLabel}
+      </label>
+      <input
+        id="passphrase-generator-count"
+        type="number"
+        min="1"
+        max="50"
+        value="1"
+        class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+      />
+    </div>
+
+    <div>
+      <label for="passphrase-generator-separator" class="ui-label">
+        {t.separatorLabel}
+      </label>
+      <input
+        id="passphrase-generator-separator"
+        type="text"
+        value="-"
+        maxlength="5"
+        autocomplete="off"
+        spellcheck="false"
+        class="ui-input h-11 w-28 px-3 font-mono dark:bg-gray-900"
+      />
+    </div>
+
+    <button
+      id="passphrase-generator-generate-button"
+      type="button"
+      class="min-h-11 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700"
+    >
+      {t.generateButton}
+    </button>
+
+    <button id="passphrase-generator-copy-button" type="button" class="ui-btn">
+      {t.copyButton}
+    </button>
+    <span
+      id="passphrase-generator-status"
+      class="text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 flex flex-wrap gap-x-6 gap-y-2">
+    <label class="ui-check">
+      <input
+        id="passphrase-generator-capitalize"
+        type="checkbox"
+        class="h-4 w-4"
+      />
+      {t.capitalizeLabel}
+    </label>
+    <label class="ui-check">
+      <input
+        id="passphrase-generator-append-number"
+        type="checkbox"
+        class="h-4 w-4"
+      />
+      {t.appendNumberLabel}
+    </label>
+  </div>
+
+  <div class="mt-4">
+    <label for="passphrase-generator-output" class="ui-label">
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="passphrase-generator-output"
+      readonly
+      class="ui-input h-40 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+    ></textarea>
+    <p
+      id="passphrase-generator-strength"
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+    <p
+      id="passphrase-generator-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+  </div>
+
+  <p
+    class="mt-6 text-xs text-gray-600 dark:text-gray-400"
+    set:html={t.attributionHtml}
+  />
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    clampPassphraseCount,
+    clampWordCount,
+    evaluatePassphrase,
+    generatePassphrases,
+  } from '../../lib/tools/passphrase-generator';
+
+  const controls = document.getElementById('passphrase-generator-controls')!;
+  const copied = controls.dataset.copied ?? '';
+  const copyFailed = controls.dataset.copyFailed ?? '';
+  const strengthTemplate = controls.dataset.strengthTemplate ?? '';
+  const loadError = controls.dataset.loadError ?? '';
+  const STRENGTH_LABELS = {
+    weak: controls.dataset.strengthWeak ?? '',
+    fair: controls.dataset.strengthFair ?? '',
+    strong: controls.dataset.strengthStrong ?? '',
+    'very-strong': controls.dataset.strengthVeryStrong ?? '',
+  } as const;
+
+  const wordsInput = document.getElementById(
+    'passphrase-generator-words',
+  ) as HTMLInputElement;
+  const countInput = document.getElementById(
+    'passphrase-generator-count',
+  ) as HTMLInputElement;
+  const separatorInput = document.getElementById(
+    'passphrase-generator-separator',
+  ) as HTMLInputElement;
+  const capitalizeCheckbox = document.getElementById(
+    'passphrase-generator-capitalize',
+  ) as HTMLInputElement;
+  const appendNumberCheckbox = document.getElementById(
+    'passphrase-generator-append-number',
+  ) as HTMLInputElement;
+  const generateButton = document.getElementById(
+    'passphrase-generator-generate-button',
+  )!;
+  const copyButton = document.getElementById(
+    'passphrase-generator-copy-button',
+  )!;
+  const statusEl = document.getElementById('passphrase-generator-status')!;
+  const errorEl = document.getElementById('passphrase-generator-error')!;
+  const strengthEl = document.getElementById('passphrase-generator-strength')!;
+  const output = document.getElementById(
+    'passphrase-generator-output',
+  ) as HTMLTextAreaElement;
+
+  // 単語リスト(約60KB)は初回の生成時にだけ読み込む
+  let wordlistPromise: Promise<readonly string[]> | null = null;
+  function loadWordlist(): Promise<readonly string[]> {
+    if (!wordlistPromise) {
+      wordlistPromise = import('../../lib/tools/passphrase-wordlist')
+        .then((m) => m.PASSPHRASE_WORDLIST)
+        .catch((error) => {
+          wordlistPromise = null;
+          throw error;
+        });
+    }
+    return wordlistPromise;
+  }
+
+  async function generate() {
+    statusEl.textContent = '';
+    errorEl.textContent = '';
+    try {
+      const wordlist = await loadWordlist();
+      const options = {
+        wordCount: Number(wordsInput.value),
+        separator: separatorInput.value,
+        capitalize: capitalizeCheckbox.checked,
+        appendNumber: appendNumberCheckbox.checked,
+      };
+      output.value = generatePassphrases(wordlist, {
+        ...options,
+        count: Number(countInput.value),
+      }).join('\n');
+      const { entropyBits, strength } = evaluatePassphrase(
+        wordlist.length,
+        options,
+      );
+      strengthEl.textContent = strengthTemplate
+        .replace('{strength}', STRENGTH_LABELS[strength])
+        .replace('{entropyBits}', String(Math.round(entropyBits)));
+    } catch {
+      output.value = '';
+      strengthEl.textContent = '';
+      errorEl.textContent = loadError;
+    }
+  }
+
+  generateButton.addEventListener('click', generate);
+  wordsInput.addEventListener('change', () => {
+    wordsInput.value = String(clampWordCount(Number(wordsInput.value)));
+    if (output.value) void generate();
+  });
+  countInput.addEventListener('change', () => {
+    countInput.value = String(clampPassphraseCount(Number(countInput.value)));
+    if (output.value) void generate();
+  });
+  for (const el of [separatorInput, capitalizeCheckbox, appendNumberCheckbox]) {
+    el.addEventListener('change', () => {
+      if (output.value) void generate();
+    });
+  }
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value)) ? copied : copyFailed;
+  });
+</script>

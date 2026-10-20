@@ -17,15 +17,20 @@ import { fileURLToPath } from 'node:url';
 const KB = 1024;
 
 /**
- * gzip後のバイト数の上限（2026-10-15時点の実測: 通常ツール最大 toml-converter 100.5KB（全ページ共通のツール登録簿チャンク約35KBを含む。ツール追加で増える）、
- * heavy 最大 code-minifier 469KB。2026-10-19: 共通のツール登録簿チャンク増で code-minifier が約521KBになり heavy を 520→560KB に引き上げ。それぞれに余裕を持たせた値）。
+ * gzip後のバイト数の上限（2026-10-15時点の実測: 通常ツール最大 toml-converter 100.5KB、
+ * heavy 最大 code-minifier 469KB。2026-10-19: ツール登録簿をコマンドパレットの遅延読み込みにして全ページ共通JSから外した。
+ * 同日、code-minifier・PDF系の重いライブラリを操作時の動的importに変更（initial は約15〜19KBに）。あわせて Vite が
+ * 動的importをテンプレートリテラルで出力する分も計測に含めるようにしたため、total は遅延先を含む実測になった。
+ * それぞれに余裕を持たせた値）。
  * wasm・PDFワーカーなど、JSの静的/動的importで辿れないアセット（qpdf.wasm 等）は計測対象外。
  */
 export const budgets = {
   // 通常ページ・通常ツール（initial / total の両方に適用）
   normal: 120 * KB,
-  // heavy ツール（PDF・wasm・大きめのライブラリ）。initial / total の両方に適用
-  heavy: 560 * KB,
+  // heavy ツールの total（PDF・wasm・大きめのライブラリ。遅延読み込み先を含む）
+  heavy: 440 * KB,
+  // heavy ツールの initial（最初に読み込むJS）。重い処理は操作時の動的importに逃がすこと
+  heavyInitial: 200 * KB,
 };
 
 /**
@@ -33,11 +38,17 @@ export const budgets = {
  * heic-to（gzip後 約720KB）を遅延読み込みする heic-converter のみ。
  */
 export const slugBudgets = {
-  'heic-converter': 800 * KB,
+  'heic-converter': 860 * KB,
+  // prettier・terser・csso を言語・操作ごとに遅延読み込みするため、全体は大きいが初回は小さい
+  'code-minifier': 600 * KB,
+  // フォント・jsQR など操作時に遅延読み込みするデータ
+  'figlet-text': 150 * KB,
+  'qr-code-reader': 140 * KB,
 };
 
 const STATIC_IMPORT = /(?:\bfrom|\bimport)\s*["'](\.[^"']+\.m?js)["']/g;
-const DYNAMIC_IMPORT = /\bimport\(\s*["'](\.[^"']+\.m?js)["']\s*\)/g;
+// Vite は動的importを __vitePreload 経由にし、遅延読み込み先をテンプレートリテラル（バッククォート）で出力することがある
+const DYNAMIC_IMPORT = /\bimport\(\s*["'`](\.[^"'`]+\.m?js)["'`]\s*\)/g;
 
 /** JSソースから、静的import・動的importの相対パスを取り出す */
 export function findImports(source) {
@@ -162,11 +173,13 @@ function main() {
     const slug = toolSlugOf(page);
     const isHeavy = slug !== null && heavy.has(slug);
     const { initial, total } = measurePage(readFileSync(file, 'utf8'), distDir);
-    const baseLimit = isHeavy ? budgets.heavy : budgets.normal;
-    const totalLimit = (slug !== null && slugBudgets[slug]) || baseLimit;
+    const initialLimit = isHeavy ? budgets.heavyInitial : budgets.normal;
+    const totalLimit =
+      (slug !== null && slugBudgets[slug]) ||
+      (isHeavy ? budgets.heavy : budgets.normal);
     rows.push({ page, initial, total, isHeavy });
     for (const [kind, size, limit] of [
-      ['initial', initial, baseLimit],
+      ['initial', initial, initialLimit],
       ['total', total, totalLimit],
     ]) {
       if (size > limit)
@@ -184,7 +197,7 @@ function main() {
     );
   }
   console.log(
-    `予算: 通常 ${fmt(budgets.normal)} / heavy ${fmt(budgets.heavy)}（initial・totalそれぞれに適用）  対象 ${rows.length}ページ`,
+    `予算: 通常 ${fmt(budgets.normal)}（initial・total） / heavy initial ${fmt(budgets.heavyInitial)}・total ${fmt(budgets.heavy)}  対象 ${rows.length}ページ`,
   );
 
   if (violations.length > 0) {

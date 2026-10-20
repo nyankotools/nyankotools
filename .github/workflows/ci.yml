@@ -21,6 +21,14 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # ツール別OGP画像の描画キャッシュ（scripts/ogp/generate.mjs）。キャッシュなしだと
+      # ビルドごとに約45秒かかるため、内容が変わらない限り再利用する。
+      - uses: actions/cache@v6
+        with:
+          path: node_modules/.cache/ogp
+          key: ogp-${{ hashFiles('src/data/tools.ts', 'scripts/ogp/generate.mjs', 'public/logo.png', 'pnpm-lock.yaml') }}
+          restore-keys: ogp-
+
       - run: pnpm exec prettier --check .
 
       - run: pnpm run lint
@@ -55,6 +63,14 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      # ツール別OGP画像の描画キャッシュ（scripts/ogp/generate.mjs）。キャッシュなしだと
+      # ビルドごとに約45秒かかるため、内容が変わらない限り再利用する。
+      - uses: actions/cache@v6
+        with:
+          path: node_modules/.cache/ogp
+          key: ogp-${{ hashFiles('src/data/tools.ts', 'scripts/ogp/generate.mjs', 'public/logo.png', 'pnpm-lock.yaml') }}
+          restore-keys: ogp-
 
       # ブラウザ本体のダウンロードを省くため、Playwrightのバージョンをキーにキャッシュする。
       # OS依存パッケージ（--with-deps）はキャッシュ対象外なので、下のinstallは毎回実行する
@@ -111,6 +127,14 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      # ツール別OGP画像の描画キャッシュ（scripts/ogp/generate.mjs）。キャッシュなしだと
+      # ビルドごとに約45秒かかるため、内容が変わらない限り再利用する。
+      - uses: actions/cache@v6
+        with:
+          path: node_modules/.cache/ogp
+          key: ogp-${{ hashFiles('src/data/tools.ts', 'scripts/ogp/generate.mjs', 'public/logo.png', 'pnpm-lock.yaml') }}
+          restore-keys: ogp-
 
       - uses: cloudflare/wrangler-action@v4
         with:

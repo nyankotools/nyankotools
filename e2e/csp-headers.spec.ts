@@ -100,7 +100,9 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
     const context = await browser.newContext({ baseURL: BASE_URL });
     await blockAnalytics(context);
     const page = await context.newPage();
-    await page.goto('/tools/char-counter/');
+    // 広告を出すページ（char-counter等）では広告ドメインがCSPに追加されるため、
+    // 厳格なCSPの形を検証する対象は広告が出ない sensitive ツール（base64）にする
+    await page.goto('/tools/base64/');
 
     const metaCsp = await page
       .locator('meta[http-equiv="content-security-policy" i]')
@@ -116,6 +118,34 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
       /script-src 'self' 'wasm-unsafe-eval'(?: https:\/\/www\.googletagmanager\.com)?(?: https:\/\/static\.cloudflareinsights\.com)?(?: 'sha256-[^']+')+/,
     );
     expect(metaCsp).toMatch(/style-src 'self'(?: 'sha256-[^']+')+/);
+
+    await context.close();
+  });
+
+  test('広告なしページ（sensitiveツール・トップ）のCSPに広告ドメインが含まれず、広告枠も出ない', async ({
+    browser,
+  }) => {
+    // 広告の出し分け（src/lib/ads.ts の shouldShowAds）の回帰防止。
+    // 機密データを扱うツールとトップページには、広告用ドメインも広告枠も出してはならない。
+    // （広告を出すページのCSPは ADS_ENABLED=true のときだけ広がる。ここでは広がらないことを見る）
+    const context = await browser.newContext({ baseURL: BASE_URL });
+    await blockAnalytics(context);
+    const page = await context.newPage();
+
+    for (const path of ['/tools/base64/', '/']) {
+      await page.goto(path);
+      const metaCsp = await page
+        .locator('meta[http-equiv="content-security-policy" i]')
+        .getAttribute('content');
+
+      expect(metaCsp, `${path} のCSP`).toBeTruthy();
+      expect(metaCsp, `${path} のCSP`).not.toContain('googlesyndication');
+      expect(metaCsp, `${path} のCSP`).not.toContain('doubleclick');
+      await expect(
+        page.locator('[data-ad-slot]'),
+        `${path} の広告枠`,
+      ).toHaveCount(0);
+    }
 
     await context.close();
   });
@@ -207,15 +237,16 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
     await page.goto('/tools/char-counter/');
 
     const html = page.locator('html');
-    const darkButton = page.locator('[data-theme-option="dark"]');
-    const lightButton = page.locator('[data-theme-option="light"]');
+    // ライト → ダーク → システム の順に切り替わる1ボタン（初期はシステム）
+    const toggle = page.locator('#theme-toggle-desktop');
 
     // 切り替えの処理（src/lib/layout-nav.ts の initTheme）は、ビルドがHTMLに埋め込む
     // インラインscriptで、<meta> のCSPがハッシュで許可している。ヘッダー側に
     // script-src 'self' が残ると、このscriptがブロックされてクリックが効かなくなる。
-    await darkButton.click();
+    await toggle.click();
+    await toggle.click();
     await expect(html).toHaveClass(/\bdark\b/);
-    await expect(darkButton).toHaveAttribute('aria-pressed', 'true');
+    await expect(toggle).toHaveAttribute('data-theme-current', 'dark');
 
     // 再読み込み後の選択の復元は、外部ファイルの public/theme-init.js（描画前）と、
     // initTheme()（読み込み時に保存値を適用）のどちらでも行われる。
@@ -223,9 +254,10 @@ test.describe('Content-Security-Policy ヘッダー（wrangler dev 実配信で�
     await page.reload();
     await expect(html).toHaveClass(/\bdark\b/);
 
-    await lightButton.click();
+    await toggle.click();
+    await toggle.click();
     await expect(html).not.toHaveClass(/\bdark\b/);
-    await expect(lightButton).toHaveAttribute('aria-pressed', 'true');
+    await expect(toggle).toHaveAttribute('data-theme-current', 'light');
 
     expect(consoleErrors).toEqual([]);
     await context.close();

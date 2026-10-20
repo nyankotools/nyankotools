@@ -1,5 +1,3 @@
-import { PDFDocument } from 'pdf-lib';
-
 export type ImageToPdfErrorCode = 'noImage' | 'badImage';
 
 export class ImageToPdfError extends Error {
@@ -29,6 +27,7 @@ export async function imagesToPdf(
   pageSize: PageSizeMode,
 ): Promise<Uint8Array> {
   if (images.length === 0) throw new ImageToPdfError('noImage');
+  const { PDFDocument } = await import('pdf-lib');
   const doc = await PDFDocument.create();
   for (const img of images) {
     let embedded;

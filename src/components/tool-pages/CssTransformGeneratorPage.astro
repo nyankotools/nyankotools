@@ -1,0 +1,230 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cssTransformGeneratorContent } from '../../i18n/tools/css-transform-generator';
+import {
+  DEFAULT_TRANSFORM,
+  TRANSFORM_PRESETS,
+  TRANSFORM_RANGES,
+  type TransformKey,
+} from '../../lib/tools/css-transform-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cssTransformGeneratorContent[locale];
+
+const groups: { id: string; keys: TransformKey[] }[] = [
+  { id: 'translate', keys: ['translateX', 'translateY', 'translateZ'] },
+  { id: 'rotate', keys: ['rotateX', 'rotateY', 'rotateZ'] },
+  { id: 'scale', keys: ['scaleX', 'scaleY'] },
+  { id: 'skew', keys: ['skewX', 'skewY'] },
+  { id: 'depth', keys: ['perspective'] },
+  { id: 'origin', keys: ['originX', 'originY'] },
+];
+---
+
+<ToolShell t={t}>
+  <div class="mb-6">
+    <h2 class="mb-2 text-lg font-bold">{t.presetsHeading}</h2>
+    <div class="flex flex-wrap gap-2">
+      {TRANSFORM_PRESETS.map((p) => (
+        <button type="button" data-preset={p.id} class="ui-btn">
+          {t.presetLabels[p.id]}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <h2 class="mb-2 text-lg font-bold">{t.previewHeading}</h2>
+  <div
+    id="tf-stage"
+    role="img"
+    aria-label={t.previewLabel}
+    class="relative mb-6 flex h-72 w-full items-center justify-center overflow-hidden rounded-lg border border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900"
+  >
+    <div
+      class="absolute h-32 w-32 rounded-lg border-2 border-dashed border-gray-400 dark:border-gray-600"
+      aria-hidden="true"
+    ></div>
+    <div
+      id="tf-box"
+      aria-hidden="true"
+      class="relative flex h-32 w-32 items-center justify-center rounded-lg bg-linear-to-br from-blue-500 to-purple-600 text-4xl font-bold text-white"
+    >
+      A
+    </div>
+  </div>
+
+  <h2 class="mb-2 text-lg font-bold">{t.controlsHeading}</h2>
+  <div class="mb-6 grid gap-4 md:grid-cols-2">
+    {groups.map((g) => (
+      <fieldset class="min-w-0 rounded-lg border border-gray-300 p-3 dark:border-gray-700">
+        <legend class="px-1 text-sm font-semibold">
+          {t.groupLabels[g.id]}
+        </legend>
+        <div class="space-y-3">
+          {g.keys.map((k) => (
+            <div class="min-w-0">
+              <label
+                for={`tf-${k}`}
+                class="mb-1 block text-sm text-gray-700 dark:text-gray-300"
+              >
+                {t.controlLabels[k]}
+              </label>
+              <div class="flex items-center gap-2">
+                <input
+                  id={`tf-${k}-range`}
+                  data-range={k}
+                  type="range"
+                  min={TRANSFORM_RANGES[k].min}
+                  max={TRANSFORM_RANGES[k].max}
+                  step={TRANSFORM_RANGES[k].step}
+                  value={DEFAULT_TRANSFORM[k]}
+                  aria-label={t.controlLabels[k]}
+                  class="min-w-0 flex-1"
+                />
+                <input
+                  id={`tf-${k}`}
+                  data-num={k}
+                  type="number"
+                  min={TRANSFORM_RANGES[k].min}
+                  max={TRANSFORM_RANGES[k].max}
+                  step={TRANSFORM_RANGES[k].step}
+                  value={DEFAULT_TRANSFORM[k]}
+                  class="ui-input h-11 w-24 shrink-0 px-2 dark:bg-gray-900"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </fieldset>
+    ))}
+  </div>
+
+  <div data-copied={t.copied} data-copy-failed={t.copyFailed}>
+    <label for="tf-css-output" class="ui-label">
+      {t.cssHeading}
+    </label>
+    <div class="flex gap-2">
+      <textarea
+        id="tf-css-output"
+        readonly
+        rows="3"
+        class="ui-input h-24 w-full min-w-0 resize-none bg-gray-50 p-3 font-mono dark:bg-gray-900"
+      ></textarea>
+      <div class="flex shrink-0 flex-col gap-2">
+        <button id="tf-copy-button" type="button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <button id="tf-reset-button" type="button" class="ui-btn">
+          {t.resetButton}
+        </button>
+      </div>
+    </div>
+    <span
+      id="tf-status"
+      class="mt-2 block text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    buildCssDeclaration,
+    buildOriginValue,
+    buildTransformValue,
+    clampTransformValue,
+    DEFAULT_TRANSFORM,
+    getPreset,
+    type TransformKey,
+    type TransformState,
+  } from '../../lib/tools/css-transform-generator';
+
+  const box = document.getElementById('tf-box')!;
+  const cssOutput = document.getElementById(
+    'tf-css-output',
+  ) as HTMLTextAreaElement;
+  const copyButton = document.getElementById('tf-copy-button')!;
+  const resetButton = document.getElementById('tf-reset-button')!;
+  const statusEl = document.getElementById('tf-status')!;
+  const copyContainer = cssOutput.closest('[data-copied]') as HTMLElement;
+  const copied = copyContainer.dataset.copied ?? '';
+  const copyFailed = copyContainer.dataset.copyFailed ?? '';
+
+  const keys = Object.keys(DEFAULT_TRANSFORM) as TransformKey[];
+  const ranges = new Map<TransformKey, HTMLInputElement>();
+  const nums = new Map<TransformKey, HTMLInputElement>();
+  for (const k of keys) {
+    ranges.set(k, document.getElementById(`tf-${k}-range`) as HTMLInputElement);
+    nums.set(k, document.getElementById(`tf-${k}`) as HTMLInputElement);
+  }
+
+  function readState(): TransformState {
+    const s = { ...DEFAULT_TRANSFORM };
+    for (const k of keys) {
+      s[k] = clampTransformValue(k, Number(nums.get(k)!.value));
+    }
+    return s;
+  }
+
+  function update() {
+    const s = readState();
+    box.style.transform = buildTransformValue(s);
+    box.style.transformOrigin = buildOriginValue(s);
+    cssOutput.value = buildCssDeclaration(s);
+  }
+
+  function setValue(k: TransformKey, v: number) {
+    nums.get(k)!.value = String(v);
+    ranges.get(k)!.value = String(v);
+  }
+
+  for (const k of keys) {
+    const range = ranges.get(k)!;
+    const num = nums.get(k)!;
+    range.addEventListener('input', () => {
+      num.value = range.value;
+      update();
+    });
+    num.addEventListener('input', () => {
+      if (num.value !== '') range.value = String(Number(num.value));
+      update();
+    });
+    num.addEventListener('change', () => {
+      const v = clampTransformValue(k, Number(num.value));
+      setValue(k, v);
+      update();
+    });
+  }
+
+  function applyState(s: TransformState) {
+    for (const k of keys) setValue(k, s[k]);
+    update();
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-preset]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const preset = getPreset(btn.dataset.preset ?? '');
+      if (preset) applyState(preset.state);
+    });
+  });
+
+  resetButton.addEventListener('click', () => {
+    applyState(DEFAULT_TRANSFORM);
+    statusEl.textContent = '';
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!cssOutput.value) return;
+    statusEl.textContent = (await copyText(cssOutput.value))
+      ? copied
+      : copyFailed;
+  });
+
+  update();
+</script>

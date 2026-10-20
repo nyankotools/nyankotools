@@ -1,0 +1,395 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { mailtoLinkGeneratorContent } from '../../i18n/tools/mailto-link-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = mailtoLinkGeneratorContent[locale];
+
+const kinds = [
+  { id: 'mailto', label: t.kindMailto },
+  { id: 'tel', label: t.kindTel },
+  { id: 'sms', label: t.kindSms },
+];
+const textClass = 'ui-input h-11 px-2';
+const areaClass = 'ui-input w-full min-w-0 resize-y p-3';
+---
+
+<ToolShell t={t}>
+  <div
+    id="ml-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-error-invalid-phone={t.errorInvalidPhone}
+    data-error-invalid-ext={t.errorInvalidExt}
+    data-error-empty-phone={t.errorEmptyPhone}
+    data-warn-invalid-email={t.warnInvalidEmail}
+    data-warn-too-long={t.warnTooLong}
+    data-label-mailto={t.anchorLabelDefaultMailto}
+    data-label-tel={t.anchorLabelDefaultTel}
+    data-label-sms={t.anchorLabelDefaultSms}
+  >
+    <div class="mb-5">
+      <span class="ui-label" id="ml-kind-label">
+        {t.kindLabel}
+      </span>
+      <div
+        class="ui-seg w-full sm:w-auto sm:inline-flex"
+        role="group"
+        aria-labelledby="ml-kind-label"
+      >
+        {kinds.map((k) => (
+          <button
+            type="button"
+            class="ui-seg-btn flex-1 sm:flex-none"
+            data-kind={k.id}
+            aria-pressed={k.id === 'mailto' ? 'true' : 'false'}
+          >
+            {k.label}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <div data-group="mailto" class="mb-5 grid gap-4">
+      <div>
+        <label for="ml-to" class="ui-label">
+          {t.toLabel}
+        </label>
+        <textarea
+          id="ml-to"
+          rows="2"
+          autocomplete="off"
+          spellcheck="false"
+          class={areaClass + ' font-mono'}
+          placeholder="info@example.com"
+        ></textarea>
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{t.toHint}</p>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label for="ml-cc" class="ui-label">
+            {t.ccLabel}
+          </label>
+          <input
+            id="ml-cc"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            class={textClass + ' w-full font-mono'}
+          />
+        </div>
+        <div>
+          <label for="ml-bcc" class="ui-label">
+            {t.bccLabel}
+          </label>
+          <input
+            id="ml-bcc"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            class={textClass + ' w-full font-mono'}
+          />
+        </div>
+      </div>
+      <div>
+        <label for="ml-subject" class="ui-label">
+          {t.subjectLabel}
+        </label>
+        <input
+          id="ml-subject"
+          type="text"
+          autocomplete="off"
+          class={textClass + ' w-full'}
+        />
+      </div>
+      <div>
+        <label for="ml-body" class="ui-label">
+          {t.bodyLabel}
+        </label>
+        <textarea id="ml-body" rows="5" class={areaClass}></textarea>
+      </div>
+    </div>
+
+    <div data-group="tel" class="mb-5 grid gap-4 sm:grid-cols-2" hidden>
+      <div>
+        <label for="ml-phone" class="ui-label">
+          {t.phoneLabel}
+        </label>
+        <input
+          id="ml-phone"
+          type="text"
+          inputmode="tel"
+          autocomplete="off"
+          class={textClass + ' w-full font-mono'}
+          placeholder="+81 3-1234-5678"
+        />
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          {t.phoneHint}
+        </p>
+      </div>
+      <div>
+        <label for="ml-ext" class="ui-label">
+          {t.extLabel}
+        </label>
+        <input
+          id="ml-ext"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          class={textClass + ' w-full font-mono'}
+        />
+      </div>
+    </div>
+
+    <div data-group="sms" class="mb-5 grid gap-4" hidden>
+      <div>
+        <label for="ml-sms-numbers" class="ui-label">
+          {t.smsNumbersLabel}
+        </label>
+        <textarea
+          id="ml-sms-numbers"
+          rows="2"
+          autocomplete="off"
+          class={areaClass + ' font-mono'}
+          placeholder="+81 90-1234-5678"
+        ></textarea>
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          {t.smsNumbersHint}
+        </p>
+      </div>
+      <div>
+        <label for="ml-sms-body" class="ui-label">
+          {t.smsBodyLabel}
+        </label>
+        <textarea id="ml-sms-body" rows="4" class={areaClass}></textarea>
+      </div>
+      <div>
+        <label for="ml-sms-style" class="ui-label">
+          {t.smsStyleLabel}
+        </label>
+        <select id="ml-sms-style" class={textClass + ' dark:bg-gray-900'}>
+          <option value="standard">{t.smsStyleStandard}</option>
+          <option value="ios">{t.smsStyleIos}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="mb-5">
+      <label for="ml-anchor-label" class="ui-label">
+        {t.anchorLabelLabel}
+      </label>
+      <input
+        id="ml-anchor-label"
+        type="text"
+        autocomplete="off"
+        value={t.anchorLabelDefaultMailto}
+        class={textClass + ' w-full'}
+      />
+    </div>
+
+    <p id="ml-error" class="ui-error mb-3" role="alert" hidden></p>
+    <ul
+      id="ml-warnings"
+      class="mb-3 list-disc space-y-1 pl-5 text-sm text-amber-800 dark:text-amber-300"
+      hidden
+    ></ul>
+
+    <div id="ml-result">
+      <div class="mb-4">
+        <label for="ml-href-output" class="ui-label">
+          {t.hrefHeading}
+        </label>
+        <textarea
+          id="ml-href-output"
+          readonly
+          rows="3"
+          class={areaClass + ' bg-gray-50 font-mono break-all dark:bg-gray-900'}
+        ></textarea>
+        <div class="mt-2 flex flex-wrap gap-2">
+          <button id="ml-copy-href-button" type="button" class="ui-btn">
+            {t.copyHrefButton}
+          </button>
+          <a
+            id="ml-try-link"
+            class="ui-btn inline-flex items-center justify-center"
+            href="#"
+          >
+            {t.tryLink}
+          </a>
+        </div>
+      </div>
+      <div>
+        <label for="ml-html-output" class="ui-label">
+          {t.htmlHeading}
+        </label>
+        <textarea
+          id="ml-html-output"
+          readonly
+          rows="3"
+          class={areaClass + ' bg-gray-50 font-mono break-all dark:bg-gray-900'}
+        ></textarea>
+        <button id="ml-copy-html-button" type="button" class="ui-btn mt-2">
+          {t.copyHtmlButton}
+        </button>
+      </div>
+      <span
+        id="ml-status"
+        class="mt-2 block text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    buildAnchor,
+    buildMailto,
+    buildSms,
+    buildTel,
+    type LinkKind,
+    type LinkResult,
+    type SmsStyle,
+  } from '../../lib/tools/mailto-link-generator';
+
+  const root = document.getElementById('ml-root') as HTMLElement;
+  const d = root.dataset;
+  const val = (id: string) =>
+    (document.getElementById(id) as HTMLInputElement).value;
+  const el = (id: string) => document.getElementById(id) as HTMLElement;
+  const hrefOut = el('ml-href-output') as HTMLTextAreaElement;
+  const htmlOut = el('ml-html-output') as HTMLTextAreaElement;
+  const anchorLabel = el('ml-anchor-label') as HTMLInputElement;
+  const tryLink = el('ml-try-link') as HTMLAnchorElement;
+  const errorEl = el('ml-error');
+  const warnEl = el('ml-warnings');
+  const statusEl = el('ml-status');
+  const kindButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-kind]'),
+  );
+
+  let kind: LinkKind = 'mailto';
+  const defaultLabels: Record<LinkKind, string> = {
+    mailto: d.labelMailto ?? '',
+    tel: d.labelTel ?? '',
+    sms: d.labelSms ?? '',
+  };
+  let labelEdited = false;
+
+  function build(): LinkResult {
+    if (kind === 'mailto') {
+      return buildMailto({
+        to: val('ml-to'),
+        cc: val('ml-cc'),
+        bcc: val('ml-bcc'),
+        subject: val('ml-subject'),
+        body: val('ml-body'),
+      });
+    }
+    if (kind === 'tel') return buildTel(val('ml-phone'), val('ml-ext'));
+    return buildSms(
+      val('ml-sms-numbers'),
+      val('ml-sms-body'),
+      val('ml-sms-style') as SmsStyle,
+    );
+  }
+
+  function errorMessage(code: string): string {
+    if (code === 'invalidPhone') return d.errorInvalidPhone ?? '';
+    if (code === 'invalidExt') return d.errorInvalidExt ?? '';
+    return d.errorEmptyPhone ?? '';
+  }
+
+  function update() {
+    statusEl.textContent = '';
+    document.querySelectorAll<HTMLElement>('[data-group]').forEach((g) => {
+      g.hidden = g.dataset.group !== kind;
+    });
+    kindButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.kind === kind)),
+    );
+
+    const r = build();
+    warnEl.textContent = '';
+    if (!r.ok) {
+      // 未入力の電話番号は初期状態なのでエラー表示を出さない
+      const initialEmpty = r.error === 'emptyPhone';
+      errorEl.textContent = initialEmpty ? '' : errorMessage(r.error);
+      errorEl.hidden = initialEmpty;
+      warnEl.hidden = true;
+      hrefOut.value = '';
+      htmlOut.value = '';
+      tryLink.removeAttribute('href');
+      tryLink.setAttribute('aria-disabled', 'true');
+      return;
+    }
+    errorEl.hidden = true;
+    for (const w of r.warnings) {
+      const li = document.createElement('li');
+      li.textContent =
+        w.code === 'invalidEmail'
+          ? `${d.warnInvalidEmail ?? ''}${w.values.join(', ')}`
+          : (d.warnTooLong ?? '').replace('{length}', String(w.length));
+      warnEl.appendChild(li);
+    }
+    warnEl.hidden = r.warnings.length === 0;
+    hrefOut.value = r.href;
+    htmlOut.value = buildAnchor(r.href, anchorLabel.value);
+    tryLink.setAttribute('href', r.href);
+    tryLink.removeAttribute('aria-disabled');
+  }
+
+  function setKind(next: LinkKind) {
+    kind = next;
+    if (!labelEdited) anchorLabel.value = defaultLabels[kind];
+    update();
+  }
+
+  kindButtons.forEach((b) =>
+    b.addEventListener('click', () => setKind(b.dataset.kind as LinkKind)),
+  );
+  anchorLabel.addEventListener('input', () => {
+    labelEdited = anchorLabel.value !== defaultLabels[kind];
+  });
+
+  for (const id of [
+    'ml-to',
+    'ml-cc',
+    'ml-bcc',
+    'ml-subject',
+    'ml-body',
+    'ml-phone',
+    'ml-ext',
+    'ml-sms-numbers',
+    'ml-sms-body',
+    'ml-sms-style',
+    'ml-anchor-label',
+  ]) {
+    el(id).addEventListener('input', update);
+    el(id).addEventListener('change', update);
+  }
+
+  async function copy(text: string) {
+    if (!text) return;
+    statusEl.textContent = (await copyText(text))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+  }
+  el('ml-copy-href-button').addEventListener('click', () =>
+    copy(hrefOut.value),
+  );
+  el('ml-copy-html-button').addEventListener('click', () =>
+    copy(htmlOut.value),
+  );
+  tryLink.addEventListener('click', (e) => {
+    if (!tryLink.getAttribute('href')) e.preventDefault();
+  });
+
+  update();
+</script>

@@ -77,9 +77,9 @@ export const loremIpsumContent: Record<Locale, LoremIpsumPageContent> = {
     ],
   },
   en: {
-    title: 'Dummy Text Generator (Lorem Ipsum & Japanese)',
+    title: 'Dummy Text Generator: Lorem Ipsum & Japanese Text',
     description:
-      'Generate Lorem ipsum or Japanese placeholder text by paragraphs, sentences, or words. Runs in your browser; nothing is sent to a server.',
+      'Free dummy text generator: create Lorem ipsum or Japanese placeholder text by paragraph, sentence or word. Runs in your browser.',
     h1: 'Dummy Text Generator',
     introHtml:
       'Generates placeholder text for mocking up designs or drafts. Supports both classic Lorem ipsum (Latin) and Japanese placeholder text, with a selectable unit — paragraphs, sentences, or words — and a count. To check how much text you generated, also try the <a href="/en/tools/char-counter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Character Counter</a> tool.',

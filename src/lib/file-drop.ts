@@ -7,8 +7,24 @@ const ACTIVE_CLASSES = [
 /**
  * zone へのファイルのドラッグ＆ドロップを input[type=file] に反映する。
  * ドロップされたファイルは input.files に設定し、change イベントを発火する。
+ * onIntent は「これからファイルが選ばれそう」な時点（選択ダイアログを開いた・ドラッグが入ってきた）で
+ * 一度だけ呼ばれる。遅延読み込みするライブラリの先読みに使う（ダイアログを開いている間に読み込める）。
  */
-export function enableFileDrop(zone: HTMLElement, input: HTMLInputElement) {
+export function enableFileDrop(
+  zone: HTMLElement,
+  input: HTMLInputElement,
+  onIntent?: () => void,
+) {
+  if (onIntent) {
+    let called = false;
+    const fire = () => {
+      if (called) return;
+      called = true;
+      onIntent();
+    };
+    input.addEventListener('click', fire);
+    zone.addEventListener('dragenter', fire);
+  }
   const hasFiles = (e: DragEvent) =>
     Array.from(e.dataTransfer?.types ?? []).includes('Files');
   const setActive = (on: boolean) =>

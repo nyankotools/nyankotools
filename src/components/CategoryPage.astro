@@ -61,14 +61,17 @@ const title = fill(t('category.title'));
     <h2 id="category-others-heading" class="mb-3 text-lg font-semibold">
       {t('category.others')}
     </h2>
-    <ul class="flex flex-wrap gap-2">
+    <ul
+      data-drag-scroll
+      class="relative -my-1 flex cursor-grab gap-2 py-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
       {groups
         .filter((group) => group.id !== category)
         .map((group) => (
-          <li>
+          <li class="shrink-0">
             <a
               href={`${prefix}/tools/category/${group.id}/`}
-              class="inline-flex min-h-11 items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
+              class="inline-flex min-h-11 shrink-0 cursor-[inherit] items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
             >
               {group.label}
             </a>
@@ -77,3 +80,12 @@ const title = fill(t('category.title'));
     </ul>
   </nav>
 </Layout>
+
+<script>
+  import { enableDragScroll, enableScrollFade } from '../lib/drag-scroll';
+
+  document.querySelectorAll<HTMLElement>('[data-drag-scroll]').forEach((el) => {
+    enableDragScroll(el);
+    enableScrollFade(el);
+  });
+</script>

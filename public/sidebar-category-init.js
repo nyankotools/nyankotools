@@ -27,7 +27,7 @@
   try {
     // お気に入り欄は描画がモジュールJS（initFavorites）待ちで、初回ペイント後に下のリストが押し下げられて
     // ちらつくため、登録数ぶんの高さを持つプレースホルダーを先に表示しておく（実描画時に置き換わる）。
-    // 高さは favorites-ui.ts の行（並び替えボタン p-3 + アイコン h-4 = 40px）に合わせている。
+    // 高さは favorites-ui.ts の行（ドラッグハンドル p-3 + アイコン h-4 = 40px）に合わせている。
     const favRaw = localStorage.getItem('favorite-tools');
     const parsed = favRaw ? JSON.parse(favRaw) : [];
     // 非文字列は favorites.ts の読み込み時に除外されるため、件数もそれに合わせる
@@ -68,7 +68,6 @@
           'aria-hidden',
           'aria-current',
           'data-move-slug',
-          'data-move-direction',
           'viewbox',
           'fill',
           'stroke',

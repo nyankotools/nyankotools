@@ -1,0 +1,297 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { noiseGeneratorContent } from '../../i18n/tools/noise-generator';
+import { NOISE_TYPES, TIMER_OPTIONS } from '../../lib/tools/noise-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = noiseGeneratorContent[locale];
+
+const selectClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+const toggleClass =
+  'ui-btn h-12 aria-pressed:border-blue-600 aria-pressed:bg-blue-600 aria-pressed:text-white dark:aria-pressed:bg-blue-600 dark:aria-pressed:text-white';
+---
+
+<ToolShell t={t}>
+  <div
+    id="ng-root"
+    data-playing={t.playing}
+    data-stopped={t.stopped}
+    data-remaining={t.remaining}
+    data-finished={t.finished}
+    data-unsupported={t.unsupported}
+    data-hint-white={t.typeHints.white}
+    data-hint-pink={t.typeHints.pink}
+    data-hint-brown={t.typeHints.brown}
+  >
+    <p class="mb-4 max-w-2xl rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+      {t.warning}
+    </p>
+
+    <p class="ui-label">{t.typeLabel}</p>
+    <div
+      id="ng-types"
+      role="group"
+      aria-label={t.typeLabel}
+      class="flex flex-wrap gap-3"
+    >
+      {NOISE_TYPES.map((type) => (
+        <button
+          type="button"
+          data-noise={type}
+          aria-pressed={type === 'white' ? 'true' : 'false'}
+          class={toggleClass}
+        >
+          {t.types[type]}
+        </button>
+      ))}
+    </div>
+    <p
+      id="ng-hint"
+      class="mt-2 max-w-2xl text-sm text-gray-600 dark:text-gray-400"
+    >
+      {t.typeHints.white}
+    </p>
+
+    <div class="mt-5 grid max-w-2xl gap-4 sm:grid-cols-2">
+      <div>
+        <label for="ng-volume" class="ui-label">
+          {t.volumeLabel}: <span id="ng-volume-value">20</span>%
+        </label>
+        <input
+          id="ng-volume"
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value="20"
+          class="w-full"
+        />
+      </div>
+      <div>
+        <label for="ng-timer" class="ui-label">
+          {t.timerLabel}
+        </label>
+        <select id="ng-timer" class={selectClass}>
+          {TIMER_OPTIONS.map((m) => (
+            <option value={m}>
+              {m === 0 ? t.timerOff : t.minutesFormat.replace('{n}', String(m))}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <div class="mt-6 flex flex-wrap items-center gap-3">
+      <button
+        id="ng-play"
+        type="button"
+        class="ui-btn ui-btn-primary h-12 px-6"
+      >
+        {t.playLabel}
+      </button>
+      <button id="ng-stop" type="button" class="ui-btn h-12 px-6">
+        {t.stopLabel}
+      </button>
+    </div>
+    <p
+      id="ng-status"
+      role="status"
+      class="mt-3 text-sm font-medium text-gray-700 dark:text-gray-300"
+    >
+      {t.stopped}
+    </p>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    LOOP_CROSSFADE_SECONDS,
+    LOOP_SECONDS,
+    clampTimerMinutes,
+    fadeGain,
+    fadeSeconds,
+    formatTimer,
+    generateLoopableNoise,
+    outputGain,
+    type NoiseType,
+  } from '../../lib/tools/noise-generator';
+
+  const root = document.getElementById('ng-root')!;
+  const d = root.dataset;
+  const volume = document.getElementById('ng-volume') as HTMLInputElement;
+  const volumeValue = document.getElementById('ng-volume-value')!;
+  const timerSelect = document.getElementById('ng-timer') as HTMLSelectElement;
+  const playButton = document.getElementById('ng-play') as HTMLButtonElement;
+  const stopButton = document.getElementById('ng-stop') as HTMLButtonElement;
+  const status = document.getElementById('ng-status')!;
+  const hint = document.getElementById('ng-hint')!;
+  const typeButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-noise]'),
+  );
+
+  let context: AudioContext | null = null;
+  let gain: GainNode | null = null;
+  let source: AudioBufferSourceNode | null = null;
+  let type: NoiseType = 'white';
+  const buffers: Partial<Record<NoiseType, AudioBuffer>> = {};
+  let timerHandle = 0;
+  let endAt = 0;
+  let totalSeconds = 0;
+
+  if (typeof window.AudioContext === 'undefined') {
+    playButton.disabled = true;
+    status.textContent = d.unsupported!;
+  }
+
+  function ensureContext(): AudioContext {
+    if (!context) {
+      context = new AudioContext();
+      gain = context.createGain();
+      gain.gain.value = 0;
+      gain.connect(context.destination);
+    }
+    if (context.state === 'suspended') void context.resume();
+    return context;
+  }
+
+  function getBuffer(ctx: AudioContext, kind: NoiseType): AudioBuffer {
+    let buffer = buffers[kind];
+    if (!buffer) {
+      const length = Math.floor(ctx.sampleRate * LOOP_SECONDS);
+      const fade = Math.floor(ctx.sampleRate * LOOP_CROSSFADE_SECONDS);
+      buffer = ctx.createBuffer(2, length, ctx.sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        buffer.copyToChannel(generateLoopableNoise(kind, length, fade), ch);
+      }
+      buffers[kind] = buffer;
+    }
+    return buffer;
+  }
+
+  function setGain(fadeFactor: number, timeConstant = 0.03) {
+    if (!context || !gain) return;
+    gain.gain.setTargetAtTime(
+      outputGain(Number(volume.value), fadeFactor),
+      context.currentTime,
+      timeConstant,
+    );
+  }
+
+  function currentFactor(): number {
+    if (!totalSeconds) return 1;
+    const remaining = (endAt - performance.now()) / 1000;
+    return fadeGain(remaining, fadeSeconds(totalSeconds));
+  }
+
+  function killSource(immediate: boolean) {
+    if (!source) return;
+    const old = source;
+    source = null;
+    const end = () => {
+      try {
+        old.stop();
+      } catch {
+        // すでに停止している場合は無視する
+      }
+      old.disconnect();
+    };
+    if (immediate) end();
+    else window.setTimeout(end, 250);
+  }
+
+  function render(text?: string) {
+    status.textContent = text ?? (source ? d.playing! : d.stopped!);
+  }
+
+  function showRemaining() {
+    const remaining = (endAt - performance.now()) / 1000;
+    status.textContent = `${d.playing!} / ${d.remaining!.replace('{time}', formatTimer(remaining))}`;
+  }
+
+  function clearTimer() {
+    window.clearInterval(timerHandle);
+    timerHandle = 0;
+    totalSeconds = 0;
+  }
+
+  function tick() {
+    const remaining = (endAt - performance.now()) / 1000;
+    if (remaining <= 0) {
+      stop(true);
+      return;
+    }
+    setGain(fadeGain(remaining, fadeSeconds(totalSeconds)), 0.15);
+    showRemaining();
+  }
+
+  function startTimer() {
+    clearTimer();
+    const minutes = clampTimerMinutes(Number(timerSelect.value));
+    if (!minutes || !source) return;
+    totalSeconds = minutes * 60;
+    endAt = performance.now() + totalSeconds * 1000;
+    timerHandle = window.setInterval(tick, 250);
+    showRemaining();
+  }
+
+  function start() {
+    const ctx = ensureContext();
+    killSource(true);
+    const node = ctx.createBufferSource();
+    node.buffer = getBuffer(ctx, type);
+    node.loop = true;
+    node.connect(gain!);
+    node.start();
+    source = node;
+    setGain(1);
+    render();
+  }
+
+  function stop(finished = false) {
+    clearTimer();
+    if (source && context) {
+      gain?.gain.setTargetAtTime(0, context.currentTime, 0.04);
+      killSource(false);
+    }
+    render(finished ? d.finished! : undefined);
+  }
+
+  playButton.addEventListener('click', () => {
+    if (source) return;
+    start();
+    startTimer();
+  });
+  stopButton.addEventListener('click', () => stop());
+
+  typeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      type = button.dataset.noise as NoiseType;
+      typeButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === button)),
+      );
+      hint.textContent = d[`hint${type[0].toUpperCase()}${type.slice(1)}`]!;
+      if (source) {
+        // タイマーは動かしたまま、音源だけ差し替える
+        start();
+        setGain(currentFactor());
+      }
+    });
+  });
+
+  volume.addEventListener('input', () => {
+    volumeValue.textContent = volume.value;
+    if (source) setGain(currentFactor());
+  });
+  timerSelect.addEventListener('change', () => {
+    if (source) startTimer();
+  });
+
+  window.addEventListener('pagehide', () => stop());
+  volumeValue.textContent = volume.value;
+</script>

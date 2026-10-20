@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import { getLocalizedTools } from '../data/tools';
 import { groupByCategory } from '../lib/home-filter';
 import { useTranslations } from '../i18n/ui';
-import FavoriteToggle from '../components/FavoriteToggle.astro';
+import HomeToolSections from '../components/HomeToolSections.astro';
 
 const t = useTranslations('ja');
 const tools = getLocalizedTools('ja');
@@ -15,11 +15,13 @@ const toolCountParts = [countBefore, '', countAfter];
 
 <Layout
   title="日本語処理も得意な無料Webツール集"
-  description={t('home.meta.description')}
+  description={t('home.meta.description').replace(
+    '{count}',
+    String(tools.length),
+  )}
 >
   <h1 class="mb-2 text-2xl font-bold">{t('home.title')}</h1>
-  <p class="mb-4 text-gray-600 dark:text-gray-400">{t('home.lead')}</p>
-  <p class="mb-8 inline-flex items-baseline gap-1 rounded-full border border-blue-200 bg-blue-50 px-5 py-2 text-blue-800 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-200">
+  <p class="mb-3 inline-flex items-baseline gap-1 rounded-full border border-blue-200 bg-blue-50 px-5 py-2 text-blue-800 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-200">
     {toolCountParts.map((part, i) =>
       i === 1 ? (
         <span class="text-3xl font-extrabold tabular-nums">{tools.length}</span>
@@ -28,6 +30,7 @@ const toolCountParts = [countBefore, '', countAfter];
       ),
     )}
   </p>
+  <p class="mb-8 text-gray-600 dark:text-gray-400">{t('home.lead')}</p>
 
   <div class="mb-6 space-y-4">
     <div>
@@ -43,7 +46,8 @@ const toolCountParts = [countBefore, '', countAfter];
     </div>
 
     <div
-      class="flex flex-wrap gap-2"
+      data-drag-scroll
+      class="relative -my-1 flex cursor-grab gap-2 py-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       role="group"
       aria-label={t('home.category.groupLabel')}
     >
@@ -51,7 +55,7 @@ const toolCountParts = [countBefore, '', countAfter];
         type="button"
         data-category-filter="all"
         aria-pressed="true"
-        class="inline-flex min-h-11 items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700 aria-pressed:border-blue-600 aria-pressed:bg-blue-600 aria-pressed:text-white dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
+        class="inline-flex min-h-11 shrink-0 cursor-[inherit] items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700 aria-pressed:border-blue-600 aria-pressed:bg-blue-600 aria-pressed:text-white dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
       >
         {t('home.category.all')}
       </button>
@@ -60,7 +64,7 @@ const toolCountParts = [countBefore, '', countAfter];
           type="button"
           data-category-filter={category.id}
           aria-pressed="false"
-          class="inline-flex min-h-11 items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700 aria-pressed:border-blue-600 aria-pressed:bg-blue-600 aria-pressed:text-white dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
+          class="inline-flex min-h-11 shrink-0 cursor-[inherit] items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700 aria-pressed:border-blue-600 aria-pressed:bg-blue-600 aria-pressed:text-white dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
         >
           {category.label}
         </button>
@@ -72,41 +76,20 @@ const toolCountParts = [countBefore, '', countAfter];
     {t('home.noResults')}
   </p>
 
-  <ul id="tool-grid" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-    {tools.map((tool) => (
-      <li data-tool-slug={tool.slug} class="relative">
-        <a
-          href={`/tools/${tool.slug}/`}
-          class="block h-full rounded-lg border border-gray-200 bg-white p-5 pr-14 shadow-sm transition hover:border-blue-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-900 dark:hover:border-blue-500"
-        >
-          <span class="mb-1 inline-block rounded bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
-            {tool.category}
-          </span>
-          <h2 class="mb-1 mt-1 font-semibold text-blue-700 dark:text-blue-400">
-            {tool.name}
-          </h2>
-          <p class="text-sm text-gray-600 dark:text-gray-400">
-            {tool.description}
-          </p>
-        </a>
-        <FavoriteToggle
-          slug={tool.slug}
-          locale="ja"
-          class="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-gray-300 hover:bg-gray-100 hover:text-yellow-500 dark:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-yellow-400"
-        />
-      </li>
-    ))}
-  </ul>
+  <HomeToolSections tools={tools} locale="ja" />
   <nav class="mt-10" aria-labelledby="home-categories-heading">
     <h2 id="home-categories-heading" class="mb-3 text-lg font-semibold">
       {t('category.viewAll')}
     </h2>
-    <ul class="flex flex-wrap gap-2">
+    <ul
+      data-drag-scroll
+      class="relative -my-1 flex cursor-grab gap-2 py-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
       {categories.map((category) => (
-        <li>
+        <li class="shrink-0">
           <a
             href={`/tools/category/${category.id}/`}
-            class="inline-flex min-h-11 items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
+            class="inline-flex min-h-11 shrink-0 cursor-[inherit] items-center rounded-full border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
           >
             {category.label}
           </a>
@@ -117,55 +100,7 @@ const toolCountParts = [countBefore, '', countAfter];
 </Layout>
 
 <script>
-  import { getLocalizedTools, type CategoryId } from '../data/tools';
-  import { filterTools } from '../lib/home-filter';
+  import { initHomePage } from '../lib/home-page';
 
-  const tools = getLocalizedTools(
-    document.documentElement.lang === 'en' ? 'en' : 'ja',
-  );
-
-  const searchInput = document.getElementById(
-    'tool-search',
-  ) as HTMLInputElement | null;
-  const categoryButtons = document.querySelectorAll<HTMLButtonElement>(
-    '[data-category-filter]',
-  );
-  const items = document.querySelectorAll<HTMLLIElement>('[data-tool-slug]');
-  const noResults = document.getElementById('no-results');
-
-  let activeCategory: CategoryId | 'all' = 'all';
-
-  function applyFilter() {
-    const query = searchInput?.value ?? '';
-    const visibleSlugs = new Set(
-      filterTools(tools, { query, category: activeCategory }).map(
-        (tool) => tool.slug,
-      ),
-    );
-
-    let visibleCount = 0;
-    items.forEach((item) => {
-      const slug = item.dataset.toolSlug;
-      const visible = slug !== undefined && visibleSlugs.has(slug);
-      item.hidden = !visible;
-      if (visible) visibleCount++;
-    });
-
-    if (noResults) {
-      noResults.hidden = visibleCount > 0;
-    }
-  }
-
-  searchInput?.addEventListener('input', applyFilter);
-
-  categoryButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      activeCategory = (button.dataset.categoryFilter ?? 'all') as
-        CategoryId | 'all';
-      categoryButtons.forEach((b) => {
-        b.setAttribute('aria-pressed', String(b === button));
-      });
-      applyFilter();
-    });
-  });
+  initHomePage();
 </script>

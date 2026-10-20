@@ -1,0 +1,601 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { mosaicSmootherContent } from '../../i18n/tools/mosaic-smoother';
+import {
+  MIN_BLOCK,
+  MAX_BLOCK,
+  DEFAULT_INFLUENCE,
+  DEFAULT_GRAIN,
+} from '../../lib/tools/mosaic-smoother';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = mosaicSmootherContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="ms-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="ms-dropzone" class="ui-dropzone">
+      <input
+        id="ms-file-input"
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="ms-source-info"
+      data-template={t.sourceInfoTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="ms-error"
+      role="alert"
+      hidden
+      data-unsupported={t.errorUnsupportedFile}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-too-many-pixels-template={t.errorTooManyPixelsTemplate}
+      data-load-failed={t.errorLoadFailed}
+      data-export-failed={t.errorExportFailed}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+  </div>
+
+  <div id="ms-editor" hidden class="mt-4">
+    <div class="grid gap-4 md:grid-cols-2">
+      <div>
+        <label class="ui-check">
+          <input id="ms-auto" type="checkbox" checked />
+          <span>{t.autoBlockLabel}</span>
+        </label>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {t.autoBlockHint}
+        </p>
+        <div id="ms-block-wrap" hidden class="mt-2">
+          <label for="ms-block" class="ui-label">
+            {t.blockSizeLabel}
+            <span id="ms-block-value" data-template={t.pxValueTemplate}></span>
+          </label>
+          <input
+            id="ms-block"
+            type="range"
+            min={MIN_BLOCK}
+            max={MAX_BLOCK}
+            value="16"
+            class="h-11 w-full"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label for="ms-influence" class="ui-label">
+          {t.influenceLabel}
+          <span
+            id="ms-influence-value"
+            data-template={t.percentValueTemplate}
+          ></span>
+        </label>
+        <input
+          id="ms-influence"
+          type="range"
+          min="0"
+          max="100"
+          value={DEFAULT_INFLUENCE}
+          class="h-11 w-full"
+        />
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          {t.influenceHint}
+        </p>
+      </div>
+
+      <div>
+        <label for="ms-grain" class="ui-label">
+          {t.grainLabel}
+          <span
+            id="ms-grain-value"
+            data-template={t.percentValueTemplate}
+          ></span>
+        </label>
+        <input
+          id="ms-grain"
+          type="range"
+          min="0"
+          max="100"
+          value={DEFAULT_GRAIN}
+          class="h-11 w-full"
+        />
+        <p class="text-xs text-gray-500 dark:text-gray-400">{t.grainHint}</p>
+      </div>
+    </div>
+
+    <p class="mt-4 text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.canvasLabel}
+    </p>
+    <p class="mb-2 text-xs text-gray-500 dark:text-gray-400">{t.canvasHint}</p>
+    <div class="mb-2 md:hidden">
+      <span class="ui-label">{t.touchModeLabel}</span>
+      <div
+        id="ms-touch-mode"
+        class="ui-seg"
+        role="group"
+        aria-label={t.touchModeLabel}
+      >
+        <button
+          type="button"
+          data-touch="select"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.touchModeSelect}
+        </button>
+        <button
+          type="button"
+          data-touch="scroll"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.touchModeScroll}
+        </button>
+      </div>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        {t.touchModeHint}
+      </p>
+    </div>
+    <div class="relative w-full select-none">
+      <canvas
+        id="ms-canvas"
+        role="img"
+        aria-label={t.canvasLabel}
+        class="block h-auto w-full cursor-crosshair rounded-lg border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
+      ></canvas>
+      <div
+        id="ms-selection"
+        hidden
+        class="pointer-events-none absolute border-2 border-dashed border-blue-600 bg-blue-500/20"
+      ></div>
+    </div>
+
+    <p
+      id="ms-region-count"
+      data-template={t.regionCountTemplate}
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+    <p
+      id="ms-detected"
+      hidden
+      data-template={t.detectedTemplate}
+      data-none={t.detectedNone}
+      class="text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+
+    <div class="mt-3 flex flex-wrap items-end gap-3">
+      <button
+        id="ms-undo-button"
+        type="button"
+        disabled
+        class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {t.undoButton}
+      </button>
+      <button
+        id="ms-reset-button"
+        type="button"
+        disabled
+        class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {t.resetButton}
+      </button>
+      <button id="ms-clear-button" type="button" class="ui-btn">
+        {t.clearButton}
+      </button>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-end gap-4">
+      <div>
+        <span class="ui-label">{t.formatLabel}</span>
+        <div
+          id="ms-format"
+          class="ui-seg"
+          role="group"
+          aria-label={t.formatLabel}
+        >
+          <button
+            type="button"
+            data-format="png"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            PNG
+          </button>
+          <button
+            type="button"
+            data-format="webp"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            WebP
+          </button>
+          <button
+            type="button"
+            data-format="jpeg"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            JPEG
+          </button>
+        </div>
+      </div>
+      <button
+        id="ms-download-button"
+        type="button"
+        class="ui-btn ui-btn-primary"
+      >
+        {t.downloadButton}
+      </button>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    applyMosaicSmooth,
+    applyRegions,
+    buildOutputFileName,
+    clampBlockSize,
+    clampPercent,
+    clientToImagePoint,
+    DEFAULT_GRAIN,
+    DEFAULT_INFLUENCE,
+    formatFileSize,
+    isAcceptedImageFile,
+    MAX_FILE_SIZE,
+    MAX_PIXELS,
+    normalizeRect,
+    OUTPUT_FORMATS,
+    type Dimensions,
+    type OutputFormat,
+    type Point,
+    type Region,
+  } from '../../lib/tools/mosaic-smoother';
+
+  const dropzone = document.getElementById('ms-dropzone')!;
+  const fileInput = document.getElementById(
+    'ms-file-input',
+  ) as HTMLInputElement;
+  const sourceInfoEl = document.getElementById('ms-source-info')!;
+  const errorEl = document.getElementById('ms-error')!;
+  const editor = document.getElementById('ms-editor')!;
+  const autoInput = document.getElementById('ms-auto') as HTMLInputElement;
+  const blockWrap = document.getElementById('ms-block-wrap')!;
+  const blockInput = document.getElementById('ms-block') as HTMLInputElement;
+  const blockValue = document.getElementById('ms-block-value')!;
+  const influenceInput = document.getElementById(
+    'ms-influence',
+  ) as HTMLInputElement;
+  const influenceValue = document.getElementById('ms-influence-value')!;
+  const grainInput = document.getElementById('ms-grain') as HTMLInputElement;
+  const grainValue = document.getElementById('ms-grain-value')!;
+  const canvas = document.getElementById('ms-canvas') as HTMLCanvasElement;
+  const selectionEl = document.getElementById('ms-selection')!;
+  const regionCountEl = document.getElementById('ms-region-count')!;
+  const detectedEl = document.getElementById('ms-detected')!;
+  const undoButton = document.getElementById(
+    'ms-undo-button',
+  ) as HTMLButtonElement;
+  const resetButton = document.getElementById(
+    'ms-reset-button',
+  ) as HTMLButtonElement;
+  const clearButton = document.getElementById('ms-clear-button')!;
+  const formatButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#ms-format [data-format]',
+  );
+  const downloadButton = document.getElementById('ms-download-button')!;
+  const touchButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#ms-touch-mode [data-touch]',
+  );
+
+  // スマホ幅(md未満)では「範囲を選択」「スクロール」を切り替える。既定はスクロール。
+  // md以上(PC・タブレット)は常に選択モード
+  const mobileQuery = window.matchMedia('(max-width: 767px)');
+  let touchSelect = false;
+  function selectionEnabled() {
+    return !mobileQuery.matches || touchSelect;
+  }
+  function applyTouchMode() {
+    canvas.style.touchAction = selectionEnabled() ? 'none' : 'pan-y pan-x';
+    touchButtons.forEach((b) =>
+      b.setAttribute(
+        'aria-pressed',
+        String((b.dataset.touch === 'select') === touchSelect),
+      ),
+    );
+  }
+  touchButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      touchSelect = b.dataset.touch === 'select';
+      applyTouchMode();
+    }),
+  );
+  mobileQuery.addEventListener('change', applyTouchMode);
+  applyTouchMode();
+
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+
+  let format: OutputFormat = 'png';
+  let fileName = 'image';
+  let dims: Dimensions | null = null;
+  let baseData: Uint8ClampedArray | null = null;
+  let working: ImageData | null = null;
+  let regions: Region[] = [];
+
+  let dragStart: Point | null = null;
+  let dragPointerId: number | null = null;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function fillTemplate(el: HTMLElement, value: string) {
+    el.textContent = (el.dataset.template ?? '').replace('{value}', value);
+  }
+
+  function updateOptionUi() {
+    blockWrap.hidden = autoInput.checked;
+    fillTemplate(blockValue, blockInput.value);
+    fillTemplate(influenceValue, influenceInput.value);
+    fillTemplate(grainValue, grainInput.value);
+  }
+
+  function updateRegionUi() {
+    regionCountEl.textContent = (regionCountEl.dataset.template ?? '').replace(
+      '{count}',
+      String(regions.length),
+    );
+    undoButton.disabled = regions.length === 0;
+    resetButton.disabled = regions.length === 0;
+    if (regions.length === 0) detectedEl.hidden = true;
+  }
+
+  function showDetected(size: number | null) {
+    detectedEl.textContent =
+      size === null
+        ? (detectedEl.dataset.none ?? '')
+        : (detectedEl.dataset.template ?? '').replace('{size}', String(size));
+    detectedEl.hidden = false;
+  }
+
+  function rebuild() {
+    if (!dims || !baseData || !working) return;
+    working.data.set(baseData);
+    applyRegions(working.data, dims, regions);
+    ctx.putImageData(working, 0, 0);
+    detectedEl.hidden = true;
+    updateRegionUi();
+  }
+
+  function hideSelection() {
+    selectionEl.hidden = true;
+    dragStart = null;
+    dragPointerId = null;
+  }
+
+  function resetAll() {
+    dims = null;
+    baseData = null;
+    working = null;
+    regions = [];
+    hideSelection();
+    editor.hidden = true;
+    sourceInfoEl.textContent = '';
+    updateRegionUi();
+  }
+
+  async function loadFile(file: File) {
+    clearError();
+    resetAll();
+    if (!isAcceptedImageFile(file)) {
+      showError(errorEl.dataset.unsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace('{max}', () =>
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+    let bitmap: ImageBitmap;
+    try {
+      bitmap = await createImageBitmap(file);
+    } catch {
+      showError(errorEl.dataset.loadFailed ?? '');
+      return;
+    }
+    if (bitmap.width * bitmap.height > MAX_PIXELS) {
+      bitmap.close();
+      showError(
+        (errorEl.dataset.tooManyPixelsTemplate ?? '').replace(
+          '{max}',
+          String(MAX_PIXELS / 1_000_000),
+        ),
+      );
+      return;
+    }
+    try {
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      ctx.clearRect(0, 0, bitmap.width, bitmap.height);
+      ctx.drawImage(bitmap, 0, 0);
+      const image = ctx.getImageData(0, 0, bitmap.width, bitmap.height);
+      baseData = new Uint8ClampedArray(image.data);
+      working = image;
+    } catch {
+      showError(errorEl.dataset.loadFailed ?? '');
+      return;
+    } finally {
+      bitmap.close();
+    }
+    dims = { width: canvas.width, height: canvas.height };
+    fileName = file.name;
+    regions = [];
+    sourceInfoEl.textContent = (sourceInfoEl.dataset.template ?? '')
+      .replace('{width}', String(dims.width))
+      .replace('{height}', String(dims.height))
+      .replace('{size}', () => formatFileSize(file.size));
+    editor.hidden = false;
+    updateRegionUi();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  for (const el of [autoInput, blockInput, influenceInput, grainInput]) {
+    el.addEventListener('input', updateOptionUi);
+    el.addEventListener('change', updateOptionUi);
+  }
+
+  formatButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      format = button.dataset.format as OutputFormat;
+      formatButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === button)),
+      );
+    });
+  });
+
+  function pointFromEvent(e: PointerEvent): Point {
+    return clientToImagePoint(
+      e.clientX,
+      e.clientY,
+      canvas.getBoundingClientRect(),
+      dims!,
+    );
+  }
+
+  function showSelection(a: Point, b: Point) {
+    if (!dims) return;
+    selectionEl.style.left = `${(Math.min(a.x, b.x) / dims.width) * 100}%`;
+    selectionEl.style.top = `${(Math.min(a.y, b.y) / dims.height) * 100}%`;
+    selectionEl.style.width = `${(Math.abs(a.x - b.x) / dims.width) * 100}%`;
+    selectionEl.style.height = `${(Math.abs(a.y - b.y) / dims.height) * 100}%`;
+    selectionEl.hidden = false;
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (!dims || dragPointerId !== null) return;
+    if (!selectionEnabled()) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    dragPointerId = e.pointerId;
+    canvas.setPointerCapture(e.pointerId);
+    dragStart = pointFromEvent(e);
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (!dims || !dragStart || e.pointerId !== dragPointerId) return;
+    showSelection(dragStart, pointFromEvent(e));
+  });
+
+  canvas.addEventListener('pointerup', (e) => {
+    if (!dims || !dragStart || !working || e.pointerId !== dragPointerId)
+      return;
+    const rect = normalizeRect(dragStart, pointFromEvent(e), dims);
+    hideSelection();
+    if (!rect) return;
+    const region: Region = {
+      rect,
+      options: {
+        blockSize: autoInput.checked
+          ? null
+          : clampBlockSize(Number(blockInput.value)),
+        influence: clampPercent(
+          Number(influenceInput.value),
+          DEFAULT_INFLUENCE,
+        ),
+        grain: clampPercent(Number(grainInput.value), DEFAULT_GRAIN),
+        seed: Math.floor(Math.random() * 0x7fffffff),
+      },
+    };
+    regions.push(region);
+    const result = applyMosaicSmooth(
+      working.data,
+      dims,
+      region.rect,
+      region.options,
+    );
+    ctx.putImageData(working, 0, 0);
+    showDetected(result.grid ? result.grid.size : null);
+    updateRegionUi();
+  });
+
+  canvas.addEventListener('pointercancel', hideSelection);
+
+  undoButton.addEventListener('click', () => {
+    regions.pop();
+    rebuild();
+  });
+
+  resetButton.addEventListener('click', () => {
+    regions = [];
+    rebuild();
+  });
+
+  clearButton.addEventListener('click', () => {
+    resetAll();
+    clearError();
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (!dims) return;
+    const option = OUTPUT_FORMATS[format];
+    let source: HTMLCanvasElement = canvas;
+    if (format === 'jpeg') {
+      // JPEGは透過を持てないため白地に合成する
+      const flat = document.createElement('canvas');
+      flat.width = canvas.width;
+      flat.height = canvas.height;
+      const flatCtx = flat.getContext('2d')!;
+      flatCtx.fillStyle = '#ffffff';
+      flatCtx.fillRect(0, 0, flat.width, flat.height);
+      flatCtx.drawImage(canvas, 0, 0);
+      source = flat;
+    }
+    const outName = buildOutputFileName(fileName, format);
+    source.toBlob(
+      (blob) => {
+        if (!blob || blob.type !== option.mimeType) {
+          showError(errorEl.dataset.exportFailed ?? '');
+          return;
+        }
+        clearError();
+        downloadBlob(blob, outName);
+      },
+      option.mimeType,
+      0.92,
+    );
+  });
+
+  updateOptionUi();
+  updateRegionUi();
+</script>

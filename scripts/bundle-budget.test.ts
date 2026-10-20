@@ -19,6 +19,11 @@ describe('bundle-budget', () => {
     });
   });
 
+  it('Vite が出力するテンプレートリテラル（バッククォート）の動的importも取り出す', () => {
+    const src = 'const x=()=>e(()=>import(`./d.js`),__vite__mapDeps([0]));';
+    expect(findImports(src).dynamic).toEqual(['./d.js']);
+  });
+
   it('同じファイルが静的・動的の両方で参照されるときは静的として扱う', () => {
     const src = 'import{a}from"./a.js";const x=()=>import("./a.js");';
     expect(findImports(src).static).toEqual(['./a.js']);

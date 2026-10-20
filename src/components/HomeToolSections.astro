@@ -1,0 +1,62 @@
+---
+import type { Locale, LocalizedTool } from '../data/tools';
+import { groupByCategory } from '../lib/home-filter';
+import { useTranslations } from '../i18n/ui';
+import HomeToolCard from './HomeToolCard.astro';
+
+interface Props {
+  tools: LocalizedTool[];
+  locale: Locale;
+}
+
+const { tools, locale } = Astro.props;
+const t = useTranslations(locale);
+const categories = groupByCategory(tools);
+const gridClass = 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3';
+const headingClass = 'mb-3 flex items-baseline gap-2 text-lg font-semibold';
+const countClass =
+  'text-sm font-normal tabular-nums text-gray-500 dark:text-gray-400';
+---
+
+<section id="home-recent" hidden class="mb-8">
+  <h2 class="mb-3 text-lg font-semibold">{t('home.recent')}</h2>
+  <ul data-recent-list class="flex flex-wrap gap-2"></ul>
+</section>
+<div
+  id="tool-grid"
+  class="space-y-10"
+  data-label-more={t('home.showMore')}
+  data-label-less={t('home.showLess')}
+>
+  <section id="home-favorites" data-home-section="favorites" hidden>
+    <h2 class={headingClass}>
+      <span aria-hidden="true" class="text-yellow-600 dark:text-yellow-400">
+        ★
+      </span>
+      {t('home.favorites')}
+      <span data-section-count class={countClass}></span>
+    </h2>
+    <ul data-section-grid class={gridClass}></ul>
+  </section>
+  {categories.map((category) => (
+    <section data-home-section={category.id}>
+      <h2 class={headingClass}>
+        {category.label}
+        <span data-section-count class={countClass}>
+          {category.tools.length}
+        </span>
+      </h2>
+      <ul data-section-grid class={gridClass}>
+        {category.tools.map((tool) => (
+          <HomeToolCard tool={tool} locale={locale} />
+        ))}
+      </ul>
+      <button
+        type="button"
+        data-show-more
+        hidden
+        class="mx-auto mt-4 flex min-h-11 items-center rounded-full border border-gray-200 bg-white px-5 text-sm font-medium text-gray-700 transition hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
+      />
+    </section>
+  ))}
+</div>

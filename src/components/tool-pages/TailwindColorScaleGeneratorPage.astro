@@ -1,0 +1,218 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { tailwindColorScaleGeneratorContent } from '../../i18n/tools/tailwind-color-scale-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = tailwindColorScaleGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="space-y-5">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
+      <input
+        id="tcs-picker"
+        type="color"
+        value="#3b82f6"
+        aria-label={t.pickerAriaLabel}
+        class="h-11 w-16 shrink-0 cursor-pointer rounded-lg border border-gray-300 bg-transparent p-1 dark:border-gray-700"
+      />
+      <div class="min-w-0 flex-1">
+        <label for="tcs-hex" class="ui-label">
+          {t.hexLabel}
+        </label>
+        <input
+          id="tcs-hex"
+          type="text"
+          value="#3b82f6"
+          placeholder={t.hexPlaceholder}
+          spellcheck="false"
+          class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div class="min-w-0 flex-1">
+        <label for="tcs-name" class="ui-label">
+          {t.nameLabel}
+        </label>
+        <input
+          id="tcs-name"
+          type="text"
+          value="brand"
+          placeholder={t.namePlaceholder}
+          spellcheck="false"
+          class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+    </div>
+
+    <label class="ui-check">
+      <input id="tcs-keep-base" type="checkbox" checked />
+      {t.keepBaseLabel}
+    </label>
+
+    <p
+      id="tcs-error"
+      data-hex-error={t.hexError}
+      class="text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div>
+      <h2 class="ui-label">{t.scaleHeading}</h2>
+      <div
+        id="tcs-swatches"
+        data-action={t.swatchAction}
+        data-base-badge={t.baseBadge}
+        class="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-6"
+      ></div>
+    </div>
+
+    <div>
+      <div class="mb-1 flex flex-wrap items-end justify-between gap-2">
+        <div class="min-w-0">
+          <label for="tcs-format" class="ui-label">
+            {t.formatLabel}
+          </label>
+          <select
+            id="tcs-format"
+            class="ui-input h-11 w-full min-w-0 px-3 dark:bg-gray-900"
+          >
+            <option value="css">{t.formats.css}</option>
+            <option value="theme">{t.formats.theme}</option>
+            <option value="config">{t.formats.config}</option>
+          </select>
+        </div>
+        <button
+          id="tcs-copy-button"
+          type="button"
+          class="ui-btn ui-btn-primary shrink-0"
+        >
+          {t.copy}
+        </button>
+      </div>
+      <label for="tcs-output" class="sr-only">
+        {t.formatLabel}
+      </label>
+      <textarea
+        id="tcs-output"
+        readonly
+        rows="14"
+        spellcheck="false"
+        data-no-count
+        class="ui-input w-full px-3 py-2 font-mono text-sm dark:bg-gray-900"
+      ></textarea>
+    </div>
+
+    <span
+      id="tcs-status"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="block text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { hexToRgb, normalizeHex } from '../../lib/tools/color-converter';
+  import {
+    generateScale,
+    toCssVariables,
+    toTailwindConfig,
+    toTailwindTheme,
+  } from '../../lib/tools/tailwind-color-scale-generator';
+
+  const picker = document.getElementById('tcs-picker') as HTMLInputElement;
+  const hexInput = document.getElementById('tcs-hex') as HTMLInputElement;
+  const nameInput = document.getElementById('tcs-name') as HTMLInputElement;
+  const keepBase = document.getElementById('tcs-keep-base') as HTMLInputElement;
+  const format = document.getElementById('tcs-format') as HTMLSelectElement;
+  const errorEl = document.getElementById('tcs-error')!;
+  const swatches = document.getElementById('tcs-swatches')!;
+  const output = document.getElementById('tcs-output') as HTMLTextAreaElement;
+  const copyButton = document.getElementById('tcs-copy-button')!;
+  const statusEl = document.getElementById('tcs-status')!;
+
+  function textColorFor(hex: string): string {
+    const rgb = hexToRgb(hex)!;
+    const lin = (v: number) => {
+      const s = v / 255;
+      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+    const lum = 0.2126 * lin(rgb.r) + 0.7152 * lin(rgb.g) + 0.0722 * lin(rgb.b);
+    return lum > 0.179 ? '#000000' : '#ffffff';
+  }
+
+  function render() {
+    statusEl.textContent = '';
+    const scale = generateScale(hexInput.value, keepBase.checked);
+    if (!scale) {
+      errorEl.textContent = hexInput.value
+        ? (errorEl.dataset.hexError ?? '')
+        : '';
+      return;
+    }
+    errorEl.textContent = '';
+    swatches.replaceChildren(
+      ...scale.entries.map(({ step, hex }) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.setAttribute(
+          'aria-label',
+          `${step} ${hex}${swatches.dataset.action ?? ''}`,
+        );
+        const stepLabel = document.createElement('span');
+        stepLabel.className = 'block text-xs font-semibold';
+        stepLabel.textContent =
+          step === scale.baseStep
+            ? `${step} (${swatches.dataset.baseBadge ?? ''})`
+            : String(step);
+        const hexLabel = document.createElement('span');
+        hexLabel.className = 'block font-mono text-xs';
+        hexLabel.textContent = hex;
+        button.append(stepLabel, hexLabel);
+        button.className =
+          'h-20 rounded-lg border border-gray-300 px-1 dark:border-gray-700';
+        button.style.backgroundColor = hex;
+        button.style.color = textColorFor(hex);
+        button.addEventListener('click', () => void copy(hex));
+        return button;
+      }),
+    );
+    const name = nameInput.value;
+    output.value =
+      format.value === 'theme'
+        ? toTailwindTheme(scale.entries, name)
+        : format.value === 'config'
+          ? toTailwindConfig(scale.entries, name)
+          : toCssVariables(scale.entries, name);
+  }
+
+  async function copy(text: string) {
+    if (!text) return;
+    statusEl.textContent = (await copyText(text))
+      ? (statusEl.dataset.copied ?? '')
+      : (statusEl.dataset.copyFailed ?? '');
+  }
+
+  hexInput.addEventListener('input', () => {
+    const normalized = normalizeHex(hexInput.value);
+    if (normalized) picker.value = normalized;
+    render();
+  });
+  picker.addEventListener('input', () => {
+    hexInput.value = picker.value;
+    render();
+  });
+  nameInput.addEventListener('input', render);
+  keepBase.addEventListener('change', render);
+  format.addEventListener('change', render);
+  copyButton.addEventListener('click', () => void copy(output.value));
+
+  render();
+</script>

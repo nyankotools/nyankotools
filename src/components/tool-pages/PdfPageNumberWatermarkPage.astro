@@ -268,6 +268,7 @@ const colorClass =
     type PageNumberPosition,
   } from '../../lib/tools/pdf-page-number-watermark';
   import { enableFileDrop } from '../../lib/file-drop';
+  import { preloadPdfLibs } from '../../lib/pdf-preload';
 
   const $ = <T extends HTMLElement>(id: string) =>
     document.getElementById(id) as T;
@@ -294,7 +295,9 @@ const colorClass =
   const resultEl = $('pw-result');
   const resultList = $('pw-result-list');
 
-  enableFileDrop($('pw-drop'), fileInput);
+  enableFileDrop($('pw-drop'), fileInput, () =>
+    preloadPdfLibs({ pdfLib: true }),
+  );
 
   let pdfBytes: Uint8Array | null = null;
   let pdfName = '';

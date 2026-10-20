@@ -2,6 +2,8 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 import sitemap from '@astrojs/sitemap';
+import { fileURLToPath } from 'node:url';
+import { generateOgpImages } from './scripts/ogp/generate.mjs';
 
 // https://astro.build/config
 export default defineConfig({
@@ -77,6 +79,19 @@ export default defineConfig({
     },
   },
   integrations: [
+    {
+      // ツール別OGP画像（/ogp/<slug>.png, /ogp/en/<slug>.png）をビルド成果物に出力する。
+      // 内容のキャッシュは node_modules/.cache/ogp/。詳細は scripts/ogp/generate.mjs。
+      name: 'tool-ogp-images',
+      hooks: {
+        'astro:build:done': async ({ dir, logger }) => {
+          const { total, rendered } = await generateOgpImages(
+            fileURLToPath(dir),
+          );
+          logger.info(`OGP画像: ${total}枚（新規描画 ${rendered}枚）`);
+        },
+      },
+    },
     sitemap({
       i18n: {
         defaultLocale: 'ja',

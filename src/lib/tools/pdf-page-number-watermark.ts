@@ -1,4 +1,5 @@
-import { degrees, PDFDocument, PDFPage, rgb, StandardFonts } from 'pdf-lib';
+// pdf-lib は大きいため、PDFを実際に処理するまで読み込まない（ページ初期表示のJSを小さく保つ）
+import type { PDFDocument, PDFPage } from 'pdf-lib';
 import { load, PdfToolError } from './pdf-merge-split';
 
 export const PAGE_NUMBER_POSITIONS = [
@@ -194,6 +195,7 @@ export async function stampPdf(
   if (pageNumber) validatePageNumber(pageNumber);
   if (watermark) validateWatermark(watermark);
 
+  const { degrees, rgb, StandardFonts } = await import('pdf-lib');
   const doc = await load(bytes);
   const pages = doc.getPages();
   const font = pageNumber

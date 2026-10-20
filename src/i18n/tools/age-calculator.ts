@@ -149,9 +149,9 @@ export const ageCalculatorContent: Record<Locale, AgeCalculatorPageContent> = {
       nextBirthdayDate: '{y}-{mm}-{dd}',
       nextBirthdayDays: ['{n} day', '{n} days'],
     },
-    title: 'Age Calculator (Exact Age, Days Since Birth, Next Birthday)',
+    title: 'Age Calculator: Exact Age, East Asian Age & Days Alive',
     description:
-      'Calculate your exact age, East Asian age, days since birth, and days until your next birthday. Runs in your browser; nothing is sent to a server.',
+      'Free age calculator: get your exact age, East Asian (kazoedoshi) age, days lived and days to your next birthday. Runs in your browser.',
     h1: 'Age Calculator',
     introHtml:
       'Enter a date of birth to instantly calculate the exact age, the traditional East Asian age (kazoedoshi), the number of days lived since birth, and the days remaining until the next birthday. The reference date defaults to today, but you can change it to check "how old will this person be on such-and-such date". Everything happens in your browser, and nothing you type is ever sent to a server. To calculate the difference between two arbitrary dates, check out the <a href="/en/tools/date-calculator/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Date Calculator</a>, or to convert a date to the Japanese era calendar, the <a href="/en/tools/japanese-era-converter/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Japanese Era Converter</a>.',

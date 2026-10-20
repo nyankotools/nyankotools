@@ -1,4 +1,5 @@
-import { PDFDocument } from 'pdf-lib';
+// pdf-lib は大きいため、PDFを実際に処理するまで読み込まない（ページ初期表示のJSを小さく保つ）
+import type { PDFDocument } from 'pdf-lib';
 
 export type PdfErrorCode =
   | 'invalid'
@@ -25,6 +26,7 @@ export async function load(
   bytes: Uint8Array,
   options?: { updateMetadata?: boolean },
 ): Promise<PDFDocument> {
+  const { PDFDocument } = await import('pdf-lib');
   try {
     const doc = await PDFDocument.load(bytes, options);
     // 破損PDFは load が成功しても、カタログが読めず getPageCount で TypeError になることがある
@@ -66,6 +68,7 @@ export function parsePageRange(spec: string, pageCount: number): number[] {
 }
 
 export async function mergePdfs(files: Uint8Array[]): Promise<Uint8Array> {
+  const { PDFDocument } = await import('pdf-lib');
   const out = await PDFDocument.create();
   for (const bytes of files) {
     const src = await load(bytes);
@@ -79,6 +82,7 @@ async function copyToNew(
   src: PDFDocument,
   indices: number[],
 ): Promise<Uint8Array> {
+  const { PDFDocument } = await import('pdf-lib');
   const out = await PDFDocument.create();
   const pages = await out.copyPages(src, indices);
   pages.forEach((p) => out.addPage(p));

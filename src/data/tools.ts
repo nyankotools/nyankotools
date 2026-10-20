@@ -9286,6 +9286,968 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'css-filter-generator',
+    category: 'dev',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: [
+      'css-box-shadow-generator',
+      'css-text-shadow-generator',
+      'css-glassmorphism-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSS filterジェネレーター',
+        description:
+          'blur・brightness・contrast・grayscale・hue-rotate・drop-shadowなどのCSS filterをスライダーで調整し、プレビューしながらコードを生成。',
+        keywords: [
+          'filter',
+          'blur',
+          'grayscale',
+          'drop-shadow',
+          'hue-rotate',
+          'sepia',
+          'フィルター',
+          'ぼかし',
+        ],
+      },
+      en: {
+        name: 'CSS Filter Generator',
+        description:
+          'Build CSS filter code with live preview: blur, brightness, contrast, grayscale, hue-rotate, drop-shadow and more.',
+        keywords: [
+          'css filter',
+          'blur',
+          'grayscale',
+          'drop-shadow',
+          'hue-rotate',
+          'sepia',
+          'brightness',
+          'contrast',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'css-transform-generator',
+    category: 'dev',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: [
+      'css-animation-generator',
+      'css-box-shadow-generator',
+      'css-border-radius-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSS transformジェネレーター',
+        description:
+          '移動・回転・拡大縮小・傾き・3D回転・perspective・transform-originを調整して、CSS transformをプレビューしながら生成します。',
+        keywords: [
+          'transform',
+          '回転',
+          '拡大縮小',
+          'skew',
+          '3D',
+          'perspective',
+          'transform-origin',
+        ],
+      },
+      en: {
+        name: 'CSS Transform Generator',
+        description:
+          'Builds CSS transform declarations with a live preview: translate, rotate, scale, skew, 3D rotation, perspective, and origin.',
+        keywords: [
+          'transform',
+          'rotate',
+          'scale',
+          'skew',
+          '3D rotate',
+          'perspective',
+          'transform-origin',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'css-specificity-calculator',
+    category: 'dev',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['css-clamp-calculator', 'regex-tester'],
+    translations: {
+      ja: {
+        name: 'CSS詳細度計算機',
+        description:
+          'CSSセレクタの詳細度(a, b, c)を1行ずつ計算し、複数のセレクタを比較してどれが優先されるか判定します。',
+        keywords: [
+          'specificity',
+          '詳細度',
+          'セレクタ',
+          'CSS優先順位',
+          'カスケード',
+          ':where',
+          ':is',
+        ],
+      },
+      en: {
+        name: 'CSS Specificity Calculator',
+        description:
+          'Calculate CSS selector specificity (a, b, c) line by line and compare selectors to see which rule wins.',
+        keywords: [
+          'specificity',
+          'css selector',
+          'css priority',
+          'cascade',
+          'selector specificity',
+          ':where',
+          ':is',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'css-button-generator',
+    category: 'dev',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: [
+      'css-box-shadow-generator',
+      'css-border-radius-generator',
+      'css-glassmorphism-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSSボタン・トグルスイッチ・三角形ジェネレーター',
+        description:
+          'ボタン・JS不要のトグルスイッチ・三角形・矢印のHTMLとCSSを、テーマ色・角丸・ホバー効果を指定してプレビュー付きで生成します。',
+        keywords: [
+          'CSSボタン',
+          'トグルスイッチ',
+          '三角形',
+          '矢印',
+          'ホバー',
+          'button',
+          'toggle switch',
+          'CSS triangle',
+        ],
+      },
+      en: {
+        name: 'CSS Button & Toggle Switch Generator',
+        description:
+          'Generate CSS buttons, pure-CSS toggle switches, triangles and arrows with hover effects, a live preview and contrast check.',
+        keywords: [
+          'CSS button',
+          'toggle switch',
+          'CSS triangle',
+          'CSS arrow',
+          'hover effect',
+          'button generator',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'css-pattern-background',
+    category: 'dev',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: [
+      'css-gradient-generator',
+      'svg-wave-generator',
+      'css-filter-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSSパターン背景ジェネレーター',
+        description:
+          'ストライプ・ドット・チェック柄の背景をCSSグラデーションやSVGで生成し、プレビューしてコピー。',
+        keywords: [
+          'パターン背景',
+          'ストライプ',
+          '水玉',
+          'ドット',
+          'チェック',
+          '市松模様',
+          '背景パターン',
+          'repeating-linear-gradient',
+        ],
+      },
+      en: {
+        name: 'CSS Pattern Background Generator',
+        description:
+          'Generate stripe, polka dot and checkerboard backgrounds as CSS gradients or SVG, preview them and copy the code.',
+        keywords: [
+          'pattern background',
+          'stripes',
+          'polka dots',
+          'checkerboard',
+          'repeating gradient',
+          'svg pattern',
+          'background pattern',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'mailto-link-generator',
+    category: 'dev',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['url-encode', 'qr-generator', 'vcard-generator'],
+    translations: {
+      ja: {
+        name: 'mailto・tel・SMSリンク生成',
+        description:
+          '件名・本文・CC/BCC付きのmailto、telリンク、SMSリンクを生成。URLエンコード済みのhrefとHTMLアンカーをコピーできる。',
+        keywords: [
+          'mailto',
+          'メールリンク',
+          '電話リンク',
+          'tel',
+          'SMS',
+          'リンク作成',
+          'メール本文 改行',
+        ],
+      },
+      en: {
+        name: 'mailto, tel & SMS Link Generator',
+        description:
+          'Generate mailto, tel and SMS links with subject, body, CC and BCC. Get an encoded href and an HTML anchor tag.',
+        keywords: [
+          'mailto',
+          'mailto link',
+          'tel link',
+          'sms link',
+          'email link generator',
+          'href',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'ics-generator',
+    category: 'generate',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['calendar-generator', 'unix-timestamp', 'qr-generator'],
+    translations: {
+      ja: {
+        name: 'ICSファイル作成',
+        description:
+          'カレンダー予定の.icsファイルとGoogleカレンダー追加リンクを作成。繰り返し・リマインダー・終日に対応。',
+        keywords: [
+          'ics',
+          'icalendar',
+          'カレンダー',
+          '予定',
+          'Googleカレンダー',
+          'リマインダー',
+          '繰り返し',
+          'RRULE',
+        ],
+      },
+      en: {
+        name: 'ICS File Generator',
+        description:
+          'Create an .ics calendar event file or Google Calendar link with recurrence, reminders and all-day events.',
+        keywords: [
+          'ics',
+          'ical',
+          'icalendar',
+          'calendar event',
+          'google calendar link',
+          'rrule',
+          'valarm',
+          'reminder',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'vcard-generator',
+    category: 'generate',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['qr-generator', 'mailto-link-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'vCard作成（連絡先.vcf・QR）',
+        description:
+          '名前・電話・メール・住所・会社名からvCard（.vcf）ファイルと連絡先QRコードを作成。',
+        keywords: ['vcard', 'vcf', '連絡先', '名刺', 'QRコード', 'アドレス帳'],
+      },
+      en: {
+        name: 'vCard Generator (.vcf & QR)',
+        description:
+          'Create a vCard (.vcf) contact file and a contact QR code from name, phone, email and address.',
+        keywords: [
+          'vcard',
+          'vcf',
+          'contact',
+          'business card',
+          'qr code',
+          'address book',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'math-drill-generator',
+    category: 'generate',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['graph-paper-generator', 'calendar-generator'],
+    translations: {
+      ja: {
+        name: '計算ドリル作成',
+        description:
+          'たし算・ひき算・かけ算・わり算の計算ドリルを、桁数・問題数・筆算/横書きを指定して作成。答えシートも印刷できます。',
+        keywords: [
+          '計算ドリル',
+          '計算プリント',
+          '算数',
+          'たし算',
+          'ひき算',
+          'かけ算',
+          'わり算',
+          '筆算',
+        ],
+      },
+      en: {
+        name: 'Math Drill Generator',
+        description:
+          'Make printable addition, subtraction, multiplication and division worksheets with an answer sheet.',
+        keywords: [
+          'math worksheet',
+          'math drill',
+          'arithmetic practice',
+          'printable worksheet',
+          'addition',
+          'multiplication',
+          'long division',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'envelope-printer',
+    category: 'generate',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['vcard-generator', 'graph-paper-generator', 'calendar-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '封筒宛名印刷（長形3号・洋形・縦書き）',
+        description:
+          '長形3号・洋形の封筒に宛名・差出人・郵便番号枠を実寸で印刷。縦書き・横書き、住所の数字は縦中横や漢数字に対応。',
+        keywords: [
+          '封筒',
+          '宛名印刷',
+          '長形3号',
+          '洋形4号',
+          '縦書き',
+          '郵便番号枠',
+          '宛名',
+          '差出人',
+        ],
+      },
+      en: {
+        name: 'Envelope Address Printer',
+        description:
+          'Print recipient and sender addresses on Japanese envelopes at true size, with postal code boxes, vertical or horizontal.',
+        keywords: [
+          'envelope',
+          'address printing',
+          'nagagata 3',
+          'youkei',
+          'vertical writing',
+          'postal code box',
+          'mailing label',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'passphrase-generator',
+    category: 'security',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['password-generator', 'password-strength-checker'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'パスフレーズ生成（Diceware）',
+        description:
+          'EFF大型ワードリスト（7,776語）からDiceware方式で覚えやすく強いパスフレーズを生成します。語数・区切り文字・エントロピー表示に対応。',
+        keywords: [
+          'パスフレーズ',
+          'Diceware',
+          'ダイスウェア',
+          'ワードリスト',
+          'EFF',
+          'パスワード',
+          'ランダム',
+          'エントロピー',
+        ],
+      },
+      en: {
+        name: 'Passphrase Generator (Diceware)',
+        description:
+          'Generate memorable Diceware passphrases from the EFF large wordlist (7,776 words), with word count, separator and entropy options.',
+        keywords: [
+          'passphrase',
+          'diceware',
+          'wordlist',
+          'EFF wordlist',
+          'password',
+          'random words',
+          'entropy',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'dmarc-spf-generator',
+    category: 'security',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: [
+      'http-header-analyzer',
+      'csp-sri-generator',
+      'mailto-link-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'SPF・DMARCレコード生成・チェック',
+        description:
+          'SPF・DMARCのTXTレコードをフォームから作成し、既存レコードの構文やDNSルックアップ10回上限を確認します。DNSには問い合わせません。',
+        keywords: [
+          'SPF',
+          'DMARC',
+          'TXTレコード',
+          'メール認証',
+          'なりすまし対策',
+          'DNSルックアップ',
+          'rua',
+          'DKIM',
+        ],
+      },
+      en: {
+        name: 'SPF & DMARC Record Generator',
+        description:
+          'Build SPF and DMARC TXT records and check existing ones for the 10-lookup limit, +all, and pct errors. No DNS queries.',
+        keywords: [
+          'SPF',
+          'DMARC',
+          'TXT record',
+          'email authentication',
+          'spoofing',
+          'DNS lookup limit',
+          'rua',
+          'DKIM',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'email-header-analyzer',
+    category: 'security',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    sensitive: true,
+    related: [
+      'dmarc-spf-generator',
+      'http-header-analyzer',
+      'mailto-link-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'メールヘッダー解析',
+        description:
+          'メールの生ヘッダーを貼り付けて、Receivedの経路と各ホップの遅延、SPF・DKIM・DMARCの判定、From不一致を確認します。ブラウザ内で処理します。',
+        keywords: [
+          'メールヘッダー',
+          'Received',
+          'SPF',
+          'DKIM',
+          'DMARC',
+          '迷惑メール',
+          'なりすまし',
+          '遅延',
+        ],
+      },
+      en: {
+        name: 'Email Header Analyzer',
+        description:
+          'Paste raw email headers to trace the Received path and hop delays, read SPF, DKIM and DMARC results, and spot From mismatches.',
+        keywords: [
+          'email header',
+          'Received',
+          'SPF',
+          'DKIM',
+          'DMARC',
+          'phishing',
+          'spoofing',
+          'mail delay',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'image-compare-slider',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['image-filter', 'image-merger', 'image-resizer'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像比較スライダー',
+        keywords: [
+          '画像比較',
+          'ビフォーアフター',
+          'ビフォー アフター',
+          '比較スライダー',
+          '画像 見比べ',
+          '並置画像',
+        ],
+        description:
+          '2枚の画像をドラッグで見比べるビフォーアフター比較スライダー。左右・上下の切り替え、ラベル表示、並置画像のPNG保存に対応します。',
+      },
+      en: {
+        name: 'Image Compare Slider',
+        keywords: [
+          'before after slider',
+          'image comparison',
+          'compare images',
+          'before and after',
+          'side by side image',
+        ],
+        description:
+          'Compare two images with a draggable before/after slider. Switch horizontal or vertical, show labels, and save a side-by-side PNG.',
+      },
+    },
+  },
+  {
+    slug: 'image-frame-maker',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['image-padding', 'image-round-crop', 'image-cropper'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像に枠・フレームを付ける',
+        keywords: [
+          'ポラロイド',
+          '額縁',
+          '画像 枠',
+          'フレーム',
+          '角丸',
+          '影付き',
+          '枠付け',
+        ],
+        description:
+          '写真にポラロイド風・シンプル枠・二重枠・額縁風・角丸・影付きのフレームを付けます。色・太さ・角丸を調整し、PNG・JPEG・WebPで保存できます。',
+      },
+      en: {
+        name: 'Image Frame Maker (Polaroid, Border & Rounded)',
+        keywords: [
+          'polaroid frame',
+          'photo frame',
+          'image border',
+          'picture frame',
+          'rounded corners',
+          'drop shadow',
+        ],
+        description:
+          'Add Polaroid, border, picture-frame, rounded and shadow frames to photos. Pick the color, thickness and corners and save as PNG, JPEG or WebP.',
+      },
+    },
+  },
+  {
+    slug: 'gradient-wallpaper',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: [
+      'css-gradient-generator',
+      'placeholder-image-generator',
+      'ogp-image-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'グラデーション壁紙・背景画像生成',
+        description:
+          '線形・放射・円錐のグラデーション壁紙を解像度指定でPNG・JPEG保存。2〜5色、粒状ノイズ対応。',
+        keywords: [
+          'グラデーション',
+          '壁紙',
+          '背景画像',
+          'グラデ画像',
+          '解像度指定',
+          'ノイズ',
+          'PNG',
+        ],
+      },
+      en: {
+        name: 'Gradient Wallpaper Generator',
+        description:
+          'Create linear, radial or conic gradient wallpapers at any resolution and save as PNG or JPEG.',
+        keywords: [
+          'gradient wallpaper',
+          'gradient background',
+          'wallpaper maker',
+          'gradient image',
+          'grain',
+          'noise',
+          'conic gradient',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'device-mockup',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['image-frame-maker', 'image-padding', 'image-round-crop'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'デバイスモックアップ作成',
+        keywords: [
+          'モックアップ',
+          'スマホ 枠',
+          'スクショ 合成',
+          'デバイスフレーム',
+          'ノートPC',
+          'ブラウザ 枠',
+          'mockup',
+        ],
+        description:
+          'スクリーンショットをスマホ・タブレット・ノートPC・ブラウザウィンドウの枠にはめ込み、透明背景や影付きのモックアップ画像をPNGで作成します。',
+      },
+      en: {
+        name: 'Device Mockup Generator (Phone, Laptop & Browser)',
+        keywords: [
+          'device mockup',
+          'phone mockup',
+          'screenshot mockup',
+          'device frame',
+          'laptop mockup',
+          'browser mockup',
+          'app screenshot',
+        ],
+        description:
+          'Put a screenshot into a phone, tablet, laptop or browser frame and save the mockup as a PNG. Transparent background and shadow options.',
+      },
+    },
+  },
+  {
+    slug: 'avatar-generator',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['image-round-crop', 'favicon-generator', 'ogp-image-generator'],
+    translations: {
+      ja: {
+        name: 'アバター・アイコン作成',
+        keywords: [
+          'アバター',
+          'アイコン作成',
+          'イニシャル',
+          'identicon',
+          'プロフィール画像',
+          '文字アイコン',
+        ],
+        description:
+          '名前のイニシャルや、文字列から決まるGitHub風identiconでアバター画像を作成します。背景色・形・フォントを選んでPNG保存できます。',
+      },
+      en: {
+        name: 'Avatar Generator (Initials & Identicon)',
+        keywords: [
+          'avatar generator',
+          'initials avatar',
+          'identicon',
+          'profile picture',
+          'letter avatar',
+        ],
+        description:
+          'Makes avatar icons from initials or a seed string (GitHub-style identicon), with color, shape and font options, and saves them as PNG.',
+      },
+    },
+  },
+  {
+    slug: 'tailwind-color-scale-generator',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['color-palette-generator', 'color-converter', 'contrast-checker'],
+    translations: {
+      ja: {
+        name: 'Tailwindカラースケール生成',
+        description:
+          '基準色から50〜950の11段階カラースケールを生成。CSS変数・Tailwind v4 @theme・tailwind.config.js形式でコピー。',
+        keywords: [
+          'Tailwind',
+          'カラースケール',
+          'カラーパレット',
+          '明度',
+          '50 950',
+          'CSS変数',
+          'shade',
+          'tailwind.config',
+        ],
+      },
+      en: {
+        name: 'Tailwind Color Scale Generator',
+        description:
+          'Generate a Tailwind-style 50-950 color scale from one base color. Copy as CSS variables, Tailwind v4 @theme or tailwind.config.js.',
+        keywords: [
+          'tailwind colors',
+          'color scale',
+          'color shades',
+          '50-950',
+          'tints and shades',
+          'color palette',
+          'css variables',
+          'tailwind.config',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'pixel-art-editor',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: [
+      'image-pixelart-converter',
+      'image-blur-mosaic',
+      'image-palette-extractor',
+    ],
+    translations: {
+      ja: {
+        name: 'ドット絵エディタ',
+        keywords: [
+          'ドット絵',
+          'ピクセルアート',
+          'ドット絵 作成',
+          'お絵かき',
+          'スプライト',
+          'アイコン作成',
+          'PNG書き出し',
+        ],
+        description:
+          'ブラウザでドット絵を描いて、拡大率を指定した透過PNGで保存。ペン・消しゴム・塗りつぶし・スポイト・パレット対応。',
+      },
+      en: {
+        name: 'Pixel Art Editor',
+        keywords: [
+          'pixel art',
+          'pixel editor',
+          'sprite editor',
+          'drawing grid',
+          'icon maker',
+          'png export',
+        ],
+        description:
+          'Draw pixel art in your browser with pen, eraser, fill and picker tools, then export a scaled transparent PNG.',
+      },
+    },
+  },
+  {
+    slug: 'screenshot-annotator',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['image-blur-mosaic', 'image-frame-maker', 'device-mockup'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'スクリーンショット注釈',
+        keywords: [
+          'スクショ',
+          '注釈',
+          'アノテーション',
+          '矢印',
+          '番号',
+          'マニュアル',
+          '画像 書き込み',
+        ],
+        description:
+          'スクリーンショットを貼り付けて、矢印・枠・自動連番の番号・テキストを書き込みPNGで保存できる無料ツール。マニュアル作成に。',
+      },
+      en: {
+        name: 'Screenshot Annotator',
+        keywords: [
+          'screenshot',
+          'annotate',
+          'annotation',
+          'arrow',
+          'markup',
+          'numbered steps',
+          'paste image',
+        ],
+        description:
+          'Paste a screenshot and add arrows, boxes, numbered badges and text, then save as PNG. Runs in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'audio-speed-changer',
+    category: 'media',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['media-converter', 'speaker-tester', 'instrument-tuner'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '音声の速度・ピッチ変更',
+        keywords: [
+          '速度変更',
+          'ピッチ変更',
+          'キー変更',
+          '再生速度',
+          'テンポ',
+          'タイムストレッチ',
+          '半音',
+          'WAV',
+        ],
+        description:
+          '音声ファイルの再生速度を0.25〜4倍に、ピッチ（キー）を半音単位で変更し、試聴してWAVで保存。ブラウザ完結。',
+      },
+      en: {
+        name: 'Audio Speed & Pitch Changer',
+        keywords: [
+          'audio speed changer',
+          'pitch shifter',
+          'change key',
+          'tempo',
+          'time stretch',
+          'playback rate',
+          'semitone',
+          'wav',
+        ],
+        description:
+          'Change audio speed and pitch (key) in semitones, preview, and save as WAV. Runs in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'noise-generator',
+    category: 'media',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['speaker-tester', 'instrument-tuner'],
+    translations: {
+      ja: {
+        name: 'ノイズジェネレーター',
+        keywords: [
+          'ホワイトノイズ',
+          'ピンクノイズ',
+          'ブラウンノイズ',
+          '睡眠',
+          '作業用BGM',
+          '環境音',
+          'タイマー',
+        ],
+        description:
+          'ホワイト・ピンク・ブラウンノイズを再生。作業・睡眠向けにタイマーとフェードアウト付き。',
+      },
+      en: {
+        name: 'Noise Generator',
+        keywords: [
+          'white noise',
+          'pink noise',
+          'brown noise',
+          'sleep sounds',
+          'focus',
+          'sleep timer',
+        ],
+        description:
+          'Play white, pink or brown noise for focus and sleep, with a timer and fade-out.',
+      },
+    },
+  },
+  {
+    slug: 'virtual-piano',
+    category: 'media',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['instrument-tuner', 'speaker-tester'],
+    translations: {
+      ja: {
+        name: 'バーチャルピアノ',
+        keywords: [
+          'ピアノ',
+          'キーボード',
+          '鍵盤',
+          'オンラインピアノ',
+          'シンセ',
+          '音色',
+          'ドレミ',
+        ],
+        description:
+          'PCのキーボードやマウス、タッチで弾けるピアノ。4音色・オクターブ切り替え対応。',
+      },
+      en: {
+        name: 'Virtual Piano',
+        keywords: [
+          'piano',
+          'keyboard',
+          'online piano',
+          'synth',
+          'keys',
+          'musical keyboard',
+        ],
+        description:
+          'Play a piano with your computer keyboard, mouse or touch. Four sounds and octave shift.',
+      },
+    },
+  },
+  {
+    slug: 'mosaic-smoother',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['image-blur-mosaic', 'image-pixelart-converter', 'image-filter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'モザイクを自然な色面に置換',
+        keywords: [
+          'モザイク',
+          'モザイク跡',
+          'グラデーション',
+          '色面',
+          '補間',
+          '画像加工',
+          'ブロック検出',
+        ],
+        description:
+          'モザイク部分を、周囲の色とモザイクの色から作った滑らかな色の変化に置き換えます。',
+      },
+      en: {
+        name: 'Mosaic to Smooth Gradient',
+        keywords: [
+          'mosaic',
+          'pixelation',
+          'smooth',
+          'gradient fill',
+          'interpolation',
+          'blend',
+        ],
+        description:
+          'Replace a mosaic area with a smooth color blend built from its blocks and the surrounding pixels.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

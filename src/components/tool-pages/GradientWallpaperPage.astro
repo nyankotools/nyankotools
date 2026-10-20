@@ -1,0 +1,409 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { gradientWallpaperContent } from '../../i18n/tools/gradient-wallpaper';
+import {
+  MAX_PIXELS,
+  MAX_SIDE,
+  MAX_STOPS,
+  MIN_SIDE,
+  MIN_STOPS,
+  SIZE_PRESETS,
+  evenPositions,
+} from '../../lib/tools/gradient-wallpaper';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = gradientWallpaperContent[locale];
+const defaultColors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe'];
+const defaultPositions = evenPositions(3);
+const rows = Array.from({ length: MAX_STOPS }, (_, i) => i);
+const counts = Array.from(
+  { length: MAX_STOPS - MIN_STOPS + 1 },
+  (_, i) => MIN_STOPS + i,
+);
+const inputClass = 'ui-input min-h-11 w-full px-3 dark:bg-gray-900';
+const pickerClass =
+  'h-11 w-14 shrink-0 cursor-pointer rounded-lg border border-gray-400 dark:border-gray-700';
+---
+
+<ToolShell t={t}>
+  <div class="grid max-w-2xl gap-4 sm:grid-cols-2">
+    <div>
+      <label for="gw-type" class="ui-label">
+        {t.typeLabel}
+      </label>
+      <select id="gw-type" class={inputClass}>
+        {t.typeOptions.map((o) => (
+          <option value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label for="gw-count" class="ui-label">
+        {t.countLabel}
+      </label>
+      <select id="gw-count" class={inputClass}>
+        {counts.map((n) => (
+          <option value={n} selected={n === 3}>
+            {n}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+
+  <fieldset class="mt-4 max-w-2xl">
+    <legend class="ui-label">{t.stopsHeading}</legend>
+    <div class="grid gap-3">
+      {rows.map((i) => (
+        <div
+          class="gw-row flex items-center gap-2"
+          data-row={i}
+          hidden={i >= 3}
+        >
+          <input
+            id={`gw-color-${i}`}
+            type="color"
+            value={defaultColors[i]}
+            aria-label={t.colorLabelTemplate.replace('{n}', String(i + 1))}
+            class={pickerClass}
+          />
+          <input
+            id={`gw-pos-${i}`}
+            type="number"
+            min="0"
+            max="100"
+            step="1"
+            value={defaultPositions[i] ?? 100}
+            aria-label={t.positionLabelTemplate.replace('{n}', String(i + 1))}
+            class={`${inputClass} w-28!`}
+          />
+          <span class="text-sm text-gray-700 dark:text-gray-300">%</span>
+        </div>
+      ))}
+    </div>
+  </fieldset>
+
+  <div class="mt-4 grid max-w-2xl gap-4 sm:grid-cols-2">
+    <div>
+      <label for="gw-angle" class="ui-label">
+        {t.angleLabel}: <output id="gw-angle-out">135</output>
+      </label>
+      <input
+        id="gw-angle"
+        type="range"
+        min="0"
+        max="360"
+        step="1"
+        value="135"
+        class="h-11 w-full"
+      />
+      <p
+        id="gw-angle-hint"
+        class="text-xs text-gray-600 dark:text-gray-400"
+        hidden
+      >
+        {t.angleDisabledHint}
+      </p>
+    </div>
+    <div>
+      <label for="gw-noise" class="ui-label">
+        {t.noiseLabel}: <output id="gw-noise-out">0</output>
+      </label>
+      <input
+        id="gw-noise"
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value="0"
+        class="h-11 w-full"
+      />
+    </div>
+    <div>
+      <label for="gw-width" class="ui-label">
+        {t.widthLabel}
+      </label>
+      <input
+        id="gw-width"
+        type="number"
+        min={MIN_SIDE}
+        max={MAX_SIDE}
+        value="1920"
+        class={inputClass}
+      />
+    </div>
+    <div>
+      <label for="gw-height" class="ui-label">
+        {t.heightLabel}
+      </label>
+      <input
+        id="gw-height"
+        type="number"
+        min={MIN_SIDE}
+        max={MAX_SIDE}
+        value="1080"
+        class={inputClass}
+      />
+    </div>
+    <div>
+      <label for="gw-format" class="ui-label">
+        {t.formatLabel}
+      </label>
+      <select id="gw-format" class={inputClass}>
+        <option value="png">PNG</option>
+        <option value="jpeg">JPEG</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <span class="ui-label">{t.presetsLabel}</span>
+    <div class="flex flex-wrap gap-2">
+      {SIZE_PRESETS.map((p) => (
+        <button
+          type="button"
+          data-w={p.width}
+          data-h={p.height}
+          class="gw-preset ui-btn"
+        >
+          {t.presetNames[p.id]} {p.width}×{p.height}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <p
+    id="gw-error"
+    role="alert"
+    hidden
+    data-range={t.errorRangeTemplate}
+    data-integer={t.errorInteger}
+    data-pixels={t.errorPixelsTemplate}
+    data-encode={t.errorEncode}
+    data-min={MIN_SIDE}
+    data-max={MAX_SIDE}
+    data-max-pixels={MAX_PIXELS.toLocaleString('en-US')}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="gw-download"
+      type="button"
+      data-generating={t.generating}
+      data-done={t.done}
+      class="ui-btn-primary"
+    >
+      {t.download}
+    </button>
+    <span
+      id="gw-status"
+      class="text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <span class="ui-label mt-4">{t.previewLabel}</span>
+  <div class="max-w-full overflow-auto rounded border border-gray-300 p-2 dark:border-gray-700">
+    <canvas
+      id="gw-canvas"
+      class="block h-auto max-w-full"
+      role="img"
+      aria-label={t.previewLabel}
+    ></canvas>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import {
+    FORMAT_INFO,
+    applyNoise,
+    buildFilename,
+    conicStartAngle,
+    linearGradientLine,
+    normalizeStops,
+    radialRadius,
+    validateSize,
+    type ColorStop,
+    type GradientKind,
+    type WallpaperFormat,
+    evenPositions,
+  } from '../../lib/tools/gradient-wallpaper';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const typeEl = $<HTMLSelectElement>('gw-type');
+  const countEl = $<HTMLSelectElement>('gw-count');
+  const angleEl = $<HTMLInputElement>('gw-angle');
+  const angleOut = $<HTMLOutputElement>('gw-angle-out');
+  const angleHint = $<HTMLElement>('gw-angle-hint');
+  const noiseEl = $<HTMLInputElement>('gw-noise');
+  const noiseOut = $<HTMLOutputElement>('gw-noise-out');
+  const widthEl = $<HTMLInputElement>('gw-width');
+  const heightEl = $<HTMLInputElement>('gw-height');
+  const formatEl = $<HTMLSelectElement>('gw-format');
+  const errorEl = $<HTMLElement>('gw-error');
+  const downloadBtn = $<HTMLButtonElement>('gw-download');
+  const statusEl = $<HTMLElement>('gw-status');
+  const canvas = $<HTMLCanvasElement>('gw-canvas');
+  const rowEls = Array.from(document.querySelectorAll<HTMLElement>('.gw-row'));
+  const PREVIEW_MAX = 480;
+  const NOISE_SEED = 20261020;
+
+  function readStops(): ColorStop[] {
+    const count = Number(countEl.value);
+    const stops: ColorStop[] = [];
+    for (let i = 0; i < count; i++) {
+      stops.push({
+        color: $<HTMLInputElement>(`gw-color-${i}`).value,
+        position: Number($<HTMLInputElement>(`gw-pos-${i}`).value),
+      });
+    }
+    return normalizeStops(stops);
+  }
+
+  /** 指定サイズの canvas に描画する（ノイズ含む） */
+  function draw(target: HTMLCanvasElement, w: number, h: number) {
+    target.width = w;
+    target.height = h;
+    const ctx = target.getContext('2d', { willReadFrequently: true })!;
+    const kind = typeEl.value as GradientKind;
+    const angle = Number(angleEl.value);
+    let g: CanvasGradient;
+    if (kind === 'linear') {
+      const l = linearGradientLine(w, h, angle);
+      g = ctx.createLinearGradient(l.x0, l.y0, l.x1, l.y1);
+    } else if (kind === 'radial') {
+      g = ctx.createRadialGradient(
+        w / 2,
+        h / 2,
+        0,
+        w / 2,
+        h / 2,
+        radialRadius(w, h),
+      );
+    } else {
+      g = ctx.createConicGradient(conicStartAngle(angle), w / 2, h / 2);
+    }
+    for (const s of readStops()) g.addColorStop(s.position / 100, s.color);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+    const noise = Number(noiseEl.value);
+    if (noise > 0) {
+      const img = ctx.getImageData(0, 0, w, h);
+      applyNoise(img.data, noise, NOISE_SEED);
+      ctx.putImageData(img, 0, 0);
+    }
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+    downloadBtn.disabled = message !== '';
+  }
+
+  function sizeError(): string {
+    const err = validateSize(Number(widthEl.value), Number(heightEl.value));
+    if (!err) return '';
+    const d = errorEl.dataset;
+    if (err === 'integer') return d.integer ?? '';
+    if (err === 'pixels')
+      return (d.pixels ?? '').replace('{max}', d.maxPixels ?? '');
+    return (d.range ?? '')
+      .replace('{min}', d.min ?? '')
+      .replace('{max}', d.max ?? '');
+  }
+
+  function updatePreview() {
+    statusEl.textContent = '';
+    angleOut.textContent = angleEl.value;
+    noiseOut.textContent = noiseEl.value;
+    const isRadial = typeEl.value === 'radial';
+    angleEl.disabled = isRadial;
+    angleHint.hidden = !isRadial;
+    const count = Number(countEl.value);
+    rowEls.forEach((row, i) => (row.hidden = i >= count));
+
+    const message = sizeError();
+    showError(message);
+    if (message) return;
+    const w = Number(widthEl.value);
+    const h = Number(heightEl.value);
+    const scale = Math.min(1, PREVIEW_MAX / Math.max(w, h));
+    draw(
+      canvas,
+      Math.max(1, Math.round(w * scale)),
+      Math.max(1, Math.round(h * scale)),
+    );
+  }
+
+  document.querySelectorAll('input, select').forEach((el) => {
+    if (el.id.startsWith('gw-') && el.id !== 'gw-count') {
+      el.addEventListener('input', updatePreview);
+      el.addEventListener('change', updatePreview);
+    }
+  });
+  // 色の数を変えたら位置を等間隔に振り直す
+  countEl.addEventListener('change', (e) => {
+    // 入力復元（untrusted イベント）では保存済みの位置を上書きしない
+    if (!e.isTrusted) {
+      updatePreview();
+      return;
+    }
+    const count = Number(countEl.value);
+    evenPositions(count).forEach((p, i) => {
+      $<HTMLInputElement>(`gw-pos-${i}`).value = String(p);
+    });
+    updatePreview();
+  });
+  document.querySelectorAll<HTMLButtonElement>('.gw-preset').forEach((btn) =>
+    btn.addEventListener('click', () => {
+      widthEl.value = btn.dataset.w ?? '';
+      heightEl.value = btn.dataset.h ?? '';
+      updatePreview();
+    }),
+  );
+
+  downloadBtn.addEventListener('click', () => {
+    if (sizeError()) return;
+    const w = Number(widthEl.value);
+    const h = Number(heightEl.value);
+    const format = formatEl.value as WallpaperFormat;
+    statusEl.textContent = downloadBtn.dataset.generating ?? '';
+    downloadBtn.disabled = true;
+    // 描画前にラベルを反映させるため、1フレーム待つ
+    setTimeout(() => {
+      const off = document.createElement('canvas');
+      try {
+        draw(off, w, h);
+      } catch {
+        showError(errorEl.dataset.encode ?? '');
+        statusEl.textContent = '';
+        return;
+      }
+      off.toBlob(
+        (blob) => {
+          downloadBtn.disabled = false;
+          if (!blob) {
+            showError(errorEl.dataset.encode ?? '');
+            statusEl.textContent = '';
+            return;
+          }
+          downloadBlob(blob, buildFilename(w, h, format));
+          statusEl.textContent = downloadBtn.dataset.done ?? '';
+          off.width = off.height = 0;
+        },
+        FORMAT_INFO[format].mime,
+        0.92,
+      );
+    }, 30);
+  });
+
+  updatePreview();
+</script>

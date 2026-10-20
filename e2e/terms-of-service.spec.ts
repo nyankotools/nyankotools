@@ -43,7 +43,7 @@ test.describe('利用規約ページ（日本語版）', () => {
 
     // #sidebar内のPC向け言語切り替え（モバイル向けは非表示のためデスクトップ幅では
     // 操作対象にならないが、DOM上には存在するため`#sidebar`内に絞り込んで一意にする）
-    await page.locator('#sidebar a[hreflang="en"]').click();
+    await page.locator('[data-lang-switch-desktop] a[hreflang="en"]').click();
 
     await expect(page).toHaveURL(/\/en\/terms-of-service\/?$/);
     await expect(page.locator('main h1')).toHaveText('Terms of Service');
@@ -86,7 +86,7 @@ test.describe('Terms of Service page (English)', () => {
   test('言語切り替えで日本語版に遷移できる', async ({ page }) => {
     await page.goto('/en/terms-of-service/');
 
-    await page.locator('#sidebar a[hreflang="ja"]').click();
+    await page.locator('[data-lang-switch-desktop] a[hreflang="ja"]').click();
 
     await expect(page).toHaveURL(/\/terms-of-service\/?$/);
     await expect(page.locator('main h1')).toHaveText('利用規約');

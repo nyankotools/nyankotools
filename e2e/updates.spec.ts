@@ -64,7 +64,7 @@ test.describe('更新情報ページ（日本語版）', () => {
   test('言語切り替えで英語版に遷移できる', async ({ page }) => {
     await page.goto('/updates/');
 
-    await page.locator('#sidebar a[hreflang="en"]').click();
+    await page.locator('[data-lang-switch-desktop] a[hreflang="en"]').click();
 
     await expect(page).toHaveURL(/\/en\/updates\/?$/);
     await expect(page.locator('main h1')).toHaveText('Updates');
@@ -105,7 +105,7 @@ test.describe('Updates page (English)', () => {
   test('言語切り替えで日本語版に遷移できる', async ({ page }) => {
     await page.goto('/en/updates/');
 
-    await page.locator('#sidebar a[hreflang="ja"]').click();
+    await page.locator('[data-lang-switch-desktop] a[hreflang="ja"]').click();
 
     await expect(page).toHaveURL(/\/updates\/?$/);
     await expect(page.locator('main h1')).toHaveText('更新情報');

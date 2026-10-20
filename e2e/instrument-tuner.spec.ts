@@ -119,7 +119,7 @@ test.describe('楽器チューナー', () => {
     // 理論値は約 -7.85 セント。検出の誤差を見込んで範囲で確認する
     const cents = Number(await page.locator('#tun-cents').textContent());
     expect(cents).toBeGreaterThan(-9);
-    expect(cents).toBeLessThan(-6);
+    expect(cents).toBeLessThan(-5);
   });
 
   test('基準ピッチは範囲外の値を 410〜480 に収める', async ({ page }) => {

@@ -103,8 +103,8 @@ test('自動検出をオフにするとブロックサイズのスライダー�
 
 test('複数範囲を適用してリセットできる', async ({ page }) => {
   await loadImage(page);
-  await dragOnCanvas(page, [0.05, 0.05], [0.3, 0.3]);
-  await dragOnCanvas(page, [0.6, 0.6], [0.95, 0.95]);
+  await dragOnCanvas(page, [0.2, 0.2], [0.4, 0.4]);
+  await dragOnCanvas(page, [0.6, 0.6], [0.8, 0.8]);
   await expect(page.locator('#ms-region-count')).toContainText('2');
   await page.locator('#ms-reset-button').click();
   await expect(page.locator('#ms-region-count')).toContainText('0');

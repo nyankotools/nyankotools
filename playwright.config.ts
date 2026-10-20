@@ -42,5 +42,7 @@ export default defineConfig({
     command: `${process.env.E2E_SKIP_BUILD ? '' : 'pnpm build && '}pnpm preview --port 4322 --ignore-lock`,
     url: 'http://localhost:4322',
     reuseExistingServer: !process.env.CI,
+    // CIではOGP画像の描画キャッシュが無いビルド（mainの初回など）が60秒を超えるため、待機時間を延ばす
+    timeout: 180_000,
   },
 });

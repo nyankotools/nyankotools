@@ -38,6 +38,34 @@ describe('updates data', () => {
     expect(dates.filter((d, i) => dates.indexOf(d) !== i)).toEqual([]);
   });
 
+  it('items の slug は同じ更新の toolSlugs に含まれ、重複しない', () => {
+    const bad = updates.flatMap((u) => {
+      const slugsInItems = (u.items ?? []).flatMap((i) =>
+        i.slug ? [i.slug] : [],
+      );
+      return slugsInItems
+        .filter(
+          (s, i) =>
+            !(u.toolSlugs ?? []).includes(s) || slugsInItems.indexOf(s) !== i,
+        )
+        .map((s) => `${u.date}: ${s}`);
+    });
+    expect(bad).toEqual([]);
+  });
+
+  it('items の ja/en の text が空でない', () => {
+    for (const u of updates) {
+      for (const [i, item] of (u.items ?? []).entries()) {
+        for (const locale of ['ja', 'en'] as const) {
+          expect(
+            item.translations[locale].text.trim().length,
+            `${u.date} #${i} ${locale}`,
+          ).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
   it('ja/en の summary が空でない', () => {
     for (const u of updates) {
       for (const locale of ['ja', 'en'] as const) {

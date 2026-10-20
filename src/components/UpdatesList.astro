@@ -1,7 +1,8 @@
 ---
-import { getSortedUpdates } from '../data/updates';
+import { getSortedUpdates, type UpdateEntry } from '../data/updates';
 import { getLocalizedTools, type Locale } from '../data/tools';
-import { localePath } from '../i18n/ui';
+import { localePath, useTranslations } from '../i18n/ui';
+import UpdateItemRow from './UpdateItemRow.astro';
 
 interface Props {
   locale: Locale;
@@ -9,7 +10,10 @@ interface Props {
 
 const { locale } = Astro.props;
 
+const t = useTranslations(locale);
 const entries = getSortedUpdates();
+/** これを超える項目は <details> に折りたたむ */
+const VISIBLE_ITEMS = 5;
 const toolBySlug = new Map(
   getLocalizedTools(locale).map((tool) => [tool.slug, tool]),
 );
@@ -23,39 +27,70 @@ function formatDate(date: string): string {
   const [year, month, day] = date.split('-').map(Number);
   return dateFormatter.format(new Date(Date.UTC(year, month - 1, day)));
 }
+
+interface Row {
+  text: string;
+  tool?: { name: string; href: string };
+}
+
+/** toolSlugs 順にツール名と説明（items に上書きがあればそれ）を並べ、続けてツール以外の項目を並べる */
+function buildRows(entry: UpdateEntry): Row[] {
+  const items = entry.items ?? [];
+  const rows: Row[] = [];
+  for (const slug of entry.toolSlugs ?? []) {
+    const tool = toolBySlug.get(slug);
+    if (!tool) continue;
+    const override = items.find((item) => item.slug === slug);
+    rows.push({
+      text: override ? override.translations[locale].text : tool.description,
+      tool: { name: tool.name, href: `${toolBasePath}${slug}/` },
+    });
+  }
+  for (const item of items.filter((i) => !i.slug)) {
+    rows.push({ text: item.translations[locale].text });
+  }
+  return rows;
+}
 ---
 
 <ol class="space-y-8">
-  {entries.map((entry) => (
-    <li class="border-b border-gray-200 pb-8 last:border-b-0 last:pb-0 dark:border-gray-800">
-      <time
-        datetime={entry.date}
-        class="block text-sm font-semibold text-gray-500 dark:text-gray-400"
-      >
-        {formatDate(entry.date)}
-      </time>
-      <p class="mt-1 text-gray-800 dark:text-gray-300">
-        {entry.translations[locale].summary}
-      </p>
-      {entry.toolSlugs && entry.toolSlugs.length > 0 && (
-        <ul class="mt-3 flex flex-wrap gap-2">
-          {entry.toolSlugs.map((slug) => {
-            const tool = toolBySlug.get(slug);
-            return (
-              tool && (
-                <li>
-                  <a
-                    href={`${toolBasePath}${slug}/`}
-                    class="inline-flex min-h-11 items-center rounded-full border border-gray-300 px-3 text-xs text-gray-700 hover:border-blue-700 hover:text-blue-700 dark:border-gray-700 dark:text-gray-300 dark:hover:border-blue-400 dark:hover:text-blue-400"
-                  >
-                    {tool.name}
-                  </a>
-                </li>
-              )
-            );
-          })}
-        </ul>
-      )}
-    </li>
-  ))}
+  {entries.map((entry) => {
+    const rows = buildRows(entry);
+    const visible = rows.slice(0, VISIBLE_ITEMS);
+    const rest = rows.slice(VISIBLE_ITEMS);
+    return (
+      <li class="border-b border-gray-200 pb-8 last:border-b-0 last:pb-0 dark:border-gray-800">
+        <time
+          datetime={entry.date}
+          class="block text-sm font-semibold text-gray-500 dark:text-gray-400"
+        >
+          {formatDate(entry.date)}
+        </time>
+        <p class="mt-1 text-gray-800 dark:text-gray-300">
+          {entry.translations[locale].summary}
+        </p>
+        {rows.length > 0 && (
+          <>
+            <ul class="mt-3 list-disc space-y-2 pl-5">
+              {visible.map((row) => (
+                <UpdateItemRow text={row.text} tool={row.tool} />
+              ))}
+            </ul>
+            {rest.length > 0 && (
+              <details class="group mt-2">
+                <summary class="inline-flex min-h-11 cursor-pointer items-center text-sm text-blue-700 hover:underline group-open:hidden dark:text-blue-400">
+                  {t('updates.showMore').replace('{n}', String(rest.length))}
+                </summary>
+                <ul class="list-disc space-y-2 pl-5">
+                  {rest.map((row) => (
+                    <UpdateItemRow text={row.text} tool={row.tool} />
+                  ))}
+                </ul>
+              </details>
+            )}
+          </>
+        )}
+      </li>
+    );
+  })}
 </ol>

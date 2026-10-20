@@ -44,6 +44,23 @@ test.describe('更新情報ページ（日本語版）', () => {
     expect(dates).toEqual(sorted);
   });
 
+  test('項目の多い日は一部が折りたたまれ、展開すると全件が見える', async ({
+    page,
+  }) => {
+    await page.goto('/updates/');
+
+    const entry = page.locator('main ol > li', {
+      hasText: '25個のツールを追加しました',
+    });
+    const details = entry.locator('details');
+    await expect(details).toHaveCount(1);
+    await expect(entry.locator('ul > li')).toHaveCount(25);
+
+    await expect(details.locator('ul')).toBeHidden();
+    await details.locator('summary').click();
+    await expect(details.locator('ul')).toBeVisible();
+  });
+
   test('更新履歴に含まれるツールへのリンクから遷移できる', async ({ page }) => {
     await page.goto('/updates/');
 

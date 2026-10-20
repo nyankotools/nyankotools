@@ -1,0 +1,24 @@
+---
+interface Props {
+  text: string;
+  /** ツール名とリンク先（ツール以外の項目では undefined） */
+  tool?: { name: string; href: string };
+}
+
+const { text, tool } = Astro.props;
+---
+
+<li class="text-gray-800 dark:text-gray-300">
+  {tool && (
+    <>
+      <a
+        href={tool.href}
+        class="font-semibold text-blue-700 underline hover:no-underline dark:text-blue-400"
+      >
+        {tool.name}
+      </a>
+      <span aria-hidden="true"> — </span>
+    </>
+  )}
+  {text}
+</li>

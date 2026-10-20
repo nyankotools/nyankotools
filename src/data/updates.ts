@@ -1,15 +1,25 @@
 import type { Locale } from './tools';
 
+/** 1日の更新内の個別項目。`slug` があればそのツールの説明を上書きし、なければ機能追加などの単独項目になる */
+export interface UpdateItem {
+  /** 紐づくツール（`toolSlugs` に含まれるものだけ指定できる） */
+  slug?: string;
+  translations: Record<Locale, { text: string }>;
+}
+
 export interface UpdateEntry {
   /** YYYY-MM-DD */
   date: string;
-  /** 関連ツールへの内部リンク表示用（存在すれば `src/data/tools.ts` から名前を解決） */
+  /** 追加・更新したツール。表示時に `src/data/tools.ts` からツール名と説明を解決して1件ずつ並べる */
   toolSlugs?: string[];
+  /** 一言の見出し。「N個のツールを追加しました。」程度に短くする */
   translations: Record<Locale, { summary: string }>;
+  /** 任意。ツール説明の上書き（`slug` あり）や、ツール以外の機能追加（`slug` なし）を書く */
+  items?: UpdateItem[];
 }
 
 /** サイト開始日（2026-09-15）以降の更新履歴。ツール追加・主要機能追加のみを対象とし、
- * インフラ・開発ルール整備・軽微な修正などは含めない。新しい更新は末尾に追記する（表示順は日付降順に自動整列）。同じ日付の更新は1エントリにまとめる（`updates.test.ts` が日付の重複を検出する）。 */
+ * インフラ・開発ルール整備・軽微な修正などは含めない。新しい更新は末尾に追記する。ツールの説明は書かず `toolSlugs` に並べる（レジストリの説明が表示される）。表示順は日付降順に自動整列する。同じ日付の更新は1エントリにまとめる（`updates.test.ts` が日付の重複を検出する）。 */
 export const updates: UpdateEntry[] = [
   {
     date: '2026-09-15',
@@ -33,11 +43,11 @@ export const updates: UpdateEntry[] = [
     translations: {
       ja: {
         summary:
-          'にゃんこツールを公開しました。文字数カウント・JSON整形・Base64エンコード/デコードなど15個のツールでスタートし、ダークモード表示と英語版ページにも対応しました。',
+          'にゃんこツールを公開しました。15個のツールでスタートし、ダークモード表示と英語版ページにも対応しました。',
       },
       en: {
         summary:
-          'Launched NyankoTools with 15 tools to start, including Character Counter, JSON Formatter, and Base64 Encoder/Decoder, along with dark mode and an English version of the site.',
+          'Launched NyankoTools with 15 tools to start, along with dark mode and an English version of the site.',
       },
     },
   },
@@ -62,11 +72,11 @@ export const updates: UpdateEntry[] = [
     translations: {
       ja: {
         summary:
-          '機種依存文字チェッカー・正規表現テスター・テキスト差分比較（diff）・JWTデコーダー・ダミーテキスト生成・Cron式スケジュールシミュレーター・和暦⇔西暦変換・年齢計算機など14個のツールを追加し、運営者情報・FAQ・お問い合わせ・利用規約ページとセキュリティヘッダー（CSP）を整備しました。',
+          '14個のツールを追加し、運営者情報・FAQ・お問い合わせ・利用規約ページとセキュリティヘッダー（CSP）を整備しました。',
       },
       en: {
         summary:
-          'Added 14 new tools including the Machine-Dependent Character Checker, Regex Tester, Text Diff Checker, JWT Decoder, Dummy Text Generator, and Age Calculator, plus About, FAQ, Contact, and Terms of Service pages and security headers (CSP).',
+          'Added 14 new tools, plus About, FAQ, Contact, and Terms of Service pages and security headers (CSP).',
       },
     },
   },
@@ -84,12 +94,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          'SQL整形・CSS/JS/HTMLミニファイ＆整形・Chmodパーミッション計算機・CIDR/サブネット計算機・キーコードチェッカー・スクリーンサイズ/Viewportチェッカー・JSON Path/JSON Pointerテスター・TOML⇔JSON/YAML変換を追加しました。',
+        summary: '8個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the SQL Formatter, CSS/JS/HTML Minifier, Chmod Permission Calculator, CIDR/Subnet Calculator, Keycode Checker, Screen Size & Viewport Checker, JSON Path/JSON Pointer Tester, and TOML to JSON/YAML Converter.',
+        summary: 'Added 8 new tools.',
       },
     },
   },
@@ -119,12 +127,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          '割合・比率計算機・BMI計算機・フリーランス手取り計算機・住宅ローン繰り上げ返済比較シミュレーション・資産運用シミュレーション・奨学金返済シミュレーションを追加しました。',
+        summary: '6個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the Ratio & Percentage Calculator, BMI Calculator, Freelancer Take-Home Pay Calculator, Mortgage Prepayment Comparison Calculator, Investment Growth Simulator, and JASSO Student Loan Repayment Simulator.',
+        summary: 'Added 6 new tools.',
       },
     },
   },
@@ -142,11 +148,11 @@ export const updates: UpdateEntry[] = [
     translations: {
       ja: {
         summary:
-          '画像フォーマット変換・画像リサイズ/圧縮・画像のBase64変換・favicon一括生成・EXIF情報表示/削除・画像ドット絵化/モザイク/減色・画像カラーパレット抽出を追加し、ツールのお気に入り登録機能にも対応しました。',
+          '7個のツールを追加し、ツールのお気に入り登録機能にも対応しました。',
       },
       en: {
         summary:
-          'Added the Image Format Converter, Image Resizer & Compressor, Image to Base64 Converter, Favicon Generator, EXIF Viewer & Remover, Pixelate/Mosaic/Color Reduction tool, and Image Color Palette Extractor, plus a favorites feature for bookmarking tools.',
+          'Added 7 new tools, plus a favorites feature for bookmarking tools.',
       },
     },
   },
@@ -165,12 +171,11 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          'SVG最適化・ダミー画像生成・PDF結合/分割/ページ抽出・PDF⇔画像変換・PDF圧縮・PDFページ回転/削除/並び替え・猫ロゴ文字ジェネレーター・PDFパスワード設定・文字コード変換/文字化け診断を追加し、ツールのカテゴリを9分類に整理しました。',
+        summary: '9個のツールを追加し、ツールのカテゴリを9分類に整理しました。',
       },
       en: {
         summary:
-          'Added the SVG Optimizer, Placeholder Image Generator, PDF Merge/Split/Extract, PDF ⇔ Image Converter, PDF Compressor, PDF Page Editor, Cat Logo Text Generator, and PDF Password Protector, plus the Encoding Converter & Mojibake Fixer, and reorganized tool categories into 9 groups.',
+          'Added 9 new tools, and reorganized tool categories into 9 groups.',
       },
     },
   },
@@ -197,12 +202,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          'Webカメラ動作確認・進数変換・CSSグラデーションジェネレーター・CSS box-shadowジェネレーター・CSS border-radiusジェネレーターを追加しました。',
+        summary: '5個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the Webcam & Microphone Test, Base Converter, CSS Gradient Generator, CSS Box-Shadow Generator, and CSS Border-Radius Generator.',
+        summary: 'Added 5 new tools.',
       },
     },
   },
@@ -211,12 +214,10 @@ export const updates: UpdateEntry[] = [
     toolSlugs: ['px-rem-converter', 'contrast-checker', 'meta-tag-generator'],
     translations: {
       ja: {
-        summary:
-          'px⇔rem変換・色のコントラスト比チェッカー（WCAG）・metaタグ・OGPタグ生成を追加しました。',
+        summary: '3個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the px to rem Converter, Color Contrast Checker (WCAG), and Meta Tag & OGP Generator.',
+        summary: 'Added 3 new tools.',
       },
     },
   },
@@ -237,14 +238,124 @@ export const updates: UpdateEntry[] = [
     date: '2026-09-30',
     translations: {
       ja: {
-        summary:
-          'コマンドパレット（Ctrl+K）によるツール検索、キーボードショートカット、「🔒 ブラウザ内完結」バッジ、カテゴリ別一覧ページ、URLクエリでの入力初期値の指定、入力内容の保持（更新・言語切替後も維持）、ページ先頭に戻るボタン、シェア先の追加（Threads・Bluesky・Reddit）、印刷用表示、スキップリンクなどのアクセシビリティ改善を追加しました。各ツールページにも、よくある質問（FAQ）・注意事項・使い方の解説を拡充しています。',
+        summary: '使いやすさと探しやすさを高める機能を追加しました。',
       },
       en: {
-        summary:
-          'Added a command palette (Ctrl+K) for finding tools, keyboard shortcuts, a "🔒 Runs in your browser" badge, category listing pages, pre-filling inputs via URL query, input persistence across reloads and language switches, a back-to-top button, more share targets (Threads, Bluesky, Reddit), print-friendly layouts, and accessibility improvements such as a skip link. Tool pages also gained expanded FAQs, notes, and how-to guides.',
+        summary: 'Added features that make tools easier to find and use.',
       },
     },
+    items: [
+      {
+        translations: {
+          ja: {
+            text: 'コマンドパレット（Ctrl+K）によるツール検索を追加しました。',
+          },
+          en: {
+            text: 'Added a command palette (Ctrl+K) for finding tools.',
+          },
+        },
+      },
+      {
+        translations: {
+          ja: {
+            text: 'キーボードショートカットを追加しました。',
+          },
+          en: {
+            text: 'Added keyboard shortcuts.',
+          },
+        },
+      },
+      {
+        translations: {
+          ja: {
+            text: '「🔒 ブラウザ内完結」バッジを追加しました。',
+          },
+          en: {
+            text: 'Added a "🔒 Runs in your browser" badge.',
+          },
+        },
+      },
+      {
+        translations: {
+          ja: {
+            text: 'カテゴリ別一覧ページを追加しました。',
+          },
+          en: {
+            text: 'Added category listing pages.',
+          },
+        },
+      },
+      {
+        translations: {
+          ja: {
+            text: 'URLクエリで入力の初期値を指定できるようにしました。',
+          },
+          en: {
+            text: 'Added pre-filling inputs via URL query.',
+          },
+        },
+      },
+      {
+        translations: {
+          ja: {
+            text: '入力内容を更新・言語切替後も保持するようにしました。',
+          },
+          en: {
+            text: 'Inputs are now kept across reloads and language switches.',
+          },
+        },
+      },
+      {
+        translations: {
+          ja: {
+            text: 'ページ先頭に戻るボタンを追加しました。',
+          },
+          en: {
+            text: 'Added a back-to-top button.',
+          },
+        },
+      },
+      {
+        translations: {
+          ja: {
+            text: 'シェア先にThreads・Bluesky・Redditを追加しました。',
+          },
+          en: {
+            text: 'Added more share targets (Threads, Bluesky, Reddit).',
+          },
+        },
+      },
+      {
+        translations: {
+          ja: {
+            text: '印刷用表示に対応しました。',
+          },
+          en: {
+            text: 'Added print-friendly layouts.',
+          },
+        },
+      },
+      {
+        translations: {
+          ja: {
+            text: 'スキップリンクなどのアクセシビリティ改善を行いました。',
+          },
+          en: {
+            text: 'Improved accessibility, including a skip link.',
+          },
+        },
+      },
+      {
+        translations: {
+          ja: {
+            text: '各ツールページのよくある質問（FAQ）・注意事項・使い方の解説を拡充しました。',
+          },
+          en: {
+            text: 'Expanded FAQs, notes, and how-to guides on tool pages.',
+          },
+        },
+      },
+    ],
   },
   {
     date: '2026-10-01',
@@ -263,12 +374,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          'cURL→Fetch/Axios変換、JSON→TypeScript型生成、JSON差分比較、バーコード生成、ULID・NanoID生成、パスワード強度チェッカー、ファイルハッシュ計算、SVG→PNG変換、OGP画像ジェネレーター、画像トリミング・回転・反転、画像の背景透過（輪郭付き）を追加しました。',
+        summary: '11個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the cURL to Fetch / Axios Converter, JSON to TypeScript Converter, JSON Diff, Barcode Generator, ULID & NanoID Generator, Password Strength Checker, File Hash Calculator, SVG to PNG Converter, OGP Image Generator, Image Cropper, Rotator & Flipper, and Image Background Remover.',
+        summary: 'Added 11 new tools.',
       },
     },
   },
@@ -313,11 +422,10 @@ export const updates: UpdateEntry[] = [
     translations: {
       ja: {
         summary:
-          'マイクテスト（入力レベル・録音）、キーボードテスト（全キー押下判定）、ドット抜けチェック（色ムラ確認）を追加し、新カテゴリ「ハードウェア」を設けました。あわせて、単位変換、割り勘計算機（端数処理・傾斜割り勘）、基礎代謝・消費カロリー計算機、会社員の手取り計算機、ふるさと納税の上限額シミュレーション、タイムゾーン変換・世界時計、営業日計算（日本の祝日対応）、タイマー・ストップウォッチ・ポモドーロ、漢数字⇔算用数字・大字変換、旧字体⇔新字体変換、マイナンバー・法人番号チェックデジット検証、ローマ字⇔ひらがな変換、英単語カタカナ変換、Unicode装飾文字変換、特殊文字・絵文字一覧、ルーレット・抽選・サイコロ、QRコードリーダー（カメラ・画像）、HEIC→JPEG変換、PDF黒塗り、テキスト暗号化・復号（AES-256-GCM）、HMAC署名生成、TOTPコード生成・検証、bcryptハッシュ生成・照合、X.509証明書デコーダー、SSH鍵フィンガープリント表示、XML⇔JSON変換、.env⇔JSON変換、CSV/TSV→Markdownテーブル変換、HTMLテーブル→CSV変換、JSONツリービューア、JSON Schema生成も追加しました。',
+          '34個のツールを追加し、新カテゴリ「ハードウェア」を設けました。',
       },
       en: {
-        summary:
-          'Added the Microphone Test (level & recording), Keyboard Tester, and Dead Pixel Test, plus a new Hardware category. Also added the Unit Converter, Split Bill Calculator, BMR & Calorie Calculator, Salary Take-Home Pay Calculator, Furusato Nozei Donation Limit Calculator, Time Zone Converter, Japan Business Day Calculator, Timer, Stopwatch & Pomodoro, Kanji Numeral Converter, Kyujitai ⇔ Shinjitai Converter, My Number & Corporate Number Validator, Romaji ⇔ Hiragana Converter, English to Katakana Converter, Unicode Text Decorator, Special Characters & Emoji List, Roulette, Random Picker & Dice, QR Code Reader (Camera & Image), HEIC to JPG Converter, PDF Redactor, Text Encryptor & Decryptor (AES-256-GCM), HMAC Generator, TOTP Code Generator, Bcrypt Hash Generator & Verifier, X.509 Certificate Decoder, SSH Key Fingerprint Viewer, XML to JSON Converter, .env to JSON Converter, CSV/TSV to Markdown Table Converter, HTML Table to CSV Converter, JSON Tree Viewer, and JSON Schema Generator.',
+        summary: 'Added 34 new tools, plus a new Hardware category.',
       },
     },
   },
@@ -337,12 +445,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          '画像結合（縦・横・グリッド）、画像への文字入れ・透かし、GIF作成（連番画像から）、PDFへのページ番号・透かし追加、PDFメタデータ編集、Unicodeエスケープ変換、ゼロ幅文字の検出・除去、読了時間・原稿用紙換算、証明写真作成、カメラ映像からのカラーコード抽出を追加しました。',
+        summary: '10個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the Image Merger, Add Text or Watermark to Image, GIF Maker, PDF Page Numbers & Watermark, PDF Metadata Editor, Unicode Escape / Unescape, Zero-Width Character Remover, Reading Time Calculator, ID Photo Maker, and Camera Color Picker.',
+        summary: 'Added 10 new tools.',
       },
     },
   },
@@ -361,12 +467,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          'ゲームパッドテスト（ボタン・スティック・ドリフト確認）、スピーカーテスト（左右確認・周波数ジェネレーター）、マウステスト（クリック速度・ポーリングレート）、電気代計算機、ダウンロード時間計算機、偏差値・平均・標準偏差計算機、損益分岐点計算機、HTTPヘッダー解析・セキュリティ診断、ダミー個人データ生成を追加しました。',
+        summary: '9個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the Gamepad Tester, Speaker Test (stereo check & tone generator), Mouse Tester (click speed & polling rate), Electricity Cost Calculator, Download Time Calculator, Statistics Calculator, Break-Even Calculator, HTTP Header Analyzer, and Dummy Personal Data Generator.',
+        summary: 'Added 9 new tools.',
       },
     },
   },
@@ -380,12 +484,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          'ZIP作成・解凍（ファイルをまとめる・中身を確認して取り出す）、画面録画（画面・ウィンドウ・タブをブラウザだけで録画して保存）、あみだくじ生成（結果を隠して1人ずつ辿れる・画像保存）、テキストマージツール（2つのバージョンを差分ごとに選んで統合）を追加しました。',
+        summary: '4個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the ZIP Maker & Extractor (bundle files, browse a ZIP and save what you need) the Screen Recorder (record a screen, window or tab in the browser and save it) and the Amidakuji Generator (ghost-leg ladder lottery with hidden results and image saving) and the Text Merge Tool (combine two versions by choosing per difference).',
+        summary: 'Added 4 new tools.',
       },
     },
   },
@@ -402,11 +504,11 @@ export const updates: UpdateEntry[] = [
     translations: {
       ja: {
         summary:
-          'キーペア生成、多段エンコード/デコード・ハッシュ変換チェーン、テキスト一括置換・行操作、OCR対策画像加工、CSP・SRIハッシュ生成、動画・音声変換／トリミング／圧縮を追加しました。あわせて、404ページに猫アクションのミニゲームを追加しました。',
+          '6個のツールを追加し、404ページに猫アクションのミニゲームを追加しました。',
       },
       en: {
         summary:
-          'Added the Key Pair Generator, Multi-Step Encode/Decode & Hash Chain, Find & Replace and Line Tools, OCR-Resistant Image Obfuscator, CSP & SRI Hash Generator, and Video & Audio Converter, Trimmer, Compressor. Also added a cat action minigame to the 404 page.',
+          'Added 6 new tools, plus a cat action minigame on the 404 page.',
       },
     },
   },
@@ -424,12 +526,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          'CSS clamp()計算機、時間計算ツール、燃費・ガソリン代計算機、アスペクト比計算機、ガチャ確率計算機、URLパーサー・クエリ編集、Unicodeコードポイント検索、User-Agent解析を追加しました。',
+        summary: '8個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the CSS clamp() Calculator, Time Calculator, Fuel Cost Calculator, Aspect Ratio Calculator, Gacha Probability Calculator, URL Parser & Query Editor, Unicode Character Inspector, and User-Agent Parser.',
+        summary: 'Added 8 new tools.',
       },
     },
   },
@@ -449,12 +549,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          'チーム分け・グループ分け、ビンゴ抽選機・カード生成、席替え・順番決めツール、おみくじ・今日の運勢、画像モザイク・ぼかし、配色パレットジェネレーター、画像フィルター・色調補正、タイピング速度テスト、反応速度テスト、数独を追加しました。',
+        summary: '10個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the Random Team Generator, Bingo Caller & Card Generator, Seating Chart Randomizer & Order Shuffler, Omikuji (Daily Fortune), Image Blur & Mosaic, Color Palette Generator, Image Filter & Color Adjustment, Typing Speed Test, Reaction Time Test, and Sudoku.',
+        summary: 'Added 10 new tools.',
       },
     },
   },
@@ -469,14 +567,69 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          '文字数カウントにX（Twitter）の文字数判定、Markdown⇔HTML変換にHTML→Markdownの書式オプション、JSON→型定義生成にC#・Go・Python・Javaの出力、PDF→Markdown変換にテキスト出力、タイマー・ストップウォッチに「ぴったりチャレンジ」を追加しました。JSON→型定義生成のURLは /tools/json-to-types/ に変わりました（旧URLは自動で転送されます）。',
+        summary: '5つのツールを更新しました。',
       },
       en: {
-        summary:
-          'Added X (Twitter) character-limit checking to the Character Counter, formatting options for HTML to Markdown, C#, Go, Python and Java output to the JSON to Types Converter, plain-text output to the PDF to Markdown Converter, and an "exact time challenge" mode to the Timer & Stopwatch. The JSON to Types Converter moved to /en/tools/json-to-types/ (the old URL redirects automatically).',
+        summary: 'Updated 5 tools.',
       },
     },
+    items: [
+      {
+        slug: 'char-counter',
+        translations: {
+          ja: {
+            text: 'X（Twitter）の文字数判定に対応しました。',
+          },
+          en: {
+            text: 'Added X (Twitter) character-limit checking.',
+          },
+        },
+      },
+      {
+        slug: 'markdown-preview',
+        translations: {
+          ja: {
+            text: 'HTML→Markdownの書式オプションを追加しました。',
+          },
+          en: {
+            text: 'Added formatting options for HTML to Markdown.',
+          },
+        },
+      },
+      {
+        slug: 'json-to-types',
+        translations: {
+          ja: {
+            text: 'C#・Go・Python・Javaの出力に対応しました。URLが /tools/json-to-types/ に変わりました（旧URLは自動で転送されます）。',
+          },
+          en: {
+            text: 'Added C#, Go, Python and Java output. The URL moved to /en/tools/json-to-types/ (the old URL redirects automatically).',
+          },
+        },
+      },
+      {
+        slug: 'pdf-to-markdown',
+        translations: {
+          ja: {
+            text: 'テキスト出力に対応しました。',
+          },
+          en: {
+            text: 'Added plain-text output.',
+          },
+        },
+      },
+      {
+        slug: 'timer-stopwatch',
+        translations: {
+          ja: {
+            text: '「ぴったりチャレンジ」を追加しました。',
+          },
+          en: {
+            text: 'Added an "exact time challenge" mode.',
+          },
+        },
+      },
+    ],
   },
   {
     date: '2026-10-10',
@@ -491,12 +644,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          'CSV⇔Excel（xlsx）変換を追加しました。Shift_JISのCSVの自動判定、シート選択、BOM付きUTF-8での保存に対応しています。あわせて、CSS Flexbox/Gridジェネレーター、カレンダー生成（月間・年間・印刷用）、動画→GIF変換・フレーム抽出、メトロノーム・BPM測定、ランダム文字列・乱数生成、ファイル種別判定（マジックナンバー）を追加しました。',
+        summary: '7個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the CSV to Excel (XLSX) Converter, which also exports xlsx sheets to CSV, with Shift_JIS detection, sheet selection and UTF-8 BOM output. Also added the CSS Flexbox & Grid Generator, the Printable Calendar Generator, the Video to GIF & Frame Extractor, the Metronome & BPM Tap Tempo Counter, the Random String & Number Generator and the File Type Detector.',
+        summary: 'Added 7 new tools.',
       },
     },
   },
@@ -511,12 +662,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          '画像→ASCIIアート変換を追加しました。横の文字数・文字の種類・明暗の反転を調整し、結果をテキストでコピー・保存できます。あわせて、JSONL（NDJSON）⇔JSON/CSV変換、神経衰弱（記憶力ゲーム）、スライドパズル（15パズル）、2048を追加しました。',
+        summary: '5個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the Image to ASCII Art Converter, with adjustable width, character set and brightness inversion, and copy or .txt download of the result. Also added the JSONL (NDJSON) to JSON / CSV Converter, Memory Match, Sliding Puzzle and 2048.',
+        summary: 'Added 5 new tools.',
       },
     },
   },
@@ -535,12 +684,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          'マインスイーパー・リバーシ（オセロ）・迷路ジェネレーター・ワードサーチ作成・クロスワード作成・色彩感覚テスト・ライフゲーム・お絵かきロジック（ピクロス）・インベーダーゲームを追加しました。マインスイーパーは初級・中級・上級とカスタムに対応し、最初の1手は必ず安全です。リバーシは4段階のCPUと対戦でき、置ける場所のヒントと「待った」に対応しています。迷路ジェネレーターは、マス数と難易度を選んで迷路を作り、解答表示・PNG保存・印刷ができます。ワードサーチ作成は、好きな言葉を隠した言葉探しパズルを作り、答え表示・PNG保存・印刷ができます。クロスワード作成は、答えとヒントを入れるだけでタテ・ヨコのカギ付きのクロスワードを作れます。色彩感覚テストは、わずかに色の違うタイルを選ぶ60秒のゲームで、正解数でランクが決まります。ライフゲームは、セルを配置して再生・1コマ送り・速度調整ができ、グライダーやパルサーなどのプリセットも置けます。お絵かきロジックは、解が1通りの問題を5×5・10×10・15×15から出題し、自分で描いた絵や画像から問題を作ることもできます。インベーダーゲームは、降りてくる猫の隊列を撃ち落とすシューティングで、キーボードとスマホの画面ボタンで遊べ、ステージ進行とベストスコア記録に対応しています。',
+        summary: '9個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added Minesweeper, Reversi (Othello), a Maze Generator, a Word Search Generator, a Crossword Generator, a Color Sense Test, Conway’s Game of Life, Picross and an Invaders Game. Minesweeper has Beginner to Expert and custom boards with a guaranteed-safe first click; Reversi offers four computer levels with legal-move hints and undo; the Maze Generator makes printable mazes with a solution view and PNG download; the Word Search Generator hides your own words in a printable puzzle with an answer key; the Crossword Generator turns answers and clues into a numbered crossword; the Color Sense Test is a 60-second game of spotting the odd color tile; the Game of Life lets you draw cells, play, step and drop in presets such as the glider and Gosper gun; Picross offers single-solution puzzles in three sizes and can turn your own drawing or image into a puzzle; the Invaders Game is a shooter against a descending cat fleet, played with the keyboard or on-screen buttons, with levels and a saved best score.',
+        summary: 'Added 9 new tools.',
       },
     },
   },
@@ -569,12 +716,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          '改行⇔カンマ・区切り文字変換・モールス信号変換・古典暗号変換・ローマ数字変換を追加しました。区切り文字変換は、改行・カンマ・タブ・スペースなどを相互に変換し、空要素・重複の削除や引用符の付与もできます。モールス信号変換は、欧文と和文を双方向に変換し、音や光で再生できます。古典暗号変換は、シーザー暗号・ROT13・ヴィジュネル暗号などに対応し、シーザー暗号の総当たり解読も表示します。ローマ数字変換は、1〜3999の算用数字とローマ数字を相互に変換します。素因数分解・順列組み合わせ計算・GPA計算・画面サイズ計算も追加しました。素因数分解は、約数の一覧や素数判定に加え、複数の整数の最大公約数・最小公倍数も求められます。順列・組み合わせ計算は、nPr・nCr・階乗などを巨大な値でも全桁正確に計算します。GPA計算は、日本の大学や4.0・4.3スケールの成績評価に対応しています。画面サイズ計算は、対角インチと縦横比から幅・高さ、PPI、視聴距離の目安を求めます。誕生日情報・学年早見表・記念日計算・出産予定日計算も追加しました。誕生日情報は、生年月日から干支・星座・誕生石・誕生花・生まれた曜日を調べます。学年早見表は、生年月日と学年を相互に引け、早生まれにも対応しています。記念日計算は、起点日から100日・1000日・周年の日付と残り日数を一覧にし、イベントまでのカウントダウンも表示します。出産予定日計算は、最終月経日や排卵日から予定日と妊娠週数を求めます。CSS text-shadowジェネレーター・CSSグラスモーフィズム・ニューモーフィズムジェネレーター・CSSアニメーションジェネレーターも追加しました。text-shadowは、複数レイヤーの文字影をプレビューしながら作り、ネオンや縁取りのプリセットを使えます。グラスモーフィズム・ニューモーフィズムは、すりガラス風と凹凸のある質感をプリセットから調整できます。CSSアニメーションは、バウンス・フェード・回転などのプリセットとイージング編集で@keyframesを生成します。HTTPステータスコード一覧・MIMEタイプ検索・robots.txt生成・sitemap.xml生成も追加しました。HTTPステータスコード一覧は、コード番号や名称、キーワードで意味・原因・対処を検索できます。MIMEタイプ検索は、拡張子とMIMEタイプを相互に調べられます。robots.txt生成は、クローラー別のAllow/Disallowやsitemap、AIボットのブロックを設定できます。sitemap.xml生成は、URL一覧からlastmodなどを付けたXMLを作り、50,000件を超える場合は自動で分割します。',
+        summary: '19個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the Newline to Comma & Delimiter Converter, Morse Code Translator, Classical Cipher Tool and Roman Numeral Converter. The delimiter converter switches between newlines, commas, tabs and spaces with trimming, de-duplication and quoting; the Morse translator handles English and Japanese Wabun and plays the result as sound or light; the cipher tool covers Caesar, ROT13, Vigenere and Atbash with a brute-force view of every Caesar shift; the Roman numeral converter converts 1–3999 both ways. Also added the Prime Factorization / GCD / LCM Calculator, Permutation & Combination Calculator, GPA Calculator and Screen Size Calculator: the factorization tool lists divisors and checks primality as well as finding the GCD and LCM of several integers; the combinatorics tool computes nPr, nCr and factorials exactly even for huge values; the GPA calculator supports Japanese university grades and 4.0 / 4.3 scales; the screen size calculator turns a diagonal and aspect ratio into width, height, PPI and a viewing distance estimate. Also added Birthday Info, a School Grade Chart, an Anniversary Calculator and a Due Date Calculator: Birthday Info looks up the zodiac animal, star sign, birthstone, birth flower and weekday from a date of birth; the grade chart maps birth dates to Japanese school grades and back, including early-born students; the anniversary calculator lists 100-day, monthly and yearly dates with days remaining plus an event countdown; the due date calculator estimates the due date and pregnancy week from a last period or ovulation date. Also added the CSS Text-Shadow Generator, CSS Glassmorphism & Neumorphism Generator and CSS Animation Generator: the text-shadow tool builds multi-layer text shadows with neon and outline presets; the glassmorphism tool tunes frosted-glass and soft-UI looks from material presets; the animation tool generates @keyframes from presets with cubic-bezier easing and a live preview. Also added the HTTP Status Codes list, MIME Type Lookup, robots.txt Generator and sitemap.xml Generator: the status code list is searchable by number, name or keyword with causes and fixes; the MIME lookup converts between file extensions and MIME types; the robots.txt generator builds per-crawler Allow/Disallow rules, sitemaps and AI bot blocks; the sitemap generator turns a URL list into XML with lastmod, changefreq and priority and splits it automatically past 50,000 URLs.',
+        summary: 'Added 19 new tools.',
       },
     },
   },
@@ -595,12 +740,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          '点字変換を追加しました。ひらがな・カタカナを日本語点字（Unicode点字）に、点字をかなに相互変換でき、濁音・拗音・促音・数符にも対応しています。点字1マスごとの点の番号も確認できます。あわせて数字→英語表記・日本語読み変換も追加し、数字を英語の数詞・序数・小切手表記とひらがなの読みに変換できます。さらにHTMLタグ除去・プレーンテキスト抽出、連番・日付リスト生成、有給休暇の付与日数計算、ランニングペース計算機を追加しました。HTMLタグ除去はスクリプトを実行せずに本文だけを取り出し、連番・日付リスト生成はゼロ埋め・接頭辞・曜日付きの一覧を作成し、有給休暇の付与日数計算は入社日と週の所定労働日数から比例付与を含む日数を算出し、ランニングペース計算機はペース・タイム・予想タイム・心拍ゾーンを求めます。画像関連では、円形・角丸切り抜き、余白追加・正方形化、電子印鑑・日付印ジェネレーター、手書き署名作成を追加しました。切り抜きと余白追加は透過PNGや背景色で保存でき、電子印鑑は丸印・角印・日付印を、署名作成は手書きの署名を透過PNGで書き出します。また、日本の伝統色・和色一覧を追加し、260色以上の色名・読み・HEX・RGBを検索してコピーできます。',
+        summary: '11個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the Japanese Braille Converter. It converts kana to six-dot Japanese braille in Unicode characters and back, handling voiced marks, contracted sounds, the small tsu and number signs, and lists the dot numbers of each cell. Also added the Number to Words Converter, which spells a number out in English, as an ordinal and in check-writing format, with its Japanese reading. Also added the HTML Tag Stripper, Number Sequence & Date List Generator, Paid Leave Days Calculator and Running Pace Calculator: the stripper extracts plain text without executing scripts; the sequence generator builds zero-padded numbers and date lists with weekdays; the paid leave calculator works out grant dates and days, including proportional grants, from a hire date and weekly schedule; the pace calculator converts between distance, time and pace and shows race predictions and heart rate zones. Also added four image tools: the Round Image Cropper (circle and rounded corners), Image Padding (add margins or make an image square), the Hanko & Date Stamp Maker and the Signature Maker, which save transparent PNGs or fill margins with a background color. Also added the Japanese Traditional Colors list, with 260+ color names, readings, HEX and RGB codes you can search and copy.',
+        summary: 'Added 11 new tools.',
       },
     },
   },
@@ -618,12 +761,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          'JWT生成・署名を追加しました。ヘッダー・ペイロード・秘密鍵から、HS256・HS384・HS512のJWTを生成できます。iat・expの自動設定にも対応し、JWTデコーダーと組み合わせてトークンの確認ができます。あわせて、CSV/JSON→SQL INSERT文生成を追加しました。MySQL・PostgreSQL・SQLite向けのINSERT文を、型推定やCREATE TABLE付きで生成できます。さらに、CSVビューアを追加しました。CSVを表で確認しながら、列ソート・キーワード絞り込み・列の並べ替えや削除をして、結果をCSVで再出力できます。加えて、CSS clip-pathジェネレーターを追加しました。プレビュー上の頂点をドラッグして多角形を編集でき、円・楕円・insetや三角形・星・吹き出しなどのプリセットにも対応しています。さらに、SVG波・ブロブジェネレーターを追加しました。セクション区切りの波形や有機的なブロブ図形を、山の数・振幅・ランダム性・色の調整とシード値での再現つきで作成し、SVGやCSS背景としてコピーできます。さらに、色覚シミュレーターを追加しました。画像やカラーコードがP型・D型・T型・全色盲の人にどう見えるかを並べて確認でき、程度の調整やコントラスト比の確認にも対応しています。さらに、画像分割を追加しました。画像を行×列で等分割し、Instagramの9分割や横3分割をZIPでまとめて保存できます。さらに、方眼紙・罫線・原稿用紙の作成を追加しました。A4・B5などの用紙とマス寸法（mm）を指定して、方眼・罫線・ドット方眼を実寸で印刷でき、SVG保存にも対応しています。',
+        summary: '8個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the JWT Generator. It builds HS256, HS384 and HS512 signed JWTs from a header, payload and secret key, with one-click iat and exp, and pairs with the JWT Decoder for inspecting tokens. Also new is the CSV/JSON to SQL INSERT Generator, which builds INSERT statements for MySQL, PostgreSQL and SQLite with type inference and optional CREATE TABLE. The new CSV Viewer shows CSV as a table with column sorting, keyword filtering and column reordering or removal, then exports the result as CSV. The CSS clip-path Generator lets you drag polygon points on a live preview, and also supports circle, ellipse and inset with presets such as triangle, star and speech bubble. The SVG Wave & Blob Generator creates section-divider waves and organic blob shapes with adjustable waves, amplitude, randomness and color, reproducible by seed, and copies them as SVG or a CSS background. The Color Blindness Simulator shows how an image or color code looks with protanopia, deuteranopia, tritanopia and achromatopsia side by side, with adjustable severity and contrast ratios. The Image Splitter cuts an image into a grid of rows and columns, such as the Instagram 3x3 layout, and saves all tiles as one ZIP. The Graph Paper Generator makes printable graph, lined and dot grid sheets in A4, B5, Letter and more with an exact cell size in mm, and can also save them as SVG.',
+        summary: 'Added 8 new tools.',
       },
     },
   },
@@ -640,12 +781,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          'ローン・リボ払い返済シミュレーターとサイズ変換（服・靴・指輪）を追加しました。ローン・リボ払い返済シミュレーターでは、借入額・年率から、元利均等・元金均等・リボ払い（定額方式）の毎月の返済額、総利息・手数料、完済までの期間と月ごとの返済計画表を試算できます。サイズ変換では、レディース・メンズの服・靴・指輪のサイズを日本・US・EU・UKの間で換算できます。さらに、リフレッシュレート測定を追加しました。ブラウザのフレーム間隔から画面のリフレッシュレート（Hz）を実測し、60Hz・120Hz・144Hzなどの近い標準値とフレーム落ちの統計を確認できます。さらに、タッチパネルテストを追加しました。画面をなぞって、同時タッチ数（マルチタッチ）・ドラッグの軌跡・反応しない範囲・勝手に反応するゴースト入力を確認できます。さらに、スネークゲームを追加しました。餌を食べるほど長く速くなる蛇を、矢印キー・WASD・スワイプ・画面ボタンで操作して高得点を目指せます。さらに、.htaccess生成を追加しました。HTTPS強制・wwwの有無の統一・末尾スラッシュ・個別URLの301/302リダイレクト・エラーページ指定を選ぶだけでApache用の.htaccessを生成し、リダイレクトのループや重複の警告と、反映後の確認手順も確認できます。さらに、ASCIIアート文字を追加しました。英数字を、記号で描いた大きな文字（FIGlet形式のテキストバナー）に変換します。Standard・Slant・Doomなど8種の書体と字間の調整に対応し、日本語ドット書体ではひらがな・カタカナ・漢字も変換できます。コードのコメント形式でコピー・保存できます。',
+        summary: '7個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the Loan & Revolving Payment Calculator and the Size Converter. From an amount and annual rate, the calculator estimates the monthly payment, total interest or fees, time to pay off and a month-by-month schedule for amortizing, equal-principal and revolving credit. The Size Converter converts women’s and men’s clothing, shoe and ring sizes between Japan, the US, the EU and the UK. The new Refresh Rate Test measures your screen refresh rate in Hz from browser frame timing and shows the closest standard value such as 60Hz, 120Hz or 144Hz, with jitter and dropped-frame statistics. The new Touch Screen Test lets you swipe the screen to check simultaneous touch points, drag trails, dead zones and ghost touches. The new Snake Game lets you steer a snake that grows longer and faster as it eats, using arrow keys, WASD, swipes or on-screen buttons. The new .htaccess Generator builds Apache rules for forcing HTTPS, www or non-www canonicalization, trailing slashes, per-URL 301/302 redirects and custom error pages, with redirect-loop warnings and a post-deploy checklist. The new ASCII Art Text Generator draws text as large lettering made of plain characters (FIGlet-style banners) in 8 fonts such as Standard, Slant and Doom (one of them a dot font that handles hiragana, katakana and kanji), with adjustable letter spacing and code-comment output you can copy or save.',
+        summary: 'Added 7 new tools.',
       },
     },
   },
@@ -659,12 +798,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          '六曜・旧暦カレンダーを追加しました。月間カレンダーに、各日の六曜（大安・友引・先勝・先負・仏滅・赤口）と旧暦の日付、二十四節気、祝日を表示します。大安などの日に色を付けたり、日付を入れて六曜・旧暦を調べたりでき、結婚式や引っ越しの日取り選びに使えます。1900〜2100年に対応しています。さらに、楽器チューナーを追加しました。マイクの音から音程を検出し、ギター・ベース・ウクレレのプリセットと半音階で、音名と±セントのずれをメーターで確認できます。さらに、落ち物パズルを追加しました。落ちてくるブロックを回転・移動して横一列を揃えて消すパズルで、ホールド・ネクスト表示・落下位置のガイド・ハードドロップに対応し、キーボードでもスマホの画面ボタンでも遊べます。さらに、請求書・見積書・領収書・納品書作成を追加しました。宛先・明細・発行者情報を入力すると、インボイス制度（適格請求書）の記載事項に沿った書類を作れます。登録番号の表示、税率（10%・8%）ごとの消費税の集計、端数処理の選択に対応し、印刷画面から「PDFに保存」できます。',
+        summary: '4個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the Rokuyo & Lunar Calendar. A monthly calendar shows each day’s rokuyo (Taian, Tomobiki, Sensho, Senbu, Butsumetsu, Shakko), lunar date, 24 solar terms and Japanese holidays. Highlight lucky days such as Taian or look up any date from 1900 to 2100 to help pick a day for a wedding or a move. The new Instrument Tuner detects pitch from your microphone and shows the note and cents off pitch on a meter, with presets for guitar, bass and ukulele plus a chromatic mode. The new Falling Block Puzzle lets you rotate and stack falling blocks to clear lines, with hold, a next-block preview, a landing guide and hard drop, playable with the keyboard or on-screen buttons. The new Invoice, Quotation, Receipt & Delivery Note Generator builds documents in Japan’s qualified invoice layout from the recipient, line items and your details, with the registration number, consumption tax totals per rate (10% / 8%) and a choice of rounding, and lets you save them as PDF from the print dialog.',
+        summary: 'Added 4 new tools.',
       },
     },
   },
@@ -686,12 +823,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          '単語・文字の出現頻度カウントを追加しました。日本語は文字単位、英語は単語単位で出現回数と割合をランキング表示し、上位N件の絞り込みとCSV出力に対応しています。さらに、Unicode正規化を追加しました。NFC・NFD・NFKC・NFKDへ変換でき、Macのファイル名で起きる濁点の分離も直せます。さらに、メール・URL・電話番号の一括抽出を追加しました。文章からメールアドレス・URL・電話番号・日付などをまとめて抜き出し、重複も除去します。さらに、インデント変換を追加しました。行頭のインデントをタブとスペースで相互に変換し、幅も変更できます。さらに、罫線表（ASCII・Unicode）作成を追加しました。CSVやExcelの表を全角幅も考慮した罫線表に整形します。さらに、シェル・正規表現・SQL・CSV・JSON文字列のエスケープを追加しました。さらに、URLスラッグ生成を追加しました。日本語のタイトルをローマ字のスラッグに変換します。さらに、暗記シート作成を追加しました。`**` で囲んだ語を赤シートで隠せます。さらに、縦書き変換を追加しました。句読点や括弧を縦書き用の字形にし、縦書きプレビューも見られます。さらに、Base32/58/62/85・16進の変換を追加しました。さらに、テキスト⇔2進数・16進数変換を追加しました。UTF-8・UTF-16・Shift_JISのバイト列で確認できます。さらに、チェックサム計算を追加しました。CRC-32・Adler-32・Fletcherなどをテキストやファイルから計算します。',
+        summary: '12個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the Word Frequency Counter, which ranks how often each word or character appears with counts and percentages, with a top-N limit and CSV export. The new Unicode Normalizer converts text to NFC, NFD, NFKC or NFKD and fixes decomposed dakuten from macOS filenames. The new Text Extractor pulls emails, URLs, phone numbers and dates out of text and removes duplicates. The new Indent Converter switches leading indentation between tabs and spaces and changes the indent width. The new ASCII Table Generator formats CSV or Excel cells into a box-drawing text table. The new Code String Escaper escapes and unescapes strings for shell, regex, SQL, CSV and JSON. The new URL Slug Generator turns titles, including Japanese, into clean slugs. The new Memorization Sheet Maker hides terms wrapped in ** like a red study sheet. The new Vertical Text Converter turns horizontal Japanese into vertical text with a vertical preview. The new Base32/58/62/85 & Hex Encoder encodes and decodes text in those formats. The new Text to Binary / Hex Converter shows UTF-8, UTF-16 or Shift_JIS bytes in binary, octal or hex. The new Checksum Calculator computes CRC-32, Adler-32 and Fletcher checksums of text or files.',
+        summary: 'Added 12 new tools.',
       },
     },
   },
@@ -721,12 +856,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          'Punycode変換を追加しました。日本語ドメイン（IDN）とxn--形式を相互に変換します。さらに、JSON5⇔JSON変換を追加しました。コメントや末尾カンマ、クォート無しキーのあるデータをJSONにできます。さらに、Markdownテーブルエディタを追加しました。表をセル編集し、整形したMarkdownで出力できます。さらに、じゃんけんゲームを追加しました。CPUと対戦して連勝記録に挑戦できます。さらに、IPアドレス変換を追加しました。IPv4を10進・16進・2進に変換し、IPv6を短縮・展開できます。さらに、セマンティックバージョン比較・範囲判定を追加しました。^や~などの範囲式に対する適合を確認できます。さらに、JSON-LD構造化データ生成を追加しました。FAQ・記事・商品・パンくずリストをフォームから作れます。さらに、UTMビルダーを追加しました。UTMパラメータ付きURLをプリセットや一括生成で作成できます。さらに、.htpasswd生成を追加しました。Basic認証用のbcrypt/SHA-1行とAuthorizationヘッダーを作れます。さらに、nginxリダイレクト設定生成を追加しました。HTTPS強制やwww統一、個別の301/302を出力します。さらに、ポート番号一覧・検索を追加しました。番号・範囲・サービス名で調べられます。さらに、HTMLテーブル生成を追加しました。セル結合やCSS付きでtableタグを作成できます。さらに、日付フォーマット文字列ビルダーを追加しました。例文からstrftimeやJava・PHPなどの書式を生成し相互変換します。さらに、正規表現パターン集を追加しました。郵便番号や電話番号など日本向けのパターンをコピーできます。さらに、ビット演算計算機を追加しました。AND・OR・XOR・シフトなどを2進・10進・16進で可視化します。さらに、浮動小数点（IEEE 754）ビット表示を追加しました。float32/float64のビット列と0.1+0.2の誤差を確認できます。さらに、クリップボード内容確認を追加しました。貼り付けたデータのMIME種別・HTMLソース・画像を一覧で確認できます。さらに、Snowflake ID・ObjectID・UUID生成時刻デコードを追加しました。IDから生成時刻と構成要素を読み取り、一括デコードにも対応します。さらに、OSSライセンス文生成を追加しました。MIT・Apache-2.0・BSDなどを著作者名と年つきで作れます。さらに、ディレクトリツリー図作成を追加しました。インデントで書いた構成を├──のツリー図に変換し、逆変換もできます。',
+        summary: '20個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the Punycode Converter, which converts internationalized domain names to xn-- form and back. The new JSON5 ⇔ JSON Converter turns data with comments, trailing commas and unquoted keys into JSON. The new Markdown Table Editor lets you edit a table cell by cell and copy neatly padded Markdown. The new Rock Paper Scissors Game lets you play the CPU and chase a win streak. Added the IP Address Converter, which converts IPv4 to decimal, hex and binary and compresses or expands IPv6. The new Semver Calculator compares versions and checks them against ranges such as ^ and ~. The new JSON-LD Generator builds FAQ, Article, Product and BreadcrumbList structured data from a form. The new UTM Builder creates campaign URLs with presets and bulk generation. The new Htpasswd Generator creates bcrypt or SHA-1 lines for Basic auth plus Authorization headers. The new nginx Redirect Generator outputs forced HTTPS, www canonical and 301/302 redirects. The new Port Number List & Search looks up ports by number, range or service name. The new HTML Table Generator builds table markup with merged cells and CSS. The new Date Format String Builder generates and converts strftime, Java and PHP formats from a sample. The new Regex Pattern Library offers copy-ready patterns for Japanese postal codes, phone numbers and more. The new Bitwise Calculator shows AND, OR, XOR and shifts in binary, decimal and hex. The new IEEE 754 Float Viewer shows float32/float64 bits and the 0.1+0.2 error. The new Clipboard Inspector lists the MIME types, HTML source and images of pasted data. The new Snowflake ID, ObjectID & UUID Timestamp Decoder reads creation times and parts from IDs, with batch decoding. The new Open Source License Generator creates MIT, Apache-2.0, BSD and other license text with your name and year. The new Directory Tree Diagram Generator turns an indented folder list into a ├── tree and back.',
+        summary: 'Added 20 new tools.',
       },
     },
   },
@@ -761,12 +894,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary:
-          'CSS filterジェネレーターを追加しました。blurやgrayscale、drop-shadowなどをプレビューしながら組み立てられます。さらに、CSS transformジェネレーターを追加しました。移動・回転・拡大縮小・傾き・3D回転をプレビュー付きで生成します。さらに、CSS詳細度計算機を追加しました。複数のセレクタの詳細度を比較し、優先されるものを判定します。さらに、CSSボタン・トグルスイッチ・三角形ジェネレーターを追加しました。テーマ色とホバー効果を指定してHTMLとCSSを作れます。さらに、CSSパターン背景ジェネレーターを追加しました。ストライプ・ドット・チェック柄をCSSグラデーションやSVGで生成します。さらに、mailto・tel・SMSリンク生成を追加しました。件名・本文・CC付きのURLエンコード済みリンクとHTMLアンカーを作れます。さらに、ICSファイル作成を追加しました。繰り返し・リマインダー・終日に対応した.icsとGoogleカレンダー追加リンクを作れます。さらに、vCard作成を追加しました。連絡先の.vcfファイルとQRコードを作成できます。さらに、計算ドリル作成を追加しました。四則演算のドリルと答えシートを実寸で印刷できます。さらに、封筒宛名印刷を追加しました。長形3号・洋形の封筒に宛名と郵便番号枠を縦書きで印刷できます。さらに、パスフレーズ生成（Diceware）を追加しました。EFFワードリストから覚えやすく強いパスフレーズを作れます。さらに、SPF・DMARCレコード生成・チェックを追加しました。TXTレコードを組み立て、既存レコードの構文も確認できます。さらに、メールヘッダー解析を追加しました。Receivedの経路と遅延、SPF・DKIM・DMARCの判定を確認できます。さらに、画像比較スライダーを追加しました。2枚の画像をドラッグで見比べ、並置画像を保存できます。さらに、画像に枠・フレームを付けるツールを追加しました。ポラロイド風や額縁風などの枠を写真に付けられます。さらに、グラデーション壁紙・背景画像生成を追加しました。解像度を指定してPNG・JPEGで保存できます。さらに、デバイスモックアップ作成を追加しました。スクリーンショットをスマホ・PC・ブラウザの枠にはめ込めます。さらに、アバター・アイコン作成を追加しました。イニシャルやidenticonのアイコンをPNGで保存できます。さらに、Tailwindカラースケール生成を追加しました。基準色から50〜950の色段階を作れます。さらに、ドット絵エディタを追加しました。ブラウザで描いて透過PNGで保存できます。さらに、スクリーンショット注釈を追加しました。矢印・枠・番号・テキストを書き込んでPNGで保存できます。さらに、音声の速度・ピッチ変更を追加しました。再生速度とキーを変えてWAVで保存できます。さらに、ノイズジェネレーターを追加しました。ホワイト・ピンク・ブラウンノイズをタイマー付きで再生します。さらに、バーチャルピアノを追加しました。PCのキーボードやタッチで演奏できます。さらに、モザイクを自然な色面に置換するツールを追加しました。ブロックサイズを自動検出し、周囲の色となじませます。',
+        summary: '25個のツールを追加しました。',
       },
       en: {
-        summary:
-          'Added the CSS Filter Generator, which builds blur, grayscale, drop-shadow and other filters with a live preview. The new CSS Transform Generator creates translate, rotate, scale, skew and 3D transforms with a preview. The new CSS Specificity Calculator compares selector specificity and shows which rule wins. The new CSS Button & Toggle Switch Generator creates HTML and CSS for buttons, toggles and triangles with your theme color and hover effect. The new CSS Pattern Background Generator creates stripe, dot and checkerboard backgrounds as CSS gradients or SVG. The new mailto, tel & SMS Link Generator builds encoded links with subject, body and CC, plus an HTML anchor. The new ICS File Generator creates .ics files and Google Calendar links with recurrence, reminders and all-day events. The new vCard Generator creates a .vcf contact file and a contact QR code. The new Math Drill Generator prints addition, subtraction, multiplication and division worksheets with an answer sheet. The new Envelope Address Printer prints addresses and postal code boxes on Japanese envelopes at true size, vertically or horizontally. The new Passphrase Generator (Diceware) builds memorable passphrases from the EFF wordlist. The new SPF & DMARC Record Generator builds TXT records and checks existing ones. The new Email Header Analyzer traces the Received path and delays and reads SPF, DKIM and DMARC results. The new Image Compare Slider lets you drag to compare two images and save a side-by-side PNG. The new Image Frame Maker adds Polaroid, picture-frame and rounded frames to photos. The new Gradient Wallpaper Generator saves gradient backgrounds as PNG or JPEG at the resolution you choose. The new Device Mockup Generator puts screenshots into phone, laptop and browser frames. The new Avatar Generator saves initials or identicon avatars as PNG. The new Tailwind Color Scale Generator builds a 50-950 scale from one base color. The new Pixel Art Editor lets you draw in the browser and save a transparent PNG. The new Screenshot Annotator adds arrows, boxes, numbered badges and text, then saves a PNG. The new Audio Speed & Pitch Changer changes tempo and key and saves a WAV. The new Noise Generator plays white, pink or brown noise with a timer. The new Virtual Piano plays from your computer keyboard or touch. The new Mosaic to Smooth Gradient tool replaces a mosaic with a smooth color blend, auto-detecting the block size.',
+        summary: 'Added 25 new tools.',
       },
     },
   },

@@ -1,6 +1,6 @@
 import { test, expect, type Page } from './helpers/test';
 
-// サイドバー上部（ロゴ・言語/テーマ切替・検索ボタン）の固定と、サイドバーのスクロール周りのCSSを確認する。
+// サイドバー上部（ロゴ・検索ボタン）の固定と、サイドバーのスクロール周りのCSSを確認する。
 // 上部は Layout.astro で `[@media(min-height:600px)]:sticky top-0` が付いた要素で、
 // 画面高さ600px未満では固定されず、通常のフローとしてリストと一緒にスクロールする。
 // 固定される要素はスクロール要素 #sidebar 自身の中の要素なので、#sidebar のスクロールに追従する。
@@ -11,7 +11,7 @@ async function setTheme(page: Page, theme: 'light' | 'dark') {
   await page.addInitScript((t) => localStorage.setItem('theme', t), theme);
 }
 
-// 上部ブロックの「サイドバー上端からのずれ」と、検索/テーマ切替が
+// 上部ブロックの「サイドバー上端からのずれ」と、検索ボタンが
 // サイドバーの表示領域に入っているかを返す
 function measureHeader(page: Page) {
   return page.evaluate(() => {
@@ -21,7 +21,7 @@ function measureHeader(page: Page) {
     const sr = sidebar.getBoundingClientRect();
     const hr = header.getBoundingClientRect();
     const switcher = document
-      .getElementById('theme-switcher')
+      .querySelector('[data-palette-open]')
       ?.getBoundingClientRect();
     return {
       dTop: hr.top - sr.top,
@@ -46,7 +46,7 @@ test.describe('サイドバー上部の固定（デスクトップ・高さ768px
     const header = page.locator(HEADER);
 
     await expect(header).toHaveCSS('position', 'sticky');
-    await expect(header.locator('#theme-switcher')).toBeVisible();
+    await expect(header.locator('[data-palette-open]')).toBeVisible();
 
     // 固定が意味を持つには、リストが実際にスクロールできる必要がある
     const overflow = await sidebar.evaluate(
@@ -61,7 +61,7 @@ test.describe('サイドバー上部の固定（デスクトップ・高さ768px
       el.scrollTop = el.scrollHeight;
     });
 
-    // スクロールされたあとも上部はサイドバーの先頭に留まり、検索/テーマ切替が見えたまま
+    // スクロールされたあとも上部はサイドバーの先頭に留まり、検索ボタンが見えたまま
     await expect
       .poll(async () => (await measureHeader(page))?.scrollTop ?? 0)
       .toBeGreaterThan(100);

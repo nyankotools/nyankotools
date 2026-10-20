@@ -150,6 +150,10 @@ const slugs = [
   'noise-generator',
   'virtual-piano',
   'mosaic-smoother',
+  'audio-merger',
+  'bpm-delay-calculator',
+  'noise-meter',
+  'screen-ruler',
 ];
 
 const locales = [

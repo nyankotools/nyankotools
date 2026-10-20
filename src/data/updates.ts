@@ -901,6 +901,23 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-21',
+    toolSlugs: [
+      'audio-merger',
+      'bpm-delay-calculator',
+      'noise-meter',
+      'screen-ruler',
+    ],
+    translations: {
+      ja: {
+        summary: '4個のツールを追加しました。',
+      },
+      en: {
+        summary: 'Added 4 new tools.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

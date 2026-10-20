@@ -10248,6 +10248,165 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'audio-merger',
+    category: 'media',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['audio-speed-changer', 'media-converter', 'noise-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '音声ファイル結合・フェード',
+        keywords: [
+          '音声結合',
+          '音声連結',
+          'オーディオ結合',
+          'クロスフェード',
+          'フェードイン',
+          'フェードアウト',
+          'mp3結合',
+          'WAV',
+        ],
+        description:
+          '複数の音声ファイルを並べ替えて連結し、クロスフェード・無音のすき間・フェードイン/アウトを付けて試聴、WAVで保存。ブラウザ完結。',
+      },
+      en: {
+        name: 'Audio Merger',
+        keywords: [
+          'merge audio',
+          'join audio files',
+          'combine mp3',
+          'concatenate audio',
+          'crossfade',
+          'fade in',
+          'fade out',
+          'WAV',
+        ],
+        description:
+          'Join several audio files into one with reordering, crossfades, silent gaps and fade in/out. Preview and save as WAV in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'bpm-delay-calculator',
+    category: 'media',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['metronome-bpm', 'instrument-tuner', 'noise-generator'],
+    translations: {
+      ja: {
+        name: 'BPMディレイタイム計算',
+        keywords: [
+          'BPM',
+          'ディレイ',
+          'ディレイタイム',
+          'リバーブ',
+          'プリディレイ',
+          '付点',
+          '3連符',
+          'テンポ同期',
+        ],
+        description:
+          'BPMから音符別のディレイタイム(ms・Hz)とリバーブのプリディレイ/ディケイの目安を計算。タップテンポ付き',
+      },
+      en: {
+        name: 'BPM to Delay Time Calculator',
+        keywords: [
+          'bpm to ms',
+          'delay time',
+          'reverb pre-delay',
+          'dotted note',
+          'triplet',
+          'tempo sync',
+          'tap tempo',
+        ],
+        description:
+          'Convert BPM to delay times in ms and Hz per note value, plus reverb pre-delay and decay guides.',
+      },
+    },
+  },
+  {
+    slug: 'noise-meter',
+    category: 'hardware',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['mic-tester', 'speaker-tester', 'instrument-tuner'],
+    sensitive: true,
+    needsCamera: true,
+    translations: {
+      ja: {
+        name: '騒音計（マイクで音量dBを測る）',
+        keywords: [
+          '騒音計',
+          '騒音測定',
+          '音量',
+          'デシベル',
+          'dB',
+          '音量計',
+          'マイク',
+        ],
+        description:
+          'マイクで周囲の騒音レベルをdBの目安で表示します。現在値・最大・平均とグラフ、騒音の目安表つき。音声は録音も送信もされません。',
+      },
+      en: {
+        name: 'Noise Meter (Sound Level in dB)',
+        keywords: [
+          'noise meter',
+          'sound level meter',
+          'decibel meter',
+          'db meter',
+          'noise level',
+          'loudness',
+        ],
+        description:
+          'Measure ambient noise in approximate dB with your microphone. Shows current, max and average levels, a graph and a noise guide. Nothing is recorded.',
+      },
+    },
+  },
+  {
+    slug: 'screen-ruler',
+    category: 'hardware',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: [
+      'screen-size-calculator',
+      'refresh-rate-tester',
+      'dead-pixel-checker',
+    ],
+    translations: {
+      ja: {
+        name: '画面定規（cm・インチの実寸）',
+        keywords: [
+          '定規',
+          'ものさし',
+          '実寸',
+          'cm',
+          'インチ',
+          'クレジットカード',
+          '校正',
+          '画面で測る',
+        ],
+        description:
+          '画面に実寸のcm・インチ定規を表示。クレジットカードに枠を合わせて画面の大きさを校正でき、横・縦の切り替えにも対応。',
+      },
+      en: {
+        name: 'Screen Ruler (cm / inch, actual size)',
+        keywords: [
+          'ruler',
+          'on-screen ruler',
+          'actual size',
+          'cm ruler',
+          'inch ruler',
+          'credit card',
+          'calibrate',
+          'measure',
+        ],
+        description:
+          'Show an actual-size cm and inch ruler on screen. Calibrate it by matching the frame to a credit card; horizontal and vertical modes.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

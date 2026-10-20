@@ -1,0 +1,433 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { noiseMeterContent } from '../../i18n/tools/noise-meter';
+import {
+  DEFAULT_OFFSET,
+  MAX_OFFSET,
+  MIN_OFFSET,
+  NOISE_BANDS,
+} from '../../lib/tools/noise-meter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = noiseMeterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="nm-root"
+    data-start-label={t.startLabel}
+    data-stop-label={t.stopLabel}
+    data-band-prefix={t.currentBandPrefix}
+    data-default-offset={DEFAULT_OFFSET}
+    data-error-permission-denied={t.errors['permission-denied']}
+    data-error-not-found={t.errors['not-found']}
+    data-error-in-use={t.errors['in-use']}
+    data-error-constraints={t.errors.constraints}
+    data-error-insecure={t.errors.insecure}
+    data-error-unsupported={t.errors.unsupported}
+    data-error-unknown={t.errors.unknown}
+  >
+    <button id="nm-toggle" type="button" class="ui-btn-primary h-12">
+      {t.startLabel}
+    </button>
+    <p id="nm-error" hidden role="alert" class="ui-error mt-4 max-w-2xl"></p>
+    <p id="nm-idle" class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+      {t.idleMessage}
+    </p>
+
+    <div id="nm-display" class="mt-4 max-w-2xl">
+      <p class="text-gray-700 dark:text-gray-300">
+        <span class="text-sm">{t.currentLabel}</span>
+        <span id="nm-current" class="ml-2 text-5xl font-bold tabular-nums">
+          -
+        </span>
+        <span class="ml-1 text-sm">{t.unit}</span>
+      </p>
+      <p
+        id="nm-band"
+        role="status"
+        class="mt-1 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+      ></p>
+      <div
+        id="nm-bar"
+        role="meter"
+        aria-label={t.meterAriaLabel}
+        aria-valuemin="0"
+        aria-valuemax="130"
+        aria-valuenow="0"
+        class="mt-2 h-4 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800"
+      >
+        <div
+          id="nm-bar-fill"
+          class="h-full w-0 bg-green-600 transition-[width] duration-100"
+        ></div>
+      </div>
+      <dl class="mt-3 grid grid-cols-2 gap-3 text-sm">
+        <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+          <dt class="text-gray-600 dark:text-gray-400">{t.maxLabel}</dt>
+          <dd class="text-2xl font-bold tabular-nums">
+            <span id="nm-max">-</span>
+            <span class="text-sm font-normal">{t.unit}</span>
+          </dd>
+        </div>
+        <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+          <dt class="text-gray-600 dark:text-gray-400">{t.avgLabel}</dt>
+          <dd class="text-2xl font-bold tabular-nums">
+            <span id="nm-avg">-</span>
+            <span class="text-sm font-normal">{t.unit}</span>
+          </dd>
+        </div>
+      </dl>
+      <button id="nm-reset" type="button" class="ui-btn mt-3">
+        {t.resetLabel}
+      </button>
+    </div>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.graphHeading}</h2>
+    <div class="max-w-2xl text-blue-700 dark:text-blue-400">
+      <svg
+        id="nm-graph"
+        role="img"
+        aria-label={t.graphAriaLabel}
+        viewBox="0 0 240 100"
+        preserveAspectRatio="none"
+        class="h-32 w-full rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900"
+      >
+        {[30, 60, 90].map((db) => (
+          <line
+            x1="0"
+            x2="240"
+            y1={100 - (db / 130) * 100}
+            y2={100 - (db / 130) * 100}
+            stroke="currentColor"
+            stroke-opacity="0.2"
+            stroke-width="1"
+            vector-effect="non-scaling-stroke"
+            class="text-gray-500"
+          ></line>
+        ))}
+        <polyline
+          id="nm-graph-line"
+          points=""
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linejoin="round"
+          vector-effect="non-scaling-stroke"
+        ></polyline>
+      </svg>
+    </div>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.graphHint}</p>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.offsetHeading}</h2>
+    <p class="mb-3 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
+      {t.offsetHint}
+    </p>
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label for="nm-offset" class="ui-label">
+          {t.offsetLabel}
+        </label>
+        <input
+          id="nm-offset"
+          type="number"
+          inputmode="decimal"
+          min={MIN_OFFSET}
+          max={MAX_OFFSET}
+          step="1"
+          value={DEFAULT_OFFSET}
+          class="ui-input h-11 w-28"
+        />
+      </div>
+      <div>
+        <label for="nm-reference" class="ui-label">
+          {t.referenceLabel}
+        </label>
+        <input
+          id="nm-reference"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          max="130"
+          step="1"
+          class="ui-input h-11 w-28"
+        />
+      </div>
+      <button id="nm-apply" type="button" disabled class="ui-btn h-11">
+        {t.applyReferenceLabel}
+      </button>
+    </div>
+    <p class="mt-2 max-w-2xl text-xs text-gray-500 dark:text-gray-400">
+      {t.referenceHint}
+    </p>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.tableHeading}</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[420px] border-collapse text-sm">
+        <thead>
+          <tr class="border-b border-gray-300 text-left dark:border-gray-700">
+            <th class="py-2 pr-3 font-medium">{t.tableRangeHeader}</th>
+            <th class="py-2 pr-3 font-medium">{t.tableLevelHeader}</th>
+            <th class="py-2 font-medium">{t.tableExampleHeader}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {NOISE_BANDS.map(({ band }) => (
+            <tr
+              data-band={band}
+              class="border-b border-gray-100 dark:border-gray-800"
+            >
+              <td class="py-2 pr-3 whitespace-nowrap tabular-nums">
+                {t.bands[band].range}
+              </td>
+              <td class="py-2 pr-3" data-level>
+                {t.bands[band].level}
+              </td>
+              <td class="py-2 text-gray-700 dark:text-gray-300">
+                {t.bands[band].example}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    DEFAULT_OFFSET,
+    addSample,
+    averageDbfs,
+    calculateRmsDbfs,
+    classifyNoise,
+    clampOffset,
+    createStats,
+    formatDb,
+    historyToPoints,
+    offsetForReference,
+    pushHistory,
+    toDisplayDb,
+  } from '../../lib/tools/noise-meter';
+  import {
+    classifyMediaError,
+    type MediaErrorKind,
+  } from '../../lib/tools/webcam-tester';
+
+  const root = document.getElementById('nm-root')!;
+  const d = root.dataset;
+  const toggleButton = document.getElementById(
+    'nm-toggle',
+  ) as HTMLButtonElement;
+  const errorEl = document.getElementById('nm-error')!;
+  const idleEl = document.getElementById('nm-idle')!;
+  const currentEl = document.getElementById('nm-current')!;
+  const bandEl = document.getElementById('nm-band')!;
+  const barEl = document.getElementById('nm-bar')!;
+  const barFill = document.getElementById('nm-bar-fill')!;
+  const maxEl = document.getElementById('nm-max')!;
+  const avgEl = document.getElementById('nm-avg')!;
+  const resetButton = document.getElementById('nm-reset') as HTMLButtonElement;
+  const graphLine = document.getElementById('nm-graph-line')!;
+  const offsetInput = document.getElementById('nm-offset') as HTMLInputElement;
+  const referenceInput = document.getElementById(
+    'nm-reference',
+  ) as HTMLInputElement;
+  const applyButton = document.getElementById('nm-apply') as HTMLButtonElement;
+  const bandRows = [...document.querySelectorAll<HTMLElement>('tr[data-band]')];
+
+  const ERROR_TEXT: Record<MediaErrorKind, string> = {
+    'permission-denied': d.errorPermissionDenied ?? '',
+    'not-found': d.errorNotFound ?? '',
+    'in-use': d.errorInUse ?? '',
+    constraints: d.errorConstraints ?? '',
+    insecure: d.errorInsecure ?? '',
+    unsupported: d.errorUnsupported ?? '',
+    unknown: d.errorUnknown ?? '',
+  };
+
+  // 表示の更新間隔、グラフの記録間隔、グラフに残す点数（250ms x 120 = 30秒）
+  const DISPLAY_INTERVAL_MS = 150;
+  const GRAPH_INTERVAL_MS = 250;
+  const GRAPH_POINTS = 120;
+  const HIGHLIGHT = ['bg-blue-50', 'dark:bg-blue-950'];
+
+  let stream: MediaStream | null = null;
+  let audioContext: AudioContext | null = null;
+  let active = false;
+  let sessionId = 0;
+  let frame = 0;
+  let stats = createStats();
+  // グラフはオフセット変更に追従できるよう dBFS で持つ
+  let history: number[] = [];
+  let lastDbfs: number | null = null;
+
+  function offset(): number {
+    const raw = offsetInput.value.trim();
+    return raw === '' ? DEFAULT_OFFSET : clampOffset(Number(raw));
+  }
+
+  function show(dbfs: number | null): string {
+    return dbfs === null ? '-' : formatDb(toDisplayDb(dbfs, offset()));
+  }
+
+  function renderGraph() {
+    const o = offset();
+    graphLine.setAttribute(
+      'points',
+      historyToPoints(
+        history.map((v) => toDisplayDb(v, o)),
+        GRAPH_POINTS,
+        240,
+        100,
+      ),
+    );
+  }
+
+  function renderBand(dbfs: number | null) {
+    let band = '';
+    if (dbfs !== null) band = classifyNoise(toDisplayDb(dbfs, offset()));
+    let label = '';
+    bandRows.forEach((row) => {
+      const on = row.dataset.band === band;
+      HIGHLIGHT.forEach((c) => row.classList.toggle(c, on));
+      if (on) {
+        label = `${d.bandPrefix ?? ''}: ${row.querySelector('[data-level]')?.textContent?.trim() ?? ''}`;
+      }
+    });
+    bandEl.textContent = label;
+  }
+
+  function render() {
+    const current = lastDbfs;
+    currentEl.textContent = show(current);
+    maxEl.textContent = show(stats.maxDbfs);
+    avgEl.textContent = show(averageDbfs(stats));
+    const value = current === null ? 0 : toDisplayDb(current, offset());
+    barFill.style.width = `${(value / 130) * 100}%`;
+    barEl.setAttribute('aria-valuenow', String(Math.round(value)));
+    renderBand(current);
+    renderGraph();
+  }
+
+  function clearDisplay() {
+    lastDbfs = null;
+    stats = createStats();
+    history = [];
+    render();
+  }
+
+  function showError(kind: MediaErrorKind) {
+    errorEl.textContent = ERROR_TEXT[kind];
+    errorEl.hidden = false;
+  }
+
+  function stopAll() {
+    sessionId++;
+    cancelAnimationFrame(frame);
+    stream?.getTracks().forEach((track) => track.stop());
+    stream = null;
+    void audioContext?.close();
+    audioContext = null;
+    active = false;
+    toggleButton.textContent = d.startLabel ?? '';
+    idleEl.hidden = false;
+    applyButton.disabled = true;
+  }
+
+  function startMeter(mediaStream: MediaStream, id: number) {
+    const ctx = new AudioContext();
+    void ctx.resume();
+    audioContext = ctx;
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 2048;
+    // 出力（destination）には繋がない。繋ぐとハウリングする
+    ctx.createMediaStreamSource(mediaStream).connect(analyser);
+    const samples = new Float32Array(analyser.fftSize);
+    let lastDisplay = 0;
+    let lastGraph = 0;
+    const tick = () => {
+      if (id !== sessionId) return;
+      analyser.getFloatTimeDomainData(samples);
+      const dbfs = calculateRmsDbfs(samples);
+      lastDbfs = dbfs;
+      stats = addSample(stats, dbfs);
+      const now = performance.now();
+      if (now - lastGraph >= GRAPH_INTERVAL_MS) {
+        lastGraph = now;
+        history = pushHistory(history, dbfs, GRAPH_POINTS);
+      }
+      if (now - lastDisplay >= DISPLAY_INTERVAL_MS) {
+        lastDisplay = now;
+        render();
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    tick();
+  }
+
+  async function start() {
+    stopAll();
+    errorEl.hidden = true;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showError(window.isSecureContext ? 'unsupported' : 'insecure');
+      return;
+    }
+    const id = sessionId;
+    active = true;
+    toggleButton.textContent = d.stopLabel ?? '';
+    try {
+      // 音量を正しく測るため、ブラウザの音声処理はすべてオフにする
+      const media = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        },
+      });
+      if (id !== sessionId) {
+        media.getTracks().forEach((track) => track.stop());
+        return;
+      }
+      stream = media;
+      idleEl.hidden = true;
+      applyButton.disabled = false;
+      clearDisplay();
+      startMeter(media, id);
+    } catch (error) {
+      if (id !== sessionId) return;
+      stopAll();
+      showError(classifyMediaError((error as DOMException | undefined)?.name));
+    }
+  }
+
+  toggleButton.addEventListener('click', () => {
+    if (active) {
+      stopAll();
+    } else {
+      void start();
+    }
+  });
+  resetButton.addEventListener('click', () => {
+    stats = createStats();
+    history = [];
+    render();
+  });
+  offsetInput.addEventListener('input', render);
+  applyButton.addEventListener('click', () => {
+    const reference = Number(referenceInput.value);
+    if (lastDbfs === null || referenceInput.value.trim() === '') return;
+    if (!Number.isFinite(reference)) return;
+    offsetInput.value = String(
+      Math.round(offsetForReference(lastDbfs, reference)),
+    );
+    render();
+  });
+
+  window.addEventListener('pagehide', stopAll);
+</script>

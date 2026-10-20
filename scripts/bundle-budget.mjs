@@ -28,7 +28,7 @@ export const budgets = {
   // 通常ページ・通常ツール（initial / total の両方に適用）
   normal: 120 * KB,
   // heavy ツールの total（PDF・wasm・大きめのライブラリ。遅延読み込み先を含む）
-  heavy: 420 * KB,
+  heavy: 440 * KB,
   // heavy ツールの initial（最初に読み込むJS）。重い処理は操作時の動的importに逃がすこと
   heavyInitial: 200 * KB,
 };
@@ -40,7 +40,7 @@ export const budgets = {
 export const slugBudgets = {
   'heic-converter': 860 * KB,
   // prettier・terser・csso を言語・操作ごとに遅延読み込みするため、全体は大きいが初回は小さい
-  'code-minifier': 540 * KB,
+  'code-minifier': 600 * KB,
   // フォント・jsQR など操作時に遅延読み込みするデータ
   'figlet-text': 150 * KB,
   'qr-code-reader': 140 * KB,

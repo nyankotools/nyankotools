@@ -10211,6 +10211,43 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'mosaic-smoother',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['image-blur-mosaic', 'image-pixelart-converter', 'image-filter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'モザイクを自然な色面に置換',
+        keywords: [
+          'モザイク',
+          'モザイク跡',
+          'グラデーション',
+          '色面',
+          '補間',
+          '画像加工',
+          'ブロック検出',
+        ],
+        description:
+          'モザイク部分を、周囲の色とモザイクの色から作った滑らかな色の変化に置き換えます。',
+      },
+      en: {
+        name: 'Mosaic to Smooth Gradient',
+        keywords: [
+          'mosaic',
+          'pixelation',
+          'smooth',
+          'gradient fill',
+          'interpolation',
+          'blend',
+        ],
+        description:
+          'Replace a mosaic area with a smooth color blend built from its blocks and the surrounding pixels.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

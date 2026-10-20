@@ -149,6 +149,7 @@ const slugs = [
   'audio-speed-changer',
   'noise-generator',
   'virtual-piano',
+  'mosaic-smoother',
 ];
 
 const locales = [

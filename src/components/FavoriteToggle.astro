@@ -10,9 +10,10 @@ interface Props {
 
 const { slug, locale, class: className = '' } = Astro.props;
 const t = useTranslations(locale);
+// 星アイコンは子要素を持たず CSS の mask で描く（global.css の .fav-toggle）。
+// ツール数ぶん繰り返されるため、DOMとHTMLを小さく保つ（HTMLコメントは出力に残るので、ここに書く）。
 ---
 
-<!-- 星アイコンは子要素を持たず CSS の mask で描く（global.css の .fav-toggle）。ツール数ぶん繰り返されるため、DOMとHTMLを小さく保つ -->
 <button
   type="button"
   data-favorite-toggle={slug}

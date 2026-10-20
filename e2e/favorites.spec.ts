@@ -478,7 +478,7 @@ test.describe('お気に入り機能', () => {
   }) => {
     await page.goto('/tools/html-escape/');
 
-    const parentDiv = page.locator('main > div');
+    const parentDiv = page.locator('main > div.relative');
     const h1 = page.locator('main h1');
     const button = page.locator('main [data-favorite-toggle="html-escape"]');
 

@@ -13,10 +13,7 @@ const href = `${locale === 'en' ? '/en' : ''}/tools/${tool.slug}/`;
 ---
 
 <li data-tool-slug={tool.slug} class="relative">
-  <a
-    href={href}
-    class="block h-full rounded-lg border border-gray-200 bg-white p-4 pr-14 shadow-sm transition hover:border-blue-300 hover:shadow-md dark:border-gray-700 dark:bg-gray-900 dark:hover:border-blue-500"
-  >
+  <a href={href} class="home-card-link">
     <span class="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
       <span
         class={`h-2 w-2 shrink-0 rounded-full ${categoryDotClass[tool.categoryId]}`}
@@ -31,9 +28,5 @@ const href = `${locale === 'en' ? '/en' : ''}/tools/${tool.slug}/`;
       {tool.description}
     </p>
   </a>
-  <FavoriteToggle
-    slug={tool.slug}
-    locale={locale}
-    class="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-yellow-600 dark:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-yellow-400"
-  />
+  <FavoriteToggle slug={tool.slug} locale={locale} class="fav-toggle-card" />
 </li>

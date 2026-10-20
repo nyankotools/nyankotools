@@ -185,7 +185,7 @@ test.describe('お問い合わせページ（日本語版）', () => {
   test('言語切り替えで英語版に遷移できる', async ({ page }) => {
     await page.goto('/contact/');
 
-    await page.locator('#sidebar a[hreflang="en"]').click();
+    await page.locator('[data-lang-switch-desktop] a[hreflang="en"]').click();
 
     await expect(page).toHaveURL(/\/en\/contact\/?$/);
     await expect(page.locator('main h1')).toHaveText('Contact');
@@ -261,7 +261,7 @@ test.describe('Contact page (English)', () => {
   test('言語切り替えで日本語版に遷移できる', async ({ page }) => {
     await page.goto('/en/contact/');
 
-    await page.locator('#sidebar a[hreflang="ja"]').click();
+    await page.locator('[data-lang-switch-desktop] a[hreflang="ja"]').click();
 
     await expect(page).toHaveURL(/\/contact\/?$/);
     await expect(page.locator('main h1')).toHaveText('お問い合わせ');

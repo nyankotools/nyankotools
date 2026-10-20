@@ -74,7 +74,7 @@ test.describe('よくある質問ページ（日本語版）', () => {
   test('言語切り替えで英語版に遷移できる', async ({ page }) => {
     await page.goto('/faq/');
 
-    await page.locator('#sidebar a[hreflang="en"]').click();
+    await page.locator('[data-lang-switch-desktop] a[hreflang="en"]').click();
 
     await expect(page).toHaveURL(/\/en\/faq\/?$/);
     await expect(page.locator('main h1')).toHaveText(
@@ -140,7 +140,7 @@ test.describe('FAQ page (English)', () => {
   test('言語切り替えで日本語版に遷移できる', async ({ page }) => {
     await page.goto('/en/faq/');
 
-    await page.locator('#sidebar a[hreflang="ja"]').click();
+    await page.locator('[data-lang-switch-desktop] a[hreflang="ja"]').click();
 
     await expect(page).toHaveURL(/\/faq\/?$/);
     await expect(page.locator('main h1')).toHaveText('よくある質問（FAQ）');

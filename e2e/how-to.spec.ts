@@ -145,6 +145,10 @@ const slugs = [
   'avatar-generator',
   'tailwind-color-scale-generator',
   'pixel-art-editor',
+  'screenshot-annotator',
+  'audio-speed-changer',
+  'noise-generator',
+  'virtual-piano',
 ];
 
 const locales = [

@@ -1,0 +1,666 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { screenshotAnnotatorContent } from '../../i18n/tools/screenshot-annotator';
+import {
+  MIN_LINE_WIDTH,
+  MAX_LINE_WIDTH,
+  MAX_TEXT_LENGTH,
+} from '../../lib/tools/screenshot-annotator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = screenshotAnnotatorContent[locale];
+const tools = [
+  { id: 'arrow', label: t.toolArrow },
+  { id: 'rect', label: t.toolRect },
+  { id: 'badge', label: t.toolBadge },
+  { id: 'text', label: t.toolText },
+  { id: 'erase', label: t.toolErase },
+];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="sa-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="sa-dropzone" class="ui-dropzone">
+      <input
+        id="sa-file-input"
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="sa-source-info"
+      data-template={t.sourceInfoTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="sa-error"
+      role="alert"
+      hidden
+      data-unsupported={t.errorUnsupportedFile}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-load-failed={t.errorLoadFailed}
+      data-export-failed={t.errorExportFailed}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+  </div>
+
+  <div id="sa-editor" hidden class="mt-4">
+    <div class="flex flex-wrap items-end gap-6">
+      <div>
+        <span class="ui-label">{t.toolLabel}</span>
+        <div id="sa-tools" class="ui-seg" role="group" aria-label={t.toolLabel}>
+          {tools.map((tool, i) => (
+            <button
+              type="button"
+              data-tool={tool.id}
+              aria-pressed={i === 0 ? 'true' : 'false'}
+              class="ui-seg-btn"
+            >
+              {tool.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label for="sa-color" class="ui-label">
+          {t.colorLabel}
+        </label>
+        <input
+          id="sa-color"
+          type="color"
+          value="#e11d48"
+          class="h-11 w-20 cursor-pointer rounded border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900"
+        />
+      </div>
+
+      <div class="min-w-48 flex-1">
+        <label for="sa-width" class="ui-label">
+          {t.widthLabel}
+          <span id="sa-width-value"></span>
+        </label>
+        <input
+          id="sa-width"
+          type="range"
+          min={MIN_LINE_WIDTH}
+          max={MAX_LINE_WIDTH}
+          value="4"
+          class="h-11 w-full"
+        />
+      </div>
+    </div>
+
+    <div id="sa-text-wrap" hidden class="mt-3">
+      <label for="sa-text" class="ui-label">
+        {t.textInputLabel}
+      </label>
+      <input
+        id="sa-text"
+        type="text"
+        maxlength={MAX_TEXT_LENGTH}
+        value={t.defaultText}
+        placeholder={t.textInputPlaceholder}
+        class="ui-input"
+      />
+    </div>
+
+    <p class="mt-4 text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.canvasLabel}
+    </p>
+    <p class="mb-2 text-xs text-gray-500 dark:text-gray-400">{t.canvasHint}</p>
+    <div class="mb-2 md:hidden">
+      <span class="ui-label">{t.touchModeLabel}</span>
+      <div
+        id="sa-touch-mode"
+        class="ui-seg"
+        role="group"
+        aria-label={t.touchModeLabel}
+      >
+        <button
+          type="button"
+          data-touch="draw"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.touchModeDraw}
+        </button>
+        <button
+          type="button"
+          data-touch="scroll"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.touchModeScroll}
+        </button>
+      </div>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        {t.touchModeHint}
+      </p>
+    </div>
+    <div class="w-full select-none">
+      <canvas
+        id="sa-canvas"
+        role="img"
+        aria-label={t.canvasLabel}
+        class="block h-auto w-full cursor-crosshair rounded-lg border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
+      ></canvas>
+    </div>
+
+    <p
+      id="sa-count"
+      data-template={t.countTemplate}
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+
+    <div class="mt-3 flex flex-wrap items-end gap-3">
+      <button
+        id="sa-undo-button"
+        type="button"
+        disabled
+        class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {t.undoButton}
+      </button>
+      <button
+        id="sa-reset-button"
+        type="button"
+        disabled
+        class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {t.clearAnnotationsButton}
+      </button>
+      <button id="sa-clear-button" type="button" class="ui-btn">
+        {t.clearImageButton}
+      </button>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <button
+        id="sa-download-button"
+        type="button"
+        class="ui-btn ui-btn-primary"
+      >
+        {t.downloadButton}
+      </button>
+      <button
+        id="sa-copy-button"
+        type="button"
+        data-success={t.copySuccess}
+        data-failed={t.copyFailed}
+        class="ui-btn"
+      >
+        {t.copyButton}
+      </button>
+    </div>
+    <p
+      id="sa-copy-status"
+      role="status"
+      class="mt-2 text-xs text-gray-600 dark:text-gray-400"
+    ></p>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import { trackEvent } from '../../lib/analytics';
+  import {
+    addAnnotation,
+    arrowHeadPoints,
+    badgeRadius,
+    buildOutputFileName,
+    clampLineWidth,
+    clientToImagePoint,
+    defaultLineWidth,
+    distance,
+    formatFileSize,
+    hitTest,
+    isAcceptedImageFile,
+    isHexColor,
+    MAX_FILE_SIZE,
+    MIN_SHAPE_SIZE,
+    nextBadgeNumber,
+    normalizeRect,
+    normalizeText,
+    removeAnnotation,
+    textFontSize,
+    undoAnnotation,
+    type Annotation,
+    type AnnotationTool,
+    type Dimensions,
+    type Point,
+  } from '../../lib/tools/screenshot-annotator';
+
+  const dropzone = document.getElementById('sa-dropzone')!;
+  const fileInput = document.getElementById(
+    'sa-file-input',
+  ) as HTMLInputElement;
+  const sourceInfoEl = document.getElementById('sa-source-info')!;
+  const errorEl = document.getElementById('sa-error')!;
+  const editor = document.getElementById('sa-editor')!;
+  const toolButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#sa-tools [data-tool]',
+  );
+  const colorInput = document.getElementById('sa-color') as HTMLInputElement;
+  const widthInput = document.getElementById('sa-width') as HTMLInputElement;
+  const widthValue = document.getElementById('sa-width-value')!;
+  const textWrap = document.getElementById('sa-text-wrap')!;
+  const textInput = document.getElementById('sa-text') as HTMLInputElement;
+  const canvas = document.getElementById('sa-canvas') as HTMLCanvasElement;
+  const countEl = document.getElementById('sa-count')!;
+  const undoButton = document.getElementById(
+    'sa-undo-button',
+  ) as HTMLButtonElement;
+  const resetButton = document.getElementById(
+    'sa-reset-button',
+  ) as HTMLButtonElement;
+  const clearButton = document.getElementById('sa-clear-button')!;
+  const downloadButton = document.getElementById('sa-download-button')!;
+  const copyButton = document.getElementById('sa-copy-button')!;
+  const copyStatus = document.getElementById('sa-copy-status')!;
+  const ctx = canvas.getContext('2d')!;
+
+  let tool: AnnotationTool = 'arrow';
+  let fileName = 'screenshot';
+  let dims: Dimensions | null = null;
+  let base: ImageBitmap | null = null;
+  let annotations: Annotation[] = [];
+  let dragStart: Point | null = null;
+  let dragNow: Point | null = null;
+  let dragPointerId: number | null = null;
+
+  // スマホ幅(md未満)では「書き込む」「スクロール」を切り替える。既定はスクロール。
+  const mobileQuery = window.matchMedia('(max-width: 767px)');
+  let touchDraw = false;
+  const touchButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#sa-touch-mode [data-touch]',
+  );
+  function drawingEnabled() {
+    return !mobileQuery.matches || touchDraw;
+  }
+  function applyTouchMode() {
+    canvas.style.touchAction = drawingEnabled() ? 'none' : 'pan-y pan-x';
+    touchButtons.forEach((b) =>
+      b.setAttribute(
+        'aria-pressed',
+        String((b.dataset.touch === 'draw') === touchDraw),
+      ),
+    );
+  }
+  touchButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      touchDraw = b.dataset.touch === 'draw';
+      applyTouchMode();
+    }),
+  );
+  mobileQuery.addEventListener('change', applyTouchMode);
+  applyTouchMode();
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function currentColor() {
+    return isHexColor(colorInput.value) ? colorInput.value : '#e11d48';
+  }
+  function currentWidth() {
+    return clampLineWidth(Number(widthInput.value));
+  }
+
+  /** 背景色に対して読める文字色（白 or 黒） */
+  function textColorOn(hex: string) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return (r * 299 + g * 587 + b * 114) / 1000 > 150 ? '#000000' : '#ffffff';
+  }
+
+  function drawAnnotation(a: Annotation) {
+    ctx.save();
+    ctx.lineJoin = 'round';
+    switch (a.kind) {
+      case 'arrow': {
+        const head = arrowHeadPoints(a.from, a.to, a.lineWidth);
+        if (!head) break;
+        ctx.strokeStyle = a.color;
+        ctx.fillStyle = a.color;
+        ctx.lineWidth = a.lineWidth;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(a.from.x, a.from.y);
+        ctx.lineTo(head.base.x, head.base.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(head.tip.x, head.tip.y);
+        ctx.lineTo(head.left.x, head.left.y);
+        ctx.lineTo(head.right.x, head.right.y);
+        ctx.closePath();
+        ctx.fill();
+        break;
+      }
+      case 'rect':
+        ctx.strokeStyle = a.color;
+        ctx.lineWidth = a.lineWidth;
+        ctx.strokeRect(a.rect.x, a.rect.y, a.rect.width, a.rect.height);
+        break;
+      case 'badge': {
+        const r = badgeRadius(a.lineWidth);
+        ctx.beginPath();
+        ctx.arc(a.center.x, a.center.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = a.color;
+        ctx.fill();
+        ctx.lineWidth = Math.max(2, r / 8);
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+        ctx.fillStyle = textColorOn(a.color);
+        ctx.font = `bold ${Math.round(r * 1.1)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(a.number), a.center.x, a.center.y + r * 0.05);
+        break;
+      }
+      case 'text': {
+        const size = textFontSize(a.lineWidth);
+        ctx.font = `bold ${size}px sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.lineWidth = Math.max(3, size / 5);
+        ctx.strokeStyle = textColorOn(a.color);
+        ctx.strokeText(a.text, a.position.x, a.position.y);
+        ctx.fillStyle = a.color;
+        ctx.fillText(a.text, a.position.x, a.position.y);
+        break;
+      }
+    }
+    ctx.restore();
+  }
+
+  /** ドラッグ中のプレビュー用の仮注釈 */
+  function draftAnnotation(): Annotation | null {
+    if (!dragStart || !dragNow) return null;
+    const common = { color: currentColor(), lineWidth: currentWidth() };
+    if (tool === 'arrow') {
+      return { ...common, kind: 'arrow', from: dragStart, to: dragNow };
+    }
+    if (tool === 'rect') {
+      const rect = normalizeRect(dragStart, dragNow);
+      return rect ? { ...common, kind: 'rect', rect } : null;
+    }
+    return null;
+  }
+
+  function render() {
+    if (!dims || !base) return;
+    ctx.clearRect(0, 0, dims.width, dims.height);
+    ctx.drawImage(base, 0, 0);
+    annotations.forEach(drawAnnotation);
+    const draft = draftAnnotation();
+    if (draft) drawAnnotation(draft);
+  }
+
+  function updateUi() {
+    countEl.textContent = (countEl.dataset.template ?? '').replace(
+      '{count}',
+      String(annotations.length),
+    );
+    undoButton.disabled = annotations.length === 0;
+    resetButton.disabled = annotations.length === 0;
+  }
+
+  function updateToolUi() {
+    toolButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.tool === tool)),
+    );
+    textWrap.hidden = tool !== 'text';
+    canvas.style.cursor = tool === 'erase' ? 'pointer' : 'crosshair';
+  }
+
+  function updateWidthUi() {
+    widthValue.textContent = `${currentWidth()}px`;
+  }
+
+  function cancelDrag() {
+    dragStart = null;
+    dragNow = null;
+    dragPointerId = null;
+  }
+
+  function resetAll() {
+    base?.close();
+    base = null;
+    dims = null;
+    annotations = [];
+    cancelDrag();
+    editor.hidden = true;
+    sourceInfoEl.textContent = '';
+    copyStatus.textContent = '';
+    updateUi();
+  }
+
+  async function loadFile(file: File) {
+    clearError();
+    if (!isAcceptedImageFile(file)) {
+      showError(errorEl.dataset.unsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace('{max}', () =>
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+    let bitmap: ImageBitmap;
+    try {
+      bitmap = await createImageBitmap(file);
+    } catch {
+      showError(errorEl.dataset.loadFailed ?? '');
+      return;
+    }
+    resetAll();
+    base = bitmap;
+    dims = { width: bitmap.width, height: bitmap.height };
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    fileName = file.name || 'screenshot';
+    widthInput.value = String(defaultLineWidth(bitmap.width));
+    updateWidthUi();
+    sourceInfoEl.textContent = (sourceInfoEl.dataset.template ?? '')
+      .replace('{width}', String(dims.width))
+      .replace('{height}', String(dims.height))
+      .replace('{size}', () => formatFileSize(file.size));
+    editor.hidden = false;
+    updateUi();
+    render();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  // クリップボードの画像を貼り付け
+  document.addEventListener('paste', (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of Array.from(items)) {
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          void loadFile(
+            file.name
+              ? file
+              : new File([file], 'screenshot.png', { type: file.type }),
+          );
+          return;
+        }
+      }
+    }
+  });
+
+  toolButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      tool = b.dataset.tool as AnnotationTool;
+      updateToolUi();
+    }),
+  );
+  widthInput.addEventListener('input', updateWidthUi);
+
+  function pointFromEvent(e: PointerEvent): Point {
+    return clientToImagePoint(
+      e.clientX,
+      e.clientY,
+      canvas.getBoundingClientRect(),
+      dims!,
+    );
+  }
+
+  /** 表示上 ~10px に相当する画像px（指でも当てやすいヒット許容範囲） */
+  function hitTolerance() {
+    const rect = canvas.getBoundingClientRect();
+    return rect.width > 0 && dims ? (10 * dims.width) / rect.width : 10;
+  }
+
+  function commit(a: Annotation) {
+    annotations = addAnnotation(annotations, a);
+    updateUi();
+    render();
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (!dims || dragPointerId !== null || !drawingEnabled()) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault();
+    const p = pointFromEvent(e);
+    if (tool === 'arrow' || tool === 'rect') {
+      dragPointerId = e.pointerId;
+      canvas.setPointerCapture(e.pointerId);
+      dragStart = p;
+      dragNow = p;
+      return;
+    }
+    if (tool === 'erase') {
+      const i = hitTest(annotations, p, hitTolerance());
+      if (i >= 0) {
+        annotations = removeAnnotation(annotations, i);
+        updateUi();
+        render();
+      }
+      return;
+    }
+    const common = { color: currentColor(), lineWidth: currentWidth() };
+    if (tool === 'badge') {
+      commit({
+        ...common,
+        kind: 'badge',
+        center: p,
+        number: nextBadgeNumber(annotations),
+      });
+    } else if (tool === 'text') {
+      const text = normalizeText(textInput.value);
+      if (text) commit({ ...common, kind: 'text', position: p, text });
+    }
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (!dragStart || e.pointerId !== dragPointerId) return;
+    dragNow = pointFromEvent(e);
+    render();
+  });
+
+  canvas.addEventListener('pointerup', (e) => {
+    if (!dragStart || e.pointerId !== dragPointerId) return;
+    dragNow = pointFromEvent(e);
+    const draft = draftAnnotation();
+    const longEnough =
+      draft?.kind === 'arrow'
+        ? distance(dragStart, dragNow) >= MIN_SHAPE_SIZE
+        : true;
+    cancelDrag();
+    if (draft && longEnough) commit(draft);
+    else render();
+  });
+
+  canvas.addEventListener('pointercancel', () => {
+    cancelDrag();
+    render();
+  });
+
+  function undo() {
+    annotations = undoAnnotation(annotations);
+    updateUi();
+    render();
+  }
+  undoButton.addEventListener('click', undo);
+  resetButton.addEventListener('click', () => {
+    annotations = [];
+    updateUi();
+    render();
+  });
+  clearButton.addEventListener('click', () => {
+    resetAll();
+    clearError();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (!dims || !(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'z')
+      return;
+    const el = e.target as HTMLElement | null;
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) return;
+    e.preventDefault();
+    undo();
+  });
+
+  function toPngBlob(): Promise<Blob | null> {
+    return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+  }
+
+  downloadButton.addEventListener('click', async () => {
+    if (!dims) return;
+    const blob = await toPngBlob();
+    if (!blob) {
+      showError(errorEl.dataset.exportFailed ?? '');
+      return;
+    }
+    clearError();
+    downloadBlob(blob, buildOutputFileName(fileName));
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!dims) return;
+    try {
+      const blob = await toPngBlob();
+      if (!blob) throw new Error('export');
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob }),
+      ]);
+      trackEvent('copy');
+      copyStatus.textContent = copyButton.dataset.success ?? '';
+    } catch {
+      copyStatus.textContent = copyButton.dataset.failed ?? '';
+    }
+  });
+
+  updateToolUi();
+  updateWidthUi();
+  updateUi();
+</script>

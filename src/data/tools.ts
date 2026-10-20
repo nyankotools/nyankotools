@@ -10061,6 +10061,156 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'screenshot-annotator',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['image-blur-mosaic', 'image-frame-maker', 'device-mockup'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'スクリーンショット注釈',
+        keywords: [
+          'スクショ',
+          '注釈',
+          'アノテーション',
+          '矢印',
+          '番号',
+          'マニュアル',
+          '画像 書き込み',
+        ],
+        description:
+          'スクリーンショットを貼り付けて、矢印・枠・自動連番の番号・テキストを書き込みPNGで保存できる無料ツール。マニュアル作成に。',
+      },
+      en: {
+        name: 'Screenshot Annotator',
+        keywords: [
+          'screenshot',
+          'annotate',
+          'annotation',
+          'arrow',
+          'markup',
+          'numbered steps',
+          'paste image',
+        ],
+        description:
+          'Paste a screenshot and add arrows, boxes, numbered badges and text, then save as PNG. Runs in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'audio-speed-changer',
+    category: 'media',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['media-converter', 'speaker-tester', 'instrument-tuner'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '音声の速度・ピッチ変更',
+        keywords: [
+          '速度変更',
+          'ピッチ変更',
+          'キー変更',
+          '再生速度',
+          'テンポ',
+          'タイムストレッチ',
+          '半音',
+          'WAV',
+        ],
+        description:
+          '音声ファイルの再生速度を0.25〜4倍に、ピッチ（キー）を半音単位で変更し、試聴してWAVで保存。ブラウザ完結。',
+      },
+      en: {
+        name: 'Audio Speed & Pitch Changer',
+        keywords: [
+          'audio speed changer',
+          'pitch shifter',
+          'change key',
+          'tempo',
+          'time stretch',
+          'playback rate',
+          'semitone',
+          'wav',
+        ],
+        description:
+          'Change audio speed and pitch (key) in semitones, preview, and save as WAV. Runs in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'noise-generator',
+    category: 'media',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['speaker-tester', 'instrument-tuner'],
+    translations: {
+      ja: {
+        name: 'ノイズジェネレーター',
+        keywords: [
+          'ホワイトノイズ',
+          'ピンクノイズ',
+          'ブラウンノイズ',
+          '睡眠',
+          '作業用BGM',
+          '環境音',
+          'タイマー',
+        ],
+        description:
+          'ホワイト・ピンク・ブラウンノイズを再生。作業・睡眠向けにタイマーとフェードアウト付き。',
+      },
+      en: {
+        name: 'Noise Generator',
+        keywords: [
+          'white noise',
+          'pink noise',
+          'brown noise',
+          'sleep sounds',
+          'focus',
+          'sleep timer',
+        ],
+        description:
+          'Play white, pink or brown noise for focus and sleep, with a timer and fade-out.',
+      },
+    },
+  },
+  {
+    slug: 'virtual-piano',
+    category: 'media',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['instrument-tuner', 'speaker-tester'],
+    translations: {
+      ja: {
+        name: 'バーチャルピアノ',
+        keywords: [
+          'ピアノ',
+          'キーボード',
+          '鍵盤',
+          'オンラインピアノ',
+          'シンセ',
+          '音色',
+          'ドレミ',
+        ],
+        description:
+          'PCのキーボードやマウス、タッチで弾けるピアノ。4音色・オクターブ切り替え対応。',
+      },
+      en: {
+        name: 'Virtual Piano',
+        keywords: [
+          'piano',
+          'keyboard',
+          'online piano',
+          'synth',
+          'keys',
+          'musical keyboard',
+        ],
+        description:
+          'Play a piano with your computer keyboard, mouse or touch. Four sounds and octave shift.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -185,7 +185,7 @@ test.describe('サイドバー上部の固定（デスクトップ・高さ768px
     expect(scrollable).toBe(true);
     // バーが実際に幅を取っていること（取っていないなら本テストは意味を持たない）
     const gutter = await sidebar.evaluate(
-      (el) => el.offsetWidth - el.clientWidth,
+      (el) => (el as HTMLElement).offsetWidth - el.clientWidth,
     );
     expect(gutter).toBeGreaterThan(0);
 

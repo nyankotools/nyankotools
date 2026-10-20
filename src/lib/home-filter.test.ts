@@ -192,7 +192,7 @@ describe('filterTools（表記ゆれ・AND検索の追加ケース）', () => {
       name: 'ヴィジュアル配色',
       keywords: ['ｶﾗｰ'],
       description: '配色を確認します。',
-      categoryId: 'design',
+      categoryId: 'image',
       category: 'デザイン',
     },
     {
@@ -200,7 +200,7 @@ describe('filterTools（表記ゆれ・AND検索の追加ケース）', () => {
       name: '🐱ネコ図鑑',
       keywords: [],
       description: '猫の絵文字を並べます。',
-      categoryId: 'fun',
+      categoryId: 'games',
       category: 'お遊び',
     },
   ];
@@ -245,7 +245,7 @@ describe('filterTools（表記ゆれ・AND検索の追加ケース）', () => {
 
   it('AND検索はカテゴリ絞り込みと併用できる', () => {
     expect(
-      filterTools(variants, { query: '配色 確認', category: 'design' }),
+      filterTools(variants, { query: '配色 確認', category: 'image' }),
     ).toEqual([variants[1]]);
     expect(
       filterTools(variants, { query: '配色 確認', category: 'calc' }),
@@ -253,7 +253,7 @@ describe('filterTools（表記ゆれ・AND検索の追加ケース）', () => {
   });
 
   it('全角空白のみのクエリでも、カテゴリ指定が効く', () => {
-    expect(filterTools(variants, { query: '　', category: 'fun' })).toEqual([
+    expect(filterTools(variants, { query: '　', category: 'games' })).toEqual([
       variants[2],
     ]);
   });

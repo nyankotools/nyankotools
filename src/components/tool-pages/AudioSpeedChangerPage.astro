@@ -1,0 +1,379 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { audioSpeedChangerContent } from '../../i18n/tools/audio-speed-changer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = audioSpeedChangerContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="asc-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="asc-dropzone" class="ui-dropzone">
+      <input
+        id="asc-file-input"
+        type="file"
+        accept="audio/*,video/mp4,video/webm,.mp3,.wav,.m4a,.aac,.ogg,.opus,.flac,.aif,.aiff"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="asc-source-info"
+      data-template={t.sourceInfoTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="asc-error"
+      role="alert"
+      hidden
+      data-unsupported={t.errorUnsupportedFile}
+      data-decode={t.errorDecode}
+      data-too-long={t.errorTooLong}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-speed-invalid={t.errorSpeedInvalid}
+      data-speed-out-of-range={t.errorSpeedOutOfRange}
+      data-semitones-invalid={t.errorSemitonesInvalid}
+      data-semitones-out-of-range={t.errorSemitonesOutOfRange}
+      data-failed={t.errorFailed}
+      class="ui-error mt-2"
+    ></p>
+  </div>
+
+  <div class="mt-4">
+    <label for="asc-mode" class="ui-label">
+      {t.modeLabel}
+    </label>
+    <select id="asc-mode" class="ui-input h-11 w-full px-3 dark:bg-gray-900">
+      <option value="independent" selected>
+        {t.modeIndependent}
+      </option>
+      <option value="linked">{t.modeLinked}</option>
+    </select>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-start gap-4">
+    <div class="min-w-48 flex-1">
+      <label for="asc-speed" class="ui-label">
+        {t.speedLabel}
+      </label>
+      <input
+        id="asc-speed"
+        type="text"
+        inputmode="decimal"
+        autocomplete="off"
+        value="1"
+        aria-describedby="asc-speed-hint"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      />
+      <p
+        id="asc-speed-hint"
+        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+      >
+        {t.speedHint}
+      </p>
+    </div>
+    <div class="min-w-48 flex-1">
+      <label for="asc-semitones" class="ui-label">
+        {t.semitonesLabel}
+      </label>
+      <input
+        id="asc-semitones"
+        type="text"
+        inputmode="decimal"
+        autocomplete="off"
+        value="0"
+        aria-describedby="asc-semitones-hint"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      />
+      <p
+        id="asc-semitones-hint"
+        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+      >
+        {t.semitonesHint}
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-4 flex flex-wrap gap-3">
+    <button
+      id="asc-process-button"
+      type="button"
+      disabled
+      class="ui-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.processButton}
+    </button>
+    <button
+      id="asc-clear-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.clearButton}
+    </button>
+  </div>
+
+  <p
+    id="asc-status"
+    role="status"
+    hidden
+    class="mt-3 text-sm text-gray-700 dark:text-gray-300"
+  >
+    {t.processing}
+  </p>
+
+  <div id="asc-results-section" hidden class="mt-6">
+    <h2 class="mb-2 text-lg font-bold">{t.resultsHeading}</h2>
+    <audio id="asc-result-audio" controls class="w-full"></audio>
+    <p
+      id="asc-result-info"
+      data-template={t.resultInfoTemplate}
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+    <button id="asc-download-button" type="button" class="ui-btn-primary mt-3">
+      {t.downloadButton}
+    </button>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    MAX_DURATION_SECONDS,
+    MAX_FILE_SIZE,
+    buildOutputFileName,
+    encodeWavBlob,
+    formatDuration,
+    formatFileSize,
+    isAcceptedAudioFile,
+    parseSemitones,
+    parseSpeed,
+    processAudio,
+    type PitchMode,
+    type ProcessOptions,
+  } from '../../lib/tools/audio-speed-changer';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const dropzone = $('asc-dropzone');
+  const fileInput = $<HTMLInputElement>('asc-file-input');
+  const sourceInfoEl = $('asc-source-info');
+  const errorEl = $('asc-error');
+  const modeSelect = $<HTMLSelectElement>('asc-mode');
+  const speedInput = $<HTMLInputElement>('asc-speed');
+  const semitonesInput = $<HTMLInputElement>('asc-semitones');
+  const processButton = $<HTMLButtonElement>('asc-process-button');
+  const clearButton = $<HTMLButtonElement>('asc-clear-button');
+  const statusEl = $('asc-status');
+  const resultsSection = $('asc-results-section');
+  const resultAudio = $<HTMLAudioElement>('asc-result-audio');
+  const resultInfoEl = $('asc-result-info');
+  const downloadButton = $<HTMLButtonElement>('asc-download-button');
+
+  interface Decoded {
+    channels: Float32Array[];
+    sampleRate: number;
+    duration: number;
+  }
+
+  let currentFile: File | null = null;
+  let decoded: Decoded | null = null;
+  let resultBlob: Blob | null = null;
+  let resultName = '';
+  let resultUrl: string | null = null;
+  let generation = 0;
+  let busy = false;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function revokeResult() {
+    if (resultUrl) URL.revokeObjectURL(resultUrl);
+    resultUrl = null;
+    resultBlob = null;
+    resultAudio.pause();
+    resultAudio.removeAttribute('src');
+    resultAudio.load();
+    resultsSection.hidden = true;
+    resultInfoEl.textContent = '';
+  }
+
+  function updateUi() {
+    semitonesInput.disabled = busy || modeSelect.value === 'linked';
+    modeSelect.disabled = busy;
+    speedInput.disabled = busy;
+    fileInput.disabled = busy;
+    processButton.disabled = busy || !decoded;
+    clearButton.disabled = busy || !decoded;
+    statusEl.hidden = !busy;
+  }
+
+  function resetAll() {
+    generation++;
+    revokeResult();
+    currentFile = null;
+    decoded = null;
+    busy = false;
+    sourceInfoEl.textContent = '';
+    updateUi();
+  }
+
+  async function decodeFile(file: File): Promise<Decoded> {
+    const data = await file.arrayBuffer();
+    const ctx = new OfflineAudioContext(1, 1, 48000);
+    const buffer = await ctx.decodeAudioData(data);
+    const channels: Float32Array[] = [];
+    for (let i = 0; i < buffer.numberOfChannels; i++) {
+      channels.push(buffer.getChannelData(i).slice());
+    }
+    return {
+      channels,
+      sampleRate: buffer.sampleRate,
+      duration: buffer.duration,
+    };
+  }
+
+  async function loadFile(file: File) {
+    clearError();
+    resetAll();
+    const gen = generation;
+
+    if (!isAcceptedAudioFile(file)) {
+      showError(errorEl.dataset.unsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace(
+          '{max}',
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+
+    let result: Decoded;
+    try {
+      result = await decodeFile(file);
+    } catch {
+      if (gen === generation) showError(errorEl.dataset.decode ?? '');
+      return;
+    }
+    if (gen !== generation) return;
+    if (result.duration > MAX_DURATION_SECONDS) {
+      showError(errorEl.dataset.tooLong ?? '');
+      return;
+    }
+
+    currentFile = file;
+    decoded = result;
+    sourceInfoEl.textContent = (sourceInfoEl.dataset.template ?? '')
+      .replace('{duration}', formatDuration(result.duration))
+      .replace('{rate}', String(result.sampleRate))
+      .replace('{channels}', String(result.channels.length))
+      .replace('{size}', formatFileSize(file.size));
+    updateUi();
+  }
+
+  function readOptions(): ProcessOptions | null {
+    const speed = parseSpeed(speedInput.value);
+    if (!speed.ok) {
+      showError(
+        (speed.error === 'invalid'
+          ? errorEl.dataset.speedInvalid
+          : errorEl.dataset.speedOutOfRange) ?? '',
+      );
+      return null;
+    }
+    const mode: PitchMode =
+      modeSelect.value === 'linked' ? 'linked' : 'independent';
+    let semitones = 0;
+    if (mode === 'independent') {
+      const st = parseSemitones(semitonesInput.value);
+      if (!st.ok) {
+        showError(
+          (st.error === 'invalid'
+            ? errorEl.dataset.semitonesInvalid
+            : errorEl.dataset.semitonesOutOfRange) ?? '',
+        );
+        return null;
+      }
+      semitones = st.value;
+    }
+    return { speed: speed.value, semitones, mode };
+  }
+
+  async function startProcessing() {
+    if (!decoded || !currentFile || busy) return;
+    clearError();
+    const options = readOptions();
+    if (!options) return;
+    revokeResult();
+
+    const gen = generation;
+    const source = decoded;
+    const file = currentFile;
+    busy = true;
+    updateUi();
+    // 「変換中」の表示を先に描画させる
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    try {
+      const out = processAudio(source.channels, source.sampleRate, options);
+      if (gen !== generation) return;
+      const blob = encodeWavBlob(out.channels, source.sampleRate);
+      resultBlob = blob;
+      resultName = buildOutputFileName(file.name, options);
+      resultUrl = URL.createObjectURL(blob);
+      resultAudio.src = resultUrl;
+      resultInfoEl.textContent = (resultInfoEl.dataset.template ?? '')
+        .replace('{duration}', formatDuration(out.duration))
+        .replace('{size}', formatFileSize(blob.size));
+      resultsSection.hidden = false;
+    } catch {
+      if (gen === generation) showError(errorEl.dataset.failed ?? '');
+    } finally {
+      if (gen === generation) {
+        busy = false;
+        updateUi();
+      }
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+
+  enableFileDrop(dropzone, fileInput);
+
+  modeSelect.addEventListener('change', updateUi);
+  processButton.addEventListener('click', () => void startProcessing());
+  clearButton.addEventListener('click', () => {
+    resetAll();
+    clearError();
+  });
+  downloadButton.addEventListener('click', () => {
+    if (resultBlob) downloadBlob(resultBlob, resultName);
+  });
+
+  updateUi();
+</script>

@@ -9753,6 +9753,163 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'email-header-analyzer',
+    category: 'security',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    sensitive: true,
+    related: [
+      'dmarc-spf-generator',
+      'http-header-analyzer',
+      'mailto-link-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'メールヘッダー解析',
+        description:
+          'メールの生ヘッダーを貼り付けて、Receivedの経路と各ホップの遅延、SPF・DKIM・DMARCの判定、From不一致を確認します。ブラウザ内で処理します。',
+        keywords: [
+          'メールヘッダー',
+          'Received',
+          'SPF',
+          'DKIM',
+          'DMARC',
+          '迷惑メール',
+          'なりすまし',
+          '遅延',
+        ],
+      },
+      en: {
+        name: 'Email Header Analyzer',
+        description:
+          'Paste raw email headers to trace the Received path and hop delays, read SPF, DKIM and DMARC results, and spot From mismatches.',
+        keywords: [
+          'email header',
+          'Received',
+          'SPF',
+          'DKIM',
+          'DMARC',
+          'phishing',
+          'spoofing',
+          'mail delay',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'image-compare-slider',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['image-filter', 'image-merger', 'image-resizer'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像比較スライダー',
+        keywords: [
+          '画像比較',
+          'ビフォーアフター',
+          'ビフォー アフター',
+          '比較スライダー',
+          '画像 見比べ',
+          '並置画像',
+        ],
+        description:
+          '2枚の画像をドラッグで見比べるビフォーアフター比較スライダー。左右・上下の切り替え、ラベル表示、並置画像のPNG保存に対応します。',
+      },
+      en: {
+        name: 'Image Compare Slider',
+        keywords: [
+          'before after slider',
+          'image comparison',
+          'compare images',
+          'before and after',
+          'side by side image',
+        ],
+        description:
+          'Compare two images with a draggable before/after slider. Switch horizontal or vertical, show labels, and save a side-by-side PNG.',
+      },
+    },
+  },
+  {
+    slug: 'image-frame-maker',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['image-padding', 'image-round-crop', 'image-cropper'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像に枠・フレームを付ける',
+        keywords: [
+          'ポラロイド',
+          '額縁',
+          '画像 枠',
+          'フレーム',
+          '角丸',
+          '影付き',
+          '枠付け',
+        ],
+        description:
+          '写真にポラロイド風・シンプル枠・二重枠・額縁風・角丸・影付きのフレームを付けます。色・太さ・角丸を調整し、PNG・JPEG・WebPで保存できます。',
+      },
+      en: {
+        name: 'Image Frame Maker (Polaroid, Border & Rounded)',
+        keywords: [
+          'polaroid frame',
+          'photo frame',
+          'image border',
+          'picture frame',
+          'rounded corners',
+          'drop shadow',
+        ],
+        description:
+          'Add Polaroid, border, picture-frame, rounded and shadow frames to photos. Pick the color, thickness and corners and save as PNG, JPEG or WebP.',
+      },
+    },
+  },
+  {
+    slug: 'gradient-wallpaper',
+    category: 'image',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: [
+      'css-gradient-generator',
+      'placeholder-image-generator',
+      'ogp-image-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'グラデーション壁紙・背景画像生成',
+        description:
+          '線形・放射・円錐のグラデーション壁紙を解像度指定でPNG・JPEG保存。2〜5色、粒状ノイズ対応。',
+        keywords: [
+          'グラデーション',
+          '壁紙',
+          '背景画像',
+          'グラデ画像',
+          '解像度指定',
+          'ノイズ',
+          'PNG',
+        ],
+      },
+      en: {
+        name: 'Gradient Wallpaper Generator',
+        description:
+          'Create linear, radial or conic gradient wallpapers at any resolution and save as PNG or JPEG.',
+        keywords: [
+          'gradient wallpaper',
+          'gradient background',
+          'wallpaper maker',
+          'gradient image',
+          'grain',
+          'noise',
+          'conic gradient',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

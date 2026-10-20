@@ -137,6 +137,10 @@ const slugs = [
   'envelope-printer',
   'passphrase-generator',
   'dmarc-spf-generator',
+  'email-header-analyzer',
+  'image-compare-slider',
+  'image-frame-maker',
+  'gradient-wallpaper',
 ];
 
 const locales = [

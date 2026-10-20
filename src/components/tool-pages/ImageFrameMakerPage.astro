@@ -1,0 +1,536 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { imageFrameMakerContent } from '../../i18n/tools/image-frame-maker';
+import {
+  MAX_DIMENSION,
+  MAX_RADIUS,
+  MAX_THICKNESS,
+  MIN_THICKNESS,
+  PRESET_DEFAULTS,
+} from '../../lib/tools/image-frame-maker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageFrameMakerContent[locale];
+const initial = PRESET_DEFAULTS.polaroid;
+---
+
+<ToolShell t={t}>
+  <div
+    id="frame-root"
+    data-output-info={t.outputInfo}
+    data-downloaded={t.downloaded}
+    data-defaults={JSON.stringify(PRESET_DEFAULTS)}
+    data-error-not-image={t.errorNotImage}
+    data-error-too-large={t.errorTooLarge.replace(
+      '{max}',
+      String(MAX_DIMENSION),
+    )}
+    data-error-output-too-large={t.errorOutputTooLarge.replace(
+      '{max}',
+      String(MAX_DIMENSION),
+    )}
+    data-error-load-failed={t.errorLoadFailed}
+    data-error-export-failed={t.errorExportFailed}
+  >
+    <label for="frame-file" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="frame-dropzone" class="ui-dropzone">
+      <input id="frame-file" type="file" accept="image/*" class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="frame-error"
+      role="alert"
+      hidden
+      class="mt-3 text-sm text-red-600 dark:text-red-400"
+    ></p>
+
+    <div id="frame-workspace" hidden class="mt-6 grid gap-6 md:grid-cols-2">
+      <div>
+        <label for="frame-preset" class="ui-label">
+          {t.presetLabel}
+        </label>
+        <select id="frame-preset" class="ui-input h-11 px-3 dark:bg-gray-900">
+          {t.presetOptions.map(({ value, label, selected }) => (
+            <option value={value} selected={selected}>
+              {label}
+            </option>
+          ))}
+        </select>
+
+        <div class="mt-4">
+          <label for="frame-thickness" class="ui-label">
+            {t.thicknessLabel}
+            <span id="frame-thickness-value">{initial.thickness}</span>
+          </label>
+          <input
+            id="frame-thickness"
+            type="range"
+            min={MIN_THICKNESS}
+            max={MAX_THICKNESS}
+            step="1"
+            value={initial.thickness}
+            class="h-11 w-full"
+          />
+        </div>
+
+        <div class="mt-2">
+          <label for="frame-radius" class="ui-label">
+            {t.radiusLabel}
+            <span id="frame-radius-value">{initial.radius}</span>
+          </label>
+          <input
+            id="frame-radius"
+            type="range"
+            min="0"
+            max={MAX_RADIUS}
+            step="1"
+            value={initial.radius}
+            class="h-11 w-full"
+          />
+        </div>
+
+        <div class="mt-4 flex flex-wrap items-end gap-4">
+          <div>
+            <label for="frame-color" class="ui-label">
+              {t.colorLabel}
+            </label>
+            <input
+              id="frame-color"
+              type="color"
+              value={initial.color}
+              class="h-11 w-20 cursor-pointer rounded border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900"
+            />
+          </div>
+          <div>
+            <label for="frame-accent" class="ui-label">
+              {t.accentLabel}
+            </label>
+            <input
+              id="frame-accent"
+              type="color"
+              value={initial.accent}
+              class="h-11 w-20 cursor-pointer rounded border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900"
+            />
+          </div>
+          <label class="ui-check h-11">
+            <input id="frame-transparent" type="checkbox" />
+            <span>{t.transparentLabel}</span>
+          </label>
+        </div>
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {t.accentHint}
+        </p>
+
+        <div class="mt-4 flex flex-wrap items-end gap-4">
+          <div>
+            <span class="ui-label">{t.formatLabel}</span>
+            <div
+              id="frame-format"
+              class="ui-seg"
+              role="group"
+              aria-label={t.formatLabel}
+            >
+              <button
+                type="button"
+                data-format="png"
+                aria-pressed="true"
+                class="ui-seg-btn"
+              >
+                PNG
+              </button>
+              <button
+                type="button"
+                data-format="jpeg"
+                aria-pressed="false"
+                class="ui-seg-btn"
+              >
+                JPEG
+              </button>
+              <button
+                type="button"
+                data-format="webp"
+                aria-pressed="false"
+                class="ui-seg-btn"
+              >
+                WebP
+              </button>
+            </div>
+          </div>
+          <div id="frame-quality-wrap" hidden class="min-w-40 flex-1">
+            <label for="frame-quality" class="ui-label">
+              {t.qualityLabel}
+              <span id="frame-quality-value">90</span>
+            </label>
+            <input
+              id="frame-quality"
+              type="range"
+              min="10"
+              max="100"
+              value="90"
+              class="h-11 w-full"
+            />
+          </div>
+        </div>
+        <p
+          id="frame-jpeg-note"
+          hidden
+          class="mt-2 text-xs text-gray-500 dark:text-gray-400"
+        >
+          {t.jpegTransparentNote}
+        </p>
+      </div>
+
+      <div class="flex flex-col items-center gap-3">
+        <p class="ui-label self-start">{t.previewLabel}</p>
+        <div
+          class="w-fit max-w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700"
+          style="background-image: conic-gradient(#e5e7eb 25%, #fff 0 50%, #e5e7eb 0 75%, #fff 0); background-size: 16px 16px;"
+        >
+          <canvas
+            id="frame-canvas"
+            role="img"
+            aria-label={t.previewLabel}
+            class="block max-h-[70vh] max-w-full"
+          ></canvas>
+        </div>
+        <p
+          id="frame-size"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></p>
+        <button
+          id="frame-download"
+          type="button"
+          disabled
+          class="ui-btn-primary"
+        >
+          {t.downloadButton}
+        </button>
+        <span
+          id="frame-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    FRAME_PRESETS,
+    framedFileName,
+    isWithinLimit,
+    PREVIEW_MAX_EDGE,
+    outputFormat,
+    planFrame,
+    type FrameOptions,
+    type FramePlan,
+    type FramePreset,
+    type OutputFormat,
+  } from '../../lib/tools/image-frame-maker';
+
+  const root = document.getElementById('frame-root')!;
+  const fileInput = document.getElementById('frame-file') as HTMLInputElement;
+  const dropzone = document.getElementById('frame-dropzone')!;
+  const errorEl = document.getElementById('frame-error')!;
+  const workspace = document.getElementById('frame-workspace')!;
+  const canvas = document.getElementById('frame-canvas') as HTMLCanvasElement;
+  const presetSelect = document.getElementById(
+    'frame-preset',
+  ) as HTMLSelectElement;
+  const thicknessInput = document.getElementById(
+    'frame-thickness',
+  ) as HTMLInputElement;
+  const thicknessValue = document.getElementById('frame-thickness-value')!;
+  const radiusInput = document.getElementById(
+    'frame-radius',
+  ) as HTMLInputElement;
+  const radiusValue = document.getElementById('frame-radius-value')!;
+  const colorInput = document.getElementById('frame-color') as HTMLInputElement;
+  const accentInput = document.getElementById(
+    'frame-accent',
+  ) as HTMLInputElement;
+  const transparentInput = document.getElementById(
+    'frame-transparent',
+  ) as HTMLInputElement;
+  const sizeEl = document.getElementById('frame-size')!;
+  const statusEl = document.getElementById('frame-status')!;
+  const downloadButton = document.getElementById(
+    'frame-download',
+  ) as HTMLButtonElement;
+  const qualityWrap = document.getElementById('frame-quality-wrap')!;
+  const qualityInput = document.getElementById(
+    'frame-quality',
+  ) as HTMLInputElement;
+  const qualityValue = document.getElementById('frame-quality-value')!;
+  const jpegNote = document.getElementById('frame-jpeg-note')!;
+  const formatButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#frame-format [data-format]'),
+  );
+
+  const d = root.dataset;
+  const defaults = JSON.parse(d.defaults ?? '{}') as Record<
+    FramePreset,
+    Pick<FrameOptions, 'thickness' | 'radius' | 'color' | 'accent'>
+  >;
+  let bitmap: ImageBitmap | null = null;
+  let sourceName: string | null = null;
+  let format: OutputFormat = 'png';
+  let hasTransparency = false;
+  // 画像の読み込みは非同期なので、古い読み込みが新しい選択を上書きしないよう世代で管理する
+  let generation = 0;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  function currentPreset(): FramePreset {
+    const v = presetSelect.value as FramePreset;
+    return FRAME_PRESETS.includes(v) ? v : 'polaroid';
+  }
+
+  function currentOptions(): FrameOptions {
+    return {
+      preset: currentPreset(),
+      thickness: Number(thicknessInput.value),
+      radius: Number(radiusInput.value),
+      color: colorInput.value,
+      accent: accentInput.value,
+      transparentBackground: transparentInput.checked,
+    };
+  }
+
+  function updateNotes() {
+    qualityWrap.hidden = format === 'png';
+    jpegNote.hidden = !(format === 'jpeg' && hasTransparency);
+  }
+
+  /** 角丸の四角いパスを作る（ctx.roundRect が無い環境でも動くよう arcTo を使う） */
+  function roundedPath(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    radius: number,
+  ) {
+    const r = Math.max(0, Math.min(radius, w / 2, h / 2));
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function draw(
+    ctx: CanvasRenderingContext2D,
+    source: ImageBitmap,
+    plan: FramePlan,
+    scale = 1,
+    background?: string,
+  ) {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, plan.canvas.width * scale, plan.canvas.height * scale);
+    if (background) {
+      ctx.fillStyle = background;
+      ctx.fillRect(0, 0, plan.canvas.width * scale, plan.canvas.height * scale);
+    }
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    for (const op of plan.ops) {
+      roundedPath(ctx, op.x, op.y, op.width, op.height, op.radius);
+      ctx.fillStyle = op.color;
+      ctx.fill();
+    }
+    const { x, y, width, height } = plan.image;
+    if (plan.shadow) {
+      ctx.save();
+      ctx.shadowColor = plan.shadow.color;
+      // shadow系の値は変形の影響を受けないので、倍率を自分でかける
+      ctx.shadowBlur = plan.shadow.blur * scale;
+      ctx.shadowOffsetY = plan.shadow.offsetY * scale;
+      roundedPath(ctx, x, y, width, height, plan.imageRadius);
+      ctx.fillStyle = '#000000';
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.save();
+    if (plan.imageRadius > 0) {
+      roundedPath(ctx, x, y, width, height, plan.imageRadius);
+      ctx.clip();
+    }
+    ctx.drawImage(source, x, y);
+    ctx.restore();
+  }
+
+  /** 入力イベントは連続で来るので、描画は1フレームに1回へまとめる */
+  let renderQueued = false;
+  function scheduleRender() {
+    if (renderQueued) return;
+    renderQueued = true;
+    requestAnimationFrame(() => {
+      renderQueued = false;
+      render();
+    });
+  }
+
+  /** 設定に合わせて、縮小したプレビューをcanvasに描く（実寸の描画は保存時だけ） */
+  function render() {
+    statusEl.textContent = '';
+    thicknessValue.textContent = thicknessInput.value;
+    radiusValue.textContent = radiusInput.value;
+    const options = currentOptions();
+    transparentInput.disabled = options.preset !== 'shadow';
+    accentInput.disabled = !['double', 'frame', 'shadow'].includes(
+      options.preset,
+    );
+    if (!bitmap) return;
+    const source = { width: bitmap.width, height: bitmap.height };
+    const plan = planFrame(source, options);
+    if (!isWithinLimit(plan.canvas)) {
+      downloadButton.disabled = true;
+      sizeEl.textContent = '';
+      showError(d.errorOutputTooLarge ?? '');
+      return;
+    }
+    showError('');
+    const scale = Math.min(
+      1,
+      PREVIEW_MAX_EDGE / Math.max(plan.canvas.width, plan.canvas.height),
+    );
+    const previewW = Math.max(1, Math.round(plan.canvas.width * scale));
+    const previewH = Math.max(1, Math.round(plan.canvas.height * scale));
+    // サイズが同じなら代入しない（代入のたびにcanvasが作り直されて重くなる）
+    if (canvas.width !== previewW) canvas.width = previewW;
+    if (canvas.height !== previewH) canvas.height = previewH;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return showError(d.errorExportFailed ?? '');
+    draw(ctx, bitmap, plan, scale);
+    hasTransparency =
+      plan.outerRadius > 0 ||
+      (options.preset === 'shadow' &&
+        (options.transparentBackground || plan.imageRadius > 0));
+    updateNotes();
+    sizeEl.textContent = (d.outputInfo ?? '')
+      .replace('{srcWidth}', String(source.width))
+      .replace('{srcHeight}', String(source.height))
+      .replace('{width}', String(plan.canvas.width))
+      .replace('{height}', String(plan.canvas.height));
+    downloadButton.disabled = false;
+  }
+
+  async function loadFile(file: File) {
+    const current = ++generation;
+    showError('');
+    statusEl.textContent = '';
+    if (!file.type.startsWith('image/'))
+      return showError(d.errorNotImage ?? '');
+    let loaded: ImageBitmap;
+    try {
+      loaded = await createImageBitmap(file);
+    } catch {
+      if (current === generation) showError(d.errorLoadFailed ?? '');
+      return;
+    }
+    if (current !== generation) return loaded.close();
+    if (!isWithinLimit({ width: loaded.width, height: loaded.height })) {
+      loaded.close();
+      return showError(d.errorTooLarge ?? '');
+    }
+    bitmap?.close();
+    bitmap = loaded;
+    sourceName = file.name;
+    workspace.hidden = false;
+    render();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  presetSelect.addEventListener('change', (e) => {
+    // 保存した入力の復元（isTrusted=false）では、復元した値を初期値で上書きしない
+    if (e.isTrusted) {
+      const def = defaults[currentPreset()];
+      if (def) {
+        thicknessInput.value = String(def.thickness);
+        radiusInput.value = String(def.radius);
+        colorInput.value = def.color;
+        accentInput.value = def.accent;
+      }
+    }
+    render();
+  });
+  for (const el of [
+    thicknessInput,
+    radiusInput,
+    colorInput,
+    accentInput,
+    transparentInput,
+  ]) {
+    el.addEventListener('input', scheduleRender);
+    el.addEventListener('change', scheduleRender);
+  }
+
+  function applyFormat(next: OutputFormat) {
+    format = next;
+    for (const b of formatButtons) {
+      b.setAttribute('aria-pressed', String(b.dataset.format === next));
+    }
+    updateNotes();
+  }
+  for (const b of formatButtons) {
+    b.addEventListener('click', () =>
+      applyFormat(b.dataset.format as OutputFormat),
+    );
+  }
+  qualityInput.addEventListener('input', () => {
+    qualityValue.textContent = qualityInput.value;
+  });
+  render();
+
+  downloadButton.addEventListener('click', () => {
+    if (!bitmap) return;
+    const { mime } = outputFormat(format);
+    const plan = planFrame(
+      { width: bitmap.width, height: bitmap.height },
+      currentOptions(),
+    );
+    const target = document.createElement('canvas');
+    target.width = plan.canvas.width;
+    target.height = plan.canvas.height;
+    const ctx = target.getContext('2d');
+    if (!ctx) return showError(d.errorExportFailed ?? '');
+    // JPEGは透明を持てないので、白の上に描いて書き出す
+    draw(ctx, bitmap, plan, 1, format === 'jpeg' ? '#ffffff' : undefined);
+    target.toBlob(
+      (blob) => {
+        target.width = target.height = 0;
+        // 非対応の形式はブラウザがPNGで返すため、種類が違えば失敗として扱う
+        if (!blob || blob.type !== mime) {
+          return showError(d.errorExportFailed ?? '');
+        }
+        showError('');
+        downloadBlob(blob, framedFileName(sourceName, format));
+        statusEl.textContent = d.downloaded ?? '';
+      },
+      mime,
+      format === 'png' ? undefined : Number(qualityInput.value) / 100,
+    );
+  });
+</script>

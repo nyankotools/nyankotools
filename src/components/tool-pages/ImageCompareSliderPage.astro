@@ -1,0 +1,575 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { imageCompareSliderContent } from '../../i18n/tools/image-compare-slider';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageCompareSliderContent[locale];
+const slots = [
+  { key: 'before', label: t.beforeDropLabel },
+  { key: 'after', label: t.afterDropLabel },
+] as const;
+---
+
+<ToolShell t={t}>
+  <div class="grid gap-4 sm:grid-cols-2">
+    {slots.map((s) => (
+      <div>
+        <label for={`ics-${s.key}-input`} class="ui-label">
+          {s.label}
+        </label>
+        <div id={`ics-${s.key}-dropzone`} class="ui-dropzone">
+          <input
+            id={`ics-${s.key}-input`}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+            class="ui-file"
+          />
+          <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            {t.dropHint}
+          </p>
+        </div>
+        <p
+          id={`ics-${s.key}-info`}
+          data-template={t.sourceInfoTemplate}
+          class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+        />
+      </div>
+    ))}
+  </div>
+  <p
+    id="ics-error"
+    role="alert"
+    hidden
+    data-unsupported={t.errorUnsupportedFile}
+    data-too-large-template={t.errorFileTooLargeTemplate}
+    data-too-many-pixels={t.errorTooManyPixels}
+    data-failed={t.errorConversionFailed}
+    class="mt-1 text-xs text-red-600 dark:text-red-400"
+  ></p>
+
+  <p id="ics-need-both" class="mt-4 text-sm text-gray-600 dark:text-gray-400">
+    {t.needBothNote}
+  </p>
+
+  <div id="ics-results-section" hidden class="mt-6">
+    <h2 class="mb-2 text-lg font-bold">{t.resultsHeading}</h2>
+
+    <div class="mb-3 flex flex-wrap items-center gap-x-6 gap-y-2">
+      <div>
+        <span class="ui-label">{t.orientationLabel}</span>
+        <div
+          id="ics-orientation"
+          class="ui-seg"
+          role="group"
+          aria-label={t.orientationLabel}
+        >
+          <button
+            type="button"
+            data-orientation="horizontal"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            {t.orientationHorizontal}
+          </button>
+          <button
+            type="button"
+            data-orientation="vertical"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.orientationVertical}
+          </button>
+        </div>
+      </div>
+      <label class="flex items-center gap-2 pt-5 text-sm">
+        <input id="ics-show-labels" type="checkbox" checked class="ui-check" />
+        {t.showLabelsLabel}
+      </label>
+    </div>
+
+    <canvas
+      id="ics-canvas"
+      data-before-badge={t.beforeBadge}
+      data-after-badge={t.afterBadge}
+      class="block w-full cursor-ew-resize rounded-lg border border-gray-300 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800"
+    ></canvas>
+
+    <div class="mt-3">
+      <label for="ics-position" class="ui-label">
+        {t.positionLabel}
+        <span id="ics-position-value" class="tabular-nums"></span>
+      </label>
+      <input
+        id="ics-position"
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value="50"
+        class="h-11 w-full"
+      />
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        {t.sliderHint}
+      </p>
+    </div>
+
+    <div class="mt-4 flex flex-wrap gap-3">
+      <button
+        id="ics-download-slider-button"
+        type="button"
+        data-processing={t.processing}
+        data-label={t.downloadSliderButton}
+        class="ui-btn ui-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {t.downloadSliderButton}
+      </button>
+      <button
+        id="ics-download-side-button"
+        type="button"
+        data-processing={t.processing}
+        data-label={t.downloadSideButton}
+        class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {t.downloadSideButton}
+      </button>
+      <button id="ics-clear-button" type="button" class="ui-btn">
+        {t.clearButton}
+      </button>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    MAX_FILE_SIZE,
+    MAX_PIXELS,
+    OUTPUT_MAX_EDGE,
+    OUTPUT_MAX_PIXELS,
+    PREVIEW_MAX_EDGE,
+    SIDE_BY_SIDE_GAP,
+    buildOutputFileName,
+    clampPercent,
+    containRect,
+    fitMaxEdge,
+    formatFileSize,
+    isAcceptedImageFile,
+    percentFromPointer,
+    sideBySideLayout,
+    splitRegions,
+    type CompareOrientation,
+    type CompareOutputKind,
+    type Rect,
+  } from '../../lib/tools/image-compare-slider';
+
+  type Side = 'before' | 'after';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const errorEl = $('ics-error');
+  const needBothEl = $('ics-need-both');
+  const resultsSection = $('ics-results-section');
+  const canvas = $<HTMLCanvasElement>('ics-canvas');
+  const positionInput = $<HTMLInputElement>('ics-position');
+  const positionValueEl = $('ics-position-value');
+  const showLabelsInput = $<HTMLInputElement>('ics-show-labels');
+  const downloadSliderButton = $<HTMLButtonElement>(
+    'ics-download-slider-button',
+  );
+  const downloadSideButton = $<HTMLButtonElement>('ics-download-side-button');
+  const clearButton = $<HTMLButtonElement>('ics-clear-button');
+  const orientationButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#ics-orientation [data-orientation]',
+  );
+
+  const loadGen: Record<Side, number> = { before: 0, after: 0 };
+  const bitmaps: Record<Side, ImageBitmap | null> = {
+    before: null,
+    after: null,
+  };
+  let beforeName = '';
+  let orientation: CompareOrientation = 'horizontal';
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.textContent = '';
+    errorEl.hidden = true;
+  }
+
+  function drawBadge(
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    anchor: Rect,
+    alignRight: boolean,
+    alignBottom: boolean,
+    fontSize: number,
+  ) {
+    ctx.save();
+    ctx.font = `bold ${fontSize}px sans-serif`;
+    ctx.textBaseline = 'middle';
+    const padX = fontSize * 0.6;
+    const boxH = fontSize * 1.8;
+    const boxW = ctx.measureText(text).width + padX * 2;
+    const margin = fontSize * 0.6;
+    const x = alignRight
+      ? anchor.x + anchor.width - boxW - margin
+      : anchor.x + margin;
+    const y = alignBottom
+      ? anchor.y + anchor.height - boxH - margin
+      : anchor.y + margin;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+    ctx.beginPath();
+    ctx.roundRect(x, y, boxW, boxH, fontSize * 0.4);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(text, x + padX, y + boxH / 2);
+    ctx.restore();
+  }
+
+  function badgeFont(width: number, height: number): number {
+    return Math.max(12, Math.round(Math.min(width, height) / 22));
+  }
+
+  /** 1枚の画像を dst 範囲に収めて描く */
+  function drawFitted(
+    ctx: CanvasRenderingContext2D,
+    bm: ImageBitmap,
+    dst: Rect,
+  ) {
+    const r = containRect(bm.width, bm.height, dst.width, dst.height);
+    ctx.drawImage(bm, dst.x + r.x, dst.y + r.y, r.width, r.height);
+  }
+
+  /** 境界で分割した比較画像を w×h で描く */
+  function drawSlider(
+    ctx: CanvasRenderingContext2D,
+    before: ImageBitmap,
+    after: ImageBitmap,
+    w: number,
+    h: number,
+    percent: number,
+  ) {
+    const full: Rect = { x: 0, y: 0, width: w, height: h };
+    const regions = splitRegions(percent, w, h, orientation);
+    ctx.clearRect(0, 0, w, h);
+    for (const [bm, rect] of [
+      [after, regions.after],
+      [before, regions.before],
+    ] as const) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(rect.x, rect.y, rect.width, rect.height);
+      ctx.clip();
+      drawFitted(ctx, bm, full);
+      ctx.restore();
+    }
+    const unit = Math.max(1, Math.round(Math.min(w, h) / 400));
+    const { x1, y1, x2, y2 } = regions.line;
+    ctx.save();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = unit * 2;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+    ctx.shadowBlur = unit * 3;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    // つまみ
+    const cx = (x1 + x2) / 2;
+    const cy = (y1 + y2) / 2;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(cx, cy, unit * 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.fillStyle = '#374151';
+    ctx.beginPath();
+    if (orientation === 'horizontal') {
+      ctx.moveTo(cx - unit * 7, cy);
+      ctx.lineTo(cx - unit * 3, cy - unit * 4);
+      ctx.lineTo(cx - unit * 3, cy + unit * 4);
+      ctx.moveTo(cx + unit * 7, cy);
+      ctx.lineTo(cx + unit * 3, cy - unit * 4);
+      ctx.lineTo(cx + unit * 3, cy + unit * 4);
+    } else {
+      ctx.moveTo(cx, cy - unit * 7);
+      ctx.lineTo(cx - unit * 4, cy - unit * 3);
+      ctx.lineTo(cx + unit * 4, cy - unit * 3);
+      ctx.moveTo(cx, cy + unit * 7);
+      ctx.lineTo(cx - unit * 4, cy + unit * 3);
+      ctx.lineTo(cx + unit * 4, cy + unit * 3);
+    }
+    ctx.fill();
+    ctx.restore();
+
+    if (showLabelsInput.checked) {
+      const size = badgeFont(w, h);
+      drawBadge(
+        ctx,
+        canvas.dataset.beforeBadge ?? 'Before',
+        full,
+        false,
+        false,
+        size,
+      );
+      drawBadge(
+        ctx,
+        canvas.dataset.afterBadge ?? 'After',
+        full,
+        orientation === 'horizontal',
+        orientation === 'vertical',
+        size,
+      );
+    }
+  }
+
+  function currentPercent(): number {
+    return clampPercent(Number(positionInput.value));
+  }
+
+  function renderPreview() {
+    const { before, after } = bitmaps;
+    positionValueEl.textContent = ` ${currentPercent()}%`;
+    if (!before || !after) return;
+    const ctx = canvas.getContext('2d')!;
+    drawSlider(
+      ctx,
+      before,
+      after,
+      canvas.width,
+      canvas.height,
+      currentPercent(),
+    );
+  }
+
+  function updateLayout() {
+    const { before, after } = bitmaps;
+    const ready = before !== null && after !== null;
+    resultsSection.hidden = !ready;
+    needBothEl.hidden = ready;
+    clearButton.disabled = !before && !after;
+    if (!before || !after) return;
+    const size = fitMaxEdge(before.width, before.height, PREVIEW_MAX_EDGE);
+    canvas.width = size.width;
+    canvas.height = size.height;
+    canvas.style.aspectRatio = `${size.width} / ${size.height}`;
+    canvas.style.cursor =
+      orientation === 'horizontal' ? 'ew-resize' : 'ns-resize';
+    canvas.style.touchAction = orientation === 'horizontal' ? 'pan-y' : 'pan-x';
+    renderPreview();
+  }
+
+  async function loadFile(side: Side, file: File) {
+    clearError();
+    if (!isAcceptedImageFile(file)) {
+      showError(errorEl.dataset.unsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace(
+          '{max}',
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+    const gen = ++loadGen[side];
+    let next: ImageBitmap;
+    try {
+      next = await createImageBitmap(file);
+    } catch {
+      if (gen === loadGen[side]) showError(errorEl.dataset.failed ?? '');
+      return;
+    }
+    if (gen !== loadGen[side]) {
+      next.close();
+      return;
+    }
+    if (next.width * next.height > MAX_PIXELS) {
+      next.close();
+      showError(errorEl.dataset.tooManyPixels ?? '');
+      return;
+    }
+    bitmaps[side]?.close();
+    bitmaps[side] = next;
+    if (side === 'before') beforeName = file.name;
+    $(`ics-${side}-info`).textContent = (
+      $(`ics-${side}-info`).dataset.template ?? ''
+    )
+      .replace('{width}', String(next.width))
+      .replace('{height}', String(next.height))
+      .replace('{size}', formatFileSize(file.size));
+    updateLayout();
+  }
+
+  function clearAll() {
+    for (const side of ['before', 'after'] as const) {
+      loadGen[side]++;
+      bitmaps[side]?.close();
+      bitmaps[side] = null;
+      $(`ics-${side}-info`).textContent = '';
+    }
+    beforeName = '';
+    positionInput.value = '50';
+    clearError();
+    updateLayout();
+  }
+
+  async function exportPng(kind: CompareOutputKind, button: HTMLButtonElement) {
+    const { before, after } = bitmaps;
+    if (!before || !after) return;
+    const label = button.dataset.label ?? '';
+    downloadSliderButton.disabled = true;
+    downloadSideButton.disabled = true;
+    button.textContent = button.dataset.processing ?? '';
+    await new Promise((r) => setTimeout(r, 30));
+    try {
+      const out = document.createElement('canvas');
+      // Safari の Canvas 面積上限（約16.7Mピクセル）を超えないよう長辺を縮める
+      const layoutFor = (edge: number) => {
+        const b = fitMaxEdge(before.width, before.height, edge);
+        const g = Math.max(1, Math.round(SIDE_BY_SIDE_GAP * b.scale));
+        return {
+          base: b,
+          layout: sideBySideLayout(b.width, b.height, orientation, g),
+        };
+      };
+      let planned = layoutFor(OUTPUT_MAX_EDGE);
+      const areaOf = (p: typeof planned) =>
+        kind === 'slider'
+          ? p.base.width * p.base.height
+          : p.layout.width * p.layout.height;
+      for (let i = 0; i < 4 && areaOf(planned) > OUTPUT_MAX_PIXELS; i++) {
+        planned = layoutFor(
+          Math.floor(
+            Math.max(...[planned.base.width, planned.base.height]) *
+              Math.sqrt(OUTPUT_MAX_PIXELS / areaOf(planned)) *
+              0.98,
+          ),
+        );
+      }
+      const { base, layout } = planned;
+      if (kind === 'slider') {
+        out.width = base.width;
+        out.height = base.height;
+      } else {
+        out.width = layout.width;
+        out.height = layout.height;
+      }
+      const ctx = out.getContext('2d')!;
+      if (kind === 'slider') {
+        drawSlider(ctx, before, after, out.width, out.height, currentPercent());
+      } else {
+        ctx.clearRect(0, 0, out.width, out.height);
+        drawFitted(ctx, before, layout.before);
+        drawFitted(ctx, after, layout.after);
+        if (showLabelsInput.checked) {
+          const size = badgeFont(base.width, base.height);
+          drawBadge(
+            ctx,
+            canvas.dataset.beforeBadge ?? 'Before',
+            layout.before,
+            false,
+            false,
+            size,
+          );
+          drawBadge(
+            ctx,
+            canvas.dataset.afterBadge ?? 'After',
+            layout.after,
+            false,
+            false,
+            size,
+          );
+        }
+      }
+      const blob = await new Promise<Blob | null>((resolve) =>
+        out.toBlob(resolve, 'image/png'),
+      );
+      if (!blob || blob.type !== 'image/png') {
+        showError(errorEl.dataset.failed ?? '');
+        return;
+      }
+      clearError();
+      downloadBlob(blob, buildOutputFileName(beforeName, kind));
+    } catch {
+      showError(errorEl.dataset.failed ?? '');
+    } finally {
+      button.textContent = label;
+      downloadSliderButton.disabled = false;
+      downloadSideButton.disabled = false;
+    }
+  }
+
+  for (const side of ['before', 'after'] as const) {
+    const input = $<HTMLInputElement>(`ics-${side}-input`);
+    input.addEventListener('change', () => {
+      const file = input.files?.[0];
+      input.value = '';
+      if (file) void loadFile(side, file);
+    });
+    enableFileDrop($(`ics-${side}-dropzone`), input);
+  }
+
+  positionInput.addEventListener('input', renderPreview);
+  showLabelsInput.addEventListener('change', renderPreview);
+
+  orientationButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      orientation = b.dataset.orientation as CompareOrientation;
+      orientationButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      canvas.style.cursor =
+        orientation === 'horizontal' ? 'ew-resize' : 'ns-resize';
+      canvas.style.touchAction =
+        orientation === 'horizontal' ? 'pan-y' : 'pan-x';
+      renderPreview();
+    }),
+  );
+
+  let dragging = false;
+  function moveTo(e: PointerEvent) {
+    const box = canvas.getBoundingClientRect();
+    const p = percentFromPointer(e.clientX, e.clientY, box, orientation);
+    positionInput.value = String(Math.round(p));
+    renderPreview();
+  }
+  canvas.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    canvas.setPointerCapture(e.pointerId);
+    moveTo(e);
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (dragging) moveTo(e);
+  });
+  const stopDrag = () => {
+    dragging = false;
+  };
+  canvas.addEventListener('pointerup', stopDrag);
+  canvas.addEventListener('pointercancel', stopDrag);
+
+  clearButton.addEventListener('click', clearAll);
+  downloadSliderButton.addEventListener(
+    'click',
+    () => void exportPng('slider', downloadSliderButton),
+  );
+  downloadSideButton.addEventListener(
+    'click',
+    () => void exportPng('side-by-side', downloadSideButton),
+  );
+
+  updateLayout();
+</script>

@@ -35,6 +35,24 @@ test.describe('コマンドパレット', () => {
     await expect(page).toHaveURL(/\/tools\/char-counter\/$/);
   });
 
+  test('空白区切りはAND検索、半角カナ・ひらがなでも一致する', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.keyboard.press('Control+k');
+    const input = page.locator('#palette-input');
+    const first = page.locator('#palette-list [role="option"]').first();
+
+    await input.fill('文字数 zzzzzz');
+    await expect(page.locator('#palette-empty')).toBeVisible();
+
+    await input.fill('ｶｳﾝﾄ');
+    await expect(first).toHaveText(/文字数カウント/);
+
+    await input.fill('文字数　カウント');
+    await expect(first).toHaveText(/文字数カウント/);
+  });
+
   test('Esc で閉じ、一致なしなら空メッセージを表示する', async ({ page }) => {
     await page.goto('/en/');
     await page.keyboard.press('Control+k');

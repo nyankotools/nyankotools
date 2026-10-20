@@ -8,16 +8,27 @@ export interface HomeFilterOptions {
 
 const ALL_CATEGORY = 'all';
 
-/** 大文字小文字と全角/半角（ＪＳＯＮ→json など）の表記ゆれを揃える */
+/**
+ * 大文字小文字と全角/半角（ＪＳＯＮ→json など）、カタカナ/ひらがな
+ * （グラデーション→ぐらでーしょん）の表記ゆれを揃える
+ */
 export function normalize(text: string): string {
-  return text.normalize('NFKC').toLowerCase();
+  return text
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[ァ-ヶ]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0x60));
+}
+
+/** 検索語を空白（全角空白含む）で区切って正規化する。空なら空配列 */
+export function splitQuery(query: string): string[] {
+  return normalize(query).split(/\s+/).filter(Boolean);
 }
 
 export function filterTools(
   tools: LocalizedTool[],
   options: HomeFilterOptions = {},
 ): LocalizedTool[] {
-  const query = normalize(options.query?.trim() ?? '');
+  const terms = splitQuery(options.query ?? '');
   const category = options.category ?? ALL_CATEGORY;
 
   return tools.filter((tool) => {
@@ -25,12 +36,12 @@ export function filterTools(
       category === ALL_CATEGORY || tool.categoryId === category;
     if (!matchesCategory) return false;
 
-    if (!query) return true;
-    return (
-      normalize(tool.name).includes(query) ||
-      normalize(tool.description).includes(query) ||
-      tool.keywords.some((keyword) => normalize(keyword).includes(query))
+    if (terms.length === 0) return true;
+    const fields = [tool.name, tool.description, ...tool.keywords].map(
+      normalize,
     );
+    // すべての語がいずれかの項目に含まれること（AND検索）
+    return terms.every((term) => fields.some((f) => f.includes(term)));
   });
 }
 

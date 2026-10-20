@@ -1,5 +1,5 @@
 import type { LocalizedTool } from '../data/tools';
-import { normalize } from './home-filter';
+import { normalize, splitQuery } from './home-filter';
 
 /**
  * クエリに一致するツールを、関連度の高い順（名前の前方一致 → 名前 → 別名 →
@@ -10,19 +10,30 @@ export function rankTools(
   query: string,
   limit = 20,
 ): LocalizedTool[] {
-  const q = normalize(query.trim());
-  if (!q) return tools;
+  const terms = splitQuery(query);
+  if (terms.length === 0) return tools;
 
   const scored: { tool: LocalizedTool; score: number; index: number }[] = [];
   tools.forEach((tool, index) => {
     const name = normalize(tool.name);
-    let score: number | null = null;
-    if (name.startsWith(q)) score = 0;
-    else if (name.includes(q)) score = 1;
-    else if (tool.keywords.some((k) => normalize(k).includes(q))) score = 2;
-    else if (tool.slug.includes(q) || normalize(tool.category).includes(q))
-      score = 3;
-    else if (normalize(tool.description).includes(q)) score = 4;
+    const keywords = tool.keywords.map(normalize);
+    const category = normalize(tool.category);
+    const description = normalize(tool.description);
+    // すべての語が一致する必要がある（AND検索）。順位は最も弱い一致で決める
+    let score: number | null = 0;
+    for (const q of terms) {
+      let s: number | null = null;
+      if (name.startsWith(q)) s = 0;
+      else if (name.includes(q)) s = 1;
+      else if (keywords.some((k) => k.includes(q))) s = 2;
+      else if (tool.slug.includes(q) || category.includes(q)) s = 3;
+      else if (description.includes(q)) s = 4;
+      if (s === null) {
+        score = null;
+        break;
+      }
+      score = Math.max(score, s);
+    }
     if (score !== null) scored.push({ tool, score, index });
   });
   scored.sort((a, b) => a.score - b.score || a.index - b.index);

@@ -124,6 +124,12 @@ test.describe('ホームページの検索（keywords・表記ゆれ）', () => 
     await search.fill('zzqxjk該当なし');
     await expect(page.locator('#no-results')).toBeVisible();
 
+    // 空白区切りはすべての語を含む項目だけに絞る（AND検索）
+    await search.fill('クロン 該当なし');
+    await expect(page.locator('#no-results')).toBeVisible();
+    await search.fill('クロン　スケジュール');
+    await expect(card('cron-parser')).toBeVisible();
+
     await search.fill('　');
     await expect(page.locator('[data-tool-slug]:not([hidden])')).toHaveCount(
       tools.length,
@@ -295,7 +301,8 @@ for (const { lang, path, toolPath } of homePages) {
     }) => {
       await page.setViewportSize({ width: 375, height: 667 });
       await page.goto(`${path}?c=camera`);
-      const group = page.locator('[data-drag-scroll]');
+      // トップは下部のカテゴリ一覧（ul）も data-drag-scroll を持つため role で絞る
+      const group = page.locator('[role="group"][data-drag-scroll]');
       const groupBox = await group.boundingBox();
       expect(groupBox).not.toBeNull();
       expect(groupBox!.x).toBeGreaterThanOrEqual(0);
@@ -317,7 +324,7 @@ for (const { lang, path, toolPath } of homePages) {
     }) => {
       await page.setViewportSize({ width: 375, height: 667 });
       await page.goto(path);
-      const group = page.locator('[data-drag-scroll]');
+      const group = page.locator('[role="group"][data-drag-scroll]');
       const box = await group.boundingBox();
       expect(box).not.toBeNull();
       const y = box!.y + box!.height / 2;
@@ -344,7 +351,7 @@ for (const { lang, path, toolPath } of homePages) {
     }) => {
       await page.setViewportSize({ width: 375, height: 667 });
       await page.goto(path);
-      const group = page.locator('[data-drag-scroll]');
+      const group = page.locator('[role="group"][data-drag-scroll]');
       const box = await group.boundingBox();
       const y = box!.y + box!.height / 2;
 
@@ -370,7 +377,7 @@ for (const { lang, path, toolPath } of homePages) {
     }) => {
       await page.setViewportSize({ width: 375, height: 667 });
       await page.goto(path);
-      const group = page.locator('[data-drag-scroll]');
+      const group = page.locator('[role="group"][data-drag-scroll]');
 
       const maskAtStart = await group.evaluate(
         (el) => getComputedStyle(el).maskImage,
@@ -394,7 +401,7 @@ for (const { lang, path, toolPath } of homePages) {
       // 1920px でもサイドバー分の余白で行が収まりきらないため、十分広い幅で確認する
       await page.setViewportSize({ width: 2560, height: 1000 });
       await page.goto(path);
-      const group = page.locator('[data-drag-scroll]');
+      const group = page.locator('[role="group"][data-drag-scroll]');
       expect(
         await group.evaluate((el) => el.scrollWidth <= el.clientWidth),
       ).toBe(true);

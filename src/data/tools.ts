@@ -9286,6 +9286,168 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'css-filter-generator',
+    category: 'dev',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: [
+      'css-box-shadow-generator',
+      'css-text-shadow-generator',
+      'css-glassmorphism-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSS filterジェネレーター',
+        description:
+          'blur・brightness・contrast・grayscale・hue-rotate・drop-shadowなどのCSS filterをスライダーで調整し、プレビューしながらコードを生成。',
+        keywords: [
+          'filter',
+          'blur',
+          'grayscale',
+          'drop-shadow',
+          'hue-rotate',
+          'sepia',
+          'フィルター',
+          'ぼかし',
+        ],
+      },
+      en: {
+        name: 'CSS Filter Generator',
+        description:
+          'Build CSS filter code with live preview: blur, brightness, contrast, grayscale, hue-rotate, drop-shadow and more.',
+        keywords: [
+          'css filter',
+          'blur',
+          'grayscale',
+          'drop-shadow',
+          'hue-rotate',
+          'sepia',
+          'brightness',
+          'contrast',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'css-transform-generator',
+    category: 'dev',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: [
+      'css-animation-generator',
+      'css-box-shadow-generator',
+      'css-border-radius-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSS transformジェネレーター',
+        description:
+          '移動・回転・拡大縮小・傾き・3D回転・perspective・transform-originを調整して、CSS transformをプレビューしながら生成します。',
+        keywords: [
+          'transform',
+          '回転',
+          '拡大縮小',
+          'skew',
+          '3D',
+          'perspective',
+          'transform-origin',
+        ],
+      },
+      en: {
+        name: 'CSS Transform Generator',
+        description:
+          'Builds CSS transform declarations with a live preview: translate, rotate, scale, skew, 3D rotation, perspective, and origin.',
+        keywords: [
+          'transform',
+          'rotate',
+          'scale',
+          'skew',
+          '3D rotate',
+          'perspective',
+          'transform-origin',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'css-specificity-calculator',
+    category: 'dev',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: ['css-clamp-calculator', 'regex-tester'],
+    translations: {
+      ja: {
+        name: 'CSS詳細度計算機',
+        description:
+          'CSSセレクタの詳細度(a, b, c)を1行ずつ計算し、複数のセレクタを比較してどれが優先されるか判定します。',
+        keywords: [
+          'specificity',
+          '詳細度',
+          'セレクタ',
+          'CSS優先順位',
+          'カスケード',
+          ':where',
+          ':is',
+        ],
+      },
+      en: {
+        name: 'CSS Specificity Calculator',
+        description:
+          'Calculate CSS selector specificity (a, b, c) line by line and compare selectors to see which rule wins.',
+        keywords: [
+          'specificity',
+          'css selector',
+          'css priority',
+          'cascade',
+          'selector specificity',
+          ':where',
+          ':is',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'css-button-generator',
+    category: 'dev',
+    addedAt: '2026-10-20',
+    updatedAt: '2026-10-20',
+    related: [
+      'css-box-shadow-generator',
+      'css-border-radius-generator',
+      'css-glassmorphism-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSSボタン・トグルスイッチ・三角形ジェネレーター',
+        description:
+          'ボタン・JS不要のトグルスイッチ・三角形・矢印のHTMLとCSSを、テーマ色・角丸・ホバー効果を指定してプレビュー付きで生成します。',
+        keywords: [
+          'CSSボタン',
+          'トグルスイッチ',
+          '三角形',
+          '矢印',
+          'ホバー',
+          'button',
+          'toggle switch',
+          'CSS triangle',
+        ],
+      },
+      en: {
+        name: 'CSS Button & Toggle Switch Generator',
+        description:
+          'Generate CSS buttons, pure-CSS toggle switches, triangles and arrows with hover effects, a live preview and contrast check.',
+        keywords: [
+          'CSS button',
+          'toggle switch',
+          'CSS triangle',
+          'CSS arrow',
+          'hover effect',
+          'button generator',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

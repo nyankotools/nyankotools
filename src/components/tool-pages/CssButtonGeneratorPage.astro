@@ -1,0 +1,491 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cssButtonGeneratorContent } from '../../i18n/tools/css-button-generator';
+import {
+  BUTTON_STYLES,
+  DEFAULT_PART,
+  DIRECTIONS,
+  HOVER_EFFECTS,
+  PART_KINDS,
+  PART_PRESETS,
+  sizeRange,
+} from '../../lib/tools/css-button-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cssButtonGeneratorContent[locale];
+
+const kindLabels = {
+  button: t.kindButton,
+  toggle: t.kindToggle,
+  triangle: t.kindTriangle,
+  arrow: t.kindArrow,
+};
+const styleLabels = {
+  solid: t.styleSolid,
+  outline: t.styleOutline,
+  soft: t.styleSoft,
+};
+const hoverLabels = {
+  none: t.hoverNone,
+  color: t.hoverColor,
+  lift: t.hoverLift,
+  both: t.hoverBoth,
+};
+const directionLabels = {
+  up: t.directionUp,
+  right: t.directionRight,
+  down: t.directionDown,
+  left: t.directionLeft,
+};
+const range = sizeRange(DEFAULT_PART.kind);
+
+const inputClass = 'ui-input h-11 px-2 dark:bg-gray-900';
+---
+
+<ToolShell t={t}>
+  <div class="mb-5">
+    <span class="ui-label" id="cb-kind-label">
+      {t.kindLabel}
+    </span>
+    <div
+      class="ui-seg w-full sm:w-auto sm:inline-flex"
+      role="group"
+      aria-labelledby="cb-kind-label"
+    >
+      {PART_KINDS.map((k) => (
+        <button
+          type="button"
+          class="ui-seg-btn flex-1 sm:flex-none"
+          data-kind={k}
+          aria-pressed={k === DEFAULT_PART.kind ? 'true' : 'false'}
+        >
+          {kindLabels[k]}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <div class="mb-5">
+    <span class="ui-label" id="cb-preset-label">
+      {t.presetLabel}
+    </span>
+    {PART_KINDS.map((k) => (
+      <div data-preset-group={k} hidden={k !== DEFAULT_PART.kind}>
+        <div
+          class="flex flex-wrap gap-2"
+          role="group"
+          aria-labelledby="cb-preset-label"
+        >
+          {PART_PRESETS[k].map((p) => (
+            <button type="button" class="ui-btn" data-preset={`${k}:${p.id}`}>
+              {t.presetNames[`${k}-${p.id}`]}
+            </button>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <div class="mb-6 grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="cb-color" class="ui-label">
+        {t.colorLabel}
+      </label>
+      <div class="flex items-center gap-2">
+        <input
+          id="cb-color"
+          type="color"
+          value={DEFAULT_PART.color}
+          class="h-11 w-14 shrink-0 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+        />
+        <input
+          id="cb-color-hex"
+          type="text"
+          value={DEFAULT_PART.color}
+          maxlength="7"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label={t.colorHexLabel}
+          class="ui-input h-11 w-32 px-2 font-mono"
+        />
+      </div>
+    </div>
+    <div data-field="buttonStyle">
+      <label for="cb-style" class="ui-label">
+        {t.buttonStyleLabel}
+      </label>
+      <select id="cb-style" class={inputClass}>
+        {BUTTON_STYLES.map((s) => (
+          <option value={s}>{styleLabels[s]}</option>
+        ))}
+      </select>
+    </div>
+    <div data-field="hover">
+      <label for="cb-hover" class="ui-label">
+        {t.hoverLabel}
+      </label>
+      <select id="cb-hover" class={inputClass}>
+        {HOVER_EFFECTS.map((h) => (
+          <option value={h} selected={h === DEFAULT_PART.hover}>
+            {hoverLabels[h]}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div data-field="direction" hidden>
+      <label for="cb-direction" class="ui-label">
+        {t.directionLabel}
+      </label>
+      <select id="cb-direction" class={inputClass}>
+        {DIRECTIONS.map((d) => (
+          <option value={d} selected={d === DEFAULT_PART.direction}>
+            {directionLabels[d]}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div data-field="label">
+      <label for="cb-label" class="ui-label">
+        {t.labelLabel}
+      </label>
+      <input
+        id="cb-label"
+        type="text"
+        value={t.labelDefault}
+        maxlength="30"
+        autocomplete="off"
+        class="ui-input h-11 px-2"
+      />
+    </div>
+    <div>
+      <label for="cb-size" class="ui-label">
+        {t.sizeLabel}: <span data-val-for="cb-size">{DEFAULT_PART.size}</span>px
+      </label>
+      <input
+        id="cb-size"
+        type="range"
+        min={range.min}
+        max={range.max}
+        value={DEFAULT_PART.size}
+        class="w-full"
+      />
+    </div>
+    <div data-field="radius">
+      <label for="cb-radius" class="ui-label">
+        {t.radiusLabel}:{' '}
+        <span data-val-for="cb-radius">{DEFAULT_PART.radius}</span>px
+      </label>
+      <input
+        id="cb-radius"
+        type="range"
+        min="0"
+        max="60"
+        value={DEFAULT_PART.radius}
+        class="w-full"
+      />
+    </div>
+    <div data-field="thickness" hidden>
+      <label for="cb-thickness" class="ui-label">
+        {t.thicknessLabel}:{' '}
+        <span data-val-for="cb-thickness">{DEFAULT_PART.thickness}</span>px
+      </label>
+      <input
+        id="cb-thickness"
+        type="range"
+        min="1"
+        max="10"
+        value={DEFAULT_PART.thickness}
+        class="w-full"
+      />
+    </div>
+  </div>
+
+  <h2 id="cb-preview-heading" class="mb-1 text-lg font-bold">
+    {t.previewHeading}
+  </h2>
+  <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">{t.previewHint}</p>
+  <div
+    role="group"
+    aria-labelledby="cb-preview-heading"
+    class="mb-4 flex h-40 w-full items-center justify-center overflow-hidden rounded-lg border border-gray-300 bg-white text-gray-900 dark:border-gray-700"
+  >
+    <div id="cb-preview"></div>
+  </div>
+
+  <div
+    class="mb-6 rounded-lg border border-gray-200 p-3 text-sm dark:border-gray-800"
+    data-pass={t.contrastPass}
+    data-fail={t.contrastFail}
+    data-text-note={t.contrastTextNote}
+    data-shape-note={t.contrastShapeNote}
+  >
+    <h2 class="mb-1 font-bold">{t.contrastHeading}</h2>
+    <ul class="space-y-1">
+      <li>
+        {t.contrastNormal}:
+        <span id="cb-contrast-normal" class="font-mono"></span>
+      </li>
+      <li id="cb-contrast-hover-row">
+        {t.contrastHover}:{' '}
+        <span id="cb-contrast-hover" class="font-mono"></span>
+      </li>
+    </ul>
+    <p id="cb-contrast-note" class="mt-1 text-gray-600 dark:text-gray-400"></p>
+  </div>
+
+  <div data-copied={t.copied} data-copy-failed={t.copyFailed}>
+    <div class="mb-4">
+      <label for="cb-html-output" class="ui-label">
+        {t.htmlHeading}
+      </label>
+      <textarea
+        id="cb-html-output"
+        readonly
+        rows="5"
+        class="ui-input h-32 w-full min-w-0 resize-none bg-gray-50 p-3 font-mono dark:bg-gray-900"
+      ></textarea>
+      <button id="cb-copy-html-button" type="button" class="ui-btn mt-2">
+        {t.copyHtmlButton}
+      </button>
+    </div>
+    <div>
+      <label for="cb-css-output" class="ui-label">
+        {t.cssHeading}
+      </label>
+      <textarea
+        id="cb-css-output"
+        readonly
+        rows="10"
+        class="ui-input h-64 w-full min-w-0 resize-none bg-gray-50 p-3 font-mono dark:bg-gray-900"
+      ></textarea>
+      <button id="cb-copy-css-button" type="button" class="ui-btn mt-2">
+        {t.copyCssButton}
+      </button>
+    </div>
+    <span
+      id="cb-status"
+      class="mt-2 block text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    applicableFields,
+    buildPartCode,
+    clampPart,
+    contrastReport,
+    normalizeHex,
+    PART_PRESETS,
+    sizeRange,
+    type ButtonStyle,
+    type Direction,
+    type HoverEffect,
+    type PartKind,
+    type PartParams,
+  } from '../../lib/tools/css-button-generator';
+
+  const $ = (id: string) => document.getElementById(id) as HTMLInputElement;
+  const num = (id: string) => Number($(id).value);
+
+  const sizeInput = $('cb-size');
+  const colorInput = $('cb-color');
+  const hexInput = $('cb-color-hex');
+  const hoverSelect = $('cb-hover') as unknown as HTMLSelectElement;
+  const htmlOutput = $('cb-html-output') as unknown as HTMLTextAreaElement;
+  const cssOutput = $('cb-css-output') as unknown as HTMLTextAreaElement;
+  const statusEl = $('cb-status');
+  const copyBox = htmlOutput.closest('[data-copied]') as HTMLElement;
+  const copied = copyBox.dataset.copied ?? '';
+  const copyFailed = copyBox.dataset.copyFailed ?? '';
+  const contrastBox = $('cb-contrast-note').closest(
+    '[data-pass]',
+  ) as HTMLElement;
+  const kindButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-kind]'),
+  );
+
+  // CSP（style-src 'self'）でインライン<style>が使えないため、
+  // プレビューはShadow DOMとconstructable stylesheetで描画する
+  const host = $('cb-preview');
+  const shadow = host.attachShadow({ mode: 'open' });
+  const supportsSheet =
+    typeof CSSStyleSheet !== 'undefined' &&
+    'replaceSync' in CSSStyleSheet.prototype &&
+    'adoptedStyleSheets' in shadow;
+  const sheet = supportsSheet ? new CSSStyleSheet() : null;
+  if (sheet) shadow.adoptedStyleSheets = [sheet];
+
+  let kind: PartKind = 'button';
+
+  function readParams(): PartParams {
+    return clampPart({
+      kind,
+      color: colorInput.value,
+      buttonStyle: $('cb-style').value as ButtonStyle,
+      hover: hoverSelect.value as HoverEffect,
+      radius: num('cb-radius'),
+      size: num('cb-size'),
+      direction: $('cb-direction').value as Direction,
+      thickness: num('cb-thickness'),
+      label: $('cb-label').value,
+    });
+  }
+
+  function refreshValueLabels() {
+    document.querySelectorAll<HTMLElement>('[data-val-for]').forEach((el) => {
+      el.textContent = $(el.dataset.valFor ?? '').value;
+    });
+  }
+
+  function refreshVisibility() {
+    const f = applicableFields(kind);
+    const show = (name: string, visible: boolean) => {
+      document
+        .querySelectorAll<HTMLElement>(`[data-field="${name}"]`)
+        .forEach((el) => (el.hidden = !visible));
+    };
+    show('buttonStyle', f.buttonStyle);
+    show('radius', f.radius);
+    show('direction', f.direction);
+    show('thickness', f.thickness);
+    show('label', f.label);
+    Array.from(hoverSelect.options).forEach((o) => {
+      const liftOption = o.value === 'lift' || o.value === 'both';
+      o.disabled = liftOption && !f.lift;
+      o.hidden = liftOption && !f.lift;
+    });
+    if (
+      !f.lift &&
+      (hoverSelect.value === 'lift' || hoverSelect.value === 'both')
+    ) {
+      hoverSelect.value = 'color';
+    }
+    document
+      .querySelectorAll<HTMLElement>('[data-preset-group]')
+      .forEach((el) => (el.hidden = el.dataset.presetGroup !== kind));
+    kindButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.kind === kind)),
+    );
+  }
+
+  function renderPreview(html: string, css: string) {
+    const prev = shadow.querySelector<HTMLInputElement>(
+      'input[type="checkbox"]',
+    );
+    const wasChecked = prev ? prev.checked : true;
+    if (sheet) sheet.replaceSync(`:host{display:block}\n${css}`);
+    shadow.innerHTML = html;
+    const next = shadow.querySelector<HTMLInputElement>(
+      'input[type="checkbox"]',
+    );
+    if (next) next.checked = wasChecked;
+  }
+
+  function renderContrast(p: PartParams) {
+    const r = contrastReport(p);
+    const pass = contrastBox.dataset.pass ?? '';
+    const fail = contrastBox.dataset.fail ?? '';
+    const fmt = (v: number) =>
+      `${v.toFixed(2)} : 1 (${v >= r.threshold ? pass : fail})`;
+    $('cb-contrast-normal').textContent = fmt(r.normal);
+    $('cb-contrast-hover').textContent = r.hover === null ? '-' : fmt(r.hover);
+    $('cb-contrast-hover-row').hidden = r.hover === null;
+    $('cb-contrast-note').textContent =
+      (r.threshold === 4.5
+        ? contrastBox.dataset.textNote
+        : contrastBox.dataset.shapeNote) ?? '';
+  }
+
+  function update() {
+    refreshValueLabels();
+    refreshVisibility();
+    const p = readParams();
+    const code = buildPartCode(p);
+    htmlOutput.value = code.html;
+    cssOutput.value = code.css;
+    renderPreview(code.html, code.css);
+    renderContrast(p);
+  }
+
+  function setKind(next: PartKind) {
+    kind = next;
+    const r = sizeRange(kind);
+    sizeInput.min = String(r.min);
+    sizeInput.max = String(r.max);
+    sizeInput.value = String(r.default);
+    applyPreset(PART_PRESETS[kind][0].params);
+  }
+
+  function applyPreset(params: Partial<PartParams>) {
+    if (params.buttonStyle) $('cb-style').value = params.buttonStyle;
+    if (params.hover) hoverSelect.value = params.hover;
+    if (params.radius !== undefined)
+      $('cb-radius').value = String(params.radius);
+    if (params.direction) $('cb-direction').value = params.direction;
+    if (params.thickness !== undefined) {
+      $('cb-thickness').value = String(params.thickness);
+    }
+    update();
+  }
+
+  kindButtons.forEach((b) =>
+    b.addEventListener('click', () => setKind(b.dataset.kind as PartKind)),
+  );
+
+  document.querySelectorAll<HTMLButtonElement>('[data-preset]').forEach((b) => {
+    b.addEventListener('click', () => {
+      const [k, id] = (b.dataset.preset ?? '').split(':');
+      const preset = PART_PRESETS[k as PartKind]?.find((x) => x.id === id);
+      if (preset) applyPreset(preset.params);
+    });
+  });
+
+  colorInput.addEventListener('input', () => {
+    hexInput.value = colorInput.value;
+  });
+  hexInput.addEventListener('input', () => {
+    const hex = normalizeHex(hexInput.value, '');
+    if (hex) {
+      colorInput.value = hex;
+      update();
+    }
+  });
+  hexInput.addEventListener('blur', () => {
+    hexInput.value = colorInput.value;
+  });
+
+  for (const id of [
+    'cb-color',
+    'cb-style',
+    'cb-hover',
+    'cb-direction',
+    'cb-label',
+    'cb-size',
+    'cb-radius',
+    'cb-thickness',
+  ]) {
+    $(id).addEventListener('input', update);
+    $(id).addEventListener('change', update);
+  }
+
+  async function copy(text: string) {
+    if (!text) return;
+    statusEl.textContent = (await copyText(text)) ? copied : copyFailed;
+  }
+  $('cb-copy-html-button').addEventListener('click', () =>
+    copy(htmlOutput.value),
+  );
+  $('cb-copy-css-button').addEventListener('click', () =>
+    copy(cssOutput.value),
+  );
+
+  update();
+</script>

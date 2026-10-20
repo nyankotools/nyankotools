@@ -1,0 +1,322 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cssFilterGeneratorContent } from '../../i18n/tools/css-filter-generator';
+import {
+  FILTER_DEFS,
+  FILTER_PRESETS,
+} from '../../lib/tools/css-filter-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cssFilterGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="mb-6">
+    <h2 class="mb-2 text-lg font-bold">{t.presetsHeading}</h2>
+    <div class="flex flex-wrap gap-2">
+      {FILTER_PRESETS.map((p) => (
+        <button type="button" data-preset={p.id} class="ui-btn">
+          {t.presetLabels[p.id]}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <h2 class="mb-2 text-lg font-bold">{t.previewHeading}</h2>
+  <div class="mb-6 flex min-h-56 w-full items-center justify-center overflow-hidden rounded-lg border border-gray-300 bg-gray-100 p-6 dark:border-gray-700">
+    <div
+      id="cf-preview"
+      role="img"
+      aria-label={t.previewSampleLabel}
+      class="flex max-w-full flex-wrap items-center justify-center gap-4"
+    >
+      <div class="h-24 w-24 rounded-full bg-gradient-to-br from-pink-500 via-orange-400 to-yellow-300"></div>
+      <div class="h-24 w-24 rounded-lg bg-gradient-to-tr from-blue-600 via-cyan-400 to-green-300"></div>
+      <div class="flex h-24 w-24 items-center justify-center rounded-lg bg-purple-600 text-lg font-bold text-white">
+        {t.previewText}
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-6">
+    <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+      <h2 class="text-lg font-bold">{t.filtersHeading}</h2>
+      <button id="cf-reset-button" type="button" class="ui-btn">
+        {t.resetButton}
+      </button>
+    </div>
+    <ul class="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+      {FILTER_DEFS.map((d) => (
+        <li>
+          <label
+            for={`cf-n-${d.key}`}
+            class="mb-1 block text-sm text-gray-700 dark:text-gray-300"
+          >
+            {t.filterLabels[d.key]}
+          </label>
+          <div class="flex items-center gap-3">
+            <input
+              data-range={d.key}
+              type="range"
+              min={d.min}
+              max={d.max}
+              step="1"
+              value={d.neutral}
+              aria-label={t.filterLabels[d.key]}
+              class="h-11 min-w-0 flex-1"
+            />
+            <input
+              id={`cf-n-${d.key}`}
+              data-filter={d.key}
+              data-neutral={d.neutral}
+              type="number"
+              min={d.min}
+              max={d.max}
+              value={d.neutral}
+              class="ui-input h-11 w-20 shrink-0 px-2 dark:bg-gray-900"
+            />
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <div class="mb-6 rounded-lg border border-gray-300 p-3 dark:border-gray-700">
+    <h2 class="mb-1 text-lg font-bold">{t.dropShadowHeading}</h2>
+    <label class="ui-check">
+      <input id="cf-shadow-enabled" type="checkbox" />
+      {t.dropShadowEnableLabel}
+    </label>
+    <div class="flex flex-wrap items-end gap-3">
+      <label class="text-sm text-gray-700 dark:text-gray-300">
+        <span class="mb-1 block">{t.offsetXLabel}</span>
+        <input
+          id="cf-shadow-x"
+          type="number"
+          min="-100"
+          max="100"
+          value="4"
+          class="ui-input h-11 w-20 px-2 dark:bg-gray-900"
+        />
+      </label>
+      <label class="text-sm text-gray-700 dark:text-gray-300">
+        <span class="mb-1 block">{t.offsetYLabel}</span>
+        <input
+          id="cf-shadow-y"
+          type="number"
+          min="-100"
+          max="100"
+          value="4"
+          class="ui-input h-11 w-20 px-2 dark:bg-gray-900"
+        />
+      </label>
+      <label class="text-sm text-gray-700 dark:text-gray-300">
+        <span class="mb-1 block">{t.blurLabel}</span>
+        <input
+          id="cf-shadow-blur"
+          type="number"
+          min="0"
+          max="100"
+          value="6"
+          class="ui-input h-11 w-20 px-2 dark:bg-gray-900"
+        />
+      </label>
+      <label class="text-sm text-gray-700 dark:text-gray-300">
+        <span class="mb-1 block">{t.colorLabel}</span>
+        <input
+          id="cf-shadow-color"
+          type="color"
+          value="#000000"
+          class="h-11 w-14 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+        />
+      </label>
+    </div>
+  </div>
+
+  <div data-copied={t.copied} data-copy-failed={t.copyFailed}>
+    <label for="cf-css-output" class="ui-label">
+      {t.cssHeading}
+    </label>
+    <div class="flex gap-2">
+      <textarea
+        id="cf-css-output"
+        readonly
+        rows="3"
+        class="ui-input h-24 w-full min-w-0 resize-none bg-gray-50 p-3 font-mono dark:bg-gray-900"
+      ></textarea>
+      <button
+        id="cf-copy-button"
+        type="button"
+        class="ui-btn shrink-0 self-start"
+      >
+        {t.copyButton}
+      </button>
+    </div>
+    <span
+      id="cf-status"
+      class="mt-2 block text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    applyPreset,
+    buildCssDeclaration,
+    buildFilterValue,
+    clampFilterValue,
+    clampShadowBlur,
+    clampShadowOffset,
+    defaultFilterState,
+    getPreset,
+    type FilterKey,
+    type FilterState,
+  } from '../../lib/tools/css-filter-generator';
+
+  const preview = document.getElementById('cf-preview')!;
+  const cssOutput = document.getElementById(
+    'cf-css-output',
+  ) as HTMLTextAreaElement;
+  const copyButton = document.getElementById('cf-copy-button')!;
+  const statusEl = document.getElementById('cf-status')!;
+  const resetButton = document.getElementById('cf-reset-button')!;
+
+  const numberInputs = Array.from(
+    document.querySelectorAll<HTMLInputElement>('input[data-filter]'),
+  );
+  const rangeInputs = Array.from(
+    document.querySelectorAll<HTMLInputElement>('input[data-range]'),
+  );
+  const shadowEnabled = document.getElementById(
+    'cf-shadow-enabled',
+  ) as HTMLInputElement;
+  const shadowX = document.getElementById('cf-shadow-x') as HTMLInputElement;
+  const shadowY = document.getElementById('cf-shadow-y') as HTMLInputElement;
+  const shadowBlur = document.getElementById(
+    'cf-shadow-blur',
+  ) as HTMLInputElement;
+  const shadowColor = document.getElementById(
+    'cf-shadow-color',
+  ) as HTMLInputElement;
+
+  const copyContainer = cssOutput.closest('[data-copied]') as HTMLElement;
+  const copied = copyContainer.dataset.copied ?? '';
+  const copyFailed = copyContainer.dataset.copyFailed ?? '';
+
+  function readState(): FilterState {
+    const state = defaultFilterState();
+    for (const input of numberInputs) {
+      const key = input.dataset.filter as FilterKey;
+      state.values[key] = Number(input.value);
+    }
+    state.dropShadow = {
+      enabled: shadowEnabled.checked,
+      offsetX: Number(shadowX.value),
+      offsetY: Number(shadowY.value),
+      blur: Number(shadowBlur.value),
+      color: shadowColor.value,
+    };
+    return state;
+  }
+
+  function render() {
+    const state = readState();
+    preview.style.filter = buildFilterValue(state);
+    cssOutput.value = buildCssDeclaration(state);
+  }
+
+  function writeState(state: FilterState) {
+    for (const input of numberInputs) {
+      const key = input.dataset.filter as FilterKey;
+      input.value = String(state.values[key]);
+    }
+    syncRanges();
+    shadowEnabled.checked = state.dropShadow.enabled;
+    shadowX.value = String(state.dropShadow.offsetX);
+    shadowY.value = String(state.dropShadow.offsetY);
+    shadowBlur.value = String(state.dropShadow.blur);
+    shadowColor.value = state.dropShadow.color;
+    render();
+  }
+
+  function syncRanges() {
+    for (const range of rangeInputs) {
+      const num = numberInputs.find(
+        (n) => n.dataset.filter === range.dataset.range,
+      )!;
+      const v = Number(num.value);
+      range.value = String(
+        Number.isFinite(v) ? v : Number(num.dataset.neutral ?? 0),
+      );
+    }
+  }
+
+  for (const range of rangeInputs) {
+    range.addEventListener('input', () => {
+      const num = numberInputs.find(
+        (n) => n.dataset.filter === range.dataset.range,
+      )!;
+      num.value = range.value;
+      render();
+    });
+  }
+
+  for (const num of numberInputs) {
+    num.addEventListener('input', () => {
+      syncRanges();
+      render();
+    });
+    num.addEventListener('change', () => {
+      const key = num.dataset.filter as FilterKey;
+      num.value = String(clampFilterValue(key, Number(num.value)));
+      syncRanges();
+      render();
+    });
+  }
+
+  shadowX.addEventListener('change', () => {
+    shadowX.value = String(clampShadowOffset(Number(shadowX.value)));
+    render();
+  });
+  shadowY.addEventListener('change', () => {
+    shadowY.value = String(clampShadowOffset(Number(shadowY.value)));
+    render();
+  });
+  shadowBlur.addEventListener('change', () => {
+    shadowBlur.value = String(clampShadowBlur(Number(shadowBlur.value)));
+    render();
+  });
+  for (const el of [shadowEnabled, shadowX, shadowY, shadowBlur, shadowColor]) {
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-preset]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const preset = getPreset(btn.dataset.preset ?? '');
+      if (!preset) return;
+      writeState(applyPreset(preset));
+    });
+  });
+
+  resetButton.addEventListener('click', () => {
+    writeState(defaultFilterState());
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!cssOutput.value) return;
+    statusEl.textContent = (await copyText(cssOutput.value))
+      ? copied
+      : copyFailed;
+  });
+
+  syncRanges();
+  render();
+</script>

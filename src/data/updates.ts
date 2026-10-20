@@ -730,6 +730,25 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-20',
+    toolSlugs: [
+      'css-filter-generator',
+      'css-transform-generator',
+      'css-specificity-calculator',
+      'css-button-generator',
+    ],
+    translations: {
+      ja: {
+        summary:
+          'CSS filterジェネレーターを追加しました。blurやgrayscale、drop-shadowなどをプレビューしながら組み立てられます。さらに、CSS transformジェネレーターを追加しました。移動・回転・拡大縮小・傾き・3D回転をプレビュー付きで生成します。さらに、CSS詳細度計算機を追加しました。複数のセレクタの詳細度を比較し、優先されるものを判定します。さらに、CSSボタン・トグルスイッチ・三角形ジェネレーターを追加しました。テーマ色とホバー効果を指定してHTMLとCSSを作れます。',
+      },
+      en: {
+        summary:
+          'Added the CSS Filter Generator, which builds blur, grayscale, drop-shadow and other filters with a live preview. The new CSS Transform Generator creates translate, rotate, scale, skew and 3D transforms with a preview. The new CSS Specificity Calculator compares selector specificity and shows which rule wins. The new CSS Button & Toggle Switch Generator creates HTML and CSS for buttons, toggles and triangles with your theme color and hover effect.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

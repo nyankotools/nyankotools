@@ -126,6 +126,9 @@ const slugs = [
   'color-blindness-simulator',
   'image-splitter',
   'graph-paper-generator',
+  'css-transform-generator',
+  'css-specificity-calculator',
+  'css-button-generator',
 ];
 
 const locales = [

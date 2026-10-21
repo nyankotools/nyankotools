@@ -1,0 +1,441 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { quadraticSolverContent } from '../../i18n/tools/quadratic-solver';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = quadraticSolverContent[locale];
+
+const vars = ['x', 'y', 'z'];
+// 3元の初期値（2元では左上の 2×2 と右辺だけを使う）
+const defaults = [
+  ['1', '1', '1', '6'],
+  ['0', '2', '5', '-4'],
+  ['2', '5', '-1', '27'],
+];
+const fill = (template: string, row: number, v?: string) =>
+  template.replace('{row}', String(row)).replace('{var}', v ?? '');
+---
+
+<ToolShell t={t}>
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    id="quad-section"
+    data-error={t.quadError}
+    data-kinds={JSON.stringify(t.quadKinds)}
+    data-step-labels={JSON.stringify(t.stepLabels)}
+    data-discriminant-label={t.quadDiscriminantLabel}
+    data-roots-label={t.quadRootsLabel}
+    data-steps-heading={t.stepsHeading}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <h2 class="mb-1 text-lg font-bold">{t.quadHeading}</h2>
+    <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">{t.quadIntro}</p>
+
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="quad-a" class="ui-label">
+          {t.quadALabel}
+        </label>
+        <input
+          id="quad-a"
+          type="number"
+          step="any"
+          inputmode="decimal"
+          value="1"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="quad-b" class="ui-label">
+          {t.quadBLabel}
+        </label>
+        <input
+          id="quad-b"
+          type="number"
+          step="any"
+          inputmode="decimal"
+          value="-3"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="quad-c" class="ui-label">
+          {t.quadCLabel}
+        </label>
+        <input
+          id="quad-c"
+          type="number"
+          step="any"
+          inputmode="decimal"
+          value="2"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+
+    <p
+      id="quad-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="quad-results" class="mt-4 hidden" aria-live="polite">
+      <p id="quad-kind" class="font-semibold"></p>
+      <p id="quad-discriminant" class="mt-1 text-sm"></p>
+      <p
+        id="quad-roots"
+        class="mt-1 text-lg font-semibold break-words text-blue-700 dark:text-blue-300"
+      ></p>
+      <h3 class="mt-4 mb-2 text-sm font-bold">{t.stepsHeading}</h3>
+      <ol id="quad-steps" class="space-y-2"></ol>
+      <button id="quad-copy-button" type="button" class="ui-btn mt-3 min-h-11">
+        {t.copyButton}
+      </button>
+      <span
+        id="quad-copy-status"
+        class="ml-2 text-sm text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </section>
+
+  <section
+    class="mt-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    id="sys-section"
+    data-error={t.sysError}
+    data-kinds={JSON.stringify(t.sysKinds)}
+    data-step-labels={JSON.stringify(t.stepLabels)}
+    data-solution-label={t.sysSolutionLabel}
+    data-steps-heading={t.stepsHeading}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <h2 class="mb-1 text-lg font-bold">{t.sysHeading}</h2>
+    <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">{t.sysIntro}</p>
+
+    <div class="mb-3">
+      <span id="sys-size-label" class="ui-label">
+        {t.sysSizeLegend}
+      </span>
+      <div
+        class="flex flex-wrap gap-3"
+        role="radiogroup"
+        aria-labelledby="sys-size-label"
+      >
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="sys-size" value="2" checked />
+          {t.sysSize2}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="sys-size" value="3" />
+          {t.sysSize3}
+        </label>
+      </div>
+    </div>
+
+    <div class="space-y-2">
+      {defaults.map((row, r) => (
+        <div
+          class="flex flex-wrap items-center gap-1"
+          data-sys-row={r + 1}
+          hidden={r === 2}
+        >
+          {vars.map((v, c) => (
+            <span
+              class="flex items-center gap-1"
+              data-sys-col={c + 1}
+              hidden={c === 2}
+            >
+              <input
+                id={`sys-${r + 1}-${c + 1}`}
+                type="number"
+                step="any"
+                inputmode="decimal"
+                value={row[c]}
+                aria-label={fill(t.coefAria, r + 1, v)}
+                class="ui-input h-11 w-16 px-2 dark:bg-gray-900"
+              />
+              <span class="text-sm" aria-hidden="true">
+                {v}
+                {c < 2 ? ' +' : ''}
+              </span>
+            </span>
+          ))}
+          <span
+            class="px-1 text-gray-500 dark:text-gray-400"
+            aria-hidden="true"
+          >
+            =
+          </span>
+          <input
+            id={`sys-${r + 1}-const`}
+            type="number"
+            step="any"
+            inputmode="decimal"
+            value={row[3]}
+            aria-label={fill(t.constAria, r + 1)}
+            class="ui-input h-11 w-20 px-2 dark:bg-gray-900"
+          />
+        </div>
+      ))}
+    </div>
+
+    <p
+      id="sys-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="sys-results" class="mt-4 hidden" aria-live="polite">
+      <p id="sys-kind" class="font-semibold"></p>
+      <p
+        id="sys-solutions"
+        class="mt-1 text-lg font-semibold break-words text-blue-700 dark:text-blue-300"
+      ></p>
+      <h3 class="mt-4 mb-2 text-sm font-bold">{t.stepsHeading}</h3>
+      <ol id="sys-steps" class="space-y-2"></ol>
+      <button id="sys-copy-button" type="button" class="ui-btn mt-3 min-h-11">
+        {t.copyButton}
+      </button>
+      <span
+        id="sys-copy-status"
+        class="ml-2 text-sm text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    solveLinearSystem,
+    solveQuadratic,
+    type QuadraticKind,
+    type LinearSystemKind,
+    type SolveStep,
+    type StepKey,
+  } from '../../lib/tools/quadratic-solver';
+  import { copyText } from '../../lib/clipboard';
+
+  type StepLabels = Record<StepKey, string>;
+
+  /** 空欄は 0、不正な値は NaN として扱う。 */
+  function readNumber(input: HTMLInputElement): number {
+    const v = input.value.trim();
+    return v === '' ? 0 : Number(v);
+  }
+
+  function renderSteps(
+    list: HTMLElement,
+    steps: SolveStep[],
+    labels: StepLabels,
+  ) {
+    list.replaceChildren();
+    for (const step of steps) {
+      const li = document.createElement('li');
+      li.className = 'rounded border border-gray-200 p-2 dark:border-gray-700';
+      const label = document.createElement('div');
+      label.className = 'text-xs text-gray-600 dark:text-gray-400';
+      label.textContent = labels[step.key];
+      const math = document.createElement('pre');
+      math.className = 'font-mono text-sm break-words whitespace-pre-wrap';
+      math.textContent = step.math;
+      li.append(label, math);
+      list.append(li);
+    }
+  }
+
+  function stepsAsText(
+    heading: string,
+    steps: SolveStep[],
+    labels: StepLabels,
+  ) {
+    return [heading, ...steps.map((s) => `[${labels[s.key]}]\n${s.math}`)].join(
+      '\n',
+    );
+  }
+
+  function setupCopy(
+    button: HTMLElement,
+    status: HTMLElement,
+    section: HTMLElement,
+    getText: () => string,
+  ) {
+    button.addEventListener('click', async () => {
+      const ok = await copyText(getText());
+      status.textContent = ok
+        ? (section.dataset.copied ?? '')
+        : (section.dataset.copyFailed ?? '');
+      window.setTimeout(() => (status.textContent = ''), 2000);
+    });
+  }
+
+  // --- 二次方程式 ---
+  const quadSection = document.getElementById('quad-section')!;
+  const quadInputs = ['a', 'b', 'c'].map(
+    (k) => document.getElementById(`quad-${k}`) as HTMLInputElement,
+  );
+  const quadError = document.getElementById('quad-error')!;
+  const quadResults = document.getElementById('quad-results')!;
+  const quadKindEl = document.getElementById('quad-kind')!;
+  const quadDiscEl = document.getElementById('quad-discriminant')!;
+  const quadRootsEl = document.getElementById('quad-roots')!;
+  const quadSteps = document.getElementById('quad-steps')!;
+  const quadKinds: Record<QuadraticKind, string> = JSON.parse(
+    quadSection.dataset.kinds ?? '{}',
+  );
+  const quadLabels: StepLabels = JSON.parse(
+    quadSection.dataset.stepLabels ?? '{}',
+  );
+  let quadText = '';
+
+  function renderQuad() {
+    quadError.textContent = '';
+    quadResults.classList.add('hidden');
+    const [a, b, c] = quadInputs.map(readNumber);
+    const result = solveQuadratic(a, b, c);
+    if (!result) {
+      quadError.textContent = quadSection.dataset.error ?? '';
+      return;
+    }
+    const kind = quadKinds[result.kind];
+    quadKindEl.textContent = kind;
+    quadDiscEl.textContent =
+      result.discriminant === null
+        ? ''
+        : `${quadSection.dataset.discriminantLabel} = ${result.discriminant}`;
+    const rootsText =
+      result.roots.length === 2
+        ? `x₁ = ${result.roots[0].text}, x₂ = ${result.roots[1].text}`
+        : result.roots.length === 1
+          ? `x = ${result.roots[0].text}`
+          : '';
+    quadRootsEl.textContent = rootsText;
+    quadRootsEl.classList.toggle('hidden', rootsText === '');
+    renderSteps(quadSteps, result.steps, quadLabels);
+    quadText = [
+      kind,
+      rootsText,
+      stepsAsText(
+        quadSection.dataset.stepsHeading ?? '',
+        result.steps,
+        quadLabels,
+      ),
+    ]
+      .filter((s) => s !== '')
+      .join('\n');
+    quadResults.classList.remove('hidden');
+  }
+
+  quadInputs.forEach((el) => el.addEventListener('input', renderQuad));
+  setupCopy(
+    document.getElementById('quad-copy-button')!,
+    document.getElementById('quad-copy-status')!,
+    quadSection,
+    () => quadText,
+  );
+
+  // --- 連立一次方程式 ---
+  const sysSection = document.getElementById('sys-section')!;
+  const sysError = document.getElementById('sys-error')!;
+  const sysResults = document.getElementById('sys-results')!;
+  const sysKindEl = document.getElementById('sys-kind')!;
+  const sysSolutionsEl = document.getElementById('sys-solutions')!;
+  const sysSteps = document.getElementById('sys-steps')!;
+  const sysKinds: Record<LinearSystemKind, string> = JSON.parse(
+    sysSection.dataset.kinds ?? '{}',
+  );
+  const sysLabels: StepLabels = JSON.parse(
+    sysSection.dataset.stepLabels ?? '{}',
+  );
+  const sizeInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="sys-size"]',
+  );
+  const cell = (r: number, c: number | 'const') =>
+    document.getElementById(`sys-${r}-${c}`) as HTMLInputElement;
+  let sysText = '';
+
+  function currentSize(): 2 | 3 {
+    return Array.from(sizeInputs).find((el) => el.checked)?.value === '3'
+      ? 3
+      : 2;
+  }
+
+  function applySize() {
+    const n = currentSize();
+    sysSection
+      .querySelectorAll<HTMLElement>('[data-sys-row]')
+      .forEach((el) => (el.hidden = Number(el.dataset.sysRow) > n));
+    sysSection
+      .querySelectorAll<HTMLElement>('[data-sys-col]')
+      .forEach((el) => (el.hidden = Number(el.dataset.sysCol) > n));
+  }
+
+  function renderSys() {
+    sysError.textContent = '';
+    sysResults.classList.add('hidden');
+    const n = currentSize();
+    const coefficients: number[][] = [];
+    const constants: number[] = [];
+    for (let r = 1; r <= n; r++) {
+      const row: number[] = [];
+      for (let c = 1; c <= n; c++) row.push(readNumber(cell(r, c)));
+      coefficients.push(row);
+      constants.push(readNumber(cell(r, 'const')));
+    }
+    const result = solveLinearSystem(coefficients, constants);
+    if (!result) {
+      sysError.textContent = sysSection.dataset.error ?? '';
+      return;
+    }
+    const kind = sysKinds[result.kind];
+    sysKindEl.textContent = kind;
+    const solutionText = result.solutions
+      .map(
+        (s) =>
+          `${s.variable} = ${s.text}${s.fraction ? ` (${s.fraction})` : ''}`,
+      )
+      .join(', ');
+    sysSolutionsEl.textContent = solutionText;
+    sysSolutionsEl.classList.toggle('hidden', solutionText === '');
+    renderSteps(sysSteps, result.steps, sysLabels);
+    sysText = [
+      kind,
+      solutionText,
+      stepsAsText(
+        sysSection.dataset.stepsHeading ?? '',
+        result.steps,
+        sysLabels,
+      ),
+    ]
+      .filter((s) => s !== '')
+      .join('\n');
+    sysResults.classList.remove('hidden');
+  }
+
+  sysSection
+    .querySelectorAll<HTMLInputElement>('input[type="number"]')
+    .forEach((el) => el.addEventListener('input', renderSys));
+  sizeInputs.forEach((el) =>
+    el.addEventListener('change', () => {
+      applySize();
+      renderSys();
+    }),
+  );
+  setupCopy(
+    document.getElementById('sys-copy-button')!,
+    document.getElementById('sys-copy-status')!,
+    sysSection,
+    () => sysText,
+  );
+
+  applySize();
+  renderQuad();
+  renderSys();
+</script>

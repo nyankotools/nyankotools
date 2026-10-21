@@ -928,13 +928,17 @@ export const updates: UpdateEntry[] = [
       'recipe-scaler',
       'material-quantity',
       'ab-test-calculator',
+      'linear-regression',
+      'matrix-calculator',
+      'quadratic-solver',
+      'geometry-calculator',
     ],
     translations: {
       ja: {
-        summary: '24個のツールを追加しました。',
+        summary: '28個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 24 new tools.',
+        summary: 'Added 28 new tools.',
       },
     },
   },

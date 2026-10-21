@@ -11175,6 +11175,157 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'linear-regression',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['statistics-calculator', 'ab-test-calculator'],
+    translations: {
+      ja: {
+        name: '回帰直線・相関係数計算機',
+        description:
+          'x,yのデータから最小二乗法の回帰直線（傾き・切片）、相関係数r、決定係数R²を計算し、散布図に表示。xからyの予測値も算出できます。',
+        keywords: [
+          '回帰直線',
+          '最小二乗法',
+          '相関係数',
+          '決定係数',
+          '散布図',
+          '単回帰分析',
+          'R2',
+        ],
+      },
+      en: {
+        name: 'Linear Regression & Correlation Calculator',
+        description:
+          'Fit a least-squares regression line to x,y data: slope, intercept, correlation r and R², with a scatter plot and predictions.',
+        keywords: [
+          'linear regression',
+          'least squares',
+          'correlation coefficient',
+          'r squared',
+          'scatter plot',
+          'line of best fit',
+          'trendline',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'matrix-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['statistics-calculator', 'ratio-calculator', 'quadratic-solver'],
+    translations: {
+      ja: {
+        name: '行列計算機',
+        description:
+          '行列の和・差・積・スカラー倍・転置・逆行列・行列式を分数で厳密に計算。最大6×6、小数表示にも切り替え可能。',
+        keywords: [
+          '行列',
+          '逆行列',
+          '行列式',
+          '行列の積',
+          '転置行列',
+          '線形代数',
+          '分数',
+          'matrix',
+        ],
+      },
+      en: {
+        name: 'Matrix Calculator',
+        description:
+          'Add, multiply, transpose and invert matrices up to 6x6 and find determinants, with exact fractions or decimals.',
+        keywords: [
+          'matrix',
+          'inverse matrix',
+          'determinant',
+          'matrix multiplication',
+          'transpose',
+          'linear algebra',
+          'gauss-jordan',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'quadratic-solver',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['matrix-calculator', 'ratio-calculator', 'statistics-calculator'],
+    translations: {
+      ja: {
+        name: '二次方程式・連立方程式ソルバー',
+        description:
+          '二次方程式の判別式・実数解・虚数解と、2元・3元の連立一次方程式を途中式つきで解く。解なし・不定の判定にも対応。',
+        keywords: [
+          '二次方程式',
+          '解の公式',
+          '判別式',
+          '虚数解',
+          '連立方程式',
+          'クラメルの公式',
+          '途中式',
+        ],
+      },
+      en: {
+        name: 'Quadratic & Linear System Solver',
+        description:
+          'Solve quadratic equations and 2- or 3-variable linear systems with step-by-step working, including complex roots and no-solution cases.',
+        keywords: [
+          'quadratic equation',
+          'quadratic formula',
+          'discriminant',
+          'complex roots',
+          'simultaneous equations',
+          'cramer rule',
+          'linear system',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'geometry-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['unit-converter', 'ratio-calculator', 'material-quantity'],
+    translations: {
+      ja: {
+        name: '図形の面積・体積計算',
+        description:
+          '円・三角形・四角形・台形の面積、円柱・円錐・球・直方体の体積と表面積を公式と途中式つきで計算。単位指定と円周率の桁数指定に対応。',
+        keywords: [
+          '面積',
+          '体積',
+          '円',
+          '円柱',
+          '円錐',
+          '球',
+          '台形',
+          '表面積',
+        ],
+      },
+      en: {
+        name: 'Area & Volume Calculator',
+        description:
+          'Find the area of circles, triangles and trapezoids and the volume of cylinders, cones, spheres and boxes, with formulas and steps.',
+        keywords: [
+          'area calculator',
+          'volume calculator',
+          'circle area',
+          'cylinder volume',
+          'cone volume',
+          'sphere volume',
+          'trapezoid area',
+          'surface area',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

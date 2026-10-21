@@ -1,0 +1,249 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { geometryCalculatorContent } from '../../i18n/tools/geometry-calculator';
+import {
+  SHAPE_IDS,
+  SHAPE_PARAMS,
+  UNIT_IDS,
+} from '../../lib/tools/geometry-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = geometryCalculatorContent[locale];
+const piOptions: Array<[string, string]> = [
+  ['exact', t.piOptions.exact],
+  ['2', t.piOptions.d2],
+  ['4', t.piOptions.d4],
+  ['10', t.piOptions.d10],
+];
+---
+
+<ToolShell t={t}>
+  <section
+    id="geo-root"
+    data-number-locale={t.numberLocale}
+    data-metrics={JSON.stringify(t.metrics)}
+    data-formula-label={t.formulaLabel}
+    data-substitution-label={t.substitutionLabel}
+    data-copied={t.copiedMessage}
+    data-copy-failed={t.copyFailedMessage}
+    data-error-empty={t.errorEmpty}
+    data-error-invalid={t.errorInvalid}
+    data-error-non-positive={t.errorNonPositive}
+  >
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="geo-shape" class="ui-label">
+          {t.shapeLabel}
+        </label>
+        <select
+          id="geo-shape"
+          class="ui-input h-11 w-full max-w-60 px-3 dark:bg-gray-900"
+        >
+          {SHAPE_IDS.map((shape) => (
+            <option value={shape}>{t.shapes[shape].name}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="geo-unit" class="ui-label">
+          {t.unitLabel}
+        </label>
+        <select
+          id="geo-unit"
+          class="ui-input h-11 w-full max-w-60 px-3 dark:bg-gray-900"
+        >
+          {UNIT_IDS.map((unit) => (
+            <option value={unit} selected={unit === 'cm'}>
+              {t.units[unit]}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="geo-pi" class="ui-label">
+          {t.piLabel}
+        </label>
+        <select
+          id="geo-pi"
+          class="ui-input h-11 w-full max-w-60 px-3 dark:bg-gray-900"
+        >
+          {piOptions.map(([value, label]) => (
+            <option value={value}>{label}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    {SHAPE_IDS.map((shape) => (
+      <div
+        class="mt-4 flex flex-wrap gap-3"
+        data-shape-fields={shape}
+        hidden={shape !== 'circle'}
+      >
+        {SHAPE_PARAMS[shape].map((param) => (
+          <div>
+            <label for={`geo-${shape}-${param}`} class="ui-label">
+              {t.shapes[shape].params[param]}
+            </label>
+            <input
+              id={`geo-${shape}-${param}`}
+              type="number"
+              inputmode="decimal"
+              step="any"
+              class="ui-input h-11 w-32 px-3 dark:bg-gray-900"
+            />
+          </div>
+        ))}
+      </div>
+    ))}
+
+    <p id="geo-error" class="ui-error mt-4 hidden" role="alert"></p>
+
+    <div id="geo-results" class="mt-4 hidden" aria-live="polite">
+      <h2 class="mb-2 text-lg font-bold">{t.resultHeading}</h2>
+      <dl id="geo-metrics" class="space-y-3"></dl>
+      <button type="button" id="geo-copy-button" class="ui-btn mt-4">
+        {t.copyButton}
+      </button>
+      <span
+        id="geo-copy-status"
+        class="ml-2 text-sm text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    SHAPE_IDS,
+    SHAPE_PARAMS,
+    calculateGeometry,
+    unitSymbol,
+    type GeometryMetric,
+    type ShapeId,
+    type UnitId,
+  } from '../../lib/tools/geometry-calculator';
+  import { copyText } from '../../lib/clipboard';
+
+  const root = document.getElementById('geo-root')!;
+  const numberFormat = new Intl.NumberFormat(
+    root.dataset.numberLocale ?? 'en-US',
+    { maximumFractionDigits: 6 },
+  );
+  const metricNames: Record<string, string> = JSON.parse(
+    root.dataset.metrics ?? '{}',
+  );
+  const formulaLabel = root.dataset.formulaLabel ?? '';
+  const substitutionLabel = root.dataset.substitutionLabel ?? '';
+
+  const shapeSelect = document.getElementById('geo-shape') as HTMLSelectElement;
+  const unitSelect = document.getElementById('geo-unit') as HTMLSelectElement;
+  const piSelect = document.getElementById('geo-pi') as HTMLSelectElement;
+  const errorEl = document.getElementById('geo-error')!;
+  const resultsEl = document.getElementById('geo-results')!;
+  const metricsEl = document.getElementById('geo-metrics')!;
+  const copyButton = document.getElementById('geo-copy-button')!;
+  const copyStatus = document.getElementById('geo-copy-status')!;
+  const fieldGroups = document.querySelectorAll<HTMLElement>(
+    '[data-shape-fields]',
+  );
+
+  let copyBody = '';
+
+  function currentShape(): ShapeId {
+    const value = shapeSelect.value as ShapeId;
+    return SHAPE_IDS.includes(value) ? value : 'circle';
+  }
+
+  function render() {
+    const shape = currentShape();
+    const unit = unitSelect.value as UnitId;
+    fieldGroups.forEach((group) => {
+      group.hidden = group.dataset.shapeFields !== shape;
+    });
+
+    errorEl.classList.add('hidden');
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+    copyStatus.textContent = '';
+
+    const params: Record<string, number | null> = {};
+    let anyFilled = false;
+    for (const key of SHAPE_PARAMS[shape]) {
+      const input = document.getElementById(
+        `geo-${shape}-${key}`,
+      ) as HTMLInputElement;
+      const raw = input.value.trim();
+      if (raw === '') {
+        params[key] = null;
+      } else {
+        anyFilled = true;
+        params[key] = Number(raw);
+      }
+    }
+    if (!anyFilled) return;
+
+    const piDigits = piSelect.value === 'exact' ? null : Number(piSelect.value);
+    const outcome = calculateGeometry(shape, params, { piDigits });
+    if (!outcome.ok) {
+      // 一部だけ入力中の「未入力」は静かに待つ
+      if (outcome.error === 'empty') return;
+      errorEl.textContent =
+        (outcome.error === 'invalid'
+          ? root.dataset.errorInvalid
+          : root.dataset.errorNonPositive) ?? '';
+      errorEl.classList.remove('hidden');
+      return;
+    }
+
+    metricsEl.textContent = '';
+    const lines: string[] = [];
+    outcome.metrics.forEach((m: GeometryMetric) => {
+      const symbol = unitSymbol(unit, m.dimension);
+      const valueText = `${numberFormat.format(m.value)} ${symbol}`;
+      const dt = document.createElement('dt');
+      dt.className = 'text-sm text-gray-600 dark:text-gray-400';
+      dt.textContent = metricNames[m.key] ?? m.key;
+      const dd = document.createElement('dd');
+      const value = document.createElement('p');
+      value.className = 'text-lg font-semibold';
+      value.textContent = valueText;
+      const formula = document.createElement('p');
+      formula.className = 'text-sm text-gray-700 dark:text-gray-300';
+      formula.textContent = `${formulaLabel}: ${m.formula}`;
+      const steps = document.createElement('p');
+      steps.className = 'text-sm text-gray-700 dark:text-gray-300 break-words';
+      steps.textContent = `${substitutionLabel}: ${m.substitution} ${symbol}`;
+      dd.append(value, formula, steps);
+      metricsEl.append(dt, dd);
+      lines.push(
+        `${metricNames[m.key] ?? m.key}: ${valueText} (${m.formula} / ${m.substitution} ${symbol})`,
+      );
+    });
+    copyBody = lines.join('\n');
+    resultsEl.classList.remove('hidden');
+  }
+
+  shapeSelect.addEventListener('change', render);
+  unitSelect.addEventListener('change', render);
+  piSelect.addEventListener('change', render);
+  document
+    .querySelectorAll<HTMLInputElement>('[data-shape-fields] input')
+    .forEach((input) => input.addEventListener('input', render));
+
+  copyButton.addEventListener('click', async () => {
+    const ok = await copyText(copyBody);
+    copyStatus.textContent =
+      (ok ? root.dataset.copied : root.dataset.copyFailed) ?? '';
+  });
+
+  // 初期値（円の半径 5）
+  (document.getElementById('geo-circle-r') as HTMLInputElement).value = '5';
+  render();
+</script>

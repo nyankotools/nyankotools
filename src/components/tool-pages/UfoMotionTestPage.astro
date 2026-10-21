@@ -45,7 +45,7 @@ const resultRows = [
     <div class="mt-5 space-y-4">
       <div>
         <p class="ui-label">{t.speedLabel}</p>
-        <div class="ui-seg flex-wrap" role="group" aria-label={t.speedLabel}>
+        <div class="ui-seg w-fit max-w-full flex-wrap" role="group" aria-label={t.speedLabel}>
           {SPEEDS.map((s) => (
             <button
               type="button"
@@ -61,7 +61,7 @@ const resultRows = [
       <div>
         <p class="ui-label">{t.backgroundLabel}</p>
         <div
-          class="ui-seg flex-wrap"
+          class="ui-seg w-fit max-w-full flex-wrap"
           role="group"
           aria-label={t.backgroundLabel}
         >
@@ -80,7 +80,7 @@ const resultRows = [
       <div>
         <p class="ui-label">{t.directionLabel}</p>
         <div
-          class="ui-seg flex-wrap"
+          class="ui-seg w-fit max-w-full flex-wrap"
           role="group"
           aria-label={t.directionLabel}
         >

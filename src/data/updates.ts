@@ -94,10 +94,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary: '8個のツールを追加しました。',
+        summary: '12個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 8 new tools.',
+        summary: 'Added 12 new tools.',
       },
     },
   },
@@ -912,6 +912,10 @@ export const updates: UpdateEntry[] = [
       'ufo-motion-test',
       'monitor-gamma-test',
       'hearing-test',
+      'unit-price-comparator',
+      'savings-goal-calculator',
+      'rent-initial-cost',
+      'bonus-take-home',
     ],
     translations: {
       ja: {

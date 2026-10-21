@@ -1,0 +1,442 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { savingsGoalCalculatorContent } from '../../i18n/tools/savings-goal-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = savingsGoalCalculatorContent[locale];
+const modes = ['target', 'monthly', 'period'] as const;
+---
+
+<ToolShell t={t}>
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-years-months-format={t.yearsMonthsFormat}
+    data-error={t.error}
+    data-unreachable-error={t.unreachableError}
+    data-already-reached={t.alreadyReachedText}
+    data-primary-label-target={t.primaryResultLabels.target}
+    data-primary-label-monthly={t.primaryResultLabels.monthly}
+    data-primary-label-period={t.primaryResultLabels.period}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-4">
+      <span id="savings-goal-mode-label" class="ui-label">
+        {t.modeLegend}
+      </span>
+      <div
+        class="flex flex-col gap-2 sm:flex-row sm:flex-wrap"
+        role="radiogroup"
+        aria-labelledby="savings-goal-mode-label"
+      >
+        {modes.map((mode) => (
+          <label class="flex items-center gap-1 text-sm">
+            <input
+              type="radio"
+              name="savings-goal-mode"
+              value={mode}
+              checked={mode === 'monthly'}
+            />
+            {t.modeLabels[mode]}
+          </label>
+        ))}
+      </div>
+    </div>
+
+    <div class="mb-3 flex flex-wrap items-end gap-3">
+      <div data-field="target">
+        <label for="savings-goal-target" class="ui-label">
+          {t.targetLabel}
+        </label>
+        <input
+          id="savings-goal-target"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.targetPlaceholder}
+          class="ui-input h-11 w-40 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label for="savings-goal-initial" class="ui-label">
+          {t.initialLabel}
+        </label>
+        <input
+          id="savings-goal-initial"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.initialPlaceholder}
+          class="ui-input h-11 w-36 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div data-field="monthly">
+        <label for="savings-goal-monthly" class="ui-label">
+          {t.monthlyLabel}
+        </label>
+        <input
+          id="savings-goal-monthly"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.monthlyPlaceholder}
+          class="ui-input h-11 w-36 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div data-field="period" class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="savings-goal-years" class="ui-label">
+            {t.yearsLabel}
+          </label>
+          <input
+            id="savings-goal-years"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            max="60"
+            placeholder={t.yearsPlaceholder}
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+        </div>
+        <div>
+          <label for="savings-goal-extra-months" class="ui-label">
+            {t.monthsLabel}
+          </label>
+          <input
+            id="savings-goal-extra-months"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            max="11"
+            placeholder={t.monthsPlaceholder}
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+        </div>
+      </div>
+      <div>
+        <label for="savings-goal-rate" class="ui-label">
+          {t.rateLabel}
+        </label>
+        <input
+          id="savings-goal-rate"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          max="50"
+          step="0.01"
+          placeholder={t.ratePlaceholder}
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+    </div>
+
+    <p
+      id="savings-goal-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="savings-goal-results" class="mt-4 hidden" aria-live="polite">
+      <dl class="mb-4 rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
+        <dt
+          class="text-sm text-gray-600 dark:text-gray-400"
+          id="savings-goal-primary-label"
+        ></dt>
+        <dd
+          class="text-xl font-semibold text-blue-700 dark:text-blue-400"
+          id="savings-goal-primary-value"
+        ></dd>
+      </dl>
+
+      <div id="savings-goal-details">
+        <h3 class="mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+          {t.resultHeading}
+        </h3>
+        <dl class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+            <dt class="text-sm text-gray-600 dark:text-gray-400">
+              {t.finalBalanceLabel}
+            </dt>
+            <dd class="text-lg font-semibold" id="savings-goal-final"></dd>
+          </div>
+          <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+            <dt class="text-sm text-gray-600 dark:text-gray-400">
+              {t.totalDepositLabel}
+            </dt>
+            <dd class="text-lg font-semibold" id="savings-goal-deposit"></dd>
+          </div>
+          <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+            <dt class="text-sm text-gray-600 dark:text-gray-400">
+              {t.totalInterestLabel}
+            </dt>
+            <dd class="text-lg font-semibold" id="savings-goal-interest"></dd>
+          </div>
+        </dl>
+
+        <h3 class="mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+          {t.tableHeading}
+        </h3>
+        <div
+          tabindex="0"
+          class="max-h-80 overflow-x-auto overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700"
+        >
+          <table class="w-full min-w-full text-left text-sm">
+            <thead class="sticky top-0 bg-gray-50 dark:bg-gray-800">
+              <tr>
+                <th class="p-2 font-medium text-gray-600 dark:text-gray-400">
+                  {t.tableYearHeader}
+                </th>
+                <th class="p-2 font-medium text-gray-600 dark:text-gray-400">
+                  {t.tableDepositHeader}
+                </th>
+                <th class="p-2 font-medium text-gray-600 dark:text-gray-400">
+                  {t.tableInterestHeader}
+                </th>
+                <th class="p-2 font-medium text-gray-600 dark:text-gray-400">
+                  {t.tableBalanceHeader}
+                </th>
+              </tr>
+            </thead>
+            <tbody id="savings-goal-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    simulateSavings,
+    solveMonthlyDeposit,
+    solveMonthsToTarget,
+  } from '../../lib/tools/savings-goal-calculator';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+  import { fill } from '../../lib/format-template';
+
+  type Mode = 'target' | 'monthly' | 'period';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
+  const errorMessage = configEl.dataset.error ?? '';
+  const unreachableMessage = configEl.dataset.unreachableError ?? '';
+  const alreadyReachedText = configEl.dataset.alreadyReached ?? '';
+  const yearsMonthsFormat = configEl.dataset.yearsMonthsFormat ?? '';
+  const primaryLabels: Record<Mode, string> = {
+    target: configEl.dataset.primaryLabelTarget ?? '',
+    monthly: configEl.dataset.primaryLabelMonthly ?? '',
+    period: configEl.dataset.primaryLabelPeriod ?? '',
+  };
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+
+  const modeInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="savings-goal-mode"]',
+  );
+  const fieldEls = document.querySelectorAll<HTMLElement>('[data-field]');
+  const targetInput = document.getElementById(
+    'savings-goal-target',
+  ) as HTMLInputElement;
+  const initialInput = document.getElementById(
+    'savings-goal-initial',
+  ) as HTMLInputElement;
+  const monthlyInput = document.getElementById(
+    'savings-goal-monthly',
+  ) as HTMLInputElement;
+  const yearsInput = document.getElementById(
+    'savings-goal-years',
+  ) as HTMLInputElement;
+  const extraMonthsInput = document.getElementById(
+    'savings-goal-extra-months',
+  ) as HTMLInputElement;
+  const rateInput = document.getElementById(
+    'savings-goal-rate',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('savings-goal-error')!;
+  const resultsEl = document.getElementById('savings-goal-results')!;
+  const detailsEl = document.getElementById('savings-goal-details')!;
+  const primaryLabelEl = document.getElementById('savings-goal-primary-label')!;
+  const primaryValueEl = document.getElementById('savings-goal-primary-value')!;
+  const finalEl = document.getElementById('savings-goal-final')!;
+  const depositEl = document.getElementById('savings-goal-deposit')!;
+  const interestEl = document.getElementById('savings-goal-interest')!;
+  const tableBodyEl = document.getElementById(
+    'savings-goal-table-body',
+  ) as HTMLTableSectionElement;
+
+  attachCommaFormatting(targetInput);
+  attachCommaFormatting(initialInput);
+  attachCommaFormatting(monthlyInput);
+
+  function getMode(): Mode {
+    return (
+      (Array.from(modeInputs).find((el) => el.checked)?.value as Mode) ||
+      'monthly'
+    );
+  }
+
+  function updateFieldVisibility() {
+    const hidden = getMode();
+    fieldEls.forEach((el) => {
+      el.classList.toggle('hidden', el.dataset.field === hidden);
+    });
+  }
+
+  function formatMonths(months: number): string {
+    return fill(yearsMonthsFormat, {
+      y: String(Math.floor(months / 12)),
+      m: String(months % 12),
+    });
+  }
+
+  function num(input: HTMLInputElement): number {
+    return Number(stripCommas(input.value));
+  }
+
+  function isBlank(input: HTMLInputElement): boolean {
+    return input.value.trim() === '';
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    const mode = getMode();
+    if (mode !== 'target' && isBlank(targetInput)) return;
+    if (mode !== 'monthly' && isBlank(monthlyInput)) return;
+    if (mode !== 'period' && isBlank(yearsInput) && isBlank(extraMonthsInput))
+      return;
+
+    const initialBalance = isBlank(initialInput) ? 0 : num(initialInput);
+    const annualRate = isBlank(rateInput) ? 0 : Number(rateInput.value);
+    const periodMonths =
+      (isBlank(yearsInput) ? 0 : Number(yearsInput.value)) * 12 +
+      (isBlank(extraMonthsInput) ? 0 : Number(extraMonthsInput.value));
+    const targetAmount = num(targetInput);
+
+    let monthlyDeposit = num(monthlyInput);
+    let months = periodMonths;
+    let primaryText = '';
+
+    if (mode === 'monthly') {
+      const solved = solveMonthlyDeposit({
+        targetAmount,
+        initialBalance,
+        annualRate,
+        months: periodMonths,
+      });
+      if (solved === null) {
+        errorEl.textContent = errorMessage;
+        return;
+      }
+      monthlyDeposit = solved;
+      primaryText = yen.format(Math.ceil(solved - 1e-6));
+    } else if (mode === 'period') {
+      const solved = solveMonthsToTarget({
+        targetAmount,
+        initialBalance,
+        monthlyDeposit,
+        annualRate,
+      });
+      if (solved === null) {
+        const valid =
+          targetAmount > 0 &&
+          initialBalance >= 0 &&
+          monthlyDeposit >= 0 &&
+          annualRate >= 0 &&
+          annualRate <= 50 &&
+          initialBalance + monthlyDeposit > 0;
+        errorEl.textContent = valid ? unreachableMessage : errorMessage;
+        return;
+      }
+      months = solved;
+      if (solved === 0) {
+        primaryLabelEl.textContent = primaryLabels.period;
+        primaryValueEl.textContent = alreadyReachedText;
+        detailsEl.classList.add('hidden');
+        resultsEl.classList.remove('hidden');
+        return;
+      }
+      primaryText = formatMonths(solved);
+    }
+
+    const result = simulateSavings({
+      initialBalance,
+      monthlyDeposit,
+      annualRate,
+      months,
+    });
+    if (!result) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+    if (mode === 'target') primaryText = yen.format(result.finalBalance);
+
+    primaryLabelEl.textContent = primaryLabels[mode];
+    primaryValueEl.textContent = primaryText;
+    finalEl.textContent = yen.format(result.finalBalance);
+    depositEl.textContent = yen.format(result.totalDeposit);
+    interestEl.textContent = yen.format(result.totalInterest);
+
+    tableBodyEl.replaceChildren(
+      ...result.yearly.map((snapshot) => {
+        const row = document.createElement('tr');
+        row.className = 'border-t border-gray-200 dark:border-gray-700';
+        const cells = [
+          formatMonths(snapshot.months),
+          yen.format(snapshot.deposited),
+          yen.format(snapshot.interest),
+          yen.format(snapshot.balance),
+        ];
+        for (const text of cells) {
+          const cell = document.createElement('td');
+          cell.className = 'p-2';
+          cell.textContent = text;
+          row.appendChild(cell);
+        }
+        return row;
+      }),
+    );
+
+    detailsEl.classList.remove('hidden');
+    resultsEl.classList.remove('hidden');
+  }
+
+  modeInputs.forEach((el) =>
+    el.addEventListener('change', () => {
+      updateFieldVisibility();
+      render();
+    }),
+  );
+  [
+    targetInput,
+    initialInput,
+    monthlyInput,
+    yearsInput,
+    extraMonthsInput,
+    rateInput,
+  ].forEach((el) => el.addEventListener('input', render));
+
+  targetInput.value = formatNumberWithCommas('3000000');
+  initialInput.value = formatNumberWithCommas('0');
+  monthlyInput.value = formatNumberWithCommas('50000');
+  yearsInput.value = '5';
+  extraMonthsInput.value = '0';
+  rateInput.value = '0';
+
+  updateFieldVisibility();
+  render();
+</script>

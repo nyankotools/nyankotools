@@ -10546,6 +10546,167 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'unit-price-comparator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['tax-calculator', 'unit-converter', 'split-bill-calculator'],
+    translations: {
+      ja: {
+        name: '単価比較ツール',
+        description:
+          '容量違いの商品を100gあたり・100mlあたりの単価で比較。3商品以上・個数・税込税抜に対応し、最安とその差を表示',
+        keywords: [
+          '単価比較',
+          '100gあたり',
+          'グラム単価',
+          'ユニットプライス',
+          'どっちがお得',
+          '内容量',
+          'コスパ',
+          '値段比較',
+        ],
+      },
+      en: {
+        name: 'Unit Price Comparator',
+        description:
+          'Compare products by price per 100 g, 100 ml or item. Handles 3+ products, pack counts and tax, and shows the cheapest and the gap.',
+        keywords: [
+          'unit price',
+          'price per 100g',
+          'price per ounce',
+          'best value',
+          'compare prices',
+          'cost per unit',
+          'grocery',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'savings-goal-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['investment-simulator', 'loan-calculator', 'mortgage-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '貯金目標計算機',
+        description:
+          '目標額・期間・毎月の貯金額のうち2つを入力すると、残る1つを逆算します。現在の貯金額や年利（0%も可）に対応し、年別の推移表で預入額と利息の内訳を確認できます。',
+        keywords: [
+          '貯金',
+          '貯蓄',
+          '目標額',
+          '積立',
+          '逆算',
+          '毎月いくら',
+          '何年で貯まる',
+          '利息0%',
+        ],
+      },
+      en: {
+        name: 'Savings Goal Calculator',
+        description:
+          'Enter two of target amount, time frame and monthly savings to solve the third. Handles a starting balance and 0% interest, with a yearly table.',
+        keywords: [
+          'savings goal',
+          'savings calculator',
+          'monthly savings',
+          'how long to save',
+          'target amount',
+          'reverse calculator',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'rent-initial-cost',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: [
+      'mortgage-calculator',
+      'loan-calculator',
+      'salary-take-home-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '賃貸初期費用計算',
+        description:
+          '家賃から敷金礼金・仲介手数料・前家賃などの初期費用の総額と内訳、年収別の家賃の目安を試算します。',
+        keywords: [
+          '賃貸',
+          '初期費用',
+          '敷金',
+          '礼金',
+          '仲介手数料',
+          '引越し',
+          '家賃 目安',
+          '前家賃',
+        ],
+      },
+      en: {
+        name: 'Rental Initial Cost Calculator',
+        description:
+          'Estimate upfront rental costs in Japan (deposit, key money, agent fee, prepaid rent) and a rent guide from income.',
+        keywords: [
+          'rent',
+          'initial cost',
+          'deposit',
+          'key money',
+          'agent fee',
+          'moving',
+          'rent guide',
+          'apartment',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'bonus-take-home',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: [
+      'salary-take-home-calculator',
+      'furusato-nozei-calculator',
+      'tax-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '賞与（ボーナス）の手取り計算',
+        description:
+          '賞与の額面と前月の給与から、社会保険料と源泉所得税を差し引いたボーナスの手取り額を試算します。令和7年分の区分に基づく概算。',
+        keywords: [
+          'ボーナス',
+          '賞与',
+          '手取り',
+          '源泉徴収',
+          '社会保険料',
+          '算出率の表',
+          'ボーナス手取り',
+        ],
+      },
+      en: {
+        name: 'Bonus Take-Home Pay Calculator (Japan)',
+        description:
+          'Estimate your net bonus in Japan after social insurance and withholding income tax, from the gross bonus and last month’s pay (2025 brackets).',
+        keywords: [
+          'bonus',
+          'net bonus',
+          'take-home',
+          'withholding tax',
+          'social insurance',
+          'Japan bonus tax',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

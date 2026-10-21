@@ -1,0 +1,351 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { rentInitialCostContent } from '../../i18n/tools/rent-initial-cost';
+import type { Locale } from '../../data/tools';
+import type { CostItemId } from '../../lib/tools/rent-initial-cost';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = rentInitialCostContent[locale];
+
+const itemIds: CostItemId[] = [
+  'deposit',
+  'keyMoney',
+  'brokerage',
+  'proratedRent',
+  'prepaidRent',
+  'fireInsurance',
+  'keyExchange',
+  'guarantee',
+  'moving',
+  'other',
+];
+
+const yenFields = [
+  { id: 'rent', label: t.rentLabel },
+  { id: 'management', label: t.managementFeeLabel },
+  { id: 'fire', label: t.fireInsuranceLabel },
+  { id: 'key-exchange', label: t.keyExchangeLabel },
+  { id: 'moving', label: t.movingLabel },
+  { id: 'other', label: t.otherLabel },
+];
+const numberFields = [
+  { id: 'deposit', label: t.depositLabel, step: '0.5', max: '24' },
+  { id: 'key-money', label: t.keyMoneyLabel, step: '0.5', max: '24' },
+  { id: 'brokerage', label: t.brokerageLabel, step: '0.5', max: '24' },
+  { id: 'days', label: t.occupiedDaysLabel, step: '1', max: '31' },
+  { id: 'prepaid', label: t.prepaidLabel, step: '0.5', max: '24' },
+  { id: 'guarantee', label: t.guaranteeLabel, step: '1', max: '200' },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+    data-months-unit={t.monthsUnit}
+    id="rent-cost-root"
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {yenFields.slice(0, 2).map((f) => (
+        <div>
+          <label for={`rent-cost-${f.id}`} class="ui-label">
+            {f.label}
+          </label>
+          <input
+            id={`rent-cost-${f.id}`}
+            type="text"
+            inputmode="numeric"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+        </div>
+      ))}
+      {numberFields.map((f) => (
+        <div>
+          <label for={`rent-cost-${f.id}`} class="ui-label">
+            {f.label}
+          </label>
+          <input
+            id={`rent-cost-${f.id}`}
+            type="number"
+            inputmode="decimal"
+            min="0"
+            max={f.max}
+            step={f.step}
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+        </div>
+      ))}
+      {yenFields.slice(2).map((f) => (
+        <div>
+          <label for={`rent-cost-${f.id}`} class="ui-label">
+            {f.label}
+          </label>
+          <input
+            id={`rent-cost-${f.id}`}
+            type="text"
+            inputmode="numeric"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+        </div>
+      ))}
+    </div>
+
+    <h2 class="mb-2 mt-5 text-lg font-bold">{t.incomeSectionHeading}</h2>
+    <div class="mb-3 max-w-sm">
+      <label for="rent-cost-income" class="ui-label">
+        {t.incomeLabel}
+      </label>
+      <input
+        id="rent-cost-income"
+        type="text"
+        inputmode="numeric"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+      <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+        {t.incomeHint}
+      </p>
+    </div>
+
+    <p
+      id="rent-cost-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="rent-cost-results" class="mt-4 hidden" aria-live="polite">
+      <div class="rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
+        <h3 class="mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+          {t.resultHeading}
+        </h3>
+        <dl class="space-y-1">
+          {itemIds.map((id) => (
+            <div class="flex items-baseline justify-between gap-3 text-sm">
+              <dt class="text-gray-700 dark:text-gray-300">
+                {t.itemLabels[id]}
+              </dt>
+              <dd class="font-semibold" id={`rent-cost-item-${id}`} />
+            </div>
+          ))}
+        </dl>
+        <div class="mt-3 flex items-baseline justify-between gap-3 border-t border-gray-300 pt-2 dark:border-gray-600">
+          <span class="font-bold">{t.totalLabel}</span>
+          <span
+            class="text-xl font-bold text-blue-700 dark:text-blue-400"
+            id="rent-cost-total"
+          ></span>
+        </div>
+      </div>
+
+      <dl class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.totalInRentMonthsLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="rent-cost-months"></dd>
+        </div>
+        <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.totalWithoutDepositLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="rent-cost-no-deposit"></dd>
+        </div>
+        <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.monthlyPaymentLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="rent-cost-monthly"></dd>
+        </div>
+      </dl>
+
+      <div
+        id="rent-cost-guideline"
+        class="mt-4 hidden rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+      >
+        <h3 class="mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">
+          {t.guidelineHeading}
+        </h3>
+        <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <dt class="text-sm text-gray-600 dark:text-gray-400">
+              {t.monthlyGrossLabel}
+            </dt>
+            <dd class="text-lg font-semibold" id="rent-cost-gross"></dd>
+          </div>
+          <div>
+            <dt class="text-sm text-gray-600 dark:text-gray-400">
+              {t.ratioLabel}
+            </dt>
+            <dd class="text-lg font-semibold" id="rent-cost-ratio"></dd>
+          </div>
+          <div>
+            <dt class="text-sm text-gray-600 dark:text-gray-400">
+              {t.upperLimitLabel}
+            </dt>
+            <dd class="text-lg font-semibold" id="rent-cost-upper"></dd>
+          </div>
+          <div>
+            <dt class="text-sm text-gray-600 dark:text-gray-400">
+              {t.comfortableLabel}
+            </dt>
+            <dd class="text-lg font-semibold" id="rent-cost-comfortable"></dd>
+          </div>
+        </dl>
+        <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+          {t.guidelineNote}
+        </p>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    calculateRentGuideline,
+    calculateRentInitialCost,
+    calculateRentToIncomeRatio,
+  } from '../../lib/tools/rent-initial-cost';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+
+  const root = document.getElementById('rent-cost-root')!;
+  const numberLocale = root.dataset.numberLocale ?? 'en-US';
+  const errorMessage = root.dataset.error ?? '';
+  const monthsUnit = root.dataset.monthsUnit ?? '';
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const oneDecimal = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 1,
+  });
+
+  const el = (id: string) =>
+    document.getElementById(`rent-cost-${id}`) as HTMLInputElement;
+  const text = (id: string) => document.getElementById(`rent-cost-${id}`)!;
+
+  const yenIds = [
+    'rent',
+    'management',
+    'fire',
+    'key-exchange',
+    'moving',
+    'other',
+    'income',
+  ];
+  yenIds.forEach((id) => attachCommaFormatting(el(id)));
+
+  const yenValue = (id: string) => {
+    const v = el(id).value.trim();
+    return v === '' ? 0 : Number(stripCommas(v));
+  };
+  const numValue = (id: string) => {
+    const v = el(id).value.trim();
+    return v === '' ? 0 : Number(v);
+  };
+
+  const errorEl = text('error');
+  const resultsEl = text('results');
+  const guidelineEl = text('guideline');
+
+  const itemIds = [
+    'deposit',
+    'keyMoney',
+    'brokerage',
+    'proratedRent',
+    'prepaidRent',
+    'fireInsurance',
+    'keyExchange',
+    'guarantee',
+    'moving',
+    'other',
+  ] as const;
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+    guidelineEl.classList.add('hidden');
+
+    if (el('rent').value.trim() === '') return;
+
+    const result = calculateRentInitialCost({
+      rent: yenValue('rent'),
+      managementFee: yenValue('management'),
+      depositMonths: numValue('deposit'),
+      keyMoneyMonths: numValue('key-money'),
+      brokerageMonths: numValue('brokerage'),
+      occupiedDays: numValue('days'),
+      prepaidMonths: numValue('prepaid'),
+      fireInsurance: yenValue('fire'),
+      keyExchange: yenValue('key-exchange'),
+      guaranteePercent: numValue('guarantee'),
+      moving: yenValue('moving'),
+      other: yenValue('other'),
+    });
+
+    if (result === null) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    for (const id of itemIds) {
+      const item = result.items.find((i) => i.id === id)!;
+      text(`item-${id}`).textContent = yen.format(item.amount);
+    }
+    text('total').textContent = yen.format(result.total);
+    text('months').textContent =
+      `${oneDecimal.format(result.totalInRentMonths)} ${monthsUnit}`;
+    text('no-deposit').textContent = yen.format(result.totalWithoutDeposit);
+    text('monthly').textContent = yen.format(result.monthlyPayment);
+    resultsEl.classList.remove('hidden');
+
+    const income = el('income').value.trim();
+    if (income !== '') {
+      const annual = Number(stripCommas(income));
+      const guide = calculateRentGuideline(annual);
+      const ratio = calculateRentToIncomeRatio(result.monthlyPayment, annual);
+      if (guide !== null && ratio !== null) {
+        text('gross').textContent = yen.format(guide.monthlyGross);
+        text('upper').textContent = yen.format(guide.upperLimit);
+        text('comfortable').textContent = yen.format(guide.comfortable);
+        text('ratio').textContent = `${oneDecimal.format(ratio)}%`;
+        guidelineEl.classList.remove('hidden');
+      }
+    }
+  }
+
+  [
+    ...yenIds,
+    'deposit',
+    'key-money',
+    'brokerage',
+    'days',
+    'prepaid',
+    'guarantee',
+  ].forEach((id) => el(id).addEventListener('input', render));
+
+  el('rent').value = formatNumberWithCommas('100000');
+  el('management').value = formatNumberWithCommas('5000');
+  el('deposit').value = '1';
+  el('key-money').value = '1';
+  el('brokerage').value = '1';
+  el('days').value = '15';
+  el('prepaid').value = '1';
+  el('fire').value = formatNumberWithCommas('20000');
+  el('key-exchange').value = formatNumberWithCommas('15000');
+  el('guarantee').value = '50';
+  el('moving').value = formatNumberWithCommas('100000');
+  el('other').value = '0';
+  render();
+</script>

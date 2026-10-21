@@ -1,0 +1,300 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { hearingTestContent } from '../../i18n/tools/hearing-test';
+import {
+  DEFAULT_STEP,
+  DEFAULT_VOLUME_PERCENT,
+  MAX_VOLUME_PERCENT,
+  STEP_OPTIONS,
+  formatHz,
+  frequencyList,
+} from '../../lib/tools/hearing-test';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = hearingTestContent[locale];
+
+const selectClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+
+// 最も細かい間隔(500Hz)の全周波数を描画し、間隔の選択に応じて表示を絞る
+const all = frequencyList(STEP_OPTIONS[0]);
+---
+
+<ToolShell t={t}>
+  <div
+    id="ht-root"
+    data-playing={t.playingLabel}
+    data-play={t.playLabel}
+    data-none={t.resultNone}
+    data-normal={t.resultNormal}
+    data-low={t.resultLow}
+    data-default-step={DEFAULT_STEP}
+  >
+    <p class="mb-4 max-w-2xl rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+      {t.warning}
+    </p>
+
+    <div class="grid max-w-2xl gap-4 sm:grid-cols-2">
+      <div>
+        <label for="ht-volume" class="ui-label">
+          {t.volumeLabel}:{' '}
+          <span id="ht-volume-value">{DEFAULT_VOLUME_PERCENT}</span>%
+        </label>
+        <input
+          id="ht-volume"
+          type="range"
+          min="0"
+          max={MAX_VOLUME_PERCENT}
+          step="1"
+          value={DEFAULT_VOLUME_PERCENT}
+          class="w-full"
+        />
+      </div>
+      <div>
+        <label for="ht-step" class="ui-label">
+          {t.stepLabel}
+        </label>
+        <select id="ht-step" class={selectClass}>
+          {STEP_OPTIONS.map((s) => (
+            <option value={s} selected={s === DEFAULT_STEP}>
+              {t.stepOptions[String(s) as '500' | '1000' | '2000']}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.listHeading}</h2>
+    <p class="mb-3 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
+      {t.listHint}
+    </p>
+    <ul class="max-w-2xl divide-y divide-gray-200 dark:divide-gray-800">
+      {all.map((f) => (
+        <li
+          data-row={f}
+          class="flex flex-wrap items-center gap-x-4 gap-y-2 py-2"
+        >
+          <span class="w-20 text-sm font-medium tabular-nums">
+            {formatHz(f)}
+          </span>
+          <button type="button" data-play-freq={f} class="ui-btn h-11 w-28">
+            {t.playLabel}
+          </button>
+          <label class="ui-check inline-flex min-h-11 items-center gap-2 text-sm">
+            <input type="checkbox" id={`ht-heard-${f}`} data-heard={f} />
+            {t.heardLabel}
+          </label>
+          <span
+            data-unsupported={f}
+            hidden
+            class="text-xs text-red-700 dark:text-red-400"
+          >
+            {t.unsupportedLabel}
+          </span>
+        </li>
+      ))}
+    </ul>
+    <button id="ht-reset" type="button" class="ui-btn mt-3 h-11">
+      {t.resetLabel}
+    </button>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.resultHeading}</h2>
+    <p
+      id="ht-result"
+      role="status"
+      class="max-w-2xl rounded-lg border border-gray-200 p-3 text-sm dark:border-gray-800"
+    >
+      {t.resultNone}
+    </p>
+    <p class="mt-2 max-w-2xl text-xs text-gray-600 dark:text-gray-400">
+      {t.resultDisclaimer}
+    </p>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    FADE_SECONDS,
+    TONE_SECONDS,
+    ageGuide,
+    clampVolumePercent,
+    formatHz,
+    hearingGain,
+    isPlayable,
+    normalizeStep,
+    toneSchedule,
+  } from '../../lib/tools/hearing-test';
+
+  const root = document.getElementById('ht-root')!;
+  const d = root.dataset;
+  const volume = document.getElementById('ht-volume') as HTMLInputElement;
+  const volumeValue = document.getElementById('ht-volume-value')!;
+  const stepSelect = document.getElementById('ht-step') as HTMLSelectElement;
+  const result = document.getElementById('ht-result')!;
+  const resetButton = document.getElementById('ht-reset') as HTMLButtonElement;
+  const rows = Array.from(document.querySelectorAll<HTMLElement>('[data-row]'));
+  const playButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-play-freq]'),
+  );
+  const checks = Array.from(
+    document.querySelectorAll<HTMLInputElement>('[data-heard]'),
+  );
+
+  let context: AudioContext | null = null;
+  let master: GainNode | null = null;
+  let current: { osc: OscillatorNode; env: GainNode } | null = null;
+  let currentButton: HTMLButtonElement | null = null;
+  let stopTimer = 0;
+
+  function ensureContext(): AudioContext {
+    if (!context) {
+      context = new AudioContext();
+      master = context.createGain();
+      master.gain.value = hearingGain(Number(volume.value));
+      master.connect(context.destination);
+    }
+    if (context.state === 'suspended') void context.resume();
+    return context;
+  }
+
+  function resetButtonLabel() {
+    if (currentButton) currentButton.textContent = d.play!;
+    currentButton = null;
+  }
+
+  function stop() {
+    window.clearTimeout(stopTimer);
+    if (current && context) {
+      const { osc, env } = current;
+      current = null;
+      const now = context.currentTime;
+      env.gain.cancelScheduledValues(now);
+      env.gain.setValueAtTime(env.gain.value, now);
+      env.gain.linearRampToValueAtTime(0, now + 0.03);
+      try {
+        osc.stop(now + 0.05);
+      } catch {
+        // すでに停止している場合は無視する
+      }
+    }
+    resetButtonLabel();
+  }
+
+  function play(frequency: number, button: HTMLButtonElement) {
+    stop();
+    const ctx = ensureContext();
+    master!.gain.value = hearingGain(Number(volume.value));
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = frequency;
+    const env = ctx.createGain();
+    const s = toneSchedule(TONE_SECONDS, FADE_SECONDS);
+    const t0 = ctx.currentTime + 0.02;
+    env.gain.setValueAtTime(0, t0);
+    env.gain.linearRampToValueAtTime(1, t0 + s.attackEnd);
+    env.gain.setValueAtTime(1, t0 + s.releaseStart);
+    env.gain.linearRampToValueAtTime(0, t0 + s.end);
+    osc.connect(env).connect(master!);
+    osc.start(t0);
+    osc.stop(t0 + s.end + 0.05);
+    current = { osc, env };
+    currentButton = button;
+    button.textContent = d.playing!;
+    stopTimer = window.setTimeout(
+      () => {
+        current = null;
+        resetButtonLabel();
+      },
+      (TONE_SECONDS + 0.1) * 1000,
+    );
+  }
+
+  function visibleStep(): number {
+    return normalizeStep(Number(stepSelect.value));
+  }
+
+  function applyStep() {
+    const step = visibleStep();
+    rows.forEach((row) => {
+      const f = Number(row.dataset.row);
+      row.hidden = (f - 8000) % step !== 0;
+    });
+    updateResult();
+  }
+
+  function updateResult() {
+    const step = visibleStep();
+    const heard = checks
+      .filter((c) => c.checked && (Number(c.dataset.heard) - 8000) % step === 0)
+      .map((c) => Number(c.dataset.heard));
+    const g = ageGuide(heard);
+    if (g.kind === 'none') {
+      result.textContent = d.none!;
+    } else {
+      const template = g.kind === 'low' ? d.low! : d.normal!;
+      result.textContent = template
+        .replace('{freq}', formatHz(g.highest!))
+        .replace('{age}', String(g.maxAge ?? ''));
+    }
+  }
+
+  playButtons.forEach((b) => {
+    b.addEventListener('click', () => {
+      if (currentButton === b) {
+        stop();
+        return;
+      }
+      play(Number(b.dataset.playFreq), b);
+    });
+  });
+  checks.forEach((c) => c.addEventListener('change', updateResult));
+  stepSelect.addEventListener('change', applyStep);
+  volume.addEventListener('input', () => {
+    const v = clampVolumePercent(Number(volume.value));
+    volumeValue.textContent = String(v);
+    if (context && master) {
+      master.gain.setTargetAtTime(hearingGain(v), context.currentTime, 0.02);
+    }
+  });
+  resetButton.addEventListener('click', () => {
+    checks.forEach((c) => (c.checked = false));
+    updateResult();
+  });
+
+  // 再生できない周波数（機器のサンプルレートが低い）は無効にする
+  function markUnsupported() {
+    const rate = context?.sampleRate ?? new AudioContext().sampleRate;
+    playButtons.forEach((b) => {
+      const f = Number(b.dataset.playFreq);
+      const ok = isPlayable(f, rate);
+      b.disabled = !ok;
+      const note = document.querySelector<HTMLElement>(
+        `[data-unsupported="${f}"]`,
+      );
+      if (note) note.hidden = ok;
+    });
+  }
+  try {
+    const probe = new AudioContext();
+    context = probe;
+    master = probe.createGain();
+    master.gain.value = hearingGain(Number(volume.value));
+    master.connect(probe.destination);
+    markUnsupported();
+  } catch {
+    // AudioContext を使えない環境では再生ボタンを無効にする
+    playButtons.forEach((b) => (b.disabled = true));
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stop();
+  });
+  window.addEventListener('pagehide', stop);
+
+  applyStep();
+</script>

@@ -1,0 +1,647 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { pfcCalculatorContent } from '../../i18n/tools/pfc-calculator';
+import { activityLevels } from '../../lib/tools/bmr-calorie-calculator';
+import { goals, presets } from '../../lib/tools/pfc-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = pfcCalculatorContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="pfc-calc"
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error-body={t.errorBody}
+    data-error-kcal={t.errorKcal}
+    data-error-ratio={t.errorRatio}
+    data-kcal-unit={t.kcalUnit}
+    data-gram-unit={t.gramUnit}
+    data-guide-item={t.guideItem}
+    data-copy-done={t.copyDone}
+    data-copy-failed={t.copyFailed}
+    data-intake-label={t.intakeLabel}
+    data-protein-label={t.proteinLabel}
+    data-fat-label={t.fatLabel}
+    data-carb-label={t.carbLabel}
+  >
+    <div class="mb-4 flex flex-wrap gap-x-8 gap-y-3">
+      <div>
+        <span id="pfc-source-legend" class="ui-label">
+          {t.sourceLegend}
+        </span>
+        <div
+          class="flex flex-wrap gap-3"
+          role="radiogroup"
+          aria-labelledby="pfc-source-legend"
+        >
+          <label class="flex items-center gap-1 text-sm">
+            <input type="radio" name="pfc-source" value="body" checked />
+            {t.sourceBody}
+          </label>
+          <label class="flex items-center gap-1 text-sm">
+            <input type="radio" name="pfc-source" value="direct" />
+            {t.sourceDirect}
+          </label>
+        </div>
+      </div>
+      <div>
+        <span id="pfc-unit-legend" class="ui-label">
+          {t.unitLegend}
+        </span>
+        <div
+          class="flex flex-wrap gap-3"
+          role="radiogroup"
+          aria-labelledby="pfc-unit-legend"
+        >
+          <label class="flex items-center gap-1 text-sm">
+            <input
+              type="radio"
+              name="pfc-unit-system"
+              value="metric"
+              checked={t.defaultUnit === 'metric'}
+            />
+            {t.unitMetric}
+          </label>
+          <label class="flex items-center gap-1 text-sm">
+            <input
+              type="radio"
+              name="pfc-unit-system"
+              value="imperial"
+              checked={t.defaultUnit === 'imperial'}
+            />
+            {t.unitImperial}
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div id="pfc-body-fields" class="mb-4">
+      <div class="mb-3">
+        <span id="pfc-sex-legend" class="ui-label">
+          {t.sexLegend}
+        </span>
+        <div
+          class="flex flex-wrap gap-3"
+          role="radiogroup"
+          aria-labelledby="pfc-sex-legend"
+        >
+          <label class="flex items-center gap-1 text-sm">
+            <input type="radio" name="pfc-sex" value="male" checked />
+            {t.sexMale}
+          </label>
+          <label class="flex items-center gap-1 text-sm">
+            <input type="radio" name="pfc-sex" value="female" />
+            {t.sexFemale}
+          </label>
+        </div>
+      </div>
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="pfc-age-input" class="ui-label">
+            {t.ageLabel}
+          </label>
+          <input
+            id="pfc-age-input"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="120"
+            step="1"
+            placeholder={t.agePlaceholder}
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+        </div>
+        <div>
+          <span id="pfc-height-legend" class="ui-label">
+            {t.heightLabel}
+          </span>
+          <div
+            id="pfc-height-metric-fields"
+            class="flex items-center gap-1"
+            role="group"
+            aria-labelledby="pfc-height-legend"
+          >
+            <input
+              id="pfc-height-cm-input"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              placeholder={t.heightCmPlaceholder}
+              class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+            />
+            <span class="text-sm text-gray-500 dark:text-gray-400">cm</span>
+          </div>
+          <div
+            id="pfc-height-imperial-fields"
+            class="flex items-center gap-1"
+            role="group"
+            aria-labelledby="pfc-height-legend"
+          >
+            <input
+              id="pfc-height-ft-input"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              placeholder={t.heightFtPlaceholder}
+              class="ui-input h-11 w-20 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+            />
+            <span class="text-sm text-gray-500 dark:text-gray-400">ft</span>
+            <input
+              id="pfc-height-in-input"
+              type="number"
+              inputmode="decimal"
+              min="0"
+              placeholder={t.heightInPlaceholder}
+              class="ui-input h-11 w-20 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+            />
+            <span class="text-sm text-gray-500 dark:text-gray-400">in</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-3">
+        <label for="pfc-activity-select" class="ui-label">
+          {t.activityLabel}
+        </label>
+        <select
+          id="pfc-activity-select"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          {activityLevels.map((level) => (
+            <option value={level} selected={level === 'light'}>
+              {t.activityLabels[level]}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <div id="pfc-direct-fields" class="mb-4 hidden">
+      <label for="pfc-kcal-input" class="ui-label">
+        {t.kcalInputLabel}
+      </label>
+      <input
+        id="pfc-kcal-input"
+        type="number"
+        inputmode="decimal"
+        min="0"
+        placeholder={t.kcalInputPlaceholder}
+        class="ui-input h-11 w-32 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+    </div>
+
+    <div class="mb-4">
+      <span id="pfc-weight-legend" class="ui-label">
+        {t.weightLabel}
+        <span id="pfc-weight-hint" class="hidden font-normal">
+          {t.weightHintOptional}
+        </span>
+      </span>
+      <div
+        id="pfc-weight-metric-fields"
+        class="flex items-center gap-1"
+        role="group"
+        aria-labelledby="pfc-weight-legend"
+      >
+        <input
+          id="pfc-weight-kg-input"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          placeholder={t.weightKgPlaceholder}
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+        <span class="text-sm text-gray-500 dark:text-gray-400">kg</span>
+      </div>
+      <div
+        id="pfc-weight-imperial-fields"
+        class="flex items-center gap-1"
+        role="group"
+        aria-labelledby="pfc-weight-legend"
+      >
+        <input
+          id="pfc-weight-lb-input"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          placeholder={t.weightLbPlaceholder}
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+        <span class="text-sm text-gray-500 dark:text-gray-400">lb</span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div>
+        <label for="pfc-goal-select" class="ui-label">
+          {t.goalLabel}
+        </label>
+        <select
+          id="pfc-goal-select"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          {goals.map((goal) => (
+            <option value={goal} selected={goal === 'maintain'}>
+              {t.goalLabels[goal]}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="pfc-preset-select" class="ui-label">
+          {t.presetLabel}
+        </label>
+        <select
+          id="pfc-preset-select"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          {presets.map((preset) => (
+            <option value={preset}>{t.presetLabels[preset]}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <div id="pfc-custom-fields" class="mt-3 hidden">
+      <span id="pfc-custom-legend" class="ui-label">
+        {t.customLegend}
+      </span>
+      <div
+        class="flex flex-wrap items-end gap-3"
+        role="group"
+        aria-labelledby="pfc-custom-legend"
+      >
+        <div>
+          <label for="pfc-custom-p" class="text-sm">
+            {t.proteinShort}
+          </label>
+          <input
+            id="pfc-custom-p"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            max="100"
+            class="ui-input mt-1 h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="pfc-custom-f" class="text-sm">
+            {t.fatShort}
+          </label>
+          <input
+            id="pfc-custom-f"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            max="100"
+            class="ui-input mt-1 h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="pfc-custom-c" class="text-sm">
+            {t.carbShort}
+          </label>
+          <input
+            id="pfc-custom-c"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            max="100"
+            class="ui-input mt-1 h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+    </div>
+
+    <p
+      id="pfc-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="pfc-results" class="mt-4 hidden" aria-live="polite">
+      <dl class="space-y-2">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.intakeLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="pfc-intake"></dd>
+        </div>
+        <div id="pfc-bmr-row">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">{t.bmrLabel}</dt>
+          <dd class="font-semibold" id="pfc-bmr"></dd>
+        </div>
+      </dl>
+      <p
+        id="pfc-warning"
+        class="mt-2 hidden text-sm text-red-600 dark:text-red-400"
+      >
+        {t.belowBmrWarning}
+      </p>
+      <dl class="mt-4 space-y-2">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.proteinLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="pfc-protein"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">{t.fatLabel}</dt>
+          <dd class="text-lg font-semibold" id="pfc-fat"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.carbLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="pfc-carb"></dd>
+        </div>
+        <div id="pfc-per-kg-row" class="hidden">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.perKgLabel}
+          </dt>
+          <dd class="font-semibold" id="pfc-per-kg"></dd>
+        </div>
+      </dl>
+      <div id="pfc-guide" class="mt-4 hidden">
+        <h2 class="mb-1 text-sm font-medium">{t.guideHeading}</h2>
+        <ul id="pfc-guide-list" class="list-disc space-y-1 pl-5 text-sm"></ul>
+      </div>
+      <div class="mt-4 flex items-center gap-3">
+        <button id="pfc-copy-button" type="button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <span
+          id="pfc-copy-status"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          role="status"
+        ></span>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    calculateBmr,
+    calculateTdee,
+    type ActivityLevel,
+    type Sex,
+  } from '../../lib/tools/bmr-calorie-calculator';
+  import { feetInchesToCm, lbToKg } from '../../lib/tools/bmi-calculator';
+  import {
+    calculatePfc,
+    calorieForGoal,
+    presetRatios,
+    proteinGuideGrams,
+    proteinPerKg,
+    type Goal,
+    type PfcPreset,
+    type PfcRatio,
+  } from '../../lib/tools/pfc-calculator';
+  import { copyText } from '../../lib/clipboard';
+
+  const section = document.getElementById('pfc-calc')!;
+  const d = section.dataset;
+  const numberLocale = d.numberLocale ?? 'en-US';
+  const kcalUnit = d.kcalUnit ?? 'kcal';
+  const gramUnit = d.gramUnit ?? 'g';
+
+  const intFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 0,
+  });
+  const oneFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 1,
+  });
+  const twoFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 2,
+  });
+  const formatKcal = (v: number) => `${intFormat.format(v)} ${kcalUnit}`;
+  const formatMacro = (m: { grams: number; kcal: number; percent: number }) =>
+    `${oneFormat.format(m.grams)} ${gramUnit} (${intFormat.format(m.kcal)} ${kcalUnit} / ${oneFormat.format(m.percent)}%)`;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const radios = (name: string) =>
+    Array.from(
+      document.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`),
+    );
+  const checked = (name: string) =>
+    radios(name).find((el) => el.checked)?.value;
+
+  const bodyFields = $('pfc-body-fields');
+  const directFields = $('pfc-direct-fields');
+  const weightHint = $('pfc-weight-hint');
+  const heightMetric = $('pfc-height-metric-fields');
+  const heightImperial = $('pfc-height-imperial-fields');
+  const weightMetric = $('pfc-weight-metric-fields');
+  const weightImperial = $('pfc-weight-imperial-fields');
+  const customFields = $('pfc-custom-fields');
+
+  const ageInput = $<HTMLInputElement>('pfc-age-input');
+  const heightCmInput = $<HTMLInputElement>('pfc-height-cm-input');
+  const heightFtInput = $<HTMLInputElement>('pfc-height-ft-input');
+  const heightInInput = $<HTMLInputElement>('pfc-height-in-input');
+  const weightKgInput = $<HTMLInputElement>('pfc-weight-kg-input');
+  const weightLbInput = $<HTMLInputElement>('pfc-weight-lb-input');
+  const activitySelect = $<HTMLSelectElement>('pfc-activity-select');
+  const kcalInput = $<HTMLInputElement>('pfc-kcal-input');
+  const goalSelect = $<HTMLSelectElement>('pfc-goal-select');
+  const presetSelect = $<HTMLSelectElement>('pfc-preset-select');
+  const customP = $<HTMLInputElement>('pfc-custom-p');
+  const customF = $<HTMLInputElement>('pfc-custom-f');
+  const customC = $<HTMLInputElement>('pfc-custom-c');
+
+  const errorEl = $('pfc-error');
+  const resultsEl = $('pfc-results');
+  const copyStatus = $('pfc-copy-status');
+
+  const isMetric = () => checked('pfc-unit-system') === 'metric';
+  const isBody = () => checked('pfc-source') !== 'direct';
+  const blank = (el: HTMLInputElement) => el.value.trim() === '';
+
+  function updateVisibility() {
+    const metric = isMetric();
+    const body = isBody();
+    bodyFields.classList.toggle('hidden', !body);
+    directFields.classList.toggle('hidden', body);
+    weightHint.classList.toggle('hidden', body);
+    heightMetric.classList.toggle('hidden', !metric);
+    heightImperial.classList.toggle('hidden', metric);
+    weightMetric.classList.toggle('hidden', !metric);
+    weightImperial.classList.toggle('hidden', metric);
+    customFields.classList.toggle('hidden', presetSelect.value !== 'custom');
+  }
+
+  /** 空欄なら null、入力ありなら kg（不正値は NaN） */
+  function weightKg(): number | null {
+    if (isMetric())
+      return blank(weightKgInput) ? null : Number(weightKgInput.value);
+    return blank(weightLbInput) ? null : lbToKg(Number(weightLbInput.value));
+  }
+
+  function heightCm(): number | null {
+    if (isMetric())
+      return blank(heightCmInput) ? null : Number(heightCmInput.value);
+    if (blank(heightFtInput) && blank(heightInInput)) return null;
+    return feetInchesToCm(
+      blank(heightFtInput) ? 0 : Number(heightFtInput.value),
+      blank(heightInInput) ? 0 : Number(heightInInput.value),
+    );
+  }
+
+  function currentRatio(): PfcRatio {
+    const preset = presetSelect.value as PfcPreset;
+    if (preset !== 'custom') return presetRatios[preset];
+    return {
+      protein: blank(customP) ? NaN : Number(customP.value),
+      fat: blank(customF) ? NaN : Number(customF.value),
+      carb: blank(customC) ? NaN : Number(customC.value),
+    };
+  }
+
+  let lastCopyText = '';
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+    copyStatus.textContent = '';
+
+    const weight = weightKg();
+    let maintenance: number;
+    let bmr: number | null = null;
+
+    if (isBody()) {
+      const h = heightCm();
+      if (blank(ageInput) || h === null || weight === null) return;
+      bmr = calculateBmr(
+        'mifflin',
+        (checked('pfc-sex') as Sex) ?? 'male',
+        Number(ageInput.value),
+        h,
+        weight,
+      );
+      if (bmr === null) {
+        errorEl.textContent = d.errorBody ?? '';
+        return;
+      }
+      maintenance = calculateTdee(bmr, activitySelect.value as ActivityLevel);
+    } else {
+      if (blank(kcalInput)) return;
+      maintenance = Number(kcalInput.value);
+    }
+
+    const calories = calorieForGoal(maintenance, goalSelect.value as Goal);
+    if (calories === null) {
+      errorEl.textContent = d.errorKcal ?? '';
+      return;
+    }
+
+    if (presetSelect.value === 'custom') {
+      const r = currentRatio();
+      if ([customP, customF, customC].some(blank)) return;
+      if (
+        Math.abs(r.protein + r.fat + r.carb - 100) >= 0.01 ||
+        !(Math.min(r.protein, r.fat, r.carb) >= 0)
+      ) {
+        errorEl.textContent = d.errorRatio ?? '';
+        return;
+      }
+    }
+
+    const pfc = calculatePfc(calories, currentRatio());
+    if (pfc === null) {
+      errorEl.textContent = d.errorKcal ?? '';
+      return;
+    }
+
+    $('pfc-intake').textContent = formatKcal(calories);
+    $('pfc-bmr-row').classList.toggle('hidden', bmr === null);
+    if (bmr !== null) $('pfc-bmr').textContent = formatKcal(bmr);
+    $('pfc-warning').classList.toggle(
+      'hidden',
+      bmr === null || calories >= bmr,
+    );
+    $('pfc-protein').textContent = formatMacro(pfc.protein);
+    $('pfc-fat').textContent = formatMacro(pfc.fat);
+    $('pfc-carb').textContent = formatMacro(pfc.carb);
+
+    const perKg =
+      weight === null ? null : proteinPerKg(pfc.protein.grams, weight);
+    $('pfc-per-kg-row').classList.toggle('hidden', perKg === null);
+    if (perKg !== null)
+      $('pfc-per-kg').textContent = `${twoFormat.format(perKg)} ${gramUnit}/kg`;
+
+    const guide = weight === null ? [] : proteinGuideGrams(weight);
+    const list = $('pfc-guide-list');
+    list.textContent = '';
+    for (const g of guide) {
+      const li = document.createElement('li');
+      li.textContent = (d.guideItem ?? '')
+        .replace('{perKg}', twoFormat.format(g.perKg))
+        .replace('{grams}', oneFormat.format(g.grams));
+      list.appendChild(li);
+    }
+    $('pfc-guide').classList.toggle('hidden', guide.length === 0);
+
+    lastCopyText = [
+      `${d.intakeLabel}: ${formatKcal(calories)}`,
+      `${d.proteinLabel}: ${formatMacro(pfc.protein)}`,
+      `${d.fatLabel}: ${formatMacro(pfc.fat)}`,
+      `${d.carbLabel}: ${formatMacro(pfc.carb)}`,
+    ].join('\n');
+    resultsEl.classList.remove('hidden');
+  }
+
+  function onChange() {
+    updateVisibility();
+    render();
+  }
+
+  radios('pfc-source').forEach((el) => el.addEventListener('change', onChange));
+  radios('pfc-unit-system').forEach((el) =>
+    el.addEventListener('change', onChange),
+  );
+  radios('pfc-sex').forEach((el) => el.addEventListener('change', render));
+  [
+    ageInput,
+    heightCmInput,
+    heightFtInput,
+    heightInInput,
+    weightKgInput,
+    weightLbInput,
+    kcalInput,
+    customP,
+    customF,
+    customC,
+  ].forEach((el) => el.addEventListener('input', render));
+  [activitySelect, goalSelect].forEach((el) =>
+    el.addEventListener('change', render),
+  );
+  presetSelect.addEventListener('change', onChange);
+
+  $('pfc-copy-button').addEventListener('click', async () => {
+    if (lastCopyText === '') return;
+    const ok = await copyText(lastCopyText);
+    copyStatus.textContent = ok ? (d.copyDone ?? '') : (d.copyFailed ?? '');
+  });
+
+  // 初期値
+  ageInput.value = '30';
+  heightCmInput.value = '170';
+  weightKgInput.value = '65';
+  heightFtInput.value = '5';
+  heightInInput.value = '7';
+  weightLbInput.value = '143';
+  kcalInput.value = '2000';
+  customP.value = '20';
+  customF.value = '25';
+  customC.value = '55';
+  updateVisibility();
+  render();
+</script>

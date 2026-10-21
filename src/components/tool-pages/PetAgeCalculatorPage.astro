@@ -1,0 +1,227 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { petAgeCalculatorContent } from '../../i18n/tools/pet-age-calculator';
+import { buildConversionTable } from '../../lib/tools/pet-age-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = petAgeCalculatorContent[locale];
+const rows = buildConversionTable(20);
+---
+
+<ToolShell t={t}>
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    id="pet-age-root"
+    data-error={t.error}
+    data-years-template={t.resultYearsTemplate}
+    data-years-months-template={t.resultYearsMonthsTemplate}
+  >
+    <div class="mb-4">
+      <span id="pet-species-legend" class="ui-label">
+        {t.speciesLegend}
+      </span>
+      <div
+        class="flex flex-wrap gap-3"
+        role="radiogroup"
+        aria-labelledby="pet-species-legend"
+      >
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="pet-species" value="dog" checked />
+          {t.speciesDog}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="pet-species" value="cat" />
+          {t.speciesCat}
+        </label>
+      </div>
+    </div>
+
+    <div id="pet-size-field" class="mb-4">
+      <label for="pet-size-select" class="ui-label">
+        {t.sizeLabel}
+      </label>
+      <select
+        id="pet-size-select"
+        class="ui-input h-11 w-full max-w-xs px-3 dark:bg-gray-900"
+      >
+        <option value="small">{t.sizeSmall}</option>
+        <option value="medium" selected>
+          {t.sizeMedium}
+        </option>
+        <option value="large">{t.sizeLarge}</option>
+      </select>
+    </div>
+
+    <div>
+      <span id="pet-age-legend" class="ui-label">
+        {t.ageLegend}
+      </span>
+      <div
+        class="flex flex-wrap items-center gap-2"
+        role="group"
+        aria-labelledby="pet-age-legend"
+      >
+        <input
+          id="pet-years-input"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          max="40"
+          step="1"
+          aria-label={`${t.ageLegend} (${t.yearsLabel})`}
+          class="ui-input h-11 w-20 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+        <span class="text-sm text-gray-500 dark:text-gray-400">
+          {t.yearsLabel}
+        </span>
+        <input
+          id="pet-months-input"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          max="11"
+          step="1"
+          aria-label={`${t.ageLegend} (${t.monthsLabel})`}
+          class="ui-input h-11 w-20 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+        <span class="text-sm text-gray-500 dark:text-gray-400">
+          {t.monthsLabel}
+        </span>
+      </div>
+    </div>
+
+    <p
+      id="pet-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="pet-results" class="mt-4 hidden" aria-live="polite">
+      <p class="text-sm text-gray-600 dark:text-gray-400">{t.resultLabel}</p>
+      <p id="pet-result" class="text-2xl font-semibold"></p>
+    </div>
+  </section>
+
+  <section class="mt-8">
+    <h2 class="mb-3 text-lg font-semibold">{t.tableHeading}</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[20rem] text-left text-sm">
+        <caption class="sr-only">{t.tableCaption}</caption>
+        <thead>
+          <tr class="border-b border-gray-300 dark:border-gray-600">
+            <th scope="col" class="px-2 py-1.5">
+              {t.tablePetAge}
+            </th>
+            <th scope="col" class="px-2 py-1.5">
+              {t.tableCat}
+            </th>
+            <th scope="col" class="px-2 py-1.5">
+              {t.tableSmall}
+            </th>
+            <th scope="col" class="px-2 py-1.5">
+              {t.tableMedium}
+            </th>
+            <th scope="col" class="px-2 py-1.5">
+              {t.tableLarge}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th scope="row" class="px-2 py-1.5 font-medium">
+                {r.petYears}
+                {t.tableYearSuffix}
+              </th>
+              <td class="px-2 py-1.5">{r.cat}</td>
+              <td class="px-2 py-1.5">{r.small}</td>
+              <td class="px-2 py-1.5">{r.medium}</td>
+              <td class="px-2 py-1.5">{r.large}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    convertPetAge,
+    type DogSize,
+    type PetSpecies,
+  } from '../../lib/tools/pet-age-calculator';
+
+  const root = document.getElementById('pet-age-root')!;
+  const errorMessage = root.dataset.error ?? '';
+  const yearsTemplate = root.dataset.yearsTemplate ?? '{y}';
+  const yearsMonthsTemplate = root.dataset.yearsMonthsTemplate ?? '{y} {m}';
+
+  const speciesInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="pet-species"]',
+  );
+  const sizeField = document.getElementById('pet-size-field')!;
+  const sizeSelect = document.getElementById(
+    'pet-size-select',
+  ) as HTMLSelectElement;
+  const yearsInput = document.getElementById(
+    'pet-years-input',
+  ) as HTMLInputElement;
+  const monthsInput = document.getElementById(
+    'pet-months-input',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('pet-error')!;
+  const resultsEl = document.getElementById('pet-results')!;
+  const resultEl = document.getElementById('pet-result')!;
+
+  function species(): PetSpecies {
+    return (
+      (Array.from(speciesInputs).find((el) => el.checked)
+        ?.value as PetSpecies) ?? 'dog'
+    );
+  }
+
+  function render() {
+    sizeField.classList.toggle('hidden', species() === 'cat');
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    if (yearsInput.value.trim() === '' && monthsInput.value.trim() === '')
+      return;
+    const years = yearsInput.value.trim() === '' ? 0 : Number(yearsInput.value);
+    const months =
+      monthsInput.value.trim() === '' ? 0 : Number(monthsInput.value);
+
+    const result = convertPetAge({
+      species: species(),
+      size: sizeSelect.value as DogSize,
+      years,
+      months,
+    });
+    if (result === null) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+    resultEl.textContent =
+      result.humanMonths === 0
+        ? yearsTemplate.replace('{y}', String(result.humanYears))
+        : yearsMonthsTemplate
+            .replace('{y}', String(result.humanYears))
+            .replace('{m}', String(result.humanMonths));
+    resultsEl.classList.remove('hidden');
+  }
+
+  speciesInputs.forEach((el) => el.addEventListener('change', render));
+  sizeSelect.addEventListener('change', render);
+  yearsInput.addEventListener('input', render);
+  monthsInput.addEventListener('input', render);
+
+  yearsInput.value = '3';
+  monthsInput.value = '0';
+  render();
+</script>

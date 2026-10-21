@@ -22,11 +22,13 @@ const KB = 1024;
  * 同日、code-minifier・PDF系の重いライブラリを操作時の動的importに変更（initial は約15〜19KBに）。あわせて Vite が
  * 動的importをテンプレートリテラルで出力する分も計測に含めるようにしたため、total は遅延先を含む実測になった。
  * それぞれに余裕を持たせた値）。
+ * 2026-10-21: ツールが約700ページ分に増え、全ページの total に含まれる遅延読み込みのツール登録簿（tools.*.js、gzip後 約82KB）
+ * が膨らんだため、通常ページ120→140KB、figlet-text 150→170KB、qr-code-reader 140→160KB に見直した。
  * wasm・PDFワーカーなど、JSの静的/動的importで辿れないアセット（qpdf.wasm 等）は計測対象外。
  */
 export const budgets = {
   // 通常ページ・通常ツール（initial / total の両方に適用）
-  normal: 120 * KB,
+  normal: 140 * KB,
   // heavy ツールの total（PDF・wasm・大きめのライブラリ。遅延読み込み先を含む）
   heavy: 440 * KB,
   // heavy ツールの initial（最初に読み込むJS）。重い処理は操作時の動的importに逃がすこと
@@ -42,8 +44,8 @@ export const slugBudgets = {
   // prettier・terser・csso を言語・操作ごとに遅延読み込みするため、全体は大きいが初回は小さい
   'code-minifier': 600 * KB,
   // フォント・jsQR など操作時に遅延読み込みするデータ
-  'figlet-text': 150 * KB,
-  'qr-code-reader': 140 * KB,
+  'figlet-text': 170 * KB,
+  'qr-code-reader': 160 * KB,
 };
 
 const STATIC_IMPORT = /(?:\bfrom|\bimport)\s*["'](\.[^"']+\.m?js)["']/g;

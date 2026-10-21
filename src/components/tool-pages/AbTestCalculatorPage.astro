@@ -1,0 +1,459 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { abTestCalculatorContent } from '../../i18n/tools/ab-test-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = abTestCalculatorContent[locale];
+const numInput =
+  'ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500';
+const selectCls = 'ui-input h-11 w-full px-3 dark:bg-gray-900';
+---
+
+<ToolShell t={t}>
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    id="ab-root"
+    data-verdict-significant={t.verdictSignificant}
+    data-verdict-not-significant={t.verdictNotSignificant}
+    data-ci-note={t.ciNote}
+    data-not-applicable={t.notApplicable}
+    data-sample-note={t.sampleNote}
+    data-error-visitors={t.errorVisitors}
+    data-error-conversions={t.errorConversions}
+    data-error-alpha={t.errorAlpha}
+    data-error-baseline={t.errorBaseline}
+    data-error-effect={t.errorEffect}
+    data-error-power={t.errorPower}
+  >
+    <div
+      id="ab-mode"
+      class="ui-seg w-fit flex-wrap"
+      role="group"
+      aria-label={t.modeLabel}
+    >
+      <button
+        type="button"
+        data-mode="test"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.modeTest}
+      </button>
+      <button
+        type="button"
+        data-mode="sample"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeSample}
+      </button>
+    </div>
+
+    <div id="ab-panel-test" class="mt-4">
+      <div class="grid gap-4 sm:grid-cols-2">
+        <fieldset class="min-w-0 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+          <legend class="px-1 text-sm font-semibold">{t.groupA}</legend>
+          <label for="ab-visitors-a" class="ui-label">
+            {t.visitorsLabel}
+          </label>
+          <input
+            id="ab-visitors-a"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            step="1"
+            class={numInput}
+          />
+          <label for="ab-conv-a" class="ui-label mt-3">
+            {t.conversionsLabel}
+          </label>
+          <input
+            id="ab-conv-a"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            class={numInput}
+          />
+        </fieldset>
+        <fieldset class="min-w-0 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+          <legend class="px-1 text-sm font-semibold">{t.groupB}</legend>
+          <label for="ab-visitors-b" class="ui-label">
+            {t.visitorsLabel}
+          </label>
+          <input
+            id="ab-visitors-b"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            step="1"
+            class={numInput}
+          />
+          <label for="ab-conv-b" class="ui-label mt-3">
+            {t.conversionsLabel}
+          </label>
+          <input
+            id="ab-conv-b"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            class={numInput}
+          />
+        </fieldset>
+      </div>
+
+      <div class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div class="min-w-0">
+          <label for="ab-alpha" class="ui-label">
+            {t.alphaLabel}
+          </label>
+          <select id="ab-alpha" class={selectCls}>
+            <option value="0.1">{t.alphaOption10}</option>
+            <option value="0.05" selected>
+              {t.alphaOption5}
+            </option>
+            <option value="0.01">{t.alphaOption1}</option>
+          </select>
+        </div>
+        <div class="min-w-0">
+          <label for="ab-tail" class="ui-label">
+            {t.tailLabel}
+          </label>
+          <select id="ab-tail" class={selectCls}>
+            <option value="two" selected>
+              {t.tailTwo}
+            </option>
+            <option value="one">{t.tailOne}</option>
+          </select>
+        </div>
+      </div>
+
+      <p
+        id="ab-error"
+        class="mt-2 text-sm text-red-600 dark:text-red-400"
+        aria-live="polite"
+      ></p>
+
+      <div id="ab-results" class="mt-4 hidden" aria-live="polite">
+        <h2 class="mb-2 text-lg font-semibold">{t.resultHeading}</h2>
+        <p
+          id="ab-verdict"
+          class="mb-3 rounded-lg border border-gray-200 p-3 font-semibold dark:border-gray-700"
+        ></p>
+        <dl class="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
+          <div>
+            <dt class="text-gray-600 dark:text-gray-400">{t.rateA}</dt>
+            <dd id="ab-rate-a" class="text-lg font-semibold"></dd>
+          </div>
+          <div>
+            <dt class="text-gray-600 dark:text-gray-400">{t.rateB}</dt>
+            <dd id="ab-rate-b" class="text-lg font-semibold"></dd>
+          </div>
+          <div>
+            <dt class="text-gray-600 dark:text-gray-400">{t.diffLabel}</dt>
+            <dd id="ab-diff" class="text-lg font-semibold"></dd>
+          </div>
+          <div>
+            <dt class="text-gray-600 dark:text-gray-400">{t.liftLabel}</dt>
+            <dd id="ab-lift" class="text-lg font-semibold"></dd>
+          </div>
+          <div>
+            <dt class="text-gray-600 dark:text-gray-400">{t.zLabel}</dt>
+            <dd id="ab-z" class="text-lg font-semibold"></dd>
+          </div>
+          <div>
+            <dt class="text-gray-600 dark:text-gray-400">{t.pLabel}</dt>
+            <dd id="ab-p" class="text-lg font-semibold"></dd>
+          </div>
+          <div class="sm:col-span-2">
+            <dt id="ab-ci-label" class="text-gray-600 dark:text-gray-400">
+              {t.ciLabel}
+            </dt>
+            <dd id="ab-ci" class="text-lg font-semibold"></dd>
+            <dd
+              id="ab-ci-note"
+              class="text-xs text-gray-600 dark:text-gray-400"
+            ></dd>
+          </div>
+        </dl>
+        <p
+          id="ab-warn-small"
+          class="mt-3 hidden rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
+        >
+          {t.warnSmall}
+        </p>
+        <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+          {t.warnWinner}
+        </p>
+      </div>
+    </div>
+
+    <div id="ab-panel-sample" class="mt-4 hidden">
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div class="min-w-0">
+          <label for="ss-baseline" class="ui-label">
+            {t.baselineLabel}
+          </label>
+          <input
+            id="ss-baseline"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            max="100"
+            step="any"
+            class={numInput}
+          />
+        </div>
+        <div class="min-w-0">
+          <label for="ss-effect-type" class="ui-label">
+            {t.effectTypeLabel}
+          </label>
+          <select id="ss-effect-type" class={selectCls}>
+            <option value="relative" selected>
+              {t.effectRelative}
+            </option>
+            <option value="absolute">{t.effectAbsolute}</option>
+          </select>
+        </div>
+        <div class="min-w-0">
+          <label for="ss-effect" class="ui-label">
+            {t.effectValueLabel}
+          </label>
+          <input
+            id="ss-effect"
+            type="number"
+            inputmode="decimal"
+            step="any"
+            class={numInput}
+          />
+        </div>
+        <div class="min-w-0">
+          <label for="ss-alpha" class="ui-label">
+            {t.alphaLabel}
+          </label>
+          <select id="ss-alpha" class={selectCls}>
+            <option value="0.1">{t.alphaOption10}</option>
+            <option value="0.05" selected>
+              {t.alphaOption5}
+            </option>
+            <option value="0.01">{t.alphaOption1}</option>
+          </select>
+        </div>
+        <div class="min-w-0">
+          <label for="ss-power" class="ui-label">
+            {t.powerLabel}
+          </label>
+          <select id="ss-power" class={selectCls}>
+            <option value="0.8" selected>
+              {t.powerOption80}
+            </option>
+            <option value="0.9">{t.powerOption90}</option>
+            <option value="0.95">{t.powerOption95}</option>
+          </select>
+        </div>
+        <div class="min-w-0">
+          <label for="ss-tail" class="ui-label">
+            {t.tailLabel}
+          </label>
+          <select id="ss-tail" class={selectCls}>
+            <option value="two" selected>
+              {t.tailTwo}
+            </option>
+            <option value="one">{t.tailOne}</option>
+          </select>
+        </div>
+      </div>
+
+      <p
+        id="ss-error"
+        class="mt-2 text-sm text-red-600 dark:text-red-400"
+        aria-live="polite"
+      ></p>
+
+      <div id="ss-results" class="mt-4 hidden" aria-live="polite">
+        <h2 class="mb-2 text-lg font-semibold">{t.sampleHeading}</h2>
+        <dl class="grid gap-x-4 gap-y-2 text-sm sm:grid-cols-2">
+          <div>
+            <dt class="text-gray-600 dark:text-gray-400">{t.perGroupLabel}</dt>
+            <dd id="ss-per-group" class="text-2xl font-semibold"></dd>
+          </div>
+          <div>
+            <dt class="text-gray-600 dark:text-gray-400">{t.totalLabel}</dt>
+            <dd id="ss-total" class="text-2xl font-semibold"></dd>
+          </div>
+          <div class="sm:col-span-2">
+            <dt class="text-gray-600 dark:text-gray-400">
+              {t.targetRateLabel}
+            </dt>
+            <dd id="ss-target" class="text-lg font-semibold"></dd>
+          </div>
+        </dl>
+        <p
+          id="ss-note"
+          class="mt-3 text-sm text-gray-600 dark:text-gray-400"
+        ></p>
+        <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+          {t.warnWinner}
+        </p>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    requiredSampleSize,
+    testTwoProportions,
+    type AbTestError,
+    type EffectType,
+    type Tail,
+  } from '../../lib/tools/ab-test-calculator';
+  import { fill } from '../../lib/format-template';
+
+  const root = document.getElementById('ab-root')!;
+  const d = root.dataset;
+  const errors: Record<AbTestError, string> = {
+    visitors: d.errorVisitors ?? '',
+    conversions: d.errorConversions ?? '',
+    alpha: d.errorAlpha ?? '',
+    baseline: d.errorBaseline ?? '',
+    effect: d.errorEffect ?? '',
+    power: d.errorPower ?? '',
+  };
+  const na = d.notApplicable ?? '-';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const modeButtons =
+    document.querySelectorAll<HTMLButtonElement>('#ab-mode button');
+  const panelTest = $('ab-panel-test');
+  const panelSample = $('ab-panel-sample');
+
+  function num(el: HTMLInputElement): number | null {
+    return el.value.trim() === '' ? null : Number(el.value);
+  }
+  function pct(x: number, digits = 2): string {
+    return `${(x * 100).toFixed(digits)}%`;
+  }
+  function signedPct(x: number, digits = 2): string {
+    return `${x > 0 ? '+' : ''}${(x * 100).toFixed(digits)}%`;
+  }
+  function formatP(p: number): string {
+    return p < 0.0001 ? '< 0.0001' : p.toFixed(4);
+  }
+  function plain(x: number): string {
+    return String(Number(x.toFixed(2)));
+  }
+
+  // ---- 有意差の検定 ----
+  const errorEl = $('ab-error');
+  const resultsEl = $('ab-results');
+  function renderTest() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+    const va = num($<HTMLInputElement>('ab-visitors-a'));
+    const ca = num($<HTMLInputElement>('ab-conv-a'));
+    const vb = num($<HTMLInputElement>('ab-visitors-b'));
+    const cb = num($<HTMLInputElement>('ab-conv-b'));
+    if (va === null || ca === null || vb === null || cb === null) return;
+    const alpha = Number($<HTMLSelectElement>('ab-alpha').value);
+    const tail = $<HTMLSelectElement>('ab-tail').value as Tail;
+    const r = testTwoProportions({
+      visitorsA: va,
+      conversionsA: ca,
+      visitorsB: vb,
+      conversionsB: cb,
+      alpha,
+      tail,
+    });
+    if ('error' in r) {
+      errorEl.textContent = errors[r.error];
+      return;
+    }
+    const p = formatP(r.pValue);
+    const template = r.significant
+      ? (d.verdictSignificant ?? '')
+      : (d.verdictNotSignificant ?? '');
+    $('ab-verdict').textContent = fill(template, {
+      p,
+      alpha: plain(alpha * 100),
+    });
+    $('ab-rate-a').textContent = pct(r.rateA);
+    $('ab-rate-b').textContent = pct(r.rateB);
+    $('ab-diff').textContent = signedPct(r.diff);
+    $('ab-lift').textContent =
+      r.relativeLift === null ? na : signedPct(r.relativeLift, 1);
+    $('ab-z').textContent = r.z.toFixed(3);
+    $('ab-p').textContent = p;
+    $('ab-ci').textContent =
+      `${signedPct(r.ciLower)} ~ ${signedPct(r.ciUpper)}`;
+    $('ab-ci-note').textContent = fill(d.ciNote ?? '', {
+      level: plain((1 - alpha) * 100),
+    });
+    $('ab-warn-small').classList.toggle('hidden', !r.smallExpected);
+    resultsEl.classList.remove('hidden');
+  }
+
+  // ---- 必要サンプルサイズ ----
+  const ssErrorEl = $('ss-error');
+  const ssResultsEl = $('ss-results');
+  function renderSample() {
+    ssErrorEl.textContent = '';
+    ssResultsEl.classList.add('hidden');
+    const baseline = num($<HTMLInputElement>('ss-baseline'));
+    const effect = num($<HTMLInputElement>('ss-effect'));
+    if (baseline === null || effect === null) return;
+    const r = requiredSampleSize({
+      baselineRate: baseline / 100,
+      effect: effect / 100,
+      effectType: $<HTMLSelectElement>('ss-effect-type').value as EffectType,
+      alpha: Number($<HTMLSelectElement>('ss-alpha').value),
+      power: Number($<HTMLSelectElement>('ss-power').value),
+      tail: $<HTMLSelectElement>('ss-tail').value as Tail,
+    });
+    if ('error' in r) {
+      ssErrorEl.textContent = errors[r.error];
+      return;
+    }
+    const perGroup = r.perGroup.toLocaleString('en-US');
+    $('ss-per-group').textContent = perGroup;
+    $('ss-total').textContent = r.total.toLocaleString('en-US');
+    $('ss-target').textContent = pct(r.targetRate);
+    $('ss-note').textContent = fill(d.sampleNote ?? '', {
+      n: perGroup,
+      rate: plain(r.targetRate * 100),
+    });
+    ssResultsEl.classList.remove('hidden');
+  }
+
+  function setMode(mode: string) {
+    modeButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.mode === mode)),
+    );
+    panelTest.classList.toggle('hidden', mode !== 'test');
+    panelSample.classList.toggle('hidden', mode !== 'sample');
+  }
+  modeButtons.forEach((b) =>
+    b.addEventListener('click', () => setMode(b.dataset.mode ?? 'test')),
+  );
+
+  panelTest.addEventListener('input', renderTest);
+  panelTest.addEventListener('change', renderTest);
+  panelSample.addEventListener('input', renderSample);
+  panelSample.addEventListener('change', renderSample);
+
+  $<HTMLInputElement>('ab-visitors-a').value = '1000';
+  $<HTMLInputElement>('ab-conv-a').value = '100';
+  $<HTMLInputElement>('ab-visitors-b').value = '1000';
+  $<HTMLInputElement>('ab-conv-b').value = '130';
+  $<HTMLInputElement>('ss-baseline').value = '5';
+  $<HTMLInputElement>('ss-effect').value = '20';
+  renderTest();
+  renderSample();
+</script>

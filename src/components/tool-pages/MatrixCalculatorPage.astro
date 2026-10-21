@@ -1,0 +1,446 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { matrixCalculatorContent } from '../../i18n/tools/matrix-calculator';
+import { MAX_MATRIX_SIZE } from '../../lib/tools/matrix-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = matrixCalculatorContent[locale];
+const sizes = Array.from({ length: MAX_MATRIX_SIZE }, (_, i) => i + 1);
+const config = JSON.stringify({
+  cellLabelTemplate: t.cellLabelTemplate,
+  matrixALabel: t.matrixALabel,
+  matrixBLabel: t.matrixBLabel,
+  determinantResultLabel: t.determinantResultLabel,
+  copied: t.copied,
+  copyFailed: t.copyFailed,
+  errorSameSize: t.errorSameSize,
+  errorMulSize: t.errorMulSize,
+  errorNotSquare: t.errorNotSquare,
+  errorSingular: t.errorSingular,
+  errorInvalidCell: t.errorInvalidCell,
+  errorInvalidScalar: t.errorInvalidScalar,
+});
+const matrices = [
+  { key: 'a', label: t.matrixALabel },
+  { key: 'b', label: t.matrixBLabel },
+];
+---
+
+<ToolShell t={t}>
+  <div id="mc-root" data-config={config}>
+    <div class="mb-4 flex flex-wrap items-end gap-4">
+      <div>
+        <label for="mc-operation" class="ui-label">
+          {t.operationLabel}
+        </label>
+        <select
+          id="mc-operation"
+          class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
+        >
+          <option value="add">{t.operations.add}</option>
+          <option value="sub">{t.operations.sub}</option>
+          <option value="mul" selected>
+            {t.operations.mul}
+          </option>
+          <option value="scalar">{t.operations.scalar}</option>
+          <option value="transpose">{t.operations.transpose}</option>
+          <option value="inverse">{t.operations.inverse}</option>
+          <option value="determinant">{t.operations.determinant}</option>
+        </select>
+      </div>
+      <div id="mc-scalar-wrap" class="hidden">
+        <label for="mc-scalar" class="ui-label">
+          {t.scalarLabel}
+        </label>
+        <input
+          id="mc-scalar"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          value="2"
+          placeholder={t.scalarPlaceholder}
+          class="ui-input h-11 w-40 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <fieldset>
+        <legend class="ui-label">{t.displayLabel}</legend>
+        <div class="flex h-11 items-center gap-4">
+          <label class="flex items-center gap-1 text-sm">
+            <input type="radio" name="mc-display" value="fraction" checked />
+            {t.displayFraction}
+          </label>
+          <label class="flex items-center gap-1 text-sm">
+            <input type="radio" name="mc-display" value="decimal" />
+            {t.displayDecimal}
+          </label>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      {matrices.map(({ key, label }) => (
+        <section
+          id={`mc-section-${key}`}
+          class="min-w-0 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+        >
+          <h2 class="mb-2 text-lg font-bold">{label}</h2>
+          <div class="mb-3 flex flex-wrap gap-3">
+            <div>
+              <label for={`mc-rows-${key}`} class="ui-label">
+                {t.rowsLabel}
+              </label>
+              <select
+                id={`mc-rows-${key}`}
+                class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
+              >
+                {sizes.map((n) => (
+                  <option value={n} selected={n === 2}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label for={`mc-cols-${key}`} class="ui-label">
+                {t.colsLabel}
+              </label>
+              <select
+                id={`mc-cols-${key}`}
+                class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
+              >
+                {sizes.map((n) => (
+                  <option value={n} selected={n === 2}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div class="overflow-x-auto pb-1">
+            <div id={`mc-grid-${key}`} class="grid w-max gap-1" />
+          </div>
+        </section>
+      ))}
+    </div>
+
+    <p id="mc-error" class="ui-error mt-4 hidden" role="alert"></p>
+
+    <section
+      id="mc-result-section"
+      class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    >
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-lg font-bold">{t.resultHeading}</h2>
+        <button type="button" id="mc-copy-button" class="ui-btn">
+          {t.copyButton}
+        </button>
+      </div>
+      <p
+        id="mc-result-label"
+        class="mb-1 hidden text-sm text-gray-600 dark:text-gray-400"
+      ></p>
+      <div class="overflow-x-auto pb-1" aria-live="polite">
+        <div id="mc-result"></div>
+      </div>
+      <p
+        id="mc-copy-status"
+        class="mt-2 min-h-5 text-sm text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></p>
+    </section>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    addMatrices,
+    determinant,
+    formatValue,
+    inverseMatrix,
+    matrixToText,
+    multiplyMatrices,
+    parseFraction,
+    parseMatrix,
+    scaleMatrix,
+    subtractMatrices,
+    transposeMatrix,
+    type DisplayMode,
+    type Matrix,
+    type MatrixResult,
+  } from '../../lib/tools/matrix-calculator';
+
+  type Key = 'a' | 'b';
+  type Op =
+    'add' | 'sub' | 'mul' | 'scalar' | 'transpose' | 'inverse' | 'determinant';
+
+  const root = document.getElementById('mc-root')!;
+  const cfg = JSON.parse(root.dataset.config ?? '{}') as Record<string, string>;
+  const fill = (tpl: string, vars: Record<string, string | number>) =>
+    tpl.replace(/\{(\w+)\}/g, (_, k: string) => String(vars[k] ?? ''));
+
+  const operationEl = document.getElementById(
+    'mc-operation',
+  ) as HTMLSelectElement;
+  const scalarWrap = document.getElementById('mc-scalar-wrap')!;
+  const scalarEl = document.getElementById('mc-scalar') as HTMLInputElement;
+  const errorEl = document.getElementById('mc-error')!;
+  const resultEl = document.getElementById('mc-result')!;
+  const resultLabelEl = document.getElementById('mc-result-label')!;
+  const copyButton = document.getElementById(
+    'mc-copy-button',
+  ) as HTMLButtonElement;
+  const copyStatus = document.getElementById('mc-copy-status')!;
+  const displayInputs = document.querySelectorAll<HTMLInputElement>(
+    'input[name="mc-display"]',
+  );
+
+  const initial: Record<Key, string[][]> = {
+    a: [
+      ['1', '2'],
+      ['3', '4'],
+    ],
+    b: [
+      ['5', '6'],
+      ['7', '8'],
+    ],
+  };
+  // 現在の入力値を保持（サイズ変更時に引き継ぐ）
+  const values: Record<Key, string[][]> = {
+    a: initial.a.map((r) => r.slice()),
+    b: initial.b.map((r) => r.slice()),
+  };
+  const gridEls: Record<Key, HTMLElement> = {
+    a: document.getElementById('mc-grid-a')!,
+    b: document.getElementById('mc-grid-b')!,
+  };
+  const rowsEls: Record<Key, HTMLSelectElement> = {
+    a: document.getElementById('mc-rows-a') as HTMLSelectElement,
+    b: document.getElementById('mc-rows-b') as HTMLSelectElement,
+  };
+  const colsEls: Record<Key, HTMLSelectElement> = {
+    a: document.getElementById('mc-cols-a') as HTMLSelectElement,
+    b: document.getElementById('mc-cols-b') as HTMLSelectElement,
+  };
+  const names: Record<Key, string> = { a: 'A', b: 'B' };
+
+  let lastText = '';
+
+  function displayMode(): DisplayMode {
+    return (
+      (Array.from(displayInputs).find((el) => el.checked)
+        ?.value as DisplayMode) ?? 'fraction'
+    );
+  }
+
+  function currentOp(): Op {
+    return operationEl.value as Op;
+  }
+
+  function buildGrid(key: Key) {
+    const rows = Number(rowsEls[key].value);
+    const cols = Number(colsEls[key].value);
+    const grid = gridEls[key];
+    grid.replaceChildren();
+    grid.style.gridTemplateColumns = `repeat(${cols}, 3.5rem)`;
+    const v = values[key];
+    for (let r = 0; r < rows; r++) {
+      if (!v[r]) v[r] = [];
+      for (let c = 0; c < cols; c++) {
+        if (v[r][c] === undefined) v[r][c] = '0';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.autocomplete = 'off';
+        input.value = v[r][c];
+        input.className =
+          'ui-input h-10 w-14 px-1 text-center dark:bg-gray-900';
+        input.setAttribute(
+          'aria-label',
+          fill(cfg.cellLabelTemplate, { name: names[key], r: r + 1, c: c + 1 }),
+        );
+        input.addEventListener('input', () => {
+          v[r][c] = input.value;
+          render();
+        });
+        grid.appendChild(input);
+      }
+    }
+  }
+
+  function readMatrix(key: Key) {
+    const rows = Number(rowsEls[key].value);
+    const cols = Number(colsEls[key].value);
+    const cells = Array.from({ length: rows }, (_, r) =>
+      Array.from({ length: cols }, (_, c) => values[key][r]?.[c] ?? ''),
+    );
+    return parseMatrix(cells);
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.classList.remove('hidden');
+    resultEl.replaceChildren();
+    resultLabelEl.classList.add('hidden');
+    lastText = '';
+    copyButton.disabled = true;
+  }
+
+  function renderMatrix(m: Matrix) {
+    const mode = displayMode();
+    const table = document.createElement('table');
+    table.className =
+      'border-x-2 border-gray-700 font-mono text-sm dark:border-gray-300';
+    const tbody = document.createElement('tbody');
+    for (const row of m) {
+      const tr = document.createElement('tr');
+      for (const cell of row) {
+        const td = document.createElement('td');
+        td.className = 'px-3 py-1 text-right';
+        td.textContent = formatValue(cell, mode);
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    }
+    table.appendChild(tbody);
+    resultEl.replaceChildren(table);
+    lastText = matrixToText(m, mode);
+    copyButton.disabled = false;
+  }
+
+  function render() {
+    errorEl.classList.add('hidden');
+    errorEl.textContent = '';
+    copyStatus.textContent = '';
+    resultLabelEl.classList.add('hidden');
+
+    const op = currentOp();
+    const needsB = op === 'add' || op === 'sub' || op === 'mul';
+
+    const pa = readMatrix('a');
+    if (!pa.ok) {
+      return showError(
+        fill(cfg.errorInvalidCell, {
+          name: cfg.matrixALabel,
+          r: pa.row + 1,
+          c: pa.col + 1,
+        }),
+      );
+    }
+    const a = pa.matrix;
+    let b: Matrix = [];
+    if (needsB) {
+      const pb = readMatrix('b');
+      if (!pb.ok) {
+        return showError(
+          fill(cfg.errorInvalidCell, {
+            name: cfg.matrixBLabel,
+            r: pb.row + 1,
+            c: pb.col + 1,
+          }),
+        );
+      }
+      b = pb.matrix;
+    }
+
+    const sizes = {
+      ar: a.length,
+      ac: a[0].length,
+      br: b.length,
+      bc: b[0]?.length ?? 0,
+    };
+    let result: MatrixResult;
+    switch (op) {
+      case 'add':
+        result = addMatrices(a, b);
+        break;
+      case 'sub':
+        result = subtractMatrices(a, b);
+        break;
+      case 'mul':
+        result = multiplyMatrices(a, b);
+        break;
+      case 'scalar': {
+        const k = parseFraction(scalarEl.value);
+        if (!k) return showError(cfg.errorInvalidScalar);
+        result = { ok: true, matrix: scaleMatrix(a, k) };
+        break;
+      }
+      case 'transpose':
+        result = { ok: true, matrix: transposeMatrix(a) };
+        break;
+      case 'inverse':
+        result = inverseMatrix(a);
+        break;
+      case 'determinant': {
+        const d = determinant(a);
+        if (!d.ok) return showError(cfg.errorNotSquare);
+        resultLabelEl.textContent = cfg.determinantResultLabel;
+        resultLabelEl.classList.remove('hidden');
+        const text = formatValue(d.value, displayMode());
+        const p = document.createElement('p');
+        p.className = 'font-mono text-xl font-semibold';
+        p.textContent = text;
+        resultEl.replaceChildren(p);
+        lastText = text;
+        copyButton.disabled = false;
+        return;
+      }
+    }
+
+    if (!result.ok) {
+      switch (result.error) {
+        case 'sizeMismatch':
+          return showError(
+            fill(op === 'mul' ? cfg.errorMulSize : cfg.errorSameSize, sizes),
+          );
+        case 'singular':
+          return showError(cfg.errorSingular);
+        default:
+          return showError(cfg.errorNotSquare);
+      }
+    }
+    renderMatrix(result.matrix);
+  }
+
+  function updateVisibility() {
+    const op = currentOp();
+    document
+      .getElementById('mc-section-b')!
+      .classList.toggle(
+        'hidden',
+        !(op === 'add' || op === 'sub' || op === 'mul'),
+      );
+    scalarWrap.classList.toggle('hidden', op !== 'scalar');
+  }
+
+  (['a', 'b'] as Key[]).forEach((key) => {
+    const onResize = () => {
+      buildGrid(key);
+      render();
+    };
+    rowsEls[key].addEventListener('change', onResize);
+    colsEls[key].addEventListener('change', onResize);
+  });
+  operationEl.addEventListener('change', () => {
+    updateVisibility();
+    render();
+  });
+  scalarEl.addEventListener('input', render);
+  displayInputs.forEach((el) => el.addEventListener('change', render));
+
+  copyButton.addEventListener('click', async () => {
+    if (!lastText) return;
+    const ok = await copyText(lastText);
+    copyStatus.textContent = ok ? cfg.copied : cfg.copyFailed;
+  });
+
+  buildGrid('a');
+  buildGrid('b');
+  updateVisibility();
+  render();
+</script>

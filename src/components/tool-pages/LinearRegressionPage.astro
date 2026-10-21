@@ -1,0 +1,381 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { linearRegressionContent } from '../../i18n/tools/linear-regression';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = linearRegressionContent[locale];
+
+const rows = [
+  ['count', t.labelCount],
+  ['slope', t.labelSlope],
+  ['intercept', t.labelIntercept],
+  ['equation', t.labelEquation],
+  ['r', t.labelR],
+  ['r2', t.labelR2],
+] as const;
+---
+
+<ToolShell t={t}>
+  <section
+    id="reg"
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-errors={JSON.stringify(t.errors)}
+    data-ignored-notice={t.ignoredNotice}
+    data-not-available={t.notAvailable}
+    data-predict-result={t.predictResult}
+    data-predict-undefined={t.predictUndefined}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <label for="reg-data-input" class="ui-label">
+      {t.dataLabel}
+    </label>
+    <textarea
+      id="reg-data-input"
+      rows="7"
+      placeholder={t.dataPlaceholder}
+      class="ui-input w-full p-3 font-mono dark:bg-gray-900"
+      spellcheck="false"
+    >{t.defaultData}</textarea>
+    <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{t.dataHint}</p>
+
+    <div class="mt-3">
+      <label for="reg-predict-input" class="ui-label">
+        {t.predictLabel}
+      </label>
+      <input
+        id="reg-predict-input"
+        type="number"
+        inputmode="decimal"
+        step="any"
+        class="ui-input h-11 w-36 px-3 dark:bg-gray-900"
+      />
+      <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+        {t.predictHint}
+      </p>
+    </div>
+
+    <p
+      id="reg-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+    <p
+      id="reg-ignored"
+      class="mt-1 text-xs text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="reg-results" class="mt-4 hidden" aria-live="polite">
+      <h2 class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+        {t.resultHeading}
+      </h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <tbody>
+            {rows.map(([key, label]) => (
+              <tr class="border-b border-gray-100 dark:border-gray-800">
+                <th scope="row" class="py-2 pr-3 font-normal">
+                  {label}
+                </th>
+                <td id={`reg-${key}`} class="py-2 font-semibold break-all" />
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div id="reg-predict" class="mt-4 hidden">
+        <p id="reg-predict-text" class="text-lg font-semibold"></p>
+      </div>
+
+      <h2 class="mt-4 mb-2 text-sm text-gray-600 dark:text-gray-400">
+        {t.chartHeading}
+      </h2>
+      <svg
+        id="reg-chart"
+        viewBox="0 0 400 260"
+        class="h-auto w-full max-w-xl rounded border border-gray-200 text-gray-700 dark:border-gray-700 dark:text-gray-300"
+        role="img"
+        aria-label={t.chartLabel}
+      ></svg>
+
+      <div class="mt-3 flex items-center gap-3">
+        <button type="button" id="reg-copy-button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <span
+          id="reg-copy-status"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { onTextInput } from '../../lib/input-scheduler';
+  import {
+    calculateRegression,
+    parsePairs,
+    predictY,
+    type Point,
+    type RegressionError,
+    type RegressionResult,
+  } from '../../lib/tools/linear-regression';
+
+  const section = document.getElementById('reg')!;
+  const numberLocale = section.dataset.numberLocale ?? 'en-US';
+  const errors: Record<RegressionError, string> = JSON.parse(
+    section.dataset.errors ?? '{}',
+  );
+  const ignoredNotice = section.dataset.ignoredNotice ?? '';
+  const notAvailable = section.dataset.notAvailable ?? '';
+  const predictTemplate = section.dataset.predictResult ?? '';
+  const predictUndefined = section.dataset.predictUndefined ?? '';
+  const copiedMessage = section.dataset.copied ?? '';
+  const copyFailedMessage = section.dataset.copyFailed ?? '';
+
+  const numFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 6,
+  });
+  const tickFormat = new Intl.NumberFormat(numberLocale, {
+    maximumSignificantDigits: 4,
+  });
+
+  const dataInput = document.getElementById(
+    'reg-data-input',
+  ) as HTMLTextAreaElement;
+  const predictInput = document.getElementById(
+    'reg-predict-input',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('reg-error')!;
+  const ignoredEl = document.getElementById('reg-ignored')!;
+  const resultsEl = document.getElementById('reg-results')!;
+  const predictEl = document.getElementById('reg-predict')!;
+  const predictText = document.getElementById('reg-predict-text')!;
+  const chart = document.getElementById('reg-chart') as unknown as SVGElement;
+  const copyButton = document.getElementById('reg-copy-button')!;
+  const copyStatus = document.getElementById('reg-copy-status')!;
+
+  let copyTextValue = '';
+
+  function setCell(key: string, text: string) {
+    document.getElementById(`reg-${key}`)!.textContent = text;
+  }
+
+  const NS = 'http://www.w3.org/2000/svg';
+  function svg(
+    tag: string,
+    attrs: Record<string, string | number>,
+    text?: string,
+  ) {
+    const el = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v));
+    if (text !== undefined) el.textContent = text;
+    chart.appendChild(el);
+    return el;
+  }
+
+  function drawChart(
+    points: Point[],
+    res: RegressionResult,
+    px: number | null,
+  ) {
+    chart.replaceChildren();
+    const W = 400;
+    const H = 260;
+    const left = 52;
+    const right = 12;
+    const top = 12;
+    const bottom = 30;
+    let xMin = Math.min(...points.map((p) => p.x));
+    let xMax = Math.max(...points.map((p) => p.x));
+    let yMin = Math.min(...points.map((p) => p.y));
+    let yMax = Math.max(...points.map((p) => p.y));
+    if (px !== null && Number.isFinite(px)) {
+      xMin = Math.min(xMin, px);
+      xMax = Math.max(xMax, px);
+    }
+    const predicted = px === null ? null : predictY(res, px);
+    if (predicted !== null) {
+      yMin = Math.min(yMin, predicted);
+      yMax = Math.max(yMax, predicted);
+    }
+    if (xMin === xMax) {
+      xMin -= 1;
+      xMax += 1;
+    }
+    if (yMin === yMax) {
+      yMin -= 1;
+      yMax += 1;
+    }
+    const sx = (x: number) =>
+      left + ((x - xMin) / (xMax - xMin)) * (W - left - right);
+    const sy = (y: number) =>
+      H - bottom - ((y - yMin) / (yMax - yMin)) * (H - top - bottom);
+
+    svg('line', {
+      x1: left,
+      y1: top,
+      x2: left,
+      y2: H - bottom,
+      stroke: 'currentColor',
+      'stroke-width': 1,
+    });
+    svg('line', {
+      x1: left,
+      y1: H - bottom,
+      x2: W - right,
+      y2: H - bottom,
+      stroke: 'currentColor',
+      'stroke-width': 1,
+    });
+    svg(
+      'text',
+      {
+        x: left,
+        y: H - 12,
+        'font-size': 11,
+        'text-anchor': 'start',
+        fill: 'currentColor',
+      },
+      tickFormat.format(xMin),
+    );
+    svg(
+      'text',
+      {
+        x: W - right,
+        y: H - 12,
+        'font-size': 11,
+        'text-anchor': 'end',
+        fill: 'currentColor',
+      },
+      tickFormat.format(xMax),
+    );
+    svg(
+      'text',
+      {
+        x: left - 4,
+        y: H - bottom,
+        'font-size': 11,
+        'text-anchor': 'end',
+        fill: 'currentColor',
+      },
+      tickFormat.format(yMin),
+    );
+    svg(
+      'text',
+      {
+        x: left - 4,
+        y: top + 8,
+        'font-size': 11,
+        'text-anchor': 'end',
+        fill: 'currentColor',
+      },
+      tickFormat.format(yMax),
+    );
+
+    svg('line', {
+      x1: sx(xMin),
+      y1: sy(res.slope * xMin + res.intercept),
+      x2: sx(xMax),
+      y2: sy(res.slope * xMax + res.intercept),
+      stroke: '#dc2626',
+      'stroke-width': 2,
+    });
+    for (const p of points) {
+      svg('circle', {
+        cx: sx(p.x),
+        cy: sy(p.y),
+        r: 3.5,
+        fill: '#2563eb',
+        'fill-opacity': 0.8,
+      });
+    }
+    if (px !== null && predicted !== null) {
+      svg('circle', {
+        cx: sx(px),
+        cy: sy(predicted),
+        r: 5,
+        fill: 'none',
+        stroke: '#dc2626',
+        'stroke-width': 2,
+      });
+    }
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    ignoredEl.textContent = '';
+    copyStatus.textContent = '';
+    resultsEl.classList.add('hidden');
+    predictEl.classList.add('hidden');
+
+    const parsed = parsePairs(dataInput.value);
+    if (parsed.invalidCount > 0) {
+      ignoredEl.textContent = ignoredNotice.replace(
+        '{count}',
+        String(parsed.invalidCount),
+      );
+    }
+    const result = calculateRegression(parsed.points);
+    if ('error' in result) {
+      errorEl.textContent = errors[result.error];
+      return;
+    }
+
+    const f = (n: number | null) =>
+      n === null ? notAvailable : numFormat.format(n);
+    const sign = result.intercept < 0 ? '−' : '+';
+    const equation = `y = ${numFormat.format(result.slope)}x ${sign} ${numFormat.format(Math.abs(result.intercept))}`;
+    setCell('count', numFormat.format(result.count));
+    setCell('slope', f(result.slope));
+    setCell('intercept', f(result.intercept));
+    setCell('equation', equation);
+    setCell('r', f(result.r));
+    setCell('r2', f(result.r2));
+
+    const lines = [...document.querySelectorAll('#reg-results tbody tr')].map(
+      (tr) =>
+        `${tr.querySelector('th')!.textContent!.trim()}: ${tr.querySelector('td')!.textContent}`,
+    );
+
+    let px: number | null = null;
+    if (predictInput.value.trim() !== '') {
+      px = Number(predictInput.value);
+      const y = predictY(result, px);
+      predictText.textContent =
+        y === null
+          ? predictUndefined
+          : `${predictTemplate.replace('{x}', numFormat.format(px))}: ${numFormat.format(y)}`;
+      predictEl.classList.remove('hidden');
+      lines.push(predictText.textContent);
+      if (y === null) px = null;
+    }
+
+    drawChart(parsed.points, result, px);
+    copyTextValue = lines.join('\n');
+    resultsEl.classList.remove('hidden');
+  }
+
+  onTextInput(dataInput, render);
+  predictInput.addEventListener('input', render);
+
+  copyButton.addEventListener('click', async () => {
+    if (copyTextValue === '') return;
+    copyStatus.textContent = (await copyText(copyTextValue))
+      ? copiedMessage
+      : copyFailedMessage;
+  });
+
+  render();
+</script>

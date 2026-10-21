@@ -1,0 +1,229 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { retirementAllowanceTaxContent } from '../../i18n/tools/retirement-allowance-tax';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = retirementAllowanceTaxContent[locale];
+
+const results = [
+  { id: 'take-home', label: t.resultTakeHomeLabel },
+  { id: 'total-tax', label: t.resultTotalTaxLabel },
+  { id: 'rate', label: t.resultRateLabel },
+  { id: 'counted-years', label: t.resultCountedYearsLabel },
+  { id: 'deduction', label: t.resultDeductionLabel },
+  { id: 'after-deduction', label: t.resultAfterDeductionLabel },
+  { id: 'half-rule', label: t.resultHalfRuleLabel },
+  { id: 'taxable', label: t.resultTaxableLabel },
+  { id: 'income-tax-base', label: t.resultIncomeTaxBaseLabel },
+  { id: 'reconstruction', label: t.resultReconstructionLabel },
+  { id: 'income-tax', label: t.resultIncomeTaxLabel },
+  { id: 'resident-tax', label: t.resultResidentTaxLabel },
+];
+---
+
+<ToolShell t={t}>
+  <p
+    class="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+    role="note"
+  >
+    {t.disclaimer}
+  </p>
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+    data-half-full={t.halfRuleFull}
+    data-half-partial={t.halfRulePartial}
+    data-half-none={t.halfRuleNone}
+    data-year-unit={t.yearUnit}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label for="retire-pay" class="ui-label">
+          {t.payLabel}
+        </label>
+        <input
+          id="retire-pay"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.payPlaceholder}
+          class="ui-input h-11 w-44 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label for="retire-years" class="ui-label">
+          {t.yearsLabel}
+        </label>
+        <input
+          id="retire-years"
+          type="number"
+          min="0"
+          max="80"
+          step="1"
+          inputmode="numeric"
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="retire-months" class="ui-label">
+          {t.monthsLabel}
+        </label>
+        <input
+          id="retire-months"
+          type="number"
+          min="0"
+          max="11"
+          step="1"
+          inputmode="numeric"
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+    <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+      {t.serviceHint}
+    </p>
+
+    <div class="mb-2">
+      <label class="flex items-center gap-2 text-sm">
+        <input id="retire-disability" type="checkbox" />
+        {t.disabilityLabel}
+      </label>
+    </div>
+    <div class="mb-2">
+      <label class="flex items-center gap-2 text-sm">
+        <input id="retire-officer" type="checkbox" />
+        {t.officerLabel}
+      </label>
+    </div>
+    <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+      {t.officerHint}
+    </p>
+
+    <p
+      id="retire-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl
+      id="retire-results"
+      class="mt-4 hidden grid grid-cols-2 gap-3 sm:grid-cols-3"
+      aria-live="polite"
+    >
+      {results.map((r) => (
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">{r.label}</dt>
+          <dd
+            class="text-lg font-semibold break-words"
+            id={`retire-result-${r.id}`}
+          />
+        </div>
+      ))}
+    </dl>
+  </section>
+</ToolShell>
+
+<script>
+  import { calculateRetirementAllowanceTax } from '../../lib/tools/retirement-allowance-tax';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
+  const errorMessage = configEl.dataset.error ?? '';
+  const halfTexts = {
+    full: configEl.dataset.halfFull ?? '',
+    partial: configEl.dataset.halfPartial ?? '',
+    none: configEl.dataset.halfNone ?? '',
+  };
+  const yearUnit = configEl.dataset.yearUnit ?? '';
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const percent = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 2,
+  });
+
+  const payInput = document.getElementById('retire-pay') as HTMLInputElement;
+  const yearsInput = document.getElementById(
+    'retire-years',
+  ) as HTMLInputElement;
+  const monthsInput = document.getElementById(
+    'retire-months',
+  ) as HTMLInputElement;
+  const disabilityInput = document.getElementById(
+    'retire-disability',
+  ) as HTMLInputElement;
+  const officerInput = document.getElementById(
+    'retire-officer',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('retire-error')!;
+  const resultsEl = document.getElementById('retire-results')!;
+
+  function setResult(id: string, text: string) {
+    document.getElementById(`retire-result-${id}`)!.textContent = text;
+  }
+
+  attachCommaFormatting(payInput);
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    if (payInput.value.trim() === '') return;
+
+    const result = calculateRetirementAllowanceTax({
+      retirementPay: Number(stripCommas(payInput.value)),
+      serviceYears: Number(yearsInput.value || '0'),
+      serviceMonths: Number(monthsInput.value || '0'),
+      disability: disabilityInput.checked,
+      kind: officerInput.checked ? 'officer' : 'regular',
+    });
+
+    if (result === null) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    setResult('take-home', yen.format(result.takeHome));
+    setResult('total-tax', yen.format(result.totalTax));
+    setResult('rate', `${percent.format(result.effectiveRate)}%`);
+    setResult('counted-years', `${result.countedYears}${yearUnit}`);
+    setResult('deduction', yen.format(result.deduction));
+    setResult('after-deduction', yen.format(result.afterDeduction));
+    setResult('half-rule', halfTexts[result.halfRule]);
+    setResult('taxable', yen.format(result.taxableIncome));
+    setResult('income-tax-base', yen.format(result.incomeTaxBase));
+    setResult('reconstruction', yen.format(result.reconstructionTax));
+    setResult('income-tax', yen.format(result.incomeTax));
+    setResult('resident-tax', yen.format(result.residentTax));
+    resultsEl.classList.remove('hidden');
+  }
+
+  for (const el of [payInput, yearsInput, monthsInput]) {
+    el.addEventListener('input', render);
+  }
+  disabilityInput.addEventListener('change', render);
+  officerInput.addEventListener('change', render);
+
+  payInput.value = formatNumberWithCommas('20000000');
+  yearsInput.value = '30';
+  monthsInput.value = '0';
+  render();
+</script>

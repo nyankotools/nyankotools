@@ -1,0 +1,324 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { realEstateYieldContent } from '../../i18n/tools/real-estate-yield';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = realEstateYieldContent[locale];
+
+const inputClass =
+  'ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500';
+
+const propertyYen = [
+  { id: 'price', label: t.priceLabel },
+  { id: 'rent', label: t.monthlyRentLabel },
+];
+const expenseYen = [
+  { id: 'repairs', label: t.repairsLabel },
+  { id: 'tax', label: t.propertyTaxLabel },
+  { id: 'other', label: t.otherExpensesLabel },
+];
+
+const results = [
+  { id: 'gross-rent', label: t.annualRentLabel },
+  { id: 'effective-rent', label: t.effectiveRentLabel },
+  { id: 'expenses', label: t.expensesLabel },
+  { id: 'noi', label: t.noiLabel },
+  { id: 'total-investment', label: t.totalInvestmentLabel },
+  { id: 'loan-amount', label: t.loanAmountLabel },
+  { id: 'monthly-loan', label: t.monthlyLoanLabel },
+  { id: 'cash-on-cash', label: t.cashOnCashLabel },
+  { id: 'dscr', label: t.dscrLabel },
+  { id: 'interest', label: t.totalInterestLabel },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    id="re-yield-root"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+    data-na={t.notAvailable}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.propertyHeading}</h2>
+    <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      {propertyYen.map((f) => (
+        <div>
+          <label for={`re-yield-${f.id}`} class="ui-label">
+            {f.label}
+          </label>
+          <input
+            id={`re-yield-${f.id}`}
+            type="text"
+            inputmode="numeric"
+            class={inputClass}
+          />
+        </div>
+      ))}
+      <div>
+        <label for="re-yield-vacancy" class="ui-label">
+          {t.vacancyLabel}
+        </label>
+        <input
+          id="re-yield-vacancy"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          max="100"
+          step="0.5"
+          class={inputClass}
+        />
+      </div>
+    </div>
+
+    <h2 class="mb-3 mt-5 text-lg font-bold">{t.expenseHeading}</h2>
+    <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div>
+        <label for="re-yield-management" class="ui-label">
+          {t.managementLabel}
+        </label>
+        <input
+          id="re-yield-management"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          max="100"
+          step="0.5"
+          class={inputClass}
+        />
+      </div>
+      {expenseYen.map((f) => (
+        <div>
+          <label for={`re-yield-${f.id}`} class="ui-label">
+            {f.label}
+          </label>
+          <input
+            id={`re-yield-${f.id}`}
+            type="text"
+            inputmode="numeric"
+            class={inputClass}
+          />
+        </div>
+      ))}
+      <div>
+        <label for="re-yield-cost-percent" class="ui-label">
+          {t.purchaseCostLabel}
+        </label>
+        <input
+          id="re-yield-cost-percent"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          max="30"
+          step="0.5"
+          class={inputClass}
+        />
+      </div>
+    </div>
+
+    <h2 class="mb-3 mt-5 text-lg font-bold">{t.financeHeading}</h2>
+    <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div class="sm:col-span-2">
+        <label for="re-yield-equity" class="ui-label">
+          {t.equityLabel}
+        </label>
+        <input
+          id="re-yield-equity"
+          type="text"
+          inputmode="numeric"
+          class={inputClass}
+        />
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          {t.equityHint}
+        </p>
+      </div>
+      <div>
+        <label for="re-yield-rate" class="ui-label">
+          {t.rateLabel}
+        </label>
+        <input
+          id="re-yield-rate"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          max="30"
+          step="0.01"
+          class={inputClass}
+        />
+      </div>
+      <div>
+        <label for="re-yield-years" class="ui-label">
+          {t.yearsLabel}
+        </label>
+        <input
+          id="re-yield-years"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="50"
+          step="1"
+          class={inputClass}
+        />
+      </div>
+    </div>
+
+    <p
+      id="re-yield-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="re-yield-results" class="mt-4 hidden" aria-live="polite">
+      <h2 class="mb-2 text-lg font-bold">{t.resultHeading}</h2>
+      <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div class="rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
+          <dt class="text-sm text-gray-700 dark:text-gray-300">
+            {t.grossYieldLabel}
+          </dt>
+          <dd
+            class="text-2xl font-bold text-blue-700 dark:text-blue-400"
+            id="re-yield-gross-yield"
+          ></dd>
+        </div>
+        <div class="rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
+          <dt class="text-sm text-gray-700 dark:text-gray-300">
+            {t.netYieldLabel}
+          </dt>
+          <dd
+            class="text-2xl font-bold text-blue-700 dark:text-blue-400"
+            id="re-yield-net-yield"
+          ></dd>
+        </div>
+        <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.annualCashFlowLabel}
+          </dt>
+          <dd class="text-xl font-bold" id="re-yield-annual-cf"></dd>
+        </div>
+        <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.monthlyCashFlowLabel}
+          </dt>
+          <dd class="text-xl font-bold" id="re-yield-monthly-cf"></dd>
+        </div>
+      </dl>
+
+      <dl class="mt-4 space-y-1 rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+        {results.map((r) => (
+          <div class="flex items-baseline justify-between gap-3 text-sm">
+            <dt class="text-gray-700 dark:text-gray-300">{r.label}</dt>
+            <dd class="text-right font-semibold" id={`re-yield-${r.id}`}></dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { calculateRealEstateYield } from '../../lib/tools/real-estate-yield';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+
+  const root = document.getElementById('re-yield-root')!;
+  const numberLocale = root.dataset.numberLocale ?? 'en-US';
+  const errorMessage = root.dataset.error ?? '';
+  const na = root.dataset.na ?? '-';
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const decimal2 = new Intl.NumberFormat(numberLocale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  const el = (id: string) =>
+    document.getElementById(`re-yield-${id}`) as HTMLInputElement;
+  const text = (id: string) => document.getElementById(`re-yield-${id}`)!;
+
+  const yenIds = ['price', 'rent', 'repairs', 'tax', 'other', 'equity'];
+  const numIds = ['vacancy', 'management', 'cost-percent', 'rate', 'years'];
+  yenIds.forEach((id) => attachCommaFormatting(el(id)));
+
+  const yenValue = (id: string) => {
+    const v = el(id).value.trim();
+    return v === '' ? 0 : Number(stripCommas(v));
+  };
+  const numValue = (id: string) => {
+    const v = el(id).value.trim();
+    return v === '' ? 0 : Number(v);
+  };
+  const percent = (n: number) => `${decimal2.format(n)}%`;
+
+  const errorEl = text('error');
+  const resultsEl = text('results');
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+    if (el('price').value.trim() === '') return;
+
+    const r = calculateRealEstateYield({
+      price: yenValue('price'),
+      monthlyRent: yenValue('rent'),
+      vacancyPercent: numValue('vacancy'),
+      managementPercent: numValue('management'),
+      repairsPerYear: yenValue('repairs'),
+      propertyTaxPerYear: yenValue('tax'),
+      otherExpensesPerYear: yenValue('other'),
+      purchaseCostPercent: numValue('cost-percent'),
+      equity: yenValue('equity'),
+      annualInterestRate: numValue('rate'),
+      loanYears: numValue('years'),
+    });
+    if (r === null) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    text('gross-yield').textContent = percent(r.grossYield);
+    text('net-yield').textContent = percent(r.netYield);
+    text('annual-cf').textContent = yen.format(r.annualCashFlow);
+    text('monthly-cf').textContent = yen.format(r.monthlyCashFlow);
+    text('gross-rent').textContent = yen.format(r.annualGrossRent);
+    text('effective-rent').textContent = yen.format(r.effectiveRent);
+    text('expenses').textContent = yen.format(r.operatingExpenses);
+    text('noi').textContent = yen.format(r.noi);
+    text('total-investment').textContent = yen.format(r.totalInvestment);
+    text('loan-amount').textContent = yen.format(r.loanAmount);
+    text('monthly-loan').textContent = yen.format(r.monthlyLoanPayment);
+    text('cash-on-cash').textContent =
+      r.cashOnCash === null ? na : percent(r.cashOnCash);
+    text('dscr').textContent = r.dscr === null ? na : decimal2.format(r.dscr);
+    text('interest').textContent = yen.format(r.totalInterest);
+    resultsEl.classList.remove('hidden');
+  }
+
+  [...yenIds, ...numIds].forEach((id) =>
+    el(id).addEventListener('input', render),
+  );
+
+  el('price').value = formatNumberWithCommas('30000000');
+  el('rent').value = formatNumberWithCommas('180000');
+  el('vacancy').value = '5';
+  el('management').value = '5';
+  el('repairs').value = formatNumberWithCommas('120000');
+  el('tax').value = formatNumberWithCommas('150000');
+  el('other').value = '0';
+  el('cost-percent').value = '7';
+  el('equity').value = formatNumberWithCommas('5000000');
+  el('rate').value = '2';
+  el('years').value = '30';
+  render();
+</script>

@@ -5713,7 +5713,6 @@ export const tools: Tool[] = [
         keywords: [
           'reaction time',
           'reflex test',
-          'response time',
           'click speed',
           'human benchmark',
           'false start',
@@ -10245,6 +10244,1537 @@ export const tools: Tool[] = [
         ],
         description:
           'Replace a mosaic area with a smooth color blend built from its blocks and the surrounding pixels.',
+      },
+    },
+  },
+  {
+    slug: 'audio-merger',
+    category: 'media',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['audio-speed-changer', 'media-converter', 'noise-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '音声ファイル結合・フェード',
+        keywords: [
+          '音声結合',
+          '音声連結',
+          'オーディオ結合',
+          'クロスフェード',
+          'フェードイン',
+          'フェードアウト',
+          'mp3結合',
+          'WAV',
+        ],
+        description:
+          '複数の音声ファイルを並べ替えて連結し、クロスフェード・無音のすき間・フェードイン/アウトを付けて試聴、WAVで保存。ブラウザ完結。',
+      },
+      en: {
+        name: 'Audio Merger',
+        keywords: [
+          'merge audio',
+          'join audio files',
+          'combine mp3',
+          'concatenate audio',
+          'crossfade',
+          'fade in',
+          'fade out',
+          'WAV',
+        ],
+        description:
+          'Join several audio files into one with reordering, crossfades, silent gaps and fade in/out. Preview and save as WAV in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'bpm-delay-calculator',
+    category: 'media',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['metronome-bpm', 'instrument-tuner', 'noise-generator'],
+    translations: {
+      ja: {
+        name: 'BPMディレイタイム計算',
+        keywords: [
+          'BPM',
+          'ディレイ',
+          'ディレイタイム',
+          'リバーブ',
+          'プリディレイ',
+          '付点',
+          '3連符',
+          'テンポ同期',
+        ],
+        description:
+          'BPMから音符別のディレイタイム(ms・Hz)とリバーブのプリディレイ/ディケイの目安を計算。タップテンポ付き',
+      },
+      en: {
+        name: 'BPM to Delay Time Calculator',
+        keywords: [
+          'bpm to ms',
+          'delay time',
+          'reverb pre-delay',
+          'dotted note',
+          'triplet',
+          'tempo sync',
+          'tap tempo',
+        ],
+        description:
+          'Convert BPM to delay times in ms and Hz per note value, plus reverb pre-delay and decay guides.',
+      },
+    },
+  },
+  {
+    slug: 'noise-meter',
+    category: 'hardware',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['mic-tester', 'speaker-tester', 'instrument-tuner'],
+    sensitive: true,
+    needsCamera: true,
+    translations: {
+      ja: {
+        name: '騒音計（マイクで音量dBを測る）',
+        keywords: [
+          '騒音計',
+          '騒音測定',
+          '音量',
+          'デシベル',
+          'dB',
+          '音量計',
+          'マイク',
+        ],
+        description:
+          'マイクで周囲の騒音レベルをdBの目安で表示します。現在値・最大・平均とグラフ、騒音の目安表つき。音声は録音も送信もされません。',
+      },
+      en: {
+        name: 'Noise Meter (Sound Level in dB)',
+        keywords: [
+          'noise meter',
+          'sound level meter',
+          'decibel meter',
+          'db meter',
+          'noise level',
+          'loudness',
+        ],
+        description:
+          'Measure ambient noise in approximate dB with your microphone. Shows current, max and average levels, a graph and a noise guide. Nothing is recorded.',
+      },
+    },
+  },
+  {
+    slug: 'screen-ruler',
+    category: 'hardware',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: [
+      'screen-size-calculator',
+      'refresh-rate-tester',
+      'dead-pixel-checker',
+    ],
+    translations: {
+      ja: {
+        name: '画面定規（cm・インチの実寸）',
+        keywords: [
+          '定規',
+          'ものさし',
+          '実寸',
+          'cm',
+          'インチ',
+          'クレジットカード',
+          '校正',
+          '画面で測る',
+        ],
+        description:
+          '画面に実寸のcm・インチ定規を表示。クレジットカードに枠を合わせて画面の大きさを校正でき、横・縦の切り替えにも対応。',
+      },
+      en: {
+        name: 'Screen Ruler (cm / inch, actual size)',
+        keywords: [
+          'ruler',
+          'on-screen ruler',
+          'actual size',
+          'cm ruler',
+          'inch ruler',
+          'credit card',
+          'calibrate',
+          'measure',
+        ],
+        description:
+          'Show an actual-size cm and inch ruler on screen. Calibrate it by matching the frame to a credit card; horizontal and vertical modes.',
+      },
+    },
+  },
+  {
+    slug: 'spirit-level',
+    category: 'hardware',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['screen-ruler', 'noise-meter'],
+    translations: {
+      ja: {
+        name: '水平器',
+        description:
+          'スマホの傾きセンサーで水平を確認。気泡・角度・傾斜率の表示とゼロ点補正に対応',
+        keywords: [
+          '水平器',
+          '水準器',
+          '傾き',
+          '角度',
+          '傾斜',
+          '気泡',
+          'レベル',
+          'スマホ',
+        ],
+      },
+      en: {
+        name: 'Spirit Level',
+        description:
+          'Check if a surface is level with your phone’s tilt sensor. Bubble, angle and slope, plus zero-point calibration.',
+        keywords: [
+          'spirit level',
+          'bubble level',
+          'inclinometer',
+          'tilt',
+          'angle',
+          'slope',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'ufo-motion-test',
+    category: 'hardware',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['refresh-rate-tester', 'dead-pixel-checker'],
+    translations: {
+      ja: {
+        name: 'モーション・残像テスト',
+        description:
+          '画面を横切る図形で、モニターやスマホの残像・モーションブラー・フレーム飛びを確認',
+        keywords: [
+          '残像',
+          'ゴースト',
+          'モーションブラー',
+          'フレーム飛び',
+          'カクつき',
+          'ディスプレイ',
+          'モニター',
+        ],
+      },
+      en: {
+        name: 'Motion Blur & Frame Skip Test',
+        description:
+          'Check ghosting, motion blur and skipped frames with a moving object in full screen',
+        keywords: [
+          'motion blur',
+          'ghosting',
+          'frame skipping',
+          'frame drop',
+          'stutter',
+          'monitor test',
+          'response time',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'monitor-gamma-test',
+    category: 'hardware',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['dead-pixel-checker', 'refresh-rate-tester', 'color-converter'],
+    translations: {
+      ja: {
+        name: 'モニターのガンマ・階調チェック',
+        keywords: [
+          'ガンマ',
+          '階調',
+          'バンディング',
+          '黒つぶれ',
+          '白飛び',
+          'グレーランプ',
+          'モニターテスト',
+          'ガンマチェッカー',
+        ],
+        description:
+          'モニターのガンマ値や階調を全画面パターンで確認します。グレーランプ、段階パターン、ガンマチェッカー、黒つぶれ・白飛びのチェックに。',
+      },
+      en: {
+        name: 'Monitor Gamma & Banding Test',
+        keywords: [
+          'gamma test',
+          'banding test',
+          'monitor gamma',
+          'grayscale test',
+          'black level',
+          'gray ramp',
+          'gamma checker',
+          'monitor test',
+        ],
+        description:
+          'Check gamma, banding and black/white clipping on your monitor with fullscreen gray ramp, step and gamma checker patterns.',
+      },
+    },
+  },
+  {
+    slug: 'hearing-test',
+    category: 'hardware',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['speaker-tester', 'noise-meter', 'instrument-tuner'],
+    translations: {
+      ja: {
+        name: '可聴域テスト・モスキート音チェック',
+        description:
+          '8kHz〜20kHzの高い音を鳴らして、耳がどこまで聞こえるかを確認。モスキート音テストと年齢の目安つき。',
+        keywords: ['モスキート音', '可聴域', '聴力テスト', '年齢 耳', '高周波'],
+      },
+      en: {
+        name: 'Hearing Test (Mosquito Tone)',
+        description:
+          'Play high-frequency tones from 8 to 20 kHz to check your hearing range, with a rough age guide.',
+        keywords: [
+          'mosquito tone',
+          'hearing range',
+          'hearing test',
+          'audible frequency',
+          'ear age',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'unit-price-comparator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['tax-calculator', 'unit-converter', 'split-bill-calculator'],
+    translations: {
+      ja: {
+        name: '単価比較ツール',
+        description:
+          '容量違いの商品を100gあたり・100mlあたりの単価で比較。3商品以上・個数・税込税抜に対応し、最安とその差を表示',
+        keywords: [
+          '単価比較',
+          '100gあたり',
+          'グラム単価',
+          'ユニットプライス',
+          'どっちがお得',
+          '内容量',
+          'コスパ',
+          '値段比較',
+        ],
+      },
+      en: {
+        name: 'Unit Price Comparator',
+        description:
+          'Compare products by price per 100 g, 100 ml or item. Handles 3+ products, pack counts and tax, and shows the cheapest and the gap.',
+        keywords: [
+          'unit price',
+          'price per 100g',
+          'price per ounce',
+          'best value',
+          'compare prices',
+          'cost per unit',
+          'grocery',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'savings-goal-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['investment-simulator', 'loan-calculator', 'mortgage-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '貯金目標計算機',
+        description:
+          '目標額・期間・毎月の貯金額のうち2つを入力すると、残る1つを逆算します。現在の貯金額や年利（0%も可）に対応し、年別の推移表で預入額と利息の内訳を確認できます。',
+        keywords: [
+          '貯金',
+          '貯蓄',
+          '目標額',
+          '積立',
+          '逆算',
+          '毎月いくら',
+          '何年で貯まる',
+          '利息0%',
+        ],
+      },
+      en: {
+        name: 'Savings Goal Calculator',
+        description:
+          'Enter two of target amount, time frame and monthly savings to solve the third. Handles a starting balance and 0% interest, with a yearly table.',
+        keywords: [
+          'savings goal',
+          'savings calculator',
+          'monthly savings',
+          'how long to save',
+          'target amount',
+          'reverse calculator',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'rent-initial-cost',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: [
+      'mortgage-calculator',
+      'loan-calculator',
+      'salary-take-home-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '賃貸初期費用計算',
+        description:
+          '家賃から敷金礼金・仲介手数料・前家賃などの初期費用の総額と内訳、年収別の家賃の目安を試算します。',
+        keywords: [
+          '賃貸',
+          '初期費用',
+          '敷金',
+          '礼金',
+          '仲介手数料',
+          '引越し',
+          '家賃 目安',
+          '前家賃',
+        ],
+      },
+      en: {
+        name: 'Rental Initial Cost Calculator',
+        description:
+          'Estimate upfront rental costs in Japan (deposit, key money, agent fee, prepaid rent) and a rent guide from income.',
+        keywords: [
+          'rent',
+          'initial cost',
+          'deposit',
+          'key money',
+          'agent fee',
+          'moving',
+          'rent guide',
+          'apartment',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'bonus-take-home',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: [
+      'salary-take-home-calculator',
+      'furusato-nozei-calculator',
+      'tax-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '賞与（ボーナス）の手取り計算',
+        description:
+          '賞与の額面と前月の給与から、社会保険料と源泉所得税を差し引いたボーナスの手取り額を試算します。令和7年分の区分に基づく概算。',
+        keywords: [
+          'ボーナス',
+          '賞与',
+          '手取り',
+          '源泉徴収',
+          '社会保険料',
+          '算出率の表',
+          'ボーナス手取り',
+        ],
+      },
+      en: {
+        name: 'Bonus Take-Home Pay Calculator (Japan)',
+        description:
+          'Estimate your net bonus in Japan after social insurance and withholding income tax, from the gross bonus and last month’s pay (2025 brackets).',
+        keywords: [
+          'bonus',
+          'net bonus',
+          'take-home',
+          'withholding tax',
+          'social insurance',
+          'Japan bonus tax',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'tax-wall-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: [
+      'salary-take-home-calculator',
+      'bonus-take-home',
+      'furusato-nozei-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '年収の壁チェック（手取り逆転シミュレーター）',
+        description:
+          'パート・扶養向けに、106万・130万・160万などの年収の壁を超えたときの社会保険料・税金と手取りの逆転を試算します。令和7年度税制改正後の概算。',
+        keywords: [
+          '年収の壁',
+          '103万円の壁',
+          '106万円の壁',
+          '130万円の壁',
+          '160万円',
+          '扶養',
+          '配偶者特別控除',
+          '手取り逆転',
+        ],
+      },
+      en: {
+        name: 'Japan Income Wall Checker (Take-Home Reversal)',
+        description:
+          'Check Japan’s income walls (¥1.06M, ¥1.3M, ¥1.6M) for part-timers and dependents and see where take-home pay drops. Estimate only.',
+        keywords: [
+          'income wall',
+          '1.03 million yen wall',
+          '1.06 million yen wall',
+          '1.3 million yen wall',
+          'dependent',
+          'spousal deduction',
+          'part-time',
+          'take-home',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'unemployment-benefit',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: [
+      'salary-take-home-calculator',
+      'paid-leave-calculator',
+      'hourly-wage-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '失業保険（基本手当）計算',
+        description:
+          '離職理由・年齢・被保険者期間・月額賃金から、失業保険の基本手当日額・給付日数・総額の目安、待期期間、自己都合の給付制限を計算します。',
+        keywords: [
+          '失業保険',
+          '基本手当',
+          '雇用保険',
+          '失業手当',
+          '退職',
+          '給付制限',
+          '離職',
+        ],
+      },
+      en: {
+        name: 'Unemployment Benefit Calculator (Japan)',
+        description:
+          "Estimate Japan's unemployment insurance basic allowance: daily amount, benefit days and waiting period by age, insured period and reason.",
+        keywords: [
+          'unemployment insurance',
+          'basic allowance',
+          'employment insurance',
+          'job loss benefit',
+          'resignation',
+          'Hello Work',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'childcare-leave-benefit',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: [
+      'salary-take-home-calculator',
+      'bonus-take-home',
+      'paid-leave-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '育児休業給付金・出産手当金・傷病手当金の計算',
+        description:
+          '育児休業給付金（67%・50%）、出産手当金、傷病手当金の支給額を月給や標準報酬月額から概算します。令和8年8月改定の上限・下限に基づく目安。',
+        keywords: [
+          '育休',
+          '育児休業給付金',
+          '出産手当金',
+          '傷病手当金',
+          '出生後休業支援給付金',
+          '産休',
+          '標準報酬月額',
+          '社会保険給付',
+        ],
+      },
+      en: {
+        name: 'Childcare Leave, Maternity & Sickness Benefit Calculator (Japan)',
+        description:
+          'Estimate Japan’s childcare leave benefit (67% / 50%), maternity allowance and sickness allowance from your pay and standard remuneration.',
+        keywords: [
+          'childcare leave benefit',
+          'parental leave pay',
+          'maternity allowance',
+          'sickness allowance',
+          'injury and sickness benefit',
+          'post-birth leave support benefit',
+          'Japan',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'retirement-allowance-tax',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: [
+      'salary-take-home-calculator',
+      'bonus-take-home',
+      'furusato-nozei-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '退職金の税金計算（退職所得控除）',
+        description:
+          '退職金と勤続年数から、退職所得控除・2分の1課税を使って所得税・住民税と手取りを試算します。',
+        keywords: [
+          '退職金',
+          '退職所得控除',
+          '退職金 税金',
+          '退職所得',
+          '2分の1課税',
+          '退職手当',
+          '勤続年数',
+        ],
+      },
+      en: {
+        name: 'Retirement Allowance Tax Calculator',
+        description:
+          'Estimate tax on a Japanese retirement allowance: retirement income deduction, half taxation, income tax and resident tax.',
+        keywords: [
+          'retirement allowance',
+          'severance pay',
+          'retirement income deduction',
+          'severance tax',
+          'half taxation',
+          'Japan retirement tax',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'real-estate-yield',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['loan-calculator', 'mortgage-calculator', 'rent-initial-cost'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '不動産投資の利回り計算',
+        description:
+          '物件価格・家賃・経費・ローン条件から、表面利回り・実質利回りとローン返済後のキャッシュフローを試算します。',
+        keywords: [
+          '不動産投資',
+          '表面利回り',
+          '実質利回り',
+          'NOI',
+          'キャッシュフロー',
+          '収益物件',
+          'アパート経営',
+          '空室率',
+        ],
+      },
+      en: {
+        name: 'Rental Property Yield Calculator',
+        description:
+          'Estimate gross yield, net yield (NOI) and cash flow after loan payments for a rental property.',
+        keywords: [
+          'rental yield',
+          'gross yield',
+          'net yield',
+          'NOI',
+          'cash flow',
+          'real estate investment',
+          'cap rate',
+          'cash on cash',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'pfc-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['bmr-calorie-calculator', 'bmi-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'PFCバランス計算機',
+        description:
+          '摂取カロリーとPFC比率から、タンパク質・脂質・炭水化物の摂取量(g)を計算します。身長・体重から目標カロリーを出すことも、直接入力することもできます。',
+        keywords: [
+          'PFC',
+          'PFCバランス',
+          'マクロ',
+          'タンパク質',
+          '摂取量',
+          'ダイエット',
+          '筋トレ',
+        ],
+      },
+      en: {
+        name: 'Macro (PFC) Calculator',
+        description:
+          'Calculate daily protein, fat, and carb grams from your calorie target and macro ratio. Estimate calories from BMR and activity.',
+        keywords: [
+          'macro calculator',
+          'PFC',
+          'protein calculator',
+          'macronutrients',
+          'protein per kg',
+          'calorie split',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'sleep-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['bmi-calculator', 'age-calculator'],
+    translations: {
+      ja: {
+        name: '睡眠計算機',
+        description:
+          '起きたい時刻から就寝時刻を、寝る時刻から起床時刻を90分周期で逆算。入眠時間の設定、4〜6サイクルの候補表示に対応。',
+        keywords: [
+          '睡眠サイクル',
+          '就寝時刻',
+          '起床時刻',
+          '90分',
+          'レム睡眠',
+          '逆算',
+          '何時に寝る',
+        ],
+      },
+      en: {
+        name: 'Sleep Calculator',
+        description:
+          'Work out your bedtime or wake-up time from 90-minute sleep cycles, with an adjustable time to fall asleep.',
+        keywords: [
+          'sleep cycle calculator',
+          'bedtime calculator',
+          'wake up time',
+          'REM',
+          '90 minute cycles',
+          'when to sleep',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'pet-age-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['age-calculator', 'bmi-calculator'],
+    translations: {
+      ja: {
+        name: '犬・猫の年齢人間換算',
+        description:
+          '犬・猫の年齢（年・月）を人間の年齢に換算。犬は体格別（小型・中型・大型）の早見表つき。',
+        keywords: [
+          'ペット年齢',
+          '犬 年齢 人間',
+          '猫 年齢 人間',
+          '犬猫 年齢換算',
+          '人間年齢換算',
+        ],
+      },
+      en: {
+        name: 'Pet Age Calculator (Dog & Cat)',
+        description:
+          "Convert your dog's or cat's age to human years, with a chart by dog size.",
+        keywords: [
+          'dog years',
+          'cat years',
+          'dog age in human years',
+          'cat age in human years',
+          'pet age',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'cooking-unit-converter',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['recipe-scaler', 'unit-converter', 'bmr-calorie-calculator'],
+    translations: {
+      ja: {
+        name: '料理の分量換算',
+        description:
+          '大さじ・小さじ・カップ・g・mlを食材別に相互換算。小麦粉・砂糖・油・バターなどの重さ早見表つき。',
+        keywords: [
+          '大さじ',
+          '小さじ',
+          'カップ',
+          'グラム',
+          '計量',
+          '分量',
+          'レシピ',
+          '比重',
+        ],
+      },
+      en: {
+        name: 'Cooking Unit Converter',
+        description:
+          'Convert tablespoons, teaspoons, cups, grams and ml for flour, sugar, butter, honey and more, with a weight chart.',
+        keywords: [
+          'tablespoon',
+          'teaspoon',
+          'cup',
+          'grams',
+          'recipe',
+          'measurement',
+          'tbsp',
+          'tsp',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'recipe-scaler',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['cooking-unit-converter', 'ratio-calculator', 'unit-converter'],
+    translations: {
+      ja: {
+        name: 'レシピ人数換算',
+        description:
+          '材料リストを貼り付けて、人数に合わせて分量を拡大・縮小。分数・全角数字・範囲に対応',
+        keywords: [
+          'レシピ',
+          '材料',
+          '分量',
+          '人数',
+          '倍量',
+          '半量',
+          '分数',
+          '料理',
+        ],
+      },
+      en: {
+        name: 'Recipe Scaler',
+        description:
+          'Scale an ingredient list to any number of servings. Handles fractions, ranges and units',
+        keywords: [
+          'recipe',
+          'servings',
+          'ingredients',
+          'scale recipe',
+          'double recipe',
+          'halve recipe',
+          'cooking',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'material-quantity',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['unit-converter', 'screen-size-calculator'],
+    translations: {
+      ja: {
+        name: '壁紙・塗料・タイル・床材の必要量計算',
+        description:
+          '部屋の寸法や面積から壁紙のロール数、塗料の缶数、タイル・床材の枚数と箱数を計算。ドア・窓の控除とロス率、畳換算に対応。',
+        keywords: [
+          '壁紙',
+          'クロス',
+          '塗料',
+          'ペンキ',
+          'タイル',
+          '床材',
+          'フローリング',
+          'DIY',
+        ],
+      },
+      en: {
+        name: 'Wallpaper, Paint, Tile & Flooring Quantity Calculator',
+        description:
+          'Estimate rolls of wallpaper, cans of paint, and tiles or flooring boxes from room size, minus doors and windows, plus waste.',
+        keywords: [
+          'wallpaper calculator',
+          'paint calculator',
+          'tile calculator',
+          'flooring calculator',
+          'DIY',
+          'tatami',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'ab-test-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['statistics-calculator', 'break-even-calculator'],
+    translations: {
+      ja: {
+        name: 'A/Bテスト有意差・必要サンプルサイズ計算',
+        description:
+          'A/Bテストの訪問数とCV数から、p値・信頼区間・有意差の有無を計算。必要サンプルサイズの見積もりにも対応。',
+        keywords: [
+          'A/Bテスト',
+          'ABテスト',
+          '有意差',
+          'p値',
+          'サンプルサイズ',
+          'z検定',
+          '信頼区間',
+          'CVR',
+        ],
+      },
+      en: {
+        name: 'A/B Test Significance & Sample Size Calculator',
+        description:
+          'Check if an A/B test result is significant (p-value, z-test, confidence interval) and estimate the sample size you need.',
+        keywords: [
+          'ab test',
+          'split test',
+          'significance',
+          'p-value',
+          'sample size',
+          'z-test',
+          'confidence interval',
+          'conversion rate',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'linear-regression',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['statistics-calculator', 'ab-test-calculator'],
+    translations: {
+      ja: {
+        name: '回帰直線・相関係数計算機',
+        description:
+          'x,yのデータから最小二乗法の回帰直線（傾き・切片）、相関係数r、決定係数R²を計算し、散布図に表示。xからyの予測値も算出できます。',
+        keywords: [
+          '回帰直線',
+          '最小二乗法',
+          '相関係数',
+          '決定係数',
+          '散布図',
+          '単回帰分析',
+          'R2',
+        ],
+      },
+      en: {
+        name: 'Linear Regression & Correlation Calculator',
+        description:
+          'Fit a least-squares regression line to x,y data: slope, intercept, correlation r and R², with a scatter plot and predictions.',
+        keywords: [
+          'linear regression',
+          'least squares',
+          'correlation coefficient',
+          'r squared',
+          'scatter plot',
+          'line of best fit',
+          'trendline',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'matrix-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['statistics-calculator', 'ratio-calculator', 'quadratic-solver'],
+    translations: {
+      ja: {
+        name: '行列計算機',
+        description:
+          '行列の和・差・積・スカラー倍・転置・逆行列・行列式を分数で厳密に計算。最大6×6、小数表示にも切り替え可能。',
+        keywords: [
+          '行列',
+          '逆行列',
+          '行列式',
+          '行列の積',
+          '転置行列',
+          '線形代数',
+          '分数',
+          'matrix',
+        ],
+      },
+      en: {
+        name: 'Matrix Calculator',
+        description:
+          'Add, multiply, transpose and invert matrices up to 6x6 and find determinants, with exact fractions or decimals.',
+        keywords: [
+          'matrix',
+          'inverse matrix',
+          'determinant',
+          'matrix multiplication',
+          'transpose',
+          'linear algebra',
+          'gauss-jordan',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'quadratic-solver',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['matrix-calculator', 'ratio-calculator', 'statistics-calculator'],
+    translations: {
+      ja: {
+        name: '二次方程式・連立方程式ソルバー',
+        description:
+          '二次方程式の判別式・実数解・虚数解と、2元・3元の連立一次方程式を途中式つきで解く。解なし・不定の判定にも対応。',
+        keywords: [
+          '二次方程式',
+          '解の公式',
+          '判別式',
+          '虚数解',
+          '連立方程式',
+          'クラメルの公式',
+          '途中式',
+        ],
+      },
+      en: {
+        name: 'Quadratic & Linear System Solver',
+        description:
+          'Solve quadratic equations and 2- or 3-variable linear systems with step-by-step working, including complex roots and no-solution cases.',
+        keywords: [
+          'quadratic equation',
+          'quadratic formula',
+          'discriminant',
+          'complex roots',
+          'simultaneous equations',
+          'cramer rule',
+          'linear system',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'geometry-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['unit-converter', 'ratio-calculator', 'material-quantity'],
+    translations: {
+      ja: {
+        name: '図形の面積・体積計算',
+        description:
+          '円・三角形・四角形・台形の面積、円柱・円錐・球・直方体の体積と表面積を公式と途中式つきで計算。単位指定と円周率の桁数指定に対応。',
+        keywords: [
+          '面積',
+          '体積',
+          '円',
+          '円柱',
+          '円錐',
+          '球',
+          '台形',
+          '表面積',
+        ],
+      },
+      en: {
+        name: 'Area & Volume Calculator',
+        description:
+          'Find the area of circles, triangles and trapezoids and the volume of cylinders, cones, spheres and boxes, with formulas and steps.',
+        keywords: [
+          'area calculator',
+          'volume calculator',
+          'circle area',
+          'cylinder volume',
+          'cone volume',
+          'sphere volume',
+          'trapezoid area',
+          'surface area',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'senjitsu-calendar',
+    category: 'datetime',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['rokuyo-calendar', 'calendar-generator', 'birthday-info'],
+    translations: {
+      ja: {
+        name: '選日カレンダー（天赦日・一粒万倍日・寅の日・巳の日・不成就日）',
+        description:
+          '天赦日・一粒万倍日・寅の日・巳の日・己巳の日・不成就日を月間カレンダーと一覧で表示。結婚・開業・財布購入など用途別に吉日を絞り込めます（1900〜2100年）',
+        keywords: [
+          '選日',
+          '天赦日',
+          '一粒万倍日',
+          '寅の日',
+          '巳の日',
+          '不成就日',
+          '吉日',
+          '暦注',
+        ],
+      },
+      en: {
+        name: 'Japanese Lucky Day Calendar (Tensha, Ichiryumanbai, Tora)',
+        description:
+          'Find Japanese lucky days (Tenshanichi, Ichiryumanbai, Tora, Mi) and unlucky Fujoju days. Filter by wedding, business launch or wallet.',
+        keywords: [
+          'tenshanichi',
+          'ichiryumanbai',
+          'tora no hi',
+          'mi no hi',
+          'fujoju',
+          'lucky days Japan',
+          'rokuyo',
+          'Japanese almanac',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'kyusei-kigaku',
+    category: 'datetime',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['birthday-info', 'rokuyo-calendar', 'senjitsu-calendar'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '九星気学（本命星・月命星）早見',
+        description:
+          '生年月日から九星気学の本命星・月命星・五行を調べます。立春基準の判定と年→星の早見表付き。',
+        keywords: [
+          '九星気学',
+          '本命星',
+          '月命星',
+          '九星',
+          '一白水星',
+          '九紫火星',
+          '立春',
+          '早見表',
+        ],
+      },
+      en: {
+        name: 'Nine Star Ki (Kyusei Kigaku) Calculator',
+        description:
+          'Look up your Nine Star Ki year star and month star from your birth date, with element and a year-to-star chart.',
+        keywords: [
+          'nine star ki',
+          'kyusei kigaku',
+          '9 star ki',
+          'year star',
+          'month star',
+          'honmei',
+          'risshun',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'shift-schedule-maker',
+    category: 'datetime',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: [
+      'calendar-generator',
+      'business-day-calculator',
+      'date-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'シフト表・当番表作成（自動割当・印刷用）',
+        description:
+          'メンバーと年月を入れるだけでシフト表・当番表を自動作成。希望休・連勤上限・土日祝休みに対応し、担当回数を均等化。印刷・CSV出力OK。',
+        keywords: [
+          'シフト表',
+          '当番表',
+          'シフト作成',
+          '勤務表',
+          'ローテーション',
+          '希望休',
+          '連勤',
+          '自動割当',
+        ],
+      },
+      en: {
+        name: 'Shift Schedule Maker (Auto-Assign, Printable)',
+        description:
+          'Make a printable monthly shift or duty roster. Auto-assigns fairly, honors days off and a max streak, and exports CSV.',
+        keywords: [
+          'shift schedule',
+          'duty roster',
+          'rota',
+          'work schedule',
+          'staff schedule',
+          'rotation',
+          'days off',
+          'printable',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'breakout-game',
+    category: 'games',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['invaders-game', 'snake-game', 'game-2048'],
+    translations: {
+      ja: {
+        name: 'ブロック崩し',
+        description:
+          'パドルでボールを打ち返してブロックを全部崩す定番ゲーム。マウス・スマホのタッチ・キーで遊べ、ベストスコアも記録。',
+        keywords: [
+          'ブロック崩し',
+          'ブロックくずし',
+          'ブレイクアウト',
+          'ゲーム',
+          'ブラウザゲーム',
+          'スマホ',
+        ],
+      },
+      en: {
+        name: 'Breakout Game',
+        description:
+          'Classic brick-breaker: bounce the ball off the paddle and clear every brick. Play with mouse, touch or keys.',
+        keywords: [
+          'breakout',
+          'brick breaker',
+          'block breaker',
+          'brick game',
+          'browser game',
+          'paddle game',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'connect-four',
+    category: 'games',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['reversi', 'lights-out', 'game-2048'],
+    translations: {
+      ja: {
+        name: '四目並べ',
+        description:
+          '重力で石を落として4つ並べる対戦ゲーム。強さ3段階のCPUと対戦でき、先手・後手も選べます。',
+        keywords: [
+          '四目並べ',
+          '4目並べ',
+          '重力四目',
+          'CPU対戦',
+          'ボードゲーム',
+          'ゲーム',
+        ],
+      },
+      en: {
+        name: 'Four in a Row',
+        description:
+          'Drop discs and line up four to win. Play the computer at three levels as first or second player.',
+        keywords: [
+          'four in a row',
+          'line four',
+          'drop four',
+          'vs computer',
+          'board game',
+          'game',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'hit-and-blow',
+    category: 'games',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['mental-math-trainer', 'sudoku', 'minesweeper'],
+    translations: {
+      ja: {
+        name: '数当てゲーム（Hit & Blow）',
+        description:
+          '隠された3〜5桁の数字をHit・Blowのヒントから推理する数当てゲーム。数字の重複あり／なしを選べ、推測履歴の表示とギブアップに対応',
+        keywords: [
+          '数当て',
+          'ヌメロン',
+          'ヒットアンドブロー',
+          'Hit and Blow',
+          'Hit & Blow',
+          'bulls and cows',
+          '推理ゲーム',
+          '脳トレ',
+        ],
+      },
+      en: {
+        name: 'Hit and Blow Number Guessing Game',
+        description:
+          'Guess a hidden 3–5 digit number from Hit and Blow clues. Choose repeated digits or not, review your guess history, or give up to see the answer',
+        keywords: [
+          'hit and blow',
+          'bulls and cows',
+          'number guessing game',
+          'numerical guessing',
+          'logic puzzle',
+          'brain training',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'lights-out',
+    category: 'games',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['slide-puzzle', 'minesweeper', 'game-2048'],
+    translations: {
+      ja: {
+        name: 'ライツアウト',
+        description:
+          '押したマスと上下左右が反転する消灯パズル。3×3〜7×7、必ず解ける配置・手数カウント・最短手順のヒント付き。',
+        keywords: [
+          'ライツアウト',
+          '消灯パズル',
+          'Lights Out',
+          'パズルゲーム',
+          'ライトを消す',
+        ],
+      },
+      en: {
+        name: 'Lights Out',
+        description:
+          'Lights Out puzzle: pressing a cell flips its neighbors. 3×3 to 7×7, always solvable, with a move counter and hints.',
+        keywords: [
+          'lights out',
+          'puzzle game',
+          'light switch puzzle',
+          'toggle puzzle',
+          'GF(2)',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'mental-math-trainer',
+    category: 'games',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['math-drill-generator', 'hit-and-blow', 'game-2048'],
+    translations: {
+      ja: {
+        name: '暗算トレーニング',
+        description:
+          '足し算・引き算・かけ算・わり算を桁数・問題数・制限時間を選んで解く暗算ゲーム。ランク判定とベスト記録付き。',
+        keywords: [
+          '暗算',
+          '計算ゲーム',
+          '計算練習',
+          '百ます',
+          'たし算',
+          'ひき算',
+          'かけ算',
+          'わり算',
+        ],
+      },
+      en: {
+        name: 'Mental Math Trainer',
+        description:
+          'Practice mental arithmetic with a rank and best score. Choose operations, digits and a time limit.',
+        keywords: [
+          'mental math',
+          'arithmetic',
+          'math game',
+          'quiz',
+          'speed math',
+          'times tables',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'function-grapher',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['quadratic-solver', 'graph-paper-generator', 'matrix-calculator'],
+    translations: {
+      ja: {
+        name: '関数グラフ描画',
+        description:
+          'y=f(x)の式を入力してグラフを描画。最大6本の重ね描き、ドラッグで移動・ホイールでズーム、度/ラジアン切替、PNG保存に対応。',
+        keywords: [
+          'グラフ',
+          '関数',
+          'y=f(x)',
+          '関数電卓',
+          'プロット',
+          '三角関数',
+          '二次関数',
+          'グラフ描画',
+        ],
+      },
+      en: {
+        name: 'Function Grapher',
+        description:
+          'Plot y=f(x) graphs online. Overlay up to 6 functions, pan and zoom, switch degrees/radians and save as PNG.',
+        keywords: [
+          'graph',
+          'plot',
+          'function',
+          'y=f(x)',
+          'graphing calculator',
+          'curve',
+          'trigonometric',
+          'parabola',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'scientific-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['function-grapher', 'geometry-calculator', 'matrix-calculator'],
+    translations: {
+      ja: {
+        name: '関数電卓',
+        description:
+          'sin・cos・log・√・階乗に対応したオンライン関数電卓。キーボード入力、度/ラジアン切替、計算履歴つき。',
+        keywords: [
+          '電卓',
+          '関数電卓',
+          '三角関数',
+          '対数',
+          '階乗',
+          'ラジアン',
+          'calculator',
+          'scientific calculator',
+        ],
+      },
+      en: {
+        name: 'Scientific Calculator',
+        description:
+          'Online scientific calculator with trig, logs, roots, powers and factorials. Keyboard input, degrees/radians, history.',
+        keywords: [
+          'calculator',
+          'scientific calculator',
+          'sin cos tan',
+          'logarithm',
+          'factorial',
+          'radians',
+          'degrees',
+          'calc',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'passport-romaji-converter',
+    category: 'text',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    sensitive: true,
+    related: ['romaji-kana-converter', 'kana-converter', 'id-photo-maker'],
+    translations: {
+      ja: {
+        name: 'パスポート用ローマ字氏名変換',
+        description:
+          'ひらがな・カタカナの氏名を、パスポートのヘボン式ローマ字に変換します。オ段・ウ段の長音の省略、B・M・P前の「ん」のM表記、OH表記の切替に対応。',
+        keywords: [
+          'パスポート ローマ字',
+          '旅券 ローマ字',
+          'ヘボン式',
+          '氏名 ローマ字',
+          '名前 ローマ字',
+          '長音 省略',
+          'OH表記',
+        ],
+      },
+      en: {
+        name: 'Passport Romaji Name Converter',
+        description:
+          'Converts a Japanese name in kana to passport Hepburn romaji: long O/U vowels omitted, M before B/M/P, optional OH spelling.',
+        keywords: [
+          'passport romaji',
+          'japanese name romaji',
+          'hepburn',
+          'passport name',
+          'long vowel',
+          'OH spelling',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'image-reveal-mask',
+    category: 'image',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['image-blur-mosaic', 'image-cropper', 'image-round-crop'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像くり抜きマスク',
+        description:
+          '画像を単色で覆い、四角・円・星・ハートなどの形だけくり抜いて元画像を見せます。クイズ画像やスポットライト風の加工に。',
+        keywords: [
+          'くり抜き',
+          'マスク',
+          'スポットライト',
+          'クイズ画像',
+          'ネタバレ防止',
+          '一部だけ見せる',
+          '画像加工',
+        ],
+      },
+      en: {
+        name: 'Image Reveal Mask',
+        description:
+          'Cover an image with a solid color and cut out shapes like circles, stars and hearts to reveal the original underneath.',
+        keywords: [
+          'reveal mask',
+          'cut out shape',
+          'spotlight',
+          'quiz image',
+          'spoiler cover',
+          'image mask',
+          'hide part of image',
+        ],
       },
     },
   },

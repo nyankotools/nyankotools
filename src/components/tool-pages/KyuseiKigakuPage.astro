@@ -1,0 +1,254 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { kyuseiKigakuContent } from '../../i18n/tools/kyusei-kigaku';
+import { getStarTable, STAR_ELEMENTS } from '../../lib/tools/kyusei-kigaku';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = kyuseiKigakuContent[locale];
+
+const resultRows = [
+  { id: 'kigaku-honmei', label: t.honmeiLabel, big: true },
+  { id: 'kigaku-honmei-desc', label: t.honmeiDescriptionLabel, plain: true },
+  { id: 'kigaku-getsumei', label: t.getsumeiLabel, big: true },
+  { id: 'kigaku-month', label: t.getsumeiMonthLabel },
+  { id: 'kigaku-judge', label: t.judgeLabel, plain: true },
+];
+
+const tableRows = getStarTable(t.tableFromYear, t.tableToYear).map((row) => ({
+  name: t.starNames[row.star - 1],
+  element: t.elementNames[STAR_ELEMENTS[row.star - 1]],
+  years: row.years.join(locale === 'ja' ? '・' : ', '),
+}));
+---
+
+<ToolShell t={t}>
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-locale={locale}
+    data-error-invalid-date={t.errorInvalidDate}
+    data-names={JSON.stringify({
+      starNames: t.starNames,
+      starDescriptions: t.starDescriptions,
+      elementNames: t.elementNames,
+      monthNames: t.monthNames,
+      starElements: STAR_ELEMENTS,
+    })}
+    data-result-format={JSON.stringify(t.resultFormat)}
+  >
+    <span id="kigaku-birth-label" class="ui-label">
+      {t.birthLabel}
+    </span>
+    <div
+      class="flex flex-wrap items-center gap-1"
+      role="group"
+      aria-labelledby="kigaku-birth-label"
+    >
+      <input
+        id="kigaku-year"
+        type="number"
+        inputmode="numeric"
+        min="1900"
+        max="2100"
+        placeholder={t.yearPlaceholder}
+        aria-label={t.birthYearAriaLabel}
+        class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+      <span class="text-sm text-gray-600 dark:text-gray-400">{t.yearUnit}</span>
+      <input
+        id="kigaku-month-input"
+        type="number"
+        inputmode="numeric"
+        min="1"
+        max="12"
+        placeholder={t.monthPlaceholder}
+        aria-label={t.birthMonthAriaLabel}
+        class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+      <span class="text-sm text-gray-600 dark:text-gray-400">
+        {t.monthUnit}
+      </span>
+      <input
+        id="kigaku-day"
+        type="number"
+        inputmode="numeric"
+        min="1"
+        max="31"
+        placeholder={t.dayPlaceholder}
+        aria-label={t.birthDayAriaLabel}
+        class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+      {t.dayUnit && (
+        <span class="text-sm text-gray-600 dark:text-gray-400">
+          {t.dayUnit}
+        </span>
+      )}
+    </div>
+    <p
+      id="kigaku-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl id="kigaku-results" class="mt-4 hidden space-y-3" aria-live="polite">
+      {resultRows.map((row) => (
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">{row.label}</dt>
+          <dd
+            class={
+              row.big
+                ? 'text-2xl font-bold'
+                : row.plain
+                  ? 'text-sm'
+                  : 'text-lg font-semibold'
+            }
+            id={row.id}
+          />
+        </div>
+      ))}
+    </dl>
+  </section>
+
+  <section class="mt-8">
+    <h2 class="mb-2 text-lg font-semibold">{t.tableHeading}</h2>
+    <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">{t.tableIntro}</p>
+    <div class="overflow-x-auto">
+      <table
+        class="w-full min-w-[20rem] border-collapse text-left text-sm"
+        id="kigaku-table"
+      >
+        <thead>
+          <tr class="border-b border-gray-300 dark:border-gray-600">
+            <th scope="col" class="py-2 pr-3 font-semibold">
+              {t.tableStarHeader}
+            </th>
+            <th scope="col" class="py-2 font-semibold">
+              {t.tableYearsHeader}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {tableRows.map((row) => (
+            <tr class="border-b border-gray-200 align-top dark:border-gray-700">
+              <th scope="row" class="py-2 pr-3 font-medium whitespace-nowrap">
+                {row.name}
+              </th>
+              <td class="py-2 break-words">{row.years}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { getKigaku } from '../../lib/tools/kyusei-kigaku';
+  import { fill } from '../../lib/format-template';
+  import type { KigakuResultFormat } from '../../i18n/tools/kyusei-kigaku';
+
+  interface Names {
+    starNames: string[];
+    starDescriptions: string[];
+    elementNames: Record<string, string>;
+    monthNames: string[];
+    starElements: string[];
+  }
+
+  const container = document.querySelector<HTMLElement>(
+    'section[data-locale]',
+  )!;
+  const format: KigakuResultFormat = JSON.parse(
+    container.dataset.resultFormat ?? '{}',
+  );
+  const names: Names = JSON.parse(container.dataset.names ?? '{}');
+  const errorInvalidDate = container.dataset.errorInvalidDate ?? '';
+
+  const yearInput = document.getElementById('kigaku-year') as HTMLInputElement;
+  const monthInput = document.getElementById(
+    'kigaku-month-input',
+  ) as HTMLInputElement;
+  const dayInput = document.getElementById('kigaku-day') as HTMLInputElement;
+  const errorEl = document.getElementById('kigaku-error')!;
+  const resultsEl = document.getElementById('kigaku-results')!;
+  const out = (id: string) => document.getElementById(id)!;
+
+  const starText = (star: number) =>
+    fill(format.starWithElement, {
+      star: names.starNames[star - 1],
+      element: names.elementNames[names.starElements[star - 1]],
+    });
+  const dateText = (m: number, d: number) =>
+    fill(format.dateFormat, { m: String(m), d: String(d) });
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+    if (
+      yearInput.value.trim() === '' ||
+      monthInput.value.trim() === '' ||
+      dayInput.value.trim() === ''
+    ) {
+      return;
+    }
+    const year = Number(yearInput.value);
+    const r = getKigaku({
+      year,
+      month: Number(monthInput.value),
+      day: Number(dayInput.value),
+    });
+    if (!r) {
+      errorEl.textContent = errorInvalidDate;
+      return;
+    }
+
+    out('kigaku-honmei').textContent = starText(r.honmei);
+    out('kigaku-honmei-desc').textContent =
+      names.starDescriptions[r.honmei - 1];
+    out('kigaku-getsumei').textContent = starText(r.getsumei);
+    out('kigaku-month').textContent =
+      names.monthNames[r.monthIndex - 1] +
+      ' / ' +
+      (r.setsuStart
+        ? fill(format.monthStarts, {
+            date: dateText(r.setsuStart.month, r.setsuStart.day),
+          })
+        : format.monthStartsPrevYear);
+
+    const lines: string[] = [
+      fill(format.risshunInfo, {
+        y: String(year),
+        m: String(r.risshun.month),
+        d: String(r.risshun.day),
+      }),
+    ];
+    if (r.beforeRisshun) {
+      lines.push(
+        fill(format.beforeRisshunNote, {
+          y: String(year),
+          sy: String(r.starYear),
+          m: String(r.risshun.month),
+          d: String(r.risshun.day),
+        }),
+      );
+    }
+    if (r.isRisshunDay) lines.push(format.risshunDayNote);
+    else if (r.isSetsuDay) lines.push(format.setsuDayNote);
+    out('kigaku-judge').textContent = lines.join(' ');
+
+    resultsEl.classList.remove('hidden');
+  }
+
+  yearInput.addEventListener('input', render);
+  monthInput.addEventListener('input', render);
+  dayInput.addEventListener('input', render);
+
+  yearInput.value = '1990';
+  monthInput.value = '6';
+  dayInput.value = '15';
+  render();
+</script>

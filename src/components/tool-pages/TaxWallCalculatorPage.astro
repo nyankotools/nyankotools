@@ -1,0 +1,290 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { taxWallCalculatorContent } from '../../i18n/tools/tax-wall-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = taxWallCalculatorContent[locale];
+
+const spouseKeys = ['none', 'upTo9m', 'upTo9_5m', 'upTo10m'] as const;
+const results = [
+  { id: 'status', label: t.statusLabel },
+  { id: 'social', label: t.resultSocialLabel },
+  { id: 'income-tax', label: t.resultIncomeTaxLabel },
+  { id: 'resident-tax', label: t.resultResidentTaxLabel },
+  { id: 'take-home', label: t.resultTakeHomeLabel },
+  { id: 'monthly', label: t.resultMonthlyLabel },
+  { id: 'spouse-deduction', label: t.resultSpouseDeductionLabel },
+  { id: 'spouse-saving', label: t.resultSpouseSavingLabel },
+  { id: 'household', label: t.resultHouseholdLabel },
+];
+---
+
+<ToolShell t={t}>
+  <p
+    class="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+    role="note"
+  >
+    {t.disclaimer}
+  </p>
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+    data-status-dependent={t.statusDependent}
+    data-status-employer={t.statusEmployer}
+    data-status-national={t.statusNational}
+    data-wall-exceeded={t.wallExceeded}
+    data-wall-not-exceeded={t.wallNotExceeded}
+    data-wall-not-applicable={t.wallNotApplicable}
+    data-cliff-template={t.cliffTemplate}
+    data-cliff-no-recover-template={t.cliffNoRecoverTemplate}
+    data-no-cliffs={t.noCliffs}
+    data-wall-labels={JSON.stringify(t.wallLabels)}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label for="tw-gross" class="ui-label">
+          {t.grossLabel}
+        </label>
+        <input
+          id="tw-gross"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.grossPlaceholder}
+          class="ui-input h-11 w-44 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <label class="ui-check">
+        <input id="tw-age40" type="checkbox" />
+        {t.age40Label}
+      </label>
+    </div>
+
+    <label class="ui-check">
+      <input id="tw-wall106" type="checkbox" />
+      {t.wall106Label}
+    </label>
+    <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+      {t.wall106Hint}
+    </p>
+
+    <div class="mb-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label for="tw-spouse" class="ui-label">
+          {t.spouseLabel}
+        </label>
+        <select
+          id="tw-spouse"
+          class="ui-input h-11 w-full max-w-sm px-3 dark:bg-gray-900"
+        >
+          {spouseKeys.map((k) => (
+            <option value={k} selected={k === 'upTo9m'}>
+              {t.spouseOptions[k]}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="tw-rate" class="ui-label">
+          {t.rateLabel}
+        </label>
+        <select id="tw-rate" class="ui-input h-11 w-28 px-3 dark:bg-gray-900">
+          {t.rateOptions.map((o) => (
+            <option value={o.value} selected={o.value === '0.1'}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+    <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+      {t.spouseHint}
+    </p>
+
+    <div class="mb-3">
+      <label for="tw-national" class="ui-label">
+        {t.nationalLabel}
+      </label>
+      <input
+        id="tw-national"
+        type="text"
+        inputmode="decimal"
+        class="ui-input h-11 w-44 px-3 dark:bg-gray-900"
+      />
+      <p class="mt-1 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+        {t.nationalHint}
+      </p>
+    </div>
+
+    <p
+      id="tw-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="tw-output" class="hidden" aria-live="polite">
+      <h2 class="mt-4 mb-2 text-lg font-bold">{t.resultHeading}</h2>
+      <dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {results.map((r) => (
+          <div>
+            <dt class="text-sm text-gray-600 dark:text-gray-400">{r.label}</dt>
+            <dd class="text-lg font-semibold" id={`tw-result-${r.id}`} />
+          </div>
+        ))}
+      </dl>
+
+      <h2 class="mt-6 mb-2 text-lg font-bold">{t.wallsHeading}</h2>
+      <ul id="tw-walls" class="space-y-1 text-sm"></ul>
+
+      <h2 class="mt-6 mb-2 text-lg font-bold">{t.cliffsHeading}</h2>
+      <ul id="tw-cliffs" class="list-disc space-y-2 pl-5 text-sm"></ul>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { calculateTaxWall } from '../../lib/tools/tax-wall-calculator';
+  import type {
+    SpouseIncomeClass,
+    WallId,
+  } from '../../lib/tools/tax-wall-calculator';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const ds = configEl.dataset;
+  const yen = new Intl.NumberFormat(ds.numberLocale ?? 'en-US', {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const wallLabels = JSON.parse(ds.wallLabels ?? '{}') as Record<
+    WallId,
+    string
+  >;
+  const statusText = {
+    dependent: ds.statusDependent ?? '',
+    employer: ds.statusEmployer ?? '',
+    national: ds.statusNational ?? '',
+  };
+
+  const grossInput = document.getElementById('tw-gross') as HTMLInputElement;
+  const age40Input = document.getElementById('tw-age40') as HTMLInputElement;
+  const wall106Input = document.getElementById(
+    'tw-wall106',
+  ) as HTMLInputElement;
+  const spouseSelect = document.getElementById(
+    'tw-spouse',
+  ) as HTMLSelectElement;
+  const rateSelect = document.getElementById('tw-rate') as HTMLSelectElement;
+  const nationalInput = document.getElementById(
+    'tw-national',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('tw-error')!;
+  const outputEl = document.getElementById('tw-output')!;
+  const wallsEl = document.getElementById('tw-walls')!;
+  const cliffsEl = document.getElementById('tw-cliffs')!;
+
+  function setResult(id: string, text: string) {
+    document.getElementById(`tw-result-${id}`)!.textContent = text;
+  }
+
+  attachCommaFormatting(grossInput);
+  attachCommaFormatting(nationalInput);
+
+  function fill(template: string, values: Record<string, string>): string {
+    return template.replace(/\{(\w+)\}/g, (_, k: string) => values[k] ?? '');
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    outputEl.classList.add('hidden');
+
+    if (grossInput.value.trim() === '') return;
+    const nationalText = stripCommas(nationalInput.value);
+    const result = calculateTaxWall({
+      grossSalary: Number(stripCommas(grossInput.value)),
+      age40OrOver: age40Input.checked,
+      employerInsuranceFrom106: wall106Input.checked,
+      spouseClass: spouseSelect.value as SpouseIncomeClass,
+      spouseMarginalRate: Number(rateSelect.value),
+      nationalHealthOverride: nationalText === '' ? null : Number(nationalText),
+    });
+    if (result === null) {
+      errorEl.textContent = ds.error ?? '';
+      return;
+    }
+
+    setResult('status', statusText[result.insuranceStatus]);
+    setResult('social', yen.format(result.socialInsurance));
+    setResult('income-tax', yen.format(result.incomeTax));
+    setResult('resident-tax', yen.format(result.residentTax));
+    setResult('take-home', yen.format(result.takeHome));
+    setResult('monthly', yen.format(Math.floor(result.takeHome / 12)));
+    setResult('spouse-deduction', yen.format(result.spouseDeduction));
+    setResult('spouse-saving', yen.format(result.spouseTaxSaving));
+    setResult('household', yen.format(result.householdTakeHome));
+
+    wallsEl.replaceChildren(
+      ...result.walls.map((w) => {
+        const li = document.createElement('li');
+        const state = !w.applicable
+          ? ds.wallNotApplicable
+          : w.exceeded
+            ? ds.wallExceeded
+            : ds.wallNotExceeded;
+        li.textContent = `${wallLabels[w.id]}（${yen.format(w.threshold)}）: ${state}`;
+        if (w.applicable && w.exceeded) li.classList.add('font-semibold');
+        return li;
+      }),
+    );
+
+    if (result.cliffs.length === 0) {
+      const li = document.createElement('li');
+      li.textContent = ds.noCliffs ?? '';
+      cliffsEl.replaceChildren(li);
+    } else {
+      cliffsEl.replaceChildren(
+        ...result.cliffs.map((c) => {
+          const li = document.createElement('li');
+          const template =
+            c.recoverIncome === null
+              ? (ds.cliffNoRecoverTemplate ?? '')
+              : (ds.cliffTemplate ?? '');
+          li.textContent = fill(template, {
+            after: yen.format(c.afterIncome),
+            drop: yen.format(c.drop),
+            before: yen.format(c.beforeTakeHome),
+            recover:
+              c.recoverIncome === null ? '' : yen.format(c.recoverIncome),
+          });
+          return li;
+        }),
+      );
+    }
+    outputEl.classList.remove('hidden');
+  }
+
+  for (const el of [grossInput, nationalInput]) {
+    el.addEventListener('input', render);
+  }
+  for (const el of [age40Input, wall106Input, spouseSelect, rateSelect]) {
+    el.addEventListener('change', render);
+  }
+
+  grossInput.value = formatNumberWithCommas('1000000');
+  render();
+</script>

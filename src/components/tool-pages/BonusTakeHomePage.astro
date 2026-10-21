@@ -1,0 +1,213 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { bonusTakeHomeContent } from '../../i18n/tools/bonus-take-home';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = bonusTakeHomeContent[locale];
+
+const results = [
+  { id: 'take-home', label: t.resultTakeHomeLabel },
+  { id: 'ratio', label: t.resultRatioLabel },
+  { id: 'social-insurance', label: t.resultSocialInsuranceLabel },
+  { id: 'health', label: t.resultHealthLabel },
+  { id: 'nursing', label: t.resultNursingLabel },
+  { id: 'pension', label: t.resultPensionLabel },
+  { id: 'employment', label: t.resultEmploymentLabel },
+  { id: 'income-tax', label: t.resultIncomeTaxLabel },
+  { id: 'rate', label: t.resultRateLabel },
+  { id: 'standard-bonus', label: t.resultStandardBonusLabel },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label for="bonus-gross" class="ui-label">
+          {t.bonusLabel}
+        </label>
+        <input
+          id="bonus-gross"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.bonusPlaceholder}
+          class="ui-input h-11 w-40 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label for="bonus-previous-salary" class="ui-label">
+          {t.previousSalaryLabel}
+        </label>
+        <input
+          id="bonus-previous-salary"
+          type="text"
+          inputmode="decimal"
+          placeholder={t.previousSalaryPlaceholder}
+          class="ui-input h-11 w-40 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+    </div>
+    <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+      {t.previousSalaryHint}
+    </p>
+
+    <div class="mb-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label for="bonus-dependents" class="ui-label">
+          {t.dependentsLabel}
+        </label>
+        <input
+          id="bonus-dependents"
+          type="number"
+          min="0"
+          max="7"
+          step="1"
+          inputmode="numeric"
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="bonus-paid" class="ui-label">
+          {t.paidLabel}
+        </label>
+        <input
+          id="bonus-paid"
+          type="text"
+          inputmode="decimal"
+          class="ui-input h-11 w-40 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <label class="flex h-11 items-center gap-2 text-sm">
+        <input id="bonus-age40" type="checkbox" />
+        {t.age40Label}
+      </label>
+    </div>
+    <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+      {t.dependentsHint}
+    </p>
+    <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+      {t.paidHint}
+    </p>
+
+    <p
+      id="bonus-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl
+      id="bonus-results"
+      class="mt-4 hidden grid grid-cols-2 gap-3 sm:grid-cols-3"
+      aria-live="polite"
+    >
+      {results.map((r) => (
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">{r.label}</dt>
+          <dd class="text-lg font-semibold" id={`bonus-result-${r.id}`} />
+        </div>
+      ))}
+    </dl>
+  </section>
+</ToolShell>
+
+<script>
+  import { calculateBonusTakeHome } from '../../lib/tools/bonus-take-home';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
+  const errorMessage = configEl.dataset.error ?? '';
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const percent = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 3,
+  });
+
+  const grossInput = document.getElementById('bonus-gross') as HTMLInputElement;
+  const salaryInput = document.getElementById(
+    'bonus-previous-salary',
+  ) as HTMLInputElement;
+  const dependentsInput = document.getElementById(
+    'bonus-dependents',
+  ) as HTMLInputElement;
+  const paidInput = document.getElementById('bonus-paid') as HTMLInputElement;
+  const age40Input = document.getElementById('bonus-age40') as HTMLInputElement;
+  const errorEl = document.getElementById('bonus-error')!;
+  const resultsEl = document.getElementById('bonus-results')!;
+
+  function setResult(id: string, text: string) {
+    document.getElementById(`bonus-result-${id}`)!.textContent = text;
+  }
+
+  attachCommaFormatting(grossInput);
+  attachCommaFormatting(salaryInput);
+  attachCommaFormatting(paidInput);
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    if (grossInput.value.trim() === '') return;
+    if (!(Number(stripCommas(salaryInput.value) || '0') > 0)) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    const result = calculateBonusTakeHome({
+      bonusGross: Number(stripCommas(grossInput.value)),
+      previousMonthSalary: Number(stripCommas(salaryInput.value) || '0'),
+      age40OrOver: age40Input.checked,
+      dependents: Number(dependentsInput.value || '0'),
+      bonusPaidThisFiscalYear: Number(stripCommas(paidInput.value) || '0'),
+    });
+
+    if (result === null) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    setResult('take-home', yen.format(result.takeHome));
+    setResult('ratio', `${percent.format(result.takeHomeRatio)}%`);
+    setResult('social-insurance', yen.format(result.socialInsurance));
+    setResult('health', yen.format(result.healthInsurance));
+    setResult('nursing', yen.format(result.nursingCare));
+    setResult('pension', yen.format(result.pension));
+    setResult('employment', yen.format(result.employmentInsurance));
+    setResult('income-tax', yen.format(result.incomeTax));
+    setResult('rate', `${percent.format(result.withholdingRate)}%`);
+    setResult('standard-bonus', yen.format(result.standardBonus));
+    resultsEl.classList.remove('hidden');
+  }
+
+  for (const el of [grossInput, salaryInput, dependentsInput, paidInput]) {
+    el.addEventListener('input', render);
+  }
+  age40Input.addEventListener('change', render);
+
+  grossInput.value = formatNumberWithCommas('1000000');
+  salaryInput.value = formatNumberWithCommas('300000');
+  dependentsInput.value = '0';
+  paidInput.value = '0';
+  render();
+</script>

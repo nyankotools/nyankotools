@@ -11,13 +11,13 @@ import {
 } from './japan-income-tax';
 
 /** 協会けんぽ平均の本人負担率（健康保険料率9.91%の半分） */
-const HEALTH_INSURANCE_RATE = 0.04955;
+export const HEALTH_INSURANCE_RATE = 0.04955;
 /** 介護保険料率1.59%の半分（40〜64歳のみ） */
-const NURSING_CARE_INSURANCE_RATE = 0.00795;
+export const NURSING_CARE_INSURANCE_RATE = 0.00795;
 /** 厚生年金保険料率18.3%の半分 */
-const PENSION_RATE = 0.0915;
+export const PENSION_RATE = 0.0915;
 /** 雇用保険の労働者負担率（一般の事業） */
-const EMPLOYMENT_INSURANCE_RATE = 0.0055;
+export const EMPLOYMENT_INSURANCE_RATE = 0.0055;
 /** 標準報酬月額の上限（健康保険・厚生年金） */
 const HEALTH_INSURANCE_MONTHLY_CAP = 1_390_000;
 const PENSION_MONTHLY_CAP = 650_000;

@@ -1,0 +1,237 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { lightsOutContent } from '../../i18n/tools/lights-out';
+import { DEFAULT_SIZE, SIZES } from '../../lib/tools/lights-out';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = lightsOutContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="lo-root"
+    data-cell-label={t.cellLabel}
+    data-state-on={t.stateOn}
+    data-state-off={t.stateOff}
+    data-hint-message={t.hintMessage}
+    data-completed={t.completed}
+    data-restarted={t.restarted}
+    data-new-started={t.newStarted}
+  >
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <span id="lo-size-label" class="ui-label">
+          {t.sizeLabel}
+        </span>
+        <div class="ui-seg" role="group" aria-labelledby="lo-size-label">
+          {SIZES.map((s) => (
+            <button
+              type="button"
+              class="ui-seg-btn"
+              data-size={s}
+              aria-pressed={s === DEFAULT_SIZE ? 'true' : 'false'}
+            >
+              {s}×{s}
+            </button>
+          ))}
+        </div>
+      </div>
+      <button id="lo-new-button" type="button" class="ui-btn-primary">
+        {t.newGame}
+      </button>
+      <button id="lo-restart-button" type="button" class="ui-btn">
+        {t.restartLabel}
+      </button>
+      <button id="lo-hint-button" type="button" class="ui-btn">
+        {t.hintLabel}
+      </button>
+    </div>
+
+    <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
+      <div class="flex gap-2">
+        <dt>{t.movesLabel}</dt>
+        <dd id="lo-moves" class="font-semibold tabular-nums">
+          0
+        </dd>
+      </div>
+      <div class="flex gap-2">
+        <dt>{t.litLabel}</dt>
+        <dd id="lo-lit" class="font-semibold tabular-nums">
+          0
+        </dd>
+      </div>
+      <div class="flex gap-2">
+        <dt>{t.hintsLabel}</dt>
+        <dd id="lo-hints" class="font-semibold tabular-nums">
+          0
+        </dd>
+      </div>
+    </dl>
+
+    <div
+      id="lo-board"
+      role="group"
+      aria-label={t.boardLabel}
+      class="mt-3 grid w-full max-w-md gap-1 sm:gap-1.5"
+    ></div>
+
+    <p
+      id="lo-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    DEFAULT_SIZE,
+    applyPress,
+    countLit,
+    hint,
+    isSolved,
+    newGame,
+    restart,
+    solve,
+    type PuzzleState,
+  } from '../../lib/tools/lights-out';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('lo-root');
+  const msg = root.dataset;
+  const boardEl = $('lo-board');
+  const movesEl = $('lo-moves');
+  const litEl = $('lo-lit');
+  const hintsEl = $('lo-hints');
+  const statusEl = $('lo-status');
+  const sizeButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-size]'),
+  );
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  let size = DEFAULT_SIZE as number;
+  let state: PuzzleState = newGame(size);
+  let hints = 0;
+  let hintIndex: number | null = null;
+  let tiles: HTMLButtonElement[] = [];
+
+  const CELL_BASE =
+    'aspect-square min-w-0 rounded-md border-2 text-lg leading-none select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600';
+  const CELL_ON =
+    'border-yellow-600 bg-yellow-300 text-yellow-900 hover:bg-yellow-200 dark:border-yellow-300 dark:bg-yellow-400 dark:hover:bg-yellow-300';
+  const CELL_OFF =
+    'border-gray-600 bg-gray-700 text-gray-700 hover:bg-gray-600 dark:border-gray-500 dark:bg-gray-800 dark:hover:bg-gray-700';
+  const CELL_HINT = ' ring-4 ring-blue-600 ring-offset-2 dark:ring-blue-400';
+
+  function buildBoard() {
+    boardEl.style.gridTemplateColumns = `repeat(${size}, minmax(0, 1fr))`;
+    boardEl.replaceChildren();
+    tiles = state.board.map((_, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.index = String(i);
+      boardEl.append(b);
+      return b;
+    });
+  }
+
+  function render() {
+    state.board.forEach((on, i) => {
+      const tile = tiles[i];
+      tile.className =
+        CELL_BASE +
+        ' ' +
+        (on ? CELL_ON : CELL_OFF) +
+        (i === hintIndex ? CELL_HINT : '');
+      tile.textContent = on ? '●' : '';
+      tile.setAttribute(
+        'aria-label',
+        fill(msg.cellLabel, {
+          row: String(Math.floor(i / size) + 1),
+          col: String((i % size) + 1),
+          state: (on ? msg.stateOn : msg.stateOff) ?? '',
+        }),
+      );
+    });
+    movesEl.textContent = String(state.moves);
+    litEl.textContent = String(countLit(state.board));
+    hintsEl.textContent = String(hints);
+  }
+
+  function startGame() {
+    state = newGame(size);
+    hints = 0;
+    hintIndex = null;
+    statusEl.textContent = '';
+    buildBoard();
+    render();
+  }
+
+  boardEl.addEventListener('click', (e) => {
+    const target = (e.target as HTMLElement).closest<HTMLElement>(
+      '[data-index]',
+    );
+    if (!target) return;
+    const next = applyPress(state, Number(target.dataset.index));
+    if (next === state) return;
+    state = next;
+    hintIndex = null;
+    statusEl.textContent = '';
+    render();
+    if (isSolved(state.board)) {
+      statusEl.textContent = fill(msg.completed, {
+        moves: String(state.moves),
+        hints: String(hints),
+      });
+    }
+  });
+
+  $('lo-hint-button').addEventListener('click', () => {
+    const idx = hint(state.board, size);
+    if (idx === null) return;
+    hints++;
+    hintIndex = idx;
+    const remaining = solve(state.board, size)?.length ?? 0;
+    statusEl.textContent = fill(msg.hintMessage, {
+      row: String(Math.floor(idx / size) + 1),
+      col: String((idx % size) + 1),
+      remaining: String(remaining),
+    });
+    render();
+    tiles[idx].focus();
+  });
+
+  $('lo-new-button').addEventListener('click', () => {
+    startGame();
+    statusEl.textContent = msg.newStarted ?? '';
+  });
+  $('lo-restart-button').addEventListener('click', () => {
+    state = restart(state);
+    hints = 0;
+    hintIndex = null;
+    render();
+    statusEl.textContent = msg.restarted ?? '';
+  });
+  sizeButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      size = Number(b.dataset.size);
+      sizeButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      startGame();
+    }),
+  );
+
+  startGame();
+</script>

@@ -1,0 +1,368 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { connectFourContent } from '../../i18n/tools/connect-four';
+import { COLS, DEFAULT_LEVEL, LEVELS } from '../../lib/tools/connect-four';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = connectFourContent[locale];
+const levelNames = {
+  easy: t.levelEasy,
+  normal: t.levelNormal,
+  hard: t.levelHard,
+};
+const columns = Array.from({ length: COLS }, (_, i) => i);
+---
+
+<ToolShell t={t}>
+  <section
+    id="cf-root"
+    data-drop-label={t.dropLabel}
+    data-drop-full-label={t.dropFullLabel}
+    data-turn-you={t.turnYou}
+    data-turn-cpu={t.turnCpu}
+    data-thinking={t.thinking}
+    data-you-won={t.youWon}
+    data-cpu-won={t.cpuWon}
+    data-draw={t.draw}
+    data-started={t.started}
+  >
+    <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
+      <div>
+        <span id="cf-level-label" class="ui-label">
+          {t.levelLabel}
+        </span>
+        <div
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-labelledby="cf-level-label"
+        >
+          {LEVELS.map((level) => (
+            <button
+              type="button"
+              class="ui-seg-btn"
+              data-level={level}
+              aria-pressed={level === DEFAULT_LEVEL ? 'true' : 'false'}
+            >
+              {levelNames[level]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <span id="cf-side-label" class="ui-label">
+          {t.sideLabel}
+        </span>
+        <div class="ui-seg" role="group" aria-labelledby="cf-side-label">
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-side="1"
+            aria-pressed="true"
+          >
+            {t.sideFirst}
+          </button>
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-side="2"
+            aria-pressed="false"
+          >
+            {t.sideSecond}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button id="cf-new-button" type="button" class="ui-btn-primary">
+        {t.newGame}
+      </button>
+      <button id="cf-undo-button" type="button" class="ui-btn" disabled>
+        {t.undo}
+      </button>
+    </div>
+
+    <ul class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
+      <li class="flex items-center gap-1.5">
+        <span
+          class="inline-block h-3.5 w-3.5 rounded-full bg-red-600 ring-1 ring-gray-400 dark:ring-gray-500"
+          aria-hidden="true"
+        ></span>
+        {t.redLabel}
+      </li>
+      <li class="flex items-center gap-1.5">
+        <span
+          class="inline-block h-3.5 w-3.5 rounded-full bg-yellow-400 ring-1 ring-gray-400 dark:ring-gray-500"
+          aria-hidden="true"
+        ></span>
+        {t.yellowLabel}
+      </li>
+    </ul>
+
+    <div class="relative mt-3 w-full max-w-md">
+      <div id="cf-drops" class="grid grid-cols-7 gap-1.5 px-1.5">
+        {columns.map((c) => (
+          <button
+            type="button"
+            class="flex h-9 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-800 hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+            data-col={c}
+          >
+            <span aria-hidden="true">▼</span>
+          </button>
+        ))}
+      </div>
+      <div
+        id="cf-board"
+        role="group"
+        aria-label={t.boardLabel}
+        class="mt-1.5 grid w-full touch-manipulation grid-cols-7 gap-1.5 rounded-lg bg-blue-700 p-1.5 select-none"
+      ></div>
+      <div
+        id="cf-result"
+        aria-hidden="true"
+        hidden
+        class="absolute inset-0 flex cursor-pointer items-center justify-center p-4"
+      >
+        <p
+          id="cf-result-text"
+          class="max-w-full rounded-lg bg-gray-900/90 px-5 py-4 text-center text-lg font-bold text-white shadow-lg ring-1 ring-white/30"
+        ></p>
+      </div>
+    </div>
+
+    <p
+      id="cf-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    COLS,
+    ROWS,
+    DEFAULT_LEVEL,
+    chooseMove,
+    dropRow,
+    newGame,
+    playMove,
+    type GameState,
+    type Level,
+    type Player,
+  } from '../../lib/tools/connect-four';
+
+  const CPU_DELAY_MS = 400;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('cf-root');
+  const msg = root.dataset;
+  const boardEl = $('cf-board');
+  const statusEl = $('cf-status');
+  const resultEl = $('cf-result');
+  const resultTextEl = $('cf-result-text');
+  const undoButton = $<HTMLButtonElement>('cf-undo-button');
+  const dropButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-col]'),
+  );
+  const levelButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-level]'),
+  );
+  const sideButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-side]'),
+  );
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  let level: Level = DEFAULT_LEVEL;
+  let human: Player = 1;
+  let state: GameState = newGame();
+  /** あなたの手番になったときの盤面（「待った」で戻る先） */
+  let history: GameState[] = [];
+  let thinking = false;
+  let notice = '';
+  let timerId: number | undefined;
+  /** 勝敗メッセージを閉じたあと、次の対局まで再表示しない */
+  let resultDismissed = false;
+  let cells: HTMLElement[] = [];
+
+  function buildBoard() {
+    boardEl.replaceChildren();
+    cells = [];
+    for (let i = 0; i < COLS * ROWS; i++) {
+      const cell = document.createElement('div');
+      cell.dataset.col = String(i % COLS);
+      cell.setAttribute('aria-hidden', 'true');
+      boardEl.append(cell);
+      cells.push(cell);
+    }
+  }
+
+  function humanCanMove() {
+    return !state.over && !thinking && state.turn === human;
+  }
+
+  function render() {
+    const win = new Set(state.line);
+    const hasWin = win.size > 0;
+    cells.forEach((cell, i) => {
+      const disc = state.board[i];
+      const base =
+        'relative flex aspect-square w-full items-center justify-center rounded-full';
+      let color = 'bg-white dark:bg-gray-200';
+      if (disc === 1) color = 'bg-red-600';
+      else if (disc === 2) color = 'bg-yellow-400';
+      const emphasis = win.has(i)
+        ? ' ring-4 ring-white'
+        : hasWin && disc !== 0
+          ? ' opacity-50'
+          : '';
+      cell.className = `${base} ${color}${emphasis}`;
+      cell.replaceChildren();
+      if (disc !== 0 && (i === state.lastMove || win.has(i))) {
+        const mark = document.createElement('span');
+        mark.className = 'block h-1/4 w-1/4 rounded-full bg-gray-900/70';
+        cell.append(mark);
+      }
+    });
+    const canMove = humanCanMove();
+    dropButtons.forEach((button) => {
+      const col = Number(button.dataset.col);
+      const full = dropRow(state.board, col) < 0;
+      button.disabled = !canMove || full;
+      button.setAttribute(
+        'aria-label',
+        fill(full ? msg.dropFullLabel : msg.dropLabel, {
+          col: String(col + 1),
+        }),
+      );
+    });
+    undoButton.disabled = thinking || history.length === 0;
+  }
+
+  function setStatus() {
+    let text: string;
+    if (state.over) {
+      text =
+        state.winner === null
+          ? (msg.draw ?? '')
+          : state.winner === human
+            ? (msg.youWon ?? '')
+            : (msg.cpuWon ?? '');
+    } else if (thinking) {
+      text = msg.thinking ?? '';
+    } else {
+      text = state.turn === human ? (msg.turnYou ?? '') : (msg.turnCpu ?? '');
+    }
+    statusEl.textContent = [notice, text].filter(Boolean).join(' ');
+    // 勝敗は盤面中央にも表示する（読み上げは status 側で行うため overlay は aria-hidden）
+    resultTextEl.textContent = state.over ? text : '';
+    resultEl.hidden = !state.over || resultDismissed;
+  }
+
+  function refresh() {
+    render();
+    setStatus();
+  }
+
+  function cancelCpu() {
+    if (timerId !== undefined) {
+      window.clearTimeout(timerId);
+      timerId = undefined;
+    }
+    thinking = false;
+  }
+
+  function scheduleCpu() {
+    if (state.over || state.turn === human) {
+      thinking = false;
+      refresh();
+      return;
+    }
+    thinking = true;
+    refresh();
+    // 描画を先に済ませるため、少し待ってから探索する（探索中は画面が止まる）
+    timerId = window.setTimeout(() => {
+      timerId = undefined;
+      const col = chooseMove(state.board, state.turn, level);
+      if (col >= 0) state = playMove(state, col);
+      scheduleCpu();
+    }, CPU_DELAY_MS);
+  }
+
+  function startGame() {
+    cancelCpu();
+    state = newGame();
+    history = [];
+    resultDismissed = false;
+    notice = msg.started ?? '';
+    scheduleCpu();
+  }
+
+  function humanMove(col: number) {
+    if (!humanCanMove()) return;
+    const next = playMove(state, col);
+    if (next === state) return;
+    history.push(state);
+    notice = '';
+    state = next;
+    scheduleCpu();
+  }
+
+  function undo() {
+    if (thinking || history.length === 0) return;
+    cancelCpu();
+    state = history.pop() as GameState;
+    resultDismissed = false;
+    notice = '';
+    refresh();
+  }
+
+  boardEl.addEventListener('click', (e) => {
+    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-col]');
+    if (el) humanMove(Number(el.dataset.col));
+  });
+  dropButtons.forEach((b) =>
+    b.addEventListener('click', () => humanMove(Number(b.dataset.col))),
+  );
+
+  levelButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      level = b.dataset.level as Level;
+      levelButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      startGame();
+    }),
+  );
+  sideButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      human = Number(b.dataset.side) as Player;
+      sideButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      startGame();
+    }),
+  );
+  resultEl.addEventListener('click', () => {
+    resultDismissed = true;
+    resultEl.hidden = true;
+  });
+  $('cf-new-button').addEventListener('click', startGame);
+  undoButton.addEventListener('click', undo);
+
+  buildBoard();
+  startGame();
+  notice = '';
+  setStatus();
+</script>

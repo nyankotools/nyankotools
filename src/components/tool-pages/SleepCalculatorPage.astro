@@ -1,0 +1,235 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { sleepCalculatorContent } from '../../i18n/tools/sleep-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = sleepCalculatorContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="sleep-root"
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-heading-wake={t.resultHeadingWake}
+    data-heading-bed={t.resultHeadingBed}
+    data-cycles-format={t.cyclesFormat}
+    data-sleep-format={t.sleepFormat}
+    data-previous-day={t.previousDay}
+    data-next-day={t.nextDay}
+    data-same-day={t.sameDay}
+    data-error-time={t.errorTime}
+    data-error-latency={t.errorLatency}
+  >
+    <div
+      id="sleep-mode"
+      class="ui-seg w-fit flex-wrap"
+      role="group"
+      aria-label={t.modeLabel}
+    >
+      <button
+        type="button"
+        data-mode="wake"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.modeWake}
+      </button>
+      <button
+        type="button"
+        data-mode="bed"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeBed}
+      </button>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-end gap-4">
+      <div id="sleep-wake-field">
+        <label for="sleep-wake-input" class="ui-label">
+          {t.wakeTimeLabel}
+        </label>
+        <input
+          id="sleep-wake-input"
+          type="time"
+          value="07:00"
+          class="ui-input h-11 w-36 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div id="sleep-bed-field" class="hidden">
+        <label for="sleep-bed-input" class="ui-label">
+          {t.bedTimeLabel}
+        </label>
+        <div class="flex flex-wrap items-center gap-2">
+          <input
+            id="sleep-bed-input"
+            type="time"
+            value="23:00"
+            class="ui-input h-11 w-36 px-3 dark:bg-gray-900"
+          />
+          <button id="sleep-now-button" type="button" class="ui-btn">
+            {t.nowButton}
+          </button>
+        </div>
+      </div>
+      <div>
+        <label for="sleep-latency-input" class="ui-label">
+          {t.latencyLabel}
+        </label>
+        <div class="flex items-center gap-1">
+          <input
+            id="sleep-latency-input"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            max="120"
+            step="1"
+            value="15"
+            aria-describedby="sleep-latency-hint"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+          <span class="text-sm text-gray-500 dark:text-gray-400">
+            {t.latencyUnit}
+          </span>
+        </div>
+      </div>
+    </div>
+    <p
+      id="sleep-latency-hint"
+      class="mt-1 text-xs text-gray-600 dark:text-gray-400"
+    >
+      {t.latencyHint}
+    </p>
+
+    <p
+      id="sleep-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="sleep-results" class="mt-4 hidden" aria-live="polite">
+      <h2 id="sleep-result-heading" class="text-base font-semibold"></h2>
+      <ul id="sleep-result-list" class="mt-2 grid gap-2 sm:grid-cols-3"></ul>
+      <p class="mt-3 text-xs text-gray-600 dark:text-gray-400">
+        {t.disclaimer}
+      </p>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    bedtimesForWake,
+    formatHours,
+    parseTime,
+    wakeTimesForBed,
+  } from '../../lib/tools/sleep-calculator';
+
+  const root = document.getElementById('sleep-root')!;
+  const d = root.dataset;
+
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#sleep-mode [data-mode]',
+  );
+  const wakeField = document.getElementById('sleep-wake-field')!;
+  const bedField = document.getElementById('sleep-bed-field')!;
+  const wakeInput = document.getElementById(
+    'sleep-wake-input',
+  ) as HTMLInputElement;
+  const bedInput = document.getElementById(
+    'sleep-bed-input',
+  ) as HTMLInputElement;
+  const latencyInput = document.getElementById(
+    'sleep-latency-input',
+  ) as HTMLInputElement;
+  const nowButton = document.getElementById('sleep-now-button')!;
+  const errorEl = document.getElementById('sleep-error')!;
+  const resultsEl = document.getElementById('sleep-results')!;
+  const headingEl = document.getElementById('sleep-result-heading')!;
+  const listEl = document.getElementById('sleep-result-list')!;
+
+  let mode: 'wake' | 'bed' = 'wake';
+
+  function setMode(next: 'wake' | 'bed') {
+    mode = next;
+    modeButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.mode === next)),
+    );
+    wakeField.classList.toggle('hidden', next !== 'wake');
+    bedField.classList.toggle('hidden', next !== 'bed');
+    render();
+  }
+
+  function dayLabel(offset: number): string {
+    if (offset < 0) return d.previousDay ?? '';
+    if (offset > 0) return d.nextDay ?? '';
+    return d.sameDay ?? '';
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    const latencyRaw = latencyInput.value.trim();
+    const latency = latencyRaw === '' ? NaN : Number(latencyRaw);
+    const time = parseTime(mode === 'wake' ? wakeInput.value : bedInput.value);
+    if (time === null) {
+      errorEl.textContent = d.errorTime ?? '';
+      return;
+    }
+    const candidates =
+      mode === 'wake'
+        ? bedtimesForWake(time, latency)
+        : wakeTimesForBed(time, latency);
+    if (candidates === null) {
+      errorEl.textContent = d.errorLatency ?? '';
+      return;
+    }
+
+    headingEl.textContent =
+      (mode === 'wake' ? d.headingWake : d.headingBed) ?? '';
+    listEl.replaceChildren(
+      ...candidates.map((c) => {
+        const li = document.createElement('li');
+        li.className =
+          'rounded-lg border border-gray-200 p-3 dark:border-gray-700';
+        const timeEl = document.createElement('div');
+        timeEl.className = 'text-2xl font-semibold tabular-nums';
+        timeEl.textContent = c.time;
+        const day = document.createElement('span');
+        day.className =
+          'ml-2 text-xs font-normal text-gray-600 dark:text-gray-400';
+        day.textContent = dayLabel(c.dayOffset);
+        timeEl.append(day);
+        const meta = document.createElement('div');
+        meta.className = 'mt-1 text-sm text-gray-700 dark:text-gray-300';
+        meta.textContent = `${(d.cyclesFormat ?? '').replace('{n}', String(c.cycles))} / ${(d.sleepFormat ?? '').replace('{h}', formatHours(c.sleepMinutes))}`;
+        li.append(timeEl, meta);
+        return li;
+      }),
+    );
+    resultsEl.classList.remove('hidden');
+  }
+
+  modeButtons.forEach((b) =>
+    b.addEventListener('click', () =>
+      setMode(b.dataset.mode === 'bed' ? 'bed' : 'wake'),
+    ),
+  );
+  [wakeInput, bedInput, latencyInput].forEach((el) => {
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  });
+  nowButton.addEventListener('click', () => {
+    const now = new Date();
+    bedInput.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    render();
+  });
+
+  render();
+</script>

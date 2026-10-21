@@ -1,0 +1,302 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { hitAndBlowContent } from '../../i18n/tools/hit-and-blow';
+import {
+  DEFAULT_DIGITS,
+  MAX_DIGITS,
+  MIN_DIGITS,
+} from '../../lib/tools/hit-and-blow';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = hitAndBlowContent[locale];
+const digitOptions = Array.from(
+  { length: MAX_DIGITS - MIN_DIGITS + 1 },
+  (_, i) => MIN_DIGITS + i,
+);
+---
+
+<ToolShell t={t}>
+  <section
+    id="hb-root"
+    data-started={t.started}
+    data-rule-no-repeat={t.ruleNoRepeat}
+    data-rule-repeat={t.ruleRepeat}
+    data-won={t.won}
+    data-gave-up={t.gaveUp}
+    data-progress={t.progress}
+    data-hint={t.guessHint}
+    data-error-empty={t.errorEmpty}
+    data-error-non-digit={t.errorNonDigit}
+    data-error-length={t.errorLength}
+    data-error-repeat={t.errorRepeat}
+    data-answer-hidden={t.answerHidden}
+  >
+    <div class="flex flex-wrap items-end gap-x-4 gap-y-2">
+      <div>
+        <span id="hb-digits-label" class="ui-label">
+          {t.digitsLabel}
+        </span>
+        <div class="ui-seg" role="group" aria-labelledby="hb-digits-label">
+          {digitOptions.map((n) => (
+            <button
+              type="button"
+              class="ui-seg-btn"
+              data-digits={n}
+              aria-pressed={n === DEFAULT_DIGITS ? 'true' : 'false'}
+            >
+              {t.digitsOption.replace('{n}', String(n))}
+            </button>
+          ))}
+        </div>
+      </div>
+      <label class="ui-check">
+        <input id="hb-repeat" type="checkbox" />
+        <span>{t.repeatLabel}</span>
+      </label>
+    </div>
+
+    <form id="hb-form" class="mt-3 max-w-xl" novalidate>
+      <label for="hb-guess" class="ui-label">
+        {t.guessLabel}
+      </label>
+      <div class="flex flex-wrap items-center gap-2">
+        <input
+          id="hb-guess"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          maxlength="5"
+          data-no-persist
+          aria-describedby="hb-hint hb-error"
+          class="ui-input h-11 w-40 bg-white px-3 text-lg tracking-widest tabular-nums dark:bg-gray-900"
+        />
+        <button id="hb-guess-button" type="submit" class="ui-btn-primary">
+          {t.guessButton}
+        </button>
+        <button id="hb-giveup-button" type="button" class="ui-btn">
+          {t.giveUp}
+        </button>
+        <button id="hb-new-button" type="button" class="ui-btn">
+          {t.newGame}
+        </button>
+      </div>
+      <p id="hb-hint" class="mt-2 text-xs text-gray-600 dark:text-gray-400"></p>
+      <p id="hb-error" class="ui-error mt-3" role="alert" hidden></p>
+    </form>
+
+    <p
+      id="hb-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+
+    <dl class="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm">
+      <div class="flex gap-2">
+        <dt class="text-gray-700 dark:text-gray-300">{t.answerLabel}</dt>
+        <dd
+          id="hb-answer"
+          class="font-semibold tracking-widest tabular-nums"
+        ></dd>
+      </div>
+    </dl>
+
+    <div class="mt-4 max-w-xl">
+      <h2 class="text-base font-semibold">{t.historyHeading}</h2>
+      <p
+        id="hb-progress"
+        class="mt-1 text-xs text-gray-600 dark:text-gray-400"
+      ></p>
+      <p id="hb-empty" class="mt-2 text-sm text-gray-700 dark:text-gray-300">
+        {t.historyEmpty}
+      </p>
+      <div class="mt-2 overflow-x-auto" id="hb-table-wrap" hidden>
+        <table class="w-full text-sm tabular-nums">
+          <caption class="sr-only">{t.historyHeading}</caption>
+          <thead>
+            <tr class="border-b border-gray-300 dark:border-gray-700">
+              <th scope="col" class="px-3 py-1.5 text-left font-medium">
+                {t.colNumber}
+              </th>
+              <th scope="col" class="px-3 py-1.5 text-left font-medium">
+                {t.colGuess}
+              </th>
+              <th scope="col" class="px-3 py-1.5 text-right font-medium">
+                {t.colHit}
+              </th>
+              <th scope="col" class="px-3 py-1.5 text-right font-medium">
+                {t.colBlow}
+              </th>
+            </tr>
+          </thead>
+          <tbody id="hb-history"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    DEFAULT_DIGITS,
+    countPatterns,
+    formatDigits,
+    giveUp,
+    newGame,
+    submitGuess,
+    type GameState,
+  } from '../../lib/tools/hit-and-blow';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('hb-root');
+  const msg = root.dataset;
+  const form = $<HTMLFormElement>('hb-form');
+  const guessInput = $<HTMLInputElement>('hb-guess');
+  const guessButton = $<HTMLButtonElement>('hb-guess-button');
+  const giveUpButton = $<HTMLButtonElement>('hb-giveup-button');
+  const repeatInput = $<HTMLInputElement>('hb-repeat');
+  const hintEl = $('hb-hint');
+  const errorEl = $('hb-error');
+  const statusEl = $('hb-status');
+  const answerEl = $('hb-answer');
+  const progressEl = $('hb-progress');
+  const emptyEl = $('hb-empty');
+  const tableWrap = $('hb-table-wrap');
+  const historyEl = $('hb-history');
+  const digitButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-digits]'),
+  );
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  let digits = DEFAULT_DIGITS;
+  let state: GameState = newGame({ digits, allowRepeat: false });
+
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function showError(text: string) {
+    errorEl.textContent = text;
+    errorEl.hidden = false;
+  }
+
+  function render() {
+    const playing = state.phase === 'playing';
+    guessInput.disabled = !playing;
+    guessButton.disabled = !playing;
+    giveUpButton.disabled = !playing;
+    guessInput.maxLength = state.config.digits;
+    hintEl.textContent = fill(msg.hint, {
+      digits: String(state.config.digits),
+    });
+    answerEl.textContent = playing
+      ? (msg.answerHidden ?? '?').repeat(state.config.digits)
+      : formatDigits(state.secret);
+
+    const rows = state.guesses.map((g, i) => {
+      const tr = document.createElement('tr');
+      tr.className = 'border-b border-gray-200 dark:border-gray-800';
+      const cells: [string, string][] = [
+        [String(i + 1), 'px-3 py-1.5 text-left'],
+        [
+          formatDigits(g.digits),
+          'px-3 py-1.5 text-left font-semibold tracking-widest',
+        ],
+        [String(g.hit), 'px-3 py-1.5 text-right'],
+        [String(g.blow), 'px-3 py-1.5 text-right'],
+      ];
+      for (const [text, cls] of cells) {
+        const td = document.createElement('td');
+        td.className = cls;
+        td.textContent = text;
+        tr.append(td);
+      }
+      return tr;
+    });
+    historyEl.replaceChildren(...rows);
+    tableWrap.hidden = rows.length === 0;
+    emptyEl.hidden = rows.length > 0;
+    progressEl.textContent = fill(msg.progress, {
+      n: String(state.guesses.length),
+      total: countPatterns(state.config).toLocaleString(
+        document.documentElement.lang || undefined,
+      ),
+    });
+  }
+
+  function startGame() {
+    state = newGame({ digits, allowRepeat: repeatInput.checked });
+    guessInput.value = '';
+    clearError();
+    render();
+    statusEl.textContent = fill(msg.started, {
+      digits: String(state.config.digits),
+      rule: repeatInput.checked
+        ? (msg.ruleRepeat ?? '')
+        : (msg.ruleNoRepeat ?? ''),
+    });
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (state.phase !== 'playing') return;
+    const result = submitGuess(state, guessInput.value);
+    if (!result.ok) {
+      const messages: Record<string, string> = {
+        empty: msg.errorEmpty ?? '',
+        nonDigit: msg.errorNonDigit ?? '',
+        length: fill(msg.errorLength, { digits: String(state.config.digits) }),
+        repeat: msg.errorRepeat ?? '',
+      };
+      showError(messages[result.error] ?? '');
+      return;
+    }
+    clearError();
+    state = result.state;
+    guessInput.value = '';
+    render();
+    if (state.phase === 'won') {
+      statusEl.textContent = fill(msg.won, { n: String(state.guesses.length) });
+    } else {
+      statusEl.textContent = '';
+      guessInput.focus();
+    }
+  });
+
+  giveUpButton.addEventListener('click', () => {
+    state = giveUp(state);
+    clearError();
+    render();
+    statusEl.textContent = fill(msg.gaveUp, {
+      answer: formatDigits(state.secret),
+    });
+  });
+
+  $('hb-new-button').addEventListener('click', () => {
+    startGame();
+    guessInput.focus();
+  });
+  repeatInput.addEventListener('change', startGame);
+  digitButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      digits = Number(b.dataset.digits);
+      digitButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      startGame();
+    }),
+  );
+
+  render();
+</script>

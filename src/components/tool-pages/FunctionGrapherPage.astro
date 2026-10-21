@@ -1,0 +1,595 @@
+---
+import ToolShell from '../ToolShell.astro';
+import ExpressionReference from '../ExpressionReference.astro';
+import { functionGrapherContent } from '../../i18n/tools/function-grapher';
+import { DEFAULT_VIEW, MAX_FUNCTIONS } from '../../lib/tools/function-grapher';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = functionGrapherContent[locale];
+
+// lib の CURVE_COLORS（#2563eb 他）と同じ色の Tailwind クラス。
+// インラインstyleはCSPで拒否され得るため、色見本は静的クラスで指定する
+const swatchClasses = [
+  'bg-blue-600',
+  'bg-red-600',
+  'bg-green-600',
+  'bg-purple-600',
+  'bg-amber-600',
+  'bg-cyan-600',
+];
+const defaults = ['sin(x)', 'x^2/10', '', '', '', ''];
+const rows = Array.from({ length: MAX_FUNCTIONS }, (_, i) => ({
+  index: i,
+  swatch: swatchClasses[i],
+  value: defaults[i],
+}));
+const viewFields = [
+  { id: 'xmin', label: t.xMinLabel, value: DEFAULT_VIEW.xMin },
+  { id: 'xmax', label: t.xMaxLabel, value: DEFAULT_VIEW.xMax },
+  { id: 'ymin', label: t.yMinLabel, value: DEFAULT_VIEW.yMin },
+  { id: 'ymax', label: t.yMaxLabel, value: DEFAULT_VIEW.yMax },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    id="fg"
+    data-summary={t.summary}
+    data-no-curves={t.noCurves}
+    data-downloaded={t.downloaded}
+    data-download-failed={t.downloadFailed}
+    data-coords={t.coords}
+    data-error-at={t.errorAt}
+    data-error-syntax={t.errorSyntax}
+    data-error-paren={t.errorParen}
+    data-error-unknown-name={t.errorUnknownName}
+    data-error-arity={t.errorArity}
+    data-error-too-long={t.errorTooLong}
+    data-error-not-number={t.errorNotNumber}
+    data-error-order={t.errorOrder}
+    data-error-span={t.errorSpan}
+    class="space-y-4"
+  >
+    <fieldset class="space-y-2">
+      <legend class="ui-label">{t.functionsLabel}</legend>
+      {rows.map((r) => (
+        <div>
+          <div class="flex items-center gap-2">
+            <span
+              aria-hidden="true"
+              class={`h-3 w-3 shrink-0 rounded-full ${r.swatch}`}
+            />
+            <span class="shrink-0 text-sm text-gray-700 dark:text-gray-300">
+              y =
+            </span>
+            <input
+              id={`fg-expr-${r.index}`}
+              type="text"
+              spellcheck="false"
+              autocomplete="off"
+              autocapitalize="off"
+              aria-label={`${t.curveLabel} ${r.index + 1}`}
+              placeholder={t.curvePlaceholder}
+              value={r.value}
+              class="ui-input h-11 min-w-0 flex-1 px-3 font-mono dark:bg-gray-900"
+            />
+          </div>
+          <p
+            id={`fg-error-${r.index}`}
+            class="ui-error mt-1 empty:hidden"
+            aria-live="polite"
+          />
+        </div>
+      ))}
+    </fieldset>
+
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <span id="fg-angle-label" class="ui-label">
+          {t.angleLabel}
+        </span>
+        <div
+          id="fg-angle"
+          class="ui-seg w-fit"
+          role="group"
+          aria-labelledby="fg-angle-label"
+        >
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-angle="rad"
+            aria-pressed="true"
+          >
+            {t.angleRad}
+          </button>
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-angle="deg"
+            aria-pressed="false"
+          >
+            {t.angleDeg}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <fieldset>
+      <legend class="ui-label">{t.viewLabel}</legend>
+      <div class="flex flex-wrap items-end gap-3">
+        {viewFields.map((f) => (
+          <div>
+            <label for={`fg-${f.id}`} class="ui-label">
+              {f.label}
+            </label>
+            <input
+              id={`fg-${f.id}`}
+              type="number"
+              inputmode="decimal"
+              step="any"
+              value={f.value}
+              class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+            />
+          </div>
+        ))}
+      </div>
+      <p
+        id="fg-view-error"
+        class="ui-error mt-2 empty:hidden"
+        aria-live="polite"
+      ></p>
+    </fieldset>
+
+    <div class="flex flex-wrap gap-3">
+      <button id="fg-zoom-in" type="button" class="ui-btn">
+        {t.zoomInButton}
+      </button>
+      <button id="fg-zoom-out" type="button" class="ui-btn">
+        {t.zoomOutButton}
+      </button>
+      <button id="fg-reset" type="button" class="ui-btn">
+        {t.resetButton}
+      </button>
+      <button
+        id="fg-download-button"
+        type="button"
+        class="ui-btn ui-btn-primary"
+      >
+        {t.downloadButton}
+      </button>
+    </div>
+
+    <div>
+      <canvas
+        id="fg-canvas"
+        role="img"
+        tabindex="0"
+        aria-label={`${t.canvasLabel} - ${t.canvasHint}`}
+        class="block aspect-[4/3] w-full cursor-grab touch-none rounded-lg border border-gray-400 bg-white dark:border-gray-700"
+      ></canvas>
+      <p
+        id="fg-status"
+        class="mt-2 min-h-5 text-sm text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></p>
+      <p
+        id="fg-coords"
+        class="min-h-5 text-sm text-gray-600 dark:text-gray-400"
+      ></p>
+    </div>
+  </section>
+  <ExpressionReference locale={locale} variable="x" />
+</ToolShell>
+
+<script>
+  import {
+    CURVE_COLORS,
+    DEFAULT_VIEW,
+    MAX_FUNCTIONS,
+    compileCurve,
+    formatTick,
+    fromPixel,
+    makeTicks,
+    panView,
+    pngFilename,
+    sampleCurve,
+    toPixel,
+    validateView,
+    zoomView,
+    type View,
+  } from '../../lib/tools/function-grapher';
+  import type { AngleMode, ParseErrorCode } from '../../lib/expression-parser';
+  import { fill } from '../../lib/format-template';
+  import { downloadBlob } from '../../lib/download';
+  import { attachExpressionAutocomplete } from '../../lib/expression-autocomplete-ui';
+
+  const root = document.getElementById('fg')!;
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const canvas = $<HTMLCanvasElement>('fg-canvas');
+  const statusEl = $('fg-status');
+  const coordsEl = $('fg-coords');
+  const viewError = $('fg-view-error');
+  const exprInputs = Array.from({ length: MAX_FUNCTIONS }, (_, i) =>
+    $<HTMLInputElement>(`fg-expr-${i}`),
+  );
+  exprInputs.forEach((el) => attachExpressionAutocomplete(el, ['x']));
+  const errorEls = Array.from({ length: MAX_FUNCTIONS }, (_, i) =>
+    $(`fg-error-${i}`),
+  );
+  const viewInputs = {
+    xMin: $<HTMLInputElement>('fg-xmin'),
+    xMax: $<HTMLInputElement>('fg-xmax'),
+    yMin: $<HTMLInputElement>('fg-ymin'),
+    yMax: $<HTMLInputElement>('fg-ymax'),
+  };
+  const angleButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#fg-angle [data-angle]'),
+  );
+  const downloadButton = $<HTMLButtonElement>('fg-download-button');
+
+  const errorKeys: Record<ParseErrorCode, string> = {
+    empty: 'errorSyntax',
+    syntax: 'errorSyntax',
+    paren: 'errorParen',
+    unknownName: 'errorUnknownName',
+    arity: 'errorArity',
+    tooLong: 'errorTooLong',
+  };
+  const viewErrorKeys = {
+    notNumber: 'errorNotNumber',
+    order: 'errorOrder',
+    span: 'errorSpan',
+  } as const;
+
+  interface Curve {
+    color: string;
+    source: string;
+    evaluate: (x: number) => number;
+  }
+
+  let view: View = { ...DEFAULT_VIEW };
+  let angle: AngleMode = 'rad';
+  let curves: Curve[] = [];
+
+  const PAD_LABEL = 4;
+
+  function compileAll() {
+    curves = [];
+    exprInputs.forEach((input, i) => {
+      const r = compileCurve(input.value, angle);
+      const el = errorEls[i];
+      el.textContent = '';
+      if (r.status === 'ok') {
+        curves.push({
+          color: CURVE_COLORS[i],
+          source: input.value.trim(),
+          evaluate: r.evaluate,
+        });
+      } else if (r.status === 'error') {
+        const base = root.dataset[errorKeys[r.error]] ?? '';
+        const at =
+          r.error === 'tooLong'
+            ? ''
+            : fill(root.dataset.errorAt ?? '', {
+                position: String(r.position + 1),
+              });
+        el.textContent = base + at;
+      }
+    });
+    downloadButton.disabled = curves.length === 0;
+    statusEl.textContent =
+      curves.length === 0
+        ? (root.dataset.noCurves ?? '')
+        : fill(root.dataset.summary ?? '', { count: String(curves.length) });
+  }
+
+  function num(v: number): string {
+    return String(Number(v.toPrecision(6)));
+  }
+
+  function writeViewInputs() {
+    viewInputs.xMin.value = num(view.xMin);
+    viewInputs.xMax.value = num(view.xMax);
+    viewInputs.yMin.value = num(view.yMin);
+    viewInputs.yMax.value = num(view.yMax);
+    viewError.textContent = '';
+  }
+
+  function setView(next: View) {
+    view = next;
+    writeViewInputs();
+    draw();
+  }
+
+  function readViewInputs() {
+    const next: View = {
+      xMin: viewInputs.xMin.valueAsNumber,
+      xMax: viewInputs.xMax.valueAsNumber,
+      yMin: viewInputs.yMin.valueAsNumber,
+      yMax: viewInputs.yMax.valueAsNumber,
+    };
+    const err = validateView(next);
+    if (err) {
+      viewError.textContent = root.dataset[viewErrorKeys[err]] ?? '';
+      return;
+    }
+    viewError.textContent = '';
+    view = next;
+    draw();
+  }
+
+  function sizeCanvas(): { w: number; h: number; dpr: number } {
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    const w = Math.max(1, Math.round(canvas.clientWidth));
+    const h = Math.max(1, Math.round(canvas.clientHeight));
+    const bw = Math.round(w * dpr);
+    const bh = Math.round(h * dpr);
+    if (canvas.width !== bw || canvas.height !== bh) {
+      canvas.width = bw;
+      canvas.height = bh;
+    }
+    return { w, h, dpr };
+  }
+
+  function draw() {
+    const { w, h, dpr } = sizeCanvas();
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+
+    const target = (n: number) => Math.max(2, Math.round(n));
+    const xt = makeTicks(view.xMin, view.xMax, target(w / 70));
+    const yt = makeTicks(view.yMin, view.yMax, target(h / 55));
+
+    // 格子
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.beginPath();
+    for (const x of xt.values) {
+      const { px } = toPixel(view, w, h, x, 0);
+      const X = Math.round(px) + 0.5;
+      ctx.moveTo(X, 0);
+      ctx.lineTo(X, h);
+    }
+    for (const y of yt.values) {
+      const { py } = toPixel(view, w, h, 0, y);
+      const Y = Math.round(py) + 0.5;
+      ctx.moveTo(0, Y);
+      ctx.lineTo(w, Y);
+    }
+    ctx.stroke();
+
+    // 軸
+    const origin = toPixel(view, w, h, 0, 0);
+    const axisX = Math.min(Math.max(origin.px, 0), w);
+    const axisY = Math.min(Math.max(origin.py, 0), h);
+    ctx.strokeStyle = '#374151';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    if (view.yMin <= 0 && view.yMax >= 0) {
+      ctx.moveTo(0, origin.py);
+      ctx.lineTo(w, origin.py);
+    }
+    if (view.xMin <= 0 && view.xMax >= 0) {
+      ctx.moveTo(origin.px, 0);
+      ctx.lineTo(origin.px, h);
+    }
+    ctx.stroke();
+
+    // 目盛りの数字（軸が範囲外のときは端に寄せる）
+    ctx.font = '11px system-ui, sans-serif';
+    ctx.fillStyle = '#4b5563';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const labelY = Math.min(axisY + PAD_LABEL, h - 14);
+    for (const x of xt.values) {
+      if (x === 0 && origin.px >= 0 && origin.px <= w) continue;
+      const { px } = toPixel(view, w, h, x, 0);
+      ctx.fillText(formatTick(x, xt.step), px, labelY);
+    }
+    ctx.textBaseline = 'middle';
+    const onLeft = axisX > w - 40;
+    ctx.textAlign = onLeft ? 'right' : 'left';
+    const labelX = onLeft ? axisX - PAD_LABEL : axisX + PAD_LABEL;
+    for (const y of yt.values) {
+      if (y === 0 && origin.py >= 0 && origin.py <= h) continue;
+      const { py } = toPixel(view, w, h, 0, y);
+      ctx.fillText(formatTick(y, yt.step), labelX, py);
+    }
+    if (origin.px >= 0 && origin.px <= w && origin.py >= 0 && origin.py <= h) {
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'top';
+      ctx.fillText('0', origin.px - PAD_LABEL, origin.py + PAD_LABEL);
+    }
+
+    // 曲線
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, w, h);
+    ctx.clip();
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    const LIMIT = 1e5;
+    for (const c of curves) {
+      ctx.strokeStyle = c.color;
+      ctx.beginPath();
+      for (const seg of sampleCurve(c.evaluate, view, w * 1.5)) {
+        seg.forEach((p, i) => {
+          const { px, py } = toPixel(view, w, h, p.x, p.y);
+          const Y = Math.min(Math.max(py, -LIMIT), LIMIT);
+          if (i === 0) ctx.moveTo(px, Y);
+          else ctx.lineTo(px, Y);
+        });
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // 凡例
+    if (curves.length > 0) {
+      ctx.font = '12px ui-monospace, monospace';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      const lineH = 18;
+      const maxChars = Math.max(8, Math.floor((w - 60) / 7.5));
+      const boxH = curves.length * lineH + 8;
+      const boxW = Math.min(
+        w - 8,
+        Math.max(
+          ...curves.map(
+            (c) => 40 + Math.min(c.source.length + 4, maxChars + 4) * 7.2,
+          ),
+        ),
+      );
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fillRect(4, 4, boxW, boxH);
+      curves.forEach((c, i) => {
+        const cy = 4 + 4 + lineH * i + lineH / 2;
+        ctx.strokeStyle = c.color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(10, cy);
+        ctx.lineTo(28, cy);
+        ctx.stroke();
+        ctx.fillStyle = '#111827';
+        const text =
+          c.source.length > maxChars
+            ? `${c.source.slice(0, maxChars - 1)}…`
+            : c.source;
+        ctx.fillText(`y = ${text}`, 34, cy);
+      });
+    }
+  }
+
+  function recompute() {
+    compileAll();
+    draw();
+  }
+
+  // 入力
+  exprInputs.forEach((el) => el.addEventListener('input', recompute));
+  Object.values(viewInputs).forEach((el) =>
+    el.addEventListener('input', readViewInputs),
+  );
+  angleButtons.forEach((btn) =>
+    btn.addEventListener('click', () => {
+      angle = btn.dataset.angle === 'deg' ? 'deg' : 'rad';
+      angleButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === btn)),
+      );
+      recompute();
+    }),
+  );
+
+  // ズーム・リセット
+  $('fg-zoom-in').addEventListener('click', () => setView(zoomView(view, 0.8)));
+  $('fg-zoom-out').addEventListener('click', () =>
+    setView(zoomView(view, 1.25)),
+  );
+  $('fg-reset').addEventListener('click', () => setView({ ...DEFAULT_VIEW }));
+
+  // ホイール・ドラッグ・キーボード
+  function canvasPoint(e: { clientX: number; clientY: number }) {
+    const rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top, rect };
+  }
+
+  canvas.addEventListener(
+    'wheel',
+    (e) => {
+      e.preventDefault();
+      const { x, y, rect } = canvasPoint(e);
+      const factor = Math.min(
+        2,
+        Math.max(0.5, Math.exp(e.deltaY * (e.deltaMode === 1 ? 0.05 : 0.0015))),
+      );
+      setView(zoomView(view, factor, x / rect.width, y / rect.height));
+    },
+    { passive: false },
+  );
+
+  let drag: { x: number; y: number } | null = null;
+  canvas.addEventListener('pointerdown', (e) => {
+    drag = { x: e.clientX, y: e.clientY };
+    canvas.setPointerCapture(e.pointerId);
+    canvas.style.cursor = 'grabbing';
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    const { x, y, rect } = canvasPoint(e);
+    if (drag) {
+      const dx = e.clientX - drag.x;
+      const dy = e.clientY - drag.y;
+      drag = { x: e.clientX, y: e.clientY };
+      setView(panView(view, dx, dy, rect.width, rect.height));
+    }
+    const m = fromPixel(view, rect.width, rect.height, x, y);
+    coordsEl.textContent = fill(root.dataset.coords ?? '', {
+      x: num(Number(m.x.toPrecision(4))),
+      y: num(Number(m.y.toPrecision(4))),
+    });
+  });
+  const endDrag = () => {
+    drag = null;
+    canvas.style.cursor = '';
+  };
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+  canvas.addEventListener('pointerleave', () => {
+    coordsEl.textContent = '';
+  });
+  canvas.addEventListener('keydown', (e) => {
+    const stepX = (view.xMax - view.xMin) * 0.1;
+    const stepY = (view.yMax - view.yMin) * 0.1;
+    const moves: Record<string, [number, number]> = {
+      ArrowLeft: [-stepX, 0],
+      ArrowRight: [stepX, 0],
+      ArrowUp: [0, stepY],
+      ArrowDown: [0, -stepY],
+    };
+    if (e.key in moves) {
+      e.preventDefault();
+      const [mx, my] = moves[e.key];
+      setView({
+        xMin: view.xMin + mx,
+        xMax: view.xMax + mx,
+        yMin: view.yMin + my,
+        yMax: view.yMax + my,
+      });
+    } else if (e.key === '+' || e.key === '=') {
+      e.preventDefault();
+      setView(zoomView(view, 0.8));
+    } else if (e.key === '-') {
+      e.preventDefault();
+      setView(zoomView(view, 1.25));
+    }
+  });
+
+  new ResizeObserver(() => draw()).observe(canvas);
+
+  // PNG保存
+  downloadButton.addEventListener('click', () => {
+    if (curves.length === 0) return;
+    draw();
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        statusEl.textContent = root.dataset.downloadFailed ?? '';
+        return;
+      }
+      downloadBlob(blob, pngFilename(curves.length));
+      statusEl.textContent = root.dataset.downloaded ?? '';
+    }, 'image/png');
+  });
+
+  // sessionStorage 復元で値が書き換わった後も、現在の入力に追従させる
+  recompute();
+  readViewInputs();
+</script>

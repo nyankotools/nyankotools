@@ -1,0 +1,479 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { mentalMathTrainerContent } from '../../i18n/tools/mental-math-trainer';
+import {
+  COUNT_CHOICES,
+  DEFAULT_SETTINGS,
+  DIGITS_MAX,
+  DIGITS_MIN,
+  LIMIT_CHOICES,
+} from '../../lib/tools/mental-math-trainer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = mentalMathTrainerContent[locale];
+
+const fillN = (template: string, n: number) =>
+  template.replace('{n}', String(n));
+const ops = [
+  { value: 'add', label: t.opAdd },
+  { value: 'sub', label: t.opSub },
+  { value: 'mul', label: t.opMul },
+  { value: 'div', label: t.opDiv },
+];
+const digits = Array.from(
+  { length: DIGITS_MAX - DIGITS_MIN + 1 },
+  (_, i) => DIGITS_MIN + i,
+);
+---
+
+<ToolShell t={t}>
+  <section
+    id="mm-root"
+    data-progress={t.progress}
+    data-feedback-correct={t.feedbackCorrect}
+    data-feedback-wrong={t.feedbackWrong}
+    data-feedback-invalid={t.feedbackInvalid}
+    data-no-limit={t.noLimitShort}
+    data-no-best={t.noBest}
+    data-best-value={t.bestValue}
+    data-new-best={t.newBest}
+    data-score-value={t.scoreValue}
+    data-avg-value={t.avgValue}
+    data-time-up={t.timeUp}
+    data-finished={t.finished}
+    data-quit={t.quit}
+    data-started={t.started}
+    data-error-ops={t.errorOps}
+    data-rank-comments={JSON.stringify(t.rankComments)}
+    class="space-y-4"
+  >
+    <div id="mm-setup" class="space-y-4">
+      <fieldset class="flex flex-wrap items-center gap-x-6 gap-y-1">
+        <legend class="ui-label">{t.opsLabel}</legend>
+        {ops.map((o) => (
+          <label class="ui-check">
+            <input
+              id={`mm-op-${o.value}`}
+              type="checkbox"
+              checked={o.value === 'add'}
+            />
+            {o.label}
+          </label>
+        ))}
+      </fieldset>
+
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="mm-digits-a" class="ui-label">
+            {t.digitsALabel}
+          </label>
+          <select id="mm-digits-a" class="ui-input h-11 px-3 dark:bg-gray-900">
+            {digits.map((n) => (
+              <option value={n} selected={n === DEFAULT_SETTINGS.digitsA}>
+                {fillN(t.digitsOption, n)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="mm-digits-b" class="ui-label">
+            {t.digitsBLabel}
+          </label>
+          <select id="mm-digits-b" class="ui-input h-11 px-3 dark:bg-gray-900">
+            {digits.map((n) => (
+              <option value={n} selected={n === DEFAULT_SETTINGS.digitsB}>
+                {fillN(t.digitsOption, n)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="mm-count" class="ui-label">
+            {t.countLabel}
+          </label>
+          <select id="mm-count" class="ui-input h-11 px-3 dark:bg-gray-900">
+            {COUNT_CHOICES.map((n) => (
+              <option value={n} selected={n === DEFAULT_SETTINGS.count}>
+                {fillN(t.countOption, n)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="mm-limit" class="ui-label">
+            {t.limitLabel}
+          </label>
+          <select id="mm-limit" class="ui-input h-11 px-3 dark:bg-gray-900">
+            {LIMIT_CHOICES.map((n) => (
+              <option value={n} selected={n === DEFAULT_SETTINGS.limitSec}>
+                {n === 0 ? t.limitNone : fillN(t.limitOption, n)}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <p class="text-sm text-gray-700 dark:text-gray-300">
+        {t.bestLabel}: <span id="mm-setup-best" class="font-semibold"></span>
+      </p>
+
+      <p id="mm-error" role="alert" class="ui-error" hidden></p>
+
+      <button id="mm-start-button" type="button" class="ui-btn-primary">
+        {t.startButton}
+      </button>
+    </div>
+
+    <div id="mm-play" class="space-y-4" hidden>
+      <dl class="flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
+        <div class="flex gap-2">
+          <dt>{t.problemLabel}</dt>
+          <dd id="mm-progress" class="font-semibold tabular-nums"></dd>
+        </div>
+        <div class="flex gap-2">
+          <dt>{t.correctLabel}</dt>
+          <dd id="mm-correct" class="font-semibold tabular-nums">
+            0
+          </dd>
+        </div>
+        <div class="flex gap-2">
+          <dt>{t.timeLabel}</dt>
+          <dd id="mm-time" class="font-semibold tabular-nums"></dd>
+        </div>
+      </dl>
+
+      <p
+        id="mm-problem"
+        class="text-4xl font-bold tabular-nums sm:text-5xl"
+        aria-live="polite"
+      ></p>
+
+      <form id="mm-form" class="flex flex-wrap items-end gap-3" novalidate>
+        <div>
+          <label for="mm-answer" class="ui-label">
+            {t.answerLabel}
+          </label>
+          <input
+            id="mm-answer"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            data-no-persist
+            class="ui-input h-12 w-40 px-3 text-xl tabular-nums dark:bg-gray-900"
+          />
+        </div>
+        <button id="mm-answer-button" type="submit" class="ui-btn-primary">
+          {t.answerButton}
+        </button>
+        <button id="mm-quit-button" type="button" class="ui-btn">
+          {t.quitButton}
+        </button>
+      </form>
+    </div>
+
+    <div id="mm-result" class="space-y-4" hidden>
+      <h2 class="text-lg font-semibold">{t.resultHeading}</h2>
+      <p class="text-sm text-gray-700 dark:text-gray-300">
+        <span class="ui-label inline">{t.rankLabel}</span>
+        <span id="mm-rank" class="ml-2 text-5xl font-bold"></span>
+      </p>
+      <p id="mm-rank-comment" class="text-sm"></p>
+      <dl class="grid max-w-md grid-cols-[auto_1fr] gap-x-6 gap-y-1 text-sm">
+        <dt>{t.scoreLabel}</dt>
+        <dd id="mm-r-score" class="font-semibold tabular-nums"></dd>
+        <dt>{t.accuracyLabel}</dt>
+        <dd id="mm-r-accuracy" class="font-semibold tabular-nums"></dd>
+        <dt>{t.timeResultLabel}</dt>
+        <dd id="mm-r-time" class="font-semibold tabular-nums"></dd>
+        <dt>{t.avgLabel}</dt>
+        <dd id="mm-r-avg" class="font-semibold tabular-nums"></dd>
+        <dt>{t.bestLabel}</dt>
+        <dd id="mm-r-best" class="font-semibold tabular-nums"></dd>
+      </dl>
+      <div class="flex flex-wrap gap-3">
+        <button id="mm-retry-button" type="button" class="ui-btn-primary">
+          {t.retryButton}
+        </button>
+        <button id="mm-back-button" type="button" class="ui-btn">
+          {t.backButton}
+        </button>
+      </div>
+    </div>
+
+    <p
+      id="mm-status"
+      role="status"
+      class="min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    OP_IDS,
+    createSession,
+    formatDuration,
+    isCorrect,
+    parseAnswer,
+    parseBests,
+    problemLabel,
+    recordBest,
+    serializeBests,
+    settingsKey,
+    summarize,
+    validateSettings,
+    type BestMap,
+    type OpId,
+    type Problem,
+    type TrainerSettings,
+  } from '../../lib/tools/mental-math-trainer';
+
+  const STORAGE_KEY = 'mental-math-trainer-best';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('mm-root');
+  const msg = root.dataset;
+  const setupEl = $('mm-setup');
+  const playEl = $('mm-play');
+  const resultEl = $('mm-result');
+  const errorEl = $('mm-error');
+  const statusEl = $('mm-status');
+  const answerInput = $<HTMLInputElement>('mm-answer');
+  const rankColors: Record<string, string> = {
+    S: 'text-amber-700 dark:text-amber-300',
+    A: 'text-red-700 dark:text-red-300',
+    B: 'text-green-700 dark:text-green-300',
+    C: 'text-blue-700 dark:text-blue-300',
+    D: 'text-gray-700 dark:text-gray-300',
+  };
+  const rankComments = JSON.parse(msg.rankComments ?? '{}') as Record<
+    string,
+    string
+  >;
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  function loadBests(): BestMap {
+    try {
+      return parseBests(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      return {};
+    }
+  }
+  function saveBests(map: BestMap) {
+    try {
+      localStorage.setItem(STORAGE_KEY, serializeBests(map));
+    } catch {
+      // 保存できない環境では、このページを開いている間だけの記録にする
+    }
+  }
+  let bests = loadBests();
+
+  function readSettings(): TrainerSettings {
+    const ops = OP_IDS.filter(
+      (o) => $<HTMLInputElement>(`mm-op-${o}`).checked,
+    ) as OpId[];
+    const num = (id: string) => Number($<HTMLSelectElement>(id).value);
+    return {
+      ops,
+      digitsA: num('mm-digits-a'),
+      digitsB: num('mm-digits-b'),
+      count: num('mm-count'),
+      limitSec: num('mm-limit'),
+    };
+  }
+
+  function bestText(key: string) {
+    const b = bests[key];
+    return b
+      ? fill(msg.bestValue, {
+          correct: String(b.correct),
+          total: String(b.total),
+          time: formatDuration(b.ms),
+        })
+      : (msg.noBest ?? '');
+  }
+
+  function renderSetupBest() {
+    $('mm-setup-best').textContent = bestText(settingsKey(readSettings()));
+  }
+  setupEl.addEventListener('change', renderSetupBest);
+  setupEl.addEventListener('input', renderSetupBest);
+
+  function show(which: 'setup' | 'play' | 'result') {
+    setupEl.hidden = which !== 'setup';
+    playEl.hidden = which !== 'play';
+    resultEl.hidden = which !== 'result';
+  }
+
+  // ---- 進行 ----
+
+  let settings: TrainerSettings = readSettings();
+  let problems: Problem[] = [];
+  let index = 0;
+  let correct = 0;
+  let startedAt = 0;
+  let timer = 0;
+  let running = false;
+
+  function randomSeed() {
+    return crypto.getRandomValues(new Uint32Array(1))[0];
+  }
+
+  function renderProblem() {
+    $('mm-progress').textContent = fill(msg.progress, {
+      n: String(index + 1),
+      total: String(problems.length),
+    });
+    $('mm-correct').textContent = String(correct);
+    $('mm-problem').textContent = `${problemLabel(problems[index])} =`;
+    answerInput.value = '';
+    answerInput.focus();
+  }
+
+  function renderTime() {
+    const elapsed = performance.now() - startedAt;
+    $('mm-time').textContent =
+      settings.limitSec > 0
+        ? formatDuration(Math.max(0, settings.limitSec * 1000 - elapsed))
+        : (msg.noLimit ?? '');
+  }
+
+  function tick() {
+    if (!running) return;
+    renderTime();
+    if (
+      settings.limitSec > 0 &&
+      performance.now() - startedAt >= settings.limitSec * 1000
+    ) {
+      finish('timeUp');
+    }
+  }
+
+  function start() {
+    const s = readSettings();
+    if (validateSettings(s) !== null) {
+      errorEl.textContent = msg.errorOps ?? '';
+      errorEl.hidden = false;
+      return;
+    }
+    errorEl.textContent = '';
+    errorEl.hidden = true;
+    settings = s;
+    problems = createSession(s, randomSeed());
+    index = 0;
+    correct = 0;
+    startedAt = performance.now();
+    running = true;
+    statusEl.textContent = msg.started ?? '';
+    show('play');
+    renderProblem();
+    renderTime();
+    window.clearInterval(timer);
+    timer = window.setInterval(tick, 200);
+  }
+
+  function finish(reason: 'done' | 'timeUp') {
+    if (!running) return;
+    running = false;
+    window.clearInterval(timer);
+    const elapsedMs =
+      reason === 'timeUp'
+        ? settings.limitSec * 1000
+        : Math.round(performance.now() - startedAt);
+    const result = summarize({
+      total: problems.length,
+      answered: index,
+      correct,
+      elapsedMs,
+    });
+    const key = settingsKey(settings);
+    const rec = recordBest(bests, key, {
+      correct,
+      total: problems.length,
+      ms: elapsedMs,
+    });
+    if (rec.updated) {
+      bests = rec.map;
+      saveBests(bests);
+    }
+    const rankEl = $('mm-rank');
+    rankEl.textContent = result.rank;
+    rankEl.className = `ml-2 text-5xl font-bold ${rankColors[result.rank] ?? ''}`;
+    $('mm-rank-comment').textContent = rankComments[result.rank] ?? '';
+    $('mm-r-score').textContent = fill(msg.scoreValue, {
+      correct: String(correct),
+      total: String(problems.length),
+    });
+    $('mm-r-accuracy').textContent = `${result.accuracy}%`;
+    $('mm-r-time').textContent = formatDuration(elapsedMs);
+    $('mm-r-avg').textContent = result.answered
+      ? fill(msg.avgValue, { n: String(result.avgSec) })
+      : '-';
+    $('mm-r-best').textContent = bestText(key);
+    const head = reason === 'timeUp' ? msg.timeUp : msg.finished;
+    statusEl.textContent = `${head ?? ''}${rec.updated ? ` ${msg.newBest ?? ''}` : ''}`;
+    show('result');
+    $('mm-retry-button').focus();
+  }
+
+  function quit() {
+    if (!running) return;
+    running = false;
+    window.clearInterval(timer);
+    statusEl.textContent = msg.quit ?? '';
+    show('setup');
+    renderSetupBest();
+  }
+
+  $('mm-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!running) return;
+    const raw = answerInput.value;
+    if (parseAnswer(raw) === null) {
+      statusEl.textContent = msg.feedbackInvalid ?? '';
+      answerInput.focus();
+      return;
+    }
+    const p = problems[index];
+    const ok = isCorrect(p, raw);
+    if (ok) correct++;
+    index++;
+    const feedback = ok
+      ? (msg.feedbackCorrect ?? '')
+      : fill(msg.feedbackWrong, { answer: String(p.answer) });
+    statusEl.textContent = feedback;
+    if (index >= problems.length) {
+      finish('done');
+      statusEl.textContent = `${feedback} ${statusEl.textContent}`;
+    } else {
+      renderProblem();
+    }
+  });
+
+  $('mm-start-button').addEventListener('click', start);
+  $('mm-retry-button').addEventListener('click', start);
+  $('mm-quit-button').addEventListener('click', quit);
+  $('mm-back-button').addEventListener('click', () => {
+    statusEl.textContent = '';
+    show('setup');
+    renderSetupBest();
+  });
+
+  // 別タブから戻ったときに時間表示を即座に合わせる
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) tick();
+  });
+
+  renderSetupBest();
+</script>

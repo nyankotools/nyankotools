@@ -1,0 +1,333 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { screenRulerContent } from '../../i18n/tools/screen-ruler';
+import {
+  CARD_PX_MAX,
+  CARD_PX_MIN,
+  DEFAULT_PX_PER_MM,
+  cardPxFromPxPerMm,
+} from '../../lib/tools/screen-ruler';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = screenRulerContent[locale];
+const defaultCardPx = cardPxFromPxPerMm(DEFAULT_PX_PER_MM).toFixed(1);
+---
+
+<ToolShell t={t}>
+  <div
+    id="sr-root"
+    data-calibration-value={t.calibrationValue}
+    data-reset-done={t.resetDone}
+  >
+    <section class="mb-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-2 text-base font-semibold">{t.calibrateHeading}</h2>
+      <p class="mb-3 text-sm text-gray-700 dark:text-gray-300">
+        {t.calibrateHelp}
+      </p>
+
+      <div class="mb-3 overflow-x-auto pb-2">
+        <div
+          id="sr-card"
+          class="flex items-center justify-center rounded-xl border-2 border-blue-600 bg-blue-50 px-2 text-center text-sm font-medium text-blue-900 dark:bg-blue-950 dark:text-blue-100"
+          style={`width:${defaultCardPx}px;height:${(Number(defaultCardPx) * 53.98) / 85.6}px`}
+        >
+          {t.cardCaption}
+        </div>
+      </div>
+
+      <label for="sr-slider" class="ui-label">
+        {t.sliderLabel}
+      </label>
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          id="sr-minus"
+          class="ui-btn shrink-0"
+          aria-label={t.fineMinusLabel}
+        >
+          {t.fineMinusText}
+        </button>
+        <input
+          id="sr-slider"
+          type="range"
+          min={CARD_PX_MIN}
+          max={CARD_PX_MAX}
+          step="0.1"
+          value={defaultCardPx}
+          data-no-persist
+          class="min-w-0 flex-1"
+        />
+        <button
+          type="button"
+          id="sr-plus"
+          class="ui-btn shrink-0"
+          aria-label={t.finePlusLabel}
+        >
+          {t.finePlusText}
+        </button>
+      </div>
+
+      <div class="mt-3 flex flex-wrap items-center gap-3">
+        <button type="button" id="sr-reset" class="ui-btn">
+          {t.resetButton}
+        </button>
+        <span
+          id="sr-calibration"
+          class="text-sm font-semibold"
+          aria-live="polite"
+        ></span>
+      </div>
+      <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{t.savedNote}</p>
+      <p
+        id="sr-status"
+        class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></p>
+    </section>
+
+    <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-base font-semibold">{t.rulerHeading}</h2>
+      <div class="mb-3 flex flex-wrap items-center gap-3">
+        <div id="sr-unit" class="ui-seg" role="group" aria-label={t.unitLabel}>
+          <button
+            type="button"
+            data-unit="cm"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            {t.unitCm}
+          </button>
+          <button
+            type="button"
+            data-unit="inch"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.unitInch}
+          </button>
+        </div>
+        <div
+          id="sr-orientation"
+          class="ui-seg"
+          role="group"
+          aria-label={t.orientationLabel}
+        >
+          <button
+            type="button"
+            data-orientation="horizontal"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            {t.orientationHorizontal}
+          </button>
+          <button
+            type="button"
+            data-orientation="vertical"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.orientationVertical}
+          </button>
+        </div>
+      </div>
+      <div
+        id="sr-ruler-wrap"
+        class="max-w-full overflow-auto rounded-md border border-gray-300 bg-white p-0 text-gray-900"
+      >
+        <svg
+          id="sr-ruler"
+          role="img"
+          aria-label={t.rulerAriaLabel}
+          class="block"
+          width="0"
+          height="0"
+        ></svg>
+      </div>
+    </section>
+  </div>
+</ToolShell>
+
+<script>
+  import { fill } from '../../lib/format-template';
+  import {
+    CARD_HEIGHT_MM,
+    CARD_WIDTH_MM,
+    DEFAULT_PX_PER_MM,
+    cardPxFromPxPerMm,
+    clampCardPx,
+    formatFixed,
+    generateTicks,
+    parseCalibration,
+    ppiFromPxPerMm,
+    pxPerMmFromCardPx,
+    rulerLengthMm,
+    serializeCalibration,
+    type RulerUnit,
+  } from '../../lib/tools/screen-ruler';
+
+  const STORAGE_KEY = 'nyanko:screen-ruler:px-per-mm';
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  /** 目盛りの長さ（mm）。level 0〜3 */
+  const TICK_MM = [9, 7, 5.5, 3.5];
+  const PAD = 12;
+
+  const root = document.getElementById('sr-root')!;
+  const d = root.dataset;
+  const card = document.getElementById('sr-card')!;
+  const slider = document.getElementById('sr-slider') as HTMLInputElement;
+  const calibration = document.getElementById('sr-calibration')!;
+  const status = document.getElementById('sr-status')!;
+  const wrap = document.getElementById('sr-ruler-wrap')!;
+  const svg = document.getElementById('sr-ruler') as unknown as SVGSVGElement;
+
+  let pxPerMm = DEFAULT_PX_PER_MM;
+  let unit: RulerUnit = 'cm';
+  let vertical = false;
+
+  function loadSaved(): number | null {
+    try {
+      return parseCalibration(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      // localStorageが使えない環境では、このページを開いている間だけの校正にする
+      return null;
+    }
+  }
+
+  function save(value: number | null) {
+    try {
+      if (value === null) localStorage.removeItem(STORAGE_KEY);
+      else localStorage.setItem(STORAGE_KEY, serializeCalibration(value));
+    } catch {
+      // 保存できなくても動作は続ける
+    }
+  }
+
+  function el(name: string, attrs: Record<string, string>): SVGElement {
+    const node = document.createElementNS(SVG_NS, name);
+    for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+    return node as SVGElement;
+  }
+
+  function drawRuler() {
+    const available = vertical
+      ? Math.min(Math.max(window.innerHeight * 0.8, 240), 1600) - PAD * 2
+      : wrap.clientWidth - PAD * 2;
+    const lengthMm = rulerLengthMm(available, pxPerMm);
+    const ticks = generateTicks(lengthMm, unit, pxPerMm);
+    const maxTick = TICK_MM[0]! * pxPerMm;
+    const labelSpace = vertical ? 28 : 22;
+    const run = (ticks.at(-1)?.position ?? 0) + PAD * 2;
+    const w = vertical ? maxTick + labelSpace : run;
+    const h = vertical ? run : maxTick + labelSpace;
+    svg.setAttribute('width', String(Math.ceil(w)));
+    svg.setAttribute('height', String(Math.ceil(h)));
+    svg.setAttribute('viewBox', `0 0 ${Math.ceil(w)} ${Math.ceil(h)}`);
+    svg.replaceChildren();
+
+    const paths: string[] = ['', '', '', ''];
+    for (const tick of ticks) {
+      const p = PAD + tick.position;
+      const len = TICK_MM[tick.level]! * pxPerMm;
+      const x = Math.round(p * 100) / 100;
+      paths[tick.level] += vertical
+        ? `M0 ${x}H${len.toFixed(2)}`
+        : `M${x} 0V${len.toFixed(2)}`;
+      if (tick.label !== null) {
+        const text = el('text', {
+          x: vertical ? String(maxTick + 4) : String(x),
+          y: vertical ? String(x + 4) : String(maxTick + 15),
+          'text-anchor': vertical ? 'start' : 'middle',
+          'font-size': '12',
+          fill: 'currentColor',
+        });
+        text.textContent = String(tick.label);
+        svg.append(text);
+      }
+    }
+    paths.forEach((dAttr, level) => {
+      if (dAttr === '') return;
+      svg.append(
+        el('path', {
+          d: dAttr,
+          stroke: 'currentColor',
+          'stroke-width': level === 0 ? '1.5' : '1',
+          fill: 'none',
+        }),
+      );
+    });
+  }
+
+  function render() {
+    const cardPx = cardPxFromPxPerMm(pxPerMm);
+    card.style.width = `${cardPx}px`;
+    card.style.height = `${(cardPx * CARD_HEIGHT_MM) / CARD_WIDTH_MM}px`;
+    slider.value = String(cardPx);
+    calibration.textContent = fill(d.calibrationValue ?? '', {
+      ppi: formatFixed(ppiFromPxPerMm(pxPerMm), 1),
+      px: formatFixed(pxPerMm * 10, 2),
+    });
+    drawRuler();
+  }
+
+  function setCardPx(raw: number) {
+    const v = pxPerMmFromCardPx(clampCardPx(raw));
+    if (v === null) return;
+    pxPerMm = v;
+    status.textContent = '';
+    save(v);
+    render();
+  }
+
+  slider.addEventListener('input', () => setCardPx(Number(slider.value)));
+  document
+    .getElementById('sr-minus')!
+    .addEventListener('click', () =>
+      setCardPx(cardPxFromPxPerMm(pxPerMm) - 0.5),
+    );
+  document
+    .getElementById('sr-plus')!
+    .addEventListener('click', () =>
+      setCardPx(cardPxFromPxPerMm(pxPerMm) + 0.5),
+    );
+  document.getElementById('sr-reset')!.addEventListener('click', () => {
+    pxPerMm = DEFAULT_PX_PER_MM;
+    save(null);
+    render();
+    status.textContent = d.resetDone ?? '';
+  });
+
+  function bindSeg(id: string, attr: string, onPick: (value: string) => void) {
+    const group = document.getElementById(id)!;
+    group.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(
+        `button[${attr}]`,
+      );
+      if (!btn) return;
+      for (const b of group.querySelectorAll('button')) {
+        b.setAttribute('aria-pressed', String(b === btn));
+      }
+      onPick(btn.getAttribute(attr) ?? '');
+      drawRuler();
+    });
+  }
+  bindSeg('sr-unit', 'data-unit', (v) => {
+    unit = v === 'inch' ? 'inch' : 'cm';
+  });
+  bindSeg('sr-orientation', 'data-orientation', (v) => {
+    vertical = v === 'vertical';
+  });
+
+  let resizeTimer: number | undefined;
+  window.addEventListener('resize', () => {
+    window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(drawRuler, 100);
+  });
+
+  pxPerMm = loadSaved() ?? DEFAULT_PX_PER_MM;
+  render();
+</script>

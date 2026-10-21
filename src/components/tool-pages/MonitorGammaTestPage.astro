@@ -1,0 +1,444 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { monitorGammaTestContent } from '../../i18n/tools/monitor-gamma-test';
+import {
+  PATTERN_IDS,
+  GAMMA_VALUES,
+  gammaMatchLevel,
+} from '../../lib/tools/monitor-gamma-test';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = monitorGammaTestContent[locale];
+---
+
+<ToolShell t={t}>
+  <div id="mgt-root">
+    <button id="mgt-start" type="button" class="ui-btn-primary h-12">
+      {t.startLabel}
+    </button>
+    <p class="mt-3 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
+      {t.startHint}
+    </p>
+
+    <h2 class="mt-6 mb-2 text-lg font-bold">{t.patternsHeading}</h2>
+    <ul class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      {PATTERN_IDS.map((id, index) => (
+        <li class="flex">
+          <button
+            type="button"
+            data-mgt-pattern={index}
+            class="ui-btn flex w-full flex-col items-start gap-1 px-3 py-2 text-left"
+          >
+            <span class="font-bold">
+              {index + 1}. {t.patternNames[id]}
+            </span>
+            <span class="text-xs font-normal text-gray-600 dark:text-gray-400">
+              {t.patternDescriptions[id]}
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
+
+    <h2 class="mt-8 mb-2 text-lg font-bold">{t.estimateHeading}</h2>
+    <p class="mb-3 max-w-2xl text-sm text-gray-600 dark:text-gray-400">
+      {t.estimateHint}
+    </p>
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label for="mgt-level" class="ui-label">
+          {t.levelLabel}
+        </label>
+        <input
+          id="mgt-level"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          max="255"
+          step="1"
+          value="186"
+          class="ui-input h-11 w-32 bg-white px-3 dark:bg-gray-900"
+        />
+      </div>
+      <p class="pb-2 text-sm">
+        <span class="text-gray-600 dark:text-gray-400">
+          {t.estimateResultLabel}
+        </span>
+        <output
+          id="mgt-gamma"
+          data-invalid={t.estimateInvalid}
+          class="ml-2 text-xl font-bold"
+          aria-live="polite"
+        ></output>
+      </p>
+    </div>
+
+    <h3 class="mt-6 mb-2 text-base font-bold">{t.gammaTableHeading}</h3>
+    <table class="w-full max-w-sm text-sm">
+      <thead>
+        <tr class="border-b border-gray-300 text-left dark:border-gray-700">
+          <th scope="col" class="py-1 pr-4">
+            {t.gammaColumn}
+          </th>
+          <th scope="col" class="py-1">
+            {t.levelColumn}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {GAMMA_VALUES.map((g) => (
+          <tr class="border-b border-gray-200 dark:border-gray-800">
+            <td class="py-1 pr-4">{g.toFixed(1)}</td>
+            <td class="py-1">{gammaMatchLevel(g)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
+    <div
+      id="mgt-stage"
+      role="dialog"
+      aria-label={t.stageLabel}
+      tabindex="-1"
+      hidden
+      class="fixed inset-0 z-[100] cursor-pointer bg-black outline-none"
+    >
+      <canvas id="mgt-canvas" class="block h-full w-full"></canvas>
+      <div class="pointer-events-none absolute inset-x-0 bottom-4 flex justify-center px-4">
+        <p
+          id="mgt-hint"
+          class="rounded-full bg-black/70 px-4 py-2 text-center text-xs text-white sm:text-sm"
+        >
+          <span id="mgt-pattern-name"></span>
+          <span class="mx-2" aria-hidden="true">
+            |
+          </span>
+          {t.stageHint}
+        </p>
+      </div>
+      <button
+        id="mgt-close"
+        type="button"
+        aria-label={t.closeLabel}
+        title={t.closeLabel}
+        class="absolute top-3 right-3 flex size-11 items-center justify-center rounded-full bg-black/40 text-xl text-white opacity-40 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-white"
+      >
+        ×
+      </button>
+    </div>
+    <p id="mgt-live" class="sr-only" aria-live="polite"></p>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    PATTERN_IDS,
+    GAMMA_VALUES,
+    STEP_COUNT,
+    DETAIL_PATCH_COUNT,
+    cycleIndex,
+    grayHex,
+    gammaMatchLevel,
+    estimateGamma,
+    stepLevels,
+    nearBlackLevels,
+    nearWhiteLevels,
+    rampLevel,
+    splitRanges,
+    labelColor,
+  } from '../../lib/tools/monitor-gamma-test';
+
+  const root = document.getElementById('mgt-root')!;
+  const stage = document.getElementById('mgt-stage')!;
+  const canvas = document.getElementById('mgt-canvas') as HTMLCanvasElement;
+  const hint = document.getElementById('mgt-hint')!;
+  const patternName = document.getElementById('mgt-pattern-name')!;
+  const live = document.getElementById('mgt-live')!;
+  const startButton = document.getElementById('mgt-start') as HTMLButtonElement;
+  const closeButton = document.getElementById('mgt-close') as HTMLButtonElement;
+  const levelInput = document.getElementById('mgt-level') as HTMLInputElement;
+  const gammaOutput = document.getElementById('mgt-gamma')!;
+
+  // パターン名はDOMのボタンから引く（文言はi18n辞書側で管理するため）
+  const names = [
+    ...root.querySelectorAll<HTMLElement>('[data-mgt-pattern]'),
+  ].map(
+    (el) =>
+      el
+        .querySelector('span')
+        ?.textContent?.replace(/^\d+\.\s*/, '')
+        .trim() ?? '',
+  );
+
+  let index = 0;
+  let open = false;
+  let opener: HTMLElement | null = null;
+  let hintTimer = 0;
+
+  function showHint() {
+    hint.hidden = false;
+    clearTimeout(hintTimer);
+    hintTimer = window.setTimeout(() => {
+      hint.hidden = true;
+    }, 3000);
+  }
+
+  function fillStripes(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+  ) {
+    // 物理ピクセル1行ごとの白黒縞（平均輝度50%）
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = '#ffffff';
+    for (let row = y; row < y + h; row += 2) ctx.fillRect(x, row, w, 1);
+  }
+
+  function drawLabel(
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    cx: number,
+    cy: number,
+    size: number,
+    color: string,
+    background?: string,
+  ) {
+    ctx.font = `bold ${size}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    if (background) {
+      const w = ctx.measureText(text).width + size;
+      ctx.fillStyle = background;
+      ctx.fillRect(cx - w / 2, cy - size, w, size * 2);
+    }
+    ctx.fillStyle = color;
+    ctx.fillText(text, cx, cy);
+  }
+
+  function drawRamp(ctx: CanvasRenderingContext2D, w: number, h: number) {
+    for (let x = 0; x < w; x++) {
+      ctx.fillStyle = grayHex(rampLevel(x, w));
+      ctx.fillRect(x, 0, 1, h);
+    }
+  }
+
+  function drawSteps(ctx: CanvasRenderingContext2D, w: number, h: number) {
+    const levels = stepLevels(STEP_COUNT);
+    splitRanges(w, levels.length).forEach((r, i) => {
+      ctx.fillStyle = grayHex(levels[i]);
+      ctx.fillRect(r.start, 0, r.end - r.start, h);
+    });
+  }
+
+  function drawGamma(
+    ctx: CanvasRenderingContext2D,
+    w: number,
+    h: number,
+    dpr: number,
+  ) {
+    splitRanges(w, GAMMA_VALUES.length).forEach((r, i) => {
+      const cw = r.end - r.start;
+      fillStripes(ctx, r.start, 0, cw, h);
+      const level = gammaMatchLevel(GAMMA_VALUES[i]);
+      const mx = Math.round(cw * 0.15);
+      const my = Math.round(h * 0.3);
+      ctx.fillStyle = grayHex(level);
+      ctx.fillRect(r.start + mx, my, cw - mx * 2, h - my * 2);
+      const size = Math.max(12 * dpr, Math.min(22 * dpr, cw * 0.1));
+      drawLabel(
+        ctx,
+        `γ ${GAMMA_VALUES[i].toFixed(1)}`,
+        r.start + cw / 2,
+        Math.round(h * 0.15),
+        size,
+        '#ffffff',
+        '#000000',
+      );
+      drawLabel(
+        ctx,
+        String(level),
+        r.start + cw / 2,
+        Math.round(h * 0.5),
+        size,
+        labelColor(level),
+      );
+    });
+  }
+
+  function drawDetail(
+    ctx: CanvasRenderingContext2D,
+    w: number,
+    h: number,
+    dpr: number,
+    dark: boolean,
+  ) {
+    ctx.fillStyle = dark ? '#000000' : '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+    const levels = dark
+      ? nearBlackLevels(DETAIL_PATCH_COUNT)
+      : nearWhiteLevels(DETAIL_PATCH_COUNT);
+    // 狭い画面では2行に分ける
+    const rows = w < 700 * dpr ? 2 : 1;
+    const perRow = Math.ceil(levels.length / rows);
+    const rowHeight = h / (rows + 1);
+    levels.forEach((level, i) => {
+      const row = Math.floor(i / perRow);
+      const col = i % perRow;
+      const range = splitRanges(w, perRow)[col];
+      const cw = range.end - range.start;
+      const mx = Math.round(cw * 0.12);
+      const top = Math.round(rowHeight * (row + 0.5));
+      const ph = Math.round(rowHeight * 0.55);
+      ctx.fillStyle = grayHex(level);
+      ctx.fillRect(range.start + mx, top, cw - mx * 2, ph);
+      const size = Math.max(9 * dpr, Math.min(16 * dpr, cw * 0.28));
+      drawLabel(
+        ctx,
+        String(level),
+        range.start + cw / 2,
+        top + ph + size * 1.2,
+        size,
+        dark ? '#8a8a8a' : '#707070',
+      );
+    });
+  }
+
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.max(1, Math.round(stage.clientWidth * dpr));
+    const h = Math.max(1, Math.round(stage.clientHeight * dpr));
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    switch (PATTERN_IDS[index]) {
+      case 'ramp':
+        drawRamp(ctx, w, h);
+        break;
+      case 'steps':
+        drawSteps(ctx, w, h);
+        break;
+      case 'gamma':
+        drawGamma(ctx, w, h, dpr);
+        break;
+      case 'black':
+        drawDetail(ctx, w, h, dpr, true);
+        break;
+      case 'white':
+        drawDetail(ctx, w, h, dpr, false);
+        break;
+    }
+  }
+
+  function render() {
+    stage.dataset.pattern = PATTERN_IDS[index];
+    patternName.textContent = names[index];
+    live.textContent = names[index];
+    draw();
+  }
+
+  function openStage(startIndex: number) {
+    opener = document.activeElement as HTMLElement | null;
+    index = startIndex;
+    open = true;
+    stage.hidden = false;
+    document.body.style.overflow = 'hidden';
+    render();
+    showHint();
+    stage.focus();
+    if (document.fullscreenEnabled) {
+      void stage
+        .requestFullscreen()
+        .then(() => {
+          if (!open && document.fullscreenElement)
+            void document.exitFullscreen();
+        })
+        .catch(() => {});
+    }
+  }
+
+  function closeStage() {
+    if (!open) return;
+    open = false;
+    stage.hidden = true;
+    document.body.style.overflow = '';
+    clearTimeout(hintTimer);
+    if (document.fullscreenElement) void document.exitFullscreen();
+    (opener ?? startButton).focus();
+  }
+
+  function step(delta: number) {
+    index = cycleIndex(index, delta, PATTERN_IDS.length);
+    render();
+  }
+
+  startButton.addEventListener('click', () => openStage(0));
+  root.querySelectorAll<HTMLElement>('[data-mgt-pattern]').forEach((el) => {
+    el.addEventListener('click', () =>
+      openStage(Number(el.dataset.mgtPattern)),
+    );
+  });
+
+  stage.addEventListener('click', (event) => {
+    if (event.target === closeButton) return;
+    step(1);
+  });
+  stage.addEventListener('mousemove', showHint);
+  closeButton.addEventListener('click', closeStage);
+
+  document.addEventListener('keydown', (event) => {
+    if (!open) return;
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowDown':
+      case ' ':
+      case 'Enter':
+        if (document.activeElement === closeButton) return;
+        event.preventDefault();
+        step(1);
+        break;
+      case 'ArrowLeft':
+      case 'ArrowUp':
+        event.preventDefault();
+        step(-1);
+        break;
+      case 'Escape':
+        closeStage();
+        break;
+      default: {
+        const n = Number(event.key);
+        if (Number.isInteger(n) && n >= 1 && n <= PATTERN_IDS.length) {
+          index = n - 1;
+          render();
+        }
+      }
+    }
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    if (open && !document.fullscreenElement) closeStage();
+  });
+  // 全画面への切り替えやウィンドウサイズ変更で寸法が変わるため再描画する
+  window.addEventListener('resize', () => {
+    if (open) draw();
+  });
+  window.addEventListener('pagehide', closeStage);
+
+  function updateEstimate() {
+    const raw = levelInput.value.trim();
+    const gamma = raw === '' ? null : estimateGamma(Number(raw));
+    gammaOutput.textContent =
+      gamma === null ? (gammaOutput.dataset.invalid ?? '') : gamma.toFixed(2);
+  }
+  levelInput.addEventListener('input', updateEstimate);
+  levelInput.addEventListener('change', updateEstimate);
+  updateEstimate();
+</script>

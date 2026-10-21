@@ -126,7 +126,7 @@ export const shiftScheduleMakerContent: Record<
     copied: 'コピーしました',
     copyFailed: 'コピーに失敗しました',
 
-    scheduleTitle: '{year}年{month}月 シフト表',
+    scheduleTitle: '{year}年{month} シフト表',
     warningHeading: '警告',
     warningShortage:
       '{date}: 必要{required}人に対して{assigned}人しか割り当てられません（希望休 {off}人・連勤上限 {streak}人）',
@@ -148,7 +148,8 @@ export const shiftScheduleMakerContent: Record<
 
     tableHeading: 'シフト表',
     tableCaption: 'メンバー×日付のシフト表',
-    legend: '○ = 出勤・担当、休 = 希望休、網掛けの列 = 休みの日（土日祝）',
+    legend:
+      '○ = 出勤・担当、丸囲みの濃い網掛け「休」 = 希望休（変更しにくい）、薄い灰色の「休」 = 自動で割り当てた休み（相談して変更可）、薄い網掛けの列 = 休みの日（土日祝）',
     nameHeader: '名前',
     totalHeader: '計',
     workMark: '○',
@@ -171,7 +172,7 @@ export const shiftScheduleMakerContent: Record<
     howToHeading: '使い方',
     howToSteps: [
       '「メンバー（1行に1人）」に名前を入力し、年・月と「1日の必要人数」「連勤の上限（日）」を指定します。',
-      '休ませたい日があれば「希望休（1行に1人）」に「田中: 3, 10」のように入力します。',
+      '休ませたい日があれば「希望休をテキストで入力（1行に1人・上の表と連動）」に「田中: 3, 10」のように入力します。',
       '「土日祝は休みにする（割り当てない）」を必要に応じて切り替え、警告が出た日は条件を見直します。',
       '「印刷する」で印刷、「CSVをコピー」または「CSVをダウンロード」で表計算ソフトに取り込めます。',
     ],
@@ -181,7 +182,7 @@ export const shiftScheduleMakerContent: Record<
       '希望休は必ず守り、そのうえで連勤上限の範囲内で人数不足が最も少なくなるよう休みを割り振ります（担当日数もなるべく均等にします）。それでも条件が厳しいと、人数が足りない日が警告に出ることがあります。',
       '1人の勤務時間・夜勤の回数・職種ごとの人数配分・曜日ごとの必要人数の違いなどは扱いません。',
       '祝日は2000〜2099年の範囲で日本の祝日法のルールから計算しており、今後の法改正は反映されません。それ以外の年は土日のみが休みになります。',
-      '31日分の表は幅が広いため、印刷時は用紙を横向きにし、倍率を縮小してください。',
+      '印刷は1週間ごとに1ページ（A4横向き）で大きく出力されます。日別の担当一覧は印刷されません。',
     ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
@@ -256,7 +257,7 @@ export const shiftScheduleMakerContent: Record<
     tableHeading: 'Roster',
     tableCaption: 'Shift roster: members by dates',
     legend:
-      '○ = working, Off = requested day off, shaded column = closed day (weekend/holiday)',
+      '○ = working, circled dark-shaded Off = requested day off (hard to change), plain gray Off = auto-assigned rest (open to swaps), light-shaded column = closed day (weekend/holiday)',
     nameHeader: 'Name',
     totalHeader: 'Total',
     workMark: '○',
@@ -281,7 +282,7 @@ export const shiftScheduleMakerContent: Record<
     howToHeading: 'How to use',
     howToSteps: [
       'Enter names under "Members (one per line)", then set the year, month, "People needed per day" and "Max consecutive working days".',
-      'If someone needs days off, add a line such as "Alice: 3, 10" under "Requested days off (one member per line)".',
+      'If someone needs days off, add a line such as "Alice: 3, 10" under "Requested days off as text (one member per line, synced with the grid above)".',
       'Toggle "Weekends and Japanese holidays off (no assignments)" if needed, and adjust the settings for any day that shows a warning.',
       'Press "Print" to print, or "Copy CSV" / "Download CSV" to use the roster in a spreadsheet.',
     ],
@@ -291,7 +292,7 @@ export const shiftScheduleMakerContent: Record<
       'Requested days off are always honored; rest days are then arranged within the streak limit to minimize understaffing, keeping workloads as even as possible. If the constraints are still too tight, some days are flagged as understaffed.',
       'Shift hours, night-shift counts, roles and different headcounts for different weekdays are not handled.',
       'Japanese holidays are calculated under current law for 2000–2099 only and do not reflect future changes. For other years only weekends are closed.',
-      'A 31-day table is wide. When printing, use landscape orientation and scale it down.',
+      'Printing outputs one large table per week (A4 landscape), one week per page. The per-day assignment list is not printed.',
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

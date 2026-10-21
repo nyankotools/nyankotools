@@ -258,6 +258,28 @@ describe('cellState / scheduleToCsv', () => {
     expect(lines[3].startsWith('"C,""x""",')).toBe(true);
     expect(lines[2].split(',')[2]).toBe('休');
   });
+  it('CSVの日付欄は出勤が○、それ以外（希望休・自動の休み・土日祝）はすべて休', () => {
+    const csv = scheduleToCsv(s, {
+      nameHeader: '名前',
+      totalHeader: '計',
+      weekdays: ['日', '月', '火', '水', '木', '金', '土'],
+      workMark: '○',
+      offMark: '休',
+    });
+    const lines = csv.split('\n');
+    // 名前にカンマを含まない行（A, =B）は split で日付欄を取り出せる
+    for (const mi of [0, 1]) {
+      const fields = lines[mi + 1].split(',').slice(1, 1 + s.days.length);
+      expect(fields).toHaveLength(s.days.length);
+      fields.forEach((f, di) => {
+        const st = cellState(s, mi, di);
+        expect(f).toBe(st === 'work' ? '○' : '休');
+      });
+    }
+    // 名前にカンマを含む行（C,"x"）も、自動の休み（rest）が空欄にならない
+    expect(cellState(s, 2, 0)).toBe('rest');
+    expect(lines[3]).toContain(',休,');
+  });
 });
 
 describe('formatDayOffs', () => {

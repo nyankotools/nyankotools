@@ -705,11 +705,7 @@ export function scheduleToCsv(
       m.name,
       ...schedule.days.map((_, di) => {
         const s = cellState(schedule, mi, di);
-        return s === 'work'
-          ? labels.workMark
-          : s === 'off'
-            ? labels.offMark
-            : '';
+        return s === 'work' ? labels.workMark : labels.offMark;
       }),
       String(m.workDays),
     ]);

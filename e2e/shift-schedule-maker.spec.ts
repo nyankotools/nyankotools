@@ -19,7 +19,14 @@ test.describe('シフト表・当番表作成', () => {
     const first = page.locator('#shift-table tbody tr').first();
     await expect(first.locator('td').nth(0)).toHaveText('休');
     await expect(first.locator('td').nth(2)).toHaveText('休');
-    await expect(first.locator('td').nth(3)).not.toHaveText('休');
+    // 希望休は丸囲み（span.rounded-full）。4日目は希望休ではないので丸囲みなし
+    // （自動の休みで「休」になることはあるため、テキストでは判定しない）
+    await expect(
+      first.locator('td').nth(0).locator('span.rounded-full'),
+    ).toHaveCount(1);
+    await expect(
+      first.locator('td').nth(3).locator('span.rounded-full'),
+    ).toHaveCount(0);
   });
 
   test('希望休の表をクリックすると休みが指定・解除され、入力欄とも連動する', async ({
@@ -37,7 +44,9 @@ test.describe('シフト表・当番表作成', () => {
     await expect(page.locator('#shift-offs')).toHaveValue('田中: 1-3');
     const first = page.locator('#shift-table tbody tr').first();
     await expect(first.locator('td').nth(2)).toHaveText('休');
-    await expect(first.locator('td').nth(3)).not.toHaveText('休');
+    await expect(
+      first.locator('td').nth(3).locator('span.rounded-full'),
+    ).toHaveCount(0);
 
     await cell('田中', 2).click();
     await expect(cell('田中', 2)).toHaveAttribute('aria-pressed', 'false');
@@ -131,12 +140,92 @@ test.describe('シフト表・当番表作成', () => {
     expect(Math.abs(nameBox.x - wrapBox.x)).toBeLessThan(2);
   });
 
-  test('印刷時はシフト表だけが残る', async ({ page }) => {
+  test('印刷時は週ごとの表だけが残り、月間表と日別一覧は出ない', async ({
+    page,
+  }) => {
     await page.emulateMedia({ media: 'print' });
     await expect(page.locator('h1')).toBeHidden();
     await expect(page.locator('[data-faq]')).toBeHidden();
     await expect(page.locator('#shift-members')).toBeHidden();
+    await expect(page.locator('#shift-table')).toBeHidden();
+    await expect(page.locator('#shift-daily')).toBeHidden();
+    await expect(page.locator('#shift-print-weeks')).toBeVisible();
+  });
+
+  test('画面では週ごとの印刷用の表は表示されない', async ({ page }) => {
+    await expect(page.locator('#shift-print-weeks')).toBeHidden();
     await expect(page.locator('#shift-table')).toBeVisible();
+    await expect(page.locator('#shift-daily')).toBeVisible();
+  });
+
+  test('印刷用の表は日曜始まりで1週1つ、列は7日分＋名前＋計に揃う', async ({
+    page,
+  }) => {
+    // 2026年10月1日は木曜。日〜土の週に分けると 1-3 / 4-10 / 11-17 / 18-24 / 25-31 の5週
+    const weeks = page.locator('#shift-print-weeks .shift-print-week');
+    await expect(weeks).toHaveCount(5);
+    for (let i = 0; i < 5; i++) {
+      const week = weeks.nth(i);
+      await expect(week.locator('thead th')).toHaveCount(9);
+      await expect(week.locator('tbody tr')).toHaveCount(5);
+      const row = week.locator('tbody tr').first();
+      await expect(row.locator('th')).toHaveCount(1);
+      await expect(row.locator('td')).toHaveCount(8);
+    }
+    // 第1週は木曜始まりなので日〜水の3列（+名前列の次）が空欄
+    const firstHead = weeks.nth(0).locator('thead th');
+    await expect(firstHead.nth(0)).toHaveText('名前');
+    for (let c = 1; c <= 4; c++) {
+      await expect(firstHead.nth(c)).toBeEmpty();
+    }
+    await expect(firstHead.nth(5)).toContainText('1');
+    // 第5週は土曜で終わるので末尾の空き列なし、最終日の31が土曜の列に入る
+    const lastHead = weeks.nth(4).locator('thead th');
+    await expect(lastHead.nth(1)).toContainText('25');
+    await expect(lastHead.nth(7)).toContainText('31');
+  });
+
+  test('自動の休みにも「休」が出て、丸囲みは希望休だけに付く', async ({
+    page,
+  }) => {
+    await page.locator('#shift-closed').uncheck();
+    await page.locator('#shift-members').fill('田中\n佐藤');
+    await page.locator('#shift-per-day').fill('1');
+    await page.locator('#shift-offs').fill('田中: 1-3');
+    const rows = page.locator('#shift-table tbody tr');
+    // 佐藤は希望休なしでも1人だけ担当の日は自動の休みになり「休」と出る
+    await expect(
+      rows.nth(1).locator('td', { hasText: '休' }).first(),
+    ).toBeVisible();
+    await expect(rows.nth(1).locator('span.rounded-full')).toHaveCount(0);
+    // 丸囲みは田中の希望休3日分（画面の表・印刷用の表とも）だけ
+    await expect(page.locator('#shift-table span.rounded-full')).toHaveCount(3);
+    await expect(
+      page.locator('#shift-print-weeks span.rounded-full'),
+    ).toHaveCount(3);
+    await expect(
+      page.locator('#shift-table span.rounded-full').first(),
+    ).toHaveText('休');
+  });
+
+  test('見出しは「2026年10月 シフト表」で月が重複しない', async ({ page }) => {
+    await expect(page.locator('#shift-output h2').first()).toHaveText(
+      '2026年10月 シフト表',
+    );
+  });
+
+  test('375pxでも希望休・自動の休みを含む表示がはみ出さない', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 375, height: 800 });
+    await page.locator('#shift-closed').uncheck();
+    await page.locator('#shift-offs').fill('田中: 1-3');
+    await expect(page.locator('#shift-table span.rounded-full')).toHaveCount(3);
+    const pageOverflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth + 1,
+    );
+    expect(pageOverflow).toBe(false);
+    await expect(page.locator('#shift-print-weeks')).toBeHidden();
   });
 
   test('英語版でも表が作られる', async ({ page }) => {

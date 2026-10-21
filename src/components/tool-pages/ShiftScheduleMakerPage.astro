@@ -211,6 +211,10 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
 </ToolShell>
 
 <style is:global>
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
   @media print {
     /* 印刷はシフト表だけにする（見出し・説明文・使い方・注意事項・FAQなどは出さない） */
     [data-tool-page] > :not(#shift) {
@@ -324,6 +328,23 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
     return node;
   }
 
+  // 希望休（個人の予定・変更しにくい）は丸囲み＋濃い網掛け、自動の休みは薄いグレーの文字で見分ける
+  const cellTone = (state: string) =>
+    state === 'work'
+      ? 'font-semibold'
+      : state === 'off'
+        ? 'bg-gray-300 font-bold text-black dark:bg-gray-600 dark:text-white print:bg-gray-300 print:text-black'
+        : 'text-gray-600 dark:text-gray-400';
+  function requestedMark(td: HTMLElement) {
+    const text = td.textContent ?? '';
+    const ring = el(
+      'span',
+      'inline-block rounded-full border-2 border-current px-1.5',
+      text,
+    );
+    td.replaceChildren(ring);
+  }
+
   function csvLabels() {
     return {
       nameHeader: d.nameHeader ?? '',
@@ -430,7 +451,7 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
     }
 
     // 表（メンバー×日付）
-    const wrap = el('div', 'overflow-x-auto print:overflow-visible');
+    const wrap = el('div', 'overflow-x-auto print:hidden');
     wrap.id = 'shift-table-wrap';
     wrap.tabIndex = 0;
     wrap.setAttribute('role', 'region');
@@ -485,13 +506,10 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
         const state = cellState(s, mi, di);
         const td = el(
           'td',
-          `${BORDER} px-1 py-1 ${day.closed ? 'bg-gray-100 dark:bg-gray-800' : ''} ${state === 'off' ? 'text-gray-600 dark:text-gray-400' : 'font-semibold'}`,
-          state === 'work'
-            ? (d.workMark ?? '')
-            : state === 'off'
-              ? (d.offMark ?? '')
-              : '',
+          `${BORDER} px-1 py-1 ${day.closed ? 'bg-gray-100 dark:bg-gray-800' : ''} ${cellTone(state)}`,
+          state === 'work' ? (d.workMark ?? '') : (d.offMark ?? ''),
         );
+        if (state === 'off') requestedMark(td);
         tr.append(td);
       });
       tr.append(
@@ -502,6 +520,98 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
     table.append(tbody);
     wrap.append(table);
     frag.append(wrap);
+
+    // 印刷用: 週ごと（日曜始まり）に分割して1週1ページ・大きく表示。画面では非表示
+    const weeks = el(
+      'div',
+      'hidden print:block print:[print-color-adjust:exact]',
+    );
+    weeks.id = 'shift-print-weeks';
+    const groups: number[][] = [];
+    s.days.forEach((day, di) => {
+      if (groups.length === 0 || day.dow === 0) groups.push([]);
+      groups[groups.length - 1].push(di);
+    });
+    groups.forEach((indexes, gi) => {
+      const section = el('div', 'shift-print-week');
+      if (gi > 0) section.style.breakBefore = 'page';
+      const wt = el('table', 'w-full border-collapse text-center text-lg');
+      const wHead = el('tr');
+      const wName = el(
+        'th',
+        `${BORDER} px-3 py-3 text-left font-medium`,
+        d.nameHeader ?? '',
+      );
+      wName.scope = 'col';
+      wHead.append(wName);
+      // 週が月の途中で始まる/終わる場合は空きの列で7列に揃える
+      const first = s.days[indexes[0]].dow;
+      for (let c = 0; c < 7; c++) {
+        const di = indexes[c - first];
+        const day = c >= first && di !== undefined ? s.days[di] : null;
+        const th = el(
+          'th',
+          `${BORDER} w-[9%] px-1 py-3 font-medium ${day ? headColor(day.dow, day.holiday !== null) : ''} ${day?.closed ? 'bg-gray-100' : ''}`,
+        );
+        th.scope = 'col';
+        if (day) {
+          th.append(el('div', 'text-2xl', String(day.day)));
+          th.append(el('div', 'text-base font-normal', weekdays[day.dow]));
+        }
+        wHead.append(th);
+      }
+      const wTotal = el(
+        'th',
+        `${BORDER} px-3 py-3 font-medium`,
+        d.totalHeader ?? '',
+      );
+      wTotal.scope = 'col';
+      wHead.append(wTotal);
+      const wThead = el('thead');
+      wThead.append(wHead);
+      wt.append(wThead);
+      const wBody = el('tbody');
+      s.members.forEach((m, mi) => {
+        const tr = el('tr');
+        const th = el(
+          'th',
+          `${BORDER} px-3 py-4 text-left text-xl font-medium whitespace-nowrap`,
+          m.name,
+        );
+        th.scope = 'row';
+        tr.append(th);
+        let weekWork = 0;
+        for (let c = 0; c < 7; c++) {
+          const di = indexes[c - first];
+          const day = c >= first && di !== undefined ? s.days[di] : null;
+          const state = day ? cellState(s, mi, di) : 'none';
+          if (state === 'work') weekWork++;
+          const td = el(
+            'td',
+            `${BORDER} px-1 py-4 text-2xl ${day?.closed ? 'bg-gray-100' : ''} ${cellTone(state)}`,
+            state === 'work'
+              ? (d.workMark ?? '')
+              : state === 'none'
+                ? ''
+                : (d.offMark ?? ''),
+          );
+          if (state === 'off') requestedMark(td);
+          tr.append(td);
+        }
+        tr.append(
+          el(
+            'td',
+            `${BORDER} px-3 py-4 text-xl font-semibold`,
+            String(weekWork),
+          ),
+        );
+        wBody.append(tr);
+      });
+      wt.append(wBody);
+      section.append(wt);
+      weeks.append(section);
+    });
+    frag.append(weeks);
     frag.append(
       el('p', 'text-xs text-gray-600 dark:text-gray-400', chrome.legend),
     );
@@ -551,7 +661,7 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
     frag.append(summary);
 
     // 日別一覧
-    const daily = el('div');
+    const daily = el('div', 'print:hidden');
     daily.append(el('h3', 'mb-1 text-base font-semibold', chrome.dailyHeading));
     const ul = el('ul', 'space-y-0.5 text-sm');
     ul.id = 'shift-daily';

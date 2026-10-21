@@ -11703,6 +11703,43 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'passport-romaji-converter',
+    category: 'text',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    sensitive: true,
+    related: ['romaji-kana-converter', 'kana-converter', 'id-photo-maker'],
+    translations: {
+      ja: {
+        name: 'パスポート用ローマ字氏名変換',
+        description:
+          'ひらがな・カタカナの氏名を、パスポートのヘボン式ローマ字に変換します。オ段・ウ段の長音の省略、B・M・P前の「ん」のM表記、OH表記の切替に対応。',
+        keywords: [
+          'パスポート ローマ字',
+          '旅券 ローマ字',
+          'ヘボン式',
+          '氏名 ローマ字',
+          '名前 ローマ字',
+          '長音 省略',
+          'OH表記',
+        ],
+      },
+      en: {
+        name: 'Passport Romaji Name Converter',
+        description:
+          'Converts a Japanese name in kana to passport Hepburn romaji: long O/U vowels omitted, M before B/M/P, optional OH spelling.',
+        keywords: [
+          'passport romaji',
+          'japanese name romaji',
+          'hepburn',
+          'passport name',
+          'long vowel',
+          'OH spelling',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

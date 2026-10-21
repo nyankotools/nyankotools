@@ -942,13 +942,14 @@ export const updates: UpdateEntry[] = [
       'mental-math-trainer',
       'function-grapher',
       'scientific-calculator',
+      'passport-romaji-converter',
     ],
     translations: {
       ja: {
-        summary: '38個のツールを追加しました。',
+        summary: '39個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 38 new tools.',
+        summary: 'Added 39 new tools.',
       },
     },
   },

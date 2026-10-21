@@ -1,0 +1,215 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { passportRomajiConverterContent } from '../../i18n/tools/passport-romaji-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = passportRomajiConverterContent[locale];
+
+const groups = [
+  {
+    id: 'long-vowel',
+    label: t.longVowelLabel,
+    items: [
+      ['omit', t.longVowelOmit],
+      ['oh', t.longVowelOh],
+    ],
+  },
+  {
+    id: 'order',
+    label: t.orderLabel,
+    items: [
+      ['surname-first', t.orderSurnameFirst],
+      ['given-first', t.orderGivenFirst],
+    ],
+  },
+];
+
+const results = [
+  ['surname', t.surnameResultLabel],
+  ['given', t.givenResultLabel],
+  ['full', t.fullResultLabel],
+] as const;
+---
+
+<ToolShell t={t}>
+  <section
+    id="passport-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-unsupported={t.unsupportedMessage}
+  >
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="passport-surname" class="ui-label">
+          {t.surnameLabel}
+        </label>
+        <input
+          id="passport-surname"
+          type="text"
+          class="ui-input h-11 w-full px-3 text-base dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.surnamePlaceholder}
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+      <div>
+        <label for="passport-given" class="ui-label">
+          {t.givenLabel}
+        </label>
+        <input
+          id="passport-given"
+          type="text"
+          class="ui-input h-11 w-full px-3 text-base dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.givenPlaceholder}
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+    </div>
+
+    <div class="mt-4 flex flex-wrap gap-x-6 gap-y-3">
+      {groups.map((group) => (
+        <div>
+          <span class="ui-label">{group.label}</span>
+          <div
+            id={`passport-${group.id}`}
+            class="ui-seg flex-wrap"
+            role="group"
+            aria-label={group.label}
+          >
+            {group.items.map(([value, label], index) => (
+              <button
+                type="button"
+                data-value={value}
+                aria-pressed={index === 0 ? 'true' : 'false'}
+                class="ui-seg-btn"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <h2 class="mt-6 text-lg font-semibold">{t.resultHeading}</h2>
+    <dl class="mt-2 grid gap-2">
+      {results.map(([id, label]) => (
+        <div class="flex flex-wrap items-baseline gap-x-3">
+          <dt class="w-20 shrink-0 text-sm text-gray-600 dark:text-gray-400">
+            {label}
+          </dt>
+          <dd
+            id={`passport-result-${id}`}
+            class="min-h-7 font-mono text-lg font-semibold break-all"
+          ></dd>
+        </div>
+      ))}
+    </dl>
+    <p id="passport-warning" class="ui-error mt-2 hidden" role="alert"></p>
+
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <button id="passport-copy-button" type="button" class="ui-btn">
+        {t.copy}
+      </button>
+      <span
+        id="passport-status"
+        class="text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    joinName,
+    toPassportRomaji,
+    type NameOrder,
+    type PassportLongVowel,
+  } from '../../lib/tools/passport-romaji-converter';
+
+  const root = document.getElementById('passport-root')!;
+  const surnameInput = document.getElementById(
+    'passport-surname',
+  ) as HTMLInputElement;
+  const givenInput = document.getElementById(
+    'passport-given',
+  ) as HTMLInputElement;
+  const resultEls = {
+    surname: document.getElementById('passport-result-surname')!,
+    given: document.getElementById('passport-result-given')!,
+    full: document.getElementById('passport-result-full')!,
+  };
+  const warning = document.getElementById('passport-warning')!;
+  const copyButton = document.getElementById(
+    'passport-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('passport-status')!;
+
+  const state = {
+    longVowel: 'omit' as PassportLongVowel,
+    order: 'surname-first' as NameOrder,
+  };
+
+  function convert() {
+    statusEl.textContent = '';
+    const options = { longVowel: state.longVowel };
+    const surname = toPassportRomaji(surnameInput.value, options);
+    const given = toPassportRomaji(givenInput.value, options);
+    resultEls.surname.textContent = surname.romaji;
+    resultEls.given.textContent = given.romaji;
+    resultEls.full.textContent = joinName(
+      surname.romaji,
+      given.romaji,
+      state.order,
+    );
+
+    const bad = [...new Set([...surname.unsupported, ...given.unsupported])];
+    warning.classList.toggle('hidden', bad.length === 0);
+    warning.textContent = (root.dataset.unsupported ?? '').replace(
+      '{chars}',
+      bad.join(' '),
+    );
+  }
+
+  function bindGroup(id: string, apply: (value: string) => void) {
+    const buttons = document.querySelectorAll<HTMLButtonElement>(
+      `#${id} [data-value]`,
+    );
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        apply(button.dataset.value ?? '');
+        buttons.forEach((b) => {
+          b.setAttribute('aria-pressed', String(b === button));
+        });
+        convert();
+      });
+    });
+  }
+
+  bindGroup(
+    'passport-long-vowel',
+    (v) => (state.longVowel = v as PassportLongVowel),
+  );
+  bindGroup('passport-order', (v) => (state.order = v as NameOrder));
+
+  surnameInput.addEventListener('input', convert);
+  givenInput.addEventListener('input', convert);
+
+  copyButton.addEventListener('click', async () => {
+    const text = resultEls.full.textContent ?? '';
+    if (!text) return;
+    statusEl.textContent = (await copyText(text))
+      ? (root.dataset.copied ?? '')
+      : (root.dataset.copyFailed ?? '');
+  });
+
+  convert();
+</script>

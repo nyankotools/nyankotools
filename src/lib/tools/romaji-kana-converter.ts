@@ -285,7 +285,7 @@ for (const [kana, romaji] of pairs(
 const I_ROW = new Set('きしちにひみりぎじぢびぴ');
 const SMALL_YOON: Record<string, string> = { ゃ: 'a', ゅ: 'u', ょ: 'o' };
 
-type Unit =
+export type Unit =
   | { kind: 'syl'; r: string }
   | { kind: 'n' }
   | { kind: 'sokuon' }
@@ -299,7 +299,7 @@ function toHiraganaChar(ch: string): string {
     : ch;
 }
 
-function tokenizeKana(input: string, style: RomajiStyle): Unit[] {
+export function tokenizeKana(input: string, style: RomajiStyle): Unit[] {
   const chars = Array.from(input, toHiraganaChar);
   const units: Unit[] = [];
   for (let i = 0; i < chars.length; i++) {

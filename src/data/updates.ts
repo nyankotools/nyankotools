@@ -943,13 +943,14 @@ export const updates: UpdateEntry[] = [
       'function-grapher',
       'scientific-calculator',
       'passport-romaji-converter',
+      'image-reveal-mask',
     ],
     translations: {
       ja: {
-        summary: '39個のツールを追加しました。',
+        summary: '40個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 39 new tools.',
+        summary: 'Added 40 new tools.',
       },
     },
   },

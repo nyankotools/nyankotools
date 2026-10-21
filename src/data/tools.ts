@@ -11740,6 +11740,44 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'image-reveal-mask',
+    category: 'image',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['image-blur-mosaic', 'image-cropper', 'image-round-crop'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像くり抜きマスク',
+        description:
+          '画像を単色で覆い、四角・円・星・ハートなどの形だけくり抜いて元画像を見せます。クイズ画像やスポットライト風の加工に。',
+        keywords: [
+          'くり抜き',
+          'マスク',
+          'スポットライト',
+          'クイズ画像',
+          'ネタバレ防止',
+          '一部だけ見せる',
+          '画像加工',
+        ],
+      },
+      en: {
+        name: 'Image Reveal Mask',
+        description:
+          'Cover an image with a solid color and cut out shapes like circles, stars and hearts to reveal the original underneath.',
+        keywords: [
+          'reveal mask',
+          'cut out shape',
+          'spotlight',
+          'quiz image',
+          'spoiler cover',
+          'image mask',
+          'hide part of image',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

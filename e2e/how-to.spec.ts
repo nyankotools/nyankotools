@@ -13,6 +13,7 @@ const slugs = [
   'image-resizer',
   'image-pixelart-converter',
   'image-blur-mosaic',
+  'image-reveal-mask',
   'color-palette-generator',
   'image-filter',
   'typing-test',

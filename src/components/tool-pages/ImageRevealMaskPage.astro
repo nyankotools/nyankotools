@@ -1,0 +1,709 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { imageRevealMaskContent } from '../../i18n/tools/image-reveal-mask';
+import {
+  DEFAULT_COLOR,
+  DEFAULT_OPACITY,
+  MAX_OPACITY,
+  MIN_OPACITY,
+  SHAPE_KINDS,
+} from '../../lib/tools/image-reveal-mask';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageRevealMaskContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="rm-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="rm-dropzone" class="ui-dropzone">
+      <input
+        id="rm-file-input"
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="rm-source-info"
+      data-template={t.sourceInfoTemplate}
+      data-downscaled-template={t.downscaledTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="rm-error"
+      role="alert"
+      hidden
+      data-unsupported={t.errorUnsupportedFile}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-load-failed={t.errorLoadFailed}
+      data-export-failed={t.errorExportFailed}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+  </div>
+
+  <div id="rm-editor" hidden class="mt-4">
+    <div class="flex flex-wrap items-end gap-6">
+      <div>
+        <label for="rm-color" class="ui-label">
+          {t.colorLabel}
+        </label>
+        <input
+          id="rm-color"
+          type="color"
+          value={DEFAULT_COLOR}
+          class="h-11 w-20 cursor-pointer rounded border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900"
+        />
+      </div>
+      <div class="min-w-56 flex-1">
+        <label for="rm-opacity" class="ui-label">
+          {t.opacityLabel}
+          <span
+            id="rm-opacity-value"
+            data-template={t.opacityValueTemplate}
+          ></span>
+        </label>
+        <input
+          id="rm-opacity"
+          type="range"
+          min={MIN_OPACITY}
+          max={MAX_OPACITY}
+          value={DEFAULT_OPACITY}
+          class="h-11 w-full"
+        />
+      </div>
+      <label class="ui-check">
+        <input id="rm-invert" type="checkbox" />
+        {t.invertLabel}
+      </label>
+    </div>
+
+    <div class="mt-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label for="rm-add-kind" class="ui-label">
+          {t.addShapeLabel}
+        </label>
+        <select id="rm-add-kind" class="ui-input h-11 px-3 dark:bg-gray-900">
+          {SHAPE_KINDS.map((kind) => (
+            <option value={kind}>{t.shapeNames[kind]}</option>
+          ))}
+        </select>
+      </div>
+      <button id="rm-add-button" type="button" class="ui-btn ui-btn-primary">
+        {t.addButton}
+      </button>
+    </div>
+
+    <p class="mt-4 text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.canvasLabel}
+    </p>
+    <p class="mb-2 text-xs text-gray-500 dark:text-gray-400">{t.canvasHint}</p>
+    <div class="mb-2 md:hidden">
+      <span class="ui-label">{t.touchModeLabel}</span>
+      <div
+        id="rm-touch-mode"
+        class="ui-seg"
+        role="group"
+        aria-label={t.touchModeLabel}
+      >
+        <button
+          type="button"
+          data-touch="edit"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.touchModeEdit}
+        </button>
+        <button
+          type="button"
+          data-touch="scroll"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.touchModeScroll}
+        </button>
+      </div>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+        {t.touchModeHint}
+      </p>
+    </div>
+    <div class="relative w-full select-none">
+      <canvas
+        id="rm-canvas"
+        role="img"
+        aria-label={t.canvasLabel}
+        class="block h-auto w-full rounded-lg border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
+      ></canvas>
+    </div>
+
+    <p
+      id="rm-shape-count"
+      data-template={t.shapeCountTemplate}
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+
+    <div class="mt-2 flex flex-wrap items-end gap-3">
+      <div id="rm-selected-panel" hidden class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="rm-selected-kind" class="ui-label">
+            {t.selectedLabel}
+          </label>
+          <select
+            id="rm-selected-kind"
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+            data-no-persist
+          >
+            {SHAPE_KINDS.map((kind) => (
+              <option value={kind}>{t.shapeNames[kind]}</option>
+            ))}
+          </select>
+        </div>
+        <button id="rm-duplicate-button" type="button" class="ui-btn">
+          {t.duplicateButton}
+        </button>
+        <button id="rm-delete-button" type="button" class="ui-btn">
+          {t.deleteButton}
+        </button>
+      </div>
+      <p
+        id="rm-no-selection"
+        class="self-center text-xs text-gray-500 dark:text-gray-400"
+      >
+        {t.noSelectionHint}
+      </p>
+      <button
+        id="rm-clear-shapes-button"
+        type="button"
+        disabled
+        class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {t.clearShapesButton}
+      </button>
+      <button id="rm-clear-button" type="button" class="ui-btn">
+        {t.clearButton}
+      </button>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-end gap-4">
+      <div>
+        <span class="ui-label">{t.formatLabel}</span>
+        <div
+          id="rm-format"
+          class="ui-seg"
+          role="group"
+          aria-label={t.formatLabel}
+        >
+          <button
+            type="button"
+            data-format="png"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            PNG
+          </button>
+          <button
+            type="button"
+            data-format="webp"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            WebP
+          </button>
+          <button
+            type="button"
+            data-format="jpeg"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            JPEG
+          </button>
+        </div>
+      </div>
+      <button
+        id="rm-download-button"
+        type="button"
+        class="ui-btn ui-btn-primary"
+      >
+        {t.downloadButton}
+      </button>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    buildOutputFileName,
+    changeShapeKind,
+    clampOpacity,
+    clientToImagePoint,
+    createShape,
+    duplicateShape,
+    findHandleAt,
+    findShapeAt,
+    fitWithin,
+    formatFileSize,
+    getHandlePositions,
+    isAcceptedImageFile,
+    MAX_FILE_SIZE,
+    moveShape,
+    OUTPUT_FORMATS,
+    resizeShape,
+    rotateShape,
+    shapeWorldPolygon,
+    tracePolygon,
+    type Dimensions,
+    type HandleKind,
+    type OutputFormat,
+    type Point,
+    type Shape,
+    type ShapeKind,
+  } from '../../lib/tools/image-reveal-mask';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const dropzone = $('rm-dropzone');
+  const fileInput = $<HTMLInputElement>('rm-file-input');
+  const sourceInfoEl = $('rm-source-info');
+  const errorEl = $('rm-error');
+  const editor = $('rm-editor');
+  const colorInput = $<HTMLInputElement>('rm-color');
+  const opacityInput = $<HTMLInputElement>('rm-opacity');
+  const opacityValue = $('rm-opacity-value');
+  const invertInput = $<HTMLInputElement>('rm-invert');
+  const addKindSelect = $<HTMLSelectElement>('rm-add-kind');
+  const addButton = $('rm-add-button');
+  const canvas = $<HTMLCanvasElement>('rm-canvas');
+  const shapeCountEl = $('rm-shape-count');
+  const selectedPanel = $('rm-selected-panel');
+  const noSelectionEl = $('rm-no-selection');
+  const selectedKindSelect = $<HTMLSelectElement>('rm-selected-kind');
+  const duplicateButton = $('rm-duplicate-button');
+  const deleteButton = $('rm-delete-button');
+  const clearShapesButton = $<HTMLButtonElement>('rm-clear-shapes-button');
+  const clearButton = $('rm-clear-button');
+  const downloadButton = $('rm-download-button');
+  const formatButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#rm-format [data-format]',
+  );
+  const touchButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#rm-touch-mode [data-touch]',
+  );
+
+  const ctx = canvas.getContext('2d')!;
+  // 元画像と、覆い(くり抜き前)の合成用に使う作業キャンバス
+  const baseCanvas = document.createElement('canvas');
+  const layerCanvas = document.createElement('canvas');
+
+  let dims: Dimensions | null = null;
+  let fileName = 'image';
+  let format: OutputFormat = 'png';
+  let shapes: Shape[] = [];
+  let selectedId: number | null = null;
+  let nextId = 1;
+
+  type Drag =
+    | { type: 'move'; id: number; dx: number; dy: number }
+    | { type: 'resize' | 'rotate'; id: number };
+  let drag: Drag | null = null;
+  let dragPointerId: number | null = null;
+
+  // スマホ幅(md未満)では「図形を操作」「スクロール」を切り替える。既定はスクロール
+  const mobileQuery = window.matchMedia('(max-width: 767px)');
+  let touchEdit = false;
+  function editingEnabled() {
+    return !mobileQuery.matches || touchEdit;
+  }
+  function applyTouchMode() {
+    canvas.style.touchAction = editingEnabled() ? 'none' : 'pan-y pan-x';
+    touchButtons.forEach((b) =>
+      b.setAttribute(
+        'aria-pressed',
+        String((b.dataset.touch === 'edit') === touchEdit),
+      ),
+    );
+  }
+  touchButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      touchEdit = b.dataset.touch === 'edit';
+      applyTouchMode();
+    }),
+  );
+  mobileQuery.addEventListener('change', applyTouchMode);
+  applyTouchMode();
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  /** 表示上1pxが画像の何pxにあたるか */
+  function displayScale(): number {
+    const rect = canvas.getBoundingClientRect();
+    return rect.width > 0 && dims ? dims.width / rect.width : 1;
+  }
+
+  function selectedShape(): Shape | null {
+    return shapes.find((s) => s.id === selectedId) ?? null;
+  }
+
+  function opacity(): number {
+    return clampOpacity(Number(opacityInput.value));
+  }
+
+  /** 元画像 + 覆い(図形部分をくり抜いたもの)を target に描く */
+  function compose(target: CanvasRenderingContext2D) {
+    if (!dims) return;
+    target.drawImage(baseCanvas, 0, 0);
+    const layerCtx = layerCanvas.getContext('2d')!;
+    layerCtx.clearRect(0, 0, dims.width, dims.height);
+    layerCtx.fillStyle = colorInput.value;
+    if (invertInput.checked) {
+      // 反転: 図形の内側を覆う
+      for (const shape of shapes) {
+        layerCtx.beginPath();
+        tracePolygon(layerCtx, shapeWorldPolygon(shape));
+        layerCtx.fill();
+      }
+    } else {
+      layerCtx.globalCompositeOperation = 'source-over';
+      layerCtx.fillRect(0, 0, dims.width, dims.height);
+      layerCtx.globalCompositeOperation = 'destination-out';
+      for (const shape of shapes) {
+        layerCtx.beginPath();
+        tracePolygon(layerCtx, shapeWorldPolygon(shape));
+        layerCtx.fill();
+      }
+      layerCtx.globalCompositeOperation = 'source-over';
+    }
+    target.save();
+    target.globalAlpha = opacity() / 100;
+    target.drawImage(layerCanvas, 0, 0);
+    target.restore();
+  }
+
+  function drawSelectionUi(shape: Shape) {
+    const scale = displayScale();
+    const lineWidth = 2 * scale;
+    const handle = 6 * scale;
+    const rotateOffset = 28 * scale;
+    ctx.save();
+    ctx.lineWidth = lineWidth;
+    ctx.strokeStyle = '#2563eb';
+    ctx.setLineDash([6 * scale, 4 * scale]);
+    const positions = getHandlePositions(shape, rotateOffset);
+    const box = [positions.nw, positions.ne, positions.se, positions.sw];
+    ctx.beginPath();
+    tracePolygon(ctx, box);
+    ctx.stroke();
+    ctx.beginPath();
+    tracePolygon(ctx, shapeWorldPolygon(shape));
+    ctx.stroke();
+    ctx.setLineDash([]);
+    const top = {
+      x: (positions.nw.x + positions.ne.x) / 2,
+      y: (positions.nw.y + positions.ne.y) / 2,
+    };
+    ctx.beginPath();
+    ctx.moveTo(top.x, top.y);
+    ctx.lineTo(positions.rotate.x, positions.rotate.y);
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    for (const p of box) {
+      ctx.fillRect(p.x - handle, p.y - handle, handle * 2, handle * 2);
+      ctx.strokeRect(p.x - handle, p.y - handle, handle * 2, handle * 2);
+    }
+    ctx.beginPath();
+    ctx.arc(positions.rotate.x, positions.rotate.y, handle, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function render() {
+    if (!dims) return;
+    ctx.clearRect(0, 0, dims.width, dims.height);
+    compose(ctx);
+    const selected = selectedShape();
+    if (selected) drawSelectionUi(selected);
+  }
+
+  function updateUi() {
+    opacityValue.textContent = (opacityValue.dataset.template ?? '').replace(
+      '{value}',
+      String(opacity()),
+    );
+    shapeCountEl.textContent = (shapeCountEl.dataset.template ?? '').replace(
+      '{count}',
+      String(shapes.length),
+    );
+    clearShapesButton.disabled = shapes.length === 0;
+    const selected = selectedShape();
+    selectedPanel.hidden = !selected;
+    noSelectionEl.hidden = !!selected;
+    if (selected) selectedKindSelect.value = selected.kind;
+  }
+
+  function refresh() {
+    updateUi();
+    render();
+  }
+
+  function resetAll() {
+    dims = null;
+    shapes = [];
+    selectedId = null;
+    drag = null;
+    dragPointerId = null;
+    editor.hidden = true;
+    sourceInfoEl.textContent = '';
+    updateUi();
+  }
+
+  async function loadFile(file: File) {
+    clearError();
+    resetAll();
+    if (!isAcceptedImageFile(file)) {
+      showError(errorEl.dataset.unsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace('{max}', () =>
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+    let bitmap: ImageBitmap;
+    try {
+      // 既定の imageOrientation: 'from-image' でEXIFの向きが補正される
+      bitmap = await createImageBitmap(file);
+    } catch {
+      showError(errorEl.dataset.loadFailed ?? '');
+      return;
+    }
+    try {
+      const size = fitWithin(bitmap.width, bitmap.height);
+      baseCanvas.width = layerCanvas.width = canvas.width = size.width;
+      baseCanvas.height = layerCanvas.height = canvas.height = size.height;
+      const baseCtx = baseCanvas.getContext('2d')!;
+      baseCtx.clearRect(0, 0, size.width, size.height);
+      baseCtx.drawImage(bitmap, 0, 0, size.width, size.height);
+      dims = size;
+      sourceInfoEl.textContent = (sourceInfoEl.dataset.template ?? '')
+        .replace('{width}', String(bitmap.width))
+        .replace('{height}', String(bitmap.height))
+        .replace('{size}', () => formatFileSize(file.size));
+      if (size.width !== bitmap.width || size.height !== bitmap.height) {
+        sourceInfoEl.textContent += ` ${(
+          sourceInfoEl.dataset.downscaledTemplate ?? ''
+        )
+          .replace('{width}', String(size.width))
+          .replace('{height}', String(size.height))}`;
+      }
+    } catch {
+      showError(errorEl.dataset.loadFailed ?? '');
+      return;
+    } finally {
+      bitmap.close();
+    }
+    fileName = file.name;
+    editor.hidden = false;
+    refresh();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  [colorInput, opacityInput, invertInput].forEach((el) => {
+    el.addEventListener('input', refresh);
+    el.addEventListener('change', refresh);
+  });
+
+  formatButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      format = button.dataset.format as OutputFormat;
+      formatButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === button)),
+      );
+    });
+  });
+
+  addButton.addEventListener('click', () => {
+    if (!dims) return;
+    const shape = createShape(
+      nextId++,
+      addKindSelect.value as ShapeKind,
+      dims,
+      shapes.length,
+    );
+    shapes.push(shape);
+    selectedId = shape.id;
+    refresh();
+  });
+
+  function replaceShape(next: Shape) {
+    shapes = shapes.map((s) => (s.id === next.id ? next : s));
+  }
+
+  selectedKindSelect.addEventListener('change', () => {
+    const shape = selectedShape();
+    if (!shape) return;
+    replaceShape(changeShapeKind(shape, selectedKindSelect.value as ShapeKind));
+    refresh();
+  });
+
+  duplicateButton.addEventListener('click', () => {
+    const shape = selectedShape();
+    if (!shape || !dims) return;
+    const copy = duplicateShape(shape, nextId++, dims);
+    shapes.push(copy);
+    selectedId = copy.id;
+    refresh();
+  });
+
+  deleteButton.addEventListener('click', () => {
+    shapes = shapes.filter((s) => s.id !== selectedId);
+    selectedId = null;
+    refresh();
+  });
+
+  clearShapesButton.addEventListener('click', () => {
+    shapes = [];
+    selectedId = null;
+    refresh();
+  });
+
+  clearButton.addEventListener('click', () => {
+    resetAll();
+    clearError();
+  });
+
+  function pointFromEvent(e: PointerEvent): Point {
+    return clientToImagePoint(
+      e.clientX,
+      e.clientY,
+      canvas.getBoundingClientRect(),
+      dims!,
+    );
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (!dims || dragPointerId !== null) return;
+    if (!editingEnabled()) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const point = pointFromEvent(e);
+    const scale = displayScale();
+    const touch = e.pointerType !== 'mouse';
+    const selected = selectedShape();
+    let next: Drag | null = null;
+    if (selected) {
+      const handle: HandleKind | null = findHandleAt(
+        selected,
+        point,
+        (touch ? 16 : 11) * scale,
+        28 * scale,
+      );
+      if (handle === 'rotate') next = { type: 'rotate', id: selected.id };
+      else if (handle) next = { type: 'resize', id: selected.id };
+    }
+    if (!next) {
+      const id = findShapeAt(shapes, point);
+      if (id !== null) {
+        const shape = shapes.find((s) => s.id === id)!;
+        // 選んだ図形を最前面に出す
+        shapes = [...shapes.filter((s) => s.id !== id), shape];
+        selectedId = id;
+        next = {
+          type: 'move',
+          id,
+          dx: shape.cx - point.x,
+          dy: shape.cy - point.y,
+        };
+      } else {
+        selectedId = null;
+      }
+    }
+    e.preventDefault();
+    if (next) {
+      drag = next;
+      dragPointerId = e.pointerId;
+      canvas.setPointerCapture(e.pointerId);
+    }
+    refresh();
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (!dims || !drag || e.pointerId !== dragPointerId) return;
+    const shape = shapes.find((s) => s.id === drag!.id);
+    if (!shape) return;
+    const point = pointFromEvent(e);
+    if (drag.type === 'move') {
+      replaceShape(
+        moveShape(shape, point.x + drag.dx, point.y + drag.dy, dims),
+      );
+    } else if (drag.type === 'resize') {
+      replaceShape(resizeShape(shape, point, dims));
+    } else {
+      replaceShape(rotateShape(shape, point, e.shiftKey));
+    }
+    render();
+  });
+
+  function endDrag(e: PointerEvent) {
+    if (e.pointerId !== dragPointerId) return;
+    drag = null;
+    dragPointerId = null;
+  }
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+
+  downloadButton.addEventListener('click', () => {
+    if (!dims) return;
+    const option = OUTPUT_FORMATS[format];
+    const out = document.createElement('canvas');
+    out.width = dims.width;
+    out.height = dims.height;
+    const outCtx = out.getContext('2d')!;
+    if (format === 'jpeg') {
+      // JPEGは透過を持てないため白地に合成する
+      outCtx.fillStyle = '#ffffff';
+      outCtx.fillRect(0, 0, out.width, out.height);
+    }
+    compose(outCtx);
+    const outName = buildOutputFileName(fileName, format);
+    out.toBlob(
+      (blob) => {
+        if (!blob || blob.type !== option.mimeType) {
+          showError(errorEl.dataset.exportFailed ?? '');
+          return;
+        }
+        clearError();
+        downloadBlob(blob, outName);
+      },
+      option.mimeType,
+      0.92,
+    );
+  });
+
+  updateUi();
+</script>

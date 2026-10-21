@@ -940,13 +940,15 @@ export const updates: UpdateEntry[] = [
       'hit-and-blow',
       'lights-out',
       'mental-math-trainer',
+      'function-grapher',
+      'scientific-calculator',
     ],
     translations: {
       ja: {
-        summary: '36個のツールを追加しました。',
+        summary: '38個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 36 new tools.',
+        summary: 'Added 38 new tools.',
       },
     },
   },

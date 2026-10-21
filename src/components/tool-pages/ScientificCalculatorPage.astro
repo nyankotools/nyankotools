@@ -1,0 +1,341 @@
+---
+import ToolShell from '../ToolShell.astro';
+import ExpressionReference from '../ExpressionReference.astro';
+import { scientificCalculatorContent } from '../../i18n/tools/scientific-calculator';
+import { PAD_KEYS } from '../../lib/tools/scientific-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = scientificCalculatorContent[locale];
+const messagesJson = JSON.stringify({
+  errors: t.errors,
+  historyEmpty: t.historyEmpty,
+  historyItemLabel: t.historyItemLabel,
+});
+---
+
+<ToolShell t={t}>
+  <div id="scicalc-root" data-messages={messagesJson}>
+    <div class="flex flex-wrap items-end gap-3">
+      <div class="min-w-0 flex-1 basis-64">
+        <label for="scicalc-input" class="ui-label">
+          {t.expressionLabel}
+        </label>
+        <input
+          id="scicalc-input"
+          type="text"
+          placeholder={t.expressionPlaceholder}
+          spellcheck="false"
+          autocomplete="off"
+          autocapitalize="off"
+          data-query-target="text"
+          data-no-count
+          class="ui-input h-12 w-full min-w-0 px-3 font-mono text-base dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <span id="scicalc-angle-label" class="ui-label">
+          {t.angleLabel}
+        </span>
+        <div
+          class="ui-seg w-fit"
+          role="group"
+          aria-labelledby="scicalc-angle-label"
+        >
+          <button
+            type="button"
+            id="scicalc-deg"
+            data-angle="deg"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            {t.degLabel}
+          </button>
+          <button
+            type="button"
+            id="scicalc-rad"
+            data-angle="rad"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.radLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 rounded-lg border border-gray-300 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+      <div class="text-xs text-gray-600 dark:text-gray-400">
+        {t.resultLabel}
+      </div>
+      <div
+        id="scicalc-result"
+        class="mt-1 min-h-8 font-mono text-2xl font-semibold break-all text-gray-900 dark:text-gray-100"
+        aria-live="polite"
+      ></div>
+      <p
+        id="scicalc-error"
+        class="mt-1 min-h-5 text-sm text-red-700 dark:text-red-400"
+        aria-live="polite"
+      ></p>
+      <div class="mt-2 flex flex-wrap items-center gap-2">
+        <button type="button" id="scicalc-copy-button" class="ui-btn">
+          {t.copyResult}
+        </button>
+        <span
+          id="scicalc-status"
+          data-copied={t.copied}
+          data-copy-failed={t.copyFailed}
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+
+    <div
+      class="mt-4 grid max-w-md grid-cols-5 gap-2"
+      role="group"
+      aria-label={t.padLabel}
+    >
+      {PAD_KEYS.map((k) => (
+        <button
+          type="button"
+          id={`scicalc-key-${k.id}`}
+          data-action={k.action}
+          data-insert={k.insert}
+          aria-label={t.keyLabels[k.id] ?? k.label}
+          title={t.keyLabels[k.id] ?? k.label}
+          class:list={[
+            k.action === 'equals' ? 'ui-btn-primary' : 'ui-btn',
+            'min-w-0 px-0 font-mono text-base',
+            k.wide && 'col-span-2',
+            /^[0-9.]$/.test(k.id) && 'font-semibold',
+          ]}
+        >
+          {k.label}
+        </button>
+      ))}
+    </div>
+
+    <section class="mt-8" aria-labelledby="scicalc-history-heading">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="scicalc-history-heading" class="text-lg font-semibold">
+          {t.historyHeading}
+        </h2>
+        <button type="button" id="scicalc-history-clear" class="ui-btn">
+          {t.historyClear}
+        </button>
+      </div>
+      <ul id="scicalc-history" class="mt-2 space-y-1"></ul>
+      <p
+        id="scicalc-history-empty"
+        class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+      >
+        {t.historyEmpty}
+      </p>
+    </section>
+  </div>
+  <ExpressionReference locale={locale} variable="ans" />
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { attachExpressionAutocomplete } from '../../lib/expression-autocomplete-ui';
+  import {
+    backspaceAt,
+    calculate,
+    insertAt,
+    pushHistory,
+    type AngleMode,
+    type CalcErrorCode,
+    type HistoryEntry,
+  } from '../../lib/tools/scientific-calculator';
+
+  const root = document.getElementById('scicalc-root')!;
+  const messages = JSON.parse(root.dataset.messages ?? '{}') as {
+    errors: Record<CalcErrorCode, string>;
+    historyEmpty: string;
+    historyItemLabel: string;
+  };
+  const input = document.getElementById('scicalc-input') as HTMLInputElement;
+  const resultEl = document.getElementById('scicalc-result')!;
+  const errorEl = document.getElementById('scicalc-error')!;
+  const statusEl = document.getElementById('scicalc-status')!;
+  const copyButton = document.getElementById(
+    'scicalc-copy-button',
+  ) as HTMLButtonElement;
+  const historyEl = document.getElementById('scicalc-history')!;
+  const historyEmptyEl = document.getElementById('scicalc-history-empty')!;
+  const angleButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-angle]'),
+  );
+
+  attachExpressionAutocomplete(input, ['ans']);
+
+  let angle: AngleMode = 'deg';
+  let ans = 0;
+  let history: HistoryEntry[] = [];
+  /** 画面に出している結果（コピー用）。なければ空 */
+  let shownResult = '';
+
+  function showResult(text: string) {
+    shownResult = text;
+    resultEl.textContent = text;
+    statusEl.textContent = '';
+  }
+
+  /** 入力中のプレビュー。エラーは確定（Enter）まで表示しない */
+  function preview() {
+    errorEl.textContent = '';
+    if (input.value.trim() === '') {
+      showResult('');
+      return;
+    }
+    const r = calculate(input.value, angle, ans);
+    showResult(r.ok ? r.text : '');
+  }
+
+  function commit() {
+    const expression = input.value.trim();
+    if (expression === '') {
+      showResult('');
+      errorEl.textContent = messages.errors.empty;
+      return;
+    }
+    const r = calculate(expression, angle, ans);
+    if (!r.ok) {
+      showResult('');
+      errorEl.textContent = messages.errors[r.error];
+      return;
+    }
+    errorEl.textContent = '';
+    showResult(r.text);
+    ans = r.value;
+    history = pushHistory(history, { expression, result: r.text });
+    renderHistory();
+  }
+
+  function setInput(text: string, cursor: number) {
+    input.value = text;
+    input.focus({ preventScroll: true });
+    input.setSelectionRange(cursor, cursor);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function insertText(text: string) {
+    const r = insertAt(
+      input.value,
+      input.selectionStart ?? input.value.length,
+      input.selectionEnd ?? input.value.length,
+      text,
+    );
+    setInput(r.text, r.cursor);
+  }
+
+  function renderHistory() {
+    historyEl.textContent = '';
+    for (const entry of history) {
+      const li = document.createElement('li');
+      li.className = 'flex flex-wrap items-center gap-x-2';
+      const exprBtn = document.createElement('button');
+      exprBtn.type = 'button';
+      exprBtn.dataset.historyExpr = entry.expression;
+      exprBtn.title = messages.historyItemLabel;
+      exprBtn.className =
+        'min-h-9 max-w-full min-w-0 rounded px-2 text-left font-mono text-sm break-all text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800';
+      exprBtn.textContent = entry.expression;
+      const eq = document.createElement('span');
+      eq.setAttribute('aria-hidden', 'true');
+      eq.className = 'text-gray-600 dark:text-gray-400';
+      eq.textContent = '=';
+      const resBtn = document.createElement('button');
+      resBtn.type = 'button';
+      resBtn.dataset.historyResult = entry.result;
+      resBtn.className =
+        'min-h-9 max-w-full min-w-0 rounded px-2 text-left font-mono text-sm font-semibold break-all text-gray-900 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-800';
+      resBtn.textContent = entry.result;
+      li.append(exprBtn, eq, resBtn);
+      historyEl.append(li);
+    }
+    historyEmptyEl.classList.toggle('hidden', history.length > 0);
+  }
+
+  // ボタンパッド（入力欄のフォーカスと選択位置を保つ）
+  root.querySelectorAll<HTMLButtonElement>('[data-action]').forEach((btn) => {
+    btn.addEventListener('mousedown', (e) => e.preventDefault());
+    btn.addEventListener('click', () => {
+      switch (btn.dataset.action) {
+        case 'insert':
+          insertText(btn.dataset.insert ?? '');
+          break;
+        case 'clear':
+          setInput('', 0);
+          errorEl.textContent = '';
+          break;
+        case 'backspace': {
+          const r = backspaceAt(
+            input.value,
+            input.selectionStart ?? input.value.length,
+            input.selectionEnd ?? input.value.length,
+          );
+          setInput(r.text, r.cursor);
+          break;
+        }
+        case 'equals':
+          commit();
+          break;
+      }
+    });
+  });
+
+  input.addEventListener('input', preview);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.ctrlKey && !e.metaKey && !e.isComposing) {
+      e.preventDefault();
+      commit();
+    }
+  });
+
+  angleButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      angle = btn.dataset.angle as AngleMode;
+      angleButtons.forEach((b) => {
+        b.setAttribute('aria-pressed', String(b === btn));
+      });
+      preview();
+    });
+  });
+
+  historyEl.addEventListener('click', (e) => {
+    const target = (e.target as HTMLElement).closest<HTMLButtonElement>(
+      'button',
+    );
+    if (!target) return;
+    if (target.dataset.historyExpr !== undefined) {
+      setInput(target.dataset.historyExpr, target.dataset.historyExpr.length);
+    } else if (target.dataset.historyResult !== undefined) {
+      insertText(target.dataset.historyResult);
+    }
+  });
+
+  document
+    .getElementById('scicalc-history-clear')!
+    .addEventListener('click', () => {
+      history = [];
+      renderHistory();
+    });
+
+  copyButton.addEventListener('click', async () => {
+    if (shownResult === '') return;
+    statusEl.textContent = (await copyText(shownResult))
+      ? (statusEl.dataset.copied ?? '')
+      : (statusEl.dataset.copyFailed ?? '');
+  });
+
+  renderHistory();
+  preview();
+</script>

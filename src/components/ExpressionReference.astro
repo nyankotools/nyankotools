@@ -1,0 +1,42 @@
+---
+import type { Locale } from '../data/tools';
+import { expressionReference } from '../i18n/expression-reference';
+
+interface Props {
+  locale: Locale;
+  /** 関数グラフは変数 x、関数電卓は ans を一覧に含める */
+  variable: 'x' | 'ans';
+}
+
+const { locale, variable } = Astro.props;
+const c = expressionReference[locale];
+const sections = [
+  { heading: c.functionsHeading, rows: c.functions },
+  { heading: c.operatorsHeading, rows: c.operators },
+  {
+    heading: c.constantsHeading,
+    rows: [...c.constants, c.variables[variable]],
+  },
+];
+---
+
+<section class="mt-10" aria-labelledby="expr-ref-heading">
+  <h2 id="expr-ref-heading" class="mb-2 text-lg font-bold">
+    {c.heading}
+  </h2>
+  {sections.map((section) => (
+    <div>
+      <h3 class="mt-4 mb-1 text-sm font-semibold">{section.heading}</h3>
+      <dl class="divide-y divide-gray-200 text-sm dark:divide-gray-700">
+        {section.rows.map((row) => (
+          <div class="grid gap-x-4 gap-y-0.5 py-1.5 sm:grid-cols-[14rem_1fr]">
+            <dt class="font-mono break-words text-gray-900 dark:text-gray-100">
+              {row.syntax}
+            </dt>
+            <dd class="text-gray-600 dark:text-gray-400">{row.description}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  ))}
+</section>

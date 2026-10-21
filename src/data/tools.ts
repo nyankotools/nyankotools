@@ -11625,6 +11625,84 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'function-grapher',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['quadratic-solver', 'graph-paper-generator', 'matrix-calculator'],
+    translations: {
+      ja: {
+        name: '関数グラフ描画',
+        description:
+          'y=f(x)の式を入力してグラフを描画。最大6本の重ね描き、ドラッグで移動・ホイールでズーム、度/ラジアン切替、PNG保存に対応。',
+        keywords: [
+          'グラフ',
+          '関数',
+          'y=f(x)',
+          '関数電卓',
+          'プロット',
+          '三角関数',
+          '二次関数',
+          'グラフ描画',
+        ],
+      },
+      en: {
+        name: 'Function Grapher',
+        description:
+          'Plot y=f(x) graphs online. Overlay up to 6 functions, pan and zoom, switch degrees/radians and save as PNG.',
+        keywords: [
+          'graph',
+          'plot',
+          'function',
+          'y=f(x)',
+          'graphing calculator',
+          'curve',
+          'trigonometric',
+          'parabola',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'scientific-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['function-grapher', 'geometry-calculator', 'matrix-calculator'],
+    translations: {
+      ja: {
+        name: '関数電卓',
+        description:
+          'sin・cos・log・√・階乗に対応したオンライン関数電卓。キーボード入力、度/ラジアン切替、計算履歴つき。',
+        keywords: [
+          '電卓',
+          '関数電卓',
+          '三角関数',
+          '対数',
+          '階乗',
+          'ラジアン',
+          'calculator',
+          'scientific calculator',
+        ],
+      },
+      en: {
+        name: 'Scientific Calculator',
+        description:
+          'Online scientific calculator with trig, logs, roots, powers and factorials. Keyboard input, degrees/radians, history.',
+        keywords: [
+          'calculator',
+          'scientific calculator',
+          'sin cos tan',
+          'logarithm',
+          'factorial',
+          'radians',
+          'degrees',
+          'calc',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

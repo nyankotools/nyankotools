@@ -81,6 +81,7 @@ const slugs = [
   'hit-and-blow',
   'lights-out',
   'mental-math-trainer',
+  'function-grapher',
   'tetris-game',
   'invoice-generator',
   'word-frequency',

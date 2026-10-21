@@ -160,6 +160,7 @@ const slugs = [
   'tax-wall-calculator',
   'unemployment-benefit',
   'childcare-leave-benefit',
+  'recipe-scaler',
 ];
 
 const locales = [

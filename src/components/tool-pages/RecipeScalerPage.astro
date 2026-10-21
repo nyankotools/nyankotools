@@ -1,0 +1,186 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { recipeScalerContent } from '../../i18n/tools/recipe-scaler';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = recipeScalerContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="rs-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="rs-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      class="ui-input h-52 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-4">
+    <div>
+      <label for="rs-from" class="ui-label">
+        {t.fromLabel}
+      </label>
+      <input
+        id="rs-from"
+        type="number"
+        inputmode="decimal"
+        min="0"
+        step="any"
+        value="2"
+        class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+      />
+    </div>
+    <div>
+      <label for="rs-to" class="ui-label">
+        {t.toLabel}
+      </label>
+      <input
+        id="rs-to"
+        type="number"
+        inputmode="decimal"
+        min="0"
+        step="any"
+        value="4"
+        class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+      />
+    </div>
+    <div>
+      <label for="rs-rounding" class="ui-label">
+        {t.roundingLabel}
+      </label>
+      <select id="rs-rounding" class="ui-input h-11 px-3 dark:bg-gray-900">
+        <option value="fraction">{t.roundingFraction}</option>
+        <option value="decimal">{t.roundingDecimal}</option>
+        <option value="integer">{t.roundingInteger}</option>
+      </select>
+    </div>
+  </div>
+
+  <p
+    id="rs-error"
+    class="ui-error mt-2"
+    hidden
+    data-message={t.errorServings}
+    aria-live="polite"
+  ></p>
+
+  <div class="mt-4">
+    <label for="rs-output" class="ui-label">
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="rs-output"
+      readonly
+      data-no-persist
+      class="ui-input h-52 w-full bg-gray-50 p-4 font-mono whitespace-pre-wrap dark:bg-gray-900"
+    ></textarea>
+  </div>
+
+  <p
+    id="rs-summary"
+    class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    data-template={t.summaryTemplate}
+    data-none={t.summaryNoNumbers}
+    data-mixed-join={t.mixedJoin}
+    aria-live="polite"
+  ></p>
+
+  <div class="mt-3 flex flex-wrap items-center gap-3">
+    <button
+      id="rs-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="rs-status"
+      class="text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    scaleRecipe,
+    type RoundingMode,
+  } from '../../lib/tools/recipe-scaler';
+
+  const input = document.getElementById('rs-input') as HTMLTextAreaElement;
+  const fromInput = document.getElementById('rs-from') as HTMLInputElement;
+  const toInput = document.getElementById('rs-to') as HTMLInputElement;
+  const roundingSelect = document.getElementById(
+    'rs-rounding',
+  ) as HTMLSelectElement;
+  const errorEl = document.getElementById('rs-error')!;
+  const output = document.getElementById('rs-output') as HTMLTextAreaElement;
+  const summaryEl = document.getElementById('rs-summary')!;
+  const copyButton = document.getElementById(
+    'rs-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('rs-status')!;
+
+  function format(n: number): string {
+    return String(Number(n.toFixed(4)));
+  }
+
+  function render() {
+    statusEl.textContent = '';
+    errorEl.textContent = '';
+    errorEl.hidden = true;
+    summaryEl.textContent = '';
+    output.value = '';
+
+    if (input.value.trim() === '') return;
+
+    const result = scaleRecipe(input.value, {
+      fromServings: Number(fromInput.value),
+      toServings: Number(toInput.value),
+      rounding: roundingSelect.value as RoundingMode,
+      mixedJoin: summaryEl.dataset.mixedJoin ?? ' ',
+    });
+    if (result === null) {
+      errorEl.textContent = errorEl.dataset.message ?? '';
+      errorEl.hidden = false;
+      return;
+    }
+
+    output.value = result.text;
+    summaryEl.textContent =
+      result.scaledCount === 0
+        ? (summaryEl.dataset.none ?? '')
+        : (summaryEl.dataset.template ?? '')
+            .replace('{factor}', format(result.factor))
+            .replace('{count}', String(result.scaledCount));
+  }
+
+  onTextInput(input, render);
+  fromInput.addEventListener('input', render);
+  toInput.addEventListener('input', render);
+  roundingSelect.addEventListener('change', render);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  render();
+</script>

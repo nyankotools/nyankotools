@@ -1,0 +1,502 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { materialQuantityContent } from '../../i18n/tools/material-quantity';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = materialQuantityContent[locale];
+
+const rows = [
+  { id: 'gross', label: t.resultGrossLabel, kinds: 'all' },
+  { id: 'opening', label: t.resultOpeningLabel, kinds: 'wallpaper paint' },
+  { id: 'net', label: t.resultNetLabel, kinds: 'all' },
+  { id: 'tatami', label: t.resultTatamiLabel, kinds: 'all' },
+  { id: 'with-loss', label: t.resultWithLossLabel, kinds: 'all' },
+  { id: 'rolls', label: t.resultRollsLabel, kinds: 'wallpaper' },
+  { id: 'roll-area', label: t.resultRollAreaLabel, kinds: 'wallpaper' },
+  { id: 'liters', label: t.resultLitersLabel, kinds: 'paint' },
+  { id: 'cans', label: t.resultCansLabel, kinds: 'paint' },
+  { id: 'purchased', label: t.resultPurchasedLabel, kinds: 'paint' },
+  { id: 'pieces', label: t.resultPiecesLabel, kinds: 'tile' },
+  { id: 'boxes', label: t.resultBoxesLabel, kinds: 'tile' },
+];
+const inputClass = 'ui-input h-11 w-28 px-3 dark:bg-gray-900';
+---
+
+<ToolShell t={t}>
+  <section
+    id="mq-root"
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+    data-unit-sqm={t.unitSqm}
+    data-unit-liter={t.unitLiter}
+    data-unit-rolls={t.unitRolls}
+    data-unit-cans={t.unitCans}
+    data-unit-pieces={t.unitPieces}
+    data-unit-boxes={t.unitBoxes}
+    data-unit-tatami={t.unitTatami}
+  >
+    <div class="mb-3">
+      <span id="mq-material-label" class="ui-label">
+        {t.materialLegend}
+      </span>
+      <div
+        class="flex flex-wrap gap-3"
+        role="radiogroup"
+        aria-labelledby="mq-material-label"
+      >
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="mq-material" value="wallpaper" checked />
+          {t.materialWallpaper}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="mq-material" value="paint" />
+          {t.materialPaint}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="mq-material" value="tile" />
+          {t.materialTile}
+        </label>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <span id="mq-mode-label" class="ui-label">
+        {t.modeLegend}
+      </span>
+      <div
+        class="flex flex-wrap gap-3"
+        role="radiogroup"
+        aria-labelledby="mq-mode-label"
+      >
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="mq-mode" value="dims" checked />
+          {t.modeDims}
+        </label>
+        <label class="flex items-center gap-1 text-sm">
+          <input type="radio" name="mq-mode" value="area" />
+          {t.modeArea}
+        </label>
+      </div>
+    </div>
+
+    <div id="mq-dims" class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="mq-width" class="ui-label">
+          {t.widthLabel}
+        </label>
+        <input
+          id="mq-width"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          value="4"
+          class={inputClass}
+        />
+      </div>
+      <div>
+        <label for="mq-depth" class="ui-label">
+          {t.depthLabel}
+        </label>
+        <input
+          id="mq-depth"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          value="3"
+          class={inputClass}
+        />
+      </div>
+      <div id="mq-height-wrap">
+        <label for="mq-height" class="ui-label">
+          {t.heightLabel}
+        </label>
+        <input
+          id="mq-height"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          value="2.4"
+          class={inputClass}
+        />
+      </div>
+    </div>
+
+    <div id="mq-area-wrap" class="hidden">
+      <label for="mq-area" class="ui-label">
+        {t.areaLabel}
+      </label>
+      <input
+        id="mq-area"
+        type="number"
+        inputmode="decimal"
+        min="0"
+        step="any"
+        value="30"
+        class={inputClass}
+      />
+      <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{t.areaNote}</p>
+    </div>
+
+    <fieldset id="mq-openings" class="mt-4">
+      <legend class="ui-label">{t.openingsHeading}</legend>
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="mq-doors" class="ui-label">
+            {t.doorsLabel}
+          </label>
+          <input
+            id="mq-doors"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            value="1"
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="mq-door-area" class="ui-label">
+            {t.doorAreaLabel}
+          </label>
+          <input
+            id="mq-door-area"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="any"
+            value="1.6"
+            class={inputClass}
+          />
+        </div>
+        <div>
+          <label for="mq-windows" class="ui-label">
+            {t.windowsLabel}
+          </label>
+          <input
+            id="mq-windows"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            step="1"
+            value="1"
+            class="ui-input h-11 w-20 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="mq-window-area" class="ui-label">
+            {t.windowAreaLabel}
+          </label>
+          <input
+            id="mq-window-area"
+            type="number"
+            inputmode="decimal"
+            min="0"
+            step="any"
+            value="1.5"
+            class={inputClass}
+          />
+        </div>
+      </div>
+      <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+        {t.openingsNote}
+      </p>
+    </fieldset>
+
+    <div class="mt-4 flex flex-wrap items-end gap-3">
+      <div>
+        <label for="mq-loss" class="ui-label">
+          {t.lossLabel}
+        </label>
+        <input
+          id="mq-loss"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          value="10"
+          class={inputClass}
+        />
+      </div>
+
+      <div data-for="wallpaper">
+        <label for="mq-roll-width" class="ui-label">
+          {t.rollWidthLabel}
+        </label>
+        <input
+          id="mq-roll-width"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          value="0.93"
+          class={inputClass}
+        />
+      </div>
+      <div data-for="wallpaper">
+        <label for="mq-roll-length" class="ui-label">
+          {t.rollLengthLabel}
+        </label>
+        <input
+          id="mq-roll-length"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          value="10"
+          class={inputClass}
+        />
+      </div>
+
+      <div data-for="paint" class="hidden">
+        <label for="mq-coverage" class="ui-label">
+          {t.coverageLabel}
+        </label>
+        <input
+          id="mq-coverage"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          value="6"
+          class={inputClass}
+        />
+      </div>
+      <div data-for="paint" class="hidden">
+        <label for="mq-coats" class="ui-label">
+          {t.coatsLabel}
+        </label>
+        <input
+          id="mq-coats"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          step="1"
+          value="2"
+          class="ui-input h-11 w-20 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div data-for="paint" class="hidden">
+        <label for="mq-can" class="ui-label">
+          {t.canLitersLabel}
+        </label>
+        <input
+          id="mq-can"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          value="4"
+          class={inputClass}
+        />
+      </div>
+
+      <div data-for="tile" class="hidden">
+        <label for="mq-piece-width" class="ui-label">
+          {t.pieceWidthLabel}
+        </label>
+        <input
+          id="mq-piece-width"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          value="30"
+          class={inputClass}
+        />
+      </div>
+      <div data-for="tile" class="hidden">
+        <label for="mq-piece-length" class="ui-label">
+          {t.pieceLengthLabel}
+        </label>
+        <input
+          id="mq-piece-length"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          value="30"
+          class={inputClass}
+        />
+      </div>
+      <div data-for="tile" class="hidden">
+        <label for="mq-per-box" class="ui-label">
+          {t.piecesPerBoxLabel}
+        </label>
+        <input
+          id="mq-per-box"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          step="1"
+          value="10"
+          class="ui-input h-11 w-20 px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+
+    <p
+      id="mq-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <dl
+      id="mq-results"
+      class="mt-4 hidden grid grid-cols-1 gap-3 sm:grid-cols-2"
+      aria-live="polite"
+    >
+      {rows.map((r) => (
+        <div data-kinds={r.kinds}>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">{r.label}</dt>
+          <dd class="text-lg font-semibold" id={`mq-result-${r.id}`} />
+        </div>
+      ))}
+    </dl>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    calculateMaterial,
+    type MaterialInput,
+    type RoomMode,
+  } from '../../lib/tools/material-quantity';
+
+  const root = document.getElementById('mq-root')!;
+  const d = root.dataset;
+  const numberLocale = d.numberLocale ?? 'en-US';
+  const unit = (k: string) => d[k] ?? '';
+  const num = new Intl.NumberFormat(numberLocale, { maximumFractionDigits: 2 });
+  const int = new Intl.NumberFormat(numberLocale, { maximumFractionDigits: 0 });
+
+  const byId = (id: string) => document.getElementById(id)!;
+  const val = (id: string) => (byId(id) as HTMLInputElement).value;
+  const n = (id: string) => (val(id).trim() === '' ? NaN : Number(val(id)));
+  const checked = (name: string) =>
+    document.querySelector<HTMLInputElement>(`input[name="${name}"]:checked`)!
+      .value;
+
+  const errorEl = byId('mq-error');
+  const resultsEl = byId('mq-results');
+
+  function applyVisibility(
+    material: string,
+    mode: RoomMode,
+    isWall: boolean,
+  ): void {
+    document.querySelectorAll<HTMLElement>('[data-for]').forEach((el) => {
+      el.classList.toggle('hidden', el.dataset.for !== material);
+    });
+    byId('mq-dims').classList.toggle('hidden', mode !== 'dims');
+    byId('mq-height-wrap').classList.toggle('hidden', !isWall);
+    byId('mq-area-wrap').classList.toggle('hidden', mode !== 'area');
+    byId('mq-openings').classList.toggle('hidden', !isWall);
+    resultsEl.querySelectorAll<HTMLElement>('[data-kinds]').forEach((el) => {
+      const kinds = (el.dataset.kinds ?? '').split(' ');
+      el.classList.toggle(
+        'hidden',
+        !(kinds.includes('all') || kinds.includes(material)),
+      );
+    });
+  }
+
+  function set(id: string, text: string) {
+    byId(`mq-result-${id}`).textContent = text;
+  }
+
+  function render() {
+    const material = checked('mq-material');
+    const mode = checked('mq-mode') as RoomMode;
+    const isWall = material !== 'tile';
+    applyVisibility(material, mode, isWall);
+
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    const room = {
+      mode,
+      width: n('mq-width'),
+      depth: n('mq-depth'),
+      height: n('mq-height'),
+      area: n('mq-area'),
+      doors: n('mq-doors'),
+      doorArea: n('mq-door-area'),
+      windows: n('mq-windows'),
+      windowArea: n('mq-window-area'),
+    };
+    // 表示されていない欄は空でも無視する
+    if (!isWall) {
+      room.doors = 0;
+      room.windows = 0;
+      room.doorArea = 0;
+      room.windowArea = 0;
+    }
+    let spec: MaterialInput['material'];
+    if (material === 'wallpaper') {
+      spec = {
+        kind: 'wallpaper',
+        rollWidthM: n('mq-roll-width'),
+        rollLengthM: n('mq-roll-length'),
+      };
+    } else if (material === 'paint') {
+      spec = {
+        kind: 'paint',
+        coveragePerL: n('mq-coverage'),
+        coats: n('mq-coats'),
+        canLiters: n('mq-can'),
+      };
+    } else {
+      spec = {
+        kind: 'tile',
+        pieceWidthCm: n('mq-piece-width'),
+        pieceLengthCm: n('mq-piece-length'),
+        piecesPerBox: n('mq-per-box'),
+      };
+    }
+
+    const r = calculateMaterial({
+      room,
+      lossPercent: n('mq-loss'),
+      material: spec,
+    });
+    if (r === null) {
+      errorEl.textContent = d.error ?? '';
+      return;
+    }
+
+    const sqm = (v: number) => `${num.format(v)} ${unit('unitSqm')}`;
+    set('gross', sqm(r.grossArea));
+    set('opening', sqm(r.openingArea));
+    set('net', sqm(r.netArea));
+    set('tatami', `${num.format(r.tatami)} ${unit('unitTatami')}`);
+    set('with-loss', sqm(r.areaWithLoss));
+    if (r.kind === 'wallpaper') {
+      set('rolls', `${int.format(r.rolls)} ${unit('unitRolls')}`);
+      set('roll-area', sqm(r.rollAreaSqm));
+    } else if (r.kind === 'paint') {
+      set('liters', `${num.format(r.litersNeeded)} ${unit('unitLiter')}`);
+      set('cans', `${int.format(r.cans)} ${unit('unitCans')}`);
+      set('purchased', `${num.format(r.litersPurchased)} ${unit('unitLiter')}`);
+    } else {
+      set('pieces', `${int.format(r.pieces)} ${unit('unitPieces')}`);
+      set('boxes', `${int.format(r.boxes)} ${unit('unitBoxes')}`);
+    }
+    resultsEl.classList.remove('hidden');
+  }
+
+  root
+    .querySelectorAll<HTMLInputElement>('input')
+    .forEach((el) =>
+      el.addEventListener(el.type === 'radio' ? 'change' : 'input', render),
+    );
+  render();
+</script>

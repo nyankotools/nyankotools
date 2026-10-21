@@ -11022,6 +11022,159 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'cooking-unit-converter',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['recipe-scaler', 'unit-converter', 'bmr-calorie-calculator'],
+    translations: {
+      ja: {
+        name: '料理の分量換算',
+        description:
+          '大さじ・小さじ・カップ・g・mlを食材別に相互換算。小麦粉・砂糖・油・バターなどの重さ早見表つき。',
+        keywords: [
+          '大さじ',
+          '小さじ',
+          'カップ',
+          'グラム',
+          '計量',
+          '分量',
+          'レシピ',
+          '比重',
+        ],
+      },
+      en: {
+        name: 'Cooking Unit Converter',
+        description:
+          'Convert tablespoons, teaspoons, cups, grams and ml for flour, sugar, butter, honey and more, with a weight chart.',
+        keywords: [
+          'tablespoon',
+          'teaspoon',
+          'cup',
+          'grams',
+          'recipe',
+          'measurement',
+          'tbsp',
+          'tsp',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'recipe-scaler',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['cooking-unit-converter', 'ratio-calculator', 'unit-converter'],
+    translations: {
+      ja: {
+        name: 'レシピ人数換算',
+        description:
+          '材料リストを貼り付けて、人数に合わせて分量を拡大・縮小。分数・全角数字・範囲に対応',
+        keywords: [
+          'レシピ',
+          '材料',
+          '分量',
+          '人数',
+          '倍量',
+          '半量',
+          '分数',
+          '料理',
+        ],
+      },
+      en: {
+        name: 'Recipe Scaler',
+        description:
+          'Scale an ingredient list to any number of servings. Handles fractions, ranges and units',
+        keywords: [
+          'recipe',
+          'servings',
+          'ingredients',
+          'scale recipe',
+          'double recipe',
+          'halve recipe',
+          'cooking',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'material-quantity',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['unit-converter', 'screen-size-calculator'],
+    translations: {
+      ja: {
+        name: '壁紙・塗料・タイル・床材の必要量計算',
+        description:
+          '部屋の寸法や面積から壁紙のロール数、塗料の缶数、タイル・床材の枚数と箱数を計算。ドア・窓の控除とロス率、畳換算に対応。',
+        keywords: [
+          '壁紙',
+          'クロス',
+          '塗料',
+          'ペンキ',
+          'タイル',
+          '床材',
+          'フローリング',
+          'DIY',
+        ],
+      },
+      en: {
+        name: 'Wallpaper, Paint, Tile & Flooring Quantity Calculator',
+        description:
+          'Estimate rolls of wallpaper, cans of paint, and tiles or flooring boxes from room size, minus doors and windows, plus waste.',
+        keywords: [
+          'wallpaper calculator',
+          'paint calculator',
+          'tile calculator',
+          'flooring calculator',
+          'DIY',
+          'tatami',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'ab-test-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['statistics-calculator', 'break-even-calculator'],
+    translations: {
+      ja: {
+        name: 'A/Bテスト有意差・必要サンプルサイズ計算',
+        description:
+          'A/Bテストの訪問数とCV数から、p値・信頼区間・有意差の有無を計算。必要サンプルサイズの見積もりにも対応。',
+        keywords: [
+          'A/Bテスト',
+          'ABテスト',
+          '有意差',
+          'p値',
+          'サンプルサイズ',
+          'z検定',
+          '信頼区間',
+          'CVR',
+        ],
+      },
+      en: {
+        name: 'A/B Test Significance & Sample Size Calculator',
+        description:
+          'Check if an A/B test result is significant (p-value, z-test, confidence interval) and estimate the sample size you need.',
+        keywords: [
+          'ab test',
+          'split test',
+          'significance',
+          'p-value',
+          'sample size',
+          'z-test',
+          'confidence interval',
+          'conversion rate',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

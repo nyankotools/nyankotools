@@ -376,7 +376,7 @@ describe('suggestHints', () => {
     const input: ShiftInput = {
       ...base,
       members: ['A'],
-      perDay: 60,
+      perDay: 12,
       maxConsecutive: 1,
       dayOffs: [[]],
     };

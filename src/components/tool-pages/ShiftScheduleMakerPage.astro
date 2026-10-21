@@ -1,0 +1,640 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { shiftScheduleMakerContent } from '../../i18n/tools/shift-schedule-maker';
+import { businessDayCalculatorContent } from '../../i18n/tools/business-day-calculator';
+import {
+  MAX_CONSECUTIVE_LIMIT,
+  MAX_MEMBERS,
+  MAX_PER_DAY,
+} from '../../lib/tools/shift-schedule-maker';
+import { MAX_YEAR, MIN_YEAR } from '../../lib/tools/calendar-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = shiftScheduleMakerContent[locale];
+const holidayNames = businessDayCalculatorContent[locale].holidayNames;
+
+const monthFormat = new Intl.DateTimeFormat(t.dateLocale, {
+  timeZone: 'UTC',
+  month: 'long',
+});
+const monthNames = Array.from({ length: 12 }, (_, i) =>
+  monthFormat.format(new Date(Date.UTC(2023, i, 1))),
+);
+---
+
+<ToolShell t={t}>
+  <section
+    id="shift"
+    data-date-locale={t.dateLocale}
+    data-holiday-names={JSON.stringify(holidayNames)}
+    data-schedule-title={t.scheduleTitle}
+    data-warning-heading={t.warningHeading}
+    data-no-warnings={t.noWarnings}
+    data-table-caption={t.tableCaption}
+    data-legend={t.legend}
+    data-summary-heading={t.summaryHeading}
+    data-summary-work-days={t.summaryWorkDays}
+    data-summary-max-streak={t.summaryMaxStreak}
+    data-daily-heading={t.dailyHeading}
+    data-warning-shortage={t.warningShortage}
+    data-issue-bad-line={t.issueBadLine}
+    data-issue-unknown-member={t.issueUnknownMember}
+    data-issue-bad-day={t.issueBadDay}
+    data-issue-out-of-range={t.issueOutOfRange}
+    data-summary-spread={t.summarySpread}
+    data-name-header={t.nameHeader}
+    data-total-header={t.totalHeader}
+    data-work-mark={t.workMark}
+    data-off-mark={t.offMark}
+    data-closed-text={t.closedText}
+    data-daily-nobody={t.dailyNobody}
+    data-csv-filename={t.csvFilename}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-error-no-members={t.errorNoMembers}
+    data-error-too-many={t.errorTooMany}
+    data-error-year={t.errorYear}
+    data-error-per-day={t.errorPerDay}
+    data-error-max-consecutive={t.errorMaxConsecutive}
+    data-min-year={MIN_YEAR}
+    data-max-year={MAX_YEAR}
+    data-max-members={MAX_MEMBERS}
+    data-max-per-day={MAX_PER_DAY}
+    data-max-consecutive-limit={MAX_CONSECUTIVE_LIMIT}
+    class="space-y-6"
+  >
+    <div class="space-y-4 print:hidden">
+      <div class="grid gap-4 md:grid-cols-2">
+        <div>
+          <label for="shift-members" class="ui-label">
+            {t.membersLabel}
+          </label>
+          <textarea
+            id="shift-members"
+            class="ui-input h-40 w-full p-3 dark:bg-gray-900 dark:placeholder-gray-500"
+            spellcheck="false"
+          >{t.membersDefault}</textarea>
+          <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            {t.membersHint}
+          </p>
+        </div>
+        <div>
+          <label for="shift-offs" class="ui-label">
+            {t.offsLabel}
+          </label>
+          <textarea
+            id="shift-offs"
+            class="ui-input h-40 w-full p-3 dark:bg-gray-900 dark:placeholder-gray-500"
+            placeholder={t.offsPlaceholder}
+            spellcheck="false"
+          ></textarea>
+          <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            {t.offsHint}
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-end gap-3">
+        <div>
+          <label for="shift-year" class="ui-label">
+            {t.yearLabel}
+          </label>
+          <input
+            id="shift-year"
+            type="number"
+            inputmode="numeric"
+            min={MIN_YEAR}
+            max={MAX_YEAR}
+            step="1"
+            class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="shift-month" class="ui-label">
+            {t.monthLabel}
+          </label>
+          <select id="shift-month" class="ui-input h-11 px-3 dark:bg-gray-900">
+            {monthNames.map((name, i) => (
+              <option value={String(i + 1)}>{name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="shift-per-day" class="ui-label">
+            {t.perDayLabel}
+          </label>
+          <input
+            id="shift-per-day"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max={MAX_PER_DAY}
+            step="1"
+            value="2"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="shift-max-consecutive" class="ui-label">
+            {t.maxConsecutiveLabel}
+          </label>
+          <input
+            id="shift-max-consecutive"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max={MAX_CONSECUTIVE_LIMIT}
+            step="1"
+            value="5"
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+
+      <label class="ui-check">
+        <input id="shift-closed" type="checkbox" checked />
+        {t.closedLabel}
+      </label>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          id="shift-print-button"
+          type="button"
+          class="ui-btn ui-btn-primary"
+        >
+          {t.printButton}
+        </button>
+        <button id="shift-copy-button" type="button" class="ui-btn">
+          {t.copyCsvButton}
+        </button>
+        <button id="shift-download-button" type="button" class="ui-btn">
+          {t.downloadCsvButton}
+        </button>
+        <span
+          id="shift-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+      <p id="shift-error" class="ui-error empty:hidden" aria-live="polite"></p>
+    </div>
+
+    <div id="shift-issues" class="space-y-1 print:hidden"></div>
+    <div id="shift-output" class="space-y-6"></div>
+  </section>
+</ToolShell>
+
+<style is:global>
+  @media print {
+    /* 印刷はシフト表だけにする（見出し・説明文・使い方・注意事項・FAQなどは出さない） */
+    [data-tool-page] > :not(#shift) {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  import {
+    cellState,
+    generateSchedule,
+    parseDayOffRequests,
+    parseMembers,
+    scheduleToCsv,
+    validateShiftInput,
+    type ShiftSchedule,
+  } from '../../lib/tools/shift-schedule-maker';
+  import {
+    daysInMonth,
+    isValidMonth,
+  } from '../../lib/tools/calendar-generator';
+  import { fill } from '../../lib/format-template';
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import type { HolidayKey } from '../../lib/tools/business-day-calculator';
+
+  const root = document.getElementById('shift')!;
+  const d = root.dataset;
+  const dateLocale = d.dateLocale ?? 'en-US';
+  const holidayNames: Record<HolidayKey, string> = JSON.parse(
+    d.holidayNames ?? '{}',
+  );
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const membersEl = $<HTMLTextAreaElement>('shift-members');
+  const offsEl = $<HTMLTextAreaElement>('shift-offs');
+  const yearEl = $<HTMLInputElement>('shift-year');
+  const monthEl = $<HTMLSelectElement>('shift-month');
+  const perDayEl = $<HTMLInputElement>('shift-per-day');
+  const maxConsecutiveEl = $<HTMLInputElement>('shift-max-consecutive');
+  const closedEl = $<HTMLInputElement>('shift-closed');
+  const printButton = $<HTMLButtonElement>('shift-print-button');
+  const copyButton = $<HTMLButtonElement>('shift-copy-button');
+  const downloadButton = $<HTMLButtonElement>('shift-download-button');
+  const statusEl = $('shift-status');
+  const errorEl = $('shift-error');
+  const issuesEl = $('shift-issues');
+  const output = $('shift-output');
+
+  const weekdayFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    weekday: 'short',
+  });
+  const monthTitleFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    month: 'long',
+  });
+  const dayFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    month: 'short',
+    day: 'numeric',
+    weekday: 'short',
+  });
+
+  // 2023-01-01 は日曜日
+  const weekdays = Array.from({ length: 7 }, (_, i) =>
+    weekdayFormat.format(new Date(Date.UTC(2023, 0, 1 + i))),
+  );
+  const utcDate = (year: number, month: number, day = 1) => {
+    const dt = new Date(Date.UTC(2000, month - 1, day));
+    dt.setUTCFullYear(year);
+    return dt;
+  };
+
+  const chrome = {
+    warningHeading: d.warningHeading ?? '',
+    noWarnings: d.noWarnings ?? '',
+    tableCaption: d.tableCaption ?? '',
+    legend: d.legend ?? '',
+    summaryHeading: d.summaryHeading ?? '',
+    summaryWorkDays: d.summaryWorkDays ?? '',
+    summaryMaxStreak: d.summaryMaxStreak ?? '',
+    dailyHeading: d.dailyHeading ?? '',
+  };
+
+  let current: ShiftSchedule | null = null;
+
+  const headColor = (dow: number, holiday: boolean) =>
+    holiday || dow === 0
+      ? 'text-red-700 dark:text-red-400'
+      : dow === 6
+        ? 'text-blue-700 dark:text-blue-400'
+        : '';
+  const BORDER =
+    'border border-gray-300 dark:border-gray-600 print:border-gray-400';
+
+  function el<K extends keyof HTMLElementTagNameMap>(
+    tag: K,
+    className = '',
+    text?: string,
+  ): HTMLElementTagNameMap[K] {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function csvLabels() {
+    return {
+      nameHeader: d.nameHeader ?? '',
+      totalHeader: d.totalHeader ?? '',
+      weekdays,
+      workMark: d.workMark ?? '',
+      offMark: d.offMark ?? '',
+    };
+  }
+
+  function renderSchedule(s: ShiftSchedule) {
+    const frag = document.createDocumentFragment();
+
+    frag.append(
+      el(
+        'h2',
+        'text-xl font-bold',
+        fill(d.scheduleTitle ?? '', {
+          year: String(s.year),
+          month: monthTitleFormat.format(utcDate(s.year, s.month)),
+        }),
+      ),
+    );
+
+    // 警告
+    if (s.warnings.length > 0) {
+      const box = el(
+        'div',
+        'rounded-lg border border-red-300 bg-red-50 p-3 dark:border-red-800 dark:bg-red-950/40 print:hidden',
+      );
+      box.setAttribute('role', 'alert');
+      box.id = 'shift-warnings';
+      box.append(
+        el(
+          'h3',
+          'mb-1 text-sm font-semibold text-red-800 dark:text-red-300',
+          chrome.warningHeading,
+        ),
+      );
+      const ul = el('ul', 'space-y-0.5 text-sm text-red-800 dark:text-red-300');
+      for (const w of s.warnings) {
+        ul.append(
+          el(
+            'li',
+            '',
+            fill(d.warningShortage ?? '', {
+              date: dayFormat.format(utcDate(s.year, s.month, w.day)),
+              required: String(w.required),
+              assigned: String(w.assigned),
+              off: String(w.unavailableOff),
+              streak: String(w.unavailableStreak),
+            }),
+          ),
+        );
+      }
+      box.append(ul);
+      frag.append(box);
+    } else {
+      const p = el(
+        'p',
+        'text-sm text-green-700 dark:text-green-400 print:hidden',
+        chrome.noWarnings,
+      );
+      p.id = 'shift-no-warnings';
+      frag.append(p);
+    }
+
+    // 表（メンバー×日付）
+    const wrap = el('div', 'overflow-x-auto print:overflow-visible');
+    wrap.id = 'shift-table-wrap';
+    wrap.tabIndex = 0;
+    wrap.setAttribute('role', 'region');
+    wrap.setAttribute('aria-label', chrome.tableCaption);
+    const table = el(
+      'table',
+      'border-collapse text-center text-sm print:w-full print:text-[10px]',
+    );
+    table.id = 'shift-table';
+    table.append(el('caption', 'sr-only', chrome.tableCaption));
+    const thead = el('thead');
+    const headRow = el('tr');
+    const nameTh = el(
+      'th',
+      `${BORDER} sticky left-0 z-10 min-w-20 bg-white px-2 py-1 text-left font-medium dark:bg-gray-900 print:static`,
+      d.nameHeader ?? '',
+    );
+    nameTh.scope = 'col';
+    headRow.append(nameTh);
+    for (const day of s.days) {
+      const th = el(
+        'th',
+        `${BORDER} min-w-9 px-1 py-1 font-medium ${headColor(day.dow, day.holiday !== null)} ${day.closed ? 'bg-gray-100 dark:bg-gray-800' : ''}`,
+      );
+      th.scope = 'col';
+      th.append(el('div', '', String(day.day)));
+      th.append(el('div', 'text-xs font-normal', weekdays[day.dow]));
+      if (day.closed) th.title = d.closedText ?? '';
+      headRow.append(th);
+    }
+    const totalTh = el(
+      'th',
+      `${BORDER} px-2 py-1 font-medium`,
+      d.totalHeader ?? '',
+    );
+    totalTh.scope = 'col';
+    headRow.append(totalTh);
+    thead.append(headRow);
+    table.append(thead);
+
+    const tbody = el('tbody');
+    s.members.forEach((m, mi) => {
+      const tr = el('tr');
+      const th = el(
+        'th',
+        `${BORDER} sticky left-0 z-10 bg-white px-2 py-1 text-left font-medium whitespace-nowrap dark:bg-gray-900 print:static`,
+        m.name,
+      );
+      th.scope = 'row';
+      tr.append(th);
+      s.days.forEach((day, di) => {
+        const state = cellState(s, mi, di);
+        const td = el(
+          'td',
+          `${BORDER} px-1 py-1 ${day.closed ? 'bg-gray-100 dark:bg-gray-800' : ''} ${state === 'off' ? 'text-gray-600 dark:text-gray-400' : 'font-semibold'}`,
+          state === 'work'
+            ? (d.workMark ?? '')
+            : state === 'off'
+              ? (d.offMark ?? '')
+              : '',
+        );
+        tr.append(td);
+      });
+      tr.append(
+        el('td', `${BORDER} px-2 py-1 font-semibold`, String(m.workDays)),
+      );
+      tbody.append(tr);
+    });
+    table.append(tbody);
+    wrap.append(table);
+    frag.append(wrap);
+    frag.append(
+      el('p', 'text-xs text-gray-600 dark:text-gray-400', chrome.legend),
+    );
+
+    // 担当日数
+    const summary = el('div', 'print:hidden');
+    summary.append(
+      el('h3', 'mb-1 text-base font-semibold', chrome.summaryHeading),
+    );
+    const sTable = el('table', 'border-collapse text-sm');
+    const sHead = el('tr');
+    for (const label of [
+      d.nameHeader ?? '',
+      chrome.summaryWorkDays,
+      chrome.summaryMaxStreak,
+    ]) {
+      const th = el('th', `${BORDER} px-3 py-1 text-left font-medium`, label);
+      th.scope = 'col';
+      sHead.append(th);
+    }
+    const sThead = el('thead');
+    sThead.append(sHead);
+    sTable.append(sThead);
+    const sBody = el('tbody');
+    for (const m of s.members) {
+      const tr = el('tr');
+      const th = el('th', `${BORDER} px-3 py-1 text-left font-medium`, m.name);
+      th.scope = 'row';
+      tr.append(
+        th,
+        el('td', `${BORDER} px-3 py-1 text-right`, String(m.workDays)),
+        el('td', `${BORDER} px-3 py-1 text-right`, String(m.maxStreak)),
+      );
+      sBody.append(tr);
+    }
+    sTable.append(sBody);
+    const sWrap = el('div', 'overflow-x-auto');
+    sWrap.append(sTable);
+    summary.append(
+      sWrap,
+      el(
+        'p',
+        'mt-1 text-sm text-gray-700 dark:text-gray-300',
+        fill(d.summarySpread ?? '', { spread: String(s.spread) }),
+      ),
+    );
+    frag.append(summary);
+
+    // 日別一覧
+    const daily = el('div');
+    daily.append(el('h3', 'mb-1 text-base font-semibold', chrome.dailyHeading));
+    const ul = el('ul', 'space-y-0.5 text-sm');
+    ul.id = 'shift-daily';
+    for (const day of s.days) {
+      const label = dayFormat.format(utcDate(s.year, s.month, day.day));
+      const holiday = day.holiday ? ` ${holidayNames[day.holiday]}` : '';
+      const who = day.closed
+        ? (d.closedText ?? '')
+        : day.assigned.length === 0
+          ? (d.dailyNobody ?? '')
+          : day.assigned.map((i) => s.members[i].name).join(', ');
+      const li = el(
+        'li',
+        day.closed ? 'text-gray-600 dark:text-gray-400' : '',
+        `${label}${holiday}: ${who}`,
+      );
+      ul.append(li);
+    }
+    daily.append(ul);
+    frag.append(daily);
+
+    output.append(frag);
+  }
+
+  function setError(message: string) {
+    errorEl.textContent = message;
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    statusEl.textContent = '';
+    output.replaceChildren();
+    issuesEl.replaceChildren();
+    current = null;
+
+    const members = parseMembers(membersEl.value);
+    const year = Number(yearEl.value);
+    const month = Number(monthEl.value);
+    const perDay = Number(perDayEl.value);
+    const maxConsecutive = Number(maxConsecutiveEl.value);
+    const monthDays =
+      isValidMonth(month) && Number.isInteger(year)
+        ? daysInMonth(year, month)
+        : 31;
+    const { dayOffs, issues } = parseDayOffRequests(
+      offsEl.value,
+      members,
+      monthDays,
+    );
+
+    const input = {
+      members,
+      year,
+      month,
+      perDay,
+      maxConsecutive,
+      closedOnOffDays: closedEl.checked,
+      dayOffs,
+    };
+    const err = validateShiftInput(input);
+    if (err) {
+      // 空の入力は静かに待つ（メンバー未入力のみ案内する）
+      const nums = {
+        min: d.minYear ?? '',
+        max: d.maxYear ?? '',
+      };
+      const messages: Record<string, string> = {
+        noMembers: d.errorNoMembers ?? '',
+        tooManyMembers: fill(d.errorTooMany ?? '', {
+          max: d.maxMembers ?? '',
+        }),
+        invalidYear: fill(d.errorYear ?? '', nums),
+        invalidMonth: '',
+        invalidPerDay: fill(d.errorPerDay ?? '', { max: d.maxPerDay ?? '' }),
+        invalidMaxConsecutive: fill(d.errorMaxConsecutive ?? '', {
+          max: d.maxConsecutiveLimit ?? '',
+        }),
+      };
+      const skip =
+        (err === 'invalidYear' && yearEl.value.trim() === '') ||
+        (err === 'invalidPerDay' && perDayEl.value.trim() === '') ||
+        (err === 'invalidMaxConsecutive' &&
+          maxConsecutiveEl.value.trim() === '');
+      if (!skip) setError(messages[err]);
+      return;
+    }
+
+    const result = generateSchedule(input);
+    if (!result.ok) return;
+    current = result.schedule;
+
+    const issueTemplates = {
+      badLine: d.issueBadLine ?? '',
+      unknownMember: d.issueUnknownMember ?? '',
+      badDay: d.issueBadDay ?? '',
+      outOfRange: d.issueOutOfRange ?? '',
+    };
+    if (issues.length > 0) {
+      const ul = el('ul', 'ui-error list-disc space-y-0.5 pl-5 text-sm');
+      for (const issue of issues) {
+        ul.append(
+          el(
+            'li',
+            '',
+            fill(issueTemplates[issue.kind], { detail: issue.detail }),
+          ),
+        );
+      }
+      issuesEl.append(ul);
+    }
+    renderSchedule(result.schedule);
+  }
+
+  function csvText(): string | null {
+    return current ? scheduleToCsv(current, csvLabels()) : null;
+  }
+
+  async function flash(ok: boolean) {
+    statusEl.textContent = ok ? (d.copied ?? '') : (d.copyFailed ?? '');
+  }
+
+  copyButton.addEventListener('click', async () => {
+    const csv = csvText();
+    if (!csv) return;
+    await flash(await copyText(csv));
+  });
+  downloadButton.addEventListener('click', () => {
+    const csv = csvText();
+    if (!csv || !current) return;
+    downloadBlob(
+      new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' }),
+      fill(d.csvFilename ?? 'shift.csv', {
+        year: String(current.year),
+        month: String(current.month).padStart(2, '0'),
+      }),
+    );
+  });
+  printButton.addEventListener('click', () => window.print());
+
+  [membersEl, offsEl, yearEl, perDayEl, maxConsecutiveEl].forEach((e) =>
+    e.addEventListener('input', render),
+  );
+  [monthEl, closedEl].forEach((e) => e.addEventListener('change', render));
+
+  const now = new Date();
+  yearEl.value = String(now.getFullYear());
+  monthEl.value = String(now.getMonth() + 1);
+  render();
+</script>

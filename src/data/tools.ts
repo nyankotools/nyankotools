@@ -11326,6 +11326,163 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'senjitsu-calendar',
+    category: 'datetime',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['rokuyo-calendar', 'calendar-generator', 'birthday-info'],
+    translations: {
+      ja: {
+        name: '選日カレンダー（天赦日・一粒万倍日・寅の日・巳の日・不成就日）',
+        description:
+          '天赦日・一粒万倍日・寅の日・巳の日・己巳の日・不成就日を月間カレンダーと一覧で表示。結婚・開業・財布購入など用途別に吉日を絞り込めます（1900〜2100年）',
+        keywords: [
+          '選日',
+          '天赦日',
+          '一粒万倍日',
+          '寅の日',
+          '巳の日',
+          '不成就日',
+          '吉日',
+          '暦注',
+        ],
+      },
+      en: {
+        name: 'Japanese Lucky Day Calendar (Tensha, Ichiryumanbai, Tora)',
+        description:
+          'Find Japanese lucky days (Tenshanichi, Ichiryumanbai, Tora, Mi) and unlucky Fujoju days. Filter by wedding, business launch or wallet.',
+        keywords: [
+          'tenshanichi',
+          'ichiryumanbai',
+          'tora no hi',
+          'mi no hi',
+          'fujoju',
+          'lucky days Japan',
+          'rokuyo',
+          'Japanese almanac',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'kyusei-kigaku',
+    category: 'datetime',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['birthday-info', 'rokuyo-calendar', 'senjitsu-calendar'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '九星気学（本命星・月命星）早見',
+        description:
+          '生年月日から九星気学の本命星・月命星・五行を調べます。立春基準の判定と年→星の早見表付き。',
+        keywords: [
+          '九星気学',
+          '本命星',
+          '月命星',
+          '九星',
+          '一白水星',
+          '九紫火星',
+          '立春',
+          '早見表',
+        ],
+      },
+      en: {
+        name: 'Nine Star Ki (Kyusei Kigaku) Calculator',
+        description:
+          'Look up your Nine Star Ki year star and month star from your birth date, with element and a year-to-star chart.',
+        keywords: [
+          'nine star ki',
+          'kyusei kigaku',
+          '9 star ki',
+          'year star',
+          'month star',
+          'honmei',
+          'risshun',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'shift-schedule-maker',
+    category: 'datetime',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: [
+      'calendar-generator',
+      'business-day-calculator',
+      'date-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'シフト表・当番表作成（自動割当・印刷用）',
+        description:
+          'メンバーと年月を入れるだけでシフト表・当番表を自動作成。希望休・連勤上限・土日祝休みに対応し、担当回数を均等化。印刷・CSV出力OK。',
+        keywords: [
+          'シフト表',
+          '当番表',
+          'シフト作成',
+          '勤務表',
+          'ローテーション',
+          '希望休',
+          '連勤',
+          '自動割当',
+        ],
+      },
+      en: {
+        name: 'Shift Schedule Maker (Auto-Assign, Printable)',
+        description:
+          'Make a printable monthly shift or duty roster. Auto-assigns fairly, honors days off and a max streak, and exports CSV.',
+        keywords: [
+          'shift schedule',
+          'duty roster',
+          'rota',
+          'work schedule',
+          'staff schedule',
+          'rotation',
+          'days off',
+          'printable',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'breakout-game',
+    category: 'games',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['invaders-game', 'snake-game', 'game-2048'],
+    translations: {
+      ja: {
+        name: 'ブロック崩し',
+        description:
+          'パドルでボールを打ち返してブロックを全部崩す定番ゲーム。マウス・スマホのタッチ・キーで遊べ、ベストスコアも記録。',
+        keywords: [
+          'ブロック崩し',
+          'ブロックくずし',
+          'ブレイクアウト',
+          'ゲーム',
+          'ブラウザゲーム',
+          'スマホ',
+        ],
+      },
+      en: {
+        name: 'Breakout Game',
+        description:
+          'Classic brick-breaker: bounce the ball off the paddle and clear every brick. Play with mouse, touch or keys.',
+        keywords: [
+          'breakout',
+          'brick breaker',
+          'block breaker',
+          'brick game',
+          'browser game',
+          'paddle game',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -1,0 +1,497 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { breakoutGameContent } from '../../i18n/tools/breakout-game';
+import { HEIGHT, START_LIVES, WIDTH } from '../../lib/tools/breakout-game';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = breakoutGameContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="breakout-root"
+    data-mode="idle"
+    data-overlay-ready={t.overlayReady}
+    data-overlay-paused={t.overlayPaused}
+    data-overlay-over={t.overlayOver}
+    data-started={t.started}
+    data-paused={t.paused}
+    data-resumed={t.resumed}
+    data-level-up={t.levelUp}
+    data-life-lost={t.lifeLost}
+    data-game-over={t.gameOver}
+    data-new-best={t.newBest}
+    data-pause-label={t.pauseButton}
+    data-resume-label={t.resumeButton}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <button id="breakout-start-button" type="button" class="ui-btn-primary">
+        {t.startButton}
+      </button>
+      <button id="breakout-pause-button" type="button" class="ui-btn" disabled>
+        {t.pauseButton}
+      </button>
+    </div>
+
+    <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
+      <div class="flex gap-2">
+        <dt>{t.scoreLabel}</dt>
+        <dd id="breakout-score" class="font-semibold tabular-nums">
+          0
+        </dd>
+      </div>
+      <div class="flex gap-2">
+        <dt>{t.bestLabel}</dt>
+        <dd id="breakout-best" class="font-semibold tabular-nums">
+          0
+        </dd>
+      </div>
+      <div class="flex gap-2">
+        <dt>{t.levelLabel}</dt>
+        <dd id="breakout-level" class="font-semibold tabular-nums">
+          1
+        </dd>
+      </div>
+      <div class="flex gap-2">
+        <dt>{t.livesLabel}</dt>
+        <dd id="breakout-lives" class="font-semibold tabular-nums">
+          {START_LIVES}
+        </dd>
+      </div>
+    </dl>
+
+    <canvas
+      id="breakout-canvas"
+      width={WIDTH * 2}
+      height={HEIGHT * 2}
+      role="application"
+      tabindex="0"
+      aria-label={t.boardLabel}
+      class="mt-3 block w-full max-w-md touch-none rounded-lg bg-gray-950 select-none"
+    ></canvas>
+
+    <div
+      role="group"
+      aria-label={t.controlsLabel}
+      class="mt-3 flex max-w-md items-center gap-2"
+    >
+      <button
+        type="button"
+        class="ui-btn h-14 w-20 touch-none text-xl select-none"
+        data-control="left"
+      >
+        {t.leftButton}
+      </button>
+      <button
+        type="button"
+        class="ui-btn h-14 w-20 touch-none text-xl select-none"
+        data-control="right"
+      >
+        {t.rightButton}
+      </button>
+      <button
+        type="button"
+        class="ui-btn-primary ml-auto h-14 min-w-24 touch-none select-none"
+        data-control="launch"
+      >
+        {t.launchButton}
+      </button>
+    </div>
+
+    <p
+      id="breakout-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    BALL_R,
+    BRICK_H,
+    BRICK_W,
+    COLS,
+    HEIGHT,
+    PADDLE_H,
+    PADDLE_W,
+    PADDLE_Y,
+    ROWS,
+    WIDTH,
+    brickPosition,
+    createGame,
+    parseBest,
+    serializeBest,
+    step,
+    type BreakoutState,
+    type Input,
+  } from '../../lib/tools/breakout-game';
+
+  const STORAGE_KEY = 'breakout-game-best';
+  const SCALE = 2;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('breakout-root');
+  const msg = root.dataset;
+  const canvas = $<HTMLCanvasElement>('breakout-canvas');
+  const ctx = canvas.getContext('2d')!;
+  const statusEl = $('breakout-status');
+  const scoreEl = $('breakout-score');
+  const bestEl = $('breakout-best');
+  const levelEl = $('breakout-level');
+  const livesEl = $('breakout-lives');
+  const startButton = $<HTMLButtonElement>('breakout-start-button');
+  const pauseButton = $<HTMLButtonElement>('breakout-pause-button');
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  function random() {
+    return crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32;
+  }
+
+  type Mode = 'idle' | 'playing' | 'paused' | 'over';
+  let mode: Mode = 'idle';
+  let state: BreakoutState = createGame();
+  let best = loadBest();
+  let rafId = 0;
+  let lastTime = 0;
+  const held = { left: false, right: false };
+  const keys = { left: false, right: false };
+  /** マウス・タッチで指しているパドルの x（キー・ボタンを使うと null に戻す） */
+  let pointerX: number | null = null;
+  /** 発射の要求（待機中のボールが打ち出されるまで保持する） */
+  let launchPending = false;
+
+  function loadBest() {
+    try {
+      return parseBest(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      return 0;
+    }
+  }
+
+  function saveBest() {
+    try {
+      localStorage.setItem(STORAGE_KEY, serializeBest(best));
+    } catch {
+      // 保存できない環境では、このページを開いている間だけの記録にする
+    }
+  }
+
+  function setStatus(text: string) {
+    statusEl.textContent = text;
+  }
+
+  // ---- 描画 ----
+
+  const ROW_COLORS = [
+    '#f87171',
+    '#fb923c',
+    '#fbbf24',
+    '#34d399',
+    '#38bdf8',
+    '#a78bfa',
+  ];
+
+  function draw() {
+    ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+    ctx.fillStyle = '#0b1020';
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+    for (let row = 0; row < ROWS; row++) {
+      ctx.fillStyle = ROW_COLORS[row % ROW_COLORS.length];
+      for (let col = 0; col < COLS; col++) {
+        if (!state.bricks[row * COLS + col]) continue;
+        const p = brickPosition(row, col);
+        ctx.fillRect(p.x + 1, p.y + 1, BRICK_W - 2, BRICK_H - 2);
+      }
+    }
+
+    // パドル
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(
+      Math.round(state.paddleX - PADDLE_W / 2),
+      PADDLE_Y,
+      PADDLE_W,
+      PADDLE_H,
+    );
+
+    // ボール
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(state.ball.x, state.ball.y, BALL_R, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 盤面の上の表示
+    const text =
+      mode === 'idle'
+        ? msg.overlayReady
+        : mode === 'paused'
+          ? msg.overlayPaused
+          : mode === 'over'
+            ? msg.overlayOver
+            : '';
+    if (text) {
+      ctx.fillStyle = 'rgba(11, 16, 32, 0.7)';
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 20px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, WIDTH / 2, HEIGHT / 2, WIDTH - 20);
+    }
+  }
+
+  function renderHud() {
+    scoreEl.textContent = String(state.score);
+    bestEl.textContent = String(Math.max(best, state.score));
+    levelEl.textContent = String(state.level);
+    livesEl.textContent = String(state.lives);
+  }
+
+  // ---- 進行 ----
+
+  function setMode(next: Mode) {
+    mode = next;
+    root.dataset.mode = next;
+    pauseButton.disabled = next !== 'playing' && next !== 'paused';
+    pauseButton.textContent =
+      (next === 'paused' ? msg.resumeLabel : msg.pauseLabel) ?? '';
+  }
+
+  function currentInput(): Input {
+    const left = held.left || keys.left;
+    const right = held.right || keys.right;
+    if (left || right) pointerX = null;
+    return { left, right, launch: launchPending, targetX: pointerX };
+  }
+
+  function frame(time: number) {
+    rafId = 0;
+    if (mode !== 'playing') return;
+    const dt = lastTime ? (time - lastTime) / 1000 : 0;
+    lastTime = time;
+    const before = { level: state.level, lives: state.lives };
+    step(state, currentInput(), dt, random);
+    if (state.served) launchPending = false;
+    if (state.level !== before.level) {
+      setStatus(fill(msg.levelUp, { level: String(state.level) }));
+    } else if (state.lives < before.lives && state.status === 'playing') {
+      setStatus(fill(msg.lifeLost, { lives: String(state.lives) }));
+    }
+    if (state.status === 'over') {
+      finish();
+    }
+    renderHud();
+    draw();
+    if (mode === 'playing') schedule();
+  }
+
+  function schedule() {
+    if (rafId === 0) rafId = requestAnimationFrame(frame);
+  }
+
+  // ゲームオーバーの表示を読む前に、連打で新しいゲームが始まってしまわないようにする
+  const RESTART_GUARD_MS = 800;
+  let overAt = 0;
+  function canRestart() {
+    return mode !== 'over' || performance.now() - overAt >= RESTART_GUARD_MS;
+  }
+
+  function finish() {
+    overAt = performance.now();
+    setMode('over');
+    let text = fill(msg.gameOver, { score: String(state.score) });
+    if (state.score > best) {
+      best = state.score;
+      saveBest();
+      text += ` ${msg.newBest ?? ''}`;
+    }
+    setStatus(text);
+  }
+
+  function startGame() {
+    state = createGame();
+    lastTime = 0;
+    launchPending = false;
+    setMode('playing');
+    setStatus(msg.started ?? '');
+    renderHud();
+    draw();
+    schedule();
+  }
+
+  function pauseGame() {
+    if (mode !== 'playing') return;
+    setMode('paused');
+    setStatus(msg.paused ?? '');
+    draw();
+  }
+
+  function resumeGame() {
+    if (mode !== 'paused') return;
+    lastTime = 0;
+    setMode('playing');
+    setStatus(msg.resumed ?? '');
+    schedule();
+  }
+
+  function togglePause() {
+    if (mode === 'playing') pauseGame();
+    else if (mode === 'paused') resumeGame();
+  }
+
+  function requestLaunch() {
+    if (mode === 'playing' && !state.served) launchPending = true;
+  }
+
+  startButton.addEventListener('click', () => {
+    startGame();
+    startButton.blur();
+  });
+  pauseButton.addEventListener('click', () => {
+    togglePause();
+    pauseButton.blur();
+  });
+
+  // タブを離れる・ウィンドウから離れたときは自動で一時停止する
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) pauseGame();
+  });
+  window.addEventListener('blur', () => {
+    keys.left = keys.right = false;
+    pauseGame();
+  });
+
+  // ---- 入力 ----
+
+  // マウス・タッチ: 盤面の上でパドルを動かし、クリック・タップで発射する
+  function toBoardX(e: PointerEvent) {
+    const rect = canvas.getBoundingClientRect();
+    return ((e.clientX - rect.left) / rect.width) * WIDTH;
+  }
+  canvas.addEventListener('pointermove', (e) => {
+    pointerX = toBoardX(e);
+  });
+  canvas.addEventListener('pointerdown', (e) => {
+    pointerX = toBoardX(e);
+    if (mode === 'paused') resumeGame();
+    else requestLaunch();
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch {
+      // キャプチャできなくても、盤面の上で動かせば追従する
+    }
+  });
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  const KEY_MAP: Record<string, 'left' | 'right' | 'launch'> = {
+    ArrowLeft: 'left',
+    a: 'left',
+    ArrowRight: 'right',
+    d: 'right',
+    ' ': 'launch',
+  };
+
+  function boardVisible() {
+    const rect = canvas.getBoundingClientRect();
+    return rect.bottom >= 0 && rect.top <= window.innerHeight;
+  }
+
+  function ignoredTarget(e: KeyboardEvent) {
+    const el = e.target as HTMLElement;
+    return Boolean(
+      el.closest?.(
+        'input, select, textarea, [contenteditable="true"], a, nav, aside',
+      ) || document.querySelector('dialog[open]'),
+    );
+  }
+
+  function keyAction(
+    e: KeyboardEvent,
+  ): 'left' | 'right' | 'launch' | 'pause' | null {
+    if (e.defaultPrevented || e.isComposing) return null;
+    if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return null;
+    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    return KEY_MAP[key] ?? (key === 'p' ? 'pause' : null);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    const action = keyAction(e);
+    if (!action || ignoredTarget(e) || !boardVisible()) return;
+    if (mode === 'idle' || mode === 'over') {
+      // 開始前・終了後は、ゲーム画面や操作ボタンにフォーカスがあるときのスペースキーだけで開始する
+      // （ページ下部を読んでいるときのスクロールなどを奪わない）
+      if (action !== 'launch' || !root.contains(e.target as Node)) return;
+      e.preventDefault();
+      if (!e.repeat && canRestart()) startGame();
+      return;
+    }
+    e.preventDefault();
+    if (action === 'pause') {
+      togglePause();
+      return;
+    }
+    if (action === 'launch') {
+      if (e.repeat) return;
+      if (mode === 'paused') resumeGame();
+      else requestLaunch();
+      return;
+    }
+    keys[action] = true;
+  });
+
+  document.addEventListener('keyup', (e) => {
+    const action = keyAction(e);
+    if (!action || action === 'pause') return;
+    if (action !== 'launch') keys[action] = false;
+    // ボタンにフォーカスがあるとスペースキーの離した瞬間にクリックされるのを防ぐ
+    if (action === 'launch' && !ignoredTarget(e) && boardVisible()) {
+      e.preventDefault();
+    }
+  });
+
+  // 押している間だけ動く画面ボタン／押すと発射するボタン
+  root.querySelectorAll<HTMLButtonElement>('[data-control]').forEach((b) => {
+    const control = b.dataset.control as 'left' | 'right' | 'launch';
+    const release = () => {
+      if (control !== 'launch') held[control] = false;
+    };
+    b.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (control === 'launch') {
+        if (mode === 'idle' || mode === 'over') {
+          if (canRestart()) startGame();
+        } else if (mode === 'paused') {
+          resumeGame();
+        } else {
+          requestLaunch();
+        }
+      } else {
+        held[control] = true;
+      }
+      try {
+        b.setPointerCapture(e.pointerId);
+      } catch {
+        // キャプチャできなくても、ボタンの上で離せば止まる
+      }
+    });
+    b.addEventListener('pointerup', release);
+    b.addEventListener('pointercancel', release);
+    b.addEventListener('lostpointercapture', release);
+    b.addEventListener('contextmenu', (e) => e.preventDefault());
+  });
+
+  renderHud();
+  draw();
+</script>

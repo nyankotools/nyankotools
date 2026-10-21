@@ -932,13 +932,17 @@ export const updates: UpdateEntry[] = [
       'matrix-calculator',
       'quadratic-solver',
       'geometry-calculator',
+      'senjitsu-calendar',
+      'kyusei-kigaku',
+      'shift-schedule-maker',
+      'breakout-game',
     ],
     translations: {
       ja: {
-        summary: '28個のツールを追加しました。',
+        summary: '32個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 28 new tools.',
+        summary: 'Added 32 new tools.',
       },
     },
   },

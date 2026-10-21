@@ -1,0 +1,477 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { senjitsuCalendarContent } from '../../i18n/tools/senjitsu-calendar';
+import {
+  MAX_YEAR,
+  MIN_YEAR,
+  OCCASION_ORDER,
+  SENJITSU_ORDER,
+} from '../../lib/tools/senjitsu-calendar';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = senjitsuCalendarContent[locale];
+
+const monthFormat = new Intl.DateTimeFormat(t.dateLocale, {
+  timeZone: 'UTC',
+  month: 'long',
+});
+const monthNames = Array.from({ length: 12 }, (_, i) =>
+  monthFormat.format(new Date(Date.UTC(2023, i, 1))),
+);
+---
+
+<ToolShell t={t}>
+  <section
+    id="sj"
+    data-date-locale={t.dateLocale}
+    data-stems={JSON.stringify(t.stems)}
+    data-branches={JSON.stringify(t.branches)}
+    data-mansions={JSON.stringify(t.mansionNames)}
+    data-rokuyo-names={JSON.stringify(t.rokuyoNames)}
+    data-senjitsu-names={JSON.stringify(t.senjitsuNames)}
+    data-senjitsu-short={JSON.stringify(t.senjitsuShort)}
+    data-occasion-names={JSON.stringify(t.occasionNames)}
+    data-month-names={JSON.stringify(monthNames)}
+    data-leap-full={t.leapFull}
+    data-lunar-full={t.lunarFull}
+    data-list-heading-month={t.listHeadingMonth}
+    data-list-heading-year={t.listHeadingYear}
+    data-list-item={t.listItem}
+    data-list-empty={t.listEmpty}
+    data-sekki-text={t.sekkiText}
+    data-lookup-result={t.lookupResult}
+    data-lookup-tags={t.lookupTags}
+    data-lookup-no-tags={t.lookupNoTags}
+    data-lookup-out-of-range={t.lookupOutOfRange}
+    data-error-year={t.errorYear}
+    data-min-year={MIN_YEAR}
+    data-max-year={MAX_YEAR}
+    class="space-y-4"
+  >
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="sj-year" class="ui-label">
+          {t.yearLabel}
+        </label>
+        <input
+          id="sj-year"
+          type="number"
+          inputmode="numeric"
+          min={MIN_YEAR}
+          max={MAX_YEAR}
+          step="1"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="sj-month" class="ui-label">
+          {t.monthLabel}
+        </label>
+        <select id="sj-month" class="ui-input h-11 px-3 dark:bg-gray-900">
+          {monthNames.map((name, i) => (
+            <option value={String(i + 1)}>{name}</option>
+          ))}
+        </select>
+      </div>
+      <div class="min-w-0 max-w-full">
+        <label for="sj-occasion" class="ui-label">
+          {t.occasionLabel}
+        </label>
+        <select
+          id="sj-occasion"
+          class="ui-input h-11 max-w-full px-3 dark:bg-gray-900"
+        >
+          {OCCASION_ORDER.map((key) => (
+            <option value={key} selected={key === 'wedding'}>
+              {t.occasionNames[key]}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="sj-scope" class="ui-label">
+          {t.scopeLabel}
+        </label>
+        <select id="sj-scope" class="ui-input h-11 px-3 dark:bg-gray-900">
+          <option value="month" selected>
+            {t.scopeMonth}
+          </option>
+          <option value="year">{t.scopeYear}</option>
+        </select>
+      </div>
+    </div>
+
+    <label class="ui-check">
+      <input id="sj-today" type="checkbox" checked />
+      {t.todayLabel}
+    </label>
+
+    <p id="sj-error" class="ui-error empty:hidden" aria-live="polite"></p>
+
+    <div id="sj-output"></div>
+
+    <div id="sj-list" class="space-y-1 text-sm"></div>
+
+    <div class="space-y-2 border-t border-gray-200 pt-4 dark:border-gray-700">
+      <h2 class="text-lg font-semibold">{t.legendHeading}</h2>
+      <p class="text-sm">{t.legendHighlight}</p>
+      <dl class="space-y-2 text-sm">
+        {SENJITSU_ORDER.map((key) => (
+          <div>
+            <dt class="font-medium">
+              <span
+                class={`mr-1 inline-block min-w-5 rounded border border-current px-1 text-center text-xs ${
+                  key === 'fujoju' || key === 'kishuku'
+                    ? 'text-blue-700 dark:text-blue-400'
+                    : 'text-red-700 dark:text-red-400'
+                }`}
+                aria-hidden="true"
+              >
+                {t.senjitsuShort[key]}
+              </span>
+              {t.senjitsuNames[key]}
+            </dt>
+            <dd class="text-gray-700 dark:text-gray-300">
+              {t.senjitsuDescriptions[key]}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+
+    <div class="space-y-2 border-t border-gray-200 pt-4 dark:border-gray-700">
+      <h2 class="text-lg font-semibold">{t.lookupHeading}</h2>
+      <div>
+        <label for="sj-lookup-date" class="ui-label">
+          {t.lookupDateLabel}
+        </label>
+        <input
+          id="sj-lookup-date"
+          type="date"
+          min={`${MIN_YEAR}-01-01`}
+          max={`${MAX_YEAR}-12-31`}
+          class="ui-input h-11 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <p id="sj-lookup-result" class="text-sm" aria-live="polite"></p>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    findRecommended,
+    getSenjitsuDay,
+    getSenjitsuMonth,
+    getSenjitsuYear,
+    isValidYear,
+    SENJITSU_ORDER,
+    type OccasionKey,
+    type RokuyoKey,
+    type SenjitsuDay,
+    type SenjitsuKey,
+  } from '../../lib/tools/senjitsu-calendar';
+  import { fill } from '../../lib/format-template';
+
+  const root = document.getElementById('sj')!;
+  const d = root.dataset;
+  const dateLocale = d.dateLocale ?? 'en-US';
+  const stems: string[] = JSON.parse(d.stems ?? '[]');
+  const branches: string[] = JSON.parse(d.branches ?? '[]');
+  const mansions: string[] = JSON.parse(d.mansions ?? '[]');
+  const rokuyoNames: Record<RokuyoKey, string> = JSON.parse(
+    d.rokuyoNames ?? '{}',
+  );
+  const senjitsuNames: Record<SenjitsuKey, string> = JSON.parse(
+    d.senjitsuNames ?? '{}',
+  );
+  const senjitsuShort: Record<SenjitsuKey, string> = JSON.parse(
+    d.senjitsuShort ?? '{}',
+  );
+  const occasionNames: Record<OccasionKey, string> = JSON.parse(
+    d.occasionNames ?? '{}',
+  );
+  const monthNames: string[] = JSON.parse(d.monthNames ?? '[]');
+  const leapFull = d.leapFull ?? '';
+  const lunarFull = d.lunarFull ?? '';
+  const listHeadingMonth = d.listHeadingMonth ?? '';
+  const listHeadingYear = d.listHeadingYear ?? '';
+  const listItem = d.listItem ?? '';
+  const listEmpty = d.listEmpty ?? '';
+  const sekkiText = d.sekkiText ?? '';
+  const lookupResultText = d.lookupResult ?? '';
+  const lookupTagsText = d.lookupTags ?? '';
+  const lookupNoTags = d.lookupNoTags ?? '';
+  const lookupOutOfRange = d.lookupOutOfRange ?? '';
+  const errorYear = d.errorYear ?? '';
+  const minYear = Number(d.minYear);
+  const maxYear = Number(d.maxYear);
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const yearInput = $<HTMLInputElement>('sj-year');
+  const monthSelect = $<HTMLSelectElement>('sj-month');
+  const occasionSelect = $<HTMLSelectElement>('sj-occasion');
+  const scopeSelect = $<HTMLSelectElement>('sj-scope');
+  const todayCheck = $<HTMLInputElement>('sj-today');
+  const errorEl = $('sj-error');
+  const output = $('sj-output');
+  const listEl = $('sj-list');
+  const lookupInput = $<HTMLInputElement>('sj-lookup-date');
+  const lookupResult = $('sj-lookup-result');
+
+  const monthTitleFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: 'long',
+  });
+  const weekdayFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    weekday: 'short',
+  });
+  const dayFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    month: 'short',
+    day: 'numeric',
+    weekday: 'short',
+  });
+  const fullDateFormat = new Intl.DateTimeFormat(dateLocale, {
+    timeZone: 'UTC',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+  });
+  const listFormat = new Intl.ListFormat(dateLocale, {
+    style: 'short',
+    type: 'conjunction',
+  });
+
+  const utcDate = (year: number, month: number, day = 1) => {
+    const date = new Date(Date.UTC(2000, month - 1, day));
+    date.setUTCFullYear(year);
+    return date;
+  };
+  const pad = (n: number, w = 2) => String(n).padStart(w, '0');
+
+  const now = new Date();
+  const todayIso = `${pad(now.getFullYear(), 4)}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+  const weekdayLabel = (dow: number) =>
+    weekdayFormat.format(new Date(Date.UTC(2023, 0, 1 + dow)));
+  const dayColor = (dow: number) =>
+    dow === 0
+      ? 'text-red-700 dark:text-red-400'
+      : dow === 6
+        ? 'text-blue-700 dark:text-blue-400'
+        : '';
+  const etoOf = (day: SenjitsuDay) =>
+    `${stems[day.stem]}${branches[day.branch]}`;
+  const isAvoidKey = (key: SenjitsuKey) =>
+    key === 'fujoju' || key === 'kishuku';
+  const tagNames = (day: SenjitsuDay) =>
+    listFormat.format(
+      SENJITSU_ORDER.filter((k) => day.tags.includes(k)).map(
+        (k) => senjitsuNames[k],
+      ),
+    );
+  const lunarText = (day: SenjitsuDay) =>
+    fill(lunarFull, {
+      leap: day.lunar.leap ? leapFull : '',
+      month: String(day.lunar.month),
+      day: String(day.lunar.day),
+    });
+
+  function div(className: string, text: string): HTMLElement {
+    const el = document.createElement('div');
+    el.className = className;
+    el.textContent = text;
+    return el;
+  }
+
+  function badge(key: SenjitsuKey): HTMLElement {
+    const wrap = document.createElement('span');
+    const mark = document.createElement('span');
+    mark.setAttribute('aria-hidden', 'true');
+    mark.className = `text-[10px] font-bold sm:text-xs ${
+      isAvoidKey(key)
+        ? 'text-blue-700 dark:text-blue-400'
+        : 'text-red-700 dark:text-red-400'
+    }`;
+    mark.textContent = senjitsuShort[key];
+    const sr = document.createElement('span');
+    sr.className = 'sr-only';
+    sr.textContent = senjitsuNames[key];
+    wrap.append(mark, sr);
+    return wrap;
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    output.replaceChildren();
+    listEl.replaceChildren();
+    const year = Number(yearInput.value);
+    const month = Number(monthSelect.value);
+    if (yearInput.value.trim() === '' || !isValidYear(year)) {
+      if (yearInput.value.trim() !== '') {
+        errorEl.textContent = fill(errorYear, {
+          min: String(minYear),
+          max: String(maxYear),
+        });
+      }
+      return;
+    }
+    const days = getSenjitsuMonth(year, month);
+    const yearDays = getSenjitsuYear(year);
+    if (!days || !yearDays) return;
+    const occasion = occasionSelect.value as OccasionKey;
+    const monthRecommended = new Set(
+      findRecommended(days, occasion).map((r) => r.day.iso),
+    );
+
+    const table = document.createElement('table');
+    table.className = 'w-full table-fixed border-collapse text-center';
+    const caption = document.createElement('caption');
+    caption.className = 'mb-2 text-left text-2xl font-bold';
+    caption.textContent = monthTitleFormat.format(utcDate(year, month));
+    table.append(caption);
+
+    const thead = document.createElement('thead');
+    const headRow = document.createElement('tr');
+    for (let dow = 0; dow < 7; dow++) {
+      const th = document.createElement('th');
+      th.scope = 'col';
+      th.className = `border border-gray-300 py-1 text-xs font-medium dark:border-gray-600 ${dayColor(dow)}`;
+      th.textContent = weekdayLabel(dow);
+      headRow.append(th);
+    }
+    thead.append(headRow);
+    table.append(thead);
+
+    const tbody = document.createElement('tbody');
+    const lead = days[0].dow;
+    let tr = document.createElement('tr');
+    const cells = lead + days.length;
+    const total = Math.ceil(cells / 7) * 7;
+    for (let i = 0; i < total; i++) {
+      const td = document.createElement('td');
+      td.className =
+        'h-16 border border-gray-300 p-0.5 align-top dark:border-gray-600 sm:h-24 sm:p-1';
+      const day = i >= lead && i < cells ? days[i - lead] : null;
+      if (day) {
+        if (monthRecommended.has(day.iso)) {
+          td.classList.add('bg-amber-100', 'dark:bg-amber-900/40');
+        }
+        const isToday = todayCheck.checked && day.iso === todayIso;
+        const num = document.createElement('span');
+        num.className = `text-sm sm:text-base ${
+          isToday
+            ? 'inline-block min-w-6 rounded-full bg-blue-600 px-1 text-white'
+            : dayColor(day.dow)
+        }`;
+        num.textContent = String(day.day);
+        td.append(num);
+        td.append(
+          div(
+            'text-[10px] leading-tight text-gray-600 sm:text-xs dark:text-gray-400',
+            etoOf(day),
+          ),
+        );
+        if (day.tags.length > 0) {
+          const marks = document.createElement('div');
+          marks.className = 'flex flex-wrap justify-center gap-x-0.5';
+          for (const key of SENJITSU_ORDER) {
+            if (day.tags.includes(key)) marks.append(badge(key));
+          }
+          td.append(marks);
+        }
+      }
+      tr.append(td);
+      if (i % 7 === 6) {
+        tbody.append(tr);
+        tr = document.createElement('tr');
+      }
+    }
+    table.append(tbody);
+    output.append(table);
+
+    // 吉日の一覧
+    const yearScope = scopeSelect.value === 'year';
+    const found = findRecommended(yearScope ? yearDays : days, occasion);
+    const heading = document.createElement('h2');
+    heading.className = 'mb-1 text-lg font-semibold';
+    heading.textContent = fill(yearScope ? listHeadingYear : listHeadingMonth, {
+      year: String(year),
+      month: monthNames[month - 1],
+      occasion: occasionNames[occasion],
+    });
+    listEl.append(heading);
+    if (found.length === 0) {
+      const p = document.createElement('p');
+      p.textContent = listEmpty;
+      listEl.append(p);
+      return;
+    }
+    const ul = document.createElement('ul');
+    ul.className = 'space-y-1';
+    for (const { day } of found) {
+      const li = document.createElement('li');
+      li.textContent = fill(listItem, {
+        date: dayFormat.format(utcDate(day.year, day.month, day.day)),
+        eto: etoOf(day),
+        rokuyo: rokuyoNames[day.lunar.rokuyo],
+        tags: tagNames(day),
+      });
+      ul.append(li);
+    }
+    listEl.append(ul);
+  }
+
+  function renderLookup() {
+    lookupResult.textContent = '';
+    const value = lookupInput.value;
+    if (!value) return;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    const day = m ? getSenjitsuDay(+m[1], +m[2], +m[3]) : null;
+    if (!m || !day) {
+      lookupResult.textContent = lookupOutOfRange;
+      return;
+    }
+    let text = fill(lookupResultText, {
+      date: fullDateFormat.format(utcDate(day.year, day.month, day.day)),
+      eto: etoOf(day),
+      sekki: fill(sekkiText, { branch: branches[(day.sekkiMonth + 1) % 12] }),
+      lunar: lunarText(day),
+      rokuyo: rokuyoNames[day.lunar.rokuyo],
+      mansion: mansions[day.mansion],
+    });
+    text +=
+      day.tags.length > 0
+        ? fill(lookupTagsText, { tags: tagNames(day) })
+        : lookupNoTags;
+    lookupResult.textContent = text;
+  }
+
+  [monthSelect, occasionSelect, scopeSelect, todayCheck].forEach((el) =>
+    el.addEventListener('change', render),
+  );
+  // 入力途中（4桁未満）の値でエラーを出さないよう、input では4桁以上のときだけ描画する
+  yearInput.addEventListener('input', () => {
+    if (yearInput.value.trim().length >= 4) render();
+  });
+  yearInput.addEventListener('change', render);
+  lookupInput.addEventListener('input', renderLookup);
+  lookupInput.addEventListener('change', renderLookup);
+
+  const startYear = Math.min(Math.max(now.getFullYear(), minYear), maxYear);
+  yearInput.value = String(startYear);
+  monthSelect.value = String(now.getMonth() + 1);
+  lookupInput.value = todayIso;
+  render();
+  renderLookup();
+</script>

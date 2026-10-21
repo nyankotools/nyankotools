@@ -157,6 +157,9 @@ const slugs = [
   'spirit-level',
   'ufo-motion-test',
   'monitor-gamma-test',
+  'tax-wall-calculator',
+  'unemployment-benefit',
+  'childcare-leave-benefit',
 ];
 
 const locales = [

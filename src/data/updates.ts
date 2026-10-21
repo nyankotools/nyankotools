@@ -916,13 +916,17 @@ export const updates: UpdateEntry[] = [
       'savings-goal-calculator',
       'rent-initial-cost',
       'bonus-take-home',
+      'tax-wall-calculator',
+      'unemployment-benefit',
+      'childcare-leave-benefit',
+      'retirement-allowance-tax',
     ],
     translations: {
       ja: {
-        summary: '8個のツールを追加しました。',
+        summary: '16個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 8 new tools.',
+        summary: 'Added 16 new tools.',
       },
     },
   },

@@ -1,0 +1,288 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { unemploymentBenefitContent } from '../../i18n/tools/unemployment-benefit';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = unemploymentBenefitContent[locale];
+
+const results = [
+  { id: 'daily', label: t.resultDailyLabel, big: true },
+  { id: 'days', label: t.resultDaysLabel, big: true },
+  { id: 'total', label: t.resultTotalLabel, big: true },
+  { id: 'per-cert', label: t.resultPerCertificationLabel, big: false },
+  { id: 'wage-daily', label: t.resultWageDailyLabel, big: false },
+  { id: 'rate', label: t.resultRateLabel, big: false },
+  { id: 'waiting', label: t.resultWaitingLabel, big: false },
+  { id: 'restriction', label: t.resultRestrictionLabel, big: false },
+  { id: 'validity', label: t.resultValidityLabel, big: false },
+];
+---
+
+<ToolShell t={t}>
+  <p
+    class="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+    role="note"
+  >
+    {t.disclaimer}
+  </p>
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    id="ub-root"
+    data-number-locale={t.numberLocale}
+    data-format={JSON.stringify(t.resultFormat)}
+    data-error-age={t.errorAge}
+    data-error-wage={t.errorWage}
+    data-error-period={t.errorPeriod}
+    data-error-age-service={t.errorAgeService}
+  >
+    <div class="mb-3 flex flex-wrap items-end gap-3">
+      <div>
+        <label for="ub-age" class="ui-label">
+          {t.ageLabel}
+        </label>
+        <input
+          id="ub-age"
+          type="number"
+          min="15"
+          max="64"
+          step="1"
+          inputmode="numeric"
+          value="35"
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="ub-wage" class="ui-label">
+          {t.wageLabel}
+        </label>
+        <input
+          id="ub-wage"
+          type="text"
+          inputmode="decimal"
+          class="ui-input h-11 w-44 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="ub-years" class="ui-label">
+          {t.insuredYearsLabel}
+        </label>
+        <input
+          id="ub-years"
+          type="number"
+          min="0"
+          max="60"
+          step="1"
+          inputmode="numeric"
+          value="5"
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="ub-months" class="ui-label">
+          {t.insuredMonthsLabel}
+        </label>
+        <input
+          id="ub-months"
+          type="number"
+          min="0"
+          max="11"
+          step="1"
+          inputmode="numeric"
+          value="0"
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+    <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+      {t.wageHint}
+    </p>
+    <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+      {t.insuredHint}
+    </p>
+
+    <div class="mb-3">
+      <label for="ub-reason" class="ui-label">
+        {t.reasonLabel}
+      </label>
+      <select
+        id="ub-reason"
+        class="ui-input h-11 w-full max-w-xl px-3 dark:bg-gray-900"
+      >
+        <option value="self">{t.reasonSelf}</option>
+        <option value="company">{t.reasonCompany}</option>
+        <option value="contract-end">{t.reasonContractEnd}</option>
+        <option value="justified">{t.reasonJustified}</option>
+      </select>
+    </div>
+    <label class="flex items-center gap-2 text-sm" id="ub-repeated-row">
+      <input id="ub-repeated" type="checkbox" />
+      {t.repeatedLabel}
+    </label>
+    <p class="mt-1 mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+      {t.repeatedHint}
+    </p>
+
+    <p
+      id="ub-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="ub-results" class="mt-4 hidden" aria-live="polite">
+      <p
+        id="ub-not-eligible"
+        class="mb-3 hidden rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-900 dark:border-red-700 dark:bg-red-950 dark:text-red-100"
+      ></p>
+      <dl class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {results.map((r) => (
+          <div>
+            <dt class="text-sm text-gray-600 dark:text-gray-400">{r.label}</dt>
+            <dd
+              class={r.big ? 'text-xl font-bold' : 'text-base font-semibold'}
+              id={`ub-result-${r.id}`}
+            />
+          </div>
+        ))}
+      </dl>
+      <p
+        id="ub-clamp"
+        class="mt-3 text-sm text-gray-600 dark:text-gray-400"
+      ></p>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    calculateUnemploymentBenefit,
+    isError,
+    WAGE_DAILY_MAX,
+    type LeaveReason,
+  } from '../../lib/tools/unemployment-benefit';
+  import { fill } from '../../lib/format-template';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+  import type { UnemploymentBenefitResultFormat } from '../../i18n/tools/unemployment-benefit';
+
+  const root = document.getElementById('ub-root')!;
+  const format: UnemploymentBenefitResultFormat = JSON.parse(
+    root.dataset.format ?? '{}',
+  );
+  const yen = new Intl.NumberFormat(root.dataset.numberLocale ?? 'en-US', {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const percent = new Intl.NumberFormat(root.dataset.numberLocale ?? 'en-US', {
+    maximumFractionDigits: 1,
+  });
+
+  const ageInput = document.getElementById('ub-age') as HTMLInputElement;
+  const wageInput = document.getElementById('ub-wage') as HTMLInputElement;
+  const yearsInput = document.getElementById('ub-years') as HTMLInputElement;
+  const monthsInput = document.getElementById('ub-months') as HTMLInputElement;
+  const reasonSelect = document.getElementById(
+    'ub-reason',
+  ) as HTMLSelectElement;
+  const repeatedInput = document.getElementById(
+    'ub-repeated',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('ub-error')!;
+  const resultsEl = document.getElementById('ub-results')!;
+  const notEligibleEl = document.getElementById('ub-not-eligible')!;
+  const clampEl = document.getElementById('ub-clamp')!;
+
+  const errorMessages = {
+    age: root.dataset.errorAge ?? '',
+    wage: root.dataset.errorWage ?? '',
+    period: root.dataset.errorPeriod ?? '',
+    ageService: root.dataset.errorAgeService ?? '',
+  };
+
+  function setResult(id: string, text: string) {
+    document.getElementById(`ub-result-${id}`)!.textContent = text;
+  }
+
+  attachCommaFormatting(wageInput);
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+    if (wageInput.value.trim() === '') return;
+
+    const result = calculateUnemploymentBenefit({
+      age: ageInput.value.trim() === '' ? Number.NaN : Number(ageInput.value),
+      monthlyWage: Number(stripCommas(wageInput.value)),
+      insuredYears:
+        yearsInput.value.trim() === '' ? 0 : Number(yearsInput.value),
+      insuredMonthsPart:
+        monthsInput.value.trim() === '' ? 0 : Number(monthsInput.value),
+      reason: reasonSelect.value as LeaveReason,
+      repeatedSelfLeave: repeatedInput.checked,
+    });
+    if (isError(result)) {
+      errorEl.textContent = errorMessages[result.error];
+      return;
+    }
+
+    setResult('daily', yen.format(result.dailyAllowance));
+    setResult('days', fill(format.days, { n: String(result.days) }));
+    setResult('total', yen.format(result.totalAmount));
+    setResult('per-cert', yen.format(result.perCertification));
+    setResult('wage-daily', yen.format(result.wageDaily));
+    setResult(
+      'rate',
+      fill(format.rateValue, { percent: percent.format(result.rate * 100) }),
+    );
+    setResult(
+      'waiting',
+      fill(format.waiting, { n: String(result.waitingDays) }),
+    );
+    setResult(
+      'restriction',
+      result.restrictionMonths === 0
+        ? format.restrictionNone
+        : fill(format.restrictionMonths, {
+            n: String(result.restrictionMonths),
+          }),
+    );
+    setResult(
+      'validity',
+      result.extraValidityDays === 0
+        ? format.validityBase
+        : fill(format.validityExtra, { n: String(result.extraValidityDays) }),
+    );
+
+    notEligibleEl.textContent = result.eligible
+      ? ''
+      : fill(format.notEligible, { months: String(result.requiredMonths) });
+    notEligibleEl.classList.toggle('hidden', result.eligible);
+    clampEl.textContent =
+      result.wageClamp === 'min'
+        ? format.clampMin
+        : result.wageClamp === 'max'
+          ? fill(format.clampMax, {
+              amount: yen.format(WAGE_DAILY_MAX[result.ageGroup]),
+            })
+          : '';
+    resultsEl.classList.remove('hidden');
+  }
+
+  for (const el of [ageInput, wageInput, yearsInput, monthsInput]) {
+    el.addEventListener('input', render);
+  }
+  reasonSelect.addEventListener('change', render);
+  repeatedInput.addEventListener('change', render);
+
+  wageInput.value = formatNumberWithCommas('300000');
+  render();
+</script>

@@ -10707,6 +10707,175 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'tax-wall-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: [
+      'salary-take-home-calculator',
+      'bonus-take-home',
+      'furusato-nozei-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '年収の壁チェック（手取り逆転シミュレーター）',
+        description:
+          'パート・扶養向けに、106万・130万・160万などの年収の壁を超えたときの社会保険料・税金と手取りの逆転を試算します。令和7年度税制改正後の概算。',
+        keywords: [
+          '年収の壁',
+          '103万円の壁',
+          '106万円の壁',
+          '130万円の壁',
+          '160万円',
+          '扶養',
+          '配偶者特別控除',
+          '手取り逆転',
+        ],
+      },
+      en: {
+        name: 'Japan Income Wall Checker (Take-Home Reversal)',
+        description:
+          'Check Japan’s income walls (¥1.06M, ¥1.3M, ¥1.6M) for part-timers and dependents and see where take-home pay drops. Estimate only.',
+        keywords: [
+          'income wall',
+          '1.03 million yen wall',
+          '1.06 million yen wall',
+          '1.3 million yen wall',
+          'dependent',
+          'spousal deduction',
+          'part-time',
+          'take-home',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'unemployment-benefit',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: [
+      'salary-take-home-calculator',
+      'paid-leave-calculator',
+      'hourly-wage-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '失業保険（基本手当）計算',
+        description:
+          '離職理由・年齢・被保険者期間・月額賃金から、失業保険の基本手当日額・給付日数・総額の目安、待期期間、自己都合の給付制限を計算します。',
+        keywords: [
+          '失業保険',
+          '基本手当',
+          '雇用保険',
+          '失業手当',
+          '退職',
+          '給付制限',
+          '離職',
+        ],
+      },
+      en: {
+        name: 'Unemployment Benefit Calculator (Japan)',
+        description:
+          "Estimate Japan's unemployment insurance basic allowance: daily amount, benefit days and waiting period by age, insured period and reason.",
+        keywords: [
+          'unemployment insurance',
+          'basic allowance',
+          'employment insurance',
+          'job loss benefit',
+          'resignation',
+          'Hello Work',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'childcare-leave-benefit',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: [
+      'salary-take-home-calculator',
+      'bonus-take-home',
+      'paid-leave-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '育児休業給付金・出産手当金・傷病手当金の計算',
+        description:
+          '育児休業給付金（67%・50%）、出産手当金、傷病手当金の支給額を月給や標準報酬月額から概算します。令和8年8月改定の上限・下限に基づく目安。',
+        keywords: [
+          '育休',
+          '育児休業給付金',
+          '出産手当金',
+          '傷病手当金',
+          '出生後休業支援給付金',
+          '産休',
+          '標準報酬月額',
+          '社会保険給付',
+        ],
+      },
+      en: {
+        name: 'Childcare Leave, Maternity & Sickness Benefit Calculator (Japan)',
+        description:
+          'Estimate Japan’s childcare leave benefit (67% / 50%), maternity allowance and sickness allowance from your pay and standard remuneration.',
+        keywords: [
+          'childcare leave benefit',
+          'parental leave pay',
+          'maternity allowance',
+          'sickness allowance',
+          'injury and sickness benefit',
+          'post-birth leave support benefit',
+          'Japan',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'retirement-allowance-tax',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: [
+      'salary-take-home-calculator',
+      'bonus-take-home',
+      'furusato-nozei-calculator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '退職金の税金計算（退職所得控除）',
+        description:
+          '退職金と勤続年数から、退職所得控除・2分の1課税を使って所得税・住民税と手取りを試算します。',
+        keywords: [
+          '退職金',
+          '退職所得控除',
+          '退職金 税金',
+          '退職所得',
+          '2分の1課税',
+          '退職手当',
+          '勤続年数',
+        ],
+      },
+      en: {
+        name: 'Retirement Allowance Tax Calculator',
+        description:
+          'Estimate tax on a Japanese retirement allowance: retirement income deduction, half taxation, income tax and resident tax.',
+        keywords: [
+          'retirement allowance',
+          'severance pay',
+          'retirement income deduction',
+          'severance tax',
+          'half taxation',
+          'Japan retirement tax',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

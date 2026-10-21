@@ -1,0 +1,397 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { childcareLeaveBenefitContent } from '../../i18n/tools/childcare-leave-benefit';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = childcareLeaveBenefitContent[locale];
+
+const modes = [
+  { id: 'childcare', label: t.modeChildcare },
+  { id: 'maternity', label: t.modeMaternity },
+  { id: 'sick', label: t.modeSick },
+];
+
+const childcareResults = [
+  { id: 'cc-total', label: t.resultChildcareTotalLabel, strong: true },
+  { id: 'cc-wage-daily', label: t.resultWageDailyLabel },
+  { id: 'cc-monthly-first', label: t.resultMonthlyFirstLabel },
+  { id: 'cc-monthly-after', label: t.resultMonthlyAfterLabel },
+  { id: 'cc-benefit-first', label: t.resultBenefitFirstLabel },
+  { id: 'cc-benefit-after', label: t.resultBenefitAfterLabel },
+  { id: 'cc-support', label: t.resultSupportLabel },
+];
+const maternityResults = [
+  { id: 'mt-total', label: t.resultMaternityTotalLabel, strong: true },
+  { id: 'mt-standard-daily', label: t.resultStandardDailyLabel },
+  { id: 'mt-benefit-daily', label: t.resultBenefitDailyLabel },
+  { id: 'mt-days', label: t.resultMaternityDaysLabel },
+];
+const sickResults = [
+  { id: 'sk-total', label: t.resultSickTotalLabel, strong: true },
+  { id: 'sk-standard-daily', label: t.resultStandardDailyLabel },
+  { id: 'sk-benefit-daily', label: t.resultBenefitDailyLabel },
+  { id: 'sk-paid-days', label: t.resultPaidDaysLabel },
+];
+const panels = [
+  { id: 'childcare', results: childcareResults },
+  { id: 'maternity', results: maternityResults },
+  { id: 'sick', results: sickResults },
+];
+---
+
+<ToolShell t={t}>
+  <p
+    class="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+    role="note"
+  >
+    {t.disclaimer}
+  </p>
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+    data-limit-upper={t.limitUpperNote}
+    data-limit-lower={t.limitLowerNote}
+    data-sick-cap={t.sickCapNote}
+  >
+    <span id="cl-mode-label" class="ui-label">
+      {t.modeLabel}
+    </span>
+    <div
+      id="cl-mode"
+      class="ui-seg mb-4 flex-wrap"
+      role="group"
+      aria-labelledby="cl-mode-label"
+    >
+      {modes.map((m, i) => (
+        <button
+          type="button"
+          data-mode={m.id}
+          aria-pressed={i === 0 ? 'true' : 'false'}
+          class="ui-seg-btn"
+        >
+          {m.label}
+        </button>
+      ))}
+    </div>
+
+    <div id="cl-panel-childcare" data-panel="childcare">
+      <h2 class="mb-3 text-lg font-bold">{t.childcareHeading}</h2>
+      <div class="mb-3 flex flex-wrap items-end gap-3">
+        <div>
+          <label for="cl-wage" class="ui-label">
+            {t.wageLabel}
+          </label>
+          <input
+            id="cl-wage"
+            type="text"
+            inputmode="decimal"
+            class="ui-input h-11 w-44 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="cl-days" class="ui-label">
+            {t.leaveDaysLabel}
+          </label>
+          <input
+            id="cl-days"
+            type="number"
+            min="1"
+            step="1"
+            inputmode="numeric"
+            class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <label class="flex h-11 items-center gap-2 text-sm">
+          <input id="cl-support" type="checkbox" />
+          {t.supportLabel}
+        </label>
+      </div>
+      <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+        {t.wageHint}
+      </p>
+      <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+        {t.leaveDaysHint}
+      </p>
+      <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+        {t.supportHint}
+      </p>
+    </div>
+
+    <div id="cl-panel-maternity" data-panel="maternity" class="hidden">
+      <h2 class="mb-3 text-lg font-bold">{t.maternityHeading}</h2>
+      <div class="mb-3 flex flex-wrap items-end gap-3">
+        <div>
+          <label for="cl-mt-standard" class="ui-label">
+            {t.standardMonthlyLabel}
+          </label>
+          <input
+            id="cl-mt-standard"
+            type="text"
+            inputmode="decimal"
+            class="ui-input h-11 w-44 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="cl-mt-delay" class="ui-label">
+            {t.delayLabel}
+          </label>
+          <input
+            id="cl-mt-delay"
+            type="number"
+            min="0"
+            step="1"
+            inputmode="numeric"
+            class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <label class="flex h-11 items-center gap-2 text-sm">
+          <input id="cl-mt-multiple" type="checkbox" />
+          {t.multipleLabel}
+        </label>
+      </div>
+      <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+        {t.standardMonthlyHint}
+      </p>
+      <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+        {t.delayHint}
+      </p>
+    </div>
+
+    <div id="cl-panel-sick" data-panel="sick" class="hidden">
+      <h2 class="mb-3 text-lg font-bold">{t.sickHeading}</h2>
+      <div class="mb-3 flex flex-wrap items-end gap-3">
+        <div>
+          <label for="cl-sk-standard" class="ui-label">
+            {t.standardMonthlyLabel}
+          </label>
+          <input
+            id="cl-sk-standard"
+            type="text"
+            inputmode="decimal"
+            class="ui-input h-11 w-44 px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="cl-sk-absent" class="ui-label">
+            {t.absentLabel}
+          </label>
+          <input
+            id="cl-sk-absent"
+            type="number"
+            min="0"
+            step="1"
+            inputmode="numeric"
+            class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+          />
+        </div>
+      </div>
+      <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+        {t.standardMonthlyHint}
+      </p>
+      <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+        {t.absentHint}
+      </p>
+    </div>
+
+    <p
+      id="cl-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    {panels.map((p) => (
+      <dl
+        id={`cl-results-${p.id}`}
+        data-results={p.id}
+        class="mt-4 hidden grid grid-cols-1 gap-3 sm:grid-cols-2"
+        aria-live="polite"
+      >
+        {p.results.map((r) => (
+          <div>
+            <dt class="text-sm text-gray-600 dark:text-gray-400">{r.label}</dt>
+            <dd
+              class={r.strong ? 'text-xl font-bold' : 'text-lg font-semibold'}
+              id={`cl-result-${r.id}`}
+            />
+          </div>
+        ))}
+      </dl>
+    ))}
+
+    <p
+      id="cl-note"
+      class="mt-3 hidden text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+    <p class="mt-4 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+      {t.basisLine}
+    </p>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    calculateChildcareLeave,
+    calculateMaternityAllowance,
+    calculateSickAllowance,
+  } from '../../lib/tools/childcare-leave-benefit';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
+  const errorMessage = configEl.dataset.error ?? '';
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const plain = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 0,
+  });
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const wage = $<HTMLInputElement>('cl-wage');
+  const days = $<HTMLInputElement>('cl-days');
+  const support = $<HTMLInputElement>('cl-support');
+  const mtStandard = $<HTMLInputElement>('cl-mt-standard');
+  const mtDelay = $<HTMLInputElement>('cl-mt-delay');
+  const mtMultiple = $<HTMLInputElement>('cl-mt-multiple');
+  const skStandard = $<HTMLInputElement>('cl-sk-standard');
+  const skAbsent = $<HTMLInputElement>('cl-sk-absent');
+  const errorEl = $('cl-error');
+  const noteEl = $('cl-note');
+  const modeButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#cl-mode button'),
+  );
+  const panels = Array.from(
+    document.querySelectorAll<HTMLElement>('[data-panel]'),
+  );
+  const resultLists = Array.from(
+    document.querySelectorAll<HTMLElement>('[data-results]'),
+  );
+
+  let mode = 'childcare';
+
+  const setResult = (id: string, text: string) => {
+    $(`cl-result-${id}`).textContent = text;
+  };
+  const num = (el: HTMLInputElement) => Number(stripCommas(el.value) || '0');
+
+  function showResults(id: string | null) {
+    for (const list of resultLists) {
+      list.classList.toggle('hidden', list.dataset.results !== id);
+    }
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    noteEl.textContent = '';
+    noteEl.classList.add('hidden');
+    showResults(null);
+
+    if (mode === 'childcare') {
+      const r = calculateChildcareLeave({
+        monthlyWage: num(wage),
+        leaveDays: num(days),
+        birthSupport: support.checked,
+      });
+      if (r === null) {
+        errorEl.textContent = errorMessage;
+        return;
+      }
+      setResult('cc-total', yen.format(r.total));
+      setResult('cc-wage-daily', yen.format(r.wageDaily));
+      setResult('cc-monthly-first', yen.format(r.monthlyFirst));
+      setResult('cc-monthly-after', yen.format(r.monthlyAfter));
+      setResult('cc-benefit-first', yen.format(r.benefitFirst));
+      setResult('cc-benefit-after', yen.format(r.benefitAfter));
+      setResult('cc-support', yen.format(r.supportBenefit));
+      if (r.limitApplied) {
+        noteEl.textContent =
+          (r.limitApplied === 'upper'
+            ? configEl.dataset.limitUpper
+            : configEl.dataset.limitLower) ?? '';
+        noteEl.classList.remove('hidden');
+      }
+      showResults('childcare');
+    } else if (mode === 'maternity') {
+      const r = calculateMaternityAllowance({
+        standardMonthly: num(mtStandard),
+        multiple: mtMultiple.checked,
+        delayDays: num(mtDelay),
+      });
+      if (r === null) {
+        errorEl.textContent = errorMessage;
+        return;
+      }
+      setResult('mt-total', yen.format(r.total));
+      setResult('mt-standard-daily', yen.format(r.standardDaily));
+      setResult('mt-benefit-daily', yen.format(r.benefitDaily));
+      setResult('mt-days', plain.format(r.totalDays));
+      showResults('maternity');
+    } else {
+      const r = calculateSickAllowance({
+        standardMonthly: num(skStandard),
+        absentDays: num(skAbsent),
+      });
+      if (r === null) {
+        errorEl.textContent = errorMessage;
+        return;
+      }
+      setResult('sk-total', yen.format(r.total));
+      setResult('sk-standard-daily', yen.format(r.standardDaily));
+      setResult('sk-benefit-daily', yen.format(r.benefitDaily));
+      setResult('sk-paid-days', plain.format(r.paidDays));
+      if (r.cappedByPeriod) {
+        noteEl.textContent = configEl.dataset.sickCap ?? '';
+        noteEl.classList.remove('hidden');
+      }
+      showResults('sick');
+    }
+  }
+
+  function setMode(next: string) {
+    mode = next;
+    for (const b of modeButtons) {
+      b.setAttribute(
+        'aria-pressed',
+        b.dataset.mode === next ? 'true' : 'false',
+      );
+    }
+    for (const p of panels) {
+      p.classList.toggle('hidden', p.dataset.panel !== next);
+    }
+    render();
+  }
+
+  for (const b of modeButtons) {
+    b.addEventListener('click', () => setMode(b.dataset.mode ?? 'childcare'));
+  }
+
+  for (const el of [wage, mtStandard, skStandard]) attachCommaFormatting(el);
+  for (const el of [wage, days, mtStandard, mtDelay, skStandard, skAbsent]) {
+    el.addEventListener('input', render);
+  }
+  for (const el of [support, mtMultiple]) el.addEventListener('change', render);
+
+  wage.value = formatNumberWithCommas('300000');
+  days.value = '180';
+  mtStandard.value = formatNumberWithCommas('300000');
+  mtDelay.value = '0';
+  skStandard.value = formatNumberWithCommas('300000');
+  skAbsent.value = '30';
+  render();
+</script>

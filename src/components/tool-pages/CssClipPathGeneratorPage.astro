@@ -45,7 +45,11 @@ const numberFields = [
   >
     <div class="mb-4">
       <span class="ui-label">{t.shapeLabel}</span>
-      <div class="ui-seg w-fit max-w-full flex-wrap" role="group" aria-label={t.shapeLabel}>
+      <div
+        class="ui-seg w-fit max-w-full flex-wrap"
+        role="group"
+        aria-label={t.shapeLabel}
+      >
         {shapes.map((shape) => (
           <button
             type="button"

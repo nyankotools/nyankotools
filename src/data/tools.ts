@@ -10876,6 +10876,152 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'real-estate-yield',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['loan-calculator', 'mortgage-calculator', 'rent-initial-cost'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '不動産投資の利回り計算',
+        description:
+          '物件価格・家賃・経費・ローン条件から、表面利回り・実質利回りとローン返済後のキャッシュフローを試算します。',
+        keywords: [
+          '不動産投資',
+          '表面利回り',
+          '実質利回り',
+          'NOI',
+          'キャッシュフロー',
+          '収益物件',
+          'アパート経営',
+          '空室率',
+        ],
+      },
+      en: {
+        name: 'Rental Property Yield Calculator',
+        description:
+          'Estimate gross yield, net yield (NOI) and cash flow after loan payments for a rental property.',
+        keywords: [
+          'rental yield',
+          'gross yield',
+          'net yield',
+          'NOI',
+          'cash flow',
+          'real estate investment',
+          'cap rate',
+          'cash on cash',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'pfc-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['bmr-calorie-calculator', 'bmi-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'PFCバランス計算機',
+        description:
+          '摂取カロリーとPFC比率から、タンパク質・脂質・炭水化物の摂取量(g)を計算します。身長・体重から目標カロリーを出すことも、直接入力することもできます。',
+        keywords: [
+          'PFC',
+          'PFCバランス',
+          'マクロ',
+          'タンパク質',
+          '摂取量',
+          'ダイエット',
+          '筋トレ',
+        ],
+      },
+      en: {
+        name: 'Macro (PFC) Calculator',
+        description:
+          'Calculate daily protein, fat, and carb grams from your calorie target and macro ratio. Estimate calories from BMR and activity.',
+        keywords: [
+          'macro calculator',
+          'PFC',
+          'protein calculator',
+          'macronutrients',
+          'protein per kg',
+          'calorie split',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'sleep-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['bmi-calculator', 'age-calculator'],
+    translations: {
+      ja: {
+        name: '睡眠計算機',
+        description:
+          '起きたい時刻から就寝時刻を、寝る時刻から起床時刻を90分周期で逆算。入眠時間の設定、4〜6サイクルの候補表示に対応。',
+        keywords: [
+          '睡眠サイクル',
+          '就寝時刻',
+          '起床時刻',
+          '90分',
+          'レム睡眠',
+          '逆算',
+          '何時に寝る',
+        ],
+      },
+      en: {
+        name: 'Sleep Calculator',
+        description:
+          'Work out your bedtime or wake-up time from 90-minute sleep cycles, with an adjustable time to fall asleep.',
+        keywords: [
+          'sleep cycle calculator',
+          'bedtime calculator',
+          'wake up time',
+          'REM',
+          '90 minute cycles',
+          'when to sleep',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'pet-age-calculator',
+    category: 'calc',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['age-calculator', 'bmi-calculator'],
+    translations: {
+      ja: {
+        name: '犬・猫の年齢人間換算',
+        description:
+          '犬・猫の年齢（年・月）を人間の年齢に換算。犬は体格別（小型・中型・大型）の早見表つき。',
+        keywords: [
+          'ペット年齢',
+          '犬 年齢 人間',
+          '猫 年齢 人間',
+          '犬猫 年齢換算',
+          '人間年齢換算',
+        ],
+      },
+      en: {
+        name: 'Pet Age Calculator (Dog & Cat)',
+        description:
+          "Convert your dog's or cat's age to human years, with a chart by dog size.",
+        keywords: [
+          'dog years',
+          'cat years',
+          'dog age in human years',
+          'cat age in human years',
+          'pet age',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

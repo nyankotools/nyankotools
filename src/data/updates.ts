@@ -920,13 +920,17 @@ export const updates: UpdateEntry[] = [
       'unemployment-benefit',
       'childcare-leave-benefit',
       'retirement-allowance-tax',
+      'real-estate-yield',
+      'pfc-calculator',
+      'sleep-calculator',
+      'pet-age-calculator',
     ],
     translations: {
       ja: {
-        summary: '16個のツールを追加しました。',
+        summary: '20個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 16 new tools.',
+        summary: 'Added 20 new tools.',
       },
     },
   },

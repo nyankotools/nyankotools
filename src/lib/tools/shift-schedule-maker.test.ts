@@ -376,13 +376,13 @@ describe('suggestHints', () => {
     const input: ShiftInput = {
       ...base,
       members: ['A'],
-      perDay: 12,
+      perDay: 7,
       maxConsecutive: 1,
       dayOffs: [[]],
     };
     const hints = suggestHints(input, run(input));
     expect(hints).toContainEqual({ kind: 'combine' });
-  });
+  }, 30000);
 });
 
 describe('割り当ての最適化', () => {

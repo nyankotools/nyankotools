@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   cellState,
+  formatDayOffs,
   generateSchedule,
   parseDayOffRequests,
   parseMembers,
   scheduleToCsv,
+  suggestHints,
   validateShiftInput,
   type ShiftInput,
   type ShiftSchedule,
@@ -255,5 +257,153 @@ describe('cellState / scheduleToCsv', () => {
     expect(lines[2].startsWith("'=B,")).toBe(true);
     expect(lines[3].startsWith('"C,""x""",')).toBe(true);
     expect(lines[2].split(',')[2]).toBe('休');
+  });
+});
+
+describe('formatDayOffs', () => {
+  it('連続する3日以上は範囲にまとめ、空のメンバーは出さない', () => {
+    expect(
+      formatDayOffs(['田中', '佐藤', '鈴木'], [[1, 2, 3, 10, 15, 16], [], [5]]),
+    ).toBe('田中: 1-3, 10, 15, 16\n鈴木: 5');
+  });
+
+  it('parseDayOffRequests と往復しても同じ', () => {
+    const members = ['田中', '佐藤'];
+    const dayOffs = [
+      [1, 2, 3, 4, 9],
+      [7, 8],
+    ];
+    const text = formatDayOffs(members, dayOffs);
+    expect(parseDayOffRequests(text, members, 31).dayOffs).toEqual(dayOffs);
+  });
+});
+
+describe('suggestHints', () => {
+  const base: ShiftInput = {
+    members: ['A', 'B'],
+    year: 2026,
+    month: 10,
+    perDay: 2,
+    maxConsecutive: 5,
+    closedOnOffDays: false,
+    dayOffs: [[], []],
+  };
+  const run = (input: ShiftInput) => {
+    const r = generateSchedule(input);
+    if (!r.ok) throw new Error('invalid');
+    return r.schedule;
+  };
+
+  it('警告が無ければヒントも無い', () => {
+    const input = { ...base, maxConsecutive: 31 };
+    expect(suggestHints(input, run(input))).toEqual([]);
+  });
+
+  it('連勤上限で不足するときは、解消する連勤上限を提案する', () => {
+    const hints = suggestHints(base, run(base));
+    const h = hints.find((x) => x.kind === 'maxConsecutive');
+    expect(h).toBeDefined();
+    if (h?.kind === 'maxConsecutive') {
+      expect(run({ ...base, maxConsecutive: h.value }).warnings).toEqual([]);
+      expect(
+        run({ ...base, maxConsecutive: h.value - 1 }).warnings.length,
+      ).toBeGreaterThan(0);
+    }
+  });
+
+  it('メンバーが必要人数に足りないときは、増員・人数引き下げを提案する', () => {
+    const input = {
+      ...base,
+      members: ['A'],
+      dayOffs: [[]],
+      maxConsecutive: 31,
+    };
+    const hints = suggestHints(input, run(input));
+    expect(hints).toContainEqual({ kind: 'addMembers', count: 1 });
+    expect(hints).toContainEqual({ kind: 'perDay', value: 1 });
+  });
+
+  it('希望休が重なった日はメンバーと日付を示す', () => {
+    const input = {
+      ...base,
+      maxConsecutive: 31,
+      dayOffs: [[3], []],
+    };
+    const hints = suggestHints(input, run(input));
+    expect(hints).toContainEqual({
+      kind: 'dayOffs',
+      days: [3],
+      members: ['A'],
+    });
+  });
+
+  it('土日祝休みで解消するならそれを提案する', () => {
+    // 2人のうち1人が毎日希望休だと平日・休日とも不足するが、休日を閉じても平日は不足する
+    const input = {
+      ...base,
+      perDay: 1,
+      members: ['A'],
+      dayOffs: [[1]],
+      maxConsecutive: 31,
+    };
+    const hints = suggestHints(input, run(input));
+    expect(hints.some((h) => h.kind === 'closed')).toBe(false);
+  });
+
+  it('どの1つの変更でも解消しないときは combine を返す', () => {
+    const input: ShiftInput = {
+      ...base,
+      members: ['A'],
+      perDay: 60,
+      maxConsecutive: 1,
+      dayOffs: [[]],
+    };
+    const hints = suggestHints(input, run(input));
+    expect(hints).toContainEqual({ kind: 'combine' });
+  });
+});
+
+describe('割り当ての最適化', () => {
+  const input: ShiftInput = {
+    members: ['m0', 'm1', 'm2'],
+    year: 2026,
+    month: 10,
+    perDay: 2,
+    maxConsecutive: 5,
+    closedOnOffDays: false,
+    dayOffs: [
+      [23, 25, 13, 2, 7],
+      [21, 22, 14, 20, 8],
+      [10, 1, 28, 30, 4],
+    ],
+  };
+
+  it('日付順の割り当てでは不足する条件でも、組み替えて警告なしにできる', () => {
+    const r = generateSchedule(input);
+    if (!r.ok) throw new Error('invalid');
+    const s = r.schedule;
+    expect(s.warnings).toEqual([]);
+    for (const m of s.members) expect(m.maxStreak).toBeLessThanOrEqual(5);
+    for (const day of s.days) {
+      s.members.forEach((m, i) => {
+        if (m.offRequests.includes(day.day))
+          expect(day.assigned).not.toContain(i);
+      });
+    }
+  });
+
+  it('同じ入力なら毎回同じ結果になる', () => {
+    expect(generateSchedule(input)).toEqual(generateSchedule(input));
+  });
+
+  it('希望休で物理的に足りない日は警告のまま、希望休は守られる', () => {
+    const r = generateSchedule({
+      ...input,
+      perDay: 3,
+      dayOffs: [[1], [], []],
+    });
+    if (!r.ok) throw new Error('invalid');
+    expect(r.schedule.warnings.map((w) => w.day)).toContain(1);
+    expect(r.schedule.days[0].assigned).not.toContain(0);
   });
 });

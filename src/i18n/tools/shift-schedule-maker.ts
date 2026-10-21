@@ -24,6 +24,9 @@ export interface ShiftScheduleMakerPageContent {
   offsLabel: string;
   offsPlaceholder: string;
   offsHint: string;
+  offsGridLabel: string;
+  offsGridHint: string;
+  offsGridDay: string;
 
   printButton: string;
   copyCsvButton: string;
@@ -37,6 +40,13 @@ export interface ShiftScheduleMakerPageContent {
   /** {date} {required} {assigned} {off} {streak} を置き換える */
   warningShortage: string;
   noWarnings: string;
+  hintHeading: string;
+  hintMaxConsecutive: string;
+  hintPerDay: string;
+  hintAddMembers: string;
+  hintClosed: string;
+  hintDayOffs: string;
+  hintCombine: string;
   issueHeading: string;
   /** {detail} を置き換える */
   issueBadLine: string;
@@ -100,10 +110,15 @@ export const shiftScheduleMakerContent: Record<
     perDayLabel: '1日の必要人数',
     maxConsecutiveLabel: '連勤の上限（日）',
     closedLabel: '土日祝は休みにする（割り当てない）',
-    offsLabel: '希望休（1行に1人）',
+    offsLabel: '希望休をテキストで入力（1行に1人・上の表と連動）',
     offsPlaceholder: '田中: 3, 10, 15-17\n佐藤: 1, 2',
     offsHint:
       '「名前: 日付」の形式で、日付はカンマ区切り（連続する日は 15-17 のように範囲指定）です。',
+
+    offsGridLabel: '希望休の指定（日付をクリックで休みに）',
+    offsGridHint:
+      'メンバーごとに、休みにしたい日をクリック（タップ）して選びます。もう一度押すと解除できます。選んだ日は割り当てられません。',
+    offsGridDay: '{name}さん {day}日を休みにする',
 
     printButton: '印刷する',
     copyCsvButton: 'CSVをコピー',
@@ -116,6 +131,15 @@ export const shiftScheduleMakerContent: Record<
     warningShortage:
       '{date}: 必要{required}人に対して{assigned}人しか割り当てられません（希望休 {off}人・連勤上限 {streak}人）',
     noWarnings: 'すべての日で必要人数を満たしています。',
+    hintHeading: '解消のヒント（いずれか1つで解消します）',
+    hintMaxConsecutive: '連勤の上限を{value}日に増やす',
+    hintPerDay: '1日の必要人数を{value}人に減らす',
+    hintAddMembers: 'メンバーを{count}人増やす',
+    hintClosed: '「土日祝は休みにする」をオンにする',
+    hintDayOffs:
+      '{days}日は希望休が重なっています（{members}）。休みの日をずらす・減らすと割り当てやすくなります',
+    hintCombine:
+      '1つの設定変更だけでは解消しません。必要人数を減らす・メンバーを増やす・連勤の上限を上げる・希望休を減らす、を組み合わせてください',
     issueHeading: '希望休の入力について',
     issueBadLine: '名前と日付の区切り（:）がない行を無視しました: {detail}',
     issueUnknownMember: 'メンバーにいない名前を無視しました: {detail}',
@@ -154,7 +178,7 @@ export const shiftScheduleMakerContent: Record<
     notesHeading: '注意事項',
     notes: [
       '割り当ては、担当日数が少ない人を優先し、同じなら最後に担当した日が古い人から選ぶ方式です。乱数は使わないため、同じ入力なら必ず同じ結果になります。',
-      '最適な組み合わせを探索するのではなく、日付順に決めていく簡易的な方法です。条件が厳しいと、人数が足りない日が警告に出ることがあります。',
+      '希望休は必ず守り、そのうえで連勤上限の範囲内で人数不足が最も少なくなるよう休みを割り振ります（担当日数もなるべく均等にします）。それでも条件が厳しいと、人数が足りない日が警告に出ることがあります。',
       '1人の勤務時間・夜勤の回数・職種ごとの人数配分・曜日ごとの必要人数の違いなどは扱いません。',
       '祝日は2000〜2099年の範囲で日本の祝日法のルールから計算しており、今後の法改正は反映されません。それ以外の年は土日のみが休みになります。',
       '31日分の表は幅が広いため、印刷時は用紙を横向きにし、倍率を縮小してください。',
@@ -191,10 +215,16 @@ export const shiftScheduleMakerContent: Record<
     perDayLabel: 'People needed per day',
     maxConsecutiveLabel: 'Max consecutive working days',
     closedLabel: 'Weekends and Japanese holidays off (no assignments)',
-    offsLabel: 'Requested days off (one member per line)',
+    offsLabel:
+      'Requested days off as text (one member per line, synced with the grid above)',
     offsPlaceholder: 'Alice: 3, 10, 15-17\nBob: 1, 2',
     offsHint:
       'Use "Name: days". Separate days with commas, and write a run of days as a range such as 15-17.',
+
+    offsGridLabel: 'Requested days off (click a day to mark it off)',
+    offsGridHint:
+      'Click (or tap) the days each member wants off. Click again to clear. Selected days are never assigned.',
+    offsGridDay: '{name}: day {day} off',
 
     printButton: 'Print',
     copyCsvButton: 'Copy CSV',
@@ -207,6 +237,15 @@ export const shiftScheduleMakerContent: Record<
     warningShortage:
       '{date}: needs {required} but only {assigned} could be assigned ({off} on requested leave, {streak} at the streak limit)',
     noWarnings: 'Every day has the required number of people.',
+    hintHeading: 'Ways to fix it (any one of these is enough)',
+    hintMaxConsecutive: 'Raise the max consecutive working days to {value}',
+    hintPerDay: 'Lower the required people per day to {value}',
+    hintAddMembers: 'Add {count} more member(s)',
+    hintClosed: 'Turn on "Weekends and Japanese holidays off"',
+    hintDayOffs:
+      'Requested days off overlap on day(s) {days} ({members}). Moving or removing some of them makes assignment easier',
+    hintCombine:
+      'No single change fixes it. Combine them: lower the required people, add members, raise the streak limit, or reduce days off',
     issueHeading: 'About the days-off input',
     issueBadLine: 'Ignored a line with no ":" between name and days: {detail}',
     issueUnknownMember:
@@ -249,7 +288,7 @@ export const shiftScheduleMakerContent: Record<
     notesHeading: 'Notes',
     notes: [
       'Assignment favors whoever has worked the fewest days, then whoever worked longest ago. No randomness is used, so the same input always gives the same roster.',
-      'It decides day by day rather than searching for the optimal roster, so tight constraints can leave some days understaffed and flagged as warnings.',
+      'Requested days off are always honored; rest days are then arranged within the streak limit to minimize understaffing, keeping workloads as even as possible. If the constraints are still too tight, some days are flagged as understaffed.',
       'Shift hours, night-shift counts, roles and different headcounts for different weekdays are not handled.',
       'Japanese holidays are calculated under current law for 2000–2099 only and do not reflect future changes. For other years only weekends are closed.',
       'A 31-day table is wide. When printing, use landscape orientation and scale it down.',

@@ -22,6 +22,33 @@ test.describe('シフト表・当番表作成', () => {
     await expect(first.locator('td').nth(3)).not.toHaveText('休');
   });
 
+  test('希望休の表をクリックすると休みが指定・解除され、入力欄とも連動する', async ({
+    page,
+  }) => {
+    await page.locator('#shift-closed').uncheck();
+    const cell = (name: string, day: number) =>
+      page.locator(
+        `#shift-off-grid button[data-member="${name}"][data-day="${day}"]`,
+      );
+    await cell('田中', 1).click();
+    await cell('田中', 2).click();
+    await cell('田中', 3).click();
+    await expect(cell('田中', 2)).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#shift-offs')).toHaveValue('田中: 1-3');
+    const first = page.locator('#shift-table tbody tr').first();
+    await expect(first.locator('td').nth(2)).toHaveText('休');
+    await expect(first.locator('td').nth(3)).not.toHaveText('休');
+
+    await cell('田中', 2).click();
+    await expect(cell('田中', 2)).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.locator('#shift-offs')).toHaveValue('田中: 1, 3');
+
+    // テキスト入力を変えると表にも反映される
+    await page.locator('#shift-offs').fill('佐藤: 10');
+    await expect(cell('佐藤', 10)).toHaveAttribute('aria-pressed', 'true');
+    await expect(cell('田中', 1)).toHaveAttribute('aria-pressed', 'false');
+  });
+
   test('人数が足りない日は警告が表示される', async ({ page }) => {
     await page.locator('#shift-members').fill('田中');
     await page.locator('#shift-per-day').fill('2');
@@ -29,6 +56,20 @@ test.describe('シフト表・当番表作成', () => {
     await expect(page.locator('#shift-warnings li').first()).toContainText(
       '必要2人',
     );
+  });
+
+  test('人数が足りないとき、解消のヒントが表示され従うと解消する', async ({
+    page,
+  }) => {
+    await page.locator('#shift-closed').uncheck();
+    await page.locator('#shift-members').fill('田中\n佐藤');
+    await page.locator('#shift-per-day').fill('2');
+    await page.locator('#shift-max-consecutive').fill('3');
+    await expect(page.locator('#shift-warnings')).toBeVisible();
+    await expect(page.locator('#shift-hints')).toContainText('連勤の上限を');
+    await page.locator('#shift-max-consecutive').fill('31');
+    await expect(page.locator('#shift-warnings')).toHaveCount(0);
+    await expect(page.locator('#shift-hints')).toHaveCount(0);
   });
 
   test('十分な人数なら警告なしと表示される', async ({ page }) => {

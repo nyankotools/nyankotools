@@ -172,6 +172,31 @@ export function parseDayOffRequests(
   };
 }
 
+/**
+ * 希望休を入力欄の書式（「名前: 3, 10, 15-17」）に戻す。
+ * 希望休が無いメンバーの行は出さない。parseDayOffRequests の逆変換。
+ */
+export function formatDayOffs(members: string[], dayOffs: number[][]): string {
+  const lines: string[] = [];
+  members.forEach((name, i) => {
+    const days = [...new Set(dayOffs[i] ?? [])].sort((a, b) => a - b);
+    if (days.length === 0) return;
+    const parts: string[] = [];
+    for (let k = 0; k < days.length;) {
+      let end = k;
+      while (end + 1 < days.length && days[end + 1] === days[end] + 1) end++;
+      parts.push(
+        end - k >= 2
+          ? `${days[k]}-${days[end]}`
+          : days.slice(k, end + 1).join(', '),
+      );
+      k = end + 1;
+    }
+    lines.push(`${name}: ${parts.join(', ')}`);
+  });
+  return lines.join('\n');
+}
+
 export function validateShiftInput(input: ShiftInput): ShiftError | null {
   if (input.members.length === 0) return 'noMembers';
   if (input.members.length > MAX_MEMBERS) return 'tooManyMembers';
@@ -194,11 +219,249 @@ export function validateShiftInput(input: ShiftInput): ShiftError | null {
   return null;
 }
 
+type Cell = NonNullable<
+  NonNullable<ReturnType<typeof buildMonth>>['weeks'][number]['days'][number]
+>;
+
+interface GreedyContext {
+  input: ShiftInput;
+  cells: Cell[];
+  offSets: Set<number>[];
+}
+
+const isClosed = (input: ShiftInput, cell: Cell) =>
+  input.closedOnOffDays &&
+  (cell.dow === 0 || cell.dow === 6 || cell.holiday !== null);
+
 /**
- * シフトを自動割り当てする（乱数なし・同じ入力なら同じ結果）。
+ * 日付順の貪欲法で1回割り当てる（初期解）。
  * 各日、希望休・連勤上限で出られない人を除き、
  * 「担当日数が少ない順 → 最後に担当した日が古い順（ラウンドロビン）→ 名簿順」で必要人数を選ぶ。
- * 必要人数に届かない日は warnings に入れる。
+ * 戻り値は日ごとの担当者（添字）。
+ */
+function runGreedy(ctx: GreedyContext): number[][] {
+  const { input, cells, offSets } = ctx;
+  const { members, perDay, maxConsecutive } = input;
+  const counts = members.map(() => 0);
+  const lastWorked = members.map(() => -1);
+  const streak = members.map(() => 0);
+  const result: number[][] = [];
+
+  for (const cell of cells) {
+    let assigned: number[] = [];
+    if (!isClosed(input, cell)) {
+      const candidates: number[] = [];
+      for (let i = 0; i < members.length; i++) {
+        if (!offSets[i].has(cell.day) && streak[i] < maxConsecutive)
+          candidates.push(i);
+      }
+      candidates.sort(
+        (a, b) =>
+          counts[a] - counts[b] || lastWorked[a] - lastWorked[b] || a - b,
+      );
+      assigned = candidates.slice(0, perDay).sort((a, b) => a - b);
+    }
+    const worked = new Set(assigned);
+    for (let i = 0; i < members.length; i++) {
+      if (worked.has(i)) {
+        counts[i]++;
+        lastWorked[i] = cell.day;
+        streak[i]++;
+      } else {
+        streak[i] = 0;
+      }
+    }
+    result.push(assigned);
+  }
+  return result;
+}
+
+/** 改善探索の反復回数（人数不足がある場合だけ使う） */
+const SEARCH_ITERATIONS = 300000;
+/** 不足・連勤超過 1 件あたりの重み（公平さ・連勤の短さより圧倒的に重い） */
+const HARD_WEIGHT = 300;
+
+/** 乱数（シード固定なので同じ入力なら同じ結果になる） */
+function makeRng(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+type Change = { i: number; d: number; to: number }[];
+
+/**
+ * 貪欲法の結果に人数不足がある場合に、焼きなまし法で割り当てを組み替えて不足を減らす。
+ * 希望休・休業日は絶対に動かさず、連勤上限を守ったうえで
+ * 「不足人数 → 担当日数の偏り → 連勤の長さ」の順に良い解を探す。
+ * 連勤上限を超える解は返さない（見つからなければ初期解のまま）。
+ */
+function improve(
+  ctx: GreedyContext,
+  initial: number[][],
+  lowerBound: number,
+): number[][] {
+  const { input, cells, offSets } = ctx;
+  const M = input.members.length;
+  const N = cells.length;
+  const max = input.maxConsecutive;
+  const req = cells.map((c) => (isClosed(input, c) ? 0 : input.perDay));
+  const free = (i: number, d: number) =>
+    req[d] > 0 && !offSets[i].has(cells[d].day);
+
+  const work = Array.from({ length: M }, () => new Uint8Array(N));
+  const cnt = new Array<number>(N).fill(0);
+  const total = new Array<number>(M).fill(0);
+  initial.forEach((list, d) => {
+    for (const i of list) {
+      work[i][d] = 1;
+      cnt[d]++;
+      total[i]++;
+    }
+  });
+
+  /** メンバー i の（連勤超過日数, 連勤の長さの二乗和） */
+  const runCost = (i: number) => {
+    let excess = 0;
+    let sq = 0;
+    let len = 0;
+    for (let d = 0; d <= N; d++) {
+      if (d < N && work[i][d]) {
+        len++;
+      } else if (len > 0) {
+        if (len > max) excess += len - max;
+        sq += len * len;
+        len = 0;
+      }
+    }
+    return { excess, sq };
+  };
+
+  let shortage = 0;
+  for (let d = 0; d < N; d++) shortage += Math.max(0, req[d] - cnt[d]);
+  const excessOf = new Array<number>(M);
+  const sqOf = new Array<number>(M);
+  let excess = 0;
+  let sq = 0;
+  let fair = 0;
+  for (let i = 0; i < M; i++) {
+    const c = runCost(i);
+    excessOf[i] = c.excess;
+    sqOf[i] = c.sq;
+    excess += c.excess;
+    sq += c.sq;
+    fair += total[i] * total[i];
+  }
+
+  // 解の良さ: ハード（不足+連勤超過）を最優先、次に担当日数の偏り、最後に連勤の短さ
+  const soft = () => 4 * fair + sq;
+  const cost = () => HARD_WEIGHT * (shortage + excess) + soft();
+
+  let best = work.map((row) => row.slice());
+  let bestShortage = shortage;
+  let bestSoft = soft();
+  const rng = makeRng(
+    (input.year * 12 + input.month) * 1000 + M * 31 + input.perDay,
+  );
+  const pick = (n: number) => Math.floor(rng() * n);
+
+  // 変更を適用する（元に戻すときは元の値を渡し直す）
+  const apply = (changes: Change) => {
+    const touched = new Set<number>();
+    for (const { i, d, to } of changes) {
+      if (work[i][d] === to) continue;
+      work[i][d] = to;
+      const delta = to ? 1 : -1;
+      shortage -= Math.max(0, req[d] - cnt[d]);
+      cnt[d] += delta;
+      shortage += Math.max(0, req[d] - cnt[d]);
+      fair += 2 * total[i] * delta + 1;
+      total[i] += delta;
+      touched.add(i);
+    }
+    for (const i of touched) {
+      const c = runCost(i);
+      excess += c.excess - excessOf[i];
+      sq += c.sq - sqOf[i];
+      excessOf[i] = c.excess;
+      sqOf[i] = c.sq;
+    }
+  };
+
+  let doneAt = -1;
+  for (let it = 0; it < SEARCH_ITERATIONS; it++) {
+    const temp = 120 * Math.pow(0.02, it / SEARCH_ITERATIONS);
+    const before = cost();
+    const r = rng();
+    let changes: Change;
+    if (r < 0.4) {
+      // 不足している日に、空いている人を追加する
+      const deficits: number[] = [];
+      for (let d = 0; d < N; d++) if (cnt[d] < req[d]) deficits.push(d);
+      if (deficits.length === 0) continue;
+      const d = deficits[pick(deficits.length)];
+      const i = pick(M);
+      if (!free(i, d) || work[i][d]) continue;
+      changes = [{ i, d, to: 1 }];
+    } else if (r < 0.7) {
+      // 同じ人の出勤日を別の日に移す
+      const i = pick(M);
+      const a = pick(N);
+      const b = pick(N);
+      if (!work[i][a] || work[i][b] || !free(i, b) || cnt[b] >= req[b])
+        continue;
+      changes = [
+        { i, d: a, to: 0 },
+        { i, d: b, to: 1 },
+      ];
+    } else {
+      // 同じ日の担当者を入れ替える
+      const d = pick(N);
+      const i = pick(M);
+      const k = pick(M);
+      if (!work[i][d] || work[k][d] || !free(k, d)) continue;
+      changes = [
+        { i, d, to: 0 },
+        { i: k, d, to: 1 },
+      ];
+    }
+    const undo: Change = changes.map(({ i, d }) => ({ i, d, to: work[i][d] }));
+    apply(changes);
+    const delta = cost() - before;
+    if (delta > 0 && rng() >= Math.exp(-delta / temp)) {
+      apply(undo);
+      continue;
+    }
+    if (
+      excess === 0 &&
+      (shortage < bestShortage ||
+        (shortage === bestShortage && soft() < bestSoft))
+    ) {
+      best = work.map((row) => row.slice());
+      bestShortage = shortage;
+      bestSoft = soft();
+    }
+    if (doneAt < 0 && excess === 0 && shortage <= lowerBound) doneAt = it;
+    if (doneAt >= 0 && it - doneAt > 8000) break;
+  }
+
+  return Array.from({ length: N }, (_, d) => {
+    const list: number[] = [];
+    for (let i = 0; i < M; i++) if (best[i][d]) list.push(i);
+    return list;
+  });
+}
+
+/**
+ * シフトを自動割り当てする（同じ入力なら同じ結果）。
+ * まず貪欲法（担当日数が少ない順 → 最後に担当した日が古い順 → 名簿順）で割り当て、
+ * 必要人数に届かない日があれば、希望休を最優先に守ったまま割り当てを組み替えて不足を減らす。
+ * それでも届かない日は warnings に入れる。
  */
 export function generateSchedule(input: ShiftInput): ShiftResult {
   const error = validateShiftInput(input);
@@ -218,59 +481,77 @@ export function generateSchedule(input: ShiftInput): ShiftResult {
         ),
       ),
   );
+  const ctx: GreedyContext = { input, cells, offSets };
+
+  const shortageOf = (a: number[][]) =>
+    a.reduce(
+      (sum, list, d) =>
+        sum +
+        Math.max(0, (isClosed(input, cells[d]) ? 0 : perDay) - list.length),
+      0,
+    );
+  // 希望休だけで決まる不足の下限（これ以上は減らせない）
+  const lowerBound = cells.reduce((sum, cell) => {
+    if (isClosed(input, cell)) return sum;
+    const avail = members.filter((_, i) => !offSets[i].has(cell.day)).length;
+    return sum + Math.max(0, perDay - avail);
+  }, 0);
+
+  let assignment = runGreedy(ctx);
+  if (shortageOf(assignment) > lowerBound) {
+    const improved = improve(ctx, assignment, lowerBound);
+    if (shortageOf(improved) < shortageOf(assignment)) assignment = improved;
+  }
 
   const counts = members.map(() => 0);
-  const lastWorked = members.map(() => -1);
-  const streak = members.map(() => 0);
   const maxStreak = members.map(() => 0);
+  const streak = members.map(() => 0);
   const days: ShiftDay[] = [];
   const warnings: ShiftWarning[] = [];
+  const workedOn = members.map(() => new Uint8Array(cells.length));
+  assignment.forEach((list, d) => list.forEach((i) => (workedOn[i][d] = 1)));
 
-  for (const cell of cells) {
-    const closed =
-      input.closedOnOffDays &&
-      (cell.dow === 0 || cell.dow === 6 || cell.holiday !== null);
+  cells.forEach((cell, d) => {
+    const closed = isClosed(input, cell);
+    const assigned = assignment[d];
     const day: ShiftDay = {
       day: cell.day,
       iso: cell.iso,
       dow: cell.dow,
       holiday: cell.holiday,
       closed,
-      assigned: [],
+      assigned,
       required: closed ? 0 : perDay,
       unavailableOff: 0,
       unavailableStreak: 0,
     };
-
-    const candidates: number[] = [];
     if (!closed) {
       for (let i = 0; i < members.length; i++) {
-        if (offSets[i].has(cell.day)) day.unavailableOff++;
-        else if (streak[i] >= maxConsecutive) day.unavailableStreak++;
-        else candidates.push(i);
+        if (workedOn[i][d]) continue;
+        if (offSets[i].has(cell.day)) {
+          day.unavailableOff++;
+          continue;
+        }
+        // この日に入れると連勤上限を超える人
+        let run = 1;
+        for (let k = d - 1; k >= 0 && workedOn[i][k]; k--) run++;
+        for (let k = d + 1; k < cells.length && workedOn[i][k]; k++) run++;
+        if (run > maxConsecutive) day.unavailableStreak++;
       }
-      candidates.sort(
-        (a, b) =>
-          counts[a] - counts[b] || lastWorked[a] - lastWorked[b] || a - b,
-      );
-      day.assigned = candidates.slice(0, perDay).sort((a, b) => a - b);
-      if (day.assigned.length < perDay) {
+      if (assigned.length < perDay) {
         warnings.push({
           kind: 'shortage',
           day: cell.day,
           required: perDay,
-          assigned: day.assigned.length,
+          assigned: assigned.length,
           unavailableOff: day.unavailableOff,
           unavailableStreak: day.unavailableStreak,
         });
       }
     }
-
-    const worked = new Set(day.assigned);
     for (let i = 0; i < members.length; i++) {
-      if (worked.has(i)) {
+      if (workedOn[i][d]) {
         counts[i]++;
-        lastWorked[i] = cell.day;
         streak[i]++;
         if (streak[i] > maxStreak[i]) maxStreak[i] = streak[i];
       } else {
@@ -278,7 +559,7 @@ export function generateSchedule(input: ShiftInput): ShiftResult {
       }
     }
     days.push(day);
-  }
+  });
 
   const summaries: MemberSummary[] = members.map((name, i) => ({
     name,
@@ -298,6 +579,83 @@ export function generateSchedule(input: ShiftInput): ShiftResult {
       spread: Math.max(...counts) - Math.min(...counts),
     },
   };
+}
+
+export type ShiftHint =
+  /** 連勤上限を value 日にすれば必要人数を満たせる */
+  | { kind: 'maxConsecutive'; value: number }
+  /** 必要人数を value 人にすれば満たせる */
+  | { kind: 'perDay'; value: number }
+  /** メンバーを count 人増やせば満たせる */
+  | { kind: 'addMembers'; count: number }
+  /** 土日祝を休みにすれば満たせる */
+  | { kind: 'closed' }
+  /** 人数不足の日に希望休が重なっている（日付と該当メンバー） */
+  | { kind: 'dayOffs'; days: number[]; members: string[] }
+  /** 1つの設定変更だけでは解消しない */
+  | { kind: 'combine' };
+
+const MAX_ADD_MEMBERS = 10;
+
+/**
+ * 人数不足の警告があるとき、どう直せば必要人数を満たせるかのヒントを返す。
+ * 各ヒントは実際に条件を変えて再計算し、不足が解消することを確かめたものだけを出す。
+ * 警告が無ければ空配列。
+ */
+export function suggestHints(
+  input: ShiftInput,
+  schedule: ShiftSchedule,
+): ShiftHint[] {
+  if (schedule.warnings.length === 0) return [];
+  const solves = (changed: ShiftInput) => {
+    const r = generateSchedule(changed);
+    return r.ok && r.schedule.warnings.length === 0;
+  };
+  const hints: ShiftHint[] = [];
+
+  for (let v = input.maxConsecutive + 1; v <= MAX_CONSECUTIVE_LIMIT; v++) {
+    if (solves({ ...input, maxConsecutive: v })) {
+      hints.push({ kind: 'maxConsecutive', value: v });
+      break;
+    }
+  }
+  for (let v = input.perDay - 1; v >= 1; v--) {
+    if (solves({ ...input, perDay: v })) {
+      // 解消する最大の人数（下げ幅が最小）を探す
+      hints.push({ kind: 'perDay', value: v });
+      break;
+    }
+  }
+  const room = Math.min(MAX_ADD_MEMBERS, MAX_MEMBERS - input.members.length);
+  for (let k = 1; k <= room; k++) {
+    const extra = Array.from({ length: k }, (_, i) => `+${i + 1}`);
+    if (
+      solves({
+        ...input,
+        members: [...input.members, ...extra],
+        dayOffs: [...input.dayOffs, ...extra.map(() => [] as number[])],
+      })
+    ) {
+      hints.push({ kind: 'addMembers', count: k });
+      break;
+    }
+  }
+  if (!input.closedOnOffDays && solves({ ...input, closedOnOffDays: true })) {
+    hints.push({ kind: 'closed' });
+  }
+
+  const shortDays = schedule.warnings
+    .filter((w) => w.unavailableOff > 0)
+    .map((w) => w.day);
+  if (shortDays.length > 0) {
+    const names = schedule.members
+      .filter((m) => m.offRequests.some((d) => shortDays.includes(d)))
+      .map((m) => m.name);
+    hints.push({ kind: 'dayOffs', days: shortDays, members: names });
+  }
+
+  if (!hints.some((h) => h.kind !== 'dayOffs')) hints.push({ kind: 'combine' });
+  return hints;
 }
 
 export type CellState = 'work' | 'off' | 'rest' | 'closed';

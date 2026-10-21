@@ -42,10 +42,18 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
     data-summary-max-streak={t.summaryMaxStreak}
     data-daily-heading={t.dailyHeading}
     data-warning-shortage={t.warningShortage}
+    data-hint-heading={t.hintHeading}
+    data-hint-max-consecutive={t.hintMaxConsecutive}
+    data-hint-per-day={t.hintPerDay}
+    data-hint-add-members={t.hintAddMembers}
+    data-hint-closed={t.hintClosed}
+    data-hint-day-offs={t.hintDayOffs}
+    data-hint-combine={t.hintCombine}
     data-issue-bad-line={t.issueBadLine}
     data-issue-unknown-member={t.issueUnknownMember}
     data-issue-bad-day={t.issueBadDay}
     data-issue-out-of-range={t.issueOutOfRange}
+    data-off-grid-day={t.offsGridDay}
     data-summary-spread={t.summarySpread}
     data-name-header={t.nameHeader}
     data-total-header={t.totalHeader}
@@ -97,6 +105,19 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
             {t.offsHint}
           </p>
         </div>
+      </div>
+
+      <div>
+        <p class="ui-label">{t.offsGridLabel}</p>
+        <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+          {t.offsGridHint}
+        </p>
+        <div
+          id="shift-off-grid"
+          class="overflow-x-auto"
+          role="group"
+          aria-label={t.offsGridLabel}
+        ></div>
       </div>
 
       <div class="flex flex-wrap items-end gap-3">
@@ -201,11 +222,14 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
 <script>
   import {
     cellState,
+    formatDayOffs,
     generateSchedule,
     parseDayOffRequests,
     parseMembers,
     scheduleToCsv,
+    suggestHints,
     validateShiftInput,
+    type ShiftInput,
     type ShiftSchedule,
   } from '../../lib/tools/shift-schedule-maker';
   import {
@@ -239,6 +263,7 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
   const statusEl = $('shift-status');
   const errorEl = $('shift-error');
   const issuesEl = $('shift-issues');
+  const gridEl = $('shift-off-grid');
   const output = $('shift-output');
 
   const weekdayFormat = new Intl.DateTimeFormat(dateLocale, {
@@ -309,7 +334,7 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
     };
   }
 
-  function renderSchedule(s: ShiftSchedule) {
+  function renderSchedule(s: ShiftSchedule, input: ShiftInput) {
     const frag = document.createDocumentFragment();
 
     frag.append(
@@ -355,6 +380,44 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
         );
       }
       box.append(ul);
+      const hints = suggestHints(input, s);
+      if (hints.length > 0) {
+        const hintBox = el(
+          'div',
+          'mt-3 border-t border-red-300 pt-2 dark:border-red-800',
+        );
+        hintBox.id = 'shift-hints';
+        hintBox.append(
+          el(
+            'h4',
+            'mb-1 text-sm font-semibold text-red-800 dark:text-red-300',
+            d.hintHeading ?? '',
+          ),
+        );
+        const hul = el(
+          'ul',
+          'list-disc space-y-0.5 pl-5 text-sm text-red-800 dark:text-red-300',
+        );
+        for (const h of hints) {
+          let text: string;
+          if (h.kind === 'maxConsecutive')
+            text = fill(d.hintMaxConsecutive ?? '', { value: String(h.value) });
+          else if (h.kind === 'perDay')
+            text = fill(d.hintPerDay ?? '', { value: String(h.value) });
+          else if (h.kind === 'addMembers')
+            text = fill(d.hintAddMembers ?? '', { count: String(h.count) });
+          else if (h.kind === 'closed') text = d.hintClosed ?? '';
+          else if (h.kind === 'dayOffs')
+            text = fill(d.hintDayOffs ?? '', {
+              days: h.days.join(', '),
+              members: h.members.join(', '),
+            });
+          else text = d.hintCombine ?? '';
+          hul.append(el('li', '', text));
+        }
+        hintBox.append(hul);
+        box.append(hintBox);
+      }
       frag.append(box);
     } else {
       const p = el(
@@ -517,6 +580,101 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
     errorEl.textContent = message;
   }
 
+  // 希望休の表（メンバー×日付）。入力欄のテキストが唯一の状態で、表のクリックはテキストを書き換えて再描画する
+  let gridKey = '';
+  function toggleDayOff(name: string, day: number) {
+    const members = parseMembers(membersEl.value);
+    const year = Number(yearEl.value);
+    const month = Number(monthEl.value);
+    const monthDays =
+      isValidMonth(month) && Number.isInteger(year)
+        ? daysInMonth(year, month)
+        : 31;
+    const { dayOffs } = parseDayOffRequests(offsEl.value, members, monthDays);
+    const i = members.indexOf(name);
+    if (i < 0) return;
+    const set = new Set(dayOffs[i]);
+    if (!set.delete(day)) set.add(day);
+    dayOffs[i] = [...set];
+    offsEl.value = formatDayOffs(members, dayOffs);
+    render();
+  }
+  function renderOffGrid(
+    members: string[],
+    year: number,
+    month: number,
+    monthDays: number,
+    dayOffs: number[][],
+  ) {
+    const valid = members.length > 0 && isValidMonth(month);
+    const key = valid ? JSON.stringify([members, year, month, monthDays]) : '';
+    if (key !== gridKey) {
+      gridKey = key;
+      gridEl.replaceChildren();
+      if (!valid) return;
+      const table = el('table', 'border-collapse text-center text-xs');
+      const thead = el('thead');
+      const headRow = el('tr');
+      headRow.append(
+        el(
+          'th',
+          'sticky left-0 z-10 bg-white px-2 py-1 text-left dark:bg-gray-900',
+        ),
+      );
+      for (let day = 1; day <= monthDays; day++) {
+        const dow = utcDate(year, month, day).getUTCDay();
+        const th = el('th', `px-0.5 py-1 font-normal ${headColor(dow, false)}`);
+        th.append(el('div', '', String(day)));
+        th.append(el('div', 'text-[10px]', weekdays[dow]));
+        headRow.append(th);
+      }
+      thead.append(headRow);
+      const tbody = el('tbody');
+      members.forEach((name) => {
+        const tr = el('tr');
+        tr.append(
+          el(
+            'th',
+            'sticky left-0 z-10 max-w-32 truncate bg-white px-2 py-1 text-left font-medium dark:bg-gray-900',
+            name,
+          ),
+        );
+        for (let day = 1; day <= monthDays; day++) {
+          const td = el('td', 'p-0.5');
+          const btn = el(
+            'button',
+            'h-8 w-8 rounded border border-gray-300 text-xs dark:border-gray-600',
+          );
+          btn.type = 'button';
+          btn.dataset.member = name;
+          btn.dataset.day = String(day);
+          btn.setAttribute(
+            'aria-label',
+            fill(d.offGridDay ?? '', { name, day: String(day) }),
+          );
+          btn.addEventListener('click', () => toggleDayOff(name, day));
+          td.append(btn);
+          tr.append(td);
+        }
+        tbody.append(tr);
+      });
+      table.append(thead, tbody);
+      gridEl.append(table);
+    }
+    if (!valid) return;
+    gridEl
+      .querySelectorAll<HTMLButtonElement>('button[data-day]')
+      .forEach((btn) => {
+        const i = members.indexOf(btn.dataset.member ?? '');
+        const on = i >= 0 && dayOffs[i].includes(Number(btn.dataset.day));
+        btn.setAttribute('aria-pressed', String(on));
+        btn.textContent = on ? '休' : '';
+        btn.classList.toggle('bg-amber-200', on);
+        btn.classList.toggle('dark:bg-amber-700', on);
+        btn.classList.toggle('font-bold', on);
+      });
+  }
+
   function render() {
     errorEl.textContent = '';
     statusEl.textContent = '';
@@ -538,6 +696,8 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
       members,
       monthDays,
     );
+
+    renderOffGrid(members, year, month, monthDays, dayOffs);
 
     const input = {
       members,
@@ -599,7 +759,7 @@ const monthNames = Array.from({ length: 12 }, (_, i) =>
       }
       issuesEl.append(ul);
     }
-    renderSchedule(result.schedule);
+    renderSchedule(result.schedule, input);
   }
 
   function csvText(): string | null {

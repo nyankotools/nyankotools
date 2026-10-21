@@ -11483,6 +11483,148 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'connect-four',
+    category: 'games',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['reversi', 'lights-out', 'game-2048'],
+    translations: {
+      ja: {
+        name: '四目並べ',
+        description:
+          '重力で石を落として4つ並べる対戦ゲーム。強さ3段階のCPUと対戦でき、先手・後手も選べます。',
+        keywords: [
+          '四目並べ',
+          '4目並べ',
+          '重力四目',
+          'CPU対戦',
+          'ボードゲーム',
+          'ゲーム',
+        ],
+      },
+      en: {
+        name: 'Four in a Row',
+        description:
+          'Drop discs and line up four to win. Play the computer at three levels as first or second player.',
+        keywords: [
+          'four in a row',
+          'line four',
+          'drop four',
+          'vs computer',
+          'board game',
+          'game',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'hit-and-blow',
+    category: 'games',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['mental-math-trainer', 'sudoku', 'minesweeper'],
+    translations: {
+      ja: {
+        name: '数当てゲーム（Hit & Blow）',
+        description:
+          '隠された3〜5桁の数字をHit・Blowのヒントから推理する数当てゲーム。数字の重複あり／なしを選べ、推測履歴の表示とギブアップに対応',
+        keywords: [
+          '数当て',
+          'ヌメロン',
+          'ヒットアンドブロー',
+          'Hit and Blow',
+          'Hit & Blow',
+          'bulls and cows',
+          '推理ゲーム',
+          '脳トレ',
+        ],
+      },
+      en: {
+        name: 'Hit and Blow Number Guessing Game',
+        description:
+          'Guess a hidden 3–5 digit number from Hit and Blow clues. Choose repeated digits or not, review your guess history, or give up to see the answer',
+        keywords: [
+          'hit and blow',
+          'bulls and cows',
+          'number guessing game',
+          'numerical guessing',
+          'logic puzzle',
+          'brain training',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'lights-out',
+    category: 'games',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['slide-puzzle', 'minesweeper', 'game-2048'],
+    translations: {
+      ja: {
+        name: 'ライツアウト',
+        description:
+          '押したマスと上下左右が反転する消灯パズル。3×3〜7×7、必ず解ける配置・手数カウント・最短手順のヒント付き。',
+        keywords: [
+          'ライツアウト',
+          '消灯パズル',
+          'Lights Out',
+          'パズルゲーム',
+          'ライトを消す',
+        ],
+      },
+      en: {
+        name: 'Lights Out',
+        description:
+          'Lights Out puzzle: pressing a cell flips its neighbors. 3×3 to 7×7, always solvable, with a move counter and hints.',
+        keywords: [
+          'lights out',
+          'puzzle game',
+          'light switch puzzle',
+          'toggle puzzle',
+          'GF(2)',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'mental-math-trainer',
+    category: 'games',
+    addedAt: '2026-10-21',
+    updatedAt: '2026-10-21',
+    related: ['math-drill-generator', 'hit-and-blow', 'game-2048'],
+    translations: {
+      ja: {
+        name: '暗算トレーニング',
+        description:
+          '足し算・引き算・かけ算・わり算を桁数・問題数・制限時間を選んで解く暗算ゲーム。ランク判定とベスト記録付き。',
+        keywords: [
+          '暗算',
+          '計算ゲーム',
+          '計算練習',
+          '百ます',
+          'たし算',
+          'ひき算',
+          'かけ算',
+          'わり算',
+        ],
+      },
+      en: {
+        name: 'Mental Math Trainer',
+        description:
+          'Practice mental arithmetic with a rank and best score. Choose operations, digits and a time limit.',
+        keywords: [
+          'mental math',
+          'arithmetic',
+          'math game',
+          'quiz',
+          'speed math',
+          'times tables',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

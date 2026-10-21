@@ -936,13 +936,17 @@ export const updates: UpdateEntry[] = [
       'kyusei-kigaku',
       'shift-schedule-maker',
       'breakout-game',
+      'connect-four',
+      'hit-and-blow',
+      'lights-out',
+      'mental-math-trainer',
     ],
     translations: {
       ja: {
-        summary: '32個のツールを追加しました。',
+        summary: '36個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 32 new tools.',
+        summary: 'Added 36 new tools.',
       },
     },
   },

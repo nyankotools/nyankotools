@@ -12,22 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      # ツール別OGP画像の描画キャッシュ（scripts/ogp/generate.mjs）。キャッシュなしだと
-      # ビルドごとに約45秒かかるため、内容が変わらない限り再利用する。
-      - uses: actions/cache@v6
-        with:
-          path: node_modules/.cache/ogp
-          key: ogp-${{ hashFiles('src/data/tools.ts', 'scripts/ogp/generate.mjs', 'public/logo.png', 'pnpm-lock.yaml') }}
-          restore-keys: ogp-
+      - uses: ./.github/actions/setup
 
       - run: pnpm exec prettier --check .
 
@@ -46,31 +31,16 @@ jobs:
   # lint/型/単体テストのジョブとは独立して並列実行し、失敗時の切り分けを容易にする。
   e2e:
     runs-on: ubuntu-latest
-    # テスト数の増加で単一ジョブだと25分を超えたため、3分割（shard）して並列実行する。
+    # テスト数の増加で単一ジョブだと25分を超えたため、4分割（shard）して並列実行する。
     timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      # ツール別OGP画像の描画キャッシュ（scripts/ogp/generate.mjs）。キャッシュなしだと
-      # ビルドごとに約45秒かかるため、内容が変わらない限り再利用する。
-      - uses: actions/cache@v6
-        with:
-          path: node_modules/.cache/ogp
-          key: ogp-${{ hashFiles('src/data/tools.ts', 'scripts/ogp/generate.mjs', 'public/logo.png', 'pnpm-lock.yaml') }}
-          restore-keys: ogp-
+      - uses: ./.github/actions/setup
 
       # ブラウザ本体のダウンロードを省くため、Playwrightのバージョンをキーにキャッシュする。
       # OS依存パッケージ（--with-deps）はキャッシュ対象外なので、下のinstallは毎回実行する
@@ -89,9 +59,9 @@ jobs:
       # playwright.config.ts / 各specが自動で起動する。
       # 実行時間の偏りを避けるため、全体の約半分を占める tools-common.spec.ts を各シャードに等分し、
       # 残りのspecも同じシャード番号で等分する（1回目でビルド済みなので2回目はビルドを省略する）。
-      - run: pnpm run test:e2e tools-common.spec.ts --shard=${{ matrix.shard }}/3
+      - run: pnpm run test:e2e tools-common.spec.ts --shard=${{ matrix.shard }}/4
 
-      - run: pnpm run test:e2e --shard=${{ matrix.shard }}/3 --output=test-results-rest
+      - run: pnpm run test:e2e --shard=${{ matrix.shard }}/4 --output=test-results-rest
         if: ${{ !cancelled() }}
         env:
           E2E_EXCLUDE_COMMON: '1'
@@ -119,22 +89,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      # ツール別OGP画像の描画キャッシュ（scripts/ogp/generate.mjs）。キャッシュなしだと
-      # ビルドごとに約45秒かかるため、内容が変わらない限り再利用する。
-      - uses: actions/cache@v6
-        with:
-          path: node_modules/.cache/ogp
-          key: ogp-${{ hashFiles('src/data/tools.ts', 'scripts/ogp/generate.mjs', 'public/logo.png', 'pnpm-lock.yaml') }}
-          restore-keys: ogp-
+      - uses: ./.github/actions/setup
 
       - uses: cloudflare/wrangler-action@v4
         with:

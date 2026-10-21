@@ -3,43 +3,55 @@ name: PR Check
 # mainへのPull Requestで、lint / 型チェック / 単体テスト / ビルドだけを実行する軽量CI。
 # E2E（Playwright）は重いため含めない。mainへのマージ（push）時に ci.yml の e2e が実行され、
 # test / e2e がともに成功したときだけ deploy される。
-# ブランチ保護（main）では、このワークフローの check ジョブを必須チェックにする。
+# 各検査は並列ジョブで実行して待ち時間を短縮し、最後の check ジョブで集約する。
+# ブランチ保護（main）では、集約ジョブ check（ジョブ名を変えないこと）を必須チェックにする。
 on:
   pull_request:
     branches: [main]
 
 jobs:
-  check:
+  format-lint:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: pnpm
-
-      - run: pnpm install --frozen-lockfile
-
-      # ツール別OGP画像の描画キャッシュ（scripts/ogp/generate.mjs）。キャッシュなしだと
-      # ビルドごとに約45秒かかるため、内容が変わらない限り再利用する。
-      - uses: actions/cache@v6
-        with:
-          path: node_modules/.cache/ogp
-          key: ogp-${{ hashFiles('src/data/tools.ts', 'scripts/ogp/generate.mjs', 'public/logo.png', 'pnpm-lock.yaml') }}
-          restore-keys: ogp-
-
+      - uses: ./.github/actions/setup
       - run: pnpm exec prettier --check .
-
       - run: pnpm run lint
 
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
       - run: pnpm exec astro check
 
+  unit-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
       - run: pnpm test
 
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
       - run: pnpm build
-
+      # ページ別JSバンドルサイズの予算チェック（重いライブラリの意図しない混入を検知）
       - run: pnpm run check:bundle
+
+  check:
+    needs: [format-lint, typecheck, unit-test, build]
+    # 上流が失敗・スキップされたときも必ず走らせ、成功以外は失敗として扱う
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: |
+          echo '${{ toJSON(needs.*.result) }}'
+          test "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') || contains(needs.*.result, 'skipped') }}" = "false"

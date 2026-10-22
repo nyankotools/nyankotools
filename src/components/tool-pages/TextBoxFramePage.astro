@@ -1,0 +1,190 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { textBoxFrameContent } from '../../i18n/tools/text-box-frame';
+import { frameStyles, commentStyles } from '../../lib/tools/text-box-frame';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = textBoxFrameContent[locale];
+const aligns = ['left', 'center', 'right'] as const;
+const paddings = [0, 1, 2, 3, 4];
+const selectClass = 'ui-input bg-white px-3 py-2 dark:bg-gray-900';
+const labelClass = 'text-sm text-gray-700 dark:text-gray-300';
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-3">
+    <label for="text-box-frame-style" class={labelClass}>
+      {t.styleLabel}
+    </label>
+    <select id="text-box-frame-style" class={selectClass}>
+      {frameStyles.map((id) => (
+        <option value={id} selected={id === 'single'}>
+          {t.styleNames[id]}
+        </option>
+      ))}
+    </select>
+    <label for="text-box-frame-align" class={labelClass}>
+      {t.alignLabel}
+    </label>
+    <select id="text-box-frame-align" class={selectClass}>
+      {aligns.map((id) => (
+        <option value={id}>{t.alignNames[id]}</option>
+      ))}
+    </select>
+    <label for="text-box-frame-padx" class={labelClass}>
+      {t.paddingXLabel}
+    </label>
+    <select id="text-box-frame-padx" class={selectClass}>
+      {paddings.map((n) => (
+        <option value={n} selected={n === 1}>
+          {n}
+        </option>
+      ))}
+    </select>
+    <label for="text-box-frame-pady" class={labelClass}>
+      {t.paddingYLabel}
+    </label>
+    <select id="text-box-frame-pady" class={selectClass}>
+      {paddings.slice(0, 3).map((n) => (
+        <option value={n}>{n}</option>
+      ))}
+    </select>
+    <label for="text-box-frame-comment" class={labelClass}>
+      {t.commentLabel}
+    </label>
+    <select id="text-box-frame-comment" class={selectClass}>
+      {commentStyles.map((id) => (
+        <option value={id}>{t.commentNames[id]}</option>
+      ))}
+    </select>
+    <label class="ui-check">
+      <input type="checkbox" id="text-box-frame-tail" checked />
+      {t.tailLabel}
+    </label>
+    <label class="ui-check">
+      <input type="checkbox" id="text-box-frame-wide" />
+      {t.wideBorderLabel}
+    </label>
+    <button
+      id="text-box-frame-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="text-box-frame-status"
+      class="text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="text-box-frame-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="text-box-frame-input"
+        data-query-target="text"
+        data-sample={t.sampleText}
+        class="ui-input h-64 w-full p-4 dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label for="text-box-frame-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="text-box-frame-output"
+        readonly
+        wrap="off"
+        class="frame-output ui-input h-64 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+</ToolShell>
+
+<style>
+  /* Consolas の半角幅の2倍になるよう日本語フォントを拡大し、全角を半角2文字分に揃える */
+  @font-face {
+    font-family: 'FrameCjk';
+    src:
+      local('Yu Gothic'), local('Meiryo'), local('Hiragino Sans'),
+      local('Noto Sans CJK JP');
+    size-adjust: 110%;
+    unicode-range: U+3000-30FF, U+3400-9FFF, U+FF00-FF60;
+  }
+  .frame-output {
+    font-family: Consolas, 'FrameCjk', monospace;
+  }
+</style>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    frameText,
+    type CommentStyle,
+    type FrameAlign,
+    type FrameStyle,
+  } from '../../lib/tools/text-box-frame';
+
+  const get = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`text-box-frame-${id}`) as T;
+  const input = get<HTMLTextAreaElement>('input');
+  const output = get<HTMLTextAreaElement>('output');
+  const styleSelect = get<HTMLSelectElement>('style');
+  const alignSelect = get<HTMLSelectElement>('align');
+  const padX = get<HTMLSelectElement>('padx');
+  const padY = get<HTMLSelectElement>('pady');
+  const commentSelect = get<HTMLSelectElement>('comment');
+  const tailCheck = get<HTMLInputElement>('tail');
+  const wideCheck = get<HTMLInputElement>('wide');
+  const copyButton = get<HTMLButtonElement>('copy-button');
+  const statusEl = get<HTMLElement>('status');
+
+  function render() {
+    statusEl.textContent = '';
+    output.value = frameText(input.value, {
+      style: styleSelect.value as FrameStyle,
+      align: alignSelect.value as FrameAlign,
+      paddingX: Number(padX.value),
+      paddingY: Number(padY.value),
+      tail: tailCheck.checked,
+      wideBorder: wideCheck.checked,
+      comment: commentSelect.value as CommentStyle,
+    }).output;
+  }
+
+  onTextInput(input, render);
+  for (const el of [
+    styleSelect,
+    alignSelect,
+    padX,
+    padY,
+    commentSelect,
+    tailCheck,
+    wideCheck,
+  ]) {
+    el.addEventListener('change', render);
+  }
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  render();
+</script>

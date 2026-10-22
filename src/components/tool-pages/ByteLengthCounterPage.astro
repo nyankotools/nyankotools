@@ -1,0 +1,253 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { byteLengthCounterContent } from '../../i18n/tools/byte-length-counter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = byteLengthCounterContent[locale];
+
+const stats = [
+  { id: 'byte-length-utf8', label: t.statUtf8 },
+  { id: 'byte-length-sjis', label: t.statShiftJis },
+  { id: 'byte-length-utf16', label: t.statUtf16 },
+];
+---
+
+<ToolShell t={t}>
+  <textarea
+    id="byte-length-input"
+    aria-label={t.inputLabel}
+    data-no-count
+    class="h-56 w-full max-w-2xl rounded-lg border border-gray-300 p-4 focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+    placeholder={t.inputPlaceholder}
+  ></textarea>
+
+  <dl class="mt-4 grid max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
+    {stats.map((s) => (
+      <div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900">
+        <dt class="text-xs text-gray-500 dark:text-gray-400">{s.label}</dt>
+        <dd class="text-xl font-semibold">
+          <span id={s.id}>0</span>
+          <span class="ml-1 text-xs font-normal text-gray-500 dark:text-gray-400">
+            {t.unit}
+          </span>
+        </dd>
+      </div>
+    ))}
+    <div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900">
+      <dt class="text-xs text-gray-500 dark:text-gray-400">
+        {t.statCharacters}
+      </dt>
+      <dd id="byte-length-characters" class="text-xl font-semibold">
+        0
+      </dd>
+    </div>
+  </dl>
+
+  <p
+    id="byte-length-unmappable"
+    hidden
+    class="mt-3 max-w-2xl text-sm text-amber-800 dark:text-amber-300"
+  >
+    {t.unmappableLabel}
+    <span id="byte-length-unmappable-list" class="font-mono break-all"></span>
+  </p>
+
+  <section class="mt-6 max-w-2xl" aria-labelledby="byte-length-options-heading">
+    <h2 id="byte-length-options-heading" class="mb-2 text-lg font-bold">
+      {t.optionsHeading}
+    </h2>
+    <div class="flex flex-wrap items-end gap-x-6 gap-y-2">
+      <label class="ui-check">
+        <input type="checkbox" id="byte-length-bom" />
+        {t.bomLabel}
+      </label>
+      <div>
+        <label for="byte-length-newline" class="ui-label">
+          {t.newlineLabel}
+        </label>
+        <select
+          id="byte-length-newline"
+          class="ui-input h-11 px-3 dark:bg-gray-900"
+        >
+          <option value="keep">{t.newlineKeep}</option>
+          <option value="lf">{t.newlineLf}</option>
+          <option value="crlf">{t.newlineCrlf}</option>
+        </select>
+      </div>
+    </div>
+  </section>
+
+  <section class="mt-8 max-w-2xl" aria-labelledby="byte-length-limit-heading">
+    <h2 id="byte-length-limit-heading" class="mb-1 text-lg font-bold">
+      {t.limitHeading}
+    </h2>
+    <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+      {t.limitDescription}
+    </p>
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label for="byte-length-limit-encoding" class="ui-label">
+          {t.limitEncodingLabel}
+        </label>
+        <select
+          id="byte-length-limit-encoding"
+          class="ui-input h-11 px-3 dark:bg-gray-900"
+        >
+          <option value="utf-8">UTF-8</option>
+          <option value="shift_jis">Shift_JIS</option>
+          <option value="utf-16">UTF-16</option>
+        </select>
+      </div>
+      <div>
+        <label for="byte-length-limit" class="ui-label">
+          {t.limitLabel}
+        </label>
+        <input
+          id="byte-length-limit"
+          type="number"
+          min="0"
+          step="1"
+          value="255"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+    <dl class="mt-4 grid grid-cols-2 gap-4">
+      <div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900">
+        <dt class="text-xs text-gray-500 dark:text-gray-400">
+          {t.limitUsedLabel}
+        </dt>
+        <dd id="byte-length-used" class="text-xl font-semibold">
+          0
+        </dd>
+      </div>
+      <div class="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-900">
+        <dt
+          id="byte-length-remaining-label"
+          class="text-xs text-gray-500 dark:text-gray-400"
+          data-remaining={t.limitRemainingLabel}
+          data-over={t.limitOverLabel}
+        >
+          {t.limitRemainingLabel}
+        </dt>
+        <dd id="byte-length-remaining" class="text-xl font-semibold">
+          255
+        </dd>
+      </div>
+    </dl>
+    <p
+      id="byte-length-limit-message"
+      role="status"
+      class="mt-3 text-sm text-gray-700 dark:text-gray-300"
+      data-ok={t.limitOkMessage}
+      data-over={t.limitOverMessage}
+    >
+      {t.limitOkMessage}
+    </p>
+    <div id="byte-length-limit-result" hidden class="mt-3 space-y-3 text-sm">
+      <div>
+        <h3 class="mb-1 font-semibold">{t.limitFitLabel}</h3>
+        <pre
+          id="byte-length-fit"
+          class="rounded-lg bg-white p-3 font-sans break-all whitespace-pre-wrap shadow-sm dark:bg-gray-900"
+        ></pre>
+      </div>
+      <div>
+        <h3 class="mb-1 font-semibold">{t.limitOverTextLabel}</h3>
+        <pre
+          id="byte-length-over"
+          class="rounded-lg bg-red-50 p-3 font-sans break-all whitespace-pre-wrap text-red-800 shadow-sm dark:bg-red-950 dark:text-red-200"
+        ></pre>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import {
+    countBytes,
+    splitAtByteLimit,
+    type ByteEncoding,
+    type NewlineMode,
+  } from '../../lib/tools/byte-length-counter';
+
+  const $ = (id: string) => document.getElementById(id)!;
+  const input = $('byte-length-input') as HTMLTextAreaElement;
+  const bomInput = $('byte-length-bom') as HTMLInputElement;
+  const newlineSelect = $('byte-length-newline') as HTMLSelectElement;
+  const limitEncoding = $('byte-length-limit-encoding') as HTMLSelectElement;
+  const limitInput = $('byte-length-limit') as HTMLInputElement;
+  const remainingLabel = $('byte-length-remaining-label');
+  const message = $('byte-length-limit-message');
+  const resultBox = $('byte-length-limit-result');
+
+  function update() {
+    const text = input.value;
+    const options = {
+      bom: bomInput.checked,
+      newline: newlineSelect.value as NewlineMode,
+    };
+    const utf8 = countBytes(text, 'utf-8', options);
+    const sjis = countBytes(text, 'shift_jis', options);
+    const utf16 = countBytes(text, 'utf-16', options);
+    $('byte-length-utf8').textContent = String(utf8.bytes);
+    $('byte-length-sjis').textContent = String(sjis.bytes);
+    $('byte-length-utf16').textContent = String(utf16.bytes);
+    $('byte-length-characters').textContent = String(utf8.characters);
+
+    const unmappableBox = $('byte-length-unmappable');
+    unmappableBox.hidden = sjis.unmappable.length === 0;
+    $('byte-length-unmappable-list').textContent = sjis.unmappable.join(' ');
+
+    // 上限欄が空のときは上限チェックを無効にする（空を0扱いすると全文が超過になる）
+    const limitBlank = limitInput.value.trim() === '';
+    const parsed = Math.floor(Number(limitInput.value));
+    const limit = limitBlank
+      ? Number.MAX_SAFE_INTEGER
+      : parsed >= 0
+        ? parsed
+        : 0;
+    const split = splitAtByteLimit(
+      text,
+      limitEncoding.value as ByteEncoding,
+      limit,
+      options,
+    );
+    $('byte-length-used').textContent = String(split.totalBytes);
+    $('byte-length-remaining').textContent = limitBlank
+      ? '-'
+      : String(Math.abs(split.remaining));
+    $('byte-length-remaining').classList.toggle(
+      'text-red-600',
+      split.overLimit,
+    );
+    $('byte-length-remaining').classList.toggle(
+      'dark:text-red-400',
+      split.overLimit,
+    );
+    remainingLabel.textContent = split.overLimit
+      ? remainingLabel.dataset.over!
+      : remainingLabel.dataset.remaining!;
+    message.textContent = split.overLimit
+      ? message.dataset.over!.replace('{n}', String(split.headCharacters + 1))
+      : limitBlank
+        ? ''
+        : message.dataset.ok!;
+    resultBox.hidden = !split.overLimit;
+    $('byte-length-fit').textContent = split.head;
+    $('byte-length-over').textContent = split.tail;
+  }
+
+  onTextInput(input, update);
+  for (const el of [bomInput, newlineSelect, limitEncoding]) {
+    el.addEventListener('change', update);
+  }
+  limitInput.addEventListener('input', update);
+  update();
+</script>

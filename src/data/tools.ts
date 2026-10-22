@@ -12096,6 +12096,156 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'whitespace-visualizer',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['zero-width-char-remover', 'char-counter', 'text-diff'],
+    translations: {
+      ja: {
+        name: '空白・不可視文字の可視化',
+        description:
+          'タブ・全角スペース・NBSP・改行(LF/CRLF)・制御文字・ゼロ幅文字を記号で表示し、種類ごとの件数を集計します。',
+        keywords: [
+          '空白',
+          '不可視文字',
+          'タブ',
+          '全角スペース',
+          'CRLF',
+          '改行コード',
+          'NBSP',
+          '制御文字',
+        ],
+      },
+      en: {
+        name: 'Whitespace & Invisible Character Visualizer',
+        description:
+          'Show tabs, no-break and ideographic spaces, line breaks (LF/CRLF), control and zero-width characters as symbols, with counts.',
+        keywords: [
+          'whitespace',
+          'invisible characters',
+          'tab',
+          'nbsp',
+          'CRLF',
+          'line ending',
+          'control characters',
+          'show hidden characters',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'text-box-frame',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['ascii-table-generator', 'unicode-decorator'],
+    translations: {
+      ja: {
+        name: 'テキスト枠囲み・吹き出し',
+        description:
+          'テキストを罫線・ASCII・吹き出しで囲む。全角幅対応で、コードコメントやREADMEの装飾に便利',
+        keywords: [
+          '枠囲み',
+          '罫線',
+          '吹き出し',
+          'ASCIIアート',
+          'コメント装飾',
+          'テキストボックス',
+          'cowsay',
+        ],
+      },
+      en: {
+        name: 'Text Box & Speech Bubble',
+        description:
+          'Wrap text in a Unicode box, ASCII border or speech bubble, with comment prefixes for code',
+        keywords: [
+          'text box',
+          'ascii box',
+          'speech bubble',
+          'cowsay',
+          'box drawing',
+          'code comment banner',
+          'frame text',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'upside-down-text',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['unicode-decorator', 'char-counter', 'zenkaku-hankaku'],
+    translations: {
+      ja: {
+        name: '上下反転・鏡文字テキスト変換',
+        description:
+          '英数字を上下反転（逆さ文字）・左右反転（鏡文字）・逆順に変換。SNSプロフィール向けにコピペできます。',
+        keywords: [
+          '逆さ文字',
+          '上下反転',
+          '鏡文字',
+          '左右反転',
+          '逆さ',
+          '文字反転',
+          'upside down text',
+        ],
+      },
+      en: {
+        name: 'Upside Down & Mirror Text Generator',
+        description:
+          'Flip text upside down, mirror it or reverse it, and copy it for bios and game names.',
+        keywords: [
+          'upside down text',
+          'flip text',
+          'mirror text',
+          'reverse text',
+          'backwards text',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'byte-length-counter',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['char-counter', 'encoding-converter', 'kishu-izon-checker'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'バイト数カウント（UTF-8・Shift_JIS・UTF-16）',
+        description:
+          '文字列のバイト数をUTF-8・Shift_JIS・UTF-16で数え、上限を指定して超過位置も表示する。DBカラム・API上限・SMSの確認に。',
+        keywords: [
+          'バイト数',
+          'バイト長',
+          'byte length',
+          'UTF-8',
+          'Shift_JIS',
+          'UTF-16',
+          'DBカラム',
+          'SMS',
+        ],
+      },
+      en: {
+        name: 'Byte Length Counter (UTF-8, Shift_JIS, UTF-16)',
+        description:
+          'Count a string in UTF-8, Shift_JIS and UTF-16 and see where it exceeds a byte limit. For DB columns, API limits and SMS.',
+        keywords: [
+          'byte length',
+          'byte count',
+          'string size',
+          'utf-8 bytes',
+          'shift_jis bytes',
+          'utf-16 bytes',
+          'database column',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -10280,6 +10280,33 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'text-to-speech',
+    category: 'media',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['audio-speed-changer', 'speaker-tester', 'char-counter'],
+    translations: {
+      ja: {
+        name: 'テキスト読み上げ（ブラウザ内蔵の音声）',
+        keywords: ['読み上げ', '音声合成', 'TTS', '朗読', 'Web Speech API'],
+        description:
+          '入力したテキストを端末内蔵の音声で読み上げ。声・速度・高さ・音量を指定でき、クラウド音声は使いません。',
+      },
+      en: {
+        name: 'Text to Speech (Built-in Browser Voices)',
+        keywords: [
+          'text to speech',
+          'tts',
+          'read aloud',
+          'speech synthesis',
+          'web speech api',
+        ],
+        description:
+          'Read text aloud with voices built into your device. Choose voice, speed, pitch and volume. Cloud voices are never used.',
+      },
+    },
+  },
+  {
     slug: 'noise-generator',
     category: 'media',
     addedAt: '2026-10-20',

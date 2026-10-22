@@ -1,0 +1,334 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { textToSpeechContent } from '../../i18n/tools/text-to-speech';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = textToSpeechContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="tts-root"
+    data-lang={locale}
+    data-speaking={t.speaking}
+    data-finished={t.finished}
+    data-empty={t.emptyText}
+    data-speak-error={t.speakError}
+    data-no-local-voice={t.noLocalVoice}
+    data-unsupported={t.unsupported}
+    data-loading={t.voiceLoading}
+    class="space-y-4"
+  >
+    <p id="tts-unsupported" hidden class="ui-error" role="alert"></p>
+
+    <div id="tts-body" class="space-y-4">
+      <div>
+        <label for="tts-text" class="ui-label">
+          {t.textLabel}
+        </label>
+        <textarea
+          id="tts-text"
+          data-query-target="text"
+          data-sample={t.sampleText}
+          rows="6"
+          placeholder={t.textPlaceholder}
+          class="ui-input w-full p-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        ></textarea>
+      </div>
+
+      <div>
+        <label for="tts-voice" class="ui-label">
+          {t.voiceLabel}
+        </label>
+        <select
+          id="tts-voice"
+          data-no-persist
+          class="ui-input h-11 w-full min-w-0 px-3 dark:bg-gray-900"
+        >
+          <option value="">{t.voiceLoading}</option>
+        </select>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          {t.voiceLocalOnly}
+        </p>
+        <p
+          id="tts-no-voice"
+          hidden
+          class="mt-2 text-sm text-red-600 dark:text-red-400"
+          role="alert"
+        ></p>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div>
+          <label for="tts-rate" class="ui-label">
+            {t.rateLabel}: <output id="tts-rate-value">1</output>
+          </label>
+          <input
+            id="tts-rate"
+            type="range"
+            min="0.5"
+            max="2"
+            step="0.1"
+            value="1"
+            class="w-full"
+          />
+        </div>
+        <div>
+          <label for="tts-pitch" class="ui-label">
+            {t.pitchLabel}: <output id="tts-pitch-value">1</output>
+          </label>
+          <input
+            id="tts-pitch"
+            type="range"
+            min="0"
+            max="2"
+            step="0.1"
+            value="1"
+            class="w-full"
+          />
+        </div>
+        <div>
+          <label for="tts-volume" class="ui-label">
+            {t.volumeLabel}: <output id="tts-volume-value">1</output>
+          </label>
+          <input
+            id="tts-volume"
+            type="range"
+            min="0"
+            max="1"
+            step="0.1"
+            value="1"
+            class="w-full"
+          />
+        </div>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <button
+          id="tts-speak-button"
+          type="button"
+          class="ui-btn ui-btn-primary"
+        >
+          {t.speak}
+        </button>
+        <button id="tts-pause-button" type="button" class="ui-btn" disabled>
+          {t.pause}
+        </button>
+        <button id="tts-resume-button" type="button" class="ui-btn" disabled>
+          {t.resume}
+        </button>
+        <button id="tts-stop-button" type="button" class="ui-btn" disabled>
+          {t.stop}
+        </button>
+      </div>
+
+      <p
+        id="tts-error"
+        class="text-sm text-red-600 empty:hidden dark:text-red-400"
+        aria-live="polite"
+      ></p>
+      <p
+        id="tts-status"
+        class="text-sm text-green-700 empty:hidden dark:text-green-400"
+        aria-live="polite"
+      ></p>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    PITCH_MAX,
+    PITCH_MIN,
+    RATE_MAX,
+    RATE_MIN,
+    VOLUME_MAX,
+    VOLUME_MIN,
+    clamp,
+    filterLocalVoices,
+    sortVoices,
+    splitIntoChunks,
+  } from '../../lib/tools/text-to-speech';
+
+  const root = document.getElementById('tts-root') as HTMLElement;
+  const body = document.getElementById('tts-body') as HTMLElement;
+  const unsupportedEl = document.getElementById(
+    'tts-unsupported',
+  ) as HTMLElement;
+  const textEl = document.getElementById('tts-text') as HTMLTextAreaElement;
+  const voiceEl = document.getElementById('tts-voice') as HTMLSelectElement;
+  const noVoiceEl = document.getElementById('tts-no-voice') as HTMLElement;
+  const rateEl = document.getElementById('tts-rate') as HTMLInputElement;
+  const pitchEl = document.getElementById('tts-pitch') as HTMLInputElement;
+  const volumeEl = document.getElementById('tts-volume') as HTMLInputElement;
+  const speakBtn = document.getElementById(
+    'tts-speak-button',
+  ) as HTMLButtonElement;
+  const pauseBtn = document.getElementById(
+    'tts-pause-button',
+  ) as HTMLButtonElement;
+  const resumeBtn = document.getElementById(
+    'tts-resume-button',
+  ) as HTMLButtonElement;
+  const stopBtn = document.getElementById(
+    'tts-stop-button',
+  ) as HTMLButtonElement;
+  const errorEl = document.getElementById('tts-error') as HTMLElement;
+  const statusEl = document.getElementById('tts-status') as HTMLElement;
+
+  const msg = root.dataset;
+
+  if (
+    !('speechSynthesis' in window) ||
+    !('SpeechSynthesisUtterance' in window)
+  ) {
+    body.hidden = true;
+    unsupportedEl.hidden = false;
+    unsupportedEl.textContent = msg.unsupported ?? '';
+  } else {
+    const synth = window.speechSynthesis;
+    let voices: SpeechSynthesisVoice[] = [];
+    // 停止・再開始時に古いチャンクの onend を無視するための世代番号
+    let session = 0;
+
+    const bindOutput = (input: HTMLInputElement, id: string) => {
+      const out = document.getElementById(id) as HTMLOutputElement;
+      const update = () => {
+        out.textContent = String(Number(input.value));
+      };
+      input.addEventListener('input', update);
+      input.addEventListener('change', update);
+      update();
+    };
+    bindOutput(rateEl, 'tts-rate-value');
+    bindOutput(pitchEl, 'tts-pitch-value');
+    bindOutput(volumeEl, 'tts-volume-value');
+
+    const setIdle = () => {
+      speakBtn.disabled = voices.length === 0;
+      pauseBtn.disabled = true;
+      resumeBtn.disabled = true;
+      stopBtn.disabled = true;
+    };
+
+    const renderVoices = (final: boolean) => {
+      const all = Array.from(synth.getVoices());
+      // クラウド音声はテキストが外部へ送られうるため、端末内の音声だけを扱う
+      voices = sortVoices(filterLocalVoices(all), root.dataset.lang ?? 'ja');
+      const previous = voiceEl.value;
+      voiceEl.replaceChildren();
+      if (voices.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = final ? '—' : (msg.loading ?? '');
+        voiceEl.append(opt);
+        if (final) {
+          noVoiceEl.hidden = false;
+          noVoiceEl.textContent = msg.noLocalVoice ?? '';
+        }
+      } else {
+        noVoiceEl.hidden = true;
+        voices.forEach((voice) => {
+          const opt = document.createElement('option');
+          opt.value = voice.voiceURI;
+          opt.textContent = `${voice.name} (${voice.lang})`;
+          voiceEl.append(opt);
+        });
+        if (voices.some((v) => v.voiceURI === previous)) {
+          voiceEl.value = previous;
+        }
+      }
+      if (!synth.speaking) setIdle();
+    };
+
+    renderVoices(false);
+    synth.addEventListener('voiceschanged', () => renderVoices(false));
+    // voiceschanged が来ない環境（Safari等）や、ローカル音声が無い環境の判定用
+    window.setTimeout(() => renderVoices(true), 1500);
+
+    const selectedVoice = (): SpeechSynthesisVoice | undefined =>
+      voices.find((v) => v.voiceURI === voiceEl.value);
+
+    const stop = () => {
+      session++;
+      synth.cancel();
+      // 一時停止中に cancel すると、次の speak が paused のまま鳴らないことがあるため解除する
+      synth.resume();
+      statusEl.textContent = '';
+      setIdle();
+    };
+
+    speakBtn.addEventListener('click', () => {
+      errorEl.textContent = '';
+      statusEl.textContent = '';
+      const voice = selectedVoice();
+      // 声を明示しないとブラウザが既定（クラウド）音声を選ぶことがあるため、ローカル音声が選べない場合は読み上げない
+      if (!voice || !voice.localService) return;
+      const chunks = splitIntoChunks(textEl.value);
+      if (chunks.length === 0) {
+        errorEl.textContent = msg.empty ?? '';
+        return;
+      }
+
+      session++;
+      const current = session;
+      synth.cancel();
+      synth.resume();
+
+      const rate = clamp(Number(rateEl.value), RATE_MIN, RATE_MAX);
+      const pitch = clamp(Number(pitchEl.value), PITCH_MIN, PITCH_MAX);
+      const volume = clamp(Number(volumeEl.value), VOLUME_MIN, VOLUME_MAX);
+
+      speakBtn.disabled = true;
+      pauseBtn.disabled = false;
+      resumeBtn.disabled = true;
+      stopBtn.disabled = false;
+      statusEl.textContent = msg.speaking ?? '';
+
+      const speakAt = (index: number) => {
+        if (current !== session) return;
+        if (index >= chunks.length) {
+          statusEl.textContent = msg.finished ?? '';
+          setIdle();
+          return;
+        }
+        const utter = new SpeechSynthesisUtterance(chunks[index]);
+        utter.voice = voice;
+        utter.lang = voice.lang;
+        utter.rate = rate;
+        utter.pitch = pitch;
+        utter.volume = volume;
+        utter.onend = () => speakAt(index + 1);
+        utter.onerror = () => {
+          if (current !== session) return;
+          // 自分の cancel では session を先に進めているため、ここに来る canceled/interrupted は外部要因（他タブ等）
+          session++;
+          synth.cancel();
+          statusEl.textContent = '';
+          errorEl.textContent = msg.speakError ?? '';
+          setIdle();
+        };
+        synth.speak(utter);
+      };
+      speakAt(0);
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      synth.pause();
+      pauseBtn.disabled = true;
+      resumeBtn.disabled = false;
+    });
+    resumeBtn.addEventListener('click', () => {
+      synth.resume();
+      pauseBtn.disabled = false;
+      resumeBtn.disabled = true;
+    });
+    stopBtn.addEventListener('click', stop);
+    window.addEventListener('pagehide', () => synth.cancel());
+  }
+</script>

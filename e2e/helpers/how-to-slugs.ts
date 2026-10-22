@@ -185,4 +185,8 @@ export const howToSlugs = [
   'daily-proration-calculator',
   'business-card-maker',
   'resume-maker',
+  'jwk-pem-converter',
+  'shamir-secret-sharing',
+  'rsa-encryptor',
+  'digital-signature-tool',
 ];

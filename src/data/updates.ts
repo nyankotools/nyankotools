@@ -1011,13 +1011,17 @@ export const updates: UpdateEntry[] = [
       'resume-maker',
       'luhn-checker',
       'isbn-checker',
+      'jwk-pem-converter',
+      'shamir-secret-sharing',
+      'rsa-encryptor',
+      'digital-signature-tool',
     ],
     translations: {
       ja: {
-        summary: '8個のツールを追加しました。',
+        summary: '20個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 8 new tools.',
+        summary: 'Added 20 new tools.',
       },
     },
   },

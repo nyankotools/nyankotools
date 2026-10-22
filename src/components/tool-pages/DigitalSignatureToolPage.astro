@@ -1,0 +1,352 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { digitalSignatureToolContent } from '../../i18n/tools/digital-signature-tool';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = digitalSignatureToolContent[locale];
+
+const keyClass = 'ui-input h-36 w-full p-3 font-mono text-xs dark:bg-gray-900';
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-3">
+    <div id="dsig-mode" class="ui-seg" role="group" aria-label={t.modeLabel}>
+      <button
+        type="button"
+        data-mode="sign"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.modeSign}
+      </button>
+      <button
+        type="button"
+        data-mode="verify"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeVerify}
+      </button>
+    </div>
+  </div>
+
+  <div class="mt-4 flex flex-wrap gap-4">
+    <div>
+      <label for="dsig-algorithm" class="ui-label">
+        {t.algorithmLabel}
+      </label>
+      <select
+        id="dsig-algorithm"
+        class="ui-input h-11 w-full max-w-xs px-3 dark:bg-gray-900"
+      >
+        <optgroup label={t.groupRsa}>
+          <option value="rsa-pss" selected>
+            RSA-PSS
+          </option>
+        </optgroup>
+        <optgroup label={t.groupEc}>
+          <option value="ecdsa-p256">ECDSA P-256</option>
+          <option value="ecdsa-p384">ECDSA P-384</option>
+          <option value="ecdsa-p521">ECDSA P-521</option>
+        </optgroup>
+      </select>
+    </div>
+    <div>
+      <label for="dsig-hash" class="ui-label">
+        {t.hashLabel}
+      </label>
+      <select
+        id="dsig-hash"
+        class="ui-input h-11 w-full max-w-xs px-3 dark:bg-gray-900"
+      >
+        <option value="SHA-256" selected>
+          SHA-256
+        </option>
+        <option value="SHA-384">SHA-384</option>
+        <option value="SHA-512">SHA-512</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <label for="dsig-message" class="ui-label">
+      {t.messageLabel}
+    </label>
+    <textarea
+      id="dsig-message"
+      class="ui-input h-32 w-full p-4 text-sm dark:bg-gray-900"
+      placeholder={t.messagePlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div id="dsig-sign-panel" class="mt-4">
+    <label for="dsig-private-key" class="ui-label">
+      {t.privateKeyLabel}
+    </label>
+    <textarea
+      id="dsig-private-key"
+      class={keyClass}
+      placeholder="-----BEGIN PRIVATE KEY-----"
+      spellcheck="false"
+      autocomplete="off"
+    ></textarea>
+  </div>
+
+  <div id="dsig-verify-panel" hidden>
+    <div class="mt-4">
+      <label for="dsig-public-key" class="ui-label">
+        {t.publicKeyLabel}
+      </label>
+      <textarea
+        id="dsig-public-key"
+        class={keyClass}
+        placeholder="-----BEGIN PUBLIC KEY-----"
+        spellcheck="false"
+        autocomplete="off"
+      ></textarea>
+    </div>
+    <div class="mt-4">
+      <label for="dsig-signature-input" class="ui-label">
+        {t.signatureInputLabel}
+      </label>
+      <textarea
+        id="dsig-signature-input"
+        class="ui-input h-24 w-full p-3 font-mono text-xs dark:bg-gray-900"
+        spellcheck="false"
+        autocomplete="off"
+      ></textarea>
+    </div>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button id="dsig-sign-button" type="button" class="ui-btn ui-btn-primary">
+      {t.signButton}
+    </button>
+    <button
+      id="dsig-verify-button"
+      type="button"
+      hidden
+      class="ui-btn ui-btn-primary"
+    >
+      {t.verifyButton}
+    </button>
+  </div>
+
+  <p
+    id="dsig-error"
+    hidden
+    data-invalid-pem={t.errorInvalidPem}
+    data-wrong-kind-sign={t.errorWrongKindSign}
+    data-wrong-kind-verify={t.errorWrongKindVerify}
+    data-key-import={t.errorKeyImport}
+    data-invalid-signature={t.errorInvalidSignature}
+    data-failed={t.errorFailed}
+    data-empty-key={t.errorEmptyKey}
+    class="ui-error mt-4 max-w-2xl"
+    role="alert"
+  ></p>
+
+  <div id="dsig-sign-result" class="mt-4" hidden>
+    <label for="dsig-signature-output" class="ui-label">
+      {t.signatureOutputLabel}
+    </label>
+    <textarea
+      id="dsig-signature-output"
+      readonly
+      class="ui-input h-24 w-full bg-gray-50 p-3 font-mono text-xs dark:bg-gray-900"
+      spellcheck="false"
+    ></textarea>
+    <div class="mt-2 flex flex-wrap items-center gap-3">
+      <button id="dsig-copy-button" type="button" class="ui-btn">
+        {t.copy}
+      </button>
+      <span
+        id="dsig-copy-status"
+        class="text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+      ></span>
+    </div>
+  </div>
+
+  <p
+    id="dsig-verify-result"
+    hidden
+    data-valid={t.resultValid}
+    data-invalid={t.resultInvalid}
+    class="mt-4 max-w-2xl rounded-lg border p-3 text-sm"
+    role="status"
+  ></p>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    defaultHash,
+    signText,
+    verifyText,
+    signatureAlgorithms,
+    signatureHashes,
+    type SignatureAlgorithm,
+    type SignatureError,
+    type SignatureHash,
+  } from '../../lib/tools/digital-signature-tool';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`dsig-${id}`) as T;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#dsig-mode [data-mode]',
+  );
+  const algorithm = $<HTMLSelectElement>('algorithm');
+  const hash = $<HTMLSelectElement>('hash');
+  const message = $<HTMLTextAreaElement>('message');
+  const privateKey = $<HTMLTextAreaElement>('private-key');
+  const publicKey = $<HTMLTextAreaElement>('public-key');
+  const signatureInput = $<HTMLTextAreaElement>('signature-input');
+  const signatureOutput = $<HTMLTextAreaElement>('signature-output');
+  const signPanel = $<HTMLElement>('sign-panel');
+  const verifyPanel = $<HTMLElement>('verify-panel');
+  const signButton = $<HTMLButtonElement>('sign-button');
+  const verifyButton = $<HTMLButtonElement>('verify-button');
+  const signResult = $<HTMLElement>('sign-result');
+  const verifyResult = $<HTMLElement>('verify-result');
+  const errorEl = $<HTMLElement>('error');
+  const copyButton = $<HTMLButtonElement>('copy-button');
+  const copyStatus = $<HTMLElement>('copy-status');
+
+  let mode: 'sign' | 'verify' = 'sign';
+
+  const validClasses = [
+    'border-green-300',
+    'bg-green-50',
+    'text-green-900',
+    'dark:border-green-800',
+    'dark:bg-green-950/40',
+    'dark:text-green-200',
+  ];
+  const invalidClasses = [
+    'border-red-300',
+    'bg-red-50',
+    'text-red-900',
+    'dark:border-red-800',
+    'dark:bg-red-950/40',
+    'dark:text-red-200',
+  ];
+
+  function clearOutputs() {
+    errorEl.hidden = true;
+    signResult.hidden = true;
+    verifyResult.hidden = true;
+    signatureOutput.value = '';
+    copyStatus.textContent = '';
+  }
+
+  function setMode(next: 'sign' | 'verify') {
+    mode = next;
+    for (const b of modeButtons) {
+      b.setAttribute('aria-pressed', String(b.dataset.mode === next));
+    }
+    signPanel.hidden = next !== 'sign';
+    signButton.hidden = next !== 'sign';
+    verifyPanel.hidden = next !== 'verify';
+    verifyButton.hidden = next !== 'verify';
+    clearOutputs();
+  }
+
+  function showError(error: SignatureError) {
+    const d = errorEl.dataset;
+    const map: Record<SignatureError, string | undefined> = {
+      'invalid-pem': d.invalidPem,
+      'wrong-key-kind': mode === 'sign' ? d.wrongKindSign : d.wrongKindVerify,
+      'key-import-failed': d.keyImport,
+      'invalid-signature': d.invalidSignature,
+      failed: d.failed,
+    };
+    errorEl.textContent = map[error] ?? '';
+    errorEl.hidden = false;
+  }
+
+  function currentParams() {
+    const alg = algorithm.value as SignatureAlgorithm;
+    const h = hash.value as SignatureHash;
+    if (!signatureAlgorithms.includes(alg) || !signatureHashes.includes(h)) {
+      return null;
+    }
+    return { alg, h };
+  }
+
+  for (const b of modeButtons) {
+    b.addEventListener('click', () =>
+      setMode(b.dataset.mode as 'sign' | 'verify'),
+    );
+  }
+
+  algorithm.addEventListener('change', () => {
+    hash.value = defaultHash(algorithm.value as SignatureAlgorithm);
+    clearOutputs();
+  });
+  hash.addEventListener('change', clearOutputs);
+
+  signButton.addEventListener('click', async () => {
+    const p = currentParams();
+    clearOutputs();
+    if (!p) return;
+    if (privateKey.value.trim() === '') {
+      errorEl.textContent = errorEl.dataset.emptyKey ?? '';
+      errorEl.hidden = false;
+      return;
+    }
+    const result = await signText(message.value, privateKey.value, p.alg, p.h);
+    if (!result.success) {
+      showError(result.error);
+      return;
+    }
+    signatureOutput.value = result.signature;
+    signResult.hidden = false;
+  });
+
+  verifyButton.addEventListener('click', async () => {
+    const p = currentParams();
+    clearOutputs();
+    if (!p) return;
+    if (publicKey.value.trim() === '') {
+      errorEl.textContent = errorEl.dataset.emptyKey ?? '';
+      errorEl.hidden = false;
+      return;
+    }
+    const result = await verifyText(
+      message.value,
+      signatureInput.value,
+      publicKey.value,
+      p.alg,
+      p.h,
+    );
+    if (!result.success) {
+      showError(result.error);
+      return;
+    }
+    verifyResult.classList.remove(...validClasses, ...invalidClasses);
+    verifyResult.classList.add(
+      ...(result.valid ? validClasses : invalidClasses),
+    );
+    verifyResult.textContent =
+      (result.valid
+        ? verifyResult.dataset.valid
+        : verifyResult.dataset.invalid) ?? '';
+    verifyResult.hidden = false;
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!signatureOutput.value) return;
+    copyStatus.textContent = (await copyText(signatureOutput.value))
+      ? (copyStatus.dataset.copied ?? '')
+      : (copyStatus.dataset.copyFailed ?? '');
+  });
+</script>

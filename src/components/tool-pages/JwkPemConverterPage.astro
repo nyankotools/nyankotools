@@ -1,0 +1,179 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { jwkPemConverterContent } from '../../i18n/tools/jwk-pem-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = jwkPemConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="jwkpem-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="jwkpem-input"
+      class="ui-input h-48 w-full p-4 font-mono text-xs"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+      autocomplete="off"
+    ></textarea>
+    <div class="mt-2">
+      <button id="jwkpem-clear-button" type="button" class="ui-btn">
+        {t.clear}
+      </button>
+    </div>
+  </div>
+
+  <p
+    id="jwkpem-error"
+    hidden
+    data-invalid-pem={t.errorInvalidPem}
+    data-unsupported-label={t.errorUnsupportedLabel}
+    data-invalid-json={t.errorInvalidJson}
+    data-unsupported-kty={t.errorUnsupportedKty}
+    data-invalid-key={t.errorInvalidKey}
+    data-unsupported={t.errorUnsupported}
+    class="ui-error mt-4 max-w-2xl"
+    role="alert"
+  ></p>
+
+  <div class="mt-4">
+    <label for="jwkpem-output" class="ui-label">
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="jwkpem-output"
+      readonly
+      class="ui-input h-48 w-full bg-gray-50 p-4 font-mono text-xs dark:bg-gray-900"
+      spellcheck="false"
+    ></textarea>
+    <p
+      id="jwkpem-info"
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+      data-pem-to-jwk={t.detectedPemToJwk}
+      data-jwk-to-pem={t.detectedJwkToPem}
+      data-public={t.keyPublic}
+      data-private={t.keyPrivate}
+    ></p>
+    <div class="mt-2 flex flex-wrap items-center gap-3">
+      <button id="jwkpem-copy-button" type="button" class="ui-btn">
+        {t.copy}
+      </button>
+      <button id="jwkpem-download-button" type="button" class="ui-btn">
+        {t.download}
+      </button>
+      <span
+        id="jwkpem-status"
+        class="text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+  <span
+    id="jwkpem-messages"
+    hidden
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  ></span>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    convertKey,
+    type ConvertDirection,
+  } from '../../lib/tools/jwk-pem-converter';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`jwkpem-${id}`) as T;
+  const input = $<HTMLTextAreaElement>('input');
+  const output = $<HTMLTextAreaElement>('output');
+  const errorEl = $<HTMLElement>('error');
+  const info = $<HTMLElement>('info');
+  const status = $<HTMLElement>('status');
+  const messages = $<HTMLElement>('messages');
+  const clearButton = $<HTMLButtonElement>('clear-button');
+  const copyButton = $<HTMLButtonElement>('copy-button');
+  const downloadButton = $<HTMLButtonElement>('download-button');
+
+  let direction: ConvertDirection | null = null;
+  let sequence = 0;
+
+  const errorKeys: Record<string, string> = {
+    'invalid-pem': 'invalidPem',
+    'unsupported-label': 'unsupportedLabel',
+    'invalid-json': 'invalidJson',
+    'unsupported-kty': 'unsupportedKty',
+    'invalid-key': 'invalidKey',
+    unsupported: 'unsupported',
+  };
+
+  function reset() {
+    output.value = '';
+    info.textContent = '';
+    status.textContent = '';
+    errorEl.hidden = true;
+    direction = null;
+  }
+
+  async function update() {
+    const current = ++sequence;
+    const result = await convertKey(input.value);
+    if (current !== sequence) return;
+    reset();
+    if (result.success) {
+      output.value = result.output;
+      direction = result.direction;
+      const kind =
+        result.keyType === 'public'
+          ? info.dataset.public
+          : info.dataset.private;
+      const head =
+        result.direction === 'pem-to-jwk'
+          ? info.dataset.pemToJwk
+          : info.dataset.jwkToPem;
+      info.textContent = `${head} ${kind ?? ''}`;
+    } else if (result.error !== 'empty') {
+      errorEl.textContent =
+        errorEl.dataset[errorKeys[result.error] ?? 'invalidKey'] ?? '';
+      errorEl.hidden = false;
+    }
+  }
+
+  input.addEventListener('input', () => {
+    void update();
+  });
+
+  clearButton.addEventListener('click', () => {
+    input.value = '';
+    sequence++;
+    reset();
+    input.focus();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    status.textContent = (await copyText(output.value))
+      ? (messages.dataset.copied ?? '')
+      : (messages.dataset.copyFailed ?? '');
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (!output.value) return;
+    const toJwk = direction === 'pem-to-jwk';
+    downloadBlob(
+      new Blob([output.value], {
+        type: toJwk ? 'application/json' : 'application/x-pem-file',
+      }),
+      toJwk ? 'key.jwk.json' : 'key.pem',
+    );
+  });
+</script>

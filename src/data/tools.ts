@@ -13311,6 +13311,167 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'jwk-pem-converter',
+    category: 'encode',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['keypair-generator', 'jwt-decoder', 'base64'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'JWK⇔PEM変換',
+        description:
+          'JWKとPEM（SPKI公開鍵・PKCS#8秘密鍵）を相互に変換。RSA・EC・Ed25519対応。鍵はブラウザ内で処理され、送信されません。',
+        keywords: [
+          'JWK',
+          'PEM',
+          'SPKI',
+          'PKCS#8',
+          'RSA',
+          'ECDSA',
+          'Ed25519',
+          'JWKS',
+        ],
+      },
+      en: {
+        name: 'JWK to PEM Converter',
+        description:
+          'Convert JWK to PEM (SPKI / PKCS#8) and PEM back to JWK for RSA, EC, and Ed25519 keys. Runs in your browser; nothing is sent.',
+        keywords: [
+          'JWK',
+          'PEM',
+          'JSON Web Key',
+          'SPKI',
+          'PKCS#8',
+          'RSA',
+          'Ed25519',
+          'JWKS',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'shamir-secret-sharing',
+    category: 'security',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['crypto-encryptor', 'password-generator', 'keypair-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'Shamir秘密分散（鍵の分割・復元）',
+        description:
+          'テキストの秘密をn個のシェアに分割し、k個以上集めると復元できるShamir秘密分散ツール。ブラウザ内で処理。',
+        keywords: [
+          'シャミア',
+          '秘密分散',
+          '鍵分割',
+          'シェア',
+          '閾値',
+          'Shamir',
+          'secret sharing',
+          '鍵の復元',
+        ],
+      },
+      en: {
+        name: "Shamir's Secret Sharing (Split & Combine)",
+        description:
+          'Split a text secret into n shares and recover it from any k of them with Shamir secret sharing. Runs in your browser.',
+        keywords: [
+          'shamir',
+          'secret sharing',
+          'key splitting',
+          'threshold scheme',
+          'key shares',
+          'GF(256)',
+          'split secret',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'rsa-encryptor',
+    category: 'security',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: [
+      'crypto-encryptor',
+      'keypair-generator',
+      'digital-signature-tool',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'RSA暗号化・復号',
+        description:
+          'PEM形式の公開鍵でRSA-OAEP暗号化し、秘密鍵で復号。平文の上限バイト数も表示',
+        keywords: [
+          'RSA',
+          'RSA-OAEP',
+          '公開鍵暗号',
+          'PEM',
+          '公開鍵',
+          '秘密鍵',
+          '暗号化',
+          '復号',
+        ],
+      },
+      en: {
+        name: 'RSA Encrypt & Decrypt',
+        description:
+          'Encrypt with a PEM public key using RSA-OAEP and decrypt with the private key',
+        keywords: [
+          'RSA',
+          'RSA-OAEP',
+          'public key encryption',
+          'PEM',
+          'SPKI',
+          'PKCS8',
+          'encrypt',
+          'decrypt',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'digital-signature-tool',
+    category: 'security',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['keypair-generator', 'jwt-generator', 'hmac-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'デジタル署名の作成・検証',
+        description:
+          'RSA-PSS・ECDSAでテキストのデジタル署名を作成・検証。PEM鍵を貼り付けるだけで、署名はBase64で出力。',
+        keywords: [
+          'デジタル署名',
+          '署名検証',
+          'RSA-PSS',
+          'ECDSA',
+          'PEM',
+          '電子署名',
+          'Web Crypto',
+        ],
+      },
+      en: {
+        name: 'Digital Signature Tool',
+        description:
+          'Create and verify digital signatures with RSA-PSS or ECDSA using PEM keys. Output is Base64.',
+        keywords: [
+          'digital signature',
+          'verify signature',
+          'RSA-PSS',
+          'ECDSA',
+          'PEM',
+          'sign',
+          'Web Crypto',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

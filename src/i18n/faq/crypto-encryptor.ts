@@ -20,7 +20,7 @@ export const faq: FaqContent = {
     {
       question: 'RSAなどの公開鍵暗号には対応していますか？',
       answer:
-        '現在はパスワードによるAES-256-GCMのみ対応しています。公開鍵暗号には対応していません。ファイルの暗号化は「ファイル暗号化・復号」ツールで行えます。',
+        '現在はパスワードによるAES-256-GCMのみ対応しています。このツールは公開鍵暗号には対応していません。RSA-OAEPは「RSA暗号化・復号」ツールを使ってください。ファイルの暗号化は「ファイル暗号化・復号」ツールで行えます。',
     },
   ],
   en: [
@@ -43,7 +43,7 @@ export const faq: FaqContent = {
     {
       question: 'Does it support public-key encryption such as RSA?',
       answer:
-        'Currently only password-based AES-256-GCM is supported. Public-key encryption is not available. For files, use the File Encryptor & Decryptor.',
+        'Currently only password-based AES-256-GCM is supported. This tool does not do public-key encryption; for RSA-OAEP use the RSA Encrypt & Decrypt tool. For files, use the File Encryptor & Decryptor.',
     },
   ],
 };

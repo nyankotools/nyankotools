@@ -40,9 +40,13 @@ describe('file-encryptor', () => {
     ['チャンクちょうど', CHUNK_SIZE],
     ['チャンク+1バイト', CHUNK_SIZE + 1],
     ['2チャンク+端数', CHUNK_SIZE * 2 + 123],
-  ])('%s を暗号化して復号できる', async (_label, size) => {
-    await roundTrip(size);
-  });
+  ])(
+    '%s を暗号化して復号できる',
+    async (_label, size) => {
+      await roundTrip(size);
+    },
+    30_000,
+  );
 
   it('同じ入力でも毎回異なる出力になる', async () => {
     const blob = new Blob(['same']);

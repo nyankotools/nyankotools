@@ -183,4 +183,6 @@ export const howToSlugs = [
   'privacy-policy-generator',
   'tokushoho-generator',
   'daily-proration-calculator',
+  'business-card-maker',
+  'resume-maker',
 ];

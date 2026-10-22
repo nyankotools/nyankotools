@@ -1,0 +1,685 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { businessCardMakerContent } from '../../i18n/tools/business-card-maker';
+import {
+  BODY_SIZE_MAX,
+  BODY_SIZE_MIN,
+  COUNT_MAX,
+  COUNT_MIN,
+  DEFAULT_OPTIONS,
+  NAME_SIZE_MAX,
+  NAME_SIZE_MIN,
+  QR_SIZE_MAX,
+  QR_SIZE_MIN,
+} from '../../lib/tools/business-card-maker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = businessCardMakerContent[locale];
+
+const personFields = [
+  { id: 'family', label: t.familyNameLabel },
+  { id: 'given', label: t.givenNameLabel },
+  { id: 'reading', label: t.readingLabel },
+  { id: 'company', label: t.companyLabel },
+  { id: 'department', label: t.departmentLabel },
+  { id: 'title', label: t.titleLabel },
+];
+const contactFields: {
+  id: string;
+  label: string;
+  type: 'text' | 'tel' | 'email';
+  wide: boolean;
+}[] = [
+  { id: 'postal', label: t.postalLabel, type: 'text', wide: false },
+  { id: 'address', label: t.addressLabel, type: 'text', wide: true },
+  { id: 'phone', label: t.phoneLabel, type: 'tel', wide: false },
+  { id: 'mobile', label: t.mobileLabel, type: 'tel', wide: false },
+  { id: 'email', label: t.emailLabel, type: 'email', wide: true },
+  { id: 'url', label: t.urlLabel, type: 'text', wide: true },
+];
+const inputClass = 'ui-input h-11 w-full px-3 dark:bg-gray-900';
+const selectClass = 'ui-input h-11 w-full px-3 dark:bg-gray-900';
+const numberClass = 'ui-input h-11 w-full px-3 dark:bg-gray-900';
+const legendClass = 'mb-2 text-base font-semibold';
+---
+
+<ToolShell t={t}>
+  <section
+    id="bc"
+    data-fn-order={t.fnOrder}
+    data-postal-prefix={t.postalPrefix}
+    data-error-name-size={t.errorNameSize}
+    data-error-body-size={t.errorBodySize}
+    data-error-qr-size={t.errorQrSize}
+    data-error-count={t.errorCount}
+    data-error-accent={t.errorAccent}
+    data-warning-qr-empty={t.warningQrEmpty}
+    data-warning-qr-too-long={t.warningQrTooLong}
+    data-warning-qr-small={t.warningQrSmall}
+    data-name-range={`${NAME_SIZE_MIN},${NAME_SIZE_MAX}`}
+    data-body-range={`${BODY_SIZE_MIN},${BODY_SIZE_MAX}`}
+    data-qr-range={`${QR_SIZE_MIN},${QR_SIZE_MAX}`}
+    data-count-range={`${COUNT_MIN},${COUNT_MAX}`}
+    class="space-y-4"
+  >
+    <div class="space-y-6 print:hidden">
+      <fieldset class="space-y-3">
+        <legend class={legendClass}>{t.personHeading}</legend>
+        <div class="grid gap-3 sm:grid-cols-2">
+          {personFields.map((f) => (
+            <div>
+              <label for={`bc-${f.id}`} class="ui-label">
+                {f.label}
+              </label>
+              <input
+                id={`bc-${f.id}`}
+                type="text"
+                autocomplete="off"
+                class={inputClass}
+              />
+            </div>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset class="space-y-3">
+        <legend class={legendClass}>{t.contactHeading}</legend>
+        <div class="grid gap-3 sm:grid-cols-2">
+          {contactFields.map((f) => (
+            <div class={f.wide ? 'sm:col-span-2' : ''}>
+              <label for={`bc-${f.id}`} class="ui-label">
+                {f.label}
+              </label>
+              <input
+                id={`bc-${f.id}`}
+                type={f.type}
+                autocomplete="off"
+                class={inputClass}
+              />
+            </div>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset class="space-y-3">
+        <legend class={legendClass}>{t.designHeading}</legend>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label for="bc-orientation" class="ui-label">
+              {t.orientationLabel}
+            </label>
+            <select id="bc-orientation" class={selectClass}>
+              <option value="landscape">{t.orientationLandscape}</option>
+              <option value="portrait">{t.orientationPortrait}</option>
+            </select>
+          </div>
+          <div>
+            <label for="bc-layout" class="ui-label">
+              {t.layoutLabel}
+            </label>
+            <select id="bc-layout" class={selectClass}>
+              <option value="classic">{t.layoutClassic}</option>
+              <option value="center">{t.layoutCenter}</option>
+              <option value="band">{t.layoutBand}</option>
+            </select>
+          </div>
+          <div>
+            <label for="bc-font" class="ui-label">
+              {t.fontLabel}
+            </label>
+            <select id="bc-font" class={selectClass}>
+              <option value="sans">{t.fontSans}</option>
+              <option value="serif">{t.fontSerif}</option>
+            </select>
+          </div>
+          <div>
+            <label for="bc-accent" class="ui-label">
+              {t.accentLabel}
+            </label>
+            <input
+              id="bc-accent"
+              type="color"
+              value={DEFAULT_OPTIONS.accent}
+              class="h-11 w-20 cursor-pointer rounded-lg border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900"
+            />
+          </div>
+          <div>
+            <label for="bc-name-size" class="ui-label">
+              {t.nameSizeLabel}
+            </label>
+            <input
+              id="bc-name-size"
+              type="number"
+              inputmode="decimal"
+              min={NAME_SIZE_MIN}
+              max={NAME_SIZE_MAX}
+              step="0.5"
+              value={DEFAULT_OPTIONS.nameSizeMm}
+              class={numberClass}
+            />
+          </div>
+          <div>
+            <label for="bc-body-size" class="ui-label">
+              {t.bodySizeLabel}
+            </label>
+            <input
+              id="bc-body-size"
+              type="number"
+              inputmode="decimal"
+              min={BODY_SIZE_MIN}
+              max={BODY_SIZE_MAX}
+              step="0.1"
+              value={DEFAULT_OPTIONS.bodySizeMm}
+              class={numberClass}
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="space-y-3">
+        <legend class={legendClass}>{t.qrHeading}</legend>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label for="bc-qr" class="ui-label">
+              {t.qrContentLabel}
+            </label>
+            <select id="bc-qr" class={selectClass}>
+              <option value="vcard" selected>
+                {t.qrVcard}
+              </option>
+              <option value="url">{t.qrUrl}</option>
+              <option value="none">{t.qrNone}</option>
+            </select>
+          </div>
+          <div>
+            <label for="bc-qr-size" class="ui-label">
+              {t.qrSizeLabel}
+            </label>
+            <input
+              id="bc-qr-size"
+              type="number"
+              inputmode="decimal"
+              min={QR_SIZE_MIN}
+              max={QR_SIZE_MAX}
+              step="1"
+              value={DEFAULT_OPTIONS.qrSizeMm}
+              class={numberClass}
+            />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="space-y-3">
+        <legend class={legendClass}>{t.printHeading}</legend>
+        <div class="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label for="bc-mode" class="ui-label">
+              {t.modeLabel}
+            </label>
+            <select id="bc-mode" class={selectClass}>
+              <option value="a4">{t.modeA4}</option>
+              <option value="single">{t.modeSingle}</option>
+            </select>
+          </div>
+          <div>
+            <label for="bc-count" class="ui-label">
+              {t.countLabel}
+            </label>
+            <input
+              id="bc-count"
+              type="number"
+              inputmode="numeric"
+              min={COUNT_MIN}
+              max={COUNT_MAX}
+              step="1"
+              value={DEFAULT_OPTIONS.count}
+              class={numberClass}
+            />
+          </div>
+        </div>
+        <label class="ui-check">
+          <input type="checkbox" id="bc-cut-lines" checked />
+          {t.cutLinesLabel}
+        </label>
+        <div class="flex flex-wrap gap-3">
+          <button
+            id="bc-print-button"
+            type="button"
+            class="ui-btn ui-btn-primary"
+          >
+            {t.printButton}
+          </button>
+        </div>
+      </fieldset>
+
+      <p id="bc-error" class="ui-error empty:hidden" aria-live="polite"></p>
+      <div id="bc-warnings" class="grid gap-2" aria-live="polite"></div>
+      <p id="bc-empty" class="hidden text-sm text-gray-600 dark:text-gray-400">
+        {t.emptyMessage}
+      </p>
+      <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+        {t.previewLabel}
+      </p>
+    </div>
+
+    <div
+      id="bc-scroll"
+      role="region"
+      aria-label={t.previewLabel}
+      tabindex="0"
+      class="max-w-full overflow-x-auto print:overflow-visible"
+    >
+      <div id="bc-output" class="bc-sheet"></div>
+    </div>
+  </section>
+</ToolShell>
+
+<style is:global>
+  .bc-sheet {
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    background: #fff;
+    color: #111;
+    border: 1px solid #9ca3af;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .bc-sheet .bc-card {
+    position: absolute;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    padding: 5mm;
+    background: #fff;
+    line-height: 1.4;
+    outline: 1px solid #d1d5db;
+    outline-offset: -1px;
+  }
+  .bc-sheet .bc-l-band {
+    padding-left: 9mm;
+  }
+  .bc-sheet .bc-band {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4mm;
+    background: var(--bc-accent);
+  }
+  .bc-sheet .bc-l-center .bc-top,
+  .bc-sheet .bc-l-center .bc-namebox {
+    text-align: center;
+  }
+  .bc-sheet .bc-company {
+    font-size: 1.15em;
+    font-weight: 700;
+  }
+  .bc-sheet .bc-role {
+    font-size: 0.95em;
+  }
+  .bc-sheet .bc-namebox {
+    padding: 1mm 0;
+  }
+  .bc-sheet .bc-l-classic .bc-namebox,
+  .bc-sheet .bc-l-center .bc-namebox {
+    border-bottom: 0.3mm solid var(--bc-accent);
+  }
+  .bc-sheet .bc-name {
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--bc-accent);
+  }
+  .bc-sheet .bc-reading {
+    font-size: 0.8em;
+    letter-spacing: 0.08em;
+    color: #374151;
+  }
+  .bc-sheet .bc-bottom {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2mm;
+  }
+  .bc-sheet .bc-contact {
+    min-width: 0;
+    font-size: 0.9em;
+    overflow-wrap: anywhere;
+  }
+  .bc-sheet .bc-label {
+    display: inline-block;
+    min-width: 5.5em;
+    margin-right: 0.4em;
+    font-size: 0.8em;
+    letter-spacing: 0.04em;
+    color: #4b5563;
+  }
+  .bc-sheet .bc-qr {
+    flex: none;
+    line-height: 0;
+  }
+  .bc-sheet .bc-portrait .bc-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .bc-sheet .bc-portrait .bc-label {
+    display: block;
+    min-width: 0;
+    margin-right: 0;
+    line-height: 1.1;
+  }
+  .bc-sheet .bc-portrait .bc-line {
+    margin-top: 0.8mm;
+  }
+  @media print {
+    @page bc-a4p {
+      size: 210mm 297mm;
+      margin: 0;
+    }
+    @page bc-a4l {
+      size: 297mm 210mm;
+      margin: 0;
+    }
+    @page bc-single-h {
+      size: 91mm 55mm;
+      margin: 0;
+    }
+    @page bc-single-v {
+      size: 55mm 91mm;
+      margin: 0;
+    }
+    /* 印刷は名刺の面だけにする（見出し・説明文・使い方・注意事項・FAQなどは出さない） */
+    [data-tool-page] > :not(#bc) {
+      display: none;
+    }
+    #bc-output {
+      border: 0;
+      width: var(--bc-width) !important;
+      /* 端数で2ページ目に溢れないよう、実寸よりわずかに小さくする */
+      height: calc(var(--bc-height) - 0.5mm) !important;
+    }
+    .bc-sheet .bc-card {
+      outline: 0;
+    }
+    .bc-sheet .bc-cut {
+      outline: 0.1mm solid #9ca3af;
+      outline-offset: -0.1mm;
+    }
+  }
+</style>
+
+<script>
+  import {
+    FONT_STACKS,
+    buildCardContent,
+    cardSize,
+    hasContent,
+    isQrModuleTooSmall,
+    qrModuleMm,
+    qrPayload,
+    qrSvgPath,
+    qrViewSize,
+    sheetLayout,
+    validateOptions,
+    type CardContent,
+    type CardLayout,
+    type CardOptions,
+    type FontKind,
+    type OptionsError,
+    type Orientation,
+    type PrintMode,
+    type QrContent,
+  } from '../../lib/tools/business-card-maker';
+  import { generateQrMatrix } from '../../lib/tools/qr-generator';
+  import { fill } from '../../lib/format-template';
+
+  const root = document.getElementById('bc')!;
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`bc-${id}`) as T;
+  const text = (id: string) => $<HTMLInputElement>(id).value;
+
+  const fnOrder =
+    root.dataset.fnOrder === 'given-family' ? 'given-family' : 'family-given';
+  const postalPrefix = root.dataset.postalPrefix ?? '';
+  const orientationSelect = $<HTMLSelectElement>('orientation');
+  const layoutSelect = $<HTMLSelectElement>('layout');
+  const fontSelect = $<HTMLSelectElement>('font');
+  const accentInput = $<HTMLInputElement>('accent');
+  const nameSize = $<HTMLInputElement>('name-size');
+  const bodySize = $<HTMLInputElement>('body-size');
+  const qrSelect = $<HTMLSelectElement>('qr');
+  const qrSize = $<HTMLInputElement>('qr-size');
+  const modeSelect = $<HTMLSelectElement>('mode');
+  const countInput = $<HTMLInputElement>('count');
+  const cutLines = $<HTMLInputElement>('cut-lines');
+  const printButton = $<HTMLButtonElement>('print-button');
+  const errorEl = $('error');
+  const warningsEl = $('warnings');
+  const emptyEl = $('empty');
+  const output = $('output');
+
+  const errorKeys: Record<OptionsError, string> = {
+    nameSize: 'errorNameSize',
+    bodySize: 'errorBodySize',
+    qrSize: 'errorQrSize',
+    count: 'errorCount',
+    accent: 'errorAccent',
+  };
+  const errorRanges: Partial<Record<OptionsError, string>> = {
+    nameSize: 'nameRange',
+    bodySize: 'bodyRange',
+    qrSize: 'qrRange',
+    count: 'countRange',
+  };
+
+  function readOptions(): CardOptions {
+    const mode = modeSelect.value as PrintMode;
+    return {
+      orientation: orientationSelect.value as Orientation,
+      layout: layoutSelect.value as CardLayout,
+      font: fontSelect.value as FontKind,
+      accent: accentInput.value,
+      familyName: text('family'),
+      givenName: text('given'),
+      reading: text('reading'),
+      company: text('company'),
+      department: text('department'),
+      title: text('title'),
+      postal: text('postal'),
+      address: text('address'),
+      phone: text('phone'),
+      mobile: text('mobile'),
+      email: text('email'),
+      url: text('url'),
+      qr: qrSelect.value as QrContent,
+      qrSizeMm: Number(qrSize.value),
+      nameSizeMm: Number(nameSize.value),
+      bodySizeMm: Number(bodySize.value),
+      mode,
+      count: mode === 'single' ? 1 : Number(countInput.value),
+      showCutLines: cutLines.checked,
+    };
+  }
+
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  interface QrDrawing {
+    path: string;
+    viewSize: number;
+  }
+
+  function qrElement(drawing: QrDrawing, sizeMm: number): HTMLElement {
+    const wrap = document.createElement('div');
+    wrap.className = 'bc-qr';
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('viewBox', `0 0 ${drawing.viewSize} ${drawing.viewSize}`);
+    svg.setAttribute('width', `${sizeMm}mm`);
+    svg.setAttribute('height', `${sizeMm}mm`);
+    svg.setAttribute('shape-rendering', 'crispEdges');
+    svg.setAttribute('aria-hidden', 'true');
+    const bg = document.createElementNS(SVG_NS, 'rect');
+    bg.setAttribute('width', String(drawing.viewSize));
+    bg.setAttribute('height', String(drawing.viewSize));
+    bg.setAttribute('fill', '#ffffff');
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('d', drawing.path);
+    path.setAttribute('fill', '#000000');
+    svg.append(bg, path);
+    wrap.append(svg);
+    return wrap;
+  }
+
+  function div(className: string, content?: string): HTMLElement {
+    const el = document.createElement('div');
+    el.className = className;
+    if (content !== undefined) el.textContent = content;
+    return el;
+  }
+
+  // 位置・寸法は CSSOM（el.style）で設定する。style 属性の文字列は CSP でブロックされうる
+  function buildCard(
+    opts: CardOptions,
+    content: CardContent,
+    qr: QrDrawing | null,
+  ): HTMLElement {
+    const size = cardSize(opts.orientation);
+    const card = div(
+      `bc-card bc-l-${opts.layout} bc-${opts.orientation}${opts.showCutLines ? ' bc-cut' : ''}`,
+    );
+    card.style.width = `${size.widthMm}mm`;
+    card.style.height = `${size.heightMm}mm`;
+    card.style.fontSize = `${opts.bodySizeMm}mm`;
+    card.style.fontFamily = FONT_STACKS[opts.font];
+    card.style.setProperty('--bc-accent', opts.accent);
+
+    if (opts.layout === 'band') card.append(div('bc-band'));
+
+    if (content.company !== '' || content.role !== '') {
+      const top = div('bc-top');
+      if (content.company !== '')
+        top.append(div('bc-company', content.company));
+      if (content.role !== '') top.append(div('bc-role', content.role));
+      card.append(top);
+    }
+
+    if (content.name !== '' || content.reading !== '') {
+      const box = div('bc-namebox');
+      if (content.name !== '') {
+        const name = div('bc-name', content.name);
+        name.style.fontSize = `${opts.nameSizeMm}mm`;
+        box.append(name);
+      }
+      if (content.reading !== '')
+        box.append(div('bc-reading', content.reading));
+      card.append(box);
+    }
+
+    const contact = div('bc-contact');
+    if (content.postal !== '') contact.append(div('bc-line', content.postal));
+    if (content.address !== '') contact.append(div('bc-line', content.address));
+    for (const c of content.contacts) {
+      const line = div('bc-line');
+      const label = document.createElement('span');
+      label.className = 'bc-label';
+      label.textContent = c.label;
+      line.append(label, c.value);
+      contact.append(line);
+    }
+    if (contact.childNodes.length > 0 || qr) {
+      const bottom = div('bc-bottom');
+      bottom.append(contact);
+      if (qr) bottom.append(qrElement(qr, opts.qrSizeMm));
+      card.append(bottom);
+    }
+    return card;
+  }
+
+  function warn(messages: string[]) {
+    warningsEl.replaceChildren(
+      ...messages.map((m) => {
+        const p = document.createElement('p');
+        p.className = 'ui-error';
+        p.textContent = m;
+        return p;
+      }),
+    );
+  }
+
+  function render() {
+    const opts = readOptions();
+    countInput.disabled = opts.mode === 'single';
+    const error = validateOptions(opts);
+    errorEl.textContent = '';
+    if (error) {
+      const template = root.dataset[errorKeys[error]] ?? '';
+      const rangeKey = errorRanges[error];
+      const [min, max] = (rangeKey ? (root.dataset[rangeKey] ?? '') : '').split(
+        ',',
+      );
+      errorEl.textContent = fill(template, { min: min ?? '', max: max ?? '' });
+      printButton.disabled = true;
+      return;
+    }
+
+    const content = buildCardContent(opts, fnOrder, postalPrefix);
+    const empty = !hasContent(content);
+    printButton.disabled = empty;
+    emptyEl.classList.toggle('hidden', !empty);
+
+    const warnings: string[] = [];
+    let drawing: QrDrawing | null = null;
+    const payload = qrPayload(opts, fnOrder);
+    if (payload.ok) {
+      const qr = generateQrMatrix(payload.text, 'M');
+      if (qr.ok) {
+        drawing = {
+          path: qrSvgPath(qr.matrix.moduleCount, qr.matrix.isDark),
+          viewSize: qrViewSize(qr.matrix.moduleCount),
+        };
+        if (isQrModuleTooSmall(opts.qrSizeMm, qr.matrix.moduleCount)) {
+          const moduleMm = qrModuleMm(opts.qrSizeMm, qr.matrix.moduleCount);
+          warnings.push(
+            fill(root.dataset.warningQrSmall ?? '', {
+              module: moduleMm.toFixed(2),
+            }),
+          );
+        }
+      } else {
+        warnings.push(root.dataset.warningQrTooLong ?? '');
+      }
+    } else if (payload.reason === 'empty' && !empty) {
+      warnings.push(root.dataset.warningQrEmpty ?? '');
+    }
+    warn(warnings);
+
+    const sheet = sheetLayout(opts.orientation, opts.mode, opts.count);
+    const card = buildCard(opts, content, drawing);
+    const cards = sheet.slots.map((slot) => {
+      const el = card.cloneNode(true) as HTMLElement;
+      el.style.left = `${slot.xMm}mm`;
+      el.style.top = `${slot.yMm}mm`;
+      return el;
+    });
+    output.replaceChildren(...cards);
+    output.style.width = `${sheet.widthMm}mm`;
+    output.style.height = `${sheet.heightMm}mm`;
+    output.style.setProperty('--bc-width', `${sheet.widthMm}mm`);
+    output.style.setProperty('--bc-height', `${sheet.heightMm}mm`);
+    // 用紙サイズは静的CSSの named page（@page bc-a4p など）で指定する。
+    // 実行時に <style> を作ると CSP（style-src 'self'）でブロックされるため
+    output.style.setProperty('page', sheet.pageName);
+  }
+
+  root.addEventListener('input', render);
+  root.addEventListener('change', render);
+  printButton.addEventListener('click', () => window.print());
+
+  render();
+</script>

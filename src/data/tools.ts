@@ -13157,6 +13157,160 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'business-card-maker',
+    category: 'generate',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['vcard-generator', 'envelope-printer', 'qr-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '名刺作成',
+        description:
+          '91×55mmの名刺を縦横・3レイアウトで作成。vCardのQRコード付きでA4に10面付けして実寸印刷できます。',
+        keywords: [
+          '名刺',
+          '名刺作成',
+          '名刺印刷',
+          '名刺QR',
+          'vCard',
+          'A4 面付け',
+          '91×55',
+        ],
+      },
+      en: {
+        name: 'Business Card Maker',
+        description:
+          'Make a 91 × 55 mm business card with a vCard QR code and print it life-size, 10 per A4 sheet.',
+        keywords: [
+          'business card',
+          'business card maker',
+          'print business cards',
+          'QR code business card',
+          'vCard',
+          'A4 imposition',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'resume-maker',
+    category: 'generate',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['id-photo-maker', 'envelope-printer', 'vcard-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '履歴書作成',
+        description:
+          'JIS様式風の履歴書をA4で印刷。学歴・職歴・資格・志望動機を入力し、証明写真も読み込めます',
+        keywords: [
+          '履歴書',
+          '履歴書 印刷',
+          '履歴書 作成',
+          'JIS 履歴書',
+          '証明写真',
+          '学歴 職歴',
+          '志望動機',
+          'rirekisho',
+        ],
+      },
+      en: {
+        name: 'Resume Maker (Rirekisho)',
+        description:
+          'Make a Japanese resume (rirekisho) in a JIS-style layout and print it on A4. Add an ID photo and save a draft in your browser. Nothing is uploaded.',
+        keywords: [
+          'rirekisho',
+          'japanese resume',
+          'resume japan',
+          'jis resume',
+          'cv japan',
+          'print resume',
+          'id photo',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'luhn-checker',
+    category: 'calc',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['my-number-checker', 'checksum-calculator', 'isbn-checker'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'Luhnチェック・カード番号ブランド判定',
+        description:
+          'カード番号などの検査桁をLuhnアルゴリズムで検証し、先頭の桁からブランドを判定。決済テスト用の公開番号付き。',
+        keywords: [
+          'Luhn',
+          'ルーン',
+          'カード番号',
+          'クレジットカード',
+          'チェックデジット',
+          'IIN',
+          'BIN',
+          'テストカード番号',
+        ],
+      },
+      en: {
+        name: 'Luhn Checker & Card Brand Detector',
+        description:
+          'Validate card numbers with the Luhn algorithm and detect the brand by IIN. Includes public payment test numbers.',
+        keywords: [
+          'Luhn',
+          'mod 10',
+          'credit card validator',
+          'card brand',
+          'IIN',
+          'BIN',
+          'test card numbers',
+          'check digit',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'isbn-checker',
+    category: 'calc',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['barcode-generator', 'luhn-checker'],
+    translations: {
+      ja: {
+        name: 'ISBN・JANチェックデジット検証',
+        description:
+          'ISBN-10/13・JAN(EAN-13/8)のチェックデジットを検証・計算し、ISBN-10とISBN-13を相互変換します。',
+        keywords: [
+          'ISBN',
+          'JAN',
+          'EAN',
+          'チェックデジット',
+          'ISBN変換',
+          'ISBN-10',
+          'ISBN-13',
+          '書籍コード',
+        ],
+      },
+      en: {
+        name: 'ISBN & EAN-13 Check Digit Validator',
+        description:
+          'Validate or calculate ISBN-10, ISBN-13 and EAN/JAN check digits and convert ISBN-10 to ISBN-13.',
+        keywords: [
+          'ISBN',
+          'ISBN-10',
+          'ISBN-13',
+          'EAN-13',
+          'JAN',
+          'check digit',
+          'ISBN converter',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

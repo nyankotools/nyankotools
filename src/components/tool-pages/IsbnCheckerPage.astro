@@ -1,0 +1,187 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { isbnCheckerContent } from '../../i18n/tools/isbn-checker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = isbnCheckerContent[locale];
+const messages = {
+  statusValid: t.statusValid,
+  statusInvalid: t.statusInvalid,
+  statusCompleted: t.statusCompleted,
+  kindLabel: t.kindLabel,
+  kinds: t.kinds,
+  checkDigitLabel: t.checkDigitLabel,
+  completedLabel: t.completedLabel,
+  isbn10Label: t.isbn10Label,
+  isbn13Label: t.isbn13Label,
+  noteLabel: t.noteLabel,
+  noteIsbn978: t.noteIsbn978,
+  noteIsbn979: t.noteIsbn979,
+  noteJapanJan: t.noteJapanJan,
+  errors: t.errors,
+};
+---
+
+<ToolShell t={t}>
+  <div class="max-w-2xl">
+    <label for="isbn-checker-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <input
+      id="isbn-checker-input"
+      type="text"
+      data-query-target="text"
+      class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      aria-describedby="isbn-checker-hint"
+      spellcheck="false"
+      autocomplete="off"
+    />
+    <p
+      id="isbn-checker-hint"
+      class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+    >
+      {t.inputHint}
+    </p>
+  </div>
+
+  <p id="isbn-checker-error" hidden class="ui-error mt-4 max-w-2xl"></p>
+
+  <section
+    id="isbn-checker-result"
+    hidden
+    data-messages={JSON.stringify(messages)}
+    class="mt-6 max-w-2xl"
+  >
+    <h2 class="mb-2 text-lg font-semibold">{t.resultHeading}</h2>
+    <p id="isbn-checker-status" class="mb-3 font-medium" role="status"></p>
+    <dl
+      id="isbn-checker-list"
+      class="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-[auto_1fr]"
+    ></dl>
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <button
+        id="isbn-checker-copy-button"
+        type="button"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="ui-btn"
+      >
+        {t.copy}
+      </button>
+      <span
+        id="isbn-checker-copy-status"
+        class="text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { checkCode, type CheckSuccess } from '../../lib/tools/isbn-checker';
+
+  interface Messages {
+    statusValid: string;
+    statusInvalid: string;
+    statusCompleted: string;
+    kindLabel: string;
+    kinds: Record<CheckSuccess['kind'], string>;
+    checkDigitLabel: string;
+    completedLabel: string;
+    isbn10Label: string;
+    isbn13Label: string;
+    noteLabel: string;
+    noteIsbn978: string;
+    noteIsbn979: string;
+    noteJapanJan: string;
+    errors: { empty: string; chars: string; length: string };
+  }
+
+  const input = document.getElementById(
+    'isbn-checker-input',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('isbn-checker-error')!;
+  const resultEl = document.getElementById('isbn-checker-result')!;
+  const statusEl = document.getElementById('isbn-checker-status')!;
+  const listEl = document.getElementById('isbn-checker-list')!;
+  const copyButton = document.getElementById(
+    'isbn-checker-copy-button',
+  ) as HTMLButtonElement;
+  const copyStatus = document.getElementById('isbn-checker-copy-status')!;
+  const messages = JSON.parse(resultEl.dataset.messages ?? '{}') as Messages;
+
+  let completed = '';
+
+  function addRow(label: string, value: string, mono = false) {
+    const dt = document.createElement('dt');
+    dt.className = 'text-sm text-gray-600 dark:text-gray-400';
+    dt.textContent = label;
+    const dd = document.createElement('dd');
+    dd.className = mono ? 'font-mono break-all' : 'break-words';
+    dd.textContent = value;
+    listEl.append(dt, dd);
+  }
+
+  function update() {
+    copyStatus.textContent = '';
+    listEl.replaceChildren();
+    const result = checkCode(input.value);
+    if (!result.ok) {
+      completed = '';
+      resultEl.hidden = true;
+      if (result.error === 'empty') {
+        errorEl.hidden = true;
+        errorEl.textContent = '';
+      } else {
+        errorEl.textContent = messages.errors[result.error];
+        errorEl.hidden = false;
+      }
+      return;
+    }
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    resultEl.hidden = false;
+    completed = result.completed;
+
+    const template = !result.hasCheck
+      ? messages.statusCompleted
+      : result.valid
+        ? messages.statusValid
+        : messages.statusInvalid;
+    statusEl.textContent = template.replace('{check}', result.checkDigit);
+    statusEl.className = result.valid
+      ? 'mb-3 font-medium text-green-700 dark:text-green-400'
+      : 'mb-3 font-medium text-red-700 dark:text-red-400';
+
+    addRow(messages.kindLabel, messages.kinds[result.kind]);
+    addRow(messages.checkDigitLabel, result.checkDigit, true);
+    addRow(messages.completedLabel, result.completed, true);
+    if (result.isbn10) addRow(messages.isbn10Label, result.isbn10, true);
+    if (result.isbn13) addRow(messages.isbn13Label, result.isbn13, true);
+    if (result.isbnPrefix === '978') {
+      addRow(messages.noteLabel, messages.noteIsbn978);
+    } else if (result.isbnPrefix === '979') {
+      addRow(messages.noteLabel, messages.noteIsbn979);
+    }
+    if (result.japanJan) addRow(messages.noteLabel, messages.noteJapanJan);
+  }
+
+  onTextInput(input, update);
+
+  copyButton.addEventListener('click', async () => {
+    if (!completed) return;
+    copyStatus.textContent = (await copyText(completed))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  update();
+</script>

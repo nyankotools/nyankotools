@@ -159,7 +159,7 @@ test.describe('サイドバー上部の固定（デスクトップ・高さ768px
     page,
   }) => {
     // 中身がスクロールしない高さにしてから、高さを足してスクロールバーを出す
-    await page.setViewportSize({ width: 1024, height: 3000 });
+    await page.setViewportSize({ width: 1024, height: 12000 });
     await page.goto('/tools/char-counter/');
     const sidebar = page.locator('#sidebar');
 
@@ -175,7 +175,7 @@ test.describe('サイドバー上部の固定（デスクトップ・高さ768px
     await sidebar.evaluate((el) => {
       const spacer = document.createElement('div');
       spacer.id = 'qa-spacer';
-      spacer.style.height = '4000px';
+      spacer.style.height = '20000px';
       el.appendChild(spacer);
     });
 

@@ -1,0 +1,188 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { htmlEntityListContent } from '../../i18n/tools/html-entity-list';
+import { ENTITY_CATEGORIES } from '../../lib/tools/html-entity-list';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = htmlEntityListContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="hel-root"
+    data-count-text={t.countText}
+    data-copy-aria={t.copyAria}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-label-named={t.copyNamed}
+    data-label-decimal={t.copyDecimal}
+    data-label-hex={t.copyHex}
+    data-label-char={t.copyChar}
+  >
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="hel-search" class="ui-label">
+          {t.searchLabel}
+        </label>
+        <input
+          id="hel-search"
+          type="text"
+          placeholder={t.searchPlaceholder}
+          autocomplete="off"
+          spellcheck="false"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label for="hel-category" class="ui-label">
+          {t.categoryLabel}
+        </label>
+        <select
+          id="hel-category"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          <option value="all">{t.categoryAll}</option>
+          {ENTITY_CATEGORIES.map((c) => (
+            <option value={c}>{t.categories[c]}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <p
+      id="hel-count"
+      class="mt-3 text-sm text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+    <p
+      id="hel-empty"
+      hidden
+      class="mt-3 text-sm text-gray-600 dark:text-gray-400"
+    >
+      {t.noResults}
+    </p>
+    <ul
+      id="hel-list"
+      class="mt-3 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-3"
+    ></ul>
+    <p id="hel-status" class="sr-only" aria-live="polite"></p>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    HTML_ENTITIES,
+    filterEntities,
+    previewChar,
+    type EntityCategory,
+  } from '../../lib/tools/html-entity-list';
+
+  const root = document.getElementById('hel-root')!;
+  const search = document.getElementById('hel-search') as HTMLInputElement;
+  const categorySelect = document.getElementById(
+    'hel-category',
+  ) as HTMLSelectElement;
+  const list = document.getElementById('hel-list')!;
+  const countEl = document.getElementById('hel-count')!;
+  const emptyEl = document.getElementById('hel-empty')!;
+  const statusEl = document.getElementById('hel-status')!;
+
+  function makeCopyButton(
+    kind: 'named' | 'decimal' | 'hex' | 'char',
+    value: string,
+    entityName: string,
+  ): HTMLButtonElement {
+    const label = root.dataset[`label${kind[0].toUpperCase()}${kind.slice(1)}`];
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.dataset.copy = value;
+    btn.className = 'ui-btn min-h-9 min-w-0 flex-1 px-2 py-1 text-xs break-all';
+    btn.setAttribute(
+      'aria-label',
+      (root.dataset.copyAria ?? '')
+        .replace('{name}', entityName)
+        .replace('{value}', label ?? kind),
+    );
+    btn.title = value;
+    const labelEl = document.createElement('span');
+    labelEl.className = 'block text-[10px] text-gray-600 dark:text-gray-400';
+    labelEl.textContent = label ?? kind;
+    const valueEl = document.createElement('span');
+    valueEl.className = 'block font-mono';
+    valueEl.textContent = kind === 'char' ? '' : value;
+    btn.append(labelEl);
+    if (kind !== 'char') btn.append(valueEl);
+    return btn;
+  }
+
+  function render() {
+    const category = categorySelect.value as EntityCategory | 'all';
+    const items = filterEntities(search.value, category, HTML_ENTITIES);
+    statusEl.textContent = '';
+    countEl.textContent = (root.dataset.countText ?? '').replace(
+      '{count}',
+      String(items.length),
+    );
+    emptyEl.hidden = items.length > 0;
+    const frag = document.createDocumentFragment();
+    for (const e of items) {
+      const li = document.createElement('li');
+      li.className =
+        'rounded-lg border border-gray-300 p-3 dark:border-gray-700';
+      const head = document.createElement('div');
+      head.className = 'flex items-center gap-3';
+      const glyph = document.createElement('span');
+      glyph.className =
+        'flex h-12 w-12 shrink-0 items-center justify-center rounded bg-gray-100 text-2xl dark:bg-gray-800';
+      glyph.setAttribute('aria-hidden', 'true');
+      glyph.textContent = previewChar(e);
+      const title = document.createElement('span');
+      title.className = 'min-w-0 font-mono text-sm font-bold break-all';
+      title.textContent = e.named;
+      head.append(glyph, title);
+      const buttons = document.createElement('div');
+      buttons.className = 'mt-2 grid grid-cols-2 gap-2';
+      buttons.append(
+        makeCopyButton('named', e.named, e.name),
+        makeCopyButton('char', e.char, e.name),
+        makeCopyButton('decimal', e.decimal, e.name),
+        makeCopyButton('hex', e.hex, e.name),
+      );
+      li.append(head, buttons);
+      frag.append(li);
+    }
+    list.replaceChildren(frag);
+  }
+
+  list.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(
+      'button[data-copy]',
+    );
+    if (!btn) return;
+    const value = btn.dataset.copy!;
+    const ok = await copyText(value);
+    const message = ok
+      ? (root.dataset.copied ?? '')
+      : (root.dataset.copyFailed ?? '');
+    statusEl.textContent = ok ? `${value} ${message}` : message;
+    btn.querySelector('[data-toast]')?.remove();
+    const toast = document.createElement('span');
+    toast.dataset.toast = '';
+    toast.textContent = message;
+    toast.className =
+      'pointer-events-none absolute -top-2 right-1 rounded bg-gray-900 px-2 py-1 text-xs font-bold text-white shadow dark:bg-white dark:text-gray-900';
+    btn.classList.add('relative');
+    btn.append(toast);
+    window.setTimeout(() => toast.remove(), 1500);
+  });
+
+  search.addEventListener('input', render);
+  categorySelect.addEventListener('change', render);
+  render();
+</script>

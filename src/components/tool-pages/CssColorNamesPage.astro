@@ -1,0 +1,180 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cssColorNamesContent } from '../../i18n/tools/css-color-names';
+import { COLOR_GROUPS } from '../../lib/tools/css-color-names';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cssColorNamesContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="ccn-root"
+    data-count-text={t.countText}
+    data-copy-aria={t.copyAria}
+    data-copy-title={t.copyTitle}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div>
+        <label for="ccn-search" class="ui-label">
+          {t.searchLabel}
+        </label>
+        <input
+          id="ccn-search"
+          type="text"
+          placeholder={t.searchPlaceholder}
+          autocomplete="off"
+          spellcheck="false"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label for="ccn-group" class="ui-label">
+          {t.groupLabel}
+        </label>
+        <select
+          id="ccn-group"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          <option value="all">{t.groupAll}</option>
+          {COLOR_GROUPS.map((g) => (
+            <option value={g}>{t.groups[g]}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="ccn-mode" class="ui-label">
+          {t.copyModeLabel}
+        </label>
+        <select
+          id="ccn-mode"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          <option value="name">{t.copyModeName}</option>
+          <option value="hex">{t.copyModeHex}</option>
+          <option value="rgb">{t.copyModeRgb}</option>
+        </select>
+      </div>
+    </div>
+
+    <p
+      id="ccn-count"
+      class="mt-3 text-sm text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+    <p
+      id="ccn-empty"
+      hidden
+      class="mt-3 text-sm text-gray-600 dark:text-gray-400"
+    >
+      {t.noResults}
+    </p>
+    <ul
+      id="ccn-list"
+      class="mt-3 grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 lg:grid-cols-3"
+    ></ul>
+    <p id="ccn-status" class="sr-only" aria-live="polite"></p>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    CSS_COLORS,
+    filterColors,
+    readableTextColor,
+    type ColorGroup,
+  } from '../../lib/tools/css-color-names';
+
+  const root = document.getElementById('ccn-root')!;
+  const search = document.getElementById('ccn-search') as HTMLInputElement;
+  const groupSelect = document.getElementById('ccn-group') as HTMLSelectElement;
+  const modeSelect = document.getElementById('ccn-mode') as HTMLSelectElement;
+  const list = document.getElementById('ccn-list')!;
+  const countEl = document.getElementById('ccn-count')!;
+  const emptyEl = document.getElementById('ccn-empty')!;
+  const statusEl = document.getElementById('ccn-status')!;
+
+  function valueFor(c: (typeof CSS_COLORS)[number]): string {
+    if (modeSelect.value === 'hex') return c.hex;
+    if (modeSelect.value === 'rgb') return c.rgb;
+    return c.name;
+  }
+
+  function render() {
+    const group = groupSelect.value as ColorGroup | 'all';
+    const colors = filterColors(search.value, group, CSS_COLORS);
+    statusEl.textContent = '';
+    countEl.textContent = (root.dataset.countText ?? '').replace(
+      '{count}',
+      String(colors.length),
+    );
+    emptyEl.hidden = colors.length > 0;
+    const frag = document.createDocumentFragment();
+    for (const c of colors) {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.dataset.name = c.name;
+      btn.title = root.dataset.copyTitle ?? '';
+      btn.setAttribute(
+        'aria-label',
+        (root.dataset.copyAria ?? '')
+          .replace('{name}', c.name)
+          .replace('{value}', valueFor(c)),
+      );
+      btn.className =
+        'relative flex w-full flex-col items-start rounded-lg border border-gray-300 p-3 text-left dark:border-gray-700';
+      btn.style.backgroundColor = c.hex;
+      btn.style.color = readableTextColor(c.hex);
+      const name = document.createElement('span');
+      name.className = 'text-base font-bold break-all';
+      name.textContent = c.name;
+      const code = document.createElement('span');
+      code.className = 'mt-1 font-mono text-sm';
+      code.textContent = c.hex.toUpperCase();
+      const rgb = document.createElement('span');
+      rgb.className = 'font-mono text-xs';
+      rgb.textContent = c.rgb;
+      btn.append(name, code, rgb);
+      li.append(btn);
+      frag.append(li);
+    }
+    list.replaceChildren(frag);
+  }
+
+  list.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(
+      'button[data-name]',
+    );
+    if (!btn) return;
+    const color = CSS_COLORS.find((c) => c.name === btn.dataset.name);
+    if (!color) return;
+    const value = valueFor(color);
+    const ok = await copyText(value);
+    const message = ok
+      ? (root.dataset.copied ?? '')
+      : (root.dataset.copyFailed ?? '');
+    statusEl.textContent = ok ? `${value} ${message}` : message;
+    btn.querySelector('[data-toast]')?.remove();
+    const toast = document.createElement('span');
+    toast.dataset.toast = '';
+    toast.textContent = message;
+    toast.className =
+      'pointer-events-none absolute top-2 right-2 rounded bg-gray-900 px-2 py-1 text-xs font-bold text-white shadow dark:bg-white dark:text-gray-900';
+    btn.append(toast);
+    window.setTimeout(() => toast.remove(), 1500);
+  });
+
+  search.addEventListener('input', render);
+  groupSelect.addEventListener('change', render);
+  modeSelect.addEventListener('change', render);
+  render();
+</script>

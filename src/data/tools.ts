@@ -12542,6 +12542,158 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'file-base64-converter',
+    category: 'encode',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['image-to-base64', 'base64', 'svg-to-data-uri'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ファイルのBase64・Data URI変換',
+        keywords: [
+          'ファイルBase64',
+          'Data URI',
+          'データURI',
+          'PDF Base64',
+          'Base64 ファイル復元',
+          'フォント 埋め込み',
+        ],
+        description:
+          'PDF・音声・フォント・ZIPなど任意のファイルをBase64やData URIに変換し、Base64からファイルに戻して保存できます。',
+      },
+      en: {
+        name: 'File to Base64 / Data URI Converter',
+        keywords: [
+          'file to base64',
+          'data URI',
+          'pdf to base64',
+          'base64 to file',
+          'base64 decode file',
+          'embed font',
+        ],
+        description:
+          'Converts any file (PDF, audio, fonts, ZIP) to Base64 or a Data URI, and decodes Base64 back into a downloadable file.',
+      },
+    },
+  },
+  {
+    slug: 'svg-to-data-uri',
+    category: 'encode',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: [
+      'css-pattern-background',
+      'image-to-base64',
+      'file-base64-converter',
+    ],
+    translations: {
+      ja: {
+        name: 'SVG→Data URI変換',
+        description:
+          'SVGコードをData URIに変換し、CSSのbackground-image用コードを出力。URLエンコード（軽量）とBase64を選べます。',
+        keywords: [
+          'SVG',
+          'Data URI',
+          'data:image/svg+xml',
+          'background-image',
+          'CSS背景',
+          'Base64',
+          'URLエンコード',
+        ],
+      },
+      en: {
+        name: 'SVG to Data URI Converter',
+        description:
+          'Convert SVG code to a data URI for CSS background-image, using compact URL encoding or Base64.',
+        keywords: [
+          'svg to data uri',
+          'data:image/svg+xml',
+          'css background-image',
+          'svg base64',
+          'inline svg',
+          'url encode svg',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'css-color-names',
+    category: 'dev',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: [
+      'color-converter',
+      'japanese-traditional-colors',
+      'color-palette-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSSカラー名一覧',
+        description:
+          'CSSで使える色名キーワード148色（red・tomato・rebeccapurple など）をHEX・RGBつきで一覧表示。名前やカラーコードで検索し、クリックでコピーできます。',
+        keywords: [
+          'CSS色名',
+          'カラーネーム',
+          'named colors',
+          'rebeccapurple',
+          'HEX',
+          'RGB',
+          '色一覧',
+        ],
+      },
+      en: {
+        name: 'CSS Color Names List',
+        description:
+          'Browse all 148 CSS named colors with HEX and RGB values. Search by name or code and click to copy.',
+        keywords: [
+          'css named colors',
+          'color keywords',
+          'rebeccapurple',
+          'hex',
+          'rgb',
+          'color names',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'html-entity-list',
+    category: 'dev',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['html-escape', 'special-char-list', 'unicode-inspector'],
+    translations: {
+      ja: {
+        name: 'HTMLエンティティ一覧',
+        description:
+          '&copy; などHTMLの文字参照を名前・10進・16進の数値参照つきで一覧表示。検索してコピーできる。',
+        keywords: [
+          'HTMLエンティティ',
+          '文字参照',
+          '実体参照',
+          '数値参照',
+          '&nbsp;',
+          '特殊文字',
+          'html entity',
+        ],
+      },
+      en: {
+        name: 'HTML Entity List',
+        description:
+          'Look up HTML character entities by name, decimal or hex code, then copy them.',
+        keywords: [
+          'html entities',
+          'character reference',
+          'named entity',
+          'numeric reference',
+          'nbsp',
+          'special characters',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

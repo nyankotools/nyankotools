@@ -176,4 +176,6 @@ export const howToSlugs = [
   'json-sorter',
   'query-string-json',
   'csv-split-merge',
+  'file-base64-converter',
+  'svg-to-data-uri',
 ];

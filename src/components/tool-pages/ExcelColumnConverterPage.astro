@@ -1,0 +1,286 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { excelColumnConverterContent } from '../../i18n/tools/excel-column-converter';
+import { referenceTable } from '../../lib/tools/excel-column-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = excelColumnConverterContent[locale];
+const table = referenceTable();
+---
+
+<ToolShell t={t}>
+  <section
+    class="mb-8"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    id="excel-col-section"
+  >
+    <h2 class="mb-3 text-lg font-semibold">{t.columnSectionHeading}</h2>
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div>
+        <label for="excel-col-letters" class="ui-label">
+          {t.columnLabel}
+        </label>
+        <div class="flex gap-2">
+          <input
+            id="excel-col-letters"
+            type="text"
+            placeholder={t.columnPlaceholder}
+            spellcheck="false"
+            autocomplete="off"
+            class="ui-input h-11 w-full min-w-0 px-3 font-mono uppercase dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          <button
+            type="button"
+            data-copy-target="excel-col-letters"
+            class="ui-btn shrink-0"
+          >
+            {t.copyButton}
+          </button>
+        </div>
+      </div>
+      <div>
+        <label for="excel-col-number" class="ui-label">
+          {t.numberLabel}
+        </label>
+        <div class="flex gap-2">
+          <input
+            id="excel-col-number"
+            type="text"
+            inputmode="numeric"
+            placeholder={t.numberPlaceholder}
+            spellcheck="false"
+            autocomplete="off"
+            class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          <button
+            type="button"
+            data-copy-target="excel-col-number"
+            class="ui-btn shrink-0"
+          >
+            {t.copyButton}
+          </button>
+        </div>
+      </div>
+    </div>
+    <p
+      id="excel-col-error"
+      data-invalid-column={t.errorInvalidColumn}
+      data-invalid-number={t.errorInvalidNumber}
+      data-range-column={t.errorOutOfRangeColumn}
+      data-range-number={t.errorOutOfRangeNumber}
+      class="ui-error mt-2 empty:hidden"
+      aria-live="polite"
+    ></p>
+    <span
+      id="excel-col-status"
+      class="block text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </section>
+
+  <section class="mb-8">
+    <h2 class="mb-3 text-lg font-semibold">{t.refSectionHeading}</h2>
+    <label for="excel-ref-input" class="ui-label">
+      {t.refLabel}
+    </label>
+    <input
+      id="excel-ref-input"
+      type="text"
+      placeholder={t.refPlaceholder}
+      spellcheck="false"
+      autocomplete="off"
+      class="ui-input h-11 w-full max-w-sm px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+    />
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.refHint}</p>
+    <p
+      id="excel-ref-error"
+      data-invalid={t.errorInvalidRef}
+      data-range={t.errorOutOfRangeRef}
+      data-l-column={t.resultColumn}
+      data-l-column-number={t.resultColumnNumber}
+      data-l-row={t.resultRow}
+      data-l-absolute={t.resultAbsolute}
+      data-l-start={t.resultStart}
+      data-l-end={t.resultEnd}
+      data-l-columns={t.resultColumns}
+      data-l-rows={t.resultRows}
+      data-l-cells={t.resultCells}
+      data-yes={t.yes}
+      data-no={t.no}
+      class="ui-error mt-2 empty:hidden"
+      aria-live="polite"
+    ></p>
+    <dl
+      id="excel-ref-result"
+      class="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm"
+    ></dl>
+  </section>
+
+  <section class="mb-8">
+    <h2 class="mb-3 text-lg font-semibold">{t.tableHeading}</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="border-b border-gray-300 dark:border-gray-700">
+            <th class="py-1 pr-4 font-medium">{t.tableColumnHeader}</th>
+            <th class="py-1 pr-4 font-medium">{t.tableNumberHeader}</th>
+            <th class="py-1 font-medium"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {table.map((row) => (
+            <tr class="border-b border-gray-200 dark:border-gray-800">
+              <td class="py-1 pr-4 font-mono">{row.column}</td>
+              <td class="py-1 pr-4 font-mono">{row.number}</td>
+              <td class="py-1 text-gray-600 dark:text-gray-400">
+                {t.tableNotes[row.column] ?? ''}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    columnToNumber,
+    numberToColumn,
+    parseReference,
+    type ConvertError,
+  } from '../../lib/tools/excel-column-converter';
+
+  const lettersInput = document.getElementById(
+    'excel-col-letters',
+  ) as HTMLInputElement;
+  const numberInput = document.getElementById(
+    'excel-col-number',
+  ) as HTMLInputElement;
+  const colError = document.getElementById('excel-col-error')!;
+  const status = document.getElementById('excel-col-status')!;
+  const section = document.getElementById('excel-col-section')!;
+
+  function colMessage(kind: 'column' | 'number', error: ConvertError): string {
+    if (error === 'invalid') {
+      return (
+        (kind === 'column'
+          ? colError.dataset.invalidColumn
+          : colError.dataset.invalidNumber) ?? ''
+      );
+    }
+    return (
+      (kind === 'column'
+        ? colError.dataset.rangeColumn
+        : colError.dataset.rangeNumber) ?? ''
+    );
+  }
+
+  lettersInput.addEventListener('input', () => {
+    status.textContent = '';
+    colError.textContent = '';
+    if (lettersInput.value.trim() === '') {
+      numberInput.value = '';
+      return;
+    }
+    const r = columnToNumber(lettersInput.value);
+    if (r.ok) {
+      numberInput.value = String(r.value);
+    } else {
+      numberInput.value = '';
+      colError.textContent = colMessage('column', r.error);
+    }
+  });
+
+  numberInput.addEventListener('input', () => {
+    status.textContent = '';
+    colError.textContent = '';
+    if (numberInput.value.trim() === '') {
+      lettersInput.value = '';
+      return;
+    }
+    const r = numberToColumn(numberInput.value);
+    if (r.ok) {
+      lettersInput.value = r.value;
+    } else {
+      lettersInput.value = '';
+      colError.textContent = colMessage('number', r.error);
+    }
+  });
+
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-copy-target]')
+    .forEach((button) => {
+      button.addEventListener('click', async () => {
+        const target = document.getElementById(
+          button.dataset.copyTarget!,
+        ) as HTMLInputElement;
+        if (!target.value) return;
+        status.textContent = (await copyText(target.value))
+          ? (section.dataset.copied ?? '')
+          : (section.dataset.copyFailed ?? '');
+      });
+    });
+
+  const refInput = document.getElementById(
+    'excel-ref-input',
+  ) as HTMLInputElement;
+  const refError = document.getElementById('excel-ref-error')!;
+  const refResult = document.getElementById('excel-ref-result')!;
+  const d = refError.dataset;
+
+  function addRow(label: string, value: string) {
+    const dt = document.createElement('dt');
+    dt.className = 'text-gray-600 dark:text-gray-400';
+    dt.textContent = label;
+    const dd = document.createElement('dd');
+    dd.className = 'font-mono';
+    dd.textContent = value;
+    refResult.append(dt, dd);
+  }
+
+  function absText(col: boolean, row: boolean): string {
+    const yes = d.yes ?? '';
+    const no = d.no ?? '';
+    return `${col ? yes : no} / ${row ? yes : no}`;
+  }
+
+  refInput.addEventListener('input', () => {
+    refError.textContent = '';
+    refResult.replaceChildren();
+    if (refInput.value.trim() === '') return;
+    const r = parseReference(refInput.value);
+    if (!r.ok) {
+      refError.textContent =
+        (r.error === 'invalid' ? d.invalid : d.range) ?? '';
+      return;
+    }
+    if (r.value.kind === 'cell') {
+      const c = r.value.cell;
+      addRow(d.lColumn ?? '', c.column);
+      addRow(d.lColumnNumber ?? '', String(c.columnNumber));
+      addRow(d.lRow ?? '', String(c.row));
+      addRow(d.lAbsolute ?? '', absText(c.absoluteColumn, c.absoluteRow));
+    } else {
+      const g = r.value.range;
+      addRow(
+        d.lStart ?? '',
+        `${g.start.column}${g.start.row} (${g.start.columnNumber})`,
+      );
+      addRow(
+        d.lEnd ?? '',
+        `${g.end.column}${g.end.row} (${g.end.columnNumber})`,
+      );
+      addRow(d.lColumns ?? '', String(g.columns));
+      addRow(d.lRows ?? '', String(g.rows));
+      addRow(d.lCells ?? '', String(g.cells));
+    }
+  });
+</script>

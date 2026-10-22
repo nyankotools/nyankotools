@@ -12392,6 +12392,156 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'yaml-formatter',
+    category: 'data',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['yaml-json-converter', 'json-sorter', 'xml-formatter'],
+    translations: {
+      ja: {
+        name: 'YAML整形・構文チェック',
+        description:
+          'YAMLをインデント整形し、構文エラーを行・列つきで表示。キーソートや複数ドキュメントにも対応',
+        keywords: [
+          'YAML',
+          'yml',
+          '整形',
+          'フォーマット',
+          'バリデーション',
+          'キーソート',
+          'リンター',
+        ],
+      },
+      en: {
+        name: 'YAML Formatter & Validator',
+        description:
+          'Format and validate YAML with line and column error positions. Sort keys and handle multiple documents.',
+        keywords: [
+          'yaml',
+          'yml',
+          'formatter',
+          'beautify',
+          'validator',
+          'lint',
+          'sort keys',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'csv-split-merge',
+    category: 'data',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['csv-viewer', 'csv-json-converter', 'zip-tool'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'CSV分割・結合・重複行削除',
+        description:
+          'CSVを行数・個数で分割（ZIP出力）、複数CSVの結合（見出しチェック付き）、キー列での重複行削除。ブラウザ内で完結',
+        keywords: [
+          'CSV分割',
+          'CSV結合',
+          'CSV重複削除',
+          'CSVマージ',
+          'CSVスプリット',
+          '重複行削除',
+          'ファイル分割',
+        ],
+      },
+      en: {
+        name: 'CSV Split, Merge and Remove Duplicates',
+        description:
+          'Split CSV by rows or file count (ZIP), merge CSVs with header checks, and remove duplicate rows by key column. Runs in your browser.',
+        keywords: [
+          'csv splitter',
+          'csv merge',
+          'combine csv',
+          'remove duplicate rows',
+          'dedupe csv',
+          'split csv by rows',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'excel-column-converter',
+    category: 'data',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['base-converter', 'csv-viewer'],
+    translations: {
+      ja: {
+        name: 'Excel列番号⇔列記号変換',
+        description:
+          'Excelの列記号（A、AZ、XFD）と列番号を相互変換。$B$3のA1参照の分解、A1:C10の列数・行数・セル数の計算にも対応',
+        keywords: [
+          'Excel',
+          '列番号',
+          '列記号',
+          'A1参照',
+          'セル参照',
+          '範囲',
+          'スプレッドシート',
+          'XFD',
+        ],
+      },
+      en: {
+        name: 'Excel Column Letter ⇔ Number Converter',
+        description:
+          'Convert Excel column letters and numbers (A=1, AZ=52, XFD=16384), split A1 references like $B$3, and count columns in a range.',
+        keywords: [
+          'excel column number',
+          'column letter',
+          'A1 reference',
+          'cell reference',
+          'range',
+          'spreadsheet',
+          'XFD',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'query-string-json',
+    category: 'data',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['url-parser', 'json-formatter', 'json-sorter'],
+    translations: {
+      ja: {
+        name: 'クエリ文字列⇔JSON変換',
+        description:
+          'URLのクエリ文字列とJSONを相互変換。a[b][c]のネストと、b[]・b[0]・繰り返しの配列表記に対応します',
+        keywords: [
+          'クエリ文字列',
+          'クエリパラメータ',
+          'JSON',
+          'URL',
+          'query string',
+          'querystring',
+          'qs',
+          'パラメータ',
+        ],
+      },
+      en: {
+        name: 'Query String ⇔ JSON Converter',
+        description:
+          'Convert URL query strings to JSON and back, with nested keys and b[] / b[0] / repeated-key array styles.',
+        keywords: [
+          'query string',
+          'querystring',
+          'query params',
+          'URL parameters',
+          'JSON',
+          'qs',
+          'urlencoded',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

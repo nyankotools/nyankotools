@@ -1,0 +1,678 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { csvSplitMergeContent } from '../../i18n/tools/csv-split-merge';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = csvSplitMergeContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="csv-split-merge-root"
+    data-split-done={t.splitDoneTemplate}
+    data-merge-done={t.mergeDoneTemplate}
+    data-dedupe-done={t.dedupeDoneTemplate}
+    data-file-selected={t.fileSelectedTemplate}
+    data-warn-large={t.warnLargeTemplate}
+    data-error-template={t.errorTemplate}
+    data-file-error-template={t.fileErrorTemplate}
+    data-error-no-file={t.errorNoFile}
+    data-error-too-few-files={t.errorTooFewFiles}
+    data-error-empty={t.errorEmpty}
+    data-error-unterminated-quote={t.errorUnterminatedQuote}
+    data-error-too-large={t.errorTooLarge}
+    data-error-invalid-value={t.errorInvalidValue}
+    data-error-too-many-parts={t.errorTooManyParts}
+    data-error-no-rows={t.errorNoRows}
+    data-error-header-mismatch={t.errorHeaderMismatchTemplate}
+    data-error-read-failed={t.errorReadFailed}
+    data-merge-remove={t.mergeRemoveTemplate}
+    data-column-name={t.columnNameTemplate}
+  >
+    <div
+      id="csv-split-merge-mode"
+      class="ui-seg"
+      role="group"
+      aria-label={t.modeLabel}
+    >
+      <button
+        type="button"
+        data-mode="split"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.modeSplit}
+      </button>
+      <button
+        type="button"
+        data-mode="merge"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeMerge}
+      </button>
+      <button
+        type="button"
+        data-mode="dedupe"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeDedupe}
+      </button>
+    </div>
+
+    <fieldset class="mt-4 min-w-0">
+      <legend class="ui-label">{t.settingsHeading}</legend>
+      <div class="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
+        <span class="flex items-center gap-2">
+          <label
+            for="csv-split-merge-encoding"
+            class="text-sm text-gray-700 dark:text-gray-300"
+          >
+            {t.encodingLabel}
+          </label>
+          <select
+            id="csv-split-merge-encoding"
+            class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+          >
+            {t.encodingOptions.map(({ value, label }) => (
+              <option value={value}>{label}</option>
+            ))}
+          </select>
+        </span>
+        <span class="flex items-center gap-2">
+          <label
+            for="csv-split-merge-delimiter"
+            class="text-sm text-gray-700 dark:text-gray-300"
+          >
+            {t.delimiterLabel}
+          </label>
+          <select
+            id="csv-split-merge-delimiter"
+            class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+          >
+            {t.delimiterOptions.map(({ value, label }) => (
+              <option value={value}>{label}</option>
+            ))}
+          </select>
+        </span>
+        <label class="ui-check">
+          <input id="csv-split-merge-has-header" type="checkbox" checked />
+          <span>{t.hasHeaderLabel}</span>
+        </label>
+        <label class="ui-check">
+          <input id="csv-split-merge-bom" type="checkbox" checked />
+          <span>{t.bomLabel}</span>
+        </label>
+      </div>
+    </fieldset>
+
+    <!-- 分割 -->
+    <section id="csv-split-merge-panel-split" class="mt-4">
+      <label for="csv-split-merge-split-file" class="ui-label">
+        {t.splitFileLabel}
+      </label>
+      <div id="csv-split-merge-split-dropzone" class="ui-dropzone">
+        <input id="csv-split-merge-split-file" type="file" class="ui-file" />
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {t.fileHint}
+        </p>
+      </div>
+      <p
+        id="csv-split-merge-split-name"
+        class="mt-1 text-sm text-gray-700 dark:text-gray-300"
+      ></p>
+      <div class="mt-3 flex flex-wrap items-end gap-3">
+        <div>
+          <label for="csv-split-merge-split-by" class="ui-label">
+            {t.splitByLabel}
+          </label>
+          <select
+            id="csv-split-merge-split-by"
+            class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+          >
+            {t.splitByOptions.map(({ value, label }) => (
+              <option value={value}>{label}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label for="csv-split-merge-split-value" class="ui-label">
+            {t.splitValueLabel}
+          </label>
+          <input
+            id="csv-split-merge-split-value"
+            type="number"
+            min="1"
+            step="1"
+            value="1000"
+            inputmode="numeric"
+            class="ui-input w-32 px-3 py-2 dark:bg-gray-900"
+          />
+        </div>
+        <button
+          id="csv-split-merge-split-button"
+          type="button"
+          class="ui-btn ui-btn-primary"
+        >
+          {t.splitButton}
+        </button>
+      </div>
+    </section>
+
+    <!-- 結合 -->
+    <section id="csv-split-merge-panel-merge" class="mt-4" hidden>
+      <label for="csv-split-merge-merge-file" class="ui-label">
+        {t.mergeFileLabel}
+      </label>
+      <div id="csv-split-merge-merge-dropzone" class="ui-dropzone">
+        <input
+          id="csv-split-merge-merge-file"
+          type="file"
+          multiple
+          class="ui-file"
+        />
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {t.mergeFileHint}
+        </p>
+      </div>
+      <div id="csv-split-merge-merge-list-wrap" class="mt-3" hidden>
+        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t.mergeFilesHeading}
+        </p>
+        <ol
+          id="csv-split-merge-merge-list"
+          class="mt-1 list-inside list-decimal space-y-1 text-sm"
+        ></ol>
+        <button
+          id="csv-split-merge-merge-clear"
+          type="button"
+          class="mt-2 rounded border border-gray-300 px-2 py-1 text-sm hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800"
+        >
+          {t.mergeClearButton}
+        </button>
+      </div>
+      <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+        <label class="ui-check">
+          <input id="csv-split-merge-validate-header" type="checkbox" checked />
+          <span>{t.validateHeaderLabel}</span>
+        </label>
+        <button
+          id="csv-split-merge-merge-button"
+          type="button"
+          class="ui-btn ui-btn-primary"
+        >
+          {t.mergeButton}
+        </button>
+      </div>
+    </section>
+
+    <!-- 重複削除 -->
+    <section id="csv-split-merge-panel-dedupe" class="mt-4" hidden>
+      <label for="csv-split-merge-dedupe-file" class="ui-label">
+        {t.dedupeFileLabel}
+      </label>
+      <div id="csv-split-merge-dedupe-dropzone" class="ui-dropzone">
+        <input id="csv-split-merge-dedupe-file" type="file" class="ui-file" />
+        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          {t.fileHint}
+        </p>
+      </div>
+      <p
+        id="csv-split-merge-dedupe-name"
+        class="mt-1 text-sm text-gray-700 dark:text-gray-300"
+      ></p>
+      <fieldset class="mt-3 min-w-0">
+        <legend class="ui-label">{t.keyColumnsHeading}</legend>
+        <p class="text-xs text-gray-600 dark:text-gray-400">
+          {t.keyColumnsHint}
+        </p>
+        <div
+          id="csv-split-merge-key-columns"
+          class="mt-1 flex flex-wrap gap-x-4 gap-y-0"
+        ></div>
+      </fieldset>
+      <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+        <span class="flex items-center gap-2">
+          <label
+            for="csv-split-merge-keep"
+            class="text-sm text-gray-700 dark:text-gray-300"
+          >
+            {t.keepLabel}
+          </label>
+          <select
+            id="csv-split-merge-keep"
+            class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+          >
+            {t.keepOptions.map(({ value, label }) => (
+              <option value={value}>{label}</option>
+            ))}
+          </select>
+        </span>
+        <label class="ui-check">
+          <input id="csv-split-merge-ignore-case" type="checkbox" />
+          <span>{t.ignoreCaseLabel}</span>
+        </label>
+        <label class="ui-check">
+          <input id="csv-split-merge-trim" type="checkbox" />
+          <span>{t.trimLabel}</span>
+        </label>
+      </div>
+      <button
+        id="csv-split-merge-dedupe-button"
+        type="button"
+        class="ui-btn ui-btn-primary mt-3"
+      >
+        {t.dedupeButton}
+      </button>
+    </section>
+
+    <p
+      id="csv-split-merge-warn"
+      hidden
+      class="mt-4 max-w-2xl text-sm text-amber-800 dark:text-amber-300"
+    ></p>
+    <p
+      id="csv-split-merge-error"
+      role="alert"
+      hidden
+      class="ui-error mt-4 max-w-2xl whitespace-pre-line"
+    ></p>
+    <p
+      id="csv-split-merge-status"
+      aria-live="polite"
+      class="mt-4 text-sm text-green-700 dark:text-green-400"
+    ></p>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    createZip,
+    formatBytes,
+    zipFileName,
+  } from '../../lib/tools/zip-tool';
+  import {
+    checkFileSize,
+    columnCount,
+    decodeCsvBytes,
+    dedupeRows,
+    detectDelimiter,
+    encodeCsvText,
+    mergeCsvData,
+    parseCsvData,
+    serializeCsv,
+    splitFileName,
+    splitRows,
+    stripExtension,
+    type CsvData,
+    type CsvEncoding,
+  } from '../../lib/tools/csv-split-merge';
+
+  const root = document.getElementById('csv-split-merge-root')!;
+  const d = root.dataset;
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`csv-split-merge-${id}`) as T;
+
+  const encodingSelect = $<HTMLSelectElement>('encoding');
+  const delimiterSelect = $<HTMLSelectElement>('delimiter');
+  const hasHeader = $<HTMLInputElement>('has-header');
+  const bom = $<HTMLInputElement>('bom');
+  const warnEl = $('warn');
+  const errorEl = $('error');
+  const statusEl = $('status');
+
+  const splitFileInput = $<HTMLInputElement>('split-file');
+  const splitName = $('split-name');
+  const splitBy = $<HTMLSelectElement>('split-by');
+  const splitValue = $<HTMLInputElement>('split-value');
+
+  const mergeFileInput = $<HTMLInputElement>('merge-file');
+  const mergeListWrap = $('merge-list-wrap');
+  const mergeList = $('merge-list');
+  const validateHeader = $<HTMLInputElement>('validate-header');
+
+  const dedupeFileInput = $<HTMLInputElement>('dedupe-file');
+  const dedupeName = $('dedupe-name');
+  const keyColumnsEl = $('key-columns');
+  const keepSelect = $<HTMLSelectElement>('keep');
+  const ignoreCase = $<HTMLInputElement>('ignore-case');
+  const trim = $<HTMLInputElement>('trim');
+
+  let splitFile: File | null = null;
+  let mergeFiles: File[] = [];
+  let dedupeFile: File | null = null;
+
+  const fill = (template: string | undefined, values: Record<string, string>) =>
+    (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      key in values ? values[key] : match,
+    );
+
+  function clearMessages() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    statusEl.textContent = '';
+  }
+
+  function showError(message: string) {
+    statusEl.textContent = '';
+    errorEl.textContent = fill(d.errorTemplate, { message });
+    errorEl.hidden = false;
+  }
+
+  function showWarnings(files: File[]) {
+    const large = files.filter((f) => checkFileSize(f.size) === 'warn');
+    warnEl.textContent = large
+      .map((f) => fill(d.warnLarge, { name: f.name }))
+      .join('\n');
+    warnEl.hidden = large.length === 0;
+  }
+
+  function reasonMessage(reason: string): string {
+    switch (reason) {
+      case 'empty':
+        return d.errorEmpty ?? '';
+      case 'unterminated-quote':
+        return d.errorUnterminatedQuote ?? '';
+      case 'too-large':
+        return d.errorTooLarge ?? '';
+      case 'invalid-value':
+        return d.errorInvalidValue ?? '';
+      case 'too-many-parts':
+        return d.errorTooManyParts ?? '';
+      case 'no-rows':
+        return d.errorNoRows ?? '';
+      case 'too-few-files':
+        return d.errorTooFewFiles ?? '';
+      default:
+        return d.errorReadFailed ?? '';
+    }
+  }
+
+  function resolveDelimiter(text: string): string {
+    switch (delimiterSelect.value) {
+      case 'auto':
+        return detectDelimiter(text);
+      case 'tab':
+        return '\t';
+      default:
+        return delimiterSelect.value;
+    }
+  }
+
+  type ReadOutcome =
+    | { ok: true; data: CsvData; delimiter: string }
+    | { ok: false; message: string };
+
+  async function readCsv(file: File, withName: boolean): Promise<ReadOutcome> {
+    const wrap = (message: string) =>
+      withName
+        ? fill(d.fileErrorTemplate, { name: file.name, message })
+        : message;
+    if (checkFileSize(file.size) === 'too-large') {
+      return { ok: false, message: wrap(reasonMessage('too-large')) };
+    }
+    let text: string;
+    try {
+      text = decodeCsvBytes(
+        new Uint8Array(await file.arrayBuffer()),
+        encodingSelect.value as CsvEncoding,
+      );
+    } catch {
+      return { ok: false, message: wrap(reasonMessage('read-failed')) };
+    }
+    const delimiter = resolveDelimiter(text);
+    const parsed = parseCsvData(text, delimiter, hasHeader.checked);
+    if (!parsed.success) {
+      return { ok: false, message: wrap(reasonMessage(parsed.reason)) };
+    }
+    return { ok: true, data: parsed.data, delimiter };
+  }
+
+  const extensionFor = (delimiter: string) =>
+    delimiter === '\t' ? 'tsv' : 'csv';
+
+  function csvBlob(text: string): Blob {
+    return new Blob([encodeCsvText(text, bom.checked) as BlobPart], {
+      type: 'text/csv;charset=utf-8',
+    });
+  }
+
+  function describeFile(file: File | null): string {
+    return file
+      ? fill(d.fileSelected, { name: file.name, size: formatBytes(file.size) })
+      : '';
+  }
+
+  // ---------- モード切り替え ----------
+  const modeButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>(
+      '#csv-split-merge-mode button',
+    ),
+  );
+  function setMode(mode: string) {
+    modeButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.mode === mode)),
+    );
+    for (const name of ['split', 'merge', 'dedupe']) {
+      $(`panel-${name}`).hidden = name !== mode;
+    }
+    clearMessages();
+    showWarnings(
+      mode === 'split'
+        ? splitFile
+          ? [splitFile]
+          : []
+        : mode === 'merge'
+          ? mergeFiles
+          : dedupeFile
+            ? [dedupeFile]
+            : [],
+    );
+  }
+  modeButtons.forEach((b) =>
+    b.addEventListener('click', () => setMode(b.dataset.mode ?? 'split')),
+  );
+
+  // ---------- 分割 ----------
+  enableFileDrop($('split-dropzone'), splitFileInput);
+  splitFileInput.addEventListener('change', () => {
+    const file = splitFileInput.files?.[0] ?? null;
+    splitFileInput.value = '';
+    if (!file) return;
+    splitFile = file;
+    splitName.textContent = describeFile(file);
+    clearMessages();
+    showWarnings([file]);
+  });
+
+  $('split-button').addEventListener('click', async () => {
+    clearMessages();
+    if (!splitFile) return showError(d.errorNoFile ?? '');
+    const read = await readCsv(splitFile, false);
+    if (!read.ok) return showError(read.message);
+    const { data, delimiter } = read;
+    const result = splitRows(data.rows, {
+      mode: splitBy.value === 'parts' ? 'parts' : 'rows',
+      value: Number(splitValue.value),
+    });
+    if (!result.success) return showError(reasonMessage(result.reason));
+    const stem = stripExtension(splitFile.name);
+    const total = result.chunks.length;
+    const ext = extensionFor(delimiter);
+    try {
+      const zip = createZip(
+        result.chunks.map((rows, i) => ({
+          name: splitFileName(stem, i, total, ext),
+          data: encodeCsvText(
+            serializeCsv(data.header, rows, delimiter),
+            bom.checked,
+          ),
+        })),
+        6,
+      );
+      downloadBlob(
+        new Blob([zip as BlobPart], { type: 'application/zip' }),
+        zipFileName(`${stem}_split`),
+      );
+    } catch {
+      return showError(reasonMessage('too-large'));
+    }
+    statusEl.textContent = fill(d.splitDone, {
+      files: String(total),
+      rows: String(data.rows.length),
+    });
+  });
+
+  // ---------- 結合 ----------
+  function renderMergeList() {
+    mergeList.textContent = '';
+    mergeFiles.forEach((file, index) => {
+      const li = document.createElement('li');
+      const label = document.createElement('span');
+      label.textContent = describeFile(file);
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.textContent = '×';
+      remove.className =
+        'ml-2 rounded border border-gray-300 px-2 text-sm hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800';
+      remove.setAttribute(
+        'aria-label',
+        fill(d.mergeRemove, { name: file.name }),
+      );
+      remove.addEventListener('click', () => {
+        mergeFiles.splice(index, 1);
+        renderMergeList();
+        showWarnings(mergeFiles);
+        clearMessages();
+      });
+      li.append(label, remove);
+      mergeList.append(li);
+    });
+    mergeListWrap.hidden = mergeFiles.length === 0;
+  }
+
+  enableFileDrop($('merge-dropzone'), mergeFileInput);
+  mergeFileInput.addEventListener('change', () => {
+    const files = Array.from(mergeFileInput.files ?? []);
+    mergeFileInput.value = '';
+    if (files.length === 0) return;
+    mergeFiles = mergeFiles.concat(files);
+    renderMergeList();
+    clearMessages();
+    showWarnings(mergeFiles);
+  });
+  $('merge-clear').addEventListener('click', () => {
+    mergeFiles = [];
+    renderMergeList();
+    clearMessages();
+    showWarnings([]);
+  });
+
+  $('merge-button').addEventListener('click', async () => {
+    clearMessages();
+    if (mergeFiles.length < 2) return showError(reasonMessage('too-few-files'));
+    const inputs: { name: string; data: CsvData }[] = [];
+    let outputDelimiter = ',';
+    for (const file of mergeFiles) {
+      const read = await readCsv(file, true);
+      if (!read.ok) return showError(read.message);
+      if (inputs.length === 0) outputDelimiter = read.delimiter;
+      inputs.push({ name: file.name, data: read.data });
+    }
+    const result = mergeCsvData(inputs, validateHeader.checked);
+    if (!result.success) {
+      return showError(
+        result.reason === 'header-mismatch'
+          ? fill(d.errorHeaderMismatch, {
+              name: inputs[result.fileIndex ?? 0].name,
+            })
+          : reasonMessage(result.reason),
+      );
+    }
+    const text = serializeCsv(
+      result.data.header,
+      result.data.rows,
+      outputDelimiter,
+    );
+    downloadBlob(
+      csvBlob(text),
+      `${stripExtension(mergeFiles[0].name)}_merged.${extensionFor(outputDelimiter)}`,
+    );
+    statusEl.textContent = fill(d.mergeDone, {
+      files: String(inputs.length),
+      rows: String(result.rowCount),
+    });
+  });
+
+  // ---------- 重複削除 ----------
+  let keyColumnsRun = 0;
+  async function loadKeyColumns() {
+    const run = ++keyColumnsRun;
+    keyColumnsEl.textContent = '';
+    if (!dedupeFile) return;
+    const read = await readCsv(dedupeFile, false);
+    if (!read.ok || run !== keyColumnsRun) return;
+    const { data } = read;
+    for (let i = 0; i < columnCount(data); i++) {
+      const label = document.createElement('label');
+      label.className = 'ui-check';
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      box.value = String(i);
+      const text = document.createElement('span');
+      text.textContent =
+        data.header?.[i] || fill(d.columnName, { n: String(i + 1) });
+      label.append(box, text);
+      keyColumnsEl.append(label);
+    }
+  }
+
+  enableFileDrop($('dedupe-dropzone'), dedupeFileInput);
+  dedupeFileInput.addEventListener('change', async () => {
+    const file = dedupeFileInput.files?.[0] ?? null;
+    dedupeFileInput.value = '';
+    if (!file) return;
+    dedupeFile = file;
+    dedupeName.textContent = describeFile(file);
+    clearMessages();
+    showWarnings([file]);
+    await loadKeyColumns();
+  });
+  // 設定を変えると列の見出しが変わるため、キー列の一覧を作り直す
+  for (const control of [encodingSelect, delimiterSelect, hasHeader]) {
+    control.addEventListener('change', () => void loadKeyColumns());
+  }
+
+  $('dedupe-button').addEventListener('click', async () => {
+    clearMessages();
+    if (!dedupeFile) return showError(d.errorNoFile ?? '');
+    const read = await readCsv(dedupeFile, false);
+    if (!read.ok) return showError(read.message);
+    const { data, delimiter } = read;
+    const keyColumns = Array.from(
+      keyColumnsEl.querySelectorAll<HTMLInputElement>('input:checked'),
+    ).map((box) => Number(box.value));
+    const result = dedupeRows(data.rows, {
+      keyColumns,
+      keep: keepSelect.value === 'last' ? 'last' : 'first',
+      ignoreCase: ignoreCase.checked,
+      trim: trim.checked,
+    });
+    downloadBlob(
+      csvBlob(serializeCsv(data.header, result.rows, delimiter)),
+      `${stripExtension(dedupeFile.name)}_dedupe.${extensionFor(delimiter)}`,
+    );
+    statusEl.textContent = fill(d.dedupeDone, {
+      removed: String(result.removed),
+      rows: String(result.rows.length),
+    });
+  });
+</script>

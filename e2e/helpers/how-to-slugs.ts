@@ -174,4 +174,6 @@ export const howToSlugs = [
   'recipe-scaler',
   'markdown-toc-generator',
   'json-sorter',
+  'query-string-json',
+  'csv-split-merge',
 ];

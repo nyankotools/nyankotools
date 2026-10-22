@@ -1015,13 +1015,17 @@ export const updates: UpdateEntry[] = [
       'shamir-secret-sharing',
       'rsa-encryptor',
       'digital-signature-tool',
+      'coordinate-converter',
+      'ohm-calculator',
+      'print-size-converter',
+      'resistor-color-code',
     ],
     translations: {
       ja: {
-        summary: '20個のツールを追加しました。',
+        summary: '24個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 20 new tools.',
+        summary: 'Added 24 new tools.',
       },
     },
   },

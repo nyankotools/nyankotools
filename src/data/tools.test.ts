@@ -5,8 +5,8 @@ import { updates } from './updates';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 describe('tools registry', () => {
-  it('all tools count should be 373', () => {
-    expect(tools.length).toBe(373);
+  it('all tools count should be 377', () => {
+    expect(tools.length).toBe(377);
   });
 
   it('slug が重複していない', () => {

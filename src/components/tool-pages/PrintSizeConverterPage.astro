@@ -1,0 +1,243 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { printSizeConverterContent } from '../../i18n/tools/print-size-converter';
+import {
+  A_SERIES,
+  B_SERIES,
+  DEFAULT_DPI,
+  PRINT_UNITS,
+} from '../../lib/tools/print-size-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = printSizeConverterContent[locale];
+
+const inputCls = 'ui-input h-11 w-full px-3 font-mono dark:bg-gray-900';
+const tables = [
+  { id: 'psc-table-a', caption: t.aSeriesCaption, series: A_SERIES },
+  { id: 'psc-table-b', caption: t.bSeriesCaption, series: B_SERIES },
+];
+---
+
+<ToolShell t={t}>
+  <div
+    class="grid grid-cols-1 gap-4 sm:grid-cols-3"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    id="psc-holder"
+  >
+    <div>
+      <label for="psc-value" class="ui-label">
+        {t.valueLabel}
+      </label>
+      <input
+        id="psc-value"
+        type="text"
+        inputmode="decimal"
+        spellcheck="false"
+        value="210"
+        placeholder={t.valuePlaceholder}
+        class={inputCls}
+      />
+    </div>
+    <div>
+      <label for="psc-unit" class="ui-label">
+        {t.unitLabel}
+      </label>
+      <select id="psc-unit" class={inputCls}>
+        {PRINT_UNITS.map((u) => (
+          <option value={u} selected={u === 'mm'}>
+            {u}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label for="psc-dpi" class="ui-label">
+        {t.dpiLabel}
+      </label>
+      <input
+        id="psc-dpi"
+        type="text"
+        inputmode="decimal"
+        spellcheck="false"
+        value={DEFAULT_DPI}
+        class={inputCls}
+      />
+    </div>
+  </div>
+  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.dpiHint}</p>
+
+  <p
+    id="psc-error"
+    data-error-value={t.errorInvalidValue}
+    data-error-dpi={t.errorInvalidDpi}
+    data-copy-label={t.copyButton}
+    class="mt-2 text-sm text-red-600 dark:text-red-400"
+    aria-live="polite"
+  ></p>
+
+  <h2 class="mt-6 mb-2 text-base font-semibold">{t.resultHeading}</h2>
+  <ul id="psc-results" class="grid grid-cols-1 gap-2 sm:grid-cols-2"></ul>
+  <span
+    id="psc-status"
+    class="mt-2 block text-sm text-green-700 dark:text-green-400"
+    aria-live="polite"
+  ></span>
+
+  <h2 class="mt-8 mb-2 text-base font-semibold">{t.paperHeading}</h2>
+  <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">{t.paperHint}</p>
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    {tables.map((tb) => (
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm" id={tb.id}>
+          <caption class="mb-1 text-left font-medium">{tb.caption}</caption>
+          <thead>
+            <tr class="border-b border-gray-300 text-left dark:border-gray-700">
+              <th scope="col" class="py-1 pr-2">
+                {t.paperColName}
+              </th>
+              <th scope="col" class="py-1 pr-2">
+                {t.paperColMm}
+              </th>
+              <th scope="col" class="py-1 pr-2">
+                {t.paperColPx}
+              </th>
+              <th scope="col" class="py-1">
+                {t.paperColPt}
+              </th>
+            </tr>
+          </thead>
+          <tbody class="font-mono" data-series={tb.id}>
+            {tb.series.map((p) => (
+              <tr
+                class="border-b border-gray-200 dark:border-gray-800"
+                data-paper={p.name}
+                data-w={p.widthMm}
+                data-h={p.heightMm}
+              >
+                <th scope="row" class="py-1 pr-2 text-left font-semibold">
+                  {p.name}
+                </th>
+                <td class="py-1 pr-2">
+                  {p.widthMm}×{p.heightMm}
+                </td>
+                <td class="py-1 pr-2" data-cell="px" />
+                <td class="py-1" data-cell="pt" />
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ))}
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    A_SERIES,
+    B_SERIES,
+    convertAll,
+    isPrintUnit,
+    paperToPixels,
+    parseDpi,
+    parseNumber,
+  } from '../../lib/tools/print-size-converter';
+
+  const valueInput = document.getElementById('psc-value') as HTMLInputElement;
+  const unitSelect = document.getElementById('psc-unit') as HTMLSelectElement;
+  const dpiInput = document.getElementById('psc-dpi') as HTMLInputElement;
+  const errorEl = document.getElementById('psc-error')!;
+  const statusEl = document.getElementById('psc-status')!;
+  const resultsEl = document.getElementById('psc-results')!;
+  const holder = document.getElementById('psc-holder')!;
+
+  const copied = holder.dataset.copied ?? '';
+  const copyFailed = holder.dataset.copyFailed ?? '';
+  const errorValue = errorEl.dataset.errorValue ?? '';
+  const errorDpi = errorEl.dataset.errorDpi ?? '';
+  const copyLabel = errorEl.dataset.copyLabel ?? '';
+
+  const papers = [...A_SERIES, ...B_SERIES];
+
+  function renderPaper(dpi: number | null) {
+    for (const p of papers) {
+      const row = document.querySelector<HTMLElement>(
+        `tr[data-paper="${p.name}"]`,
+      );
+      if (!row) continue;
+      const pxCell = row.querySelector<HTMLElement>('[data-cell="px"]')!;
+      const ptCell = row.querySelector<HTMLElement>('[data-cell="pt"]')!;
+      if (dpi === null) {
+        pxCell.textContent = '-';
+        ptCell.textContent = '-';
+        continue;
+      }
+      const r = paperToPixels(p, dpi);
+      pxCell.textContent = `${r.widthPx}×${r.heightPx}`;
+      ptCell.textContent = `${r.widthPt}×${r.heightPt}`;
+    }
+  }
+
+  function render() {
+    statusEl.textContent = '';
+    resultsEl.replaceChildren();
+    const dpi = parseDpi(dpiInput.value);
+    renderPaper(dpi);
+    if (dpi === null) {
+      errorEl.textContent = errorDpi;
+      return;
+    }
+    if (valueInput.value.trim() === '') {
+      errorEl.textContent = '';
+      return;
+    }
+    const value = parseNumber(valueInput.value);
+    if (value === null) {
+      errorEl.textContent = errorValue;
+      return;
+    }
+    const unit = unitSelect.value;
+    if (!isPrintUnit(unit)) return;
+    errorEl.textContent = '';
+    for (const r of convertAll(value, unit, dpi)) {
+      const text = `${r.value}${r.unit}`;
+      const li = document.createElement('li');
+      li.className =
+        'flex items-center justify-between gap-2 rounded-lg border border-gray-300 px-3 py-1 dark:border-gray-700';
+      const span = document.createElement('span');
+      span.className = 'min-w-0 break-all font-mono text-sm';
+      span.textContent = text;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'ui-btn shrink-0';
+      button.textContent = copyLabel;
+      button.setAttribute('aria-label', `${copyLabel} ${text}`);
+      button.dataset.copyValue = text;
+      li.append(span, button);
+      resultsEl.append(li);
+    }
+  }
+
+  resultsEl.addEventListener('click', async (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
+      'button[data-copy-value]',
+    );
+    if (!button) return;
+    statusEl.textContent = (await copyText(button.dataset.copyValue ?? ''))
+      ? copied
+      : copyFailed;
+  });
+
+  for (const el of [valueInput, dpiInput]) {
+    el.addEventListener('input', render);
+  }
+  unitSelect.addEventListener('change', render);
+
+  render();
+</script>

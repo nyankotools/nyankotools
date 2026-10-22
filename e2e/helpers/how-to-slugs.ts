@@ -189,4 +189,6 @@ export const howToSlugs = [
   'shamir-secret-sharing',
   'rsa-encryptor',
   'digital-signature-tool',
+  'ohm-calculator',
+  'resistor-color-code',
 ];

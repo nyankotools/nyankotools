@@ -13472,6 +13472,160 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'print-size-converter',
+    category: 'calc',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['screen-size-calculator', 'css-unit-converter'],
+    translations: {
+      ja: {
+        name: '印刷サイズ換算ツール',
+        description:
+          'DPIを指定してmm・pt・px・inchを換算。A判・B判の用紙サイズ一覧つき',
+        keywords: [
+          '印刷サイズ',
+          'mm px 変換',
+          'pt mm 変換',
+          'DPI',
+          '解像度',
+          'A4 ピクセル',
+          '用紙サイズ',
+          'B5',
+        ],
+      },
+      en: {
+        name: 'Print Size Converter',
+        description:
+          'Convert mm, pt, px and inches by DPI, with an A-series and B-series paper size chart',
+        keywords: [
+          'print size',
+          'mm to px',
+          'pt to mm',
+          'DPI',
+          'A4 pixels',
+          'paper size',
+          'resolution',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'coordinate-converter',
+    category: 'calc',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['unit-converter', 'base-converter', 'ratio-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '緯度経度 度分秒変換・2点間距離',
+        description:
+          '緯度経度を10進度と度分秒で相互変換し、2地点の距離・方位・中間点をHaversine公式で計算。地図は表示せず外部通信なし。',
+        keywords: [
+          '緯度経度',
+          '度分秒',
+          'DMS',
+          '10進度',
+          'ハーバーサイン',
+          'Haversine',
+          '2点間距離',
+          '方位角',
+        ],
+      },
+      en: {
+        name: 'Lat/Long Converter (DMS) & Distance Calculator',
+        description:
+          'Convert latitude and longitude between decimal degrees and DMS, and calculate distance, bearing and midpoint of two points with Haversine.',
+        keywords: [
+          'latitude longitude',
+          'DMS',
+          'decimal degrees',
+          'coordinates',
+          'Haversine',
+          'distance between two points',
+          'bearing',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'ohm-calculator',
+    category: 'calc',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['resistor-color-code', 'unit-converter'],
+    translations: {
+      ja: {
+        name: 'オームの法則・電力計算機',
+        description:
+          '電圧・電流・抵抗・電力のうち2つから残りを計算。直列・並列の合成抵抗とLEDの電流制限抵抗(E24)も求められます。',
+        keywords: [
+          'オームの法則',
+          '電力',
+          '合成抵抗',
+          '直列並列',
+          'LED 抵抗',
+          '電流制限抵抗',
+          'E24',
+          'ワット',
+        ],
+      },
+      en: {
+        name: "Ohm's Law Calculator",
+        description:
+          'Find voltage, current, resistance or power from any two. Also series/parallel resistance and LED resistor values.',
+        keywords: [
+          'ohms law',
+          'power calculator',
+          'series parallel resistance',
+          'led resistor',
+          'current limiting resistor',
+          'E24',
+          'watts',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'resistor-color-code',
+    category: 'calc',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['ohm-calculator'],
+    translations: {
+      ja: {
+        name: '抵抗カラーコード計算',
+        description:
+          '抵抗の色帯（4〜6本線）から抵抗値・許容差を読み取り、抵抗値から色帯も求められます。最も近いE系列の値も表示。',
+        keywords: [
+          '抵抗',
+          'カラーコード',
+          '色帯',
+          '抵抗値',
+          'E系列',
+          'E24',
+          'E96',
+          '許容差',
+        ],
+      },
+      en: {
+        name: 'Resistor Color Code Calculator',
+        description:
+          'Read 4-, 5- and 6-band resistor color codes or convert a resistance to bands, with tolerance and the nearest E series value.',
+        keywords: [
+          'resistor',
+          'color bands',
+          'color code',
+          'resistance',
+          'E series',
+          'E24',
+          'E96',
+          'tolerance',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

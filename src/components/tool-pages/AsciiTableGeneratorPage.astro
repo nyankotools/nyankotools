@@ -65,6 +65,10 @@ const t = asciiTableGeneratorContent[locale];
       <input type="checkbox" id="ascii-table-generator-rows" />
       {t.rowSeparatorsLabel}
     </label>
+    <label class="ui-check">
+      <input type="checkbox" id="ascii-table-generator-wide" />
+      {t.wideBorderLabel}
+    </label>
     <button
       id="ascii-table-generator-copy-button"
       type="button"
@@ -102,7 +106,7 @@ const t = asciiTableGeneratorContent[locale];
         id="ascii-table-generator-output"
         readonly
         wrap="off"
-        class="ui-input h-80 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+        class="table-output ui-input h-80 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
       ></textarea>
     </div>
   </div>
@@ -114,6 +118,21 @@ const t = asciiTableGeneratorContent[locale];
     class="ui-error mt-4 max-w-2xl"
   ></p>
 </ToolShell>
+
+<style>
+  /* Consolas の半角幅の2倍になるよう日本語フォントを拡大し、全角を半角2文字分に揃える */
+  @font-face {
+    font-family: 'TableCjk';
+    src:
+      local('Yu Gothic'), local('Meiryo'), local('Hiragino Sans'),
+      local('Noto Sans CJK JP');
+    size-adjust: 110%;
+    unicode-range: U+3000-30FF, U+3400-9FFF, U+FF00-FF60;
+  }
+  .table-output {
+    font-family: Consolas, 'TableCjk', monospace;
+  }
+</style>
 
 <script>
   import { onTextInput } from '../../lib/input-scheduler';
@@ -134,6 +153,7 @@ const t = asciiTableGeneratorContent[locale];
   const alignSelect = get<HTMLSelectElement>('align');
   const headerCheck = get<HTMLInputElement>('header');
   const rowsCheck = get<HTMLInputElement>('rows');
+  const wideCheck = get<HTMLInputElement>('wide');
   const copyButton = get<HTMLButtonElement>('copy-button');
   const statusEl = get<HTMLElement>('status');
   const errorEl = get<HTMLElement>('error');
@@ -152,6 +172,7 @@ const t = asciiTableGeneratorContent[locale];
       align: alignSelect.value as Align,
       header: headerCheck.checked,
       rowSeparators: rowsCheck.checked,
+      wideBorder: wideCheck.checked,
     });
     if (result.success) {
       output.value = result.output;
@@ -169,6 +190,7 @@ const t = asciiTableGeneratorContent[locale];
     alignSelect,
     headerCheck,
     rowsCheck,
+    wideCheck,
   ]) {
     el.addEventListener('change', convert);
   }

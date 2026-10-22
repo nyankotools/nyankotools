@@ -84,7 +84,7 @@ export const textBoxFrameContent: Record<Locale, TextBoxFramePageContent> = {
     notes: [
       '全角文字・絵文字は幅2、半角は幅1として揃えます。表示するフォントによっては全角が半角2文字分にならず、右端がずれることがあります。コードに貼る場合は、等幅フォントのエディタで確認してください。',
       '罫線文字（┌─┐など）は、一部のフォントや環境では全角幅で表示されて枠が崩れます。崩れるときは「ASCII」スタイルを使ってください。',
-      '「罫線を全角幅（幅2）として整形」をオンにすると、罫線を幅2として数えて整形します。罫線が全角幅で表示されるフォントで右端が揃うようになりますが、半角幅で表示されるフォントに貼ると逆にずれます。また、内側の幅が奇数になる場合は右に空白を1つ足して偶数にします。罫線を使わないASCII・#・*・吹き出しスタイルには影響しません。',
+      '「罫線を全角幅（幅2）として整形」をオンにすると、罫線を幅2として数えて整形します。罫線が全角幅で表示されるフォントで右端が揃うようになりますが、半角幅で表示されるフォントに貼ると逆にずれます。また、内側の幅が奇数になる場合は右に空白を1つ足して偶数にします。対象は単線・太線・角丸です。角丸の角（╭╮╰╯）は半角幅のままとして数えます。二重線・ASCII・#・*・吹き出しは変わりません（二重線は、MSゴシックなどでも半角幅で表示されるため、オフのまま使ってください）。',
       '余白と「しっぽ」は、枠のスタイルに応じて使われます。左右・上下の余白は吹き出しでは使われず、しっぽは吹き出しだけに付きます。',
       'ブロックコメントでは、本文中の */ がコメントを閉じてしまわないよう、* / に置き換えます。',
       'タブは4つの半角スペースに置き換えます。結合文字やゼロ幅文字は幅0として数えます。',
@@ -147,7 +147,7 @@ export const textBoxFrameContent: Record<Locale, TextBoxFramePageContent> = {
     notes: [
       'Fullwidth characters and emoji count as two columns and halfwidth characters as one. Some fonts do not draw fullwidth characters at exactly twice the width, so the right edge can drift. If you paste into code, check it in a monospace editor.',
       'In some fonts and environments, box-drawing characters (┌─┐ and so on) are drawn at double width and the frame breaks. If that happens, use the ASCII style.',
-      'Turning on "Treat box lines as double-width" counts each box-drawing character as two columns. The right edge then lines up in fonts that draw these characters wide, but it drifts in fonts that draw them narrow. If the inner width would be odd, one space is added on the right to make it even. The ASCII, #, * and bubble styles do not use box-drawing characters and are not affected.',
+      'Turning on "Treat box lines as double-width" counts each box-drawing character as two columns. The right edge then lines up in fonts that draw these characters wide, but it drifts in fonts that draw them narrow. If the inner width would be odd, one space is added on the right to make it even. Only the single line, heavy line and rounded styles are affected, and rounded corners (╭╮╰╯) are still counted as one column. Double line, ASCII, #, * and bubble styles are unchanged (in fonts such as MS Gothic, double lines are drawn narrow, so leave the option off for them).',
       'Padding and the tail depend on the frame style. Horizontal and vertical padding are ignored for bubbles, and the tail applies to bubbles only.',
       'In block comments, */ inside your text is changed to * / so it cannot close the comment early.',
       'Tabs are replaced with four spaces. Combining and zero-width characters count as zero columns.',

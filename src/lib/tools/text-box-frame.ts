@@ -42,7 +42,7 @@ export interface TextBoxFrameOptions {
   /** 吹き出しのしっぽを付ける */
   tail: boolean;
   comment: CommentStyle;
-  /** 罫線文字（─│┌など）を全角幅で表示する環境（MSゴシック等）向けに、幅2として整形する */
+  /** 単線・太線・角丸の罫線（─│┌など）を全角幅で表示する環境（MSゴシック等）向けに、幅2として整形する */
   wideBorder?: boolean;
 }
 
@@ -99,8 +99,9 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, Math.trunc(value)));
 }
 
-function isBoxDrawing(chars: BoxChars): boolean {
-  return chars.h.charCodeAt(0) >= 0x2500;
+/** MSゴシックなどで全角幅になる罫線（単線・太線・角丸の辺）。二重線は半角幅のまま */
+function hasWideBorder(style: FrameStyle): boolean {
+  return style === 'single' || style === 'heavy' || style === 'rounded';
 }
 
 function boxLines(
@@ -111,11 +112,16 @@ function boxLines(
 ): string[] {
   const padX = clamp(options.paddingX, 0, 8);
   const padY = clamp(options.paddingY, 0, 4);
-  const wide = options.wideBorder === true && isBoxDrawing(chars);
+  const wide = options.wideBorder === true && hasWideBorder(options.style);
   // 罫線が幅2のときは、内側を偶数幅にして罫線の繰り返し数で揃える
   const extra = wide && (width + padX * 2) % 2 === 1 ? 1 : 0;
   const inner = width + padX * 2 + extra;
-  const hCount = wide ? inner / 2 : inner;
+  // 角丸の角（╭╮╰╯）は半角幅のままなので、その分だけ辺の罫線を1個増やす
+  const hCount = wide
+    ? options.style === 'rounded'
+      ? inner / 2 + 1
+      : inner / 2
+    : inner;
   const blank = chars.v + ' '.repeat(inner) + chars.v;
   const result = [chars.tl + chars.h.repeat(hCount) + chars.tr];
   for (let i = 0; i < padY; i++) result.push(blank);

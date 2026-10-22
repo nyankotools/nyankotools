@@ -12,6 +12,8 @@ export interface AsciiTableOptions {
   header: boolean;
   /** すべての行の間に区切り線を引く */
   rowSeparators: boolean;
+  /** 罫線文字（─│┌など）を全角幅で表示する環境向けに、幅2として整形する（Unicode単線・角丸が対象。二重線・ASCIIは対象外） */
+  wideBorder?: boolean;
 }
 
 export type AsciiTableOutcome =
@@ -162,16 +164,22 @@ export function csvToAsciiTable(
     return cells;
   });
 
-  const widths = Array.from({ length: columns }, (_, column) =>
-    Math.max(
+  const wide =
+    options.wideBorder === true &&
+    (options.style === 'single' || options.style === 'rounded');
+  const widths = Array.from({ length: columns }, (_, column) => {
+    const width = Math.max(
       0,
       ...rows.flatMap((row) => row[column].map((line) => displayWidth(line))),
-    ),
-  );
+    );
+    // 罫線が幅2のときは、セル全体（左右の空白込み）を偶数幅にして罫線の繰り返し数で揃える
+    return wide && width % 2 === 1 ? width + 1 : width;
+  });
 
   const c = BORDER_CHARS[options.style];
+  const hCount = (w: number) => (wide ? (w + 2) / 2 : w + 2);
   const rule = (left: string, mid: string, right: string) =>
-    left + widths.map((w) => c.h.repeat(w + 2)).join(mid) + right;
+    left + widths.map((w) => c.h.repeat(hCount(w))).join(mid) + right;
 
   const lines: string[] = [rule(c.tl, c.tc, c.tr)];
   rows.forEach((row, index) => {

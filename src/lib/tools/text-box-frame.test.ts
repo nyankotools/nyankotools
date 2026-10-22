@@ -166,3 +166,24 @@ describe('wideBorder（罫線を全角幅で扱う）', () => {
     );
   });
 });
+
+describe('wideBorder の対象スタイル', () => {
+  it('太線は対象', () => {
+    expect(run('あい', { style: 'heavy', wideBorder: true }).output).toBe(
+      '┏━━━┓\n┃ あい ┃\n┗━━━┛',
+    );
+  });
+
+  it('角丸は角が半角幅なので辺の罫線を1個増やす', () => {
+    // 行は 2+6+2=10 桁、上辺は 1+2*4+1=10 桁
+    expect(run('あい', { style: 'rounded', wideBorder: true }).output).toBe(
+      '╭────╮\n│ あい │\n╰────╯',
+    );
+  });
+
+  it('二重線は対象外', () => {
+    expect(run('あい', { style: 'double', wideBorder: true }).output).toBe(
+      run('あい', { style: 'double' }).output,
+    );
+  });
+});

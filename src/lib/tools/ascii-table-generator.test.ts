@@ -145,3 +145,45 @@ describe('csvToAsciiTable', () => {
     expect(result.output.split('\n')).toHaveLength(2000 + 3);
   });
 });
+
+describe('wideBorder（罫線を全角幅で扱う）', () => {
+  it('罫線の繰り返し数を半分にして右端を揃える', () => {
+    // 幅4 + 左右の空白2 = 6 → 罫線3個（各全角幅）
+    expect(run('あい', { style: 'single', wideBorder: true }).output).toBe(
+      '┌───┐\n│ あい │\n└───┘',
+    );
+  });
+
+  it('列の幅が奇数なら空白を1つ足して偶数にする', () => {
+    expect(run('a', { style: 'single', wideBorder: true }).output).toBe(
+      '┌──┐\n│ a  │\n└──┘',
+    );
+  });
+
+  it('複数列でも区切り線の幅が揃う', () => {
+    const lines = run('a,あい\n1,2', {
+      style: 'single',
+      wideBorder: true,
+    }).output.split('\n');
+    expect(lines[0]).toBe('┌──┬───┐');
+    expect(lines[1]).toBe('│ a  │ あい │');
+  });
+
+  it('ASCII罫線では無効', () => {
+    expect(run('a,b', { wideBorder: true }).output).toBe(run('a,b').output);
+  });
+});
+
+describe('wideBorder の対象スタイル', () => {
+  it('角丸は角を変えずに辺と区切りを全角幅で整形する', () => {
+    expect(run('あい', { style: 'rounded', wideBorder: true }).output).toBe(
+      '╭───╮\n│ あい │\n╰───╯',
+    );
+  });
+
+  it('二重線は対象外', () => {
+    expect(run('あい', { style: 'double', wideBorder: true }).output).toBe(
+      run('あい', { style: 'double' }).output,
+    );
+  });
+});

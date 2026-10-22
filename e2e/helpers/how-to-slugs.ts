@@ -48,6 +48,7 @@ export const howToSlugs = [
   'exif-viewer',
   'curl-converter',
   'file-hash-calculator',
+  'file-encryptor',
   'checksum-calculator',
   'text-binary-converter',
   'punycode-converter',

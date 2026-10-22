@@ -2666,6 +2666,35 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'file-encryptor',
+    category: 'security',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['crypto-encryptor', 'file-hash-calculator', 'password-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ファイル暗号化・復号',
+        keywords: ['ファイル暗号化', '復号', 'AES', 'AES-GCM', 'enc', '暗号化'],
+        description:
+          'ファイルをパスワードでAES-256-GCM暗号化して.encとして保存。同じパスワードで元のファイルに復号できます。',
+      },
+      en: {
+        name: 'File Encryptor & Decryptor',
+        keywords: [
+          'file encryption',
+          'decrypt',
+          'AES',
+          'AES-GCM',
+          'enc',
+          'encrypt file',
+        ],
+        description:
+          'Encrypt a file with a password using AES-256-GCM and save it as .enc, then decrypt it with the same password.',
+      },
+    },
+  },
+  {
     slug: 'hmac-generator',
     category: 'security',
     addedAt: '2026-10-02',

@@ -1,0 +1,293 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { fileEncryptorContent } from '../../i18n/tools/file-encryptor';
+import { MAX_FILE_SIZE } from '../../lib/tools/file-encryptor';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = fileEncryptorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="file-encryptor-root"
+    data-max-bytes={MAX_FILE_SIZE}
+    data-max-mb={MAX_FILE_SIZE / 1024 / 1024}
+    data-label-encrypt={t.runEncrypt}
+    data-label-decrypt={t.runDecrypt}
+    data-file-label-encrypt={t.fileLabelEncrypt}
+    data-file-label-decrypt={t.fileLabelDecrypt}
+    data-running={t.running}
+    data-result-ready={t.resultReady}
+  >
+    <div
+      id="file-encryptor-mode"
+      class="ui-seg"
+      role="group"
+      aria-label={t.modeLabel}
+    >
+      <button
+        type="button"
+        data-mode="encrypt"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.modeEncrypt}
+      </button>
+      <button
+        type="button"
+        data-mode="decrypt"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeDecrypt}
+      </button>
+    </div>
+
+    <div class="mt-4">
+      <label
+        for="file-encryptor-file"
+        id="file-encryptor-file-label"
+        class="ui-label"
+      >
+        {t.fileLabelEncrypt}
+      </label>
+      <div id="file-encryptor-dropzone" class="ui-dropzone">
+        <input id="file-encryptor-file" type="file" class="ui-file" />
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          {t.dropHint}
+        </p>
+      </div>
+      <p
+        id="file-encryptor-selected"
+        class="mt-2 break-all text-sm text-gray-700 dark:text-gray-300"
+        aria-live="polite"
+      ></p>
+    </div>
+
+    <div class="mt-4">
+      <label for="file-encryptor-password" class="ui-label">
+        {t.passwordLabel}
+      </label>
+      <input
+        id="file-encryptor-password"
+        type="password"
+        autocomplete="off"
+        class="ui-input h-11 w-full max-w-md px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.passwordPlaceholder}
+      />
+      <label class="ui-check mt-2">
+        <input id="file-encryptor-show-password" type="checkbox" />
+        <span>{t.showPassword}</span>
+      </label>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <button
+        id="file-encryptor-run-button"
+        type="button"
+        class="ui-btn ui-btn-primary"
+      >
+        {t.runEncrypt}
+      </button>
+    </div>
+
+    <progress
+      id="file-encryptor-progress"
+      hidden
+      max="100"
+      value="0"
+      class="mt-4 block h-2 w-full max-w-md"
+    ></progress>
+
+    <p
+      id="file-encryptor-error"
+      hidden
+      data-empty-file={t.emptyFile}
+      data-empty-password={t.emptyPassword}
+      data-too-large={t.errorTooLarge}
+      data-read-failed={t.errorReadFailed}
+      data-invalid-format={t.invalidFormat}
+      data-wrong-password={t.wrongPassword}
+      data-truncated={t.truncated}
+      data-corrupted={t.corrupted}
+      class="ui-error mt-4 max-w-2xl"
+      role="alert"
+    ></p>
+
+    <div id="file-encryptor-result" hidden class="mt-4">
+      <p
+        id="file-encryptor-result-text"
+        class="text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></p>
+      <button
+        id="file-encryptor-download-button"
+        type="button"
+        class="ui-btn mt-2"
+      >
+        {t.download}
+      </button>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import { fill } from '../../lib/format-template';
+  import {
+    decryptFile,
+    encryptFile,
+    encryptedFileName,
+    formatFileSize,
+    type FileEncryptError,
+  } from '../../lib/tools/file-encryptor';
+
+  type Mode = 'encrypt' | 'decrypt';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`file-encryptor-${id}`) as T;
+  const root = $<HTMLElement>('root');
+  const fileInput = $<HTMLInputElement>('file');
+  const dropzone = $<HTMLElement>('dropzone');
+  const fileLabel = $<HTMLElement>('file-label');
+  const selectedEl = $<HTMLElement>('selected');
+  const password = $<HTMLInputElement>('password');
+  const showPassword = $<HTMLInputElement>('show-password');
+  const runButton = $<HTMLButtonElement>('run-button');
+  const progressEl = $<HTMLProgressElement>('progress');
+  const errorEl = $<HTMLElement>('error');
+  const resultEl = $<HTMLElement>('result');
+  const resultText = $<HTMLElement>('result-text');
+  const downloadButton = $<HTMLButtonElement>('download-button');
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#file-encryptor-mode [data-mode]',
+  );
+
+  const d = root.dataset;
+  const maxBytes = Number(d.maxBytes);
+  let mode: Mode = 'encrypt';
+  let selected: File | null = null;
+  let output: { blob: Blob; name: string } | null = null;
+
+  const ERROR_KEYS: Record<FileEncryptError, string> = {
+    'invalid-format': 'invalidFormat',
+    'wrong-password': 'wrongPassword',
+    truncated: 'truncated',
+    corrupted: 'corrupted',
+    'too-large': 'tooLarge',
+  };
+
+  function showError(key: string) {
+    errorEl.textContent = fill(errorEl.dataset[key] ?? '', {
+      max: d.maxMb ?? '',
+    });
+    errorEl.hidden = false;
+  }
+
+  function resetResult() {
+    output = null;
+    errorEl.hidden = true;
+    resultEl.hidden = true;
+    progressEl.hidden = true;
+  }
+
+  function setBusy(busy: boolean) {
+    runButton.disabled = busy;
+    modeButtons.forEach((b) => (b.disabled = busy));
+    fileInput.disabled = busy;
+  }
+
+  function applyMode(next: Mode) {
+    mode = next;
+    modeButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.mode === next)),
+    );
+    runButton.textContent =
+      (next === 'encrypt' ? d.labelEncrypt : d.labelDecrypt) ?? '';
+    fileLabel.textContent =
+      (next === 'encrypt' ? d.fileLabelEncrypt : d.fileLabelDecrypt) ?? '';
+    fileInput.accept = next === 'decrypt' ? '.enc' : '';
+    selected = null;
+    selectedEl.textContent = '';
+    fileInput.value = '';
+    resetResult();
+  }
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () =>
+      applyMode(button.dataset.mode as Mode),
+    );
+  });
+
+  showPassword.addEventListener('change', () => {
+    password.type = showPassword.checked ? 'text' : 'password';
+  });
+
+  enableFileDrop(dropzone, fileInput);
+  fileInput.addEventListener('change', () => {
+    // 処理中にドロップされた場合は無視する
+    if (runButton.disabled) return;
+    resetResult();
+    selected = fileInput.files?.[0] ?? null;
+    fileInput.value = '';
+    if (selected && selected.size > maxBytes) {
+      selected = null;
+      showError('tooLarge');
+    }
+    selectedEl.textContent = selected
+      ? `${selected.name} (${formatFileSize(selected.size)})`
+      : '';
+  });
+
+  runButton.addEventListener('click', async () => {
+    resetResult();
+    if (!selected) return showError('emptyFile');
+    if (password.value === '') return showError('emptyPassword');
+
+    const file = selected;
+    const label = runButton.textContent;
+    setBusy(true);
+    runButton.textContent = d.running ?? '';
+    progressEl.hidden = false;
+    progressEl.removeAttribute('value');
+    const onProgress = (done: number, total: number) => {
+      progressEl.value = total === 0 ? 100 : (done / total) * 100;
+    };
+    try {
+      if (mode === 'encrypt') {
+        const blob = await encryptFile(
+          file,
+          file.name,
+          password.value,
+          onProgress,
+        );
+        output = { blob, name: encryptedFileName(file.name) };
+      } else {
+        const result = await decryptFile(file, password.value, onProgress);
+        if (!result.success) return showError(ERROR_KEYS[result.error]);
+        output = { blob: result.blob, name: result.name };
+      }
+      resultText.textContent = fill(d.resultReady ?? '', {
+        name: output.name,
+        size: formatFileSize(output.blob.size),
+      });
+      resultEl.hidden = false;
+    } catch {
+      showError('readFailed');
+    } finally {
+      progressEl.hidden = true;
+      setBusy(false);
+      runButton.textContent = label;
+    }
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (output) downloadBlob(output.blob, output.name);
+  });
+</script>

@@ -11,7 +11,7 @@ export type DecryptResult =
   | { success: true; text: string }
   | { success: false; error: 'invalid-format' | 'wrong-password' };
 
-async function deriveKey(
+export async function deriveKey(
   password: string,
   salt: Uint8Array,
   usage: 'encrypt' | 'decrypt',

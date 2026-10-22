@@ -954,6 +954,44 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-22',
+    toolSlugs: [
+      'color-space-converter',
+      'chart-maker',
+      'file-encryptor',
+      'image-ocr',
+      'text-to-speech',
+      'notation-variants-checker',
+      'readability-checker',
+      'ruby-tag-generator',
+      'string-similarity',
+      'whitespace-visualizer',
+      'text-box-frame',
+      'upside-down-text',
+      'byte-length-counter',
+      'markdown-toc-generator',
+      'anagram-palindrome-checker',
+      'json-sorter',
+      'xml-formatter',
+      'yaml-formatter',
+      'csv-split-merge',
+      'excel-column-converter',
+      'query-string-json',
+      'file-base64-converter',
+      'svg-to-data-uri',
+      'css-color-names',
+      'html-entity-list',
+    ],
+    translations: {
+      ja: {
+        summary: '25個のツールを追加しました。',
+      },
+      en: {
+        summary: 'Added 25 new tools.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

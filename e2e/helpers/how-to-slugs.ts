@@ -108,6 +108,7 @@ export const howToSlugs = [
   'csp-sri-generator',
   'text-replace-tools',
   'ocr-protect-image',
+  'image-ocr',
   'media-converter',
   'css-clamp-calculator',
   'time-calculator',

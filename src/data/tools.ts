@@ -5005,7 +5005,7 @@ export const tools: Tool[] = [
     category: 'image',
     addedAt: '2026-10-06',
     updatedAt: '2026-10-06',
-    related: ['image-pixelart-converter', 'image-text-overlay', 'exif-viewer'],
+    related: ['image-pixelart-converter', 'image-text-overlay', 'image-ocr'],
     sensitive: true,
     translations: {
       ja: {
@@ -5031,6 +5031,43 @@ export const tools: Tool[] = [
         ],
         description:
           'Adds subtle distortion, noise, and fine lines to text in an image to make automatic OCR reading harder. No guarantee of effect. Saves as PNG.',
+      },
+    },
+  },
+  {
+    slug: 'image-ocr',
+    category: 'image',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['ocr-protect-image', 'exif-viewer', 'image-text-overlay'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: '画像から文字抽出（OCR）',
+        keywords: [
+          'OCR',
+          '文字認識',
+          '画像 文字起こし',
+          '画像からテキスト',
+          'スクリーンショット 文字抽出',
+          '日本語OCR',
+        ],
+        description:
+          '画像内の文字を日本語・英語でテキスト化。認識はブラウザ内で完結し、画像は送信されません。精度は保証できません。',
+      },
+      en: {
+        name: 'Image to Text (OCR)',
+        keywords: [
+          'OCR',
+          'image to text',
+          'extract text from image',
+          'text recognition',
+          'screenshot to text',
+          'japanese OCR',
+        ],
+        description:
+          'Extract text from images in English or Japanese. Recognition runs in your browser and the image is never uploaded. Accuracy is not guaranteed.',
       },
     },
   },

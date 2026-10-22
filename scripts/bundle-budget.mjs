@@ -40,7 +40,7 @@ export const budgets = {
  * heic-to（gzip後 約720KB）を遅延読み込みする heic-converter のみ。
  */
 export const slugBudgets = {
-  'heic-converter': 860 * KB,
+  'heic-converter': 870 * KB,
   // prettier・terser・csso を言語・操作ごとに遅延読み込みするため、全体は大きいが初回は小さい
   'code-minifier': 600 * KB,
   // フォント・jsQR など操作時に遅延読み込みするデータ

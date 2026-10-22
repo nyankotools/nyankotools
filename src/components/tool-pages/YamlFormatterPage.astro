@@ -1,0 +1,230 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { yamlFormatterContent } from '../../i18n/tools/yaml-formatter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = yamlFormatterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-3">
+    <label
+      for="yaml-formatter-indent"
+      class="text-sm text-gray-700 dark:text-gray-300"
+    >
+      {t.indentLabel}
+    </label>
+    <select
+      id="yaml-formatter-indent"
+      class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+    >
+      <option value="2">{t.indentOption2}</option>
+      <option value="4">{t.indentOption4}</option>
+    </select>
+    <label class="ui-check">
+      <input type="checkbox" id="yaml-formatter-sort-keys" />
+      {t.sortKeysLabel}
+    </label>
+    <label class="ui-check">
+      <input type="checkbox" id="yaml-formatter-expand-flow" />
+      {t.expandFlowLabel}
+    </label>
+    <button
+      id="yaml-formatter-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <button id="yaml-formatter-download-button" type="button" class="ui-btn">
+      {t.download}
+    </button>
+    <span
+      id="yaml-formatter-status"
+      class="text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+      data-documents-template={t.documentsTemplate}
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="yaml-formatter-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="yaml-formatter-input"
+        data-query-target="text"
+        class="ui-input h-80 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholder}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label for="yaml-formatter-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="yaml-formatter-output"
+        readonly
+        wrap="off"
+        class="ui-input h-80 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+
+  <div
+    id="yaml-formatter-error"
+    hidden
+    data-error-prefix={t.syntaxErrorPrefix}
+    data-location-template={t.errorLocationTemplate}
+    data-document-template={t.errorDocumentTemplate}
+    data-excerpt-label={t.errorExcerptLabel}
+    class="ui-error mt-4 max-w-2xl"
+  >
+    <p id="yaml-formatter-error-message" class="break-words"></p>
+    <pre
+      id="yaml-formatter-error-excerpt"
+      hidden
+      class="mt-2 overflow-x-auto font-mono text-xs whitespace-pre"
+    ></pre>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import { formatYaml } from '../../lib/tools/yaml-formatter';
+
+  const input = document.getElementById(
+    'yaml-formatter-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'yaml-formatter-output',
+  ) as HTMLTextAreaElement;
+  const indentSelect = document.getElementById(
+    'yaml-formatter-indent',
+  ) as HTMLSelectElement;
+  const sortKeysCheck = document.getElementById(
+    'yaml-formatter-sort-keys',
+  ) as HTMLInputElement;
+  const expandFlowCheck = document.getElementById(
+    'yaml-formatter-expand-flow',
+  ) as HTMLInputElement;
+  const copyButton = document.getElementById(
+    'yaml-formatter-copy-button',
+  ) as HTMLButtonElement;
+  const downloadButton = document.getElementById(
+    'yaml-formatter-download-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('yaml-formatter-status')!;
+  const errorEl = document.getElementById('yaml-formatter-error')!;
+  const errorMessageEl = document.getElementById(
+    'yaml-formatter-error-message',
+  )!;
+  const excerptEl = document.getElementById('yaml-formatter-error-excerpt')!;
+
+  function clearError() {
+    errorEl.hidden = true;
+    errorMessageEl.textContent = '';
+    excerptEl.hidden = true;
+    excerptEl.textContent = '';
+  }
+
+  function showError(
+    message: string,
+    line: number | null,
+    column: number | null,
+    documentNumber: number,
+  ) {
+    output.value = '';
+    let text = `${errorEl.dataset.errorPrefix ?? ''}: ${message}`;
+    const parts: string[] = [];
+    if (documentNumber > 1) {
+      parts.push(
+        (errorEl.dataset.documentTemplate ?? '').replace(
+          '{n}',
+          String(documentNumber),
+        ),
+      );
+    }
+    if (line !== null && column !== null) {
+      parts.push(
+        (errorEl.dataset.locationTemplate ?? '')
+          .replace('{line}', String(line))
+          .replace('{column}', String(column)),
+      );
+    }
+    if (parts.length > 0) text += ` (${parts.join(', ')})`;
+    excerptEl.hidden = true;
+    excerptEl.textContent = '';
+    if (line !== null && column !== null) {
+      const source = input.value.split(/\r\n|\r|\n/)[line - 1];
+      if (source !== undefined) {
+        // 長い行は該当列の周辺だけを切り出す
+        const start = Math.max(0, column - 60);
+        const clipped = source.slice(start, start + 120);
+        const pointer = ' '.repeat(Math.max(0, column - 1 - start)) + '^';
+        excerptEl.textContent = `${errorEl.dataset.excerptLabel ?? ''} ${line}:\n${clipped}\n${pointer}`;
+        excerptEl.hidden = false;
+      }
+    }
+    errorMessageEl.textContent = text;
+    errorEl.hidden = false;
+  }
+
+  function run() {
+    statusEl.textContent = '';
+    if (input.value.trim() === '') {
+      output.value = '';
+      clearError();
+      return;
+    }
+    const result = formatYaml(input.value, {
+      indent: Number(indentSelect.value),
+      sortKeys: sortKeysCheck.checked,
+      expandFlow: expandFlowCheck.checked,
+    });
+    if (result.success) {
+      output.value = result.output;
+      clearError();
+      if (result.documents > 1) {
+        statusEl.textContent = (
+          statusEl.dataset.documentsTemplate ?? ''
+        ).replace('{n}', String(result.documents));
+      }
+    } else {
+      showError(result.message, result.line, result.column, result.document);
+    }
+  }
+
+  onTextInput(input, run);
+  indentSelect.addEventListener('change', run);
+  sortKeysCheck.addEventListener('change', run);
+  expandFlowCheck.addEventListener('change', run);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (!output.value) return;
+    downloadBlob(
+      new Blob([output.value + '\n'], { type: 'text/yaml;charset=utf-8' }),
+      'formatted.yaml',
+    );
+  });
+
+  run();
+</script>

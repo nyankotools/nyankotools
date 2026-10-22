@@ -422,9 +422,9 @@ export const tools: Tool[] = [
     addedAt: '2026-09-15',
     updatedAt: '2026-09-15',
     related: [
+      'color-space-converter',
       'contrast-checker',
       'css-gradient-generator',
-      'image-palette-extractor',
     ],
     translations: {
       ja: {
@@ -452,6 +452,81 @@ export const tools: Tool[] = [
         ],
         description:
           'Converts color codes between HEX, RGB, and HSL, with a color picker for choosing colors visually.',
+      },
+    },
+  },
+  {
+    slug: 'color-space-converter',
+    category: 'image',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['color-converter', 'contrast-checker', 'color-palette-generator'],
+    translations: {
+      ja: {
+        name: '色空間変換（RGB・CMYK・Lab・OKLCH）',
+        keywords: [
+          'RGB CMYK 変換',
+          'CMYK',
+          'Lab',
+          'OKLCH',
+          'HWB',
+          '色空間',
+          '色変換',
+        ],
+        description:
+          'RGB・HEX・HSL・CMYK・HWB・Lab・OKLCHを相互に変換。CSSのlab()・oklch()・hwb()形式でコピーできます。',
+      },
+      en: {
+        name: 'Color Space Converter (RGB, CMYK, Lab, OKLCH)',
+        keywords: [
+          'rgb to cmyk',
+          'cmyk',
+          'lab',
+          'oklch',
+          'hwb',
+          'color space',
+          'color converter',
+        ],
+        description:
+          'Convert between RGB, HEX, HSL, CMYK, HWB, Lab and OKLCH, and copy CSS lab(), oklch() and hwb() values.',
+      },
+    },
+  },
+  {
+    slug: 'chart-maker',
+    category: 'image',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['csv-viewer', 'function-grapher', 'color-palette-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'グラフ作成（棒・折れ線・円）→PNG保存',
+        keywords: [
+          'グラフ作成',
+          '棒グラフ',
+          '折れ線グラフ',
+          '円グラフ',
+          'CSV グラフ',
+          'チャート',
+          'PNG',
+        ],
+        description:
+          'CSVや表を貼り付けて、棒グラフ・折れ線グラフ・円グラフを作成しPNG画像で保存。複数系列・タイトル・軸ラベルに対応。',
+      },
+      en: {
+        name: 'Chart Maker (Bar, Line, Pie) to PNG',
+        keywords: [
+          'chart maker',
+          'bar chart',
+          'line chart',
+          'pie chart',
+          'csv to chart',
+          'graph maker',
+          'png',
+        ],
+        description:
+          'Paste CSV or a table to make a bar, line or pie chart and save it as a PNG. Supports multiple series, titles and axis labels.',
       },
     },
   },
@@ -2662,6 +2737,35 @@ export const tools: Tool[] = [
         ],
         description:
           'Encrypt text with a password using AES-256-GCM and share it as Base64, then decrypt it with the same password.',
+      },
+    },
+  },
+  {
+    slug: 'file-encryptor',
+    category: 'security',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['crypto-encryptor', 'file-hash-calculator', 'password-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ファイル暗号化・復号',
+        keywords: ['ファイル暗号化', '復号', 'AES', 'AES-GCM', 'enc', '暗号化'],
+        description:
+          'ファイルをパスワードでAES-256-GCM暗号化して.encとして保存。同じパスワードで元のファイルに復号できます。',
+      },
+      en: {
+        name: 'File Encryptor & Decryptor',
+        keywords: [
+          'file encryption',
+          'decrypt',
+          'AES',
+          'AES-GCM',
+          'enc',
+          'encrypt file',
+        ],
+        description:
+          'Encrypt a file with a password using AES-256-GCM and save it as .enc, then decrypt it with the same password.',
       },
     },
   },
@@ -4939,7 +5043,7 @@ export const tools: Tool[] = [
     category: 'image',
     addedAt: '2026-10-06',
     updatedAt: '2026-10-06',
-    related: ['image-pixelart-converter', 'image-text-overlay', 'exif-viewer'],
+    related: ['image-pixelart-converter', 'image-text-overlay', 'image-ocr'],
     sensitive: true,
     translations: {
       ja: {
@@ -4965,6 +5069,43 @@ export const tools: Tool[] = [
         ],
         description:
           'Adds subtle distortion, noise, and fine lines to text in an image to make automatic OCR reading harder. No guarantee of effect. Saves as PNG.',
+      },
+    },
+  },
+  {
+    slug: 'image-ocr',
+    category: 'image',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['ocr-protect-image', 'exif-viewer', 'image-text-overlay'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: '画像から文字抽出（OCR）',
+        keywords: [
+          'OCR',
+          '文字認識',
+          '画像 文字起こし',
+          '画像からテキスト',
+          'スクリーンショット 文字抽出',
+          '日本語OCR',
+        ],
+        description:
+          '画像内の文字を日本語・英語でテキスト化。認識はブラウザ内で完結し、画像は送信されません。精度は保証できません。',
+      },
+      en: {
+        name: 'Image to Text (OCR)',
+        keywords: [
+          'OCR',
+          'image to text',
+          'extract text from image',
+          'text recognition',
+          'screenshot to text',
+          'japanese OCR',
+        ],
+        description:
+          'Extract text from images in English or Japanese. Recognition runs in your browser and the image is never uploaded. Accuracy is not guaranteed.',
       },
     },
   },
@@ -10139,6 +10280,33 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'text-to-speech',
+    category: 'media',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['audio-speed-changer', 'speaker-tester', 'char-counter'],
+    translations: {
+      ja: {
+        name: 'テキスト読み上げ（ブラウザ内蔵の音声）',
+        keywords: ['読み上げ', '音声合成', 'TTS', '朗読', 'Web Speech API'],
+        description:
+          '入力したテキストを端末内蔵の音声で読み上げ。声・速度・高さ・音量を指定でき、クラウド音声は使いません。',
+      },
+      en: {
+        name: 'Text to Speech (Built-in Browser Voices)',
+        keywords: [
+          'text to speech',
+          'tts',
+          'read aloud',
+          'speech synthesis',
+          'web speech api',
+        ],
+        description:
+          'Read text aloud with voices built into your device. Choose voice, speed, pitch and volume. Cloud voices are never used.',
+      },
+    },
+  },
+  {
     slug: 'noise-generator',
     category: 'media',
     addedAt: '2026-10-20',
@@ -11774,6 +11942,754 @@ export const tools: Tool[] = [
           'spoiler cover',
           'image mask',
           'hide part of image',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'notation-variants-checker',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['char-counter', 'zenkaku-hankaku', 'text-diff'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '文章校正（表記ゆれ・用字用語チェック）',
+        keywords: [
+          '表記ゆれ',
+          '表記揺れ',
+          '校正',
+          '用字用語',
+          '送り仮名',
+          '文章校正',
+          '全角半角 混在',
+        ],
+        description:
+          '日本語の文章から送り仮名・漢字とかな・カタカナ表記・全角半角の混在などの表記ゆれを辞書で検出し、推奨表記をハイライトで提案します。',
+      },
+      en: {
+        name: 'Japanese Notation Variants Checker',
+        keywords: [
+          'notation variants',
+          'japanese proofreading',
+          'okurigana',
+          'spelling consistency',
+          'full-width half-width',
+          'style guide',
+        ],
+        description:
+          'Checks Japanese text for notation variants (okurigana, kanji vs kana, katakana, full/half-width mixing) and suggests recommended forms.',
+      },
+    },
+  },
+  {
+    slug: 'readability-checker',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['char-counter', 'reading-time-calculator', 'text-diff'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '文章の読みやすさ診断',
+        description:
+          '文長・漢字率・同じ文末や接続詞の連続・読点の多寡を診断し、問題のある文をハイライト',
+        keywords: [
+          '読みやすさ',
+          '文章診断',
+          '文長',
+          '漢字率',
+          '文末',
+          '接続詞',
+          '読点',
+          '推敲',
+        ],
+      },
+      en: {
+        name: 'Readability Checker',
+        description:
+          'Check sentence length, kanji ratio, repeated endings and conjunctions, and comma use; highlights weak sentences',
+        keywords: [
+          'readability',
+          'sentence length',
+          'kanji ratio',
+          'writing checker',
+          'proofreading',
+          'japanese text',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'ruby-tag-generator',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['kana-converter', 'zenkaku-hankaku', 'char-counter'],
+    translations: {
+      ja: {
+        name: 'ルビ（ふりがな）HTMLタグ生成',
+        description:
+          '漢字《かんじ》や｜親文字《ルビ》の記法から、ふりがな用の<ruby>タグを生成。rp括弧の有無とプレビュー付き。',
+        keywords: [
+          'ルビ',
+          'ふりがな',
+          'rubyタグ',
+          '振り仮名',
+          '青空文庫',
+          'rt',
+          'rp',
+          'HTML',
+        ],
+      },
+      en: {
+        name: 'Ruby (Furigana) HTML Tag Generator',
+        description:
+          'Generate HTML ruby tags for furigana from a simple bracket notation, with optional rp parentheses and preview.',
+        keywords: [
+          'ruby',
+          'furigana',
+          'ruby tag',
+          'rt',
+          'rp',
+          'aozora bunko',
+          'html',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'string-similarity',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['text-diff', 'char-counter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '文字列の類似度・編集距離計算',
+        description:
+          '2つの文字列の編集距離（レーベンシュタイン）・類似率・挿入/削除/置換の操作列を計算',
+        keywords: [
+          '編集距離',
+          'レーベンシュタイン',
+          '類似度',
+          '類似率',
+          'Jaro-Winkler',
+          '文字列比較',
+          'Damerau',
+        ],
+      },
+      en: {
+        name: 'String Similarity & Edit Distance',
+        description:
+          'Compute Levenshtein edit distance, similarity percentage, and insert/delete/replace steps between two strings.',
+        keywords: [
+          'levenshtein',
+          'edit distance',
+          'string similarity',
+          'jaro-winkler',
+          'damerau',
+          'fuzzy match',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'whitespace-visualizer',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['zero-width-char-remover', 'char-counter', 'text-diff'],
+    translations: {
+      ja: {
+        name: '空白・不可視文字の可視化',
+        description:
+          'タブ・全角スペース・NBSP・改行(LF/CRLF)・制御文字・ゼロ幅文字を記号で表示し、種類ごとの件数を集計します。',
+        keywords: [
+          '空白',
+          '不可視文字',
+          'タブ',
+          '全角スペース',
+          'CRLF',
+          '改行コード',
+          'NBSP',
+          '制御文字',
+        ],
+      },
+      en: {
+        name: 'Whitespace & Invisible Character Visualizer',
+        description:
+          'Show tabs, no-break and ideographic spaces, line breaks (LF/CRLF), control and zero-width characters as symbols, with counts.',
+        keywords: [
+          'whitespace',
+          'invisible characters',
+          'tab',
+          'nbsp',
+          'CRLF',
+          'line ending',
+          'control characters',
+          'show hidden characters',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'text-box-frame',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['ascii-table-generator', 'unicode-decorator'],
+    translations: {
+      ja: {
+        name: 'テキスト枠囲み・吹き出し',
+        description:
+          'テキストを罫線・ASCII・吹き出しで囲む。全角幅対応で、コードコメントやREADMEの装飾に便利',
+        keywords: [
+          '枠囲み',
+          '罫線',
+          '吹き出し',
+          'ASCIIアート',
+          'コメント装飾',
+          'テキストボックス',
+          'cowsay',
+        ],
+      },
+      en: {
+        name: 'Text Box & Speech Bubble',
+        description:
+          'Wrap text in a Unicode box, ASCII border or speech bubble, with comment prefixes for code',
+        keywords: [
+          'text box',
+          'ascii box',
+          'speech bubble',
+          'cowsay',
+          'box drawing',
+          'code comment banner',
+          'frame text',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'upside-down-text',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['unicode-decorator', 'char-counter', 'zenkaku-hankaku'],
+    translations: {
+      ja: {
+        name: '上下反転・鏡文字テキスト変換',
+        description:
+          '英数字を上下反転（逆さ文字）・左右反転（鏡文字）・逆順に変換。SNSプロフィール向けにコピペできます。',
+        keywords: [
+          '逆さ文字',
+          '上下反転',
+          '鏡文字',
+          '左右反転',
+          '逆さ',
+          '文字反転',
+          'upside down text',
+        ],
+      },
+      en: {
+        name: 'Upside Down & Mirror Text Generator',
+        description:
+          'Flip text upside down, mirror it or reverse it, and copy it for bios and game names.',
+        keywords: [
+          'upside down text',
+          'flip text',
+          'mirror text',
+          'reverse text',
+          'backwards text',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'byte-length-counter',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['char-counter', 'encoding-converter', 'kishu-izon-checker'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'バイト数カウント（UTF-8・Shift_JIS・UTF-16）',
+        description:
+          '文字列のバイト数をUTF-8・Shift_JIS・UTF-16で数え、上限を指定して超過位置も表示する。DBカラム・API上限・SMSの確認に。',
+        keywords: [
+          'バイト数',
+          'バイト長',
+          'byte length',
+          'UTF-8',
+          'Shift_JIS',
+          'UTF-16',
+          'DBカラム',
+          'SMS',
+        ],
+      },
+      en: {
+        name: 'Byte Length Counter (UTF-8, Shift_JIS, UTF-16)',
+        description:
+          'Count a string in UTF-8, Shift_JIS and UTF-16 and see where it exceeds a byte limit. For DB columns, API limits and SMS.',
+        keywords: [
+          'byte length',
+          'byte count',
+          'string size',
+          'utf-8 bytes',
+          'shift_jis bytes',
+          'utf-16 bytes',
+          'database column',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'markdown-toc-generator',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['markdown-preview', 'markdown-table-editor', 'text-diff'],
+    translations: {
+      ja: {
+        name: 'Markdown目次（TOC）生成',
+        description:
+          'Markdownの見出しからネスト付きの目次を生成。GitHub形式アンカー・重複見出しの連番・深さ指定・番号付き／箇条書きに対応。',
+        keywords: [
+          'TOC',
+          '目次',
+          'Markdown',
+          'アンカー',
+          'README',
+          '見出し',
+          'table of contents',
+        ],
+      },
+      en: {
+        name: 'Markdown TOC Generator',
+        description:
+          'Generate a nested table of contents from Markdown headings with GitHub-style anchors, depth limits and bullet or numbered lists.',
+        keywords: [
+          'toc',
+          'table of contents',
+          'markdown',
+          'anchor',
+          'readme',
+          'heading',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'anagram-palindrome-checker',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['char-counter', 'text-case-converter', 'string-similarity'],
+    translations: {
+      ja: {
+        name: 'アナグラム・回文チェッカー',
+        description:
+          '2語がアナグラムか、文が回文かを判定。大文字小文字・空白・記号・かな・長音・濁点の扱いを選べ、正規化後の文字列と過不足の文字も表示します。',
+        keywords: [
+          'アナグラム',
+          '回文',
+          'パリンドローム',
+          '文字の並べ替え',
+          'しりとり',
+          '言葉遊び',
+          'anagram',
+          'palindrome',
+        ],
+      },
+      en: {
+        name: 'Anagram & Palindrome Checker',
+        description:
+          'Check whether two words are anagrams or a phrase is a palindrome, ignoring case, spaces, punctuation and kana differences.',
+        keywords: [
+          'anagram',
+          'palindrome',
+          'word game',
+          'rearrange letters',
+          'same letters',
+          'reverse text',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'json-sorter',
+    category: 'data',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['json-formatter', 'json-diff', 'json-path-tester'],
+    translations: {
+      ja: {
+        name: 'JSONキーソート・フラット化',
+        description:
+          'JSONのキーを再帰ソートし、a.b[0]形式へのフラット化と元の構造への復元ができます。',
+        keywords: [
+          'JSON',
+          'キーソート',
+          'ソート',
+          'flatten',
+          'unflatten',
+          'フラット化',
+          'JSON並べ替え',
+          'JSON正規化',
+        ],
+      },
+      en: {
+        name: 'JSON Key Sorter & Flatten',
+        description:
+          'Sort JSON keys recursively, flatten nested JSON to a.b[0] paths, and unflatten it back.',
+        keywords: [
+          'json sort keys',
+          'flatten json',
+          'unflatten json',
+          'json normalize',
+          'sort json',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'xml-formatter',
+    category: 'data',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['xml-json-converter', 'json-formatter'],
+    translations: {
+      ja: {
+        name: 'XML整形・構文チェック',
+        description:
+          'XMLをインデント整形・ミニファイ・構文チェック。エラーは行・列つきで表示',
+        keywords: [
+          'XML',
+          'XML整形',
+          'XMLフォーマッター',
+          'ミニファイ',
+          'XML検証',
+          'XMLバリデーター',
+          'インデント',
+          '構文エラー',
+        ],
+      },
+      en: {
+        name: 'XML Formatter & Validator',
+        description:
+          'Format, minify and validate XML with line and column error positions',
+        keywords: [
+          'xml formatter',
+          'xml beautifier',
+          'xml minify',
+          'xml validator',
+          'pretty print xml',
+          'xml syntax check',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'yaml-formatter',
+    category: 'data',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['yaml-json-converter', 'json-sorter', 'xml-formatter'],
+    translations: {
+      ja: {
+        name: 'YAML整形・構文チェック',
+        description:
+          'YAMLをインデント整形し、構文エラーを行・列つきで表示。キーソートや複数ドキュメントにも対応',
+        keywords: [
+          'YAML',
+          'yml',
+          '整形',
+          'フォーマット',
+          'バリデーション',
+          'キーソート',
+          'リンター',
+        ],
+      },
+      en: {
+        name: 'YAML Formatter & Validator',
+        description:
+          'Format and validate YAML with line and column error positions. Sort keys and handle multiple documents.',
+        keywords: [
+          'yaml',
+          'yml',
+          'formatter',
+          'beautify',
+          'validator',
+          'lint',
+          'sort keys',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'csv-split-merge',
+    category: 'data',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['csv-viewer', 'csv-json-converter', 'zip-tool'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'CSV分割・結合・重複行削除',
+        description:
+          'CSVを行数・個数で分割（ZIP出力）、複数CSVの結合（見出しチェック付き）、キー列での重複行削除。ブラウザ内で完結',
+        keywords: [
+          'CSV分割',
+          'CSV結合',
+          'CSV重複削除',
+          'CSVマージ',
+          'CSVスプリット',
+          '重複行削除',
+          'ファイル分割',
+        ],
+      },
+      en: {
+        name: 'CSV Split, Merge and Remove Duplicates',
+        description:
+          'Split CSV by rows or file count (ZIP), merge CSVs with header checks, and remove duplicate rows by key column. Runs in your browser.',
+        keywords: [
+          'csv splitter',
+          'csv merge',
+          'combine csv',
+          'remove duplicate rows',
+          'dedupe csv',
+          'split csv by rows',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'excel-column-converter',
+    category: 'data',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['base-converter', 'csv-viewer'],
+    translations: {
+      ja: {
+        name: 'Excel列番号⇔列記号変換',
+        description:
+          'Excelの列記号（A、AZ、XFD）と列番号を相互変換。$B$3のA1参照の分解、A1:C10の列数・行数・セル数の計算にも対応',
+        keywords: [
+          'Excel',
+          '列番号',
+          '列記号',
+          'A1参照',
+          'セル参照',
+          '範囲',
+          'スプレッドシート',
+          'XFD',
+        ],
+      },
+      en: {
+        name: 'Excel Column Letter ⇔ Number Converter',
+        description:
+          'Convert Excel column letters and numbers (A=1, AZ=52, XFD=16384), split A1 references like $B$3, and count columns in a range.',
+        keywords: [
+          'excel column number',
+          'column letter',
+          'A1 reference',
+          'cell reference',
+          'range',
+          'spreadsheet',
+          'XFD',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'query-string-json',
+    category: 'data',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['url-parser', 'json-formatter', 'json-sorter'],
+    translations: {
+      ja: {
+        name: 'クエリ文字列⇔JSON変換',
+        description:
+          'URLのクエリ文字列とJSONを相互変換。a[b][c]のネストと、b[]・b[0]・繰り返しの配列表記に対応します',
+        keywords: [
+          'クエリ文字列',
+          'クエリパラメータ',
+          'JSON',
+          'URL',
+          'query string',
+          'querystring',
+          'qs',
+          'パラメータ',
+        ],
+      },
+      en: {
+        name: 'Query String ⇔ JSON Converter',
+        description:
+          'Convert URL query strings to JSON and back, with nested keys and b[] / b[0] / repeated-key array styles.',
+        keywords: [
+          'query string',
+          'querystring',
+          'query params',
+          'URL parameters',
+          'JSON',
+          'qs',
+          'urlencoded',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'file-base64-converter',
+    category: 'encode',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['image-to-base64', 'base64', 'svg-to-data-uri'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ファイルのBase64・Data URI変換',
+        keywords: [
+          'ファイルBase64',
+          'Data URI',
+          'データURI',
+          'PDF Base64',
+          'Base64 ファイル復元',
+          'フォント 埋め込み',
+        ],
+        description:
+          'PDF・音声・フォント・ZIPなど任意のファイルをBase64やData URIに変換し、Base64からファイルに戻して保存できます。',
+      },
+      en: {
+        name: 'File to Base64 / Data URI Converter',
+        keywords: [
+          'file to base64',
+          'data URI',
+          'pdf to base64',
+          'base64 to file',
+          'base64 decode file',
+          'embed font',
+        ],
+        description:
+          'Converts any file (PDF, audio, fonts, ZIP) to Base64 or a Data URI, and decodes Base64 back into a downloadable file.',
+      },
+    },
+  },
+  {
+    slug: 'svg-to-data-uri',
+    category: 'encode',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: [
+      'css-pattern-background',
+      'image-to-base64',
+      'file-base64-converter',
+    ],
+    translations: {
+      ja: {
+        name: 'SVG→Data URI変換',
+        description:
+          'SVGコードをData URIに変換し、CSSのbackground-image用コードを出力。URLエンコード（軽量）とBase64を選べます。',
+        keywords: [
+          'SVG',
+          'Data URI',
+          'data:image/svg+xml',
+          'background-image',
+          'CSS背景',
+          'Base64',
+          'URLエンコード',
+        ],
+      },
+      en: {
+        name: 'SVG to Data URI Converter',
+        description:
+          'Convert SVG code to a data URI for CSS background-image, using compact URL encoding or Base64.',
+        keywords: [
+          'svg to data uri',
+          'data:image/svg+xml',
+          'css background-image',
+          'svg base64',
+          'inline svg',
+          'url encode svg',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'css-color-names',
+    category: 'dev',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: [
+      'color-converter',
+      'japanese-traditional-colors',
+      'color-palette-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'CSSカラー名一覧',
+        description:
+          'CSSで使える色名キーワード148色（red・tomato・rebeccapurple など）をHEX・RGBつきで一覧表示。名前やカラーコードで検索し、クリックでコピーできます。',
+        keywords: [
+          'CSS色名',
+          'カラーネーム',
+          'named colors',
+          'rebeccapurple',
+          'HEX',
+          'RGB',
+          '色一覧',
+        ],
+      },
+      en: {
+        name: 'CSS Color Names List',
+        description:
+          'Browse all 148 CSS named colors with HEX and RGB values. Search by name or code and click to copy.',
+        keywords: [
+          'css named colors',
+          'color keywords',
+          'rebeccapurple',
+          'hex',
+          'rgb',
+          'color names',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'html-entity-list',
+    category: 'dev',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['html-escape', 'special-char-list', 'unicode-inspector'],
+    translations: {
+      ja: {
+        name: 'HTMLエンティティ一覧',
+        description:
+          '&copy; などHTMLの文字参照を名前・10進・16進の数値参照つきで一覧表示。検索してコピーできる。',
+        keywords: [
+          'HTMLエンティティ',
+          '文字参照',
+          '実体参照',
+          '数値参照',
+          '&nbsp;',
+          '特殊文字',
+          'html entity',
+        ],
+      },
+      en: {
+        name: 'HTML Entity List',
+        description:
+          'Look up HTML character entities by name, decimal or hex code, then copy them.',
+        keywords: [
+          'html entities',
+          'character reference',
+          'named entity',
+          'numeric reference',
+          'nbsp',
+          'special characters',
         ],
       },
     },

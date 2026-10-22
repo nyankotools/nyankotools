@@ -75,7 +75,7 @@ export const cryptoEncryptorContent: Record<
       'パスワードを忘れると復号できません。パスワードの再発行や復元はできません。',
       '暗号の強さはパスワードの強さに依存します。短い・推測されやすいパスワードは避けてください（強さは「パスワード強度チェッカー」で確認できます）。',
       '暗号文の形式は、バージョン（1バイト）・ソルト（16バイト）・IV（12バイト）・暗号文と認証タグを連結してBase64にしたものです。鍵はPBKDF2（SHA-256・600,000回）でパスワードから導出します。',
-      '暗号化できるのはテキストのみです。ファイルの暗号化には対応していません。',
+      '暗号化できるのはテキストのみです。ファイルの暗号化は「ファイル暗号化・復号」ツールをご利用ください。',
     ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
@@ -130,7 +130,7 @@ export const cryptoEncryptorContent: Record<
       'If you forget the password, the text cannot be decrypted. There is no way to reset or recover it.',
       'The strength of the encryption depends on the password. Avoid short or guessable passwords (you can check one with the Password Strength Checker).',
       'The ciphertext is a Base64 string of the version (1 byte), salt (16 bytes), IV (12 bytes), and ciphertext with its authentication tag, concatenated. The key is derived from the password with PBKDF2 (SHA-256, 600,000 iterations).',
-      'Only text can be encrypted. Files are not supported.',
+      'Only text can be encrypted. To encrypt files, use the File Encryptor & Decryptor.',
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

@@ -1,0 +1,265 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { notationVariantsCheckerContent } from '../../i18n/tools/notation-variants-checker';
+import {
+  NOTATION_KINDS,
+  DEFAULT_KINDS,
+} from '../../lib/tools/notation-variants-checker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = notationVariantsCheckerContent[locale];
+const optionKinds = NOTATION_KINDS.filter((k) => k !== 'custom');
+---
+
+<ToolShell t={t}>
+  <div
+    id="nvc-root"
+    data-kind-labels={JSON.stringify(t.kindLabels)}
+    data-status-template={t.statusTemplate}
+    data-status-none={t.statusNone}
+    data-status-empty={t.statusEmpty}
+    data-highlight-empty={t.highlightEmpty}
+    data-mixed-yes={t.mixedYes}
+    data-mixed-no={t.mixedNo}
+    data-copied={t.copiedMessage}
+    data-copy-failed={t.copyFailedMessage}
+    data-sample={t.sampleText}
+  >
+    <label for="nvc-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="nvc-input"
+      class="ui-input h-48 w-full p-4 dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+    <div class="mt-2">
+      <button type="button" id="nvc-sample-button" class="ui-btn">
+        {t.sampleButton}
+      </button>
+    </div>
+
+    <fieldset class="mt-4">
+      <legend class="ui-label">{t.optionsLegend}</legend>
+      <div class="grid gap-x-6 sm:grid-cols-2">
+        {optionKinds.map((kind) => (
+          <label class="flex min-h-11 items-start gap-2 py-1.5">
+            <input
+              type="checkbox"
+              class="mt-1 h-4 w-4"
+              data-kind={kind}
+              checked={DEFAULT_KINDS[kind]}
+            />
+            <span class="text-sm text-gray-700 dark:text-gray-300">
+              {t.kindLabels[kind]}
+              <span class="block text-xs text-gray-600 dark:text-gray-400">
+                {t.kindHints[kind as keyof typeof t.kindHints]}
+              </span>
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+
+    <div class="mt-3">
+      <label for="nvc-custom" class="ui-label">
+        {t.customLabel}
+      </label>
+      <textarea
+        id="nvc-custom"
+        class="ui-input h-24 w-full p-3 font-mono text-sm dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.customPlaceholder}
+        spellcheck="false"
+        aria-describedby="nvc-custom-hint"
+      ></textarea>
+      <p
+        id="nvc-custom-hint"
+        class="mt-1 text-xs text-gray-600 dark:text-gray-400"
+      >
+        {t.customHint}
+      </p>
+    </div>
+
+    <p
+      id="nvc-status"
+      class="mt-5 text-sm font-medium text-gray-700 dark:text-gray-300"
+      aria-live="polite"
+    ></p>
+
+    <div class="mt-2">
+      <span id="nvc-highlight-label" class="ui-label">
+        {t.highlightLabel}
+      </span>
+      <div
+        id="nvc-highlight"
+        role="region"
+        aria-labelledby="nvc-highlight-label"
+        tabindex="0"
+        class="max-h-80 min-h-24 overflow-auto rounded-lg border border-gray-300 bg-gray-50 p-4 text-sm leading-relaxed break-words whitespace-pre-wrap text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      ></div>
+    </div>
+
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button
+        type="button"
+        id="nvc-copy-button"
+        class="ui-btn ui-btn-primary"
+        disabled
+      >
+        {t.applyButton}
+      </button>
+      <span
+        id="nvc-copy-status"
+        class="text-sm text-gray-700 dark:text-gray-300"
+        aria-live="polite"
+      ></span>
+    </div>
+
+    <div
+      id="nvc-table-wrap"
+      class="mt-4 hidden overflow-x-auto rounded-lg border border-gray-300 dark:border-gray-700"
+    >
+      <table class="w-full min-w-[480px] text-left text-sm">
+        <thead class="bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+          <tr>
+            <th class="px-3 py-2 font-medium">{t.tableFound}</th>
+            <th class="px-3 py-2 font-medium">{t.tableSuggestion}</th>
+            <th class="px-3 py-2 font-medium">{t.tableKind}</th>
+            <th class="px-3 py-2 font-medium">{t.tableMixed}</th>
+          </tr>
+        </thead>
+        <tbody id="nvc-body"></tbody>
+      </table>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { onTextInput } from '../../lib/input-scheduler';
+  import {
+    applySuggestions,
+    buildSegments,
+    checkNotation,
+    DEFAULT_KINDS,
+    type NotationKind,
+  } from '../../lib/tools/notation-variants-checker';
+
+  const root = document.getElementById('nvc-root')!;
+  const input = document.getElementById('nvc-input') as HTMLTextAreaElement;
+  const custom = document.getElementById('nvc-custom') as HTMLTextAreaElement;
+  const statusEl = document.getElementById('nvc-status')!;
+  const highlightEl = document.getElementById('nvc-highlight')!;
+  const bodyEl = document.getElementById('nvc-body')!;
+  const tableWrap = document.getElementById('nvc-table-wrap')!;
+  const copyButton = document.getElementById(
+    'nvc-copy-button',
+  ) as HTMLButtonElement;
+  const copyStatus = document.getElementById('nvc-copy-status')!;
+  const sampleButton = document.getElementById('nvc-sample-button')!;
+  const checkboxes = Array.from(
+    root.querySelectorAll<HTMLInputElement>('input[data-kind]'),
+  );
+
+  const d = root.dataset;
+  const kindLabels = JSON.parse(d.kindLabels ?? '{}') as Record<
+    NotationKind,
+    string
+  >;
+
+  let correctedText = '';
+
+  function td(text: string, className = 'px-3 py-2'): HTMLTableCellElement {
+    const cell = document.createElement('td');
+    cell.className = className;
+    cell.textContent = text;
+    return cell;
+  }
+
+  function render() {
+    const text = input.value;
+    copyStatus.textContent = '';
+
+    const kinds = { ...DEFAULT_KINDS, custom: true };
+    for (const cb of checkboxes) {
+      kinds[cb.dataset.kind as NotationKind] = cb.checked;
+    }
+    const result = checkNotation(text, {
+      kinds,
+      customRules: custom.value,
+    });
+
+    highlightEl.replaceChildren();
+    bodyEl.replaceChildren();
+
+    if (text.trim() === '') {
+      statusEl.textContent = d.statusEmpty ?? '';
+      highlightEl.textContent = d.highlightEmpty ?? '';
+      tableWrap.classList.add('hidden');
+      copyButton.disabled = true;
+      correctedText = '';
+      return;
+    }
+
+    statusEl.textContent =
+      result.total === 0
+        ? (d.statusNone ?? '')
+        : (d.statusTemplate ?? '').replace('{count}', () =>
+            String(result.total),
+          );
+
+    // ユーザー入力は textContent / createTextNode のみで描画する（HTMLとして解釈しない）
+    for (const seg of buildSegments(text, result.findings)) {
+      if (seg.finding === null) {
+        highlightEl.appendChild(document.createTextNode(seg.text));
+        continue;
+      }
+      const f = result.findings[seg.finding];
+      const mark = document.createElement('mark');
+      mark.className =
+        'rounded bg-yellow-200 px-0.5 text-gray-900 dark:bg-yellow-700 dark:text-white';
+      mark.textContent = seg.text;
+      mark.title = f.suggestion;
+      highlightEl.appendChild(mark);
+    }
+
+    for (const f of result.findings) {
+      const tr = document.createElement('tr');
+      tr.className = 'border-t border-gray-200 dark:border-gray-700';
+      tr.append(
+        td(f.text, 'px-3 py-2 font-medium break-all'),
+        td(f.suggestion, 'px-3 py-2 break-all'),
+        td(kindLabels[f.kind] ?? f.kind),
+        td(f.mixed ? (d.mixedYes ?? '') : (d.mixedNo ?? '')),
+      );
+      bodyEl.appendChild(tr);
+    }
+    tableWrap.classList.toggle('hidden', result.total === 0);
+
+    correctedText = applySuggestions(text, result.findings);
+    copyButton.disabled = result.total === 0;
+  }
+
+  onTextInput(input, render, { watch: [custom] });
+  onTextInput(custom, render, { watch: [input] });
+  for (const cb of checkboxes) cb.addEventListener('change', render);
+
+  sampleButton.addEventListener('click', () => {
+    input.value = d.sample ?? '';
+    render();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!correctedText) return;
+    const ok = await copyText(correctedText);
+    copyStatus.textContent = ok ? (d.copied ?? '') : (d.copyFailed ?? '');
+  });
+
+  render();
+</script>

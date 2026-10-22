@@ -1,0 +1,294 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { readabilityCheckerContent } from '../../i18n/tools/readability-checker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = readabilityCheckerContent[locale];
+
+const labels = {
+  levelGood: t.levelGood,
+  levelFair: t.levelFair,
+  levelPoor: t.levelPoor,
+  statusOk: t.statusOk,
+  statusWarn: t.statusWarn,
+  metrics: {
+    sentenceCount: t.metricSentenceCount,
+    avgLength: t.metricAvgLength,
+    longSentences: t.metricLongSentences,
+    kanjiRatio: t.metricKanjiRatio,
+    endingRepeat: t.metricEndingRepeat,
+    conjunctionRun: t.metricConjunctionRun,
+    commaAvg: t.metricCommaAvg,
+  },
+  issues: {
+    long: t.issueLong,
+    commaMany: t.issueCommaMany,
+    commaNone: t.issueCommaNone,
+    endingRepeat: t.issueEndingRepeat,
+    conjunctionRun: t.issueConjunctionRun,
+  },
+};
+---
+
+<ToolShell t={t}>
+  <div
+    id="readability-root"
+    data-labels={JSON.stringify(labels)}
+    data-sample={t.sampleText}
+  >
+    <label for="readability-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="readability-input"
+      data-no-count
+      class="h-56 w-full max-w-3xl rounded-lg border border-gray-300 p-4 focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+    ></textarea>
+
+    <div class="mt-3 flex max-w-3xl flex-wrap items-end gap-4">
+      <div>
+        <label for="readability-max-length" class="ui-label">
+          {t.maxLengthLabel}
+        </label>
+        <input
+          id="readability-max-length"
+          type="number"
+          min="5"
+          step="1"
+          value="60"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="readability-max-commas" class="ui-label">
+          {t.maxCommasLabel}
+        </label>
+        <input
+          id="readability-max-commas"
+          type="number"
+          min="0"
+          step="1"
+          value="3"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+      </div>
+      <button type="button" id="readability-sample-button" class="ui-btn">
+        {t.sampleButton}
+      </button>
+    </div>
+
+    <section class="mt-6 max-w-3xl" aria-live="polite">
+      <h2 class="mb-2 text-lg font-bold">{t.scoreLabel}</h2>
+      <p
+        id="readability-score-empty"
+        class="text-sm text-gray-600 dark:text-gray-400"
+      >
+        {t.scoreEmpty}
+      </p>
+      <p id="readability-score-box" class="hidden items-baseline gap-3">
+        <span id="readability-score" class="text-4xl font-bold">
+          0
+        </span>
+        <span id="readability-level" class="text-base font-semibold"></span>
+      </p>
+    </section>
+
+    <section class="mt-6 max-w-3xl">
+      <h2 class="mb-2 text-lg font-bold">{t.metricsHeading}</h2>
+      <dl
+        id="readability-metrics"
+        class="divide-y divide-gray-200 rounded-lg bg-white shadow-sm dark:divide-gray-800 dark:bg-gray-900"
+      ></dl>
+    </section>
+
+    <section class="mt-6 max-w-3xl">
+      <h2 class="mb-2 text-lg font-bold">{t.previewHeading}</h2>
+      <div
+        id="readability-preview"
+        class="min-h-16 rounded-lg bg-white p-4 text-sm leading-7 break-words whitespace-pre-wrap shadow-sm dark:bg-gray-900"
+        data-empty={t.previewEmpty}
+      ></div>
+    </section>
+
+    <section class="mt-6 max-w-3xl">
+      <h2 class="mb-2 text-lg font-bold">{t.issuesHeading}</h2>
+      <p
+        id="readability-issues-none"
+        class="text-sm text-gray-600 dark:text-gray-400"
+      >
+        {t.issuesNone}
+      </p>
+      <ul id="readability-issues" class="space-y-2 text-sm"></ul>
+    </section>
+  </div>
+
+  <Fragment slot="after">
+    <h2 class="mt-10 mb-2 text-lg font-bold">{t.relatedHeading}</h2>
+    <ul class="list-inside list-disc space-y-1 text-sm text-gray-600 dark:text-gray-400">
+      {t.relatedLinks.map((link) => (
+        <li>
+          <a
+            href={link.href}
+            class="text-blue-700 underline hover:no-underline dark:text-blue-400"
+          >
+            {link.label}
+          </a>{' '}
+          — {link.description}
+        </li>
+      ))}
+    </ul>
+  </Fragment>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import {
+    analyze,
+    scoreLevel,
+    type IssueKind,
+    type MetricKey,
+  } from '../../lib/tools/readability-checker';
+
+  interface Labels {
+    levelGood: string;
+    levelFair: string;
+    levelPoor: string;
+    statusOk: string;
+    statusWarn: string;
+    metrics: Record<MetricKey, string>;
+    issues: Record<IssueKind, string>;
+  }
+
+  const root = document.getElementById('readability-root')!;
+  const labels = JSON.parse(root.dataset.labels!) as Labels;
+  const input = document.getElementById(
+    'readability-input',
+  ) as HTMLTextAreaElement;
+  const maxLengthInput = document.getElementById(
+    'readability-max-length',
+  ) as HTMLInputElement;
+  const maxCommasInput = document.getElementById(
+    'readability-max-commas',
+  ) as HTMLInputElement;
+  const sampleButton = document.getElementById('readability-sample-button')!;
+  const scoreEmpty = document.getElementById('readability-score-empty')!;
+  const scoreBox = document.getElementById('readability-score-box')!;
+  const scoreEl = document.getElementById('readability-score')!;
+  const levelEl = document.getElementById('readability-level')!;
+  const metricsEl = document.getElementById('readability-metrics')!;
+  const previewEl = document.getElementById('readability-preview')!;
+  const issuesNone = document.getElementById('readability-issues-none')!;
+  const issuesList = document.getElementById('readability-issues')!;
+
+  const percent = (v: number) => `${(v * 100).toFixed(1)}%`;
+  const decimal = (v: number) => (Math.round(v * 10) / 10).toString();
+
+  function formatMetric(key: MetricKey, value: number | null): string {
+    if (value === null) return '-';
+    if (key === 'kanjiRatio') return percent(value);
+    if (key === 'avgLength' || key === 'commaAvg') return decimal(value);
+    return String(value);
+  }
+
+  function update() {
+    const result = analyze(input.value, {
+      maxLength:
+        maxLengthInput.value === '' ? NaN : Number(maxLengthInput.value),
+      maxCommas:
+        maxCommasInput.value === '' ? NaN : Number(maxCommasInput.value),
+    });
+
+    // スコア
+    const hasScore = result.score !== null;
+    scoreEmpty.classList.toggle('hidden', hasScore);
+    scoreBox.classList.toggle('hidden', !hasScore);
+    scoreBox.classList.toggle('flex', hasScore);
+    if (result.score !== null) {
+      scoreEl.textContent = String(result.score);
+      const level = scoreLevel(result.score);
+      levelEl.textContent =
+        level === 'good'
+          ? labels.levelGood
+          : level === 'fair'
+            ? labels.levelFair
+            : labels.levelPoor;
+    }
+
+    // 指標一覧
+    metricsEl.replaceChildren(
+      ...result.metrics.map((m) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between gap-3 px-4 py-2';
+        const dt = document.createElement('dt');
+        dt.className = 'text-sm text-gray-700 dark:text-gray-300';
+        dt.textContent = labels.metrics[m.key];
+        const dd = document.createElement('dd');
+        dd.className = 'flex items-center gap-2 text-sm font-semibold';
+        const val = document.createElement('span');
+        val.textContent = formatMetric(m.key, m.value);
+        dd.append(val);
+        if (m.key !== 'sentenceCount' && m.value !== null) {
+          const badge = document.createElement('span');
+          badge.className = m.warn
+            ? 'rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-900 dark:bg-amber-900/40 dark:text-amber-200'
+            : 'rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-900 dark:bg-green-900/40 dark:text-green-200';
+          badge.textContent = m.warn ? labels.statusWarn : labels.statusOk;
+          dd.append(badge);
+        }
+        row.append(dt, dd);
+        return row;
+      }),
+    );
+
+    // ハイライト（textContent のみ使用し、入力は HTML として解釈しない）
+    if (result.sentences.length === 0) {
+      previewEl.textContent = previewEl.dataset.empty!;
+    } else {
+      previewEl.replaceChildren(
+        ...result.sentences.map((s) => {
+          if (s.issues.length === 0) return document.createTextNode(s.raw);
+          const mark = document.createElement('mark');
+          mark.className =
+            'rounded bg-yellow-200 px-0.5 text-gray-900 underline decoration-wavy decoration-amber-600';
+          mark.title = s.issues.map((k) => labels.issues[k]).join(' / ');
+          mark.textContent = s.raw;
+          return mark;
+        }),
+      );
+    }
+
+    // 指摘された文の一覧
+    const flagged = result.sentences.filter((s) => s.issues.length > 0);
+    issuesNone.classList.toggle('hidden', flagged.length > 0);
+    issuesList.replaceChildren(
+      ...flagged.map((s) => {
+        const li = document.createElement('li');
+        li.className =
+          'rounded-lg bg-white p-3 shadow-sm dark:bg-gray-900 break-words';
+        const reasons = document.createElement('p');
+        reasons.className =
+          'mb-1 text-xs font-semibold text-amber-800 dark:text-amber-300';
+        reasons.textContent = s.issues.map((k) => labels.issues[k]).join(' / ');
+        const body = document.createElement('p');
+        body.textContent = s.raw.trim();
+        li.append(reasons, body);
+        return li;
+      }),
+    );
+  }
+
+  onTextInput(input, update);
+  maxLengthInput.addEventListener('input', update);
+  maxCommasInput.addEventListener('input', update);
+  sampleButton.addEventListener('click', () => {
+    input.value = root.dataset.sample!;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  update();
+</script>

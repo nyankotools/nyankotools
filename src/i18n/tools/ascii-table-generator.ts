@@ -27,6 +27,7 @@ export interface AsciiTableGeneratorPageContent {
   alignRight: string;
   headerLabel: string;
   rowSeparatorsLabel: string;
+  wideBorderLabel: string;
   copy: string;
   copied: string;
   copyFailed: string;
@@ -67,6 +68,7 @@ export const asciiTableGeneratorContent: Record<
     alignRight: '右揃え',
     headerLabel: '1行目を見出しにする',
     rowSeparatorsLabel: '全行の間に線を引く',
+    wideBorderLabel: '罫線を全角幅（幅2）として整形',
     copy: 'コピー',
     copied: 'コピーしました',
     copyFailed: 'コピーに失敗しました',
@@ -80,6 +82,7 @@ export const asciiTableGeneratorContent: Record<
       '全角文字は半角2文字分の幅として数えて整形します。等幅フォントで表示してください。プロポーショナルフォントでは罫線がずれます。',
       'フォントによっては、全角文字の幅が半角のちょうど2倍にならず、罫線が少しずれることがあります。Unicode罫線は、フォントによっては文字幅が異なる場合があります。',
       '「1行目を見出しにする」をオンにすると、1行目の下に区切り線を引きます。「全行の間に線を引く」をオンにすると、すべての行の間に線を引きます。',
+      '「罫線を全角幅（幅2）として整形」をオンにすると、罫線を幅2として数えて整形します。罫線が全角幅で表示されるフォントで右端が揃うようになりますが、半角幅で表示されるフォントに貼ると逆にずれます。列の幅が奇数になる場合は空白を1つ足して偶数にします。対象はUnicode単線と角丸です。角丸の角（╭╮╰╯）は半角幅で表示されるフォントが多く、角丸では全体が揃わないことがあります。二重線・ASCII罫線は変わりません（二重線は、MSゴシックなどでも半角幅で表示されるため、オフのまま使ってください）。',
       'セル内の改行は、複数行のセルとして表示します。列数が足りない行は空のセルで補い、空行は無視します。',
     ],
     glossaryHeading: '用語解説',
@@ -124,6 +127,7 @@ export const asciiTableGeneratorContent: Record<
     alignRight: 'Right',
     headerLabel: 'Use the first row as header',
     rowSeparatorsLabel: 'Line between every row',
+    wideBorderLabel: 'Treat box lines as double-width',
     copy: 'Copy',
     copied: 'Copied',
     copyFailed: 'Copy failed',
@@ -137,6 +141,7 @@ export const asciiTableGeneratorContent: Record<
       'Full-width characters count as two columns wide. View the table in a monospaced font; a proportional font will misalign the borders.',
       'Some fonts do not draw full-width characters at exactly twice the width of half-width ones, and Unicode box-drawing characters can vary in width, so borders may be slightly off.',
       'With "Use the first row as header" on, a line is drawn under the first row. With "Line between every row" on, a line is drawn between all rows.',
+      'Turning on "Treat box lines as double-width" counts each box-drawing character as two columns. The borders then line up in fonts that draw these characters wide, but drift in fonts that draw them narrow. If a column width would be odd, one space is added to make it even. Only the Unicode single line and rounded styles are affected. Rounded corners (╭╮╰╯) are drawn narrow in many fonts, so the rounded style may not line up completely. Double line and ASCII styles are unchanged (in fonts such as MS Gothic, double lines are drawn narrow, so leave the option off for them).',
       'A line break inside a cell becomes a multi-line cell. Rows with fewer columns are filled with empty cells, and blank lines are ignored.',
     ],
     glossaryHeading: 'Glossary',

@@ -1,0 +1,291 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { queryStringJsonContent } from '../../i18n/tools/query-string-json';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = queryStringJsonContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
+    <div class="flex items-center gap-2">
+      <label
+        for="qsj-direction"
+        class="text-sm text-gray-700 dark:text-gray-300"
+      >
+        {t.directionLabel}
+      </label>
+      <select
+        id="qsj-direction"
+        class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+      >
+        {t.directionOptions.map((o) => (
+          <option value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </div>
+    <div
+      id="qsj-q2j-options"
+      class="flex flex-wrap items-center gap-x-4 gap-y-3"
+    >
+      <label class="ui-check">
+        <input id="qsj-infer" type="checkbox" class="h-4 w-4" />
+        {t.inferLabel}
+      </label>
+      <label class="ui-check">
+        <input id="qsj-plus" type="checkbox" class="h-4 w-4" checked />
+        {t.plusLabel}
+      </label>
+      <div class="flex items-center gap-2">
+        <label
+          for="qsj-indent"
+          class="text-sm text-gray-700 dark:text-gray-300"
+        >
+          {t.indentLabel}
+        </label>
+        <select
+          id="qsj-indent"
+          class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+        >
+          {t.indentOptions.map((o) => (
+            <option value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+    <div
+      id="qsj-j2q-options"
+      hidden
+      class="flex flex-wrap items-center gap-x-4 gap-y-3"
+    >
+      <div class="flex items-center gap-2">
+        <label for="qsj-array" class="text-sm text-gray-700 dark:text-gray-300">
+          {t.arrayLabel}
+        </label>
+        <select
+          id="qsj-array"
+          class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+        >
+          {t.arrayOptions.map((o) => (
+            <option value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      </div>
+      <div class="flex items-center gap-2">
+        <label
+          for="qsj-encode"
+          class="text-sm text-gray-700 dark:text-gray-300"
+        >
+          {t.encodeLabel}
+        </label>
+        <select
+          id="qsj-encode"
+          class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+        >
+          {t.encodeOptions.map((o) => (
+            <option value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      </div>
+      <label class="ui-check">
+        <input id="qsj-space-plus" type="checkbox" class="h-4 w-4" />
+        {t.spacePlusLabel}
+      </label>
+      <label class="ui-check">
+        <input id="qsj-leading" type="checkbox" class="h-4 w-4" />
+        {t.leadingLabel}
+      </label>
+    </div>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="qsj-sample-button"
+      type="button"
+      class="ui-btn"
+      data-query-sample={t.sampleQuery}
+      data-json-sample={t.sampleJson}
+    >
+      {t.sampleButton}
+    </button>
+    <button
+      id="qsj-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="qsj-status"
+      class="text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="qsj-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="qsj-input"
+        data-query-target="text"
+        data-no-count
+        data-placeholder-query={t.inputPlaceholderQuery}
+        data-placeholder-json={t.inputPlaceholderJson}
+        class="ui-input h-80 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.inputPlaceholderQuery}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label for="qsj-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="qsj-output"
+        readonly
+        class="ui-input h-80 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="qsj-error"
+    hidden
+    data-parse={t.errorParse}
+    data-not-object={t.errorNotObject}
+    data-depth={t.errorDepth}
+    class="ui-error mt-4 max-w-2xl whitespace-pre-line"
+  ></p>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    jsonToQuery,
+    queryToJson,
+    type ArrayFormat,
+    type EncodeMode,
+  } from '../../lib/tools/query-string-json';
+
+  const input = document.getElementById('qsj-input') as HTMLTextAreaElement;
+  const output = document.getElementById('qsj-output') as HTMLTextAreaElement;
+  const direction = document.getElementById(
+    'qsj-direction',
+  ) as HTMLSelectElement;
+  const q2jOptions = document.getElementById('qsj-q2j-options')!;
+  const j2qOptions = document.getElementById('qsj-j2q-options')!;
+  const inferCheck = document.getElementById('qsj-infer') as HTMLInputElement;
+  const plusCheck = document.getElementById('qsj-plus') as HTMLInputElement;
+  const indentSelect = document.getElementById(
+    'qsj-indent',
+  ) as HTMLSelectElement;
+  const arraySelect = document.getElementById('qsj-array') as HTMLSelectElement;
+  const encodeSelect = document.getElementById(
+    'qsj-encode',
+  ) as HTMLSelectElement;
+  const spacePlusCheck = document.getElementById(
+    'qsj-space-plus',
+  ) as HTMLInputElement;
+  const leadingCheck = document.getElementById(
+    'qsj-leading',
+  ) as HTMLInputElement;
+  const sampleButton = document.getElementById(
+    'qsj-sample-button',
+  ) as HTMLButtonElement;
+  const copyButton = document.getElementById(
+    'qsj-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('qsj-status')!;
+  const errorEl = document.getElementById('qsj-error')!;
+
+  function run() {
+    statusEl.textContent = '';
+    const toJson = direction.value === 'q2j';
+    q2jOptions.hidden = !toJson;
+    j2qOptions.hidden = toJson;
+    input.placeholder =
+      (toJson
+        ? input.dataset.placeholderQuery
+        : input.dataset.placeholderJson) ?? '';
+    if (input.value.trim() === '') {
+      output.value = '';
+      errorEl.hidden = true;
+      return;
+    }
+    if (toJson) {
+      const result = queryToJson(input.value, {
+        inferTypes: inferCheck.checked,
+        plusAsSpace: plusCheck.checked,
+        indent:
+          indentSelect.value === 'tab' ? '\t' : Number(indentSelect.value),
+      });
+      output.value = result.success ? result.output : '';
+      errorEl.hidden = true;
+      return;
+    }
+    const result = jsonToQuery(input.value, {
+      arrayFormat: arraySelect.value as ArrayFormat,
+      encode: encodeSelect.value as EncodeMode,
+      spaceAsPlus: spacePlusCheck.checked,
+      leadingQuestion: leadingCheck.checked,
+    });
+    if (result.success) {
+      output.value = result.output;
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    } else {
+      const templates: Record<string, string | undefined> = {
+        parse: errorEl.dataset.parse,
+        'not-object': errorEl.dataset.notObject,
+        depth: errorEl.dataset.depth,
+      };
+      output.value = '';
+      errorEl.textContent = (templates[result.kind] ?? '').replace(
+        '{message}',
+        () => result.message,
+      );
+      errorEl.hidden = false;
+    }
+  }
+
+  onTextInput(input, run);
+  for (const el of [
+    direction,
+    inferCheck,
+    plusCheck,
+    indentSelect,
+    arraySelect,
+    encodeSelect,
+    spacePlusCheck,
+    leadingCheck,
+  ]) {
+    el.addEventListener('change', run);
+  }
+
+  sampleButton.addEventListener('click', () => {
+    input.value =
+      direction.value === 'q2j'
+        ? (sampleButton.dataset.querySample ?? '')
+        : (sampleButton.dataset.jsonSample ?? '');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  run();
+</script>

@@ -1,0 +1,175 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { markdownTocGeneratorContent } from '../../i18n/tools/markdown-toc-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = markdownTocGeneratorContent[locale];
+const selectCls = 'ui-input h-11 w-full px-3 dark:bg-gray-900';
+const levels = [1, 2, 3, 4, 5, 6];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="toc-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="toc-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      class="ui-input h-64 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div class="mt-4 grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="toc-min" class="ui-label">
+        {t.minLevelLabel}
+      </label>
+      <select id="toc-min" class={selectCls}>
+        {levels.map((l) => (
+          <option value={l} selected={l === 1}>
+            {t.levelOption.replace('{level}', String(l))}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label for="toc-max" class="ui-label">
+        {t.maxLevelLabel}
+      </label>
+      <select id="toc-max" class={selectCls}>
+        {levels.map((l) => (
+          <option value={l} selected={l === 3}>
+            {t.levelOption.replace('{level}', String(l))}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div>
+      <label for="toc-style" class="ui-label">
+        {t.styleLabel}
+      </label>
+      <select id="toc-style" class={selectCls}>
+        <option value="bullet">{t.styleBullet}</option>
+        <option value="number">{t.styleNumber}</option>
+      </select>
+    </div>
+    <div>
+      <label for="toc-indent" class="ui-label">
+        {t.indentLabel}
+      </label>
+      <select id="toc-indent" class={selectCls}>
+        <option value="2">{t.indent2}</option>
+        <option value="4">{t.indent4}</option>
+      </select>
+    </div>
+  </div>
+
+  <label class="mt-3 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+    <input id="toc-links" type="checkbox" checked class="h-4 w-4" />
+    <span>{t.linksLabel}</span>
+  </label>
+
+  <p
+    id="toc-summary"
+    class="mt-4 text-sm font-medium"
+    aria-live="polite"
+    data-found={t.summaryFound}
+    data-none={t.summaryNone}
+  ></p>
+
+  <div class="mt-4">
+    <div class="mb-1 flex flex-wrap items-center gap-3">
+      <label for="toc-output" class="ui-label mb-0">
+        {t.resultLabel}
+      </label>
+      <button
+        id="toc-copy-button"
+        type="button"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="ui-btn"
+      >
+        {t.copy}
+      </button>
+      <span
+        id="toc-status"
+        class="text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+    <textarea
+      id="toc-output"
+      readonly
+      data-no-persist
+      data-no-count
+      class="ui-input h-48 w-full bg-gray-50 p-4 font-mono text-sm dark:bg-gray-900"
+      spellcheck="false"
+    ></textarea>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    generateToc,
+    type TocStyle,
+  } from '../../lib/tools/markdown-toc-generator';
+
+  const input = document.getElementById('toc-input') as HTMLTextAreaElement;
+  const minEl = document.getElementById('toc-min') as HTMLSelectElement;
+  const maxEl = document.getElementById('toc-max') as HTMLSelectElement;
+  const styleEl = document.getElementById('toc-style') as HTMLSelectElement;
+  const indentEl = document.getElementById('toc-indent') as HTMLSelectElement;
+  const linksEl = document.getElementById('toc-links') as HTMLInputElement;
+  const output = document.getElementById('toc-output') as HTMLTextAreaElement;
+  const summaryEl = document.getElementById('toc-summary')!;
+  const statusEl = document.getElementById('toc-status')!;
+  const copyButton = document.getElementById(
+    'toc-copy-button',
+  ) as HTMLButtonElement;
+
+  function update() {
+    statusEl.textContent = '';
+    const result = generateToc(input.value, {
+      minLevel: Number(minEl.value),
+      maxLevel: Number(maxEl.value),
+      style: styleEl.value as TocStyle,
+      indent: Number(indentEl.value),
+      links: linksEl.checked,
+    });
+    output.value = result.markdown;
+    summaryEl.textContent =
+      input.value === ''
+        ? ''
+        : result.included === 0
+          ? (summaryEl.dataset.none ?? '')
+          : (summaryEl.dataset.found ?? '').replace(
+              '{count}',
+              String(result.included),
+            );
+  }
+
+  onTextInput(input, update);
+  for (const el of [minEl, maxEl, styleEl, indentEl, linksEl]) {
+    el.addEventListener('change', update);
+  }
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  update();
+</script>

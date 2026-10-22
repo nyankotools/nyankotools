@@ -83,6 +83,7 @@ pnpm run test:e2e     # Playwright E2E
 pnpm run test:e2e:ui  # Playwright E2E（UIモード）
 pnpm qa <slug…>       # 対象ツールのspecだけを実行するQA用ラッパー（scripts/qa.mjs）
 pnpm run check:bundle # JSバンドル予算のチェック（scripts/bundle-budget.mjs）
+pnpm precheck         # PR Check相当（prettier・eslint・astro check・vitest・build・バンドル予算）を一括実行
 ```
 
 ## ディレクトリ構成
@@ -107,18 +108,23 @@ src/
     about/, contact/, faq/, privacy-policy/, terms-of-service/
   styles/global.css
 e2e/                          # Playwright E2E テスト（*.spec.ts）
+scripts/                      # QAラッパー・バンドル予算チェック・OGP生成
 docs/spec.md                  # 仕様書
+.github/workflows/            # CI（pr.yml: PR Check / ci.yml: test・e2e・deploy）
+.claude/                      # Claude Code 用のドキュメント・エージェント・コマンド
 ```
 
 新規ツール追加の手順は [`.claude/docs/adding-a-tool.md`](./.claude/docs/adding-a-tool.md) を参照してください。
 
 ## 開発フロー（このリポジトリ固有のルール）
 
-このリポジトリを Claude Code で扱う場合、ツールの追加・修正後は **実装 → レビュー（`tool-reviewer`）→ テスト（`tool-qa`）** の順で確認する運用になっています。人手で開発する場合も、コミット前に以下を通すことを推奨します。
+このリポジトリを Claude Code で扱う場合、ツールの追加・修正後は **実装 → レビュー（`tool-reviewer`）→ テスト（`tool-qa`）** の順で確認する運用になっています。人手で開発する場合も、`main` へのPR作成前に以下を通すことを推奨します（PR Check 相当）。
 
 ```bash
-pnpm exec astro check && pnpm run lint && pnpm test && pnpm build
+pnpm precheck
 ```
+
+`main` はブランチ保護されており、`develop` からのPR（CIの `check` 成功が必須）経由で反映します。E2E は PR Check に含まれず、`main` へのマージ後の `ci.yml` で実行され、test / e2e がともに成功したときだけデプロイされます。
 
 詳細は [`CLAUDE.md`](./CLAUDE.md) を参照してください。
 

@@ -1,0 +1,379 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { imageOcrContent } from '../../i18n/tools/image-ocr';
+import type { Locale } from '../../data/tools';
+import { formatFileSize } from '../../lib/tools/image-pixelart-converter';
+import { MAX_OCR_FILE_SIZE } from '../../lib/tools/image-ocr';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageOcrContent[locale];
+---
+
+<ToolShell t={t}>
+  <p
+    role="note"
+    class="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
+  >
+    {t.disclaimer}
+  </p>
+
+  <div id="ocr-root" data-locale={locale}>
+    <label for="ocr-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="ocr-dropzone" class="ui-dropzone">
+      <input id="ocr-file-input" type="file" accept="image/*" class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="ocr-error"
+      role="alert"
+      hidden
+      data-not-image={t.errorNotImage}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-max-size={formatFileSize(MAX_OCR_FILE_SIZE)}
+      data-failed={t.errorRecognizeFailed}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+
+    <div id="ocr-source" hidden class="mt-4">
+      <div class="flex flex-wrap items-center gap-3">
+        <img
+          id="ocr-preview"
+          alt={t.previewAlt}
+          class="max-h-40 max-w-full rounded border border-gray-300 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800"
+        />
+        <p
+          id="ocr-file-info"
+          data-template={t.fileInfoTemplate}
+          class="text-sm break-all text-gray-600 dark:text-gray-400"
+        ></p>
+      </div>
+
+      <div class="mt-4 flex flex-wrap items-center gap-3">
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t.languageLabel}
+        </span>
+        <div
+          id="ocr-language"
+          class="ui-seg"
+          role="group"
+          aria-label={t.languageLabel}
+        >
+          <button
+            type="button"
+            data-lang="jpn+eng"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            {t.languageJpnEng}
+          </button>
+          <button
+            type="button"
+            data-lang="jpn"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.languageJpn}
+          </button>
+          <button
+            type="button"
+            data-lang="eng"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            {t.languageEng}
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          id="ocr-recognize-button"
+          type="button"
+          class="ui-btn ui-btn-primary"
+        >
+          {t.recognizeButton}
+        </button>
+        <button id="ocr-clear-button" type="button" class="ui-btn">
+          {t.clearButton}
+        </button>
+      </div>
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+        {t.firstRunNote}
+      </p>
+
+      <div id="ocr-progress-area" hidden class="mt-4">
+        <progress
+          id="ocr-progress"
+          max="100"
+          value="0"
+          class="h-2 w-full"
+          aria-labelledby="ocr-status"
+        ></progress>
+      </div>
+      <p
+        id="ocr-status"
+        role="status"
+        aria-live="polite"
+        data-loading={t.statusLoading}
+        data-recognizing-template={t.statusRecognizingTemplate}
+        data-done={t.statusDone}
+        data-empty={t.statusEmpty}
+        class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+      ></p>
+    </div>
+
+    <div id="ocr-result-section" hidden class="mt-4">
+      <label for="ocr-result" class="ui-label">
+        {t.resultLabel}
+      </label>
+      <textarea
+        id="ocr-result"
+        data-no-count
+        class="ui-input h-64 w-full p-4"
+      ></textarea>
+      <p
+        id="ocr-confidence"
+        data-template={t.confidenceTemplate}
+        class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+      ></p>
+      <p
+        id="ocr-low-warning"
+        hidden
+        class="mt-1 text-sm text-amber-800 dark:text-amber-300"
+      >
+        {t.confidenceLowWarning}
+      </p>
+      <div class="mt-3 flex flex-wrap items-center gap-3">
+        <button
+          id="ocr-copy-button"
+          type="button"
+          data-copied={t.copied}
+          data-copy-failed={t.copyFailed}
+          class="ui-btn"
+        >
+          {t.copyButton}
+        </button>
+        <button id="ocr-download-button" type="button" class="ui-btn">
+          {t.downloadButton}
+        </button>
+        <span
+          id="ocr-copy-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import { fill } from '../../lib/format-template';
+  import { formatFileSize } from '../../lib/tools/image-pixelart-converter';
+  import {
+    cleanOcrText,
+    confidenceLevel,
+    isOcrLanguage,
+    languageCodes,
+    validateOcrFile,
+    type OcrLanguage,
+  } from '../../lib/tools/image-ocr';
+  // 認識エンジン・言語データはすべて同一オリジンから読み込む（CDNへは接続しない）。
+  // 言語データは public/ocr/lang/ に固定名で置いている（Tesseract が `<lang>.traineddata.gz` を組み立てるため）。
+  import workerUrl from 'tesseract.js/dist/worker.min.js?url';
+  import coreUrl from 'tesseract.js-core/tesseract-core-simd-lstm.wasm.js?url';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const dropzone = $('ocr-dropzone');
+  const fileInput = $<HTMLInputElement>('ocr-file-input');
+  const errorEl = $('ocr-error');
+  const sourceSection = $('ocr-source');
+  const previewImg = $<HTMLImageElement>('ocr-preview');
+  const fileInfoEl = $('ocr-file-info');
+  const langButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#ocr-language [data-lang]',
+  );
+  const recognizeButton = $<HTMLButtonElement>('ocr-recognize-button');
+  const clearButton = $<HTMLButtonElement>('ocr-clear-button');
+  const progressArea = $('ocr-progress-area');
+  const progressEl = $<HTMLProgressElement>('ocr-progress');
+  const statusEl = $('ocr-status');
+  const resultSection = $('ocr-result-section');
+  const resultEl = $<HTMLTextAreaElement>('ocr-result');
+  const confidenceEl = $('ocr-confidence');
+  const lowWarningEl = $('ocr-low-warning');
+  const copyButton = $<HTMLButtonElement>('ocr-copy-button');
+  const downloadButton = $<HTMLButtonElement>('ocr-download-button');
+  const copyStatusEl = $('ocr-copy-status');
+
+  let currentFile: File | null = null;
+  let previewUrl: string | null = null;
+  let language: OcrLanguage = 'jpn+eng';
+  let busy = false;
+  let copyTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function resetResult() {
+    resultSection.hidden = true;
+    resultEl.value = '';
+    confidenceEl.textContent = '';
+    lowWarningEl.hidden = true;
+    progressArea.hidden = true;
+    progressEl.value = 0;
+    statusEl.textContent = '';
+    copyStatusEl.textContent = '';
+  }
+
+  function clearAll() {
+    if (busy) return;
+    currentFile = null;
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = null;
+    previewImg.removeAttribute('src');
+    sourceSection.hidden = true;
+    errorEl.hidden = true;
+    resetResult();
+  }
+
+  function setBusy(value: boolean) {
+    busy = value;
+    recognizeButton.disabled = value;
+    clearButton.disabled = value;
+    langButtons.forEach((b) => (b.disabled = value));
+  }
+
+  function handleFile(file: File) {
+    if (busy) return;
+    errorEl.hidden = true;
+    const problem = validateOcrFile(file);
+    if (problem === 'notImage') {
+      showError(errorEl.dataset.notImage!);
+      return;
+    }
+    if (problem === 'tooLarge') {
+      showError(
+        fill(errorEl.dataset.tooLargeTemplate!, {
+          max: errorEl.dataset.maxSize!,
+        }),
+      );
+      return;
+    }
+    resetResult();
+    currentFile = file;
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    previewUrl = URL.createObjectURL(file);
+    previewImg.src = previewUrl;
+    fileInfoEl.textContent = fill(fileInfoEl.dataset.template!, {
+      name: file.name,
+      size: formatFileSize(file.size),
+    });
+    sourceSection.hidden = false;
+  }
+
+  enableFileDrop(dropzone, fileInput);
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) handleFile(file);
+  });
+
+  langButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const value = button.dataset.lang ?? '';
+      if (!isOcrLanguage(value)) return;
+      language = value;
+      langButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === button)),
+      );
+    });
+  });
+
+  clearButton.addEventListener('click', clearAll);
+
+  recognizeButton.addEventListener('click', async () => {
+    if (!currentFile || busy) return;
+    const file = currentFile;
+    const lang = language;
+    errorEl.hidden = true;
+    resetResult();
+    setBusy(true);
+    progressArea.hidden = false;
+    statusEl.textContent = statusEl.dataset.loading!;
+
+    let worker: { terminate: () => Promise<unknown> } | null = null;
+    try {
+      const { createWorker } = await import('tesseract.js');
+      const created = await createWorker(languageCodes(lang), 1, {
+        // blob: 経由のworkerだと相対URLのimportScriptsが解決できないため、直接URLで起動する
+        workerBlobURL: false,
+        workerPath: new URL(workerUrl, location.href).href,
+        corePath: new URL(coreUrl, location.href).href,
+        langPath: new URL('/ocr/lang', location.href).href,
+        gzip: true,
+        logger: (m) => {
+          if (m.status === 'recognizing text') {
+            const percent = Math.round(m.progress * 100);
+            progressEl.value = percent;
+            statusEl.textContent = fill(statusEl.dataset.recognizingTemplate!, {
+              percent: String(percent),
+            });
+          }
+        },
+      });
+      worker = created;
+      const { data } = await created.recognize(file);
+      const text = cleanOcrText(data.text, lang);
+      progressEl.value = 100;
+      if (text === '') {
+        statusEl.textContent = statusEl.dataset.empty!;
+        return;
+      }
+      resultEl.value = text;
+      const confidence = Math.round(data.confidence);
+      confidenceEl.textContent = fill(confidenceEl.dataset.template!, {
+        percent: String(confidence),
+      });
+      lowWarningEl.hidden = confidenceLevel(confidence) !== 'low';
+      resultSection.hidden = false;
+      statusEl.textContent = statusEl.dataset.done!;
+    } catch {
+      progressArea.hidden = true;
+      statusEl.textContent = '';
+      showError(errorEl.dataset.failed!);
+    } finally {
+      await worker?.terminate().catch(() => {});
+      setBusy(false);
+    }
+  });
+
+  copyButton.addEventListener('click', async () => {
+    const ok = await copyText(resultEl.value);
+    copyStatusEl.textContent = ok
+      ? copyButton.dataset.copied!
+      : copyButton.dataset.copyFailed!;
+    clearTimeout(copyTimer);
+    copyTimer = setTimeout(() => (copyStatusEl.textContent = ''), 2000);
+  });
+
+  downloadButton.addEventListener('click', () => {
+    const base = (currentFile?.name ?? 'ocr').replace(/\.[^.]+$/, '') || 'ocr';
+    downloadBlob(
+      new Blob([resultEl.value], { type: 'text/plain;charset=utf-8' }),
+      `${base}.txt`,
+    );
+  });
+</script>

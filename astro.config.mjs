@@ -117,6 +117,7 @@ export default defineConfig({
         'bcryptjs',
         'fast-xml-parser',
         '@neslinesli93/qpdf-wasm',
+        'tesseract.js',
         'csso',
         'dompurify',
         'exifr',

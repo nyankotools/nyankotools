@@ -1,0 +1,325 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { anagramPalindromeCheckerContent } from '../../i18n/tools/anagram-palindrome-checker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = anagramPalindromeCheckerContent[locale];
+
+const options = [
+  { id: 'ap-opt-nfkc', key: 'nfkc', label: t.optNfkc, checked: true },
+  {
+    id: 'ap-opt-case',
+    key: 'ignoreCase',
+    label: t.optIgnoreCase,
+    checked: true,
+  },
+  {
+    id: 'ap-opt-spaces',
+    key: 'ignoreSpaces',
+    label: t.optIgnoreSpaces,
+    checked: true,
+  },
+  {
+    id: 'ap-opt-punct',
+    key: 'ignorePunctuation',
+    label: t.optIgnorePunctuation,
+    checked: true,
+  },
+  { id: 'ap-opt-kana', key: 'unifyKana', label: t.optUnifyKana, checked: true },
+  {
+    id: 'ap-opt-long',
+    key: 'ignoreLongVowel',
+    label: t.optIgnoreLongVowel,
+    checked: false,
+  },
+  {
+    id: 'ap-opt-dakuten',
+    key: 'ignoreDakuten',
+    label: t.optIgnoreDakuten,
+    checked: false,
+  },
+];
+---
+
+<ToolShell t={t}>
+  <fieldset class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <legend class="px-1 text-sm font-medium">{t.optionsLabel}</legend>
+    <div class="grid gap-2 sm:grid-cols-2">
+      {options.map((o) => (
+        <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+          <input
+            id={o.id}
+            type="checkbox"
+            checked={o.checked}
+            data-option={o.key}
+            class="h-4 w-4"
+          />
+          <span>{o.label}</span>
+        </label>
+      ))}
+    </div>
+  </fieldset>
+
+  <section
+    id="ap-anagram"
+    class="mt-6"
+    data-yes={t.anagramYes}
+    data-identical={t.anagramIdentical}
+    data-no={t.anagramNo}
+    data-empty={t.anagramEmpty}
+    data-chars={t.charsUnit}
+    data-none={t.none}
+    data-sample-a={t.anagramSample.a}
+    data-sample-b={t.anagramSample.b}
+  >
+    <h2 class="mb-2 text-lg font-semibold">{t.anagramHeading}</h2>
+    <div class="grid gap-3 lg:grid-cols-2">
+      <div>
+        <label for="ap-a" class="ui-label">
+          {t.inputALabel}
+        </label>
+        <textarea
+          id="ap-a"
+          class="ui-input h-24 w-full p-4 dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.anagramPlaceholderA}
+          spellcheck="false"
+          autocomplete="off"
+        ></textarea>
+      </div>
+      <div>
+        <label for="ap-b" class="ui-label">
+          {t.inputBLabel}
+        </label>
+        <textarea
+          id="ap-b"
+          class="ui-input h-24 w-full p-4 dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.anagramPlaceholderB}
+          spellcheck="false"
+          autocomplete="off"
+        ></textarea>
+      </div>
+    </div>
+    <button id="ap-sample-button" type="button" class="ui-btn mt-3">
+      {t.sampleButton}
+    </button>
+
+    <p
+      id="ap-anagram-status"
+      class="mt-4 text-base font-semibold"
+      aria-live="polite"
+    ></p>
+    <dl id="ap-anagram-detail" class="mt-2 hidden space-y-2 text-sm">
+      <div>
+        <dt class="text-gray-600 dark:text-gray-400">{t.normalizedALabel}</dt>
+        <dd id="ap-norm-a" class="font-mono break-all"></dd>
+      </div>
+      <div>
+        <dt class="text-gray-600 dark:text-gray-400">{t.normalizedBLabel}</dt>
+        <dd id="ap-norm-b" class="font-mono break-all"></dd>
+      </div>
+      <div id="ap-diff" class="hidden space-y-2">
+        <div>
+          <dt class="text-gray-600 dark:text-gray-400">{t.extraInALabel}</dt>
+          <dd id="ap-extra-a" class="font-mono break-all"></dd>
+        </div>
+        <div>
+          <dt class="text-gray-600 dark:text-gray-400">{t.extraInBLabel}</dt>
+          <dd id="ap-extra-b" class="font-mono break-all"></dd>
+        </div>
+      </div>
+    </dl>
+  </section>
+
+  <section
+    id="ap-palindrome"
+    class="mt-8"
+    data-yes={t.palindromeYes}
+    data-no={t.palindromeNo}
+    data-empty={t.palindromeEmpty}
+    data-chars={t.charsUnit}
+  >
+    <h2 class="mb-2 text-lg font-semibold">{t.palindromeHeading}</h2>
+    <label for="ap-p" class="ui-label">
+      {t.palindromeInputLabel}
+    </label>
+    <textarea
+      id="ap-p"
+      data-query-target="text"
+      data-sample={t.palindromeSample}
+      class="ui-input h-28 w-full p-4 dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.palindromePlaceholder}
+      spellcheck="false"
+    ></textarea>
+
+    <p
+      id="ap-palindrome-status"
+      class="mt-4 text-base font-semibold"
+      aria-live="polite"
+    ></p>
+    <dl id="ap-palindrome-detail" class="mt-2 hidden space-y-2 text-sm">
+      <div>
+        <dt class="text-gray-600 dark:text-gray-400">{t.normalizedLabel}</dt>
+        <dd id="ap-p-norm" class="font-mono break-all"></dd>
+      </div>
+      <div>
+        <dt class="text-gray-600 dark:text-gray-400">{t.reversedLabel}</dt>
+        <dd id="ap-p-rev" class="font-mono break-all"></dd>
+      </div>
+    </dl>
+  </section>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import {
+    checkAnagram,
+    checkPalindrome,
+    defaultOptions,
+    type CharCount,
+    type NormalizeOptions,
+  } from '../../lib/tools/anagram-palindrome-checker';
+
+  const inputA = document.getElementById('ap-a') as HTMLTextAreaElement;
+  const inputB = document.getElementById('ap-b') as HTMLTextAreaElement;
+  const inputP = document.getElementById('ap-p') as HTMLTextAreaElement;
+  const anagramSection = document.getElementById('ap-anagram')!;
+  const palindromeSection = document.getElementById('ap-palindrome')!;
+  const aStatus = document.getElementById('ap-anagram-status')!;
+  const aDetail = document.getElementById('ap-anagram-detail')!;
+  const pStatus = document.getElementById('ap-palindrome-status')!;
+  const pDetail = document.getElementById('ap-palindrome-detail')!;
+  const diffEl = document.getElementById('ap-diff')!;
+  const checkboxes = Array.from(
+    document.querySelectorAll<HTMLInputElement>('input[data-option]'),
+  );
+
+  const okClass =
+    'mt-4 text-base font-semibold text-green-700 dark:text-green-400';
+  const ngClass = 'mt-4 text-base font-semibold text-red-700 dark:text-red-400';
+  const neutralClass =
+    'mt-4 text-base font-semibold text-gray-600 dark:text-gray-400';
+
+  function getOptions(): NormalizeOptions {
+    const o: NormalizeOptions = { ...defaultOptions };
+    for (const cb of checkboxes) {
+      const key = cb.dataset.option as keyof NormalizeOptions;
+      o[key] = cb.checked;
+    }
+    return o;
+  }
+
+  function withCount(chars: string, n: number, d: DOMStringMap): string {
+    const unit = (d.chars ?? '{n}').replace('{n}', String(n));
+    return chars === '' ? unit : `${chars}（${unit}）`;
+  }
+
+  function formatCounts(list: CharCount[], none: string): string {
+    if (list.length === 0) return none;
+    return list
+      .map((c) => (c.count > 1 ? `${c.char}×${c.count}` : c.char))
+      .join('  ');
+  }
+
+  function updateAnagram() {
+    const d = anagramSection.dataset;
+    const r = checkAnagram(inputA.value, inputB.value, getOptions());
+    if (inputA.value === '' && inputB.value === '') {
+      aStatus.textContent = '';
+      aDetail.classList.add('hidden');
+      return;
+    }
+    const text =
+      r.status === 'anagram'
+        ? d.yes
+        : r.status === 'identical'
+          ? d.identical
+          : r.status === 'different'
+            ? d.no
+            : d.empty;
+    aStatus.textContent = text ?? '';
+    aStatus.className =
+      r.status === 'anagram' || r.status === 'identical'
+        ? okClass
+        : r.status === 'different'
+          ? ngClass
+          : neutralClass;
+    const hasDetail = r.status !== 'empty';
+    aDetail.classList.toggle('hidden', !hasDetail);
+    if (!hasDetail) return;
+    document.getElementById('ap-norm-a')!.textContent = withCount(
+      r.normalizedA,
+      r.lengthA,
+      d,
+    );
+    document.getElementById('ap-norm-b')!.textContent = withCount(
+      r.normalizedB,
+      r.lengthB,
+      d,
+    );
+    const showDiff = r.status === 'different';
+    diffEl.classList.toggle('hidden', !showDiff);
+    if (showDiff) {
+      const none = d.none ?? '';
+      document.getElementById('ap-extra-a')!.textContent = formatCounts(
+        r.extraInA,
+        none,
+      );
+      document.getElementById('ap-extra-b')!.textContent = formatCounts(
+        r.extraInB,
+        none,
+      );
+    }
+  }
+
+  function updatePalindrome() {
+    const d = palindromeSection.dataset;
+    if (inputP.value === '') {
+      pStatus.textContent = '';
+      pDetail.classList.add('hidden');
+      return;
+    }
+    const r = checkPalindrome(inputP.value, getOptions());
+    pStatus.textContent =
+      (r.status === 'palindrome'
+        ? d.yes
+        : r.status === 'not'
+          ? d.no
+          : d.empty) ?? '';
+    pStatus.className =
+      r.status === 'palindrome'
+        ? okClass
+        : r.status === 'not'
+          ? ngClass
+          : neutralClass;
+    pDetail.classList.toggle('hidden', r.status === 'empty');
+    document.getElementById('ap-p-norm')!.textContent = withCount(
+      r.normalized,
+      r.length,
+      d,
+    );
+    document.getElementById('ap-p-rev')!.textContent = r.reversed;
+  }
+
+  function updateAll() {
+    updateAnagram();
+    updatePalindrome();
+  }
+
+  onTextInput(inputA, updateAnagram);
+  onTextInput(inputB, updateAnagram);
+  onTextInput(inputP, updatePalindrome);
+  for (const cb of checkboxes) cb.addEventListener('change', updateAll);
+
+  document.getElementById('ap-sample-button')!.addEventListener('click', () => {
+    inputA.value = anagramSection.dataset.sampleA ?? '';
+    inputB.value = anagramSection.dataset.sampleB ?? '';
+    updateAnagram();
+  });
+
+  updateAll();
+</script>

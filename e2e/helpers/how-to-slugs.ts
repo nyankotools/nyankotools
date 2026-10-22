@@ -109,6 +109,7 @@ export const howToSlugs = [
   'text-replace-tools',
   'ocr-protect-image',
   'image-ocr',
+  'chart-maker',
   'media-converter',
   'css-clamp-calculator',
   'time-calculator',

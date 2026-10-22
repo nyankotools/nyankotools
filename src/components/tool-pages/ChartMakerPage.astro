@@ -1,0 +1,663 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { chartMakerContent } from '../../i18n/tools/chart-maker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = chartMakerContent[locale];
+
+const types = [
+  { id: 'bar', label: t.typeBar },
+  { id: 'line', label: t.typeLine },
+  { id: 'pie', label: t.typePie },
+];
+const sizes = ['800x500', '1200x750', '1000x1000'];
+---
+
+<ToolShell t={t}>
+  <section
+    id="cm"
+    class="space-y-5"
+    data-sample={t.sampleData}
+    data-downloaded={t.downloaded}
+    data-download-failed={t.downloadFailed}
+    data-pie-note={t.pieFirstSeriesNote}
+    data-err-empty={t.errorEmpty}
+    data-err-unterminated-quote={t.errorUnterminatedQuote}
+    data-err-no-series={t.errorNoSeries}
+    data-err-too-many-rows={t.errorTooManyRowsTemplate}
+    data-err-too-many-series={t.errorTooManySeriesTemplate}
+    data-err-not-number={t.errorNotNumberTemplate}
+    data-err-pie-negative={t.errorPieNegative}
+    data-err-pie-zero-total={t.errorPieZeroTotal}
+    data-err-too-small={t.errorTooSmall}
+  >
+    <div>
+      <label for="cm-data" class="ui-label">
+        {t.dataLabel}
+      </label>
+      <textarea
+        id="cm-data"
+        rows="8"
+        spellcheck="false"
+        wrap="off"
+        aria-describedby="cm-data-hint cm-error"
+        class="ui-input w-full px-3 py-2 font-mono text-sm dark:bg-gray-900"
+      >{t.sampleData}</textarea>
+      <p
+        id="cm-data-hint"
+        class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+      >
+        {t.dataHint}
+      </p>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <button id="cm-sample" type="button" class="ui-btn">
+          {t.sampleButton}
+        </button>
+        <button id="cm-clear" type="button" class="ui-btn">
+          {t.clearButton}
+        </button>
+      </div>
+      <p
+        id="cm-error"
+        class="ui-error mt-2 empty:hidden"
+        aria-live="polite"
+      ></p>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <span id="cm-type-label" class="ui-label">
+          {t.typeLabel}
+        </span>
+        <div class="ui-seg" role="group" aria-labelledby="cm-type-label">
+          {types.map((ty) => (
+            <button
+              type="button"
+              class="ui-seg-btn"
+              data-type={ty.id}
+              aria-pressed={ty.id === 'bar' ? 'true' : 'false'}
+            >
+              {ty.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div class="min-w-48 flex-1">
+        <label for="cm-title" class="ui-label">
+          {t.titleLabel}
+        </label>
+        <input
+          id="cm-title"
+          type="text"
+          placeholder={t.titlePlaceholder}
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2" id="cm-axis-labels">
+      <div>
+        <label for="cm-xlabel" class="ui-label">
+          {t.xLabel}
+        </label>
+        <input
+          id="cm-xlabel"
+          type="text"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="cm-ylabel" class="ui-label">
+          {t.yLabel}
+        </label>
+        <input
+          id="cm-ylabel"
+          type="text"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label for="cm-size" class="ui-label">
+          {t.sizeLabel}
+        </label>
+        <select id="cm-size" class="ui-input h-11 px-3 dark:bg-gray-900">
+          {sizes.map((s) => (
+            <option value={s}>{s.replace('x', ' × ')}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="cm-scale" class="ui-label">
+          {t.scaleLabel}
+        </label>
+        <select id="cm-scale" class="ui-input h-11 px-3 dark:bg-gray-900">
+          <option value="1">1×</option>
+          <option value="2">2×</option>
+        </select>
+      </div>
+      <label class="ui-check">
+        <input id="cm-legend" type="checkbox" checked />
+        <span>{t.optionLegend}</span>
+      </label>
+      <label class="ui-check">
+        <input id="cm-grid" type="checkbox" checked />
+        <span>{t.optionGrid}</span>
+      </label>
+      <label class="ui-check">
+        <input id="cm-transparent" type="checkbox" />
+        <span>{t.optionTransparent}</span>
+      </label>
+    </div>
+
+    <div>
+      <canvas
+        id="cm-canvas"
+        role="img"
+        aria-label={t.canvasLabel}
+        class="block h-auto w-full rounded-lg border border-gray-400 bg-white dark:border-gray-700"
+      ></canvas>
+      <p
+        id="cm-status"
+        class="mt-2 min-h-5 text-sm text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></p>
+    </div>
+
+    <button id="cm-download-button" type="button" class="ui-btn ui-btn-primary">
+      {t.downloadButton}
+    </button>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    SERIES_COLORS,
+    computePieSlices,
+    computeValueAxis,
+    formatPercent,
+    formatTick,
+    parseChartData,
+    pngFilename,
+    type ChartData,
+    type ChartType,
+    type ChartDataError,
+  } from '../../lib/tools/chart-maker';
+  import { fill } from '../../lib/format-template';
+  import { downloadBlob } from '../../lib/download';
+
+  const root = document.getElementById('cm')!;
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const dataInput = $<HTMLTextAreaElement>('cm-data');
+  const errorEl = $('cm-error');
+  const statusEl = $('cm-status');
+  const canvas = $<HTMLCanvasElement>('cm-canvas');
+  const titleInput = $<HTMLInputElement>('cm-title');
+  const xLabelInput = $<HTMLInputElement>('cm-xlabel');
+  const yLabelInput = $<HTMLInputElement>('cm-ylabel');
+  const sizeSelect = $<HTMLSelectElement>('cm-size');
+  const scaleSelect = $<HTMLSelectElement>('cm-scale');
+  const legendCheck = $<HTMLInputElement>('cm-legend');
+  const gridCheck = $<HTMLInputElement>('cm-grid');
+  const transparentCheck = $<HTMLInputElement>('cm-transparent');
+  const downloadButton = $<HTMLButtonElement>('cm-download-button');
+  const axisLabels = $('cm-axis-labels');
+  const typeButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-type]'),
+  );
+
+  const FONT = "'Hiragino Sans','Yu Gothic','Meiryo','Noto Sans JP',sans-serif";
+  const INK = '#1f2937';
+  const MUTED = '#6b7280';
+  const GRID = '#e5e7eb';
+
+  let chartType: ChartType = 'bar';
+  let currentData: ChartData | null = null;
+
+  function seriesColor(i: number): string {
+    return i < SERIES_COLORS.length
+      ? SERIES_COLORS[i]
+      : `hsl(${(i * 47) % 360} 55% 42%)`;
+  }
+
+  function errorMessage(e: ChartDataError): string {
+    const d = root.dataset;
+    switch (e.code) {
+      case 'empty':
+        return d.errEmpty ?? '';
+      case 'unterminated-quote':
+        return d.errUnterminatedQuote ?? '';
+      case 'no-series':
+        return d.errNoSeries ?? '';
+      case 'too-many-rows':
+        return fill(d.errTooManyRows ?? '', { max: String(e.max) });
+      case 'too-many-series':
+        return fill(d.errTooManySeries ?? '', { max: String(e.max) });
+      case 'not-number':
+        return fill(d.errNotNumber ?? '', {
+          row: String(e.row),
+          column: String(e.column),
+        });
+    }
+  }
+
+  function clip(ctx: CanvasRenderingContext2D, text: string, maxW: number) {
+    if (ctx.measureText(text).width <= maxW) return text;
+    let s = text;
+    while (s.length > 1 && ctx.measureText(`${s}…`).width > maxW) {
+      s = s.slice(0, -1);
+    }
+    return `${s}…`;
+  }
+
+  interface LegendItem {
+    color: string;
+    text: string;
+  }
+
+  /** 凡例を折り返して並べたときの高さ。draw=true なら実際に描く */
+  function legendBlock(
+    ctx: CanvasRenderingContext2D,
+    items: LegendItem[],
+    width: number,
+    top: number,
+    k: number,
+    draw: boolean,
+  ): number {
+    const font = 13 * k;
+    const lineH = font * 1.7;
+    const sw = 11 * k;
+    ctx.font = `${font}px ${FONT}`;
+    const widths = items.map(
+      (it) =>
+        sw + 6 * k + ctx.measureText(clip(ctx, it.text, width * 0.8)).width,
+    );
+    const gap = 18 * k;
+    const lines: number[][] = [[]];
+    let x = 0;
+    widths.forEach((w, i) => {
+      if (x > 0 && x + w > width) {
+        lines.push([]);
+        x = 0;
+      }
+      lines[lines.length - 1].push(i);
+      x += w + gap;
+    });
+    if (draw) {
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      lines.forEach((idxs, li) => {
+        const total =
+          idxs.reduce((s, i) => s + widths[i], 0) + gap * (idxs.length - 1);
+        let lx = (canvas.width - total) / 2;
+        const cy = top + li * lineH + lineH / 2;
+        for (const i of idxs) {
+          ctx.fillStyle = items[i].color;
+          ctx.fillRect(lx, cy - sw / 2, sw, sw);
+          ctx.fillStyle = INK;
+          ctx.fillText(
+            clip(ctx, items[i].text, width * 0.8),
+            lx + sw + 6 * k,
+            cy,
+          );
+          lx += widths[i] + gap;
+        }
+      });
+    }
+    return lines.length * lineH;
+  }
+
+  function drawTitle(
+    ctx: CanvasRenderingContext2D,
+    title: string,
+    k: number,
+  ): number {
+    if (!title) return 0;
+    ctx.font = `bold ${20 * k}px ${FONT}`;
+    ctx.fillStyle = INK;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(
+      clip(ctx, title, canvas.width - 40 * k),
+      canvas.width / 2,
+      16 * k,
+    );
+    return 16 * k + 20 * k * 1.4;
+  }
+
+  function drawAxisChart(
+    ctx: CanvasRenderingContext2D,
+    data: ChartData,
+    type: 'bar' | 'line',
+    k: number,
+  ): boolean {
+    const W = canvas.width;
+    const H = canvas.height;
+    const font = 12 * k;
+    const items = data.series.map((s, i) => ({
+      color: seriesColor(i),
+      text: s.name,
+    }));
+    const topTitle = drawTitle(ctx, titleInput.value.trim(), k);
+    const top = Math.max(topTitle, 12 * k) + 8 * k;
+    const legendFull = legendCheck.checked
+      ? legendBlock(ctx, items, W - 40 * k, 0, k, false) + 6 * k
+      : 0;
+    // 凡例が高すぎるときは省略して描画領域を確保する
+    const showLegend = legendCheck.checked && legendFull <= H * 0.35;
+    const legendH = showLegend ? legendFull : 0;
+
+    const axis = computeValueAxis(
+      data.series.flatMap((s) => s.values),
+      type === 'bar',
+    );
+    ctx.font = `${font}px ${FONT}`;
+    const tickTexts = axis.ticks.map((v) => formatTick(v, axis.step));
+    const tickW = Math.max(...tickTexts.map((s) => ctx.measureText(s).width));
+    const yLabel = yLabelInput.value.trim();
+    const xLabel = xLabelInput.value.trim();
+    const left = 14 * k + (yLabel ? font * 1.4 : 0) + tickW + 10 * k;
+    const right = W - 20 * k;
+    const plotW = right - left;
+
+    const n = data.labels.length;
+    const slot = plotW / n;
+    const labels = data.labels.map((l) => clip(ctx, l, 160 * k));
+    const maxLabelW = Math.max(...labels.map((l) => ctx.measureText(l).width));
+    const rotate = maxLabelW > slot * 0.95;
+    const skip = rotate ? Math.max(1, Math.ceil((font * 1.3) / slot)) : 1;
+    const labelH = rotate ? maxLabelW * 0.72 + font : font * 1.6;
+    const bottom = H - legendH - labelH - (xLabel ? font * 1.6 : 0) - 10 * k;
+    const plotH = bottom - top;
+    if (plotW < 20 || plotH < 20) return false;
+
+    const yOf = (v: number) =>
+      bottom - ((v - axis.min) / (axis.max - axis.min)) * plotH;
+
+    // グリッドと縦軸の目盛り
+    ctx.lineWidth = Math.max(1, k);
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    axis.ticks.forEach((v, i) => {
+      const y = yOf(v);
+      if (gridCheck.checked) {
+        ctx.strokeStyle = GRID;
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(right, y);
+        ctx.stroke();
+      }
+      ctx.fillStyle = MUTED;
+      ctx.fillText(tickTexts[i], left - 6 * k, y);
+    });
+    // 軸線（値が0の位置に基準線）
+    ctx.strokeStyle = '#9ca3af';
+    ctx.beginPath();
+    ctx.moveTo(left, top);
+    ctx.lineTo(left, bottom);
+    ctx.stroke();
+    const zeroY = yOf(Math.min(Math.max(0, axis.min), axis.max));
+    ctx.beginPath();
+    ctx.moveTo(left, zeroY);
+    ctx.lineTo(right, zeroY);
+    ctx.stroke();
+
+    const m = data.series.length;
+    if (type === 'bar') {
+      const groupW = slot * 0.8;
+      const barW = groupW / m;
+      data.series.forEach((s, si) => {
+        ctx.fillStyle = seriesColor(si);
+        s.values.forEach((v, i) => {
+          if (v === null) return;
+          const x = left + slot * i + (slot - groupW) / 2 + barW * si;
+          const y = yOf(v);
+          ctx.fillRect(
+            x,
+            Math.min(y, zeroY),
+            Math.max(1, barW - 1),
+            Math.abs(zeroY - y),
+          );
+        });
+      });
+    } else {
+      data.series.forEach((s, si) => {
+        const color = seriesColor(si);
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = 2.5 * k;
+        ctx.lineJoin = 'round';
+        let pen = false;
+        ctx.beginPath();
+        s.values.forEach((v, i) => {
+          if (v === null) {
+            pen = false;
+            return;
+          }
+          const x = left + slot * (i + 0.5);
+          if (pen) ctx.lineTo(x, yOf(v));
+          else ctx.moveTo(x, yOf(v));
+          pen = true;
+        });
+        ctx.stroke();
+        if (n <= 60) {
+          s.values.forEach((v, i) => {
+            if (v === null) return;
+            ctx.beginPath();
+            ctx.arc(left + slot * (i + 0.5), yOf(v), 3.5 * k, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        }
+      });
+    }
+
+    // 横軸のラベル
+    ctx.font = `${font}px ${FONT}`;
+    ctx.fillStyle = MUTED;
+    labels.forEach((l, i) => {
+      if (i % skip !== 0) return;
+      const x = left + slot * (i + 0.5);
+      if (rotate) {
+        ctx.save();
+        ctx.translate(x, bottom + 8 * k);
+        ctx.rotate(-Math.PI / 4);
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(l, 0, 0);
+        ctx.restore();
+      } else {
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText(l, x, bottom + 8 * k);
+      }
+    });
+
+    // 軸ラベル
+    ctx.fillStyle = INK;
+    if (xLabel) {
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(
+        clip(ctx, xLabel, plotW),
+        left + plotW / 2,
+        bottom + labelH + 6 * k,
+      );
+    }
+    if (yLabel) {
+      ctx.save();
+      ctx.translate(14 * k, top + plotH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(clip(ctx, yLabel, plotH), 0, 0);
+      ctx.restore();
+    }
+
+    if (showLegend) {
+      legendBlock(ctx, items, W - 40 * k, H - legendH, k, true);
+    }
+    return true;
+  }
+
+  function drawPie(
+    ctx: CanvasRenderingContext2D,
+    data: ChartData,
+    k: number,
+  ): string | null {
+    const tooSmall = root.dataset.errTooSmall ?? '';
+    const pie = computePieSlices(data);
+    if (!pie.success) {
+      return pie.error === 'negative'
+        ? (root.dataset.errPieNegative ?? '')
+        : (root.dataset.errPieZeroTotal ?? '');
+    }
+    const W = canvas.width;
+    const H = canvas.height;
+    const items = pie.slices.map((s, i) => ({
+      color: seriesColor(i),
+      text: `${s.label} (${formatPercent(s.fraction)})`,
+    }));
+    const topTitle = drawTitle(ctx, titleInput.value.trim(), k);
+    const top = Math.max(topTitle, 12 * k) + 8 * k;
+    const legendFull = legendCheck.checked
+      ? legendBlock(ctx, items, W - 40 * k, 0, k, false) + 6 * k
+      : 0;
+    const showLegend = legendCheck.checked && legendFull <= H * 0.35;
+    const legendH = showLegend ? legendFull : 0;
+    const availH = H - top - legendH - 12 * k;
+    const r = Math.min(availH, W - 40 * k) / 2;
+    if (r < 20) return tooSmall;
+    const cx = W / 2;
+    const cy = top + availH / 2;
+    pie.slices.forEach((s, i) => {
+      const a0 = s.startAngle - Math.PI / 2;
+      const a1 = s.endAngle - Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r, a0, a1);
+      ctx.closePath();
+      ctx.fillStyle = seriesColor(i);
+      ctx.fill();
+      ctx.lineWidth = 2 * k;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+      if (s.fraction >= 0.05) {
+        const mid = (a0 + a1) / 2;
+        ctx.font = `bold ${13 * k}px ${FONT}`;
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(
+          formatPercent(s.fraction),
+          cx + Math.cos(mid) * r * 0.65,
+          cy + Math.sin(mid) * r * 0.65,
+        );
+      }
+    });
+    if (showLegend) {
+      legendBlock(ctx, items, W - 40 * k, H - legendH, k, true);
+    }
+    return null;
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    statusEl.textContent = '';
+    axisLabels.classList.toggle('hidden', chartType === 'pie');
+    const [w, h] = sizeSelect.value.split('x').map(Number);
+    const scale = Number(scaleSelect.value);
+    canvas.width = w * scale;
+    canvas.height = h * scale;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const k = (w * scale) / 800;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const outcome = parseChartData(dataInput.value);
+    if (!outcome.success) {
+      currentData = null;
+      errorEl.textContent = errorMessage(outcome.error);
+      downloadButton.disabled = true;
+      return;
+    }
+    currentData = outcome.data;
+    if (!transparentCheck.checked) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    let drawError: string | null = null;
+    if (chartType === 'pie') {
+      drawError = drawPie(ctx, outcome.data, k);
+      if (!drawError && outcome.data.series.length > 1) {
+        statusEl.textContent = root.dataset.pieNote ?? '';
+      }
+    } else {
+      if (!drawAxisChart(ctx, outcome.data, chartType, k)) {
+        drawError = root.dataset.errTooSmall ?? '';
+      }
+    }
+    if (drawError) {
+      errorEl.textContent = drawError;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    downloadButton.disabled = drawError !== null;
+  }
+
+  typeButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      chartType = b.dataset.type as ChartType;
+      typeButtons.forEach((o) =>
+        o.setAttribute('aria-pressed', String(o === b)),
+      );
+      render();
+    }),
+  );
+  for (const el of [
+    dataInput,
+    titleInput,
+    xLabelInput,
+    yLabelInput,
+    sizeSelect,
+    scaleSelect,
+    legendCheck,
+    gridCheck,
+    transparentCheck,
+  ]) {
+    el.addEventListener('input', render);
+    if (
+      !(el instanceof HTMLInputElement && el.type === 'text') &&
+      el !== dataInput
+    ) {
+      el.addEventListener('change', render);
+    }
+  }
+  $('cm-sample').addEventListener('click', () => {
+    dataInput.value = root.dataset.sample ?? '';
+    render();
+  });
+  $('cm-clear').addEventListener('click', () => {
+    dataInput.value = '';
+    render();
+  });
+  downloadButton.addEventListener('click', () => {
+    if (!currentData) return;
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        statusEl.textContent = root.dataset.downloadFailed ?? '';
+        return;
+      }
+      downloadBlob(blob, pngFilename(chartType));
+      statusEl.textContent = root.dataset.downloaded ?? '';
+    }, 'image/png');
+  });
+
+  render();
+</script>

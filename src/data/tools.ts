@@ -493,6 +493,44 @@ export const tools: Tool[] = [
     },
   },
   {
+    slug: 'chart-maker',
+    category: 'image',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['csv-viewer', 'function-grapher', 'color-palette-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'グラフ作成（棒・折れ線・円）→PNG保存',
+        keywords: [
+          'グラフ作成',
+          '棒グラフ',
+          '折れ線グラフ',
+          '円グラフ',
+          'CSV グラフ',
+          'チャート',
+          'PNG',
+        ],
+        description:
+          'CSVや表を貼り付けて、棒グラフ・折れ線グラフ・円グラフを作成しPNG画像で保存。複数系列・タイトル・軸ラベルに対応。',
+      },
+      en: {
+        name: 'Chart Maker (Bar, Line, Pie) to PNG',
+        keywords: [
+          'chart maker',
+          'bar chart',
+          'line chart',
+          'pie chart',
+          'csv to chart',
+          'graph maker',
+          'png',
+        ],
+        description:
+          'Paste CSV or a table to make a bar, line or pie chart and save it as a PNG. Supports multiple series, titles and axis labels.',
+      },
+    },
+  },
+  {
     slug: 'base64',
     category: 'encode',
     addedAt: '2026-09-15',

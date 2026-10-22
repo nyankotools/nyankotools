@@ -12697,8 +12697,8 @@ export const tools: Tool[] = [
   {
     slug: 'cron-generator',
     category: 'dev',
-    addedAt: '2026-10-22',
-    updatedAt: '2026-10-22',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
     related: ['cron-parser', 'unix-timestamp', 'iso-duration-converter'],
     translations: {
       ja: {
@@ -12734,8 +12734,8 @@ export const tools: Tool[] = [
   {
     slug: 'iso-duration-converter',
     category: 'dev',
-    addedAt: '2026-10-22',
-    updatedAt: '2026-10-22',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
     related: ['unix-timestamp', 'date-calculator', 'cron-parser'],
     translations: {
       ja: {
@@ -12770,8 +12770,8 @@ export const tools: Tool[] = [
   {
     slug: 'cookie-parser',
     category: 'dev',
-    addedAt: '2026-10-22',
-    updatedAt: '2026-10-22',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
     related: ['http-header-analyzer', 'jwt-decoder', 'http-status-codes'],
     sensitive: true,
     translations: {
@@ -12810,8 +12810,8 @@ export const tools: Tool[] = [
   {
     slug: 'umask-calculator',
     category: 'dev',
-    addedAt: '2026-10-22',
-    updatedAt: '2026-10-22',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
     related: ['chmod-calculator'],
     translations: {
       ja: {

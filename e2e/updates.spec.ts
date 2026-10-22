@@ -51,11 +51,11 @@ test.describe('更新情報ページ（日本語版）', () => {
 
     // 同じ件数の日が複数あっても動くよう、先頭（最新）の1件に絞る
     const entry = page
-      .locator('main ol > li', { hasText: '29個のツールを追加しました' })
+      .locator('main ol > li', { hasText: '25個のツールを追加しました' })
       .first();
     const details = entry.locator('details');
     await expect(details).toHaveCount(1);
-    await expect(entry.locator('ul > li')).toHaveCount(29);
+    await expect(entry.locator('ul > li')).toHaveCount(25);
 
     await expect(details.locator('ul')).toBeHidden();
     await details.locator('summary').click();

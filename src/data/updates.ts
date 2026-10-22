@@ -982,6 +982,19 @@ export const updates: UpdateEntry[] = [
       'svg-to-data-uri',
       'css-color-names',
       'html-entity-list',
+    ],
+    translations: {
+      ja: {
+        summary: '25個のツールを追加しました。',
+      },
+      en: {
+        summary: 'Added 25 new tools.',
+      },
+    },
+  },
+  {
+    date: '2026-10-23',
+    toolSlugs: [
       'cron-generator',
       'iso-duration-converter',
       'cookie-parser',
@@ -989,10 +1002,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary: '29個のツールを追加しました。',
+        summary: '4個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 29 new tools.',
+        summary: 'Added 4 new tools.',
       },
     },
   },

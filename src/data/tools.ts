@@ -12845,6 +12845,155 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'docker-compose-converter',
+    category: 'dev',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['yaml-formatter', 'env-json-converter', 'curl-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'docker run→docker-compose変換',
+        keywords: [
+          'docker',
+          'docker run',
+          'docker-compose',
+          'compose.yml',
+          'Compose',
+          'コンテナ',
+        ],
+        description:
+          'docker runコマンドをdocker-compose.ymlに変換します。ポート・ボリューム・環境変数・--name・--restartなど主要オプションに対応し、未対応オプションは警告表示。',
+      },
+      en: {
+        name: 'docker run to docker-compose Converter',
+        keywords: [
+          'docker',
+          'docker run',
+          'docker-compose',
+          'compose.yml',
+          'Compose',
+          'container',
+        ],
+        description:
+          'Converts a docker run command to a docker-compose.yml file. Handles ports, volumes, env vars, --name and --restart, and warns about options it cannot convert.',
+      },
+    },
+  },
+  {
+    slug: 'regex-explainer',
+    category: 'dev',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['regex-tester', 'regex-pattern-library', 'text-extractor'],
+    translations: {
+      ja: {
+        name: '正規表現の解説（パターン分解）',
+        keywords: [
+          '正規表現',
+          'regex',
+          '解説',
+          '意味',
+          '先読み',
+          '後読み',
+          '量指定子',
+          'パターン分解',
+        ],
+        description:
+          '正規表現のパターンを文字クラス・量指定子・グループ・先読み・後読み・アンカー・フラグに分解して日本語で解説。不正なパターンはエラー位置つきで表示。',
+      },
+      en: {
+        name: 'Regex Explainer',
+        keywords: [
+          'regex',
+          'regular expression',
+          'explain',
+          'lookahead',
+          'lookbehind',
+          'quantifier',
+          'regex breakdown',
+        ],
+        description:
+          'Break a regular expression into character classes, quantifiers, groups, lookarounds and flags, and read what each part does. Syntax errors show their position.',
+      },
+    },
+  },
+  {
+    slug: 'css-unit-converter',
+    category: 'dev',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['px-rem-converter', 'css-clamp-calculator', 'viewport-checker'],
+    translations: {
+      ja: {
+        name: 'CSS単位換算ツール',
+        description:
+          'px・rem・em・vw・vh・vmin・ch・ptなどCSS単位を画面幅や親フォントサイズを指定して一括換算',
+        keywords: [
+          'CSS単位',
+          'vw',
+          'vh',
+          'em',
+          'pt',
+          'ch',
+          '単位変換',
+          'ビューポート',
+        ],
+      },
+      en: {
+        name: 'CSS Unit Converter',
+        description:
+          'Convert px, rem, em, vw, vh, vmin, ch and pt between each other with your viewport and font sizes.',
+        keywords: [
+          'css units',
+          'vw',
+          'vh',
+          'em',
+          'rem',
+          'pt',
+          'px to vw',
+          'viewport units',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'fetch-to-curl',
+    category: 'dev',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['curl-converter', 'json-formatter', 'http-status-codes'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'Fetch/Axios→cURL変換',
+        keywords: [
+          'fetch',
+          'axios',
+          'curl',
+          'API',
+          'fetchとしてコピー',
+          'JavaScript',
+        ],
+        description:
+          'fetch・axiosのJavaScriptコードをcurlコマンドに変換します。method・headers・JSONボディ・FormDataに対応し、コードは実行せず解析のみ。',
+      },
+      en: {
+        name: 'Fetch / Axios to cURL Converter',
+        keywords: [
+          'fetch',
+          'axios',
+          'curl',
+          'API',
+          'copy as fetch',
+          'JavaScript',
+        ],
+        description:
+          'Converts JavaScript fetch or axios code to a curl command. Handles method, headers, JSON bodies, and FormData; it only parses the code and never runs it.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

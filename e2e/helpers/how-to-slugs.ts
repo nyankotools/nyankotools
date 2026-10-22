@@ -178,4 +178,6 @@ export const howToSlugs = [
   'csv-split-merge',
   'file-base64-converter',
   'svg-to-data-uri',
+  'regex-explainer',
+  'fetch-to-curl',
 ];

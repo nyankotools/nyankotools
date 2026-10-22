@@ -1,0 +1,207 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cssUnitConverterContent } from '../../i18n/tools/css-unit-converter';
+import { CSS_UNITS, DEFAULT_CONTEXT } from '../../lib/tools/css-unit-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cssUnitConverterContent[locale];
+
+const inputCls = 'ui-input h-11 w-full px-3 font-mono dark:bg-gray-900';
+const contextFields = [
+  {
+    id: 'cuc-root',
+    label: t.rootFontSizeLabel,
+    value: DEFAULT_CONTEXT.rootFontSize,
+  },
+  {
+    id: 'cuc-parent',
+    label: t.parentFontSizeLabel,
+    value: DEFAULT_CONTEXT.parentFontSize,
+  },
+  {
+    id: 'cuc-vw',
+    label: t.viewportWidthLabel,
+    value: DEFAULT_CONTEXT.viewportWidth,
+  },
+  {
+    id: 'cuc-vh',
+    label: t.viewportHeightLabel,
+    value: DEFAULT_CONTEXT.viewportHeight,
+  },
+];
+---
+
+<ToolShell t={t}>
+  <div
+    class="grid grid-cols-1 gap-4 sm:grid-cols-2"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    id="cuc-root-el"
+  >
+    <div>
+      <label for="cuc-value" class="ui-label">
+        {t.valueLabel}
+      </label>
+      <input
+        id="cuc-value"
+        type="text"
+        inputmode="decimal"
+        spellcheck="false"
+        value="16"
+        placeholder={t.valuePlaceholder}
+        class={inputCls}
+      />
+    </div>
+    <div>
+      <label for="cuc-unit" class="ui-label">
+        {t.unitLabel}
+      </label>
+      <select id="cuc-unit" class={inputCls}>
+        {CSS_UNITS.map((u) => (
+          <option value={u} selected={u === 'px'}>
+            {u}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+
+  <h2 class="mt-6 mb-2 text-base font-semibold">{t.contextHeading}</h2>
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    {contextFields.map((f) => (
+      <div>
+        <label for={f.id} class="ui-label">
+          {f.label}
+        </label>
+        <input
+          id={f.id}
+          type="text"
+          inputmode="decimal"
+          spellcheck="false"
+          value={f.value}
+          class={inputCls}
+        />
+      </div>
+    ))}
+  </div>
+  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.contextHint}</p>
+
+  <p
+    id="cuc-error"
+    data-error-value={t.errorInvalidValue}
+    data-error-context={t.errorInvalidContext}
+    data-copy-label={t.copyButton}
+    class="mt-2 text-sm text-red-600 dark:text-red-400"
+    aria-live="polite"
+  ></p>
+
+  <h2 class="mt-6 mb-2 text-base font-semibold">{t.resultHeading}</h2>
+  <ul id="cuc-results" class="grid grid-cols-1 gap-2 sm:grid-cols-2"></ul>
+  <span
+    id="cuc-status"
+    class="mt-2 block text-sm text-green-700 dark:text-green-400"
+    aria-live="polite"
+  ></span>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    convertAll,
+    isCssUnit,
+    parseNumber,
+    parsePositive,
+  } from '../../lib/tools/css-unit-converter';
+
+  const valueInput = document.getElementById('cuc-value') as HTMLInputElement;
+  const unitSelect = document.getElementById('cuc-unit') as HTMLSelectElement;
+  const rootInput = document.getElementById('cuc-root') as HTMLInputElement;
+  const parentInput = document.getElementById('cuc-parent') as HTMLInputElement;
+  const vwInput = document.getElementById('cuc-vw') as HTMLInputElement;
+  const vhInput = document.getElementById('cuc-vh') as HTMLInputElement;
+  const errorEl = document.getElementById('cuc-error')!;
+  const statusEl = document.getElementById('cuc-status')!;
+  const resultsEl = document.getElementById('cuc-results')!;
+  const holder = document.getElementById('cuc-root-el')!;
+
+  const copied = holder.dataset.copied ?? '';
+  const copyFailed = holder.dataset.copyFailed ?? '';
+  const errorValue = errorEl.dataset.errorValue ?? '';
+  const errorContext = errorEl.dataset.errorContext ?? '';
+  const copyLabel = errorEl.dataset.copyLabel ?? '';
+
+  function render() {
+    statusEl.textContent = '';
+    resultsEl.replaceChildren();
+    const rootFontSize = parsePositive(rootInput.value);
+    const parentFontSize = parsePositive(parentInput.value);
+    const viewportWidth = parsePositive(vwInput.value);
+    const viewportHeight = parsePositive(vhInput.value);
+    if (
+      rootFontSize === null ||
+      parentFontSize === null ||
+      viewportWidth === null ||
+      viewportHeight === null
+    ) {
+      errorEl.textContent = errorContext;
+      return;
+    }
+    if (valueInput.value.trim() === '') {
+      errorEl.textContent = '';
+      return;
+    }
+    const value = parseNumber(valueInput.value);
+    if (value === null) {
+      errorEl.textContent = errorValue;
+      return;
+    }
+    const unit = unitSelect.value;
+    if (!isCssUnit(unit)) return;
+    errorEl.textContent = '';
+    const results = convertAll(value, unit, {
+      rootFontSize,
+      parentFontSize,
+      viewportWidth,
+      viewportHeight,
+    });
+    for (const r of results) {
+      const text = `${r.value}${r.unit}`;
+      const li = document.createElement('li');
+      li.className =
+        'flex items-center justify-between gap-2 rounded-lg border border-gray-300 px-3 py-1 dark:border-gray-700';
+      const span = document.createElement('span');
+      span.className = 'min-w-0 break-all font-mono text-sm';
+      span.textContent = text;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'ui-btn shrink-0';
+      button.textContent = copyLabel;
+      button.setAttribute('aria-label', `${copyLabel} ${text}`);
+      button.dataset.copyValue = text;
+      li.append(span, button);
+      resultsEl.append(li);
+    }
+  }
+
+  resultsEl.addEventListener('click', async (event) => {
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
+      'button[data-copy-value]',
+    );
+    if (!button) return;
+    statusEl.textContent = (await copyText(button.dataset.copyValue ?? ''))
+      ? copied
+      : copyFailed;
+  });
+
+  for (const el of [valueInput, rootInput, parentInput, vwInput, vhInput]) {
+    el.addEventListener('input', render);
+  }
+  unitSelect.addEventListener('change', render);
+
+  render();
+</script>

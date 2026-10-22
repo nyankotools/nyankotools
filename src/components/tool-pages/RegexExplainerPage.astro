@@ -1,0 +1,303 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { regexExplainerContent } from '../../i18n/tools/regex-explainer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = regexExplainerContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="rx-root"
+    data-labels={JSON.stringify(t.labels)}
+    data-tokens={JSON.stringify(t.tokens)}
+    data-errors={JSON.stringify(t.errors)}
+    data-flag-errors={JSON.stringify(t.flagErrors)}
+    data-flag-descriptions={JSON.stringify(t.flagDescriptions)}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-sample-pattern={t.samplePattern}
+    data-sample-flags={t.sampleFlags}
+  >
+    <label for="rx-pattern" class="ui-label">
+      {t.patternLabel}
+    </label>
+    <input
+      id="rx-pattern"
+      type="text"
+      class="ui-input w-full p-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.patternPlaceholder}
+      spellcheck="false"
+      autocomplete="off"
+      autocapitalize="off"
+      data-query-target="text"
+    />
+
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <label for="rx-flags" class="text-sm font-medium">
+        {t.flagsLabel}
+      </label>
+      <input
+        id="rx-flags"
+        type="text"
+        class="ui-input h-11 w-28 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.flagsPlaceholder}
+        spellcheck="false"
+        autocomplete="off"
+        autocapitalize="off"
+        maxlength="16"
+      />
+      <button id="rx-sample-button" type="button" class="ui-btn">
+        {t.sampleButton}
+      </button>
+      <button id="rx-clear-button" type="button" class="ui-btn">
+        {t.clearButton}
+      </button>
+    </div>
+
+    <div id="rx-error" class="mt-4 hidden" role="alert">
+      <p id="rx-error-heading" class="ui-error font-medium"></p>
+      <pre
+        id="rx-error-pattern"
+        class="mt-2 overflow-x-auto rounded-lg bg-gray-100 p-3 font-mono text-sm whitespace-pre-wrap break-all dark:bg-gray-800"
+      ></pre>
+      <p id="rx-error-message" class="ui-error mt-2"></p>
+    </div>
+
+    <div id="rx-results" class="mt-5 hidden">
+      <div class="mb-3 flex flex-wrap items-center gap-3">
+        <h2 class="text-lg font-bold">{t.labels.summary}</h2>
+        <button id="rx-copy-button" type="button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <span
+          id="rx-copy-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+      <p
+        id="rx-literal-note"
+        class="mb-2 hidden text-sm text-gray-600 dark:text-gray-400"
+      ></p>
+      <ul id="rx-meta" class="mb-4 space-y-1 text-sm"></ul>
+      <h3 class="mb-2 text-base font-bold">{t.labels.tokensHeading}</h3>
+      <p id="rx-empty" class="hidden text-sm text-gray-700 dark:text-gray-300">
+        {t.labels.emptyPattern}
+      </p>
+      <ul id="rx-tokens" class="space-y-1"></ul>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    explainRegex,
+    fillTemplate,
+    splitRegexLiteral,
+    type ExplainResult,
+    type TokenKind,
+    type ErrorCode,
+    type FlagErrorCode,
+  } from '../../lib/tools/regex-explainer';
+
+  const root = document.getElementById('rx-root')!;
+  const patternEl = document.getElementById('rx-pattern') as HTMLInputElement;
+  const flagsEl = document.getElementById('rx-flags') as HTMLInputElement;
+  const resultsEl = document.getElementById('rx-results')!;
+  const errorEl = document.getElementById('rx-error')!;
+  const errorHeadingEl = document.getElementById('rx-error-heading')!;
+  const errorPatternEl = document.getElementById('rx-error-pattern')!;
+  const errorMessageEl = document.getElementById('rx-error-message')!;
+  const metaEl = document.getElementById('rx-meta')!;
+  const tokensEl = document.getElementById('rx-tokens')!;
+  const emptyEl = document.getElementById('rx-empty')!;
+  const literalNoteEl = document.getElementById('rx-literal-note')!;
+  const copyButton = document.getElementById('rx-copy-button')!;
+  const copyStatus = document.getElementById('rx-copy-status')!;
+
+  const parse = <T,>(name: string): T =>
+    JSON.parse(root.dataset[name] ?? '{}') as T;
+  const labels = parse<Record<string, string>>('labels');
+  const tokenText = parse<Record<TokenKind, string>>('tokens');
+  const errorText = parse<Record<ErrorCode, string>>('errors');
+  const flagErrorText = parse<Record<FlagErrorCode, string>>('flagErrors');
+  const flagDesc = parse<Record<string, string>>('flagDescriptions');
+
+  let copyBody = '';
+
+  function el(tag: string, className: string, text?: string): HTMLElement {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function showError(pattern: string, flags: string, r: ExplainResult): void {
+    resultsEl.classList.add('hidden');
+    errorEl.classList.remove('hidden');
+    errorHeadingEl.textContent = labels.errorHeading;
+    errorPatternEl.replaceChildren();
+    const messages: string[] = [];
+    if (r.error) {
+      const e = r.error;
+      messages.push(
+        fillTemplate(errorText[e.code], { detail: e.detail ?? '' }),
+      );
+      if (e.index >= 0) {
+        // コードポイント単位で強調する
+        const before = pattern.slice(0, e.index);
+        const rest = Array.from(pattern.slice(e.index));
+        const mark = el(
+          'mark',
+          'rounded bg-red-200 px-0.5 text-red-900 dark:bg-red-900 dark:text-red-100',
+          rest[0] ?? '␣',
+        );
+        errorPatternEl.append(
+          document.createTextNode(before),
+          mark,
+          document.createTextNode(rest.slice(1).join('')),
+        );
+        messages[0] =
+          fillTemplate(labels.errorPosition, {
+            pos: String(Array.from(before).length + 1),
+          }) +
+          ': ' +
+          messages[0];
+      } else {
+        errorPatternEl.textContent = pattern;
+      }
+    } else {
+      errorPatternEl.textContent = pattern;
+    }
+    if (r.flagError) {
+      messages.push(
+        fillTemplate(flagErrorText[r.flagError.code], {
+          char: r.flagError.char,
+        }),
+      );
+      errorPatternEl.append(document.createTextNode(`\n/${flags}`));
+    }
+    errorMessageEl.textContent = messages.join(' / ');
+  }
+
+  function render() {
+    copyStatus.textContent = '';
+    const raw = patternEl.value;
+    if (raw === '') {
+      resultsEl.classList.add('hidden');
+      errorEl.classList.add('hidden');
+      copyBody = '';
+      return;
+    }
+    const lit = splitRegexLiteral(raw);
+    const pattern = lit ? lit.pattern : raw;
+    const flags = lit ? lit.flags : flagsEl.value.trim();
+    const r = explainRegex(pattern, flags);
+
+    if (!r.ok) {
+      copyBody = '';
+      showError(pattern, flags, r);
+      return;
+    }
+    errorEl.classList.add('hidden');
+    resultsEl.classList.remove('hidden');
+
+    literalNoteEl.textContent = labels.literalFormNote;
+    literalNoteEl.classList.toggle('hidden', !lit);
+
+    const lines: string[] = [];
+    metaEl.replaceChildren();
+    const groupLine =
+      r.groupCount === 0
+        ? labels.noGroups
+        : fillTemplate(labels.groupsLine, { count: String(r.groupCount) });
+    metaEl.append(el('li', '', groupLine));
+    lines.push(groupLine);
+    if (r.groupNames.length > 0) {
+      const l = fillTemplate(labels.namedGroupsLine, {
+        names: r.groupNames.join(', '),
+      });
+      metaEl.append(el('li', '', l));
+      lines.push(l);
+    }
+    if (r.flags.length === 0) {
+      metaEl.append(el('li', '', labels.noFlags));
+      lines.push(labels.noFlags);
+    } else {
+      for (const f of r.flags) {
+        const li = el('li', 'flex flex-wrap gap-2');
+        li.append(
+          el(
+            'code',
+            'rounded bg-gray-100 px-1.5 font-mono dark:bg-gray-800',
+            f,
+          ),
+          el('span', '', flagDesc[f] ?? ''),
+        );
+        metaEl.append(li);
+        lines.push(`${labels.flagsHeading} ${f}: ${flagDesc[f] ?? ''}`);
+      }
+    }
+
+    tokensEl.replaceChildren();
+    emptyEl.classList.toggle('hidden', r.tokens.length > 0);
+    lines.push('');
+    for (const tok of r.tokens) {
+      const desc =
+        fillTemplate(tokenText[tok.kind], tok.p) +
+        (tok.lazy ? labels.lazyNote : '');
+      const li = el(
+        'li',
+        'flex flex-col gap-1 rounded-lg border border-gray-200 px-3 py-2 sm:flex-row sm:items-baseline sm:gap-3 dark:border-gray-700',
+      );
+      li.style.marginLeft = `${Math.min(tok.depth, 8) * 1.25}rem`;
+      li.append(
+        el(
+          'code',
+          'shrink-0 rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm font-bold break-all dark:bg-gray-800',
+          tok.source,
+        ),
+        el('span', 'text-sm', desc),
+      );
+      tokensEl.append(li);
+      lines.push(`${'  '.repeat(tok.depth)}${tok.source}  ${desc}`);
+    }
+    copyBody = lines.join('\n');
+  }
+
+  onTextInput(patternEl, render);
+  flagsEl.addEventListener('input', render);
+
+  document.getElementById('rx-sample-button')!.addEventListener('click', () => {
+    patternEl.value = root.dataset.samplePattern ?? '';
+    flagsEl.value = root.dataset.sampleFlags ?? '';
+    patternEl.dispatchEvent(new Event('input', { bubbles: true }));
+    flagsEl.dispatchEvent(new Event('input', { bubbles: true }));
+    render();
+  });
+  document.getElementById('rx-clear-button')!.addEventListener('click', () => {
+    patternEl.value = '';
+    flagsEl.value = '';
+    patternEl.dispatchEvent(new Event('input', { bubbles: true }));
+    render();
+    patternEl.focus();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (copyBody === '') return;
+    const ok = await copyText(copyBody);
+    copyStatus.textContent = ok
+      ? (root.dataset.copied ?? '')
+      : (root.dataset.copyFailed ?? '');
+  });
+
+  render();
+</script>

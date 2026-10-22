@@ -12246,6 +12246,152 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'markdown-toc-generator',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['markdown-preview', 'markdown-table-editor', 'text-diff'],
+    translations: {
+      ja: {
+        name: 'Markdown目次（TOC）生成',
+        description:
+          'Markdownの見出しからネスト付きの目次を生成。GitHub形式アンカー・重複見出しの連番・深さ指定・番号付き／箇条書きに対応。',
+        keywords: [
+          'TOC',
+          '目次',
+          'Markdown',
+          'アンカー',
+          'README',
+          '見出し',
+          'table of contents',
+        ],
+      },
+      en: {
+        name: 'Markdown TOC Generator',
+        description:
+          'Generate a nested table of contents from Markdown headings with GitHub-style anchors, depth limits and bullet or numbered lists.',
+        keywords: [
+          'toc',
+          'table of contents',
+          'markdown',
+          'anchor',
+          'readme',
+          'heading',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'anagram-palindrome-checker',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['char-counter', 'text-case-converter', 'string-similarity'],
+    translations: {
+      ja: {
+        name: 'アナグラム・回文チェッカー',
+        description:
+          '2語がアナグラムか、文が回文かを判定。大文字小文字・空白・記号・かな・長音・濁点の扱いを選べ、正規化後の文字列と過不足の文字も表示します。',
+        keywords: [
+          'アナグラム',
+          '回文',
+          'パリンドローム',
+          '文字の並べ替え',
+          'しりとり',
+          '言葉遊び',
+          'anagram',
+          'palindrome',
+        ],
+      },
+      en: {
+        name: 'Anagram & Palindrome Checker',
+        description:
+          'Check whether two words are anagrams or a phrase is a palindrome, ignoring case, spaces, punctuation and kana differences.',
+        keywords: [
+          'anagram',
+          'palindrome',
+          'word game',
+          'rearrange letters',
+          'same letters',
+          'reverse text',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'json-sorter',
+    category: 'data',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['json-formatter', 'json-diff', 'json-path-tester'],
+    translations: {
+      ja: {
+        name: 'JSONキーソート・フラット化',
+        description:
+          'JSONのキーを再帰ソートし、a.b[0]形式へのフラット化と元の構造への復元ができます。',
+        keywords: [
+          'JSON',
+          'キーソート',
+          'ソート',
+          'flatten',
+          'unflatten',
+          'フラット化',
+          'JSON並べ替え',
+          'JSON正規化',
+        ],
+      },
+      en: {
+        name: 'JSON Key Sorter & Flatten',
+        description:
+          'Sort JSON keys recursively, flatten nested JSON to a.b[0] paths, and unflatten it back.',
+        keywords: [
+          'json sort keys',
+          'flatten json',
+          'unflatten json',
+          'json normalize',
+          'sort json',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'xml-formatter',
+    category: 'data',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['xml-json-converter', 'json-formatter'],
+    translations: {
+      ja: {
+        name: 'XML整形・構文チェック',
+        description:
+          'XMLをインデント整形・ミニファイ・構文チェック。エラーは行・列つきで表示',
+        keywords: [
+          'XML',
+          'XML整形',
+          'XMLフォーマッター',
+          'ミニファイ',
+          'XML検証',
+          'XMLバリデーター',
+          'インデント',
+          '構文エラー',
+        ],
+      },
+      en: {
+        name: 'XML Formatter & Validator',
+        description:
+          'Format, minify and validate XML with line and column error positions',
+        keywords: [
+          'xml formatter',
+          'xml beautifier',
+          'xml minify',
+          'xml validator',
+          'pretty print xml',
+          'xml syntax check',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

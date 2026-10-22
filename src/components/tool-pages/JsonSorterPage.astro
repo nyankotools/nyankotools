@@ -1,0 +1,232 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { jsonSorterContent } from '../../i18n/tools/json-sorter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = jsonSorterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
+    <div class="flex items-center gap-2">
+      <label
+        for="json-sorter-mode"
+        class="text-sm text-gray-700 dark:text-gray-300"
+      >
+        {t.modeLabel}
+      </label>
+      <select
+        id="json-sorter-mode"
+        class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+      >
+        {t.modeOptions.map((o) => (
+          <option value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </div>
+    <div
+      id="json-sorter-sort-options"
+      class="flex flex-wrap items-center gap-x-4 gap-y-3"
+    >
+      <div class="flex items-center gap-2">
+        <label
+          for="json-sorter-order"
+          class="text-sm text-gray-700 dark:text-gray-300"
+        >
+          {t.orderLabel}
+        </label>
+        <select
+          id="json-sorter-order"
+          class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+        >
+          {t.orderOptions.map((o) => (
+            <option value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      </div>
+      <label class="ui-check">
+        <input
+          id="json-sorter-recursive"
+          type="checkbox"
+          class="h-4 w-4"
+          checked
+        />
+        {t.recursiveLabel}
+      </label>
+    </div>
+    <div class="flex items-center gap-2">
+      <label
+        for="json-sorter-indent"
+        class="text-sm text-gray-700 dark:text-gray-300"
+      >
+        {t.indentLabel}
+      </label>
+      <select
+        id="json-sorter-indent"
+        class="ui-input bg-white px-3 py-2 dark:bg-gray-900"
+      >
+        {t.indentOptions.map((o) => (
+          <option value={o.value}>{o.label}</option>
+        ))}
+      </select>
+    </div>
+    <button
+      id="json-sorter-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="json-sorter-status"
+      class="text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <div class="mt-4 grid gap-4 lg:grid-cols-2">
+    <div>
+      <label for="json-sorter-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="json-sorter-input"
+        data-query-target="text"
+        data-sample={t.sampleText}
+        data-no-count
+        class="ui-input h-80 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={'{"b": 1, "a": {"d": 2, "c": [1, 2]}}'}
+        spellcheck="false"
+      ></textarea>
+    </div>
+    <div>
+      <label for="json-sorter-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="json-sorter-output"
+        readonly
+        class="ui-input h-80 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      ></textarea>
+    </div>
+  </div>
+
+  <p
+    id="json-sorter-error"
+    hidden
+    data-parse={t.errorParse}
+    data-depth={t.errorDepth}
+    data-not-object={t.errorNotObject}
+    data-invalid-path={t.errorInvalidPath}
+    data-conflict={t.errorConflict}
+    data-index-too-large={t.errorIndexTooLarge}
+    class="ui-error mt-4 max-w-2xl whitespace-pre-line"
+  ></p>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    flattenJson,
+    sortJsonKeys,
+    unflattenJson,
+    type JsonToolOutcome,
+    type SortOrder,
+  } from '../../lib/tools/json-sorter';
+
+  const input = document.getElementById(
+    'json-sorter-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'json-sorter-output',
+  ) as HTMLTextAreaElement;
+  const modeSelect = document.getElementById(
+    'json-sorter-mode',
+  ) as HTMLSelectElement;
+  const orderSelect = document.getElementById(
+    'json-sorter-order',
+  ) as HTMLSelectElement;
+  const recursiveCheck = document.getElementById(
+    'json-sorter-recursive',
+  ) as HTMLInputElement;
+  const indentSelect = document.getElementById(
+    'json-sorter-indent',
+  ) as HTMLSelectElement;
+  const sortOptions = document.getElementById('json-sorter-sort-options')!;
+  const copyButton = document.getElementById(
+    'json-sorter-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('json-sorter-status')!;
+  const errorEl = document.getElementById('json-sorter-error')!;
+
+  function getIndent(): number | string {
+    return indentSelect.value === 'tab' ? '\t' : Number(indentSelect.value);
+  }
+
+  function showError(result: Extract<JsonToolOutcome, { success: false }>) {
+    const templates: Record<string, string | undefined> = {
+      parse: errorEl.dataset.parse,
+      depth: errorEl.dataset.depth,
+      'not-object': errorEl.dataset.notObject,
+      'invalid-path': errorEl.dataset.invalidPath,
+      conflict: errorEl.dataset.conflict,
+      'index-too-large': errorEl.dataset.indexTooLarge,
+    };
+    output.value = '';
+    errorEl.textContent = (templates[result.kind] ?? '')
+      .replace('{message}', () => result.message)
+      .replace('{path}', () => result.path ?? '');
+    errorEl.hidden = false;
+  }
+
+  function run() {
+    statusEl.textContent = '';
+    const mode = modeSelect.value;
+    sortOptions.hidden = mode !== 'sort';
+    if (input.value.trim() === '') {
+      output.value = '';
+      errorEl.hidden = true;
+      return;
+    }
+    const indent = getIndent();
+    const result =
+      mode === 'flatten'
+        ? flattenJson(input.value, { indent })
+        : mode === 'unflatten'
+          ? unflattenJson(input.value, { indent })
+          : sortJsonKeys(input.value, {
+              order: orderSelect.value as SortOrder,
+              recursive: recursiveCheck.checked,
+              indent,
+            });
+    if (result.success) {
+      output.value = result.output;
+      errorEl.hidden = true;
+      errorEl.textContent = '';
+    } else {
+      showError(result);
+    }
+  }
+
+  onTextInput(input, run);
+  for (const el of [modeSelect, orderSelect, recursiveCheck, indentSelect]) {
+    el.addEventListener('change', run);
+  }
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  run();
+</script>

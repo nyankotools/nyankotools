@@ -172,4 +172,6 @@ export const howToSlugs = [
   'unemployment-benefit',
   'childcare-leave-benefit',
   'recipe-scaler',
+  'markdown-toc-generator',
+  'json-sorter',
 ];

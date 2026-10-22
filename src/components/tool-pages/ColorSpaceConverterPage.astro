@@ -1,0 +1,234 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { colorSpaceConverterContent } from '../../i18n/tools/color-space-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = colorSpaceConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-col gap-6 sm:flex-row sm:items-start">
+    <div class="flex flex-col items-center gap-2">
+      <input
+        id="color-space-picker"
+        type="color"
+        value="#3b82f6"
+        aria-label={t.pickerAriaLabel}
+        class="h-24 w-24 cursor-pointer rounded-lg border border-gray-300 bg-transparent p-1 dark:border-gray-700"
+      />
+    </div>
+
+    <div class="flex-1 space-y-4">
+      {t.fields.map((field) => (
+        <div>
+          <label for={`color-space-${field.id}`} class="ui-label">
+            {field.label}
+          </label>
+          <div class="flex gap-2">
+            <input
+              id={`color-space-${field.id}`}
+              type="text"
+              placeholder={field.placeholder}
+              spellcheck="false"
+              aria-describedby={`color-space-${field.id}-error`}
+              class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+            />
+            <button
+              type="button"
+              data-copy-target={`color-space-${field.id}`}
+              class="ui-btn shrink-0"
+            >
+              {t.copy}
+            </button>
+          </div>
+          <p
+            id={`color-space-${field.id}-error`}
+            data-message={field.error}
+            class="mt-1 text-sm text-red-600 empty:hidden dark:text-red-400"
+            aria-live="polite"
+          ></p>
+        </div>
+      ))}
+      <p
+        id="color-space-clipped"
+        data-message={t.clipped}
+        class="text-sm text-amber-700 empty:hidden dark:text-amber-400"
+        aria-live="polite"
+      ></p>
+      <span
+        id="color-space-status"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="block text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    formatHsl,
+    formatRgb,
+    hexToRgb,
+    hslToRgb,
+    parseHslString,
+    parseRgbString,
+    rgbToHex,
+    rgbToHsl,
+    type RgbColor,
+  } from '../../lib/tools/color-converter';
+  import {
+    cmykToRgb,
+    formatCmyk,
+    formatHwb,
+    formatLab,
+    formatOklch,
+    hwbToRgb,
+    labToRgb,
+    oklchToRgb,
+    parseCmykString,
+    parseHwbString,
+    parseLabString,
+    parseOklchString,
+    rgbToCmyk,
+    rgbToHwb,
+    rgbToLab,
+    rgbToOklch,
+    type RgbResult,
+  } from '../../lib/tools/color-space-converter';
+
+  const PREFIX = 'color-space-';
+
+  interface Field {
+    id: string;
+    parse: (input: string) => RgbResult | null;
+    format: (rgb: RgbColor) => string;
+  }
+
+  const exact = (rgb: RgbColor | null): RgbResult | null =>
+    rgb ? { rgb, clipped: false } : null;
+
+  const fieldDefs: Field[] = [
+    {
+      id: 'hex',
+      parse: (s) => exact(hexToRgb(s)),
+      format: rgbToHex,
+    },
+    {
+      id: 'rgb',
+      parse: (s) => exact(parseRgbString(s)),
+      format: formatRgb,
+    },
+    {
+      id: 'hsl',
+      parse: (s) => {
+        const hsl = parseHslString(s);
+        return hsl ? exact(hslToRgb(hsl)) : null;
+      },
+      format: (rgb) => formatHsl(rgbToHsl(rgb)),
+    },
+    {
+      id: 'cmyk',
+      parse: (s) => {
+        const cmyk = parseCmykString(s);
+        return cmyk ? exact(cmykToRgb(cmyk)) : null;
+      },
+      format: (rgb) => formatCmyk(rgbToCmyk(rgb)),
+    },
+    {
+      id: 'hwb',
+      parse: (s) => {
+        const hwb = parseHwbString(s);
+        return hwb ? exact(hwbToRgb(hwb)) : null;
+      },
+      format: (rgb) => formatHwb(rgbToHwb(rgb)),
+    },
+    {
+      id: 'lab',
+      parse: (s) => {
+        const lab = parseLabString(s);
+        return lab ? labToRgb(lab) : null;
+      },
+      format: (rgb) => formatLab(rgbToLab(rgb)),
+    },
+    {
+      id: 'oklch',
+      parse: (s) => {
+        const lch = parseOklchString(s);
+        return lch ? oklchToRgb(lch) : null;
+      },
+      format: (rgb) => formatOklch(rgbToOklch(rgb)),
+    },
+  ];
+
+  const picker = document.getElementById(`${PREFIX}picker`) as HTMLInputElement;
+  const clippedEl = document.getElementById(`${PREFIX}clipped`)!;
+  const statusEl = document.getElementById(`${PREFIX}status`)!;
+
+  const inputs = new Map<string, HTMLInputElement>();
+  const errors = new Map<string, HTMLElement>();
+  for (const { id } of fieldDefs) {
+    inputs.set(id, document.getElementById(PREFIX + id) as HTMLInputElement);
+    errors.set(id, document.getElementById(`${PREFIX}${id}-error`)!);
+  }
+
+  function clearErrors() {
+    errors.forEach((el) => (el.textContent = ''));
+  }
+
+  /** source の欄は入力中の文字列を保つため書き換えない */
+  function applyRgb(rgb: RgbColor, source: string, clipped: boolean) {
+    clearErrors();
+    clippedEl.textContent = clipped ? (clippedEl.dataset.message ?? '') : '';
+    for (const field of fieldDefs) {
+      if (field.id !== source) inputs.get(field.id)!.value = field.format(rgb);
+    }
+    if (source !== 'picker') picker.value = rgbToHex(rgb);
+  }
+
+  for (const field of fieldDefs) {
+    const input = inputs.get(field.id)!;
+    input.addEventListener('input', () => {
+      statusEl.textContent = '';
+      clearErrors();
+      clippedEl.textContent = '';
+      if (input.value.trim() === '') return;
+      const result = field.parse(input.value);
+      if (!result) {
+        const error = errors.get(field.id)!;
+        error.textContent = error.dataset.message ?? '';
+        return;
+      }
+      applyRgb(result.rgb, field.id, result.clipped);
+    });
+  }
+
+  picker.addEventListener('input', () => {
+    statusEl.textContent = '';
+    const rgb = hexToRgb(picker.value);
+    if (rgb) applyRgb(rgb, 'picker', false);
+  });
+
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-copy-target]')
+    .forEach((button) => {
+      button.addEventListener('click', async () => {
+        const target = document.getElementById(
+          button.dataset.copyTarget!,
+        ) as HTMLInputElement;
+        if (!target.value) return;
+        statusEl.textContent = (await copyText(target.value))
+          ? (statusEl.dataset.copied ?? '')
+          : (statusEl.dataset.copyFailed ?? '');
+      });
+    });
+
+  applyRgb(hexToRgb(picker.value)!, 'init', false);
+</script>

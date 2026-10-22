@@ -422,9 +422,9 @@ export const tools: Tool[] = [
     addedAt: '2026-09-15',
     updatedAt: '2026-09-15',
     related: [
+      'color-space-converter',
       'contrast-checker',
       'css-gradient-generator',
-      'image-palette-extractor',
     ],
     translations: {
       ja: {
@@ -452,6 +452,43 @@ export const tools: Tool[] = [
         ],
         description:
           'Converts color codes between HEX, RGB, and HSL, with a color picker for choosing colors visually.',
+      },
+    },
+  },
+  {
+    slug: 'color-space-converter',
+    category: 'image',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['color-converter', 'contrast-checker', 'color-palette-generator'],
+    translations: {
+      ja: {
+        name: '色空間変換（RGB・CMYK・Lab・OKLCH）',
+        keywords: [
+          'RGB CMYK 変換',
+          'CMYK',
+          'Lab',
+          'OKLCH',
+          'HWB',
+          '色空間',
+          '色変換',
+        ],
+        description:
+          'RGB・HEX・HSL・CMYK・HWB・Lab・OKLCHを相互に変換。CSSのlab()・oklch()・hwb()形式でコピーできます。',
+      },
+      en: {
+        name: 'Color Space Converter (RGB, CMYK, Lab, OKLCH)',
+        keywords: [
+          'rgb to cmyk',
+          'cmyk',
+          'lab',
+          'oklch',
+          'hwb',
+          'color space',
+          'color converter',
+        ],
+        description:
+          'Convert between RGB, HEX, HSL, CMYK, HWB, Lab and OKLCH, and copy CSS lab(), oklch() and hwb() values.',
       },
     },
   },

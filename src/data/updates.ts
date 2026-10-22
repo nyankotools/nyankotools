@@ -982,13 +982,17 @@ export const updates: UpdateEntry[] = [
       'svg-to-data-uri',
       'css-color-names',
       'html-entity-list',
+      'cron-generator',
+      'iso-duration-converter',
+      'cookie-parser',
+      'umask-calculator',
     ],
     translations: {
       ja: {
-        summary: '25個のツールを追加しました。',
+        summary: '29個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 25 new tools.',
+        summary: 'Added 29 new tools.',
       },
     },
   },

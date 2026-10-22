@@ -1,0 +1,411 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { umaskCalculatorContent } from '../../i18n/tools/umask-calculator';
+import {
+  calculateFromUmask,
+  parseUmask,
+} from '../../lib/tools/umask-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = umaskCalculatorContent[locale];
+
+const presetRows = t.presets.map((p) => {
+  const r = calculateFromUmask(parseUmask(p.umask) ?? 0);
+  return {
+    umask: p.umask,
+    use: p.use,
+    file: `${r.file.octal} (${r.file.symbolic})`,
+    directory: `${r.directory.octal} (${r.directory.symbolic})`,
+  };
+});
+
+const outputClass =
+  'h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-gray-50 px-3 font-mono text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+---
+
+<ToolShell t={t}>
+  <div data-copied={t.copied} data-copy-failed={t.copyFailed} id="umask-root">
+    <label for="umask-input" class="ui-label">
+      {t.umaskLabel}
+    </label>
+    <input
+      id="umask-input"
+      type="text"
+      inputmode="numeric"
+      value="022"
+      placeholder={t.umaskPlaceholder}
+      spellcheck="false"
+      autocomplete="off"
+      class="ui-input h-11 w-full max-w-xs px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+    />
+    <p
+      id="umask-error"
+      data-error-invalid-umask={t.errorInvalidUmask}
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <section aria-labelledby="umask-file-heading">
+        <h2
+          id="umask-file-heading"
+          class="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100"
+        >
+          {t.fileHeading}
+        </h2>
+        <label for="umask-file-octal" class="ui-label">
+          {t.octalLabel}
+        </label>
+        <div class="flex gap-2">
+          <input
+            id="umask-file-octal"
+            type="text"
+            readonly
+            class={outputClass}
+          />
+          <button
+            type="button"
+            data-copy-target="umask-file-octal"
+            class="ui-btn shrink-0"
+          >
+            {t.copyButton}
+          </button>
+        </div>
+        <label for="umask-file-symbolic" class="ui-label mt-2">
+          {t.symbolicLabel}
+        </label>
+        <input
+          id="umask-file-symbolic"
+          type="text"
+          readonly
+          class={outputClass}
+        />
+      </section>
+
+      <section aria-labelledby="umask-dir-heading">
+        <h2
+          id="umask-dir-heading"
+          class="mb-2 text-base font-semibold text-gray-900 dark:text-gray-100"
+        >
+          {t.directoryHeading}
+        </h2>
+        <label for="umask-dir-octal" class="ui-label">
+          {t.octalLabel}
+        </label>
+        <div class="flex gap-2">
+          <input
+            id="umask-dir-octal"
+            type="text"
+            readonly
+            class={outputClass}
+          />
+          <button
+            type="button"
+            data-copy-target="umask-dir-octal"
+            class="ui-btn shrink-0"
+          >
+            {t.copyButton}
+          </button>
+        </div>
+        <label for="umask-dir-symbolic" class="ui-label mt-2">
+          {t.symbolicLabel}
+        </label>
+        <input
+          id="umask-dir-symbolic"
+          type="text"
+          readonly
+          class={outputClass}
+        />
+      </section>
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div>
+        <label for="umask-command" class="ui-label">
+          {t.commandLabel}
+        </label>
+        <div class="flex gap-2">
+          <input id="umask-command" type="text" readonly class={outputClass} />
+          <button
+            type="button"
+            id="umask-copy-button"
+            data-copy-target="umask-command"
+            class="ui-btn shrink-0"
+          >
+            {t.copyButton}
+          </button>
+        </div>
+      </div>
+      <div>
+        <label for="umask-symbolic-output" class="ui-label">
+          {t.symbolicOutputLabel}
+        </label>
+        <input
+          id="umask-symbolic-output"
+          type="text"
+          readonly
+          class={outputClass}
+        />
+      </div>
+    </div>
+
+    <p
+      id="umask-status"
+      class="mt-2 block text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></p>
+
+    <section class="mt-8" aria-labelledby="umask-reverse-heading">
+      <h2
+        id="umask-reverse-heading"
+        class="text-lg font-semibold text-gray-900 dark:text-gray-100"
+      >
+        {t.reverseHeading}
+      </h2>
+      <p class="mt-1 text-sm text-gray-700 dark:text-gray-300">
+        {t.reverseDescription}
+      </p>
+
+      <div class="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label for="umask-desired-input" class="ui-label">
+            {t.desiredLabel}
+          </label>
+          <input
+            id="umask-desired-input"
+            type="text"
+            inputmode="numeric"
+            value="644"
+            placeholder={t.desiredPlaceholder}
+            spellcheck="false"
+            autocomplete="off"
+            class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+        </div>
+        <fieldset>
+          <legend class="ui-label">{t.kindLabel}</legend>
+          <div class="flex flex-wrap gap-x-6 gap-y-2 pt-2">
+            <label class="ui-check">
+              <input
+                id="umask-kind-file"
+                type="radio"
+                name="umask-kind"
+                value="file"
+                checked
+                class="h-4 w-4"
+              />
+              {t.kindFile}
+            </label>
+            <label class="ui-check">
+              <input
+                id="umask-kind-directory"
+                type="radio"
+                name="umask-kind"
+                value="directory"
+                class="h-4 w-4"
+              />
+              {t.kindDirectory}
+            </label>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="mt-4">
+        <label for="umask-reverse-result" class="ui-label">
+          {t.reverseResultLabel}
+        </label>
+        <div class="flex gap-2">
+          <input
+            id="umask-reverse-result"
+            type="text"
+            readonly
+            class={outputClass}
+          />
+          <button
+            type="button"
+            data-copy-target="umask-reverse-result"
+            class="ui-btn shrink-0"
+          >
+            {t.copyButton}
+          </button>
+        </div>
+      </div>
+      <p
+        id="umask-reverse-error"
+        data-error-invalid-mode={t.errorInvalidMode}
+        class="mt-2 text-sm text-red-600 dark:text-red-400"
+        aria-live="polite"
+      ></p>
+      <p
+        id="umask-reverse-warning"
+        data-message={t.unreachableMessage}
+        class="mt-2 text-sm text-amber-800 dark:text-amber-300"
+        aria-live="polite"
+      ></p>
+    </section>
+
+    <section class="mt-8" aria-labelledby="umask-presets-heading">
+      <h2
+        id="umask-presets-heading"
+        class="text-lg font-semibold text-gray-900 dark:text-gray-100"
+      >
+        {t.presetsHeading}
+      </h2>
+      <div class="mt-2 overflow-x-auto">
+        <table class="w-full min-w-[480px] border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-700">
+              <th class="py-2 pr-3 text-left font-medium text-gray-700 dark:text-gray-300">
+                {t.presetColumnUmask}
+              </th>
+              <th class="py-2 pr-3 text-left font-medium text-gray-700 dark:text-gray-300">
+                {t.presetColumnFile}
+              </th>
+              <th class="py-2 pr-3 text-left font-medium text-gray-700 dark:text-gray-300">
+                {t.presetColumnDirectory}
+              </th>
+              <th class="py-2 text-left font-medium text-gray-700 dark:text-gray-300">
+                {t.presetColumnUse}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {presetRows.map((row) => (
+              <tr class="border-b border-gray-100 dark:border-gray-800">
+                <td class="py-2 pr-3 font-mono text-gray-900 dark:text-gray-100">
+                  {row.umask}
+                </td>
+                <td class="py-2 pr-3 font-mono text-gray-700 dark:text-gray-300">
+                  {row.file}
+                </td>
+                <td class="py-2 pr-3 font-mono text-gray-700 dark:text-gray-300">
+                  {row.directory}
+                </td>
+                <td class="py-2 text-gray-700 dark:text-gray-300">{row.use}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    calculateFromUmask,
+    parseMode,
+    parseUmask,
+    reverseUmask,
+    type TargetKind,
+  } from '../../lib/tools/umask-calculator';
+
+  function el(id: string): HTMLInputElement {
+    return document.getElementById(id) as HTMLInputElement;
+  }
+
+  const umaskInput = el('umask-input');
+  const errorEl = document.getElementById('umask-error')!;
+  const statusEl = document.getElementById('umask-status')!;
+  const desiredInput = el('umask-desired-input');
+  const reverseResult = el('umask-reverse-result');
+  const reverseError = document.getElementById('umask-reverse-error')!;
+  const reverseWarning = document.getElementById('umask-reverse-warning')!;
+  const root = document.getElementById('umask-root')!;
+
+  const copied = root.dataset.copied ?? '';
+  const copyFailed = root.dataset.copyFailed ?? '';
+  const errorInvalidUmask = errorEl.dataset.errorInvalidUmask ?? '';
+  const errorInvalidMode = reverseError.dataset.errorInvalidMode ?? '';
+  const unreachableMessage = reverseWarning.dataset.message ?? '';
+
+  function clearOutputs() {
+    for (const id of [
+      'umask-file-octal',
+      'umask-file-symbolic',
+      'umask-dir-octal',
+      'umask-dir-symbolic',
+      'umask-command',
+      'umask-symbolic-output',
+    ]) {
+      el(id).value = '';
+    }
+  }
+
+  function renderForward() {
+    statusEl.textContent = '';
+    const raw = umaskInput.value;
+    if (raw.trim() === '') {
+      errorEl.textContent = '';
+      clearOutputs();
+      return;
+    }
+    const umask = parseUmask(raw);
+    if (umask === null) {
+      errorEl.textContent = errorInvalidUmask;
+      clearOutputs();
+      return;
+    }
+    errorEl.textContent = '';
+    const r = calculateFromUmask(umask);
+    el('umask-file-octal').value = r.file.octal;
+    el('umask-file-symbolic').value = r.file.symbolic;
+    el('umask-dir-octal').value = r.directory.octal;
+    el('umask-dir-symbolic').value = r.directory.symbolic;
+    el('umask-command').value = r.command;
+    el('umask-symbolic-output').value = r.symbolicCommandOutput;
+  }
+
+  function selectedKind(): TargetKind {
+    return el('umask-kind-directory').checked ? 'directory' : 'file';
+  }
+
+  function renderReverse() {
+    statusEl.textContent = '';
+    reverseWarning.textContent = '';
+    const raw = desiredInput.value;
+    if (raw.trim() === '') {
+      reverseError.textContent = '';
+      reverseResult.value = '';
+      return;
+    }
+    const mode = parseMode(raw);
+    if (mode === null) {
+      reverseError.textContent = errorInvalidMode;
+      reverseResult.value = '';
+      return;
+    }
+    reverseError.textContent = '';
+    const r = reverseUmask(mode, selectedKind());
+    reverseResult.value = r.umaskOctal;
+    if (r.hasUnreachable) {
+      reverseWarning.textContent = `${unreachableMessage} ${r.achieved.octal} (${r.achieved.symbolic})`;
+    }
+  }
+
+  umaskInput.addEventListener('input', renderForward);
+  desiredInput.addEventListener('input', renderReverse);
+  el('umask-kind-file').addEventListener('change', renderReverse);
+  el('umask-kind-directory').addEventListener('change', renderReverse);
+
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-copy-target]')
+    .forEach((button) => {
+      button.addEventListener('click', async () => {
+        const target = el(button.dataset.copyTarget!);
+        if (!target.value) return;
+        statusEl.textContent = (await copyText(target.value))
+          ? copied
+          : copyFailed;
+      });
+    });
+
+  renderForward();
+  renderReverse();
+</script>

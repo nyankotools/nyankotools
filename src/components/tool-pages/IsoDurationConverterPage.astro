@@ -1,0 +1,368 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { isoDurationConverterContent } from '../../i18n/tools/iso-duration-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = isoDurationConverterContent[locale];
+
+const totals = [
+  { id: 'seconds', label: t.totalSecondsLabel },
+  { id: 'minutes', label: t.totalMinutesLabel },
+  { id: 'hours', label: t.totalHoursLabel },
+  { id: 'days', label: t.totalDaysLabel },
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="iso-duration-root"
+    data-number-locale={t.numberLocale}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-unit-suffixes={JSON.stringify(t.unitSuffixes)}
+    data-unit-separator={t.unitSeparator}
+    data-negative-label={t.negativeLabel}
+    data-error-format={t.errorFormat}
+    data-error-no-components={t.errorNoComponents}
+    data-error-too-large={t.errorTooLarge}
+    data-error-seconds-invalid={t.errorSecondsInvalid}
+    data-error-fractional-calendar={t.errorFractionalCalendar}
+    data-end-placeholder={t.endPlaceholder}
+  >
+    <section class="mb-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-bold">{t.isoHeading}</h2>
+      <label for="iso-duration-input" class="ui-label">
+        {t.isoLabel}
+      </label>
+      <input
+        id="iso-duration-input"
+        type="text"
+        placeholder={t.isoPlaceholder}
+        spellcheck="false"
+        autocomplete="off"
+        class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+      <p
+        id="iso-duration-error"
+        class="mt-2 text-sm text-red-700 dark:text-red-400"
+        aria-live="polite"
+      ></p>
+
+      <dl class="mt-4 space-y-2 text-sm">
+        <div class="flex flex-wrap items-center gap-2">
+          <dt class="w-32 shrink-0 text-gray-500 dark:text-gray-400">
+            {t.breakdownLabel}
+          </dt>
+          <dd id="iso-duration-breakdown" class="font-mono"></dd>
+        </div>
+        {totals.map(({ id, label }) => (
+          <div class="flex flex-wrap items-center gap-2">
+            <dt class="w-32 shrink-0 text-gray-500 dark:text-gray-400">
+              {label}
+            </dt>
+            <dd class="flex min-w-0 flex-wrap items-center gap-2">
+              <span
+                id={`iso-duration-total-${id}`}
+                class="break-all font-mono"
+              />
+              <button
+                type="button"
+                data-copy-target={`iso-duration-total-${id}`}
+                class="ui-btn shrink-0"
+              >
+                {t.copyButton}
+              </button>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p
+        id="iso-duration-approximate"
+        class="mt-3 hidden text-sm text-amber-700 dark:text-amber-400"
+      >
+        {t.approximateNotice}
+      </p>
+      <span
+        id="iso-duration-status"
+        class="mt-2 block text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </section>
+
+    <section class="mb-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-3 text-lg font-bold">{t.secondsHeading}</h2>
+      <label for="iso-duration-seconds-input" class="ui-label">
+        {t.secondsLabel}
+      </label>
+      <input
+        id="iso-duration-seconds-input"
+        type="text"
+        inputmode="decimal"
+        placeholder={t.secondsPlaceholder}
+        spellcheck="false"
+        autocomplete="off"
+        class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+      <p
+        id="iso-duration-seconds-error"
+        class="mt-2 text-sm text-red-700 dark:text-red-400"
+        aria-live="polite"
+      ></p>
+      <dl class="mt-4 space-y-2 text-sm">
+        <div class="flex flex-wrap items-center gap-2">
+          <dt class="w-32 shrink-0 text-gray-500 dark:text-gray-400">
+            {t.isoResultLabel}
+          </dt>
+          <dd class="flex min-w-0 flex-wrap items-center gap-2">
+            <span
+              id="iso-duration-seconds-result"
+              class="break-all font-mono"
+            ></span>
+            <button
+              type="button"
+              data-copy-target="iso-duration-seconds-result"
+              class="ui-btn shrink-0"
+            >
+              {t.copyButton}
+            </button>
+          </dd>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <dt class="w-32 shrink-0 text-gray-500 dark:text-gray-400">
+            {t.breakdownLabel}
+          </dt>
+          <dd id="iso-duration-seconds-breakdown" class="font-mono"></dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="mb-1 text-lg font-bold">{t.addHeading}</h2>
+      <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">{t.addHint}</p>
+      <div class="flex flex-wrap items-end gap-3">
+        <div class="min-w-0 flex-1">
+          <label for="iso-duration-base" class="ui-label">
+            {t.baseLabel}
+          </label>
+          <input
+            id="iso-duration-base"
+            type="datetime-local"
+            step="1"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </div>
+        <button
+          type="button"
+          id="iso-duration-base-now"
+          class="ui-btn shrink-0"
+        >
+          {t.useCurrentDatetime}
+        </button>
+      </div>
+      <p
+        id="iso-duration-add-error"
+        class="mt-2 text-sm text-red-700 dark:text-red-400"
+        aria-live="polite"
+      ></p>
+      <dl class="mt-4 space-y-2 text-sm">
+        <div class="flex flex-wrap items-center gap-2">
+          <dt class="w-32 shrink-0 text-gray-500 dark:text-gray-400">
+            {t.endLabel}
+          </dt>
+          <dd class="flex min-w-0 flex-wrap items-center gap-2">
+            <span id="iso-duration-end" class="break-all font-mono">
+              {t.endPlaceholder}
+            </span>
+            <button
+              type="button"
+              data-copy-target="iso-duration-end"
+              class="ui-btn shrink-0"
+            >
+              {t.copyButton}
+            </button>
+          </dd>
+        </div>
+      </dl>
+    </section>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    addDurationToDate,
+    breakdownComponents,
+    durationToSeconds,
+    parseIsoDuration,
+    parseSecondsInput,
+    secondsToBreakdown,
+    secondsToIsoDuration,
+    secondsToTotals,
+    type IsoDuration,
+    type IsoDurationError,
+  } from '../../lib/tools/iso-duration-converter';
+  import {
+    formatDateTimeLocalValue,
+    parseDateTimeLocalValue,
+  } from '../../lib/tools/unix-timestamp';
+
+  const root = document.getElementById('iso-duration-root')!;
+  const ds = root.dataset;
+  const suffixes = JSON.parse(ds.unitSuffixes ?? '{}') as Record<
+    string,
+    string
+  >;
+  const separator = ds.unitSeparator ?? ' ';
+  const negativeLabel = ds.negativeLabel ?? '-';
+  const numberLocale = ds.numberLocale ?? 'en-US';
+  const errorMessages: Record<IsoDurationError, string> = {
+    empty: '',
+    format: ds.errorFormat ?? '',
+    noComponents: ds.errorNoComponents ?? '',
+    tooLarge: ds.errorTooLarge ?? '',
+  };
+
+  const input = document.getElementById(
+    'iso-duration-input',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('iso-duration-error')!;
+  const breakdownEl = document.getElementById('iso-duration-breakdown')!;
+  const approxEl = document.getElementById('iso-duration-approximate')!;
+  const statusEl = document.getElementById('iso-duration-status')!;
+  const totalEls = {
+    seconds: document.getElementById('iso-duration-total-seconds')!,
+    minutes: document.getElementById('iso-duration-total-minutes')!,
+    hours: document.getElementById('iso-duration-total-hours')!,
+    days: document.getElementById('iso-duration-total-days')!,
+  };
+
+  const secondsInput = document.getElementById(
+    'iso-duration-seconds-input',
+  ) as HTMLInputElement;
+  const secondsErrorEl = document.getElementById('iso-duration-seconds-error')!;
+  const secondsResultEl = document.getElementById(
+    'iso-duration-seconds-result',
+  )!;
+  const secondsBreakdownEl = document.getElementById(
+    'iso-duration-seconds-breakdown',
+  )!;
+
+  const baseInput = document.getElementById(
+    'iso-duration-base',
+  ) as HTMLInputElement;
+  const baseNowButton = document.getElementById(
+    'iso-duration-base-now',
+  ) as HTMLButtonElement;
+  const addErrorEl = document.getElementById('iso-duration-add-error')!;
+  const endEl = document.getElementById('iso-duration-end')!;
+  const endPlaceholder = ds.endPlaceholder ?? '-';
+
+  const dateFormatter = new Intl.DateTimeFormat(numberLocale, {
+    dateStyle: 'full',
+    timeStyle: 'medium',
+  });
+
+  let currentDuration: IsoDuration | null = null;
+
+  function joinParts(parts: { unit: string; value: string }[]): string {
+    return parts
+      .map(({ unit, value }) => `${value}${suffixes[unit] ?? unit}`)
+      .join(separator);
+  }
+
+  function renderIso() {
+    errorEl.textContent = '';
+    breakdownEl.textContent = '';
+    approxEl.classList.add('hidden');
+    for (const el of Object.values(totalEls)) el.textContent = '';
+    currentDuration = null;
+
+    const result = parseIsoDuration(input.value);
+    if (!result.ok) {
+      errorEl.textContent = errorMessages[result.error];
+    } else {
+      const d = result.value;
+      currentDuration = d;
+      const { seconds, approximate } = durationToSeconds(d);
+      const totals = secondsToTotals(seconds);
+      totalEls.seconds.textContent = totals.seconds;
+      totalEls.minutes.textContent = totals.minutes;
+      totalEls.hours.textContent = totals.hours;
+      totalEls.days.textContent = totals.days;
+      const parts = joinParts(breakdownComponents(d));
+      breakdownEl.textContent =
+        d.negative && parts ? `${negativeLabel} ${parts}` : parts || '0';
+      approxEl.classList.toggle('hidden', !approximate);
+    }
+    renderAdd();
+  }
+
+  function renderSeconds() {
+    secondsErrorEl.textContent = '';
+    secondsResultEl.textContent = '';
+    secondsBreakdownEl.textContent = '';
+    if (secondsInput.value.trim() === '') return;
+    const value = parseSecondsInput(secondsInput.value);
+    if (value === null) {
+      secondsErrorEl.textContent = ds.errorSecondsInvalid ?? '';
+      return;
+    }
+    secondsResultEl.textContent = secondsToIsoDuration(value);
+    const b = secondsToBreakdown(value);
+    const parts = joinParts(
+      [
+        { unit: 'days', value: String(b.days) },
+        { unit: 'hours', value: String(b.hours) },
+        { unit: 'minutes', value: String(b.minutes) },
+        { unit: 'seconds', value: b.seconds },
+      ].filter((p) => p.value !== '0'),
+    );
+    secondsBreakdownEl.textContent = b.negative
+      ? `${negativeLabel} ${parts}`
+      : parts || `0${suffixes.seconds ?? ''}`;
+  }
+
+  function renderAdd() {
+    addErrorEl.textContent = '';
+    endEl.textContent = endPlaceholder;
+    if (!currentDuration) return;
+    const base = parseDateTimeLocalValue(baseInput.value);
+    if (!base) return;
+    const end = addDurationToDate(base, currentDuration);
+    if (!end) {
+      addErrorEl.textContent = ds.errorFractionalCalendar ?? '';
+      return;
+    }
+    endEl.textContent = `${dateFormatter.format(end)} (${formatDateTimeLocalValue(end)})`;
+  }
+
+  input.addEventListener('input', renderIso);
+  secondsInput.addEventListener('input', renderSeconds);
+  baseInput.addEventListener('input', renderAdd);
+  baseNowButton.addEventListener('click', () => {
+    baseInput.value = formatDateTimeLocalValue(new Date());
+    renderAdd();
+  });
+
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-copy-target]')
+    .forEach((button) => {
+      button.addEventListener('click', async () => {
+        const target = document.getElementById(button.dataset.copyTarget!);
+        const text = target?.textContent ?? '';
+        if (!text || text === endPlaceholder) return;
+        statusEl.textContent = (await copyText(text))
+          ? (ds.copied ?? '')
+          : (ds.copyFailed ?? '');
+      });
+    });
+
+  baseInput.value = formatDateTimeLocalValue(new Date());
+  renderIso();
+  renderSeconds();
+</script>

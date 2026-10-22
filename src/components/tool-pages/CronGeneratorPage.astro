@@ -1,0 +1,271 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cronGeneratorContent } from '../../i18n/tools/cron-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cronGeneratorContent[locale];
+
+const fields = ['minute', 'hour', 'dayOfMonth', 'month', 'dayOfWeek'] as const;
+---
+
+<ToolShell t={t}>
+  <div
+    id="cg-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-label-value={t.labelValue}
+    data-label-from={t.labelFrom}
+    data-label-to={t.labelTo}
+    data-label-step={t.labelStep}
+    data-error-not-a-number={t.errorMessages['not-a-number']}
+    data-error-out-of-range={t.errorMessages['out-of-range']}
+    data-error-range-order={t.errorMessages['range-order']}
+    data-error-step-zero={t.errorMessages['step-zero']}
+    data-error-empty-list={t.errorMessages['empty-list']}
+    data-quartz-unavailable={t.quartzUnavailable}
+    class="space-y-4"
+  >
+    {fields.map((name) => (
+      <fieldset
+        class="rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+        data-field={name}
+      >
+        <legend class="px-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t.fieldLabels[name]}
+        </legend>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div>
+            <label for={`cg-${name}-mode`} class="ui-label">
+              {t.modeLabel}
+            </label>
+            <select
+              id={`cg-${name}-mode`}
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            >
+              {t.modeOptions.map((o) => (
+                <option value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+          <div id={`cg-${name}-a-wrap`} class="hidden">
+            <label
+              for={`cg-${name}-a`}
+              id={`cg-${name}-a-label`}
+              class="ui-label"
+            >
+              {t.labelValue}
+            </label>
+            <input
+              id={`cg-${name}-a`}
+              type="text"
+              inputmode="numeric"
+              class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+            />
+          </div>
+          <div id={`cg-${name}-b-wrap`} class="hidden">
+            <label for={`cg-${name}-b`} class="ui-label">
+              {t.labelTo}
+            </label>
+            <input
+              id={`cg-${name}-b`}
+              type="text"
+              inputmode="numeric"
+              class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+            />
+          </div>
+          <div id={`cg-${name}-list-wrap`} class="hidden sm:col-span-2">
+            <label for={`cg-${name}-list`} class="ui-label">
+              {t.labelList}
+            </label>
+            <input
+              id={`cg-${name}-list`}
+              type="text"
+              placeholder={t.listPlaceholder}
+              spellcheck="false"
+              class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+            />
+          </div>
+        </div>
+        <p
+          id={`cg-${name}-error`}
+          class="mt-2 text-sm text-red-600 dark:text-red-400"
+          aria-live="polite"
+        />
+      </fieldset>
+    ))}
+  </div>
+
+  <div class="mt-6">
+    <label for="cg-result" class="ui-label">
+      {t.resultLabel}
+    </label>
+    <div class="flex gap-2">
+      <input
+        id="cg-result"
+        type="text"
+        readonly
+        spellcheck="false"
+        class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-gray-50 px-3 font-mono text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+      <button
+        type="button"
+        id="cg-copy-button"
+        data-copy-target="cg-result"
+        class="ui-btn ui-btn-primary shrink-0"
+      >
+        {t.copyButton}
+      </button>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <label for="cg-quartz" class="ui-label">
+      {t.quartzLabel}
+    </label>
+    <div class="flex gap-2">
+      <input
+        id="cg-quartz"
+        type="text"
+        readonly
+        spellcheck="false"
+        class="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-gray-50 px-3 font-mono text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+      />
+      <button
+        type="button"
+        id="cg-quartz-copy-button"
+        data-copy-target="cg-quartz"
+        class="ui-btn shrink-0"
+      >
+        {t.copyButton}
+      </button>
+    </div>
+    <p
+      id="cg-quartz-note"
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+  </div>
+
+  <span
+    id="cg-status"
+    class="mt-2 block text-sm text-green-700 dark:text-green-400"
+    aria-live="polite"
+  ></span>
+
+  <p
+    class="mt-4 text-sm text-gray-700 dark:text-gray-300"
+    set:html={t.parserLinkHtml}
+  />
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    CRON_FIELDS,
+    buildCron,
+    toQuartz,
+    type FieldMode,
+    type FieldSpec,
+    type CronFieldName,
+  } from '../../lib/tools/cron-generator';
+
+  const root = document.getElementById('cg-root')!;
+  const d = root.dataset;
+  const errorTexts: Record<string, string> = {
+    'not-a-number': d.errorNotANumber ?? '',
+    'out-of-range': d.errorOutOfRange ?? '',
+    'range-order': d.errorRangeOrder ?? '',
+    'step-zero': d.errorStepZero ?? '',
+    'empty-list': d.errorEmptyList ?? '',
+  };
+
+  const result = document.getElementById('cg-result') as HTMLInputElement;
+  const quartz = document.getElementById('cg-quartz') as HTMLInputElement;
+  const quartzNote = document.getElementById('cg-quartz-note')!;
+  const status = document.getElementById('cg-status')!;
+
+  function el<T extends HTMLElement>(id: string): T {
+    return document.getElementById(id) as T;
+  }
+
+  function readSpecs(): Record<CronFieldName, FieldSpec> {
+    const specs = {} as Record<CronFieldName, FieldSpec>;
+    for (const name of CRON_FIELDS) {
+      specs[name] = {
+        mode: el<HTMLSelectElement>(`cg-${name}-mode`).value as FieldMode,
+        a: el<HTMLInputElement>(`cg-${name}-a`).value,
+        b: el<HTMLInputElement>(`cg-${name}-b`).value,
+        list: el<HTMLInputElement>(`cg-${name}-list`).value,
+      };
+    }
+    return specs;
+  }
+
+  function updateVisibility() {
+    for (const name of CRON_FIELDS) {
+      const mode = el<HTMLSelectElement>(`cg-${name}-mode`).value;
+      el(`cg-${name}-a-wrap`).classList.toggle(
+        'hidden',
+        !['single', 'range', 'step'].includes(mode),
+      );
+      el(`cg-${name}-b-wrap`).classList.toggle('hidden', mode !== 'range');
+      el(`cg-${name}-list-wrap`).classList.toggle('hidden', mode !== 'list');
+      const label =
+        mode === 'range'
+          ? d.labelFrom
+          : mode === 'step'
+            ? d.labelStep
+            : d.labelValue;
+      el(`cg-${name}-a-label`).textContent = label ?? '';
+    }
+  }
+
+  function render() {
+    updateVisibility();
+    status.textContent = '';
+    const built = buildCron(readSpecs());
+    for (const name of CRON_FIELDS) {
+      const code = built.ok ? undefined : built.errors[name];
+      el(`cg-${name}-error`).textContent = code ? errorTexts[code] : '';
+    }
+    if (!built.ok) {
+      result.value = '';
+      quartz.value = '';
+      quartzNote.textContent = '';
+      return;
+    }
+    result.value = built.expression;
+    const q = toQuartz(built.fields);
+    if (q.ok) {
+      quartz.value = q.expression;
+      quartzNote.textContent = '';
+    } else {
+      quartz.value = '';
+      quartzNote.textContent = d.quartzUnavailable ?? '';
+    }
+  }
+
+  root.addEventListener('input', render);
+  root.addEventListener('change', render);
+
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-copy-target]')
+    .forEach((button) => {
+      button.addEventListener('click', async () => {
+        const target = document.getElementById(
+          button.dataset.copyTarget!,
+        ) as HTMLInputElement;
+        if (!target.value) return;
+        status.textContent = (await copyText(target.value))
+          ? (d.copied ?? '')
+          : (d.copyFailed ?? '');
+      });
+    });
+
+  render();
+</script>

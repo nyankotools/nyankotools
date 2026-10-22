@@ -913,7 +913,7 @@ export const tools: Tool[] = [
     category: 'datetime',
     addedAt: '2026-09-16',
     updatedAt: '2026-09-16',
-    related: ['unix-timestamp', 'date-calculator', 'regex-tester'],
+    related: ['unix-timestamp', 'date-calculator', 'cron-generator'],
     translations: {
       ja: {
         name: 'Cron式スケジュールシミュレーター',
@@ -1367,7 +1367,7 @@ export const tools: Tool[] = [
     category: 'dev',
     addedAt: '2026-09-17',
     updatedAt: '2026-09-17',
-    related: ['cidr-calculator', 'base-converter', 'cron-parser'],
+    related: ['cidr-calculator', 'base-converter', 'umask-calculator'],
     translations: {
       ja: {
         name: 'Chmodパーミッション計算機',
@@ -12690,6 +12690,157 @@ export const tools: Tool[] = [
           'numeric reference',
           'nbsp',
           'special characters',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'cron-generator',
+    category: 'dev',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['cron-parser', 'unix-timestamp', 'iso-duration-converter'],
+    translations: {
+      ja: {
+        name: 'Cron式ジェネレーター',
+        description:
+          '分・時・日・月・曜日をGUIで選んでcron式を作成。*/5の間隔・範囲・列挙、Quartz形式にも対応します。',
+        keywords: [
+          'cron',
+          'crontab',
+          'cron式 作成',
+          'スケジュール',
+          'Quartz',
+          'GitHub Actions',
+          'cron ジェネレーター',
+        ],
+      },
+      en: {
+        name: 'Cron Expression Generator',
+        description:
+          'Build cron expressions visually by picking minute, hour, day, month and weekday. Supports steps, ranges, lists and Quartz output.',
+        keywords: [
+          'cron',
+          'crontab',
+          'cron generator',
+          'cron builder',
+          'schedule',
+          'quartz',
+          'github actions',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'iso-duration-converter',
+    category: 'dev',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['unix-timestamp', 'date-calculator', 'cron-parser'],
+    translations: {
+      ja: {
+        name: 'ISO 8601 期間（duration）変換',
+        keywords: [
+          'ISO 8601',
+          'duration',
+          '期間',
+          'PT1H30M',
+          'YouTube API',
+          'iCalendar',
+          'OpenAPI',
+        ],
+        description:
+          'ISO 8601の期間（PT1H30M、P1Y2M3D、P2Wなど）を秒・分・時間・日に変換します。秒数からの逆変換や、基準日時への加算にも対応。',
+      },
+      en: {
+        name: 'ISO 8601 Duration Converter',
+        keywords: [
+          'ISO 8601 duration',
+          'duration',
+          'PT1H30M',
+          'YouTube API duration',
+          'iCalendar duration',
+          'seconds to duration',
+        ],
+        description:
+          'Converts ISO 8601 durations (PT1H30M, P1Y2M3D, P2W) to seconds, minutes, hours and days, converts seconds back, and adds a duration to a date.',
+      },
+    },
+  },
+  {
+    slug: 'cookie-parser',
+    category: 'dev',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['http-header-analyzer', 'jwt-decoder', 'http-status-codes'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'Cookie解析（Cookie・Set-Cookie分解）',
+        keywords: [
+          'Cookie',
+          'Set-Cookie',
+          'SameSite',
+          'HttpOnly',
+          'Secure',
+          'Max-Age',
+          'Partitioned',
+          'クッキー',
+        ],
+        description:
+          'CookieヘッダーやSet-Cookieを名前・値・Domain・Path・Expires・Max-Age・Secure・HttpOnly・SameSiteに分解して表示。設定ミスも指摘。値は初期状態でマスク表示します。',
+      },
+      en: {
+        name: 'Cookie Parser (Cookie & Set-Cookie)',
+        keywords: [
+          'cookie',
+          'Set-Cookie',
+          'SameSite',
+          'HttpOnly',
+          'Secure',
+          'Max-Age',
+          'Partitioned',
+          'CHIPS',
+        ],
+        description:
+          'Parses Cookie and Set-Cookie headers into name, value, Domain, Path, Expires, Max-Age, Secure, HttpOnly and SameSite, and flags common mistakes. Values are masked.',
+      },
+    },
+  },
+  {
+    slug: 'umask-calculator',
+    category: 'dev',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['chmod-calculator'],
+    translations: {
+      ja: {
+        name: 'umask計算機',
+        description:
+          'umask値から新規ファイル・ディレクトリの実効パーミッションを算出。欲しいパーミッションからのumask逆算にも対応。',
+        keywords: [
+          'umask',
+          'パーミッション',
+          'chmod',
+          '022',
+          '002',
+          '077',
+          'Linux',
+          '権限',
+        ],
+      },
+      en: {
+        name: 'umask Calculator',
+        description:
+          'Find the permissions new files and directories get from a umask, or work back to the umask you need.',
+        keywords: [
+          'umask',
+          'permissions',
+          'chmod',
+          '022',
+          '002',
+          '077',
+          'linux file mode',
         ],
       },
     },

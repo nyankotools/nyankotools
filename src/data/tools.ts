@@ -11946,6 +11946,156 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'notation-variants-checker',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['char-counter', 'zenkaku-hankaku', 'text-diff'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '文章校正（表記ゆれ・用字用語チェック）',
+        keywords: [
+          '表記ゆれ',
+          '表記揺れ',
+          '校正',
+          '用字用語',
+          '送り仮名',
+          '文章校正',
+          '全角半角 混在',
+        ],
+        description:
+          '日本語の文章から送り仮名・漢字とかな・カタカナ表記・全角半角の混在などの表記ゆれを辞書で検出し、推奨表記をハイライトで提案します。',
+      },
+      en: {
+        name: 'Japanese Notation Variants Checker',
+        keywords: [
+          'notation variants',
+          'japanese proofreading',
+          'okurigana',
+          'spelling consistency',
+          'full-width half-width',
+          'style guide',
+        ],
+        description:
+          'Checks Japanese text for notation variants (okurigana, kanji vs kana, katakana, full/half-width mixing) and suggests recommended forms.',
+      },
+    },
+  },
+  {
+    slug: 'readability-checker',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['char-counter', 'reading-time-calculator', 'text-diff'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '文章の読みやすさ診断',
+        description:
+          '文長・漢字率・同じ文末や接続詞の連続・読点の多寡を診断し、問題のある文をハイライト',
+        keywords: [
+          '読みやすさ',
+          '文章診断',
+          '文長',
+          '漢字率',
+          '文末',
+          '接続詞',
+          '読点',
+          '推敲',
+        ],
+      },
+      en: {
+        name: 'Readability Checker',
+        description:
+          'Check sentence length, kanji ratio, repeated endings and conjunctions, and comma use; highlights weak sentences',
+        keywords: [
+          'readability',
+          'sentence length',
+          'kanji ratio',
+          'writing checker',
+          'proofreading',
+          'japanese text',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'ruby-tag-generator',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['kana-converter', 'zenkaku-hankaku', 'char-counter'],
+    translations: {
+      ja: {
+        name: 'ルビ（ふりがな）HTMLタグ生成',
+        description:
+          '漢字《かんじ》や｜親文字《ルビ》の記法から、ふりがな用の<ruby>タグを生成。rp括弧の有無とプレビュー付き。',
+        keywords: [
+          'ルビ',
+          'ふりがな',
+          'rubyタグ',
+          '振り仮名',
+          '青空文庫',
+          'rt',
+          'rp',
+          'HTML',
+        ],
+      },
+      en: {
+        name: 'Ruby (Furigana) HTML Tag Generator',
+        description:
+          'Generate HTML ruby tags for furigana from a simple bracket notation, with optional rp parentheses and preview.',
+        keywords: [
+          'ruby',
+          'furigana',
+          'ruby tag',
+          'rt',
+          'rp',
+          'aozora bunko',
+          'html',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'string-similarity',
+    category: 'text',
+    addedAt: '2026-10-22',
+    updatedAt: '2026-10-22',
+    related: ['text-diff', 'char-counter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '文字列の類似度・編集距離計算',
+        description:
+          '2つの文字列の編集距離（レーベンシュタイン）・類似率・挿入/削除/置換の操作列を計算',
+        keywords: [
+          '編集距離',
+          'レーベンシュタイン',
+          '類似度',
+          '類似率',
+          'Jaro-Winkler',
+          '文字列比較',
+          'Damerau',
+        ],
+      },
+      en: {
+        name: 'String Similarity & Edit Distance',
+        description:
+          'Compute Levenshtein edit distance, similarity percentage, and insert/delete/replace steps between two strings.',
+        keywords: [
+          'levenshtein',
+          'edit distance',
+          'string similarity',
+          'jaro-winkler',
+          'damerau',
+          'fuzzy match',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

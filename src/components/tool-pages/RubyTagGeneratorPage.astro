@@ -1,0 +1,187 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { rubyTagGeneratorContent } from '../../i18n/tools/ruby-tag-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = rubyTagGeneratorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="ruby-tag-generator-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="ruby-tag-generator-input"
+      data-query-target="text"
+      data-sample={t.sampleText}
+      class="ui-input h-40 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div class="mt-3">
+    <p class="ui-label">{t.insertLegend}</p>
+    <div class="flex flex-wrap gap-2">
+      <button id="ruby-tag-generator-insert" type="button" class="ui-btn">
+        {t.insertRuby}
+      </button>
+      <button id="ruby-tag-generator-insert-bar" type="button" class="ui-btn">
+        {t.insertRubyBar}
+      </button>
+    </div>
+    <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{t.insertHint}</p>
+  </div>
+
+  <fieldset class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+    <legend class="mb-1 w-full text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.optionsLegend}
+    </legend>
+    <label class="flex min-h-11 items-center gap-2">
+      <input
+        id="ruby-tag-generator-rp"
+        type="checkbox"
+        checked
+        class="h-4 w-4"
+      />
+      {t.optRp}
+    </label>
+    <label class="flex min-h-11 items-center gap-2">
+      <input id="ruby-tag-generator-br" type="checkbox" class="h-4 w-4" />
+      {t.optBr}
+    </label>
+  </fieldset>
+
+  <div class="mt-4">
+    <label for="ruby-tag-generator-output" class="ui-label">
+      {t.htmlLabel}
+    </label>
+    <textarea
+      id="ruby-tag-generator-output"
+      readonly
+      class="ui-input h-40 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+    ></textarea>
+  </div>
+
+  <div class="mt-3 flex flex-wrap items-center gap-3">
+    <button
+      id="ruby-tag-generator-copy-button"
+      type="button"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="ui-btn ui-btn-primary"
+    >
+      {t.copy}
+    </button>
+    <span
+      id="ruby-tag-generator-status"
+      class="text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+    <span
+      id="ruby-tag-generator-count"
+      data-template={t.countTemplate}
+      class="text-sm text-gray-700 dark:text-gray-300"
+    ></span>
+  </div>
+
+  <div class="mt-4">
+    <p class="ui-label">{t.previewLabel}</p>
+    <div
+      id="ruby-tag-generator-preview"
+      class="min-h-24 rounded-md border border-gray-300 bg-white p-4 text-lg leading-loose whitespace-pre-wrap text-gray-900 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+    ></div>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { generateRubyHtml } from '../../lib/tools/ruby-tag-generator';
+
+  const input = document.getElementById(
+    'ruby-tag-generator-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'ruby-tag-generator-output',
+  ) as HTMLTextAreaElement;
+  const rpCheck = document.getElementById(
+    'ruby-tag-generator-rp',
+  ) as HTMLInputElement;
+  const brCheck = document.getElementById(
+    'ruby-tag-generator-br',
+  ) as HTMLInputElement;
+  const preview = document.getElementById('ruby-tag-generator-preview')!;
+  const copyButton = document.getElementById(
+    'ruby-tag-generator-copy-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('ruby-tag-generator-status')!;
+  const countEl = document.getElementById('ruby-tag-generator-count')!;
+
+  function render() {
+    statusEl.textContent = '';
+    const { html, rubyCount, tokens } = generateRubyHtml(input.value, {
+      rp: rpCheck.checked,
+      br: brCheck.checked,
+    });
+    output.value = html;
+    countEl.textContent = input.value
+      ? (countEl.dataset.template ?? '').replace('{n}', String(rubyCount))
+      : '';
+
+    // innerHTML は使わず、ruby/rt/rp 要素とテキストノードだけで組み立てる
+    const fragment = document.createDocumentFragment();
+    for (const token of tokens) {
+      if (token.type === 'text') {
+        fragment.append(document.createTextNode(token.text));
+        continue;
+      }
+      const ruby = document.createElement('ruby');
+      ruby.append(document.createTextNode(token.base));
+      const rt = document.createElement('rt');
+      rt.textContent = token.rt;
+      ruby.append(rt);
+      fragment.append(ruby);
+    }
+    preview.replaceChildren(fragment);
+  }
+
+  // 選択範囲の後ろに《》を挿入し、カーソルを《》の間に置く（barなら選択範囲の前に｜も付ける）
+  function insertRubyBrackets(withBar: boolean) {
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const selected = input.value.slice(start, end);
+    const text = (withBar ? '｜' : '') + selected + '《》';
+    input.focus();
+    input.setRangeText(text, start, end, 'end');
+    const caret = start + text.length - 1;
+    input.setSelectionRange(caret, caret);
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  document
+    .getElementById('ruby-tag-generator-insert')!
+    .addEventListener('click', () => insertRubyBrackets(false));
+  document
+    .getElementById('ruby-tag-generator-insert-bar')!
+    .addEventListener('click', () => insertRubyBrackets(true));
+
+  onTextInput(input, render);
+  rpCheck.addEventListener('change', render);
+  brCheck.addEventListener('change', render);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  render();
+</script>

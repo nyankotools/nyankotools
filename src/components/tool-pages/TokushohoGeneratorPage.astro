@@ -1,0 +1,329 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { tokushohoGeneratorContent } from '../../i18n/tools/tokushoho-generator';
+import { TOKUSHOHO_FIELD_IDS } from '../../lib/tools/tokushoho-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = tokushohoGeneratorContent[locale];
+const fieldLabels = Object.fromEntries(
+  TOKUSHOHO_FIELD_IDS.map((id) => [id, t.fields[id].label]),
+);
+// 複数行になりやすい項目は textarea、それ以外は1行入力にする
+const multiline: Record<string, number> = {
+  address: 2,
+  price: 2,
+  extraFees: 3,
+  payment: 2,
+  paymentTiming: 3,
+  delivery: 2,
+  returns: 5,
+};
+---
+
+<ToolShell t={t}>
+  <div
+    id="tkg-root"
+    data-field-labels={JSON.stringify(fieldLabels)}
+    data-issue-messages={JSON.stringify(t.issueMessages)}
+    data-error-prefix={t.errorPrefix}
+    data-warning-prefix={t.warningPrefix}
+    data-no-issues={t.noIssues}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-downloaded={t.downloaded}
+  >
+    <div
+      class="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200"
+      role="note"
+    >
+      <p class="mb-1 font-bold">{t.disclaimerHeading}</p>
+      <p>{t.disclaimer}</p>
+    </div>
+
+    <h2 class="mb-3 text-lg font-bold">{t.inputHeading}</h2>
+    <div class="mb-6 space-y-4">
+      {TOKUSHOHO_FIELD_IDS.map((id) => (
+        <div>
+          <label for={`tkg-f-${id}`} class="ui-label">
+            {t.fields[id].label}
+          </label>
+          <p
+            id={`tkg-h-${id}`}
+            class="mb-1 text-xs text-gray-600 dark:text-gray-400"
+          >
+            {t.fields[id].hint}
+          </p>
+          {multiline[id] ? (
+            <textarea
+              id={`tkg-f-${id}`}
+              data-field={id}
+              rows={multiline[id]}
+              aria-describedby={`tkg-h-${id}`}
+              placeholder={t.fields[id].placeholder}
+              class="ui-input w-full resize-y p-3 dark:bg-gray-900"
+            />
+          ) : (
+            <input
+              id={`tkg-f-${id}`}
+              data-field={id}
+              type={id === 'email' ? 'email' : 'text'}
+              aria-describedby={`tkg-h-${id}`}
+              placeholder={t.fields[id].placeholder}
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            />
+          )}
+          {id === 'address' && (
+            <label class="ui-check mt-1 h-auto min-h-11">
+              <input id="tkg-hide-address" type="checkbox" />
+              {t.hideAddressLabel}
+            </label>
+          )}
+          {id === 'phone' && (
+            <>
+              <label class="ui-check mt-1 h-auto min-h-11">
+                <input id="tkg-hide-phone" type="checkbox" />
+                {t.hidePhoneLabel}
+              </label>
+              <label for="tkg-phone-hours" class="ui-label mt-2">
+                {t.phoneHoursLabel}
+              </label>
+              <input
+                id="tkg-phone-hours"
+                type="text"
+                placeholder={t.phoneHoursPlaceholder}
+                class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+              />
+            </>
+          )}
+        </div>
+      ))}
+      <div>
+        <label for="tkg-url" class="ui-label">
+          {t.urlLabel}
+        </label>
+        <input
+          id="tkg-url"
+          type="text"
+          inputmode="url"
+          spellcheck="false"
+          placeholder={t.urlPlaceholder}
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="tkg-extra" class="ui-label">
+          {t.extraLabel}
+        </label>
+        <p
+          id="tkg-extra-hint"
+          class="mb-1 text-xs text-gray-600 dark:text-gray-400"
+        >
+          {t.extraHint}
+        </p>
+        <textarea
+          id="tkg-extra"
+          rows="3"
+          aria-describedby="tkg-extra-hint"
+          placeholder={t.extraPlaceholder}
+          class="ui-input w-full resize-y p-3 dark:bg-gray-900"
+        ></textarea>
+      </div>
+    </div>
+
+    <h2 class="mb-2 text-lg font-bold">{t.presetHeading}</h2>
+    <div class="mb-6 flex flex-wrap gap-2">
+      {t.presets.map((p) => (
+        <button
+          type="button"
+          class="ui-btn"
+          data-tkg-preset={p.target}
+          data-text={p.text}
+        >
+          {p.label}
+        </button>
+      ))}
+    </div>
+
+    <h2 class="mb-2 text-lg font-bold">{t.issuesHeading}</h2>
+    <ul
+      id="tkg-issues"
+      class="mb-6 list-disc space-y-1 pl-5 text-sm"
+      aria-live="polite"
+    ></ul>
+
+    <div class="mb-3">
+      <label for="tkg-format" class="ui-label">
+        {t.formatLabel}
+      </label>
+      <select
+        id="tkg-format"
+        class="ui-input h-11 w-full px-3 sm:w-64 dark:bg-gray-900"
+      >
+        {t.formats.map((f) => (
+          <option value={f.id}>{f.label}</option>
+        ))}
+      </select>
+    </div>
+
+    <div>
+      <label for="tkg-output" class="ui-label">
+        {t.outputHeading}
+      </label>
+      <textarea
+        id="tkg-output"
+        readonly
+        rows="14"
+        placeholder={t.outputEmpty}
+        class="ui-input w-full resize-y bg-gray-50 p-3 font-mono dark:bg-gray-900"
+      ></textarea>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <button id="tkg-copy-button" type="button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <button id="tkg-download-button" type="button" class="ui-btn">
+          {t.downloadButton}
+        </button>
+      </div>
+      <span
+        id="tkg-status"
+        class="mt-2 block text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import { fill } from '../../lib/format-template';
+  import {
+    TOKUSHOHO_FIELD_IDS,
+    analyzeTokushoho,
+    buildTokushoho,
+    emptyInput,
+    fileExtension,
+    type TokushohoFieldId,
+    type TokushohoFormat,
+    type TokushohoIssueCode,
+  } from '../../lib/tools/tokushoho-generator';
+
+  const root = document.getElementById('tkg-root')!;
+  const issuesEl = document.getElementById('tkg-issues')!;
+  const output = document.getElementById('tkg-output') as HTMLTextAreaElement;
+  const statusEl = document.getElementById('tkg-status')!;
+  const formatEl = document.getElementById('tkg-format') as HTMLSelectElement;
+  const hideAddress = document.getElementById(
+    'tkg-hide-address',
+  ) as HTMLInputElement;
+  const hidePhone = document.getElementById(
+    'tkg-hide-phone',
+  ) as HTMLInputElement;
+  const phoneHours = document.getElementById(
+    'tkg-phone-hours',
+  ) as HTMLInputElement;
+  const urlEl = document.getElementById('tkg-url') as HTMLInputElement;
+  const extraEl = document.getElementById('tkg-extra') as HTMLTextAreaElement;
+
+  const fieldLabels = JSON.parse(root.dataset.fieldLabels ?? '{}') as Record<
+    TokushohoFieldId,
+    string
+  >;
+  const issueMessages = JSON.parse(
+    root.dataset.issueMessages ?? '{}',
+  ) as Record<TokushohoIssueCode, string>;
+  const errorPrefix = root.dataset.errorPrefix ?? '';
+  const warningPrefix = root.dataset.warningPrefix ?? '';
+  const noIssues = root.dataset.noIssues ?? '';
+  const copied = root.dataset.copied ?? '';
+  const copyFailed = root.dataset.copyFailed ?? '';
+  const downloaded = root.dataset.downloaded ?? '';
+
+  const fieldEl = (id: TokushohoFieldId) =>
+    document.getElementById(`tkg-f-${id}`) as
+      HTMLInputElement | HTMLTextAreaElement;
+
+  function readInput() {
+    const input = emptyInput();
+    for (const id of TOKUSHOHO_FIELD_IDS) input.values[id] = fieldEl(id).value;
+    input.hideAddress = hideAddress.checked;
+    input.hidePhone = hidePhone.checked;
+    input.phoneHours = phoneHours.value;
+    input.url = urlEl.value;
+    input.extraLines = extraEl.value;
+    return input;
+  }
+
+  function update() {
+    const input = readInput();
+    output.value = buildTokushoho(input, formatEl.value as TokushohoFormat);
+
+    // 住所・電話番号を非公開にする間は、入力欄を無効にして紛れを防ぐ
+    fieldEl('address').disabled = hideAddress.checked;
+    fieldEl('phone').disabled = hidePhone.checked;
+    phoneHours.disabled = hidePhone.checked;
+
+    const issues = analyzeTokushoho(input);
+    issuesEl.textContent = '';
+    if (issues.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'list-none -ml-5 text-gray-700 dark:text-gray-300';
+      li.textContent = noIssues;
+      issuesEl.appendChild(li);
+      return;
+    }
+    for (const issue of issues) {
+      const li = document.createElement('li');
+      const isError = issue.severity === 'error';
+      li.className = isError
+        ? 'text-red-700 dark:text-red-400'
+        : 'text-amber-800 dark:text-amber-300';
+      const message = fill(issueMessages[issue.code] ?? issue.code, {
+        field: issue.field ? (fieldLabels[issue.field] ?? '') : '',
+        value: issue.value ?? '',
+      });
+      li.textContent = `${isError ? errorPrefix : warningPrefix}: ${message}`;
+      issuesEl.appendChild(li);
+    }
+  }
+
+  root.addEventListener('input', update);
+  root.addEventListener('change', update);
+
+  root.querySelectorAll<HTMLElement>('[data-tkg-preset]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const el = fieldEl(btn.dataset.tkgPreset as TokushohoFieldId);
+      el.value = btn.dataset.text ?? '';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  });
+
+  document
+    .getElementById('tkg-copy-button')!
+    .addEventListener('click', async () => {
+      if (!output.value) return;
+      statusEl.textContent = (await copyText(output.value))
+        ? copied
+        : copyFailed;
+    });
+
+  document
+    .getElementById('tkg-download-button')!
+    .addEventListener('click', () => {
+      if (!output.value) return;
+      const format = formatEl.value as TokushohoFormat;
+      const mime = format === 'html' ? 'text/html' : 'text/plain';
+      downloadBlob(
+        new Blob([output.value], { type: `${mime};charset=utf-8` }),
+        `tokushoho.${fileExtension(format)}`,
+      );
+      statusEl.textContent = downloaded;
+    });
+
+  update();
+</script>

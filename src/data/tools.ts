@@ -12994,6 +12994,169 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'wifi-qr-generator',
+    category: 'generate',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['qr-generator', 'qr-code-reader', 'password-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'Wi-Fi QRコード生成',
+        keywords: [
+          'Wi-Fi',
+          'WiFi',
+          'QR',
+          'SSID',
+          'ワイファイ',
+          'パスワード',
+          'ゲスト',
+        ],
+        description:
+          'SSIDとパスワードからWi-Fi接続用のQRコードを作成。WPA・WEP・パスワードなし、隠しSSIDに対応',
+      },
+      en: {
+        name: 'Wi-Fi QR Code Generator',
+        keywords: [
+          'wifi qr',
+          'wifi password qr',
+          'ssid',
+          'wpa',
+          'wep',
+          'guest wifi',
+          'hidden ssid',
+        ],
+        description:
+          'Create a Wi-Fi QR code from an SSID and password. Supports WPA, WEP, open and hidden networks',
+      },
+    },
+  },
+  {
+    slug: 'tokushoho-generator',
+    category: 'generate',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: [
+      'privacy-policy-generator',
+      'invoice-generator',
+      'meta-tag-generator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '特定商取引法に基づく表記ジェネレーター',
+        keywords: [
+          '特商法',
+          '特定商取引法',
+          '特定商取引法に基づく表記',
+          '通信販売',
+          'ネットショップ',
+          '返品特約',
+          'ひな形',
+          'テンプレート',
+        ],
+        description:
+          '特定商取引法に基づく表記（通信販売）の必須項目を入力してひな形を作成。テキスト・Markdown・HTML出力、住所・電話番号の非公開表記に対応。法的助言ではありません',
+      },
+      en: {
+        name: 'Tokushoho Notice Generator (Japan Commercial Transactions Act)',
+        keywords: [
+          'tokushoho',
+          'specified commercial transactions act',
+          'japan e-commerce disclosure',
+          'legal notice generator',
+          'online shop japan',
+          'return policy',
+        ],
+        description:
+          'Draft the legal disclosure page required for online sales in Japan from the required items, as text, Markdown or HTML. A template, not legal advice',
+      },
+    },
+  },
+  {
+    slug: 'privacy-policy-generator',
+    category: 'generate',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: [
+      'tokushoho-generator',
+      'robots-txt-generator',
+      'meta-tag-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'プライバシーポリシー雛形生成',
+        keywords: [
+          'プライバシーポリシー',
+          '個人情報保護方針',
+          'Googleアナリティクス',
+          'AdSense',
+          'Cookie',
+          'アフィリエイト',
+          '雛形',
+          'テンプレート',
+        ],
+        description:
+          'Googleアナリティクス・AdSense・Cookie・アフィリエイト対応のプライバシーポリシー雛形を作成。法的助言ではなく雛形です',
+      },
+      en: {
+        name: 'Privacy Policy Template Generator',
+        keywords: [
+          'privacy policy',
+          'privacy policy generator',
+          'Google Analytics',
+          'AdSense',
+          'cookie policy',
+          'affiliate disclosure',
+          'APPI',
+        ],
+        description:
+          'Generate a privacy policy template with Google Analytics, AdSense, cookie and affiliate clauses (Japan). Not legal advice',
+      },
+    },
+  },
+  {
+    slug: 'daily-proration-calculator',
+    category: 'calc',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: [
+      'rent-initial-cost',
+      'salary-take-home-calculator',
+      'date-calculator',
+    ],
+    translations: {
+      ja: {
+        name: '日割り計算機',
+        keywords: [
+          '日割り',
+          '日割り計算',
+          '日割り家賃',
+          '日割り給与',
+          '日割り料金',
+          'サブスク',
+          '月額',
+          '按分',
+        ],
+        description:
+          '月額と日数（または開始日・終了日）から日割額を計算します。家賃・給与・サブスクに対応し、暦日数・30日・年換算の基準と端数処理を選べます',
+      },
+      en: {
+        name: 'Daily Proration Calculator',
+        keywords: [
+          'proration',
+          'prorated rent',
+          'daily rate',
+          'prorate salary',
+          'subscription proration',
+          'pro rata',
+        ],
+        description:
+          'Prorate monthly rent, salary or subscription fees by days or dates, with calendar, 30-day or 365-day basis and rounding options',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

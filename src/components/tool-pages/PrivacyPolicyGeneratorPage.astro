@@ -1,0 +1,235 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { privacyPolicyGeneratorContent } from '../../i18n/tools/privacy-policy-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = privacyPolicyGeneratorContent[locale];
+
+const features = [
+  { key: 'contactForm', label: t.contactFormLabel },
+  { key: 'cookies', label: t.cookiesLabel },
+  { key: 'analytics', label: t.analyticsLabel },
+  { key: 'adsense', label: t.adsenseLabel },
+  { key: 'otherAds', label: t.otherAdsLabel },
+  { key: 'affiliate', label: t.affiliateLabel },
+  { key: 'amazon', label: t.amazonLabel },
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="pp-root"
+    data-locale={locale}
+    data-issue-messages={JSON.stringify(t.issueMessages)}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-downloaded={t.downloaded}
+  >
+    <p
+      class="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200"
+      role="note"
+    >
+      {t.disclaimer}
+    </p>
+
+    <h2 class="mb-2 text-lg font-bold">{t.basicHeading}</h2>
+    <div class="mb-6 grid gap-3 sm:grid-cols-2">
+      <div>
+        <label for="pp-site" class="ui-label">
+          {t.siteNameLabel}
+        </label>
+        <input
+          id="pp-site"
+          type="text"
+          autocomplete="off"
+          placeholder={t.siteNamePlaceholder}
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="pp-operator" class="ui-label">
+          {t.operatorLabel}
+        </label>
+        <input
+          id="pp-operator"
+          type="text"
+          autocomplete="off"
+          placeholder={t.operatorPlaceholder}
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div class="sm:col-span-2">
+        <label for="pp-contact" class="ui-label">
+          {t.contactLabel}
+        </label>
+        <input
+          id="pp-contact"
+          type="text"
+          autocomplete="off"
+          placeholder={t.contactPlaceholder}
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="pp-enacted" class="ui-label">
+          {t.enactedLabel}
+        </label>
+        <input
+          id="pp-enacted"
+          type="date"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="pp-revised" class="ui-label">
+          {t.revisedLabel}
+        </label>
+        <input
+          id="pp-revised"
+          type="date"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+
+    <h2 class="mb-1 text-lg font-bold">{t.featuresHeading}</h2>
+    <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+      {t.featuresHint}
+    </p>
+    <div class="mb-6 grid sm:grid-cols-2">
+      {features.map((f) => (
+        <label class="ui-check">
+          <input id={`pp-${f.key}`} type="checkbox" data-feature={f.key} />
+          <span>{f.label}</span>
+        </label>
+      ))}
+    </div>
+
+    <h2 class="mb-2 text-lg font-bold">{t.issuesHeading}</h2>
+    <ul
+      id="pp-issues"
+      class="mb-6 list-disc space-y-1 pl-5 text-sm text-amber-800 dark:text-amber-300"
+      aria-live="polite"
+    ></ul>
+
+    <div>
+      <label for="pp-output" class="ui-label">
+        {t.outputHeading}
+      </label>
+      <textarea
+        id="pp-output"
+        readonly
+        rows="18"
+        class="ui-input w-full resize-y bg-gray-50 p-3 dark:bg-gray-900"
+      ></textarea>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <button id="pp-copy-button" type="button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <button id="pp-download-button" type="button" class="ui-btn">
+          {t.downloadButton}
+        </button>
+      </div>
+      <span
+        id="pp-status"
+        class="mt-2 block text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    buildPrivacyPolicy,
+    emptyPolicyInput,
+    validatePolicy,
+    type PolicyInput,
+    type PolicyIssueCode,
+    type PolicyLocale,
+  } from '../../lib/tools/privacy-policy-generator';
+
+  const root = document.getElementById('pp-root')!;
+  const locale = (root.dataset.locale ?? 'ja') as PolicyLocale;
+  const issueMessages = JSON.parse(
+    root.dataset.issueMessages ?? '{}',
+  ) as Record<PolicyIssueCode, string>;
+  const copied = root.dataset.copied ?? '';
+  const copyFailed = root.dataset.copyFailed ?? '';
+  const downloaded = root.dataset.downloaded ?? '';
+
+  const el = (id: string) => document.getElementById(id) as HTMLInputElement;
+  const site = el('pp-site');
+  const operator = el('pp-operator');
+  const contact = el('pp-contact');
+  const enacted = el('pp-enacted');
+  const revised = el('pp-revised');
+  const output = document.getElementById('pp-output') as HTMLTextAreaElement;
+  const issuesEl = document.getElementById('pp-issues')!;
+  const statusEl = document.getElementById('pp-status')!;
+  const featureEls = Array.from(
+    root.querySelectorAll<HTMLInputElement>('[data-feature]'),
+  );
+
+  function todayLocal(): string {
+    const d = new Date();
+    const p = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  }
+
+  function read(): PolicyInput {
+    const input = emptyPolicyInput();
+    input.siteName = site.value;
+    input.operator = operator.value;
+    input.contact = contact.value;
+    input.enactedDate = enacted.value;
+    input.revisedDate = revised.value;
+    const flags = input as unknown as Record<string, boolean>;
+    for (const cb of featureEls) {
+      flags[cb.dataset.feature ?? ''] = cb.checked;
+    }
+    return input;
+  }
+
+  function update() {
+    const input = read();
+    output.value = buildPrivacyPolicy(input, locale);
+    issuesEl.textContent = '';
+    for (const code of validatePolicy(input)) {
+      const li = document.createElement('li');
+      li.textContent = issueMessages[code] ?? code;
+      issuesEl.appendChild(li);
+    }
+  }
+
+  root.addEventListener('input', update);
+  root.addEventListener('change', update);
+
+  document
+    .getElementById('pp-copy-button')!
+    .addEventListener('click', async () => {
+      statusEl.textContent = (await copyText(output.value))
+        ? copied
+        : copyFailed;
+    });
+
+  document
+    .getElementById('pp-download-button')!
+    .addEventListener('click', () => {
+      downloadBlob(
+        new Blob([output.value], { type: 'text/plain;charset=utf-8' }),
+        'privacy-policy.txt',
+      );
+      statusEl.textContent = downloaded;
+    });
+
+  enacted.value = todayLocal();
+  update();
+</script>

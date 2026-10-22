@@ -180,4 +180,7 @@ export const howToSlugs = [
   'svg-to-data-uri',
   'regex-explainer',
   'fetch-to-curl',
+  'privacy-policy-generator',
+  'tokushoho-generator',
+  'daily-proration-calculator',
 ];

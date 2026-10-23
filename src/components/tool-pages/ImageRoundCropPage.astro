@@ -10,9 +10,6 @@ interface Props {
 
 const { locale } = Astro.props;
 const t = imageRoundCropContent[locale];
-
-const checker =
-  'background-image: conic-gradient(#e5e7eb 25%, #fff 0 50%, #e5e7eb 0 75%, #fff 0); background-size: 16px 16px;';
 ---
 
 <ToolShell t={t}>
@@ -227,8 +224,7 @@ const checker =
         <p class="ui-label self-start">{t.previewLabel}</p>
         <div
           id="rc-stage"
-          class="relative w-fit max-w-full touch-none overflow-hidden rounded-lg border border-gray-300 select-none dark:border-gray-700"
-          style={`${checker} cursor: crosshair;`}
+          class="ui-checker relative cursor-crosshair w-fit max-w-full touch-none overflow-hidden rounded-lg border border-gray-300 select-none dark:border-gray-700"
         >
           <canvas
             id="rc-source"
@@ -247,10 +243,7 @@ const checker =
         </p>
 
         <p class="ui-label self-start">{t.resultLabel}</p>
-        <div
-          class="max-w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700"
-          style={checker}
-        >
+        <div class="ui-checker max-w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700">
           <canvas
             id="rc-result"
             role="img"

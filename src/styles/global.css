@@ -78,6 +78,17 @@
  * bg-* に負けるのを避けるため）
  */
 @layer components {
+  /* 透過画像プレビュー用の市松模様。CSP（style-src 'self'）でインラインstyle属性が使えないためクラスで提供する */
+  .ui-checker {
+    background-image: conic-gradient(
+      #e5e7eb 25%,
+      #fff 0 50%,
+      #e5e7eb 0 75%,
+      #fff 0
+    );
+    background-size: 16px 16px;
+  }
+
   .ui-label {
     @apply mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300;
   }

@@ -194,4 +194,8 @@ export const howToSlugs = [
   'image-compress-to-size',
   'image-dpi-changer',
   'image-diff',
+  'image-logo-watermark',
+  'meme-generator',
+  'sticker-outline-maker',
+  'screen-color-picker',
 ];

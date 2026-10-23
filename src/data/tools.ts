@@ -13741,6 +13741,160 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'image-logo-watermark',
+    category: 'image',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['image-text-overlay', 'image-merger', 'image-diff'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像ロゴ・透かし合成',
+        keywords: [
+          'ロゴ合成',
+          '透かし',
+          'ウォーターマーク',
+          'ロゴ 重ねる',
+          '画像 合成',
+          'タイル',
+          'watermark',
+          'logo overlay',
+        ],
+        description:
+          'ベース画像にロゴ画像を重ねて透かしを入れます。9分割の位置・サイズ・不透明度・余白・回転・敷き詰めを指定し、PNG/JPEGで保存。ブラウザ内で処理され外部送信なし。',
+      },
+      en: {
+        name: 'Image Logo Watermark',
+        keywords: [
+          'logo watermark',
+          'watermark',
+          'logo overlay',
+          'add logo to image',
+          'tile watermark',
+          'combine images',
+        ],
+        description:
+          'Overlay a logo on an image with nine positions, size, opacity, margin, rotation, and tiling. Save as PNG or JPEG. Runs in your browser; no upload.',
+      },
+    },
+  },
+  {
+    slug: 'meme-generator',
+    category: 'image',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['image-text-overlay', 'image-diff'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ミーム画像ジェネレーター',
+        keywords: [
+          'ミーム',
+          'ミーム画像',
+          'キャプション',
+          '縁取り文字',
+          'Impact',
+          'meme',
+          '画像 文字入れ',
+        ],
+        description:
+          '画像の上下に縁取り付きの太字キャプションを入れてミーム画像を作成。幅に合わせた自動縮小・折り返し、PNG/JPEG保存に対応。',
+      },
+      en: {
+        name: 'Meme Generator',
+        keywords: [
+          'meme',
+          'meme maker',
+          'caption',
+          'top text bottom text',
+          'impact font',
+          'image text',
+        ],
+        description:
+          'Add bold outlined top and bottom captions to any image to make a meme. Text auto-shrinks and wraps to fit. PNG/JPEG, in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'sticker-outline-maker',
+    category: 'image',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['image-background-remover', 'image-cropper', 'image-resizer'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ステッカー風の縁取りメーカー',
+        keywords: [
+          '縁取り',
+          'ステッカー',
+          '透過PNG',
+          '輪郭',
+          'フチ',
+          '白フチ',
+          '影',
+        ],
+        description:
+          '切り抜いた透過PNGに、ステッカーのような縁取りを付けます。太さ・色、二重縁、影、内側の穴埋めに対応しています。',
+      },
+      en: {
+        name: 'Sticker Outline Maker',
+        keywords: [
+          'sticker outline',
+          'add border',
+          'transparent png',
+          'cutout stroke',
+          'die cut',
+          'white border',
+          'drop shadow',
+        ],
+        description:
+          'Add a sticker-style outline to a cutout PNG, with custom width and color, a double border, a shadow, and hole filling.',
+      },
+    },
+  },
+  {
+    slug: 'screen-color-picker',
+    category: 'image',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: [
+      'camera-color-picker',
+      'color-converter',
+      'image-palette-extractor',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'スクリーンカラーピッカー',
+        keywords: [
+          'スポイト',
+          'カラーピッカー',
+          'EyeDropper',
+          'スクリーンカラー',
+          'スクショ 色',
+          '色取得',
+          'HEX',
+        ],
+        description:
+          '画面上の好きな場所の色をスポイトで拾い、HEX・RGB・HSLを表示・コピー。非対応ブラウザでは画像を読み込んで取得できます。',
+      },
+      en: {
+        name: 'Screen Color Picker',
+        keywords: [
+          'eyedropper',
+          'color picker',
+          'EyeDropper API',
+          'screen color',
+          'pick color from screen',
+          'hex',
+        ],
+        description:
+          'Pick any color on your screen with the eyedropper and get HEX, RGB and HSL codes. Image mode for other browsers.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

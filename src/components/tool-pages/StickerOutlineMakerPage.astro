@@ -1,0 +1,318 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { stickerOutlineMakerContent } from '../../i18n/tools/sticker-outline-maker';
+import {
+  DEFAULT_OPTIONS,
+  MAX_OUTLINE,
+  MAX_SHADOW_OFFSET,
+  MAX_SIDE,
+} from '../../lib/tools/sticker-outline-maker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = stickerOutlineMakerContent[locale];
+
+const colorClass =
+  'h-11 w-16 cursor-pointer rounded-lg border border-gray-300 bg-white p-1 dark:border-gray-700 dark:bg-gray-900';
+
+const sliders = [
+  {
+    id: 'som-width',
+    label: t.widthLabel,
+    min: 0,
+    max: MAX_OUTLINE,
+    value: DEFAULT_OPTIONS.width,
+    color: { id: 'som-color', label: t.colorLabel, value: '#ffffff' },
+  },
+  {
+    id: 'som-outer-width',
+    label: t.outerWidthLabel,
+    min: 0,
+    max: MAX_OUTLINE,
+    value: 0,
+    color: {
+      id: 'som-outer-color',
+      label: t.outerColorLabel,
+      value: '#000000',
+    },
+  },
+  {
+    id: 'som-shadow-opacity',
+    label: t.shadowOpacityLabel,
+    min: 0,
+    max: 100,
+    value: 0,
+    color: {
+      id: 'som-shadow-color',
+      label: t.shadowColorLabel,
+      value: '#000000',
+    },
+  },
+  {
+    id: 'som-shadow-x',
+    label: t.shadowXLabel,
+    min: -MAX_SHADOW_OFFSET,
+    max: MAX_SHADOW_OFFSET,
+    value: DEFAULT_OPTIONS.shadowOffsetX,
+    color: null,
+  },
+  {
+    id: 'som-shadow-y',
+    label: t.shadowYLabel,
+    min: -MAX_SHADOW_OFFSET,
+    max: MAX_SHADOW_OFFSET,
+    value: DEFAULT_OPTIONS.shadowOffsetY,
+    color: null,
+  },
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="som-root"
+    data-max-side={MAX_SIDE}
+    data-output-info={t.outputInfo}
+    data-scaled-info={t.scaledInfo}
+    data-downloaded={t.downloaded}
+    data-error-not-image={t.errorNotImage}
+    data-error-load-failed={t.errorLoadFailed}
+    data-error-export-failed={t.errorExportFailed}
+  >
+    <label for="som-file" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="som-dropzone" class="ui-dropzone">
+      <input id="som-file" type="file" accept="image/*" class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="som-error"
+      role="alert"
+      hidden
+      class="mt-3 text-sm text-red-600 dark:text-red-400"
+    ></p>
+
+    <div id="som-workspace" hidden class="mt-6 grid gap-6 md:grid-cols-2">
+      <div>
+        {sliders.map(({ id, label, min, max, value, color }) => (
+          <div class="mt-4 first:mt-0">
+            <label for={id} class="ui-label">
+              {label}
+              <span id={`${id}-value`}>{value}</span>
+            </label>
+            <div class="flex items-center gap-3">
+              <input
+                id={id}
+                type="range"
+                min={min}
+                max={max}
+                value={value}
+                class="h-11 min-w-0 flex-1"
+              />
+              {color && (
+                <input
+                  id={color.id}
+                  type="color"
+                  value={color.value}
+                  aria-label={color.label}
+                  class={colorClass}
+                />
+              )}
+            </div>
+          </div>
+        ))}
+
+        <label class="ui-check mt-4">
+          <input id="som-fill-holes" type="checkbox" />
+          {t.fillHolesLabel}
+        </label>
+      </div>
+
+      <div class="flex flex-col items-center gap-3">
+        <p class="ui-label self-start">{t.previewLabel}</p>
+        <div class="ui-checker flex max-h-[75vh] w-full overflow-auto rounded-lg border border-gray-300 p-2 dark:border-gray-700">
+          <canvas
+            id="som-canvas"
+            role="img"
+            aria-label={t.previewLabel}
+            class="m-auto block h-auto max-h-[70vh] max-w-full shrink-0"
+          ></canvas>
+        </div>
+        <p
+          id="som-size"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></p>
+        <button id="som-download" type="button" disabled class="ui-btn-primary">
+          {t.downloadButton}
+        </button>
+        <span
+          id="som-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    fitWithin,
+    hexToRgb,
+    makeSticker,
+    stickerFileName,
+    type RgbaImage,
+  } from '../../lib/tools/sticker-outline-maker';
+
+  const root = document.getElementById('som-root')!;
+  const d = root.dataset;
+  const fileInput = document.getElementById('som-file') as HTMLInputElement;
+  const dropzone = document.getElementById('som-dropzone')!;
+  const errorEl = document.getElementById('som-error')!;
+  const workspace = document.getElementById('som-workspace')!;
+  const canvas = document.getElementById('som-canvas') as HTMLCanvasElement;
+  const sizeEl = document.getElementById('som-size')!;
+  const statusEl = document.getElementById('som-status')!;
+  const downloadButton = document.getElementById(
+    'som-download',
+  ) as HTMLButtonElement;
+  const input = (id: string) => document.getElementById(id) as HTMLInputElement;
+  const width = input('som-width');
+  const color = input('som-color');
+  const outerWidth = input('som-outer-width');
+  const outerColor = input('som-outer-color');
+  const fillHoles = input('som-fill-holes');
+  const shadowOpacity = input('som-shadow-opacity');
+  const shadowX = input('som-shadow-x');
+  const shadowY = input('som-shadow-y');
+  const shadowColor = input('som-shadow-color');
+
+  const black = { r: 0, g: 0, b: 0 };
+  let source: RgbaImage | null = null;
+  let sourceName: string | null = null;
+  let note = '';
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  // 画像の読み込みは非同期なので、古い読み込みが新しい選択を上書きしないよう世代で管理する
+  let generation = 0;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  function process() {
+    if (!source) return;
+    statusEl.textContent = '';
+    const result = makeSticker(source, {
+      width: Number(width.value),
+      color: hexToRgb(color.value) ?? black,
+      outerWidth: Number(outerWidth.value),
+      outerColor: hexToRgb(outerColor.value) ?? black,
+      fillHoles: fillHoles.checked,
+      shadowOpacity: Number(shadowOpacity.value),
+      shadowOffsetX: Number(shadowX.value),
+      shadowOffsetY: Number(shadowY.value),
+      shadowColor: hexToRgb(shadowColor.value) ?? black,
+    });
+    canvas.width = result.width;
+    canvas.height = result.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return showError(d.errorExportFailed ?? '');
+    ctx.putImageData(
+      new ImageData(
+        result.data as Uint8ClampedArray<ArrayBuffer>,
+        result.width,
+        result.height,
+      ),
+      0,
+      0,
+    );
+    sizeEl.textContent =
+      (d.outputInfo ?? '')
+        .replace('{width}', String(result.width))
+        .replace('{height}', String(result.height)) + (note ? ` ${note}` : '');
+    downloadButton.disabled = false;
+  }
+
+  // スライダー操作中の連続した再計算をまとめる
+  function schedule() {
+    clearTimeout(timer);
+    timer = setTimeout(process, 60);
+  }
+
+  async function loadFile(file: File) {
+    const current = ++generation;
+    showError('');
+    statusEl.textContent = '';
+    if (!file.type.startsWith('image/'))
+      return showError(d.errorNotImage ?? '');
+    let bitmap: ImageBitmap;
+    try {
+      bitmap = await createImageBitmap(file);
+    } catch {
+      if (current === generation) showError(d.errorLoadFailed ?? '');
+      return;
+    }
+    if (current !== generation) return bitmap.close();
+    const fit = fitWithin(
+      bitmap.width,
+      bitmap.height,
+      Number(d.maxSide) || 2000,
+    );
+    const work = document.createElement('canvas');
+    work.width = fit.width;
+    work.height = fit.height;
+    const ctx = work.getContext('2d', { willReadFrequently: true });
+    if (!ctx) {
+      bitmap.close();
+      return showError(d.errorLoadFailed ?? '');
+    }
+    ctx.drawImage(bitmap, 0, 0, fit.width, fit.height);
+    bitmap.close();
+    const image = ctx.getImageData(0, 0, fit.width, fit.height);
+    source = { data: image.data, width: image.width, height: image.height };
+    sourceName = file.name;
+    note = fit.scaled
+      ? (d.scaledInfo ?? '')
+          .replace('{width}', String(fit.width))
+          .replace('{height}', String(fit.height))
+      : '';
+    workspace.hidden = false;
+    process();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  for (const el of [color, outerColor, shadowColor]) {
+    el.addEventListener('input', schedule);
+  }
+  fillHoles.addEventListener('change', schedule);
+  for (const slider of [width, outerWidth, shadowOpacity, shadowX, shadowY]) {
+    const value = document.getElementById(`${slider.id}-value`)!;
+    slider.addEventListener('input', () => {
+      value.textContent = slider.value;
+      schedule();
+    });
+  }
+
+  downloadButton.addEventListener('click', () => {
+    canvas.toBlob((blob) => {
+      if (!blob) return showError(d.errorExportFailed ?? '');
+      showError('');
+      downloadBlob(blob, stickerFileName(sourceName));
+      statusEl.textContent = d.downloaded ?? '';
+    }, 'image/png');
+  });
+</script>

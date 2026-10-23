@@ -1022,13 +1022,17 @@ export const updates: UpdateEntry[] = [
       'image-compress-to-size',
       'image-dpi-changer',
       'image-diff',
+      'image-logo-watermark',
+      'meme-generator',
+      'sticker-outline-maker',
+      'screen-color-picker',
     ],
     translations: {
       ja: {
-        summary: '27個のツールを追加しました。',
+        summary: '31個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 27 new tools.',
+        summary: 'Added 31 new tools.',
       },
     },
   },

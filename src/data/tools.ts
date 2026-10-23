@@ -13626,6 +13626,121 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'image-compress-to-size',
+    category: 'image',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['image-resizer', 'image-converter', 'image-dpi-changer'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像を指定サイズ以下に圧縮',
+        description:
+          '画像を200KB以下などの目標容量に自動圧縮。JPEG・WebPの品質を二分探索で自動調整します。',
+        keywords: [
+          '画像 圧縮',
+          '200KB以下',
+          '容量指定',
+          'ファイルサイズ 指定',
+          '画像 軽量化',
+          'JPEG',
+          'WebP',
+        ],
+      },
+      en: {
+        name: 'Compress Image to Target Size',
+        description:
+          'Compress an image to under a target file size such as 200KB. JPEG or WebP quality is found automatically.',
+        keywords: [
+          'compress image to size',
+          'reduce image size',
+          'under 200kb',
+          'target file size',
+          'image compressor',
+          'jpeg',
+          'webp',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'image-dpi-changer',
+    category: 'image',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['print-size-converter', 'image-resizer', 'image-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像DPI変更',
+        description:
+          'PNG・JPEGのDPIを再圧縮なしで書き換え、印刷サイズ(mm)とA判・B判への収まりを確認',
+        keywords: [
+          'DPI変更',
+          '解像度変更',
+          '画像 dpi',
+          'pHYs',
+          'JFIF',
+          '印刷サイズ',
+          '72dpi',
+          '300dpi',
+        ],
+      },
+      en: {
+        name: 'Image DPI Changer',
+        description:
+          'Change PNG/JPEG DPI without re-encoding and check the print size in mm and paper fit',
+        keywords: [
+          'change dpi',
+          'image resolution',
+          'png dpi',
+          'jpeg dpi',
+          'pHYs',
+          'JFIF',
+          'print size',
+          '300 dpi',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'image-diff',
+    category: 'image',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['image-compare-slider', 'image-resizer', 'image-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像差分比較（ピクセルdiff）',
+        keywords: [
+          '画像差分',
+          '画像比較',
+          'ピクセル比較',
+          'diff',
+          'ヒートマップ',
+          '差異率',
+          'スクリーンショット比較',
+        ],
+        description:
+          '2枚の画像をピクセル単位で比較し、差異率とヒートマップを表示。しきい値の指定、サイズ違いの扱い切り替え、差分画像のPNG保存に対応します。',
+      },
+      en: {
+        name: 'Image Diff (Pixel Comparison)',
+        keywords: [
+          'image diff',
+          'pixel diff',
+          'compare images',
+          'image difference',
+          'heatmap',
+          'screenshot diff',
+        ],
+        description:
+          'Compares two images pixel by pixel and shows the difference rate on a heatmap. Set a tolerance, handle mismatched sizes, and save the diff as PNG.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

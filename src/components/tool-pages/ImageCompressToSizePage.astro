@@ -1,0 +1,480 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { imageCompressToSizeContent } from '../../i18n/tools/image-compress-to-size';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageCompressToSizeContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="ics-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="ics-dropzone" class="ui-dropzone">
+      <input
+        id="ics-file-input"
+        type="file"
+        multiple
+        accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="ics-file-count"
+      data-selected-template={t.filesSelectedTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="ics-error"
+      role="alert"
+      hidden
+      data-message={t.errorUnsupportedFile}
+      data-too-many-template={t.errorTooManyFilesTemplate}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-invalid-target={t.errorInvalidTarget}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-6">
+    <div>
+      <label for="ics-target" class="ui-label">
+        {t.targetLabel}
+      </label>
+      <div class="flex flex-wrap items-center gap-2">
+        <input
+          id="ics-target"
+          type="number"
+          min="1"
+          step="any"
+          inputmode="decimal"
+          value="200"
+          class="ui-input h-11 w-28"
+        />
+        <div id="ics-unit" class="ui-seg" role="group" aria-label={t.unitLabel}>
+          <button
+            type="button"
+            data-unit="KB"
+            aria-pressed="true"
+            class="ui-seg-btn"
+          >
+            KB
+          </button>
+          <button
+            type="button"
+            data-unit="MB"
+            aria-pressed="false"
+            class="ui-seg-btn"
+          >
+            MB
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <span class="ui-label">{t.formatLabel}</span>
+      <div
+        id="ics-format"
+        class="ui-seg"
+        role="group"
+        aria-label={t.formatLabel}
+      >
+        <button
+          type="button"
+          data-format="jpeg"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.formatJpeg}
+        </button>
+        <button
+          type="button"
+          data-format="webp"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.formatWebp}
+        </button>
+      </div>
+    </div>
+
+    <button
+      id="ics-clear-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.clearButton}
+    </button>
+  </div>
+
+  <label class="ui-check mt-3">
+    <input id="ics-resize" type="checkbox" checked />
+    <span>{t.resizeLabel}</span>
+  </label>
+
+  <div
+    id="ics-results-section"
+    hidden
+    class="mt-6"
+    data-original-label={t.originalSizeLabel}
+    data-compressed-label={t.compressedSizeLabel}
+    data-settings-template={t.settingsTemplate}
+    data-settings-resized-template={t.settingsResizedTemplate}
+    data-reduction-increased-template={t.reductionIncreasedTemplate}
+    data-reduction-decreased-template={t.reductionDecreasedTemplate}
+    data-processing={t.processingText}
+    data-download-label={t.downloadButton}
+    data-remove-label={t.removeButton}
+    data-error-failed={t.errorConversionFailed}
+    data-error-unreachable-template={t.errorUnreachableTemplate}
+  >
+    <h2 class="mb-2 text-lg font-bold">{t.resultsHeading}</h2>
+    <ul id="ics-results-list" class="space-y-3"></ul>
+  </div>
+
+  <template id="ics-result-template">
+    <li class="flex flex-wrap items-center gap-3 rounded-lg border border-gray-300 p-3 dark:border-gray-700">
+      <img
+        data-thumb
+        alt=""
+        class="h-14 w-14 flex-shrink-0 rounded bg-gray-100 object-cover dark:bg-gray-800"
+      />
+      <div class="min-w-0 flex-1">
+        <p
+          data-filename
+          class="truncate text-sm font-medium text-gray-800 dark:text-gray-200"
+        ></p>
+        <p data-size class="text-xs text-gray-500 dark:text-gray-400"></p>
+        <p data-error hidden class="text-xs text-red-600 dark:text-red-400"></p>
+      </div>
+      <button
+        data-download
+        type="button"
+        class="ui-btn ui-btn-primary px-4"
+      ></button>
+      <button data-remove type="button" class="ui-btn px-3"></button>
+    </li>
+  </template>
+</ToolShell>
+
+<script>
+  import { paren } from '../../lib/paren';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    buildOutputFileName,
+    calculateReductionPercent,
+    compressToTarget,
+    DEFAULT_COMPRESS_OPTIONS,
+    formatFileSize,
+    getCompressFormatOption,
+    isAcceptedImageFile,
+    parseTargetBytes,
+    scaledDimensions,
+    type CompressFormat,
+    type SizeUnit,
+  } from '../../lib/tools/image-compress-to-size';
+
+  const MAX_FILES = 20;
+  const MAX_FILE_SIZE = 25 * 1024 * 1024;
+
+  interface ImageItem {
+    id: number;
+    file: File;
+    bitmap: ImageBitmap;
+  }
+
+  const dropzone = document.getElementById('ics-dropzone')!;
+  const fileInput = document.getElementById(
+    'ics-file-input',
+  ) as HTMLInputElement;
+  const fileCountEl = document.getElementById('ics-file-count')!;
+  const errorEl = document.getElementById('ics-error')!;
+  const targetInput = document.getElementById('ics-target') as HTMLInputElement;
+  const resizeInput = document.getElementById('ics-resize') as HTMLInputElement;
+  const unitButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#ics-unit [data-unit]',
+  );
+  const formatButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#ics-format [data-format]',
+  );
+  const clearButton = document.getElementById(
+    'ics-clear-button',
+  ) as HTMLButtonElement;
+  const resultsSection = document.getElementById('ics-results-section')!;
+  const resultsList = document.getElementById('ics-results-list')!;
+  const resultTemplate = document.getElementById(
+    'ics-result-template',
+  ) as HTMLTemplateElement;
+
+  const d = resultsSection.dataset;
+  const selectedTemplate = fileCountEl.dataset.selectedTemplate ?? '';
+
+  let items: ImageItem[] = [];
+  let nextId = 0;
+  let format: CompressFormat = 'jpeg';
+  let unit: SizeUnit = 'KB';
+  let objectUrls: string[] = [];
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearErrorBanner() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function updateCount() {
+    fileCountEl.textContent =
+      items.length === 0
+        ? ''
+        : selectedTemplate.replace('{count}', String(items.length));
+    clearButton.disabled = items.length === 0;
+    resultsSection.hidden = items.length === 0;
+  }
+
+  function revokeUrls() {
+    objectUrls.forEach((u) => URL.revokeObjectURL(u));
+    objectUrls = [];
+  }
+
+  async function addFiles(fileList: FileList) {
+    clearErrorBanner();
+    const incoming = Array.from(fileList);
+
+    if (items.length + incoming.length > MAX_FILES) {
+      showError(
+        (errorEl.dataset.tooManyTemplate ?? '').replace(
+          '{max}',
+          String(MAX_FILES),
+        ),
+      );
+      return;
+    }
+
+    for (const file of incoming) {
+      if (!isAcceptedImageFile(file)) {
+        showError(errorEl.dataset.message ?? '');
+        continue;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        showError(
+          (errorEl.dataset.tooLargeTemplate ?? '').replace(
+            '{max}',
+            formatFileSize(MAX_FILE_SIZE),
+          ),
+        );
+        continue;
+      }
+      try {
+        const bitmap = await createImageBitmap(file);
+        items.push({ id: nextId++, file, bitmap });
+      } catch {
+        showError(d.errorFailed ?? '');
+      }
+    }
+
+    updateCount();
+    await renderResults();
+  }
+
+  /** canvas.toBlob に依存する部分。縮小率と品質（1-100）でエンコードする */
+  function encodeItem(
+    item: ImageItem,
+    scale: number,
+    quality: number,
+  ): Promise<{ size: number; data: Blob } | null> {
+    return new Promise((resolve) => {
+      try {
+        const option = getCompressFormatOption(format);
+        const { width, height } = scaledDimensions(
+          item.bitmap.width,
+          item.bitmap.height,
+          scale,
+        );
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(null);
+          return;
+        }
+        if (format === 'jpeg') {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, width, height);
+        }
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(item.bitmap, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (blob && blob.type === option.mimeType) {
+              resolve({ size: blob.size, data: blob });
+            } else {
+              resolve(null);
+            }
+          },
+          option.mimeType,
+          quality / 100,
+        );
+      } catch {
+        resolve(null);
+      }
+    });
+  }
+
+  let renderGeneration = 0;
+
+  async function renderResults() {
+    const generation = ++renderGeneration;
+    revokeUrls();
+    resultsList.innerHTML = '';
+    if (items.length === 0) return;
+
+    const targetBytes = parseTargetBytes(Number(targetInput.value), unit);
+    if (targetBytes === null) {
+      showError(errorEl.dataset.invalidTarget ?? '');
+      return;
+    }
+    if (errorEl.dataset.invalidTarget === errorEl.textContent) {
+      clearErrorBanner();
+    }
+
+    const format0 = format;
+    for (const item of items) {
+      const li = resultTemplate.content.firstElementChild!.cloneNode(
+        true,
+      ) as HTMLElement;
+      const thumb = li.querySelector('[data-thumb]') as HTMLImageElement;
+      const filenameEl = li.querySelector('[data-filename]')!;
+      const sizeEl = li.querySelector('[data-size]')!;
+      const errorLineEl = li.querySelector('[data-error]') as HTMLElement;
+      const downloadEl = li.querySelector(
+        '[data-download]',
+      ) as HTMLButtonElement;
+      const removeEl = li.querySelector('[data-remove]') as HTMLButtonElement;
+
+      filenameEl.textContent = item.file.name;
+      sizeEl.textContent = d.processing ?? '';
+      downloadEl.textContent = d.downloadLabel ?? '';
+      downloadEl.disabled = true;
+      removeEl.textContent = d.removeLabel ?? '';
+      removeEl.addEventListener('click', () => {
+        items = items.filter((i) => i.id !== item.id);
+        updateCount();
+        void renderResults();
+      });
+      resultsList.appendChild(li);
+
+      const outcome = await compressToTarget(
+        (scale, quality) =>
+          generation !== renderGeneration
+            ? Promise.resolve(null)
+            : encodeItem(item, scale, quality),
+        targetBytes,
+        {
+          ...DEFAULT_COMPRESS_OPTIONS,
+          allowResize: resizeInput.checked,
+        },
+      );
+      if (generation !== renderGeneration) return;
+
+      if (outcome.status === 'ok') {
+        const blob = outcome.data;
+        const url = URL.createObjectURL(blob);
+        objectUrls.push(url);
+        thumb.src = url;
+        const reduction = calculateReductionPercent(item.file.size, blob.size);
+        const reductionText =
+          reduction >= 0
+            ? (d.reductionDecreasedTemplate ?? '').replace(
+                '{percent}',
+                String(reduction),
+              )
+            : (d.reductionIncreasedTemplate ?? '').replace(
+                '{percent}',
+                String(Math.abs(reduction)),
+              );
+        const settings = (
+          outcome.scale === 1
+            ? (d.settingsTemplate ?? '')
+            : (d.settingsResizedTemplate ?? '')
+        )
+          .replace('{quality}', String(outcome.quality))
+          .replace('{scale}', String(Math.round(outcome.scale * 100)));
+        sizeEl.textContent = `${d.originalLabel}: ${formatFileSize(item.file.size)} → ${d.compressedLabel}: ${formatFileSize(blob.size)}${paren(reductionText)} / ${settings}`;
+        downloadEl.disabled = false;
+        downloadEl.addEventListener('click', () => {
+          downloadBlob(blob, buildOutputFileName(item.file.name, format0));
+        });
+      } else {
+        thumb.remove();
+        sizeEl.textContent = '';
+        errorLineEl.textContent = outcome.best
+          ? (d.errorUnreachableTemplate ?? '').replace(
+              '{size}',
+              formatFileSize(outcome.best.size),
+            )
+          : (d.errorFailed ?? '');
+        errorLineEl.hidden = false;
+      }
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    if (!fileInput.files || fileInput.files.length === 0) return;
+    void addFiles(fileInput.files);
+    fileInput.value = '';
+  });
+
+  enableFileDrop(dropzone, fileInput);
+
+  function bindSeg<T extends string>(
+    buttons: NodeListOf<HTMLButtonElement>,
+    attr: 'unit' | 'format',
+    apply: (value: T) => void,
+  ) {
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        apply(button.dataset[attr] as T);
+        buttons.forEach((b) => {
+          b.setAttribute('aria-pressed', String(b === button));
+        });
+        void renderResults();
+      });
+    });
+  }
+  bindSeg<SizeUnit>(unitButtons, 'unit', (v) => {
+    unit = v;
+  });
+  bindSeg<CompressFormat>(formatButtons, 'format', (v) => {
+    format = v;
+  });
+
+  let debounce: ReturnType<typeof setTimeout> | undefined;
+  targetInput.addEventListener('input', () => {
+    clearTimeout(debounce);
+    debounce = setTimeout(() => void renderResults(), 400);
+  });
+  resizeInput.addEventListener('change', () => void renderResults());
+
+  clearButton.addEventListener('click', () => {
+    items = [];
+    revokeUrls();
+    updateCount();
+    resultsList.innerHTML = '';
+    clearErrorBanner();
+    renderGeneration++;
+  });
+</script>

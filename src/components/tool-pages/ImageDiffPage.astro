@@ -1,0 +1,502 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { imageDiffContent } from '../../i18n/tools/image-diff';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageDiffContent[locale];
+const slots = [
+  { key: 'base', label: t.baseDropLabel },
+  { key: 'target', label: t.targetDropLabel },
+] as const;
+---
+
+<ToolShell t={t}>
+  <div class="grid gap-4 sm:grid-cols-2">
+    {slots.map((s) => (
+      <div>
+        <label for={`idf-${s.key}-input`} class="ui-label">
+          {s.label}
+        </label>
+        <div id={`idf-${s.key}-dropzone`} class="ui-dropzone">
+          <input
+            id={`idf-${s.key}-input`}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+            class="ui-file"
+          />
+          <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            {t.dropHint}
+          </p>
+        </div>
+        <p
+          id={`idf-${s.key}-info`}
+          data-template={t.sourceInfoTemplate}
+          class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+        />
+      </div>
+    ))}
+  </div>
+  <p
+    id="idf-error"
+    role="alert"
+    hidden
+    data-unsupported={t.errorUnsupportedFile}
+    data-too-large-template={t.errorFileTooLargeTemplate}
+    data-too-many-pixels={t.errorTooManyPixels}
+    data-failed={t.errorConversionFailed}
+    class="mt-1 text-xs text-red-600 dark:text-red-400"
+  ></p>
+
+  <div class="mt-4 flex flex-wrap items-start gap-x-6 gap-y-3">
+    <div>
+      <span class="ui-label">{t.sizeModeLabel}</span>
+      <div
+        id="idf-size-mode"
+        class="ui-seg"
+        role="group"
+        aria-label={t.sizeModeLabel}
+      >
+        <button
+          type="button"
+          data-size-mode="pad"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.sizeModePad}
+        </button>
+        <button
+          type="button"
+          data-size-mode="resize"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.sizeModeResize}
+        </button>
+      </div>
+    </div>
+    <div>
+      <span class="ui-label">{t.styleLabel}</span>
+      <div id="idf-style" class="ui-seg" role="group" aria-label={t.styleLabel}>
+        <button
+          type="button"
+          data-style="heatmap"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.styleHeatmap}
+        </button>
+        <button
+          type="button"
+          data-style="highlight"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.styleHighlight}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <label for="idf-threshold" class="ui-label">
+      {t.thresholdLabel}
+      <span id="idf-threshold-value" class="tabular-nums"></span>
+    </label>
+    <input
+      id="idf-threshold"
+      type="range"
+      min="0"
+      max="50"
+      step="0.5"
+      value="0"
+      class="h-11 w-full max-w-md"
+    />
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+      {t.thresholdHint}
+    </p>
+  </div>
+
+  <p id="idf-need-both" class="mt-4 text-sm text-gray-600 dark:text-gray-400">
+    {t.needBothNote}
+  </p>
+
+  <div
+    id="idf-results-section"
+    hidden
+    data-identical={t.identicalMessage}
+    data-different={t.differentMessage}
+    data-size-template={t.comparedSizeTemplate}
+    data-bounds-template={t.boundsTemplate}
+    data-none={t.noneValue}
+    data-processing={t.processing}
+    data-label={t.downloadButton}
+    class="mt-6"
+  >
+    <h2 class="mb-2 text-lg font-bold">{t.resultsHeading}</h2>
+    <p id="idf-verdict" role="status" class="mb-2 text-sm font-semibold"></p>
+    <canvas
+      id="idf-canvas"
+      class="block w-full rounded-lg border border-gray-300 bg-gray-100 object-contain dark:border-gray-700 dark:bg-gray-800"
+    ></canvas>
+    <p
+      id="idf-compared-size"
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="idf-size-mismatch"
+      hidden
+      class="mt-1 text-xs text-gray-600 dark:text-gray-400"
+    >
+      {t.sizeMismatchNote}
+    </p>
+    <p
+      id="idf-scaled"
+      hidden
+      class="mt-1 text-xs text-gray-600 dark:text-gray-400"
+    >
+      {t.scaledNote}
+    </p>
+
+    <dl class="mt-4 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+      {[
+        ['percent', t.statDiffPercent],
+        ['pixels', t.statDiffPixels],
+        ['max', t.statMaxDelta],
+        ['mean', t.statMeanDelta],
+        ['bounds', t.statBounds],
+      ].map(([key, label]) => (
+        <div class="flex flex-wrap justify-between gap-x-3 border-b border-gray-200 pb-1 dark:border-gray-700">
+          <dt class="text-gray-600 dark:text-gray-400">{label}</dt>
+          <dd id={`idf-stat-${key}`} class="font-mono tabular-nums" />
+        </div>
+      ))}
+    </dl>
+
+    <div class="mt-4 flex flex-wrap gap-3">
+      <button
+        id="idf-download-button"
+        type="button"
+        class="ui-btn ui-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {t.downloadButton}
+      </button>
+      <button id="idf-clear-button" type="button" class="ui-btn">
+        {t.clearButton}
+      </button>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    MAX_FILE_SIZE,
+    MAX_PIXELS,
+    buildOutputFileName,
+    diffImages,
+    formatFileSize,
+    formatPercent,
+    isAcceptedImageFile,
+    resolveTargetSize,
+    type DiffResult,
+    type HeatmapStyle,
+    type RgbaImage,
+    type SizeMode,
+  } from '../../lib/tools/image-diff';
+
+  type Side = 'base' | 'target';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const errorEl = $('idf-error');
+  const needBothEl = $('idf-need-both');
+  const resultsSection = $('idf-results-section');
+  const verdictEl = $('idf-verdict');
+  const canvas = $<HTMLCanvasElement>('idf-canvas');
+  const comparedSizeEl = $('idf-compared-size');
+  const mismatchEl = $('idf-size-mismatch');
+  const scaledEl = $('idf-scaled');
+  const thresholdInput = $<HTMLInputElement>('idf-threshold');
+  const thresholdValueEl = $('idf-threshold-value');
+  const downloadButton = $<HTMLButtonElement>('idf-download-button');
+  const clearButton = $<HTMLButtonElement>('idf-clear-button');
+  const sizeModeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#idf-size-mode [data-size-mode]',
+  );
+  const styleButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#idf-style [data-style]',
+  );
+
+  const loadGen: Record<Side, number> = { base: 0, target: 0 };
+  const bitmaps: Record<Side, ImageBitmap | null> = {
+    base: null,
+    target: null,
+  };
+  let baseName = '';
+  let sizeMode: SizeMode = 'pad';
+  let style: HeatmapStyle = 'heatmap';
+  let prepared: {
+    a: RgbaImage;
+    b: RgbaImage;
+    scale: number;
+    mismatch: boolean;
+  } | null = null;
+  let lastResult: DiffResult | null = null;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.textContent = '';
+    errorEl.hidden = true;
+  }
+
+  function stat(key: string, value: string) {
+    $(`idf-stat-${key}`).textContent = value;
+  }
+
+  /** ビットマップを target サイズのキャンバスに描いて RGBA を取り出す */
+  function rasterize(
+    bm: ImageBitmap,
+    width: number,
+    height: number,
+    scale: number,
+    stretch: boolean,
+  ): RgbaImage {
+    const c = document.createElement('canvas');
+    c.width = width;
+    c.height = height;
+    const ctx = c.getContext('2d', { willReadFrequently: true })!;
+    ctx.imageSmoothingQuality = 'high';
+    if (stretch) ctx.drawImage(bm, 0, 0, width, height);
+    else ctx.drawImage(bm, 0, 0, bm.width * scale, bm.height * scale);
+    const img = ctx.getImageData(0, 0, width, height);
+    return { data: img.data, width, height };
+  }
+
+  function prepare() {
+    const { base, target } = bitmaps;
+    prepared = null;
+    if (!base || !target) return;
+    const size = resolveTargetSize(base, target, sizeMode);
+    const stretch = sizeMode === 'resize';
+    prepared = {
+      a: rasterize(base, size.width, size.height, size.scale, stretch),
+      b: rasterize(target, size.width, size.height, size.scale, stretch),
+      scale: size.scale,
+      mismatch: base.width !== target.width || base.height !== target.height,
+    };
+  }
+
+  function updateThresholdLabel() {
+    thresholdValueEl.textContent = ` ${thresholdInput.value}%`;
+  }
+
+  function render() {
+    updateThresholdLabel();
+    if (!prepared) {
+      lastResult = null;
+      return;
+    }
+    const result = diffImages(
+      prepared.a,
+      prepared.b,
+      Number(thresholdInput.value),
+      style,
+    );
+    lastResult = result;
+    canvas.width = result.width;
+    canvas.height = result.height;
+    canvas.style.aspectRatio = `${result.width} / ${result.height}`;
+    const ctx = canvas.getContext('2d')!;
+    ctx.putImageData(
+      new ImageData(result.map, result.width, result.height),
+      0,
+      0,
+    );
+
+    const ds = resultsSection.dataset;
+    verdictEl.textContent =
+      result.diffPixels === 0 ? (ds.identical ?? '') : (ds.different ?? '');
+    verdictEl.className =
+      result.diffPixels === 0
+        ? 'mb-2 text-sm font-semibold text-green-700 dark:text-green-400'
+        : 'mb-2 text-sm font-semibold text-red-700 dark:text-red-400';
+    comparedSizeEl.textContent = (ds.sizeTemplate ?? '')
+      .replace('{width}', String(result.width))
+      .replace('{height}', String(result.height));
+    mismatchEl.hidden = !prepared.mismatch;
+    scaledEl.hidden = prepared.scale >= 1;
+    stat('percent', `${formatPercent(result.diffPercent)}%`);
+    stat(
+      'pixels',
+      `${result.diffPixels.toLocaleString()} / ${result.totalPixels.toLocaleString()}`,
+    );
+    stat('max', String(result.maxDelta));
+    stat('mean', result.meanDelta.toFixed(2));
+    stat(
+      'bounds',
+      result.bounds
+        ? (ds.boundsTemplate ?? '')
+            .replace('{x}', String(result.bounds.x))
+            .replace('{y}', String(result.bounds.y))
+            .replace('{width}', String(result.bounds.width))
+            .replace('{height}', String(result.bounds.height))
+        : (ds.none ?? ''),
+    );
+  }
+
+  function updateLayout() {
+    const ready = bitmaps.base !== null && bitmaps.target !== null;
+    resultsSection.hidden = !ready;
+    needBothEl.hidden = ready;
+    clearButton.disabled = !bitmaps.base && !bitmaps.target;
+    if (!ready) return;
+    try {
+      prepare();
+      render();
+    } catch {
+      showError(errorEl.dataset.failed ?? '');
+    }
+  }
+
+  async function loadFile(side: Side, file: File) {
+    clearError();
+    if (!isAcceptedImageFile(file)) {
+      showError(errorEl.dataset.unsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace(
+          '{max}',
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+    const gen = ++loadGen[side];
+    let next: ImageBitmap;
+    try {
+      next = await createImageBitmap(file);
+    } catch {
+      if (gen === loadGen[side]) showError(errorEl.dataset.failed ?? '');
+      return;
+    }
+    if (gen !== loadGen[side]) {
+      next.close();
+      return;
+    }
+    if (next.width * next.height > MAX_PIXELS) {
+      next.close();
+      showError(errorEl.dataset.tooManyPixels ?? '');
+      return;
+    }
+    bitmaps[side]?.close();
+    bitmaps[side] = next;
+    if (side === 'base') baseName = file.name;
+    const info = $(`idf-${side}-info`);
+    info.textContent = (info.dataset.template ?? '')
+      .replace('{width}', String(next.width))
+      .replace('{height}', String(next.height))
+      .replace('{size}', formatFileSize(file.size));
+    updateLayout();
+  }
+
+  function clearAll() {
+    for (const side of ['base', 'target'] as const) {
+      loadGen[side]++;
+      bitmaps[side]?.close();
+      bitmaps[side] = null;
+      $(`idf-${side}-info`).textContent = '';
+    }
+    baseName = '';
+    prepared = null;
+    lastResult = null;
+    clearError();
+    updateLayout();
+  }
+
+  for (const side of ['base', 'target'] as const) {
+    const input = $<HTMLInputElement>(`idf-${side}-input`);
+    input.addEventListener('change', () => {
+      const file = input.files?.[0];
+      input.value = '';
+      if (file) void loadFile(side, file);
+    });
+    enableFileDrop($(`idf-${side}-dropzone`), input);
+  }
+
+  let renderQueued = false;
+  thresholdInput.addEventListener('input', () => {
+    updateThresholdLabel();
+    if (renderQueued) return;
+    renderQueued = true;
+    requestAnimationFrame(() => {
+      renderQueued = false;
+      try {
+        render();
+      } catch {
+        showError(errorEl.dataset.failed ?? '');
+      }
+    });
+  });
+
+  sizeModeButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      sizeMode = b.dataset.sizeMode as SizeMode;
+      sizeModeButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      updateLayout();
+    }),
+  );
+
+  styleButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      style = b.dataset.style as HeatmapStyle;
+      styleButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      try {
+        render();
+      } catch {
+        showError(errorEl.dataset.failed ?? '');
+      }
+    }),
+  );
+
+  downloadButton.addEventListener('click', async () => {
+    if (!lastResult) return;
+    downloadButton.disabled = true;
+    try {
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, 'image/png'),
+      );
+      if (!blob || blob.type !== 'image/png') {
+        showError(errorEl.dataset.failed ?? '');
+        return;
+      }
+      clearError();
+      downloadBlob(blob, buildOutputFileName(baseName));
+    } catch {
+      showError(errorEl.dataset.failed ?? '');
+    } finally {
+      downloadButton.disabled = false;
+    }
+  });
+
+  clearButton.addEventListener('click', clearAll);
+
+  updateThresholdLabel();
+  updateLayout();
+</script>

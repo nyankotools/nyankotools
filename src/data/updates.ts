@@ -1019,13 +1019,16 @@ export const updates: UpdateEntry[] = [
       'ohm-calculator',
       'print-size-converter',
       'resistor-color-code',
+      'image-compress-to-size',
+      'image-dpi-changer',
+      'image-diff',
     ],
     translations: {
       ja: {
-        summary: '24個のツールを追加しました。',
+        summary: '27個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 24 new tools.',
+        summary: 'Added 27 new tools.',
       },
     },
   },

@@ -191,4 +191,7 @@ export const howToSlugs = [
   'digital-signature-tool',
   'ohm-calculator',
   'resistor-color-code',
+  'image-compress-to-size',
+  'image-dpi-changer',
+  'image-diff',
 ];

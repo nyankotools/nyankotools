@@ -129,7 +129,16 @@ describe('explainRegex: グループ', () => {
     expect(r.tokens[2].p.name).toBe('x');
   });
 
-  it('修飾子グループ', () => {
+  // 正規表現の修飾子グループは Node 23 以降（古いNodeでは構文エラー扱いになる）
+  const supportsModifiers = (() => {
+    try {
+      new RegExp('(?i-s:a)');
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+  it.skipIf(!supportsModifiers)('修飾子グループ', () => {
     const r = explainRegex('(?i-s:a)');
     expect(r.tokens[0].kind).toBe('modifierGroup');
     expect(r.tokens[0].p.flags).toBe('+i -s');

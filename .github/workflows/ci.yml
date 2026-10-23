@@ -33,6 +33,11 @@ jobs:
     runs-on: ubuntu-latest
     # テスト数の増加で単一ジョブだと25分を超えたため、4分割（shard）して並列実行する。
     timeout-minutes: 40
+    # ブラウザと依存パッケージ込みの公式イメージを使う。ubuntuのaptミラーが遅い回に
+    # `playwright install --with-deps` が10分超かかったため（24MBを39kB/sで取得）、aptを使わない。
+    # タグは @playwright/test のバージョンと一致させる（src/data/ci-playwright-image.test.ts が検証）。
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.0-noble
     strategy:
       fail-fast: false
       matrix:
@@ -41,19 +46,6 @@ jobs:
       - uses: actions/checkout@v7
 
       - uses: ./.github/actions/setup
-
-      # ブラウザ本体のダウンロードを省くため、Playwrightのバージョンをキーにキャッシュする。
-      # OS依存パッケージ（--with-deps）はキャッシュ対象外なので、下のinstallは毎回実行する
-      # （キャッシュがヒットすればブラウザのダウンロードだけがスキップされる）。
-      - id: playwright-version
-        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
-
-      - uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
-
-      - run: pnpm exec playwright install --with-deps chromium
 
       # webServer（pnpm build && pnpm preview --port 4322）と、CSP/サイドバー永続化specのwrangler devは
       # playwright.config.ts / 各specが自動で起動する。

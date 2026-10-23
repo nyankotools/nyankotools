@@ -1,0 +1,192 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { luhnCheckerContent } from '../../i18n/tools/luhn-checker';
+import { TEST_NUMBERS } from '../../lib/tools/luhn-checker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = luhnCheckerContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="luhn-root"
+    data-result-empty={t.resultEmpty}
+    data-result-valid={t.resultValid}
+    data-result-invalid={t.resultInvalid}
+    data-result-invalid-detail={t.resultInvalidDetail}
+    data-result-invalid-chars={t.resultInvalidChars}
+    data-result-wrong-length={t.resultWrongLength}
+    data-brand-label={t.brandLabel}
+    data-brand-unknown={t.brandUnknown}
+    data-length-ok={t.lengthOk}
+    data-length-ng={t.lengthNg}
+    data-formatted-label={t.formattedLabel}
+    data-brand-names={JSON.stringify(t.brandNames)}
+  >
+    <p class="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-200">
+      {t.warning}
+    </p>
+
+    <div class="mt-4">
+      <label for="luhn-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <input
+        id="luhn-input"
+        type="text"
+        inputmode="numeric"
+        autocomplete="off"
+        autocapitalize="off"
+        spellcheck="false"
+        data-no-persist
+        aria-describedby="luhn-hint"
+        class="ui-input h-11 w-full max-w-md px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+        placeholder={t.placeholder}
+      />
+      <p id="luhn-hint" class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        {t.inputHint}
+      </p>
+    </div>
+
+    <div class="mt-4">
+      <h2 class="ui-label">{t.testNumbersLabel}</h2>
+      <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+        {t.testNumbersHint}
+      </p>
+      <div class="mt-2 flex flex-wrap gap-2">
+        {TEST_NUMBERS.map((n) => (
+          <button
+            type="button"
+            class="ui-btn"
+            data-test-number={n.number}
+            title={n.number}
+          >
+            {t.brandNames[n.brand]}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <div class="mt-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="ui-label">{t.resultLabel}</h2>
+      <p id="luhn-result" class="mt-1 font-medium" aria-live="polite"></p>
+      <p
+        id="luhn-detail"
+        class="mt-1 text-sm text-gray-700 dark:text-gray-300"
+      ></p>
+      <p
+        id="luhn-brand"
+        class="mt-1 hidden text-sm text-gray-700 dark:text-gray-300"
+      ></p>
+      <p
+        id="luhn-length"
+        class="mt-1 hidden text-sm text-gray-700 dark:text-gray-300"
+      ></p>
+      <p
+        id="luhn-formatted"
+        class="mt-1 hidden font-mono text-sm break-all text-gray-700 dark:text-gray-300"
+      ></p>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { checkLuhn } from '../../lib/tools/luhn-checker';
+
+  const root = document.getElementById('luhn-root')!;
+  const input = document.getElementById('luhn-input') as HTMLInputElement;
+  const resultEl = document.getElementById('luhn-result')!;
+  const detailEl = document.getElementById('luhn-detail')!;
+  const brandEl = document.getElementById('luhn-brand')!;
+  const lengthEl = document.getElementById('luhn-length')!;
+  const formattedEl = document.getElementById('luhn-formatted')!;
+  const brandNames = JSON.parse(root.dataset.brandNames ?? '{}') as Record<
+    string,
+    string
+  >;
+
+  const OK = 'mt-1 font-medium text-green-700 dark:text-green-400';
+  const NG = 'mt-1 font-medium text-red-600 dark:text-red-400';
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return Object.entries(values).reduce(
+      (text, [key, value]) => text.replaceAll(`{${key}}`, value),
+      template ?? '',
+    );
+  }
+
+  function render() {
+    detailEl.textContent = '';
+    for (const el of [brandEl, lengthEl, formattedEl]) {
+      el.classList.add('hidden');
+      el.textContent = '';
+    }
+    resultEl.className = 'mt-1 font-medium';
+
+    const r = checkLuhn(input.value);
+    switch (r.kind) {
+      case 'empty':
+        resultEl.textContent = root.dataset.resultEmpty ?? '';
+        resultEl.className = 'mt-1 text-gray-600 dark:text-gray-400';
+        return;
+      case 'invalidChars':
+        resultEl.textContent = root.dataset.resultInvalidChars ?? '';
+        resultEl.className = NG;
+        return;
+      case 'wrongLength':
+        resultEl.textContent = fill(root.dataset.resultWrongLength, {
+          length: String(r.length),
+        });
+        resultEl.className = NG;
+        return;
+      case 'checked':
+        if (r.valid) {
+          resultEl.textContent = fill(root.dataset.resultValid, {
+            actual: String(r.actualCheckDigit),
+          });
+          resultEl.className = OK;
+        } else {
+          resultEl.textContent = root.dataset.resultInvalid ?? '';
+          resultEl.className = NG;
+          detailEl.textContent = fill(root.dataset.resultInvalidDetail, {
+            actual: String(r.actualCheckDigit),
+            expected: String(r.expectedCheckDigit),
+          });
+        }
+        brandEl.textContent = `${root.dataset.brandLabel ?? ''}${
+          r.brand
+            ? (brandNames[r.brand] ?? r.brand)
+            : (root.dataset.brandUnknown ?? '')
+        }`;
+        brandEl.classList.remove('hidden');
+        if (r.brand) {
+          lengthEl.textContent =
+            (r.lengthMatchesBrand
+              ? root.dataset.lengthOk
+              : root.dataset.lengthNg) ?? '';
+          lengthEl.classList.remove('hidden');
+        }
+        formattedEl.textContent = `${root.dataset.formattedLabel ?? ''}${r.formatted}`;
+        formattedEl.classList.remove('hidden');
+        return;
+    }
+  }
+
+  input.addEventListener('input', render);
+
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-test-number]')
+    .forEach((button) => {
+      button.addEventListener('click', () => {
+        input.value = button.dataset.testNumber ?? '';
+        render();
+      });
+    });
+
+  render();
+</script>

@@ -1,0 +1,548 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { resistorColorCodeContent } from '../../i18n/tools/resistor-color-code';
+import {
+  E_SERIES_IDS,
+  TEMPCO_VALUES,
+  TOLERANCE_VALUES,
+} from '../../lib/tools/resistor-color-code';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = resistorColorCodeContent[locale];
+
+const i18n = {
+  bandLabel: t.bandLabel,
+  roleLabels: t.roleLabels,
+  colorNames: t.colorNames,
+  resultValue: t.resultValue,
+  rangeLine: t.rangeLine,
+  tempcoLine: t.tempcoLine,
+  findEmpty: t.findEmpty,
+  findSummary: t.findSummary,
+  copied: t.copied,
+  copyFailed: t.copyFailed,
+  errInvalidValue: t.errInvalidValue,
+  errNotRepresentable: t.errNotRepresentable,
+  errOutOfRange: t.errOutOfRange,
+  eNearest: t.eNearest,
+  eExact: t.eExact,
+  eNeighbors: t.eNeighbors,
+};
+const bandIndexes = [0, 1, 2, 3, 4, 5];
+const resultBox =
+  'mt-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700';
+const bandsBox =
+  'flex h-14 w-fit max-w-full items-center gap-2 rounded-full bg-amber-100 px-5 dark:bg-amber-900/40';
+---
+
+<ToolShell t={t}>
+  <section id="rc-root" data-i18n={JSON.stringify(i18n)}>
+    <h2 class="ui-label">{t.settingsLabel}</h2>
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <span id="rc-count-label" class="ui-label">
+          {t.bandCountLabel}
+        </span>
+        <div
+          id="rc-count"
+          class="ui-seg"
+          role="group"
+          aria-labelledby="rc-count-label"
+        >
+          {(['4', '5', '6'] as const).map((n) => (
+            <button
+              type="button"
+              data-count={n}
+              aria-pressed={n === '4' ? 'true' : 'false'}
+              class="ui-seg-btn"
+            >
+              {t.bandCountOptions[n]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label for="rc-series" class="ui-label">
+          {t.seriesLabel}
+        </label>
+        <select
+          id="rc-series"
+          class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
+        >
+          {E_SERIES_IDS.map((s) => (
+            <option value={s} selected={s === 'E24'}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <h2 class="mt-8 text-lg font-semibold">{t.readHeading}</h2>
+    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{t.readHint}</p>
+    <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {bandIndexes.map((i) => (
+        <div data-band-wrap={i}>
+          <label
+            for={`rc-band-${i}`}
+            id={`rc-band-label-${i}`}
+            class="ui-label"
+          >
+            {' '}
+          </label>
+          <select
+            id={`rc-band-${i}`}
+            data-no-persist
+            class="ui-input h-11 w-full bg-white px-3 dark:bg-gray-900"
+          ></select>
+        </div>
+      ))}
+    </div>
+    <div class={resultBox}>
+      <h3 class="ui-label">{t.resultLabel}</h3>
+      <div id="rc-read-bands" class={bandsBox} aria-hidden="true"></div>
+      <p
+        id="rc-read-value"
+        class="mt-3 text-lg font-semibold"
+        aria-live="polite"
+      ></p>
+      <p
+        id="rc-read-range"
+        class="mt-1 text-sm text-gray-700 dark:text-gray-300"
+      ></p>
+      <p
+        id="rc-read-tempco"
+        class="mt-1 text-sm text-gray-700 dark:text-gray-300"
+      ></p>
+      <p
+        id="rc-read-e"
+        class="mt-1 text-sm text-gray-700 dark:text-gray-300"
+      ></p>
+      <p
+        id="rc-read-neighbors"
+        class="mt-1 text-sm text-gray-700 dark:text-gray-300"
+      ></p>
+    </div>
+
+    <h2 class="mt-10 text-lg font-semibold">{t.findHeading}</h2>
+    <div class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="sm:col-span-2 lg:col-span-1">
+        <label for="rc-value" class="ui-label">
+          {t.valueLabel}
+        </label>
+        <input
+          id="rc-value"
+          type="text"
+          inputmode="decimal"
+          autocomplete="off"
+          spellcheck="false"
+          aria-describedby="rc-value-hint"
+          class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+          placeholder={t.valuePlaceholder}
+        />
+        <p
+          id="rc-value-hint"
+          class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+        >
+          {t.valueHint}
+        </p>
+      </div>
+      <div>
+        <label for="rc-tol" class="ui-label">
+          {t.toleranceLabel}
+        </label>
+        <select
+          id="rc-tol"
+          class="ui-input h-11 w-full bg-white px-3 dark:bg-gray-900"
+        >
+          {TOLERANCE_VALUES.map((v) => (
+            <option value={String(v)} selected={v === 5}>
+              ±{v}%
+            </option>
+          ))}
+        </select>
+      </div>
+      <div id="rc-tc-wrap" class="hidden">
+        <label for="rc-tc" class="ui-label">
+          {t.tempcoLabel}
+        </label>
+        <select
+          id="rc-tc"
+          class="ui-input h-11 w-full bg-white px-3 dark:bg-gray-900"
+        >
+          {TEMPCO_VALUES.map((v) => (
+            <option value={String(v)} selected={v === 100}>
+              {v} ppm/℃
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+    <div class={resultBox}>
+      <h3 class="ui-label">{t.findResultLabel}</h3>
+      <div
+        id="rc-find-bands"
+        class={`${bandsBox} hidden`}
+        aria-hidden="true"
+      ></div>
+      <p
+        id="rc-find-summary"
+        class="mt-3 text-lg font-semibold"
+        aria-live="polite"
+      ></p>
+      <p
+        id="rc-find-names"
+        class="mt-1 text-sm text-gray-700 dark:text-gray-300"
+      ></p>
+      <p id="rc-find-error" class="ui-error mt-2 hidden" role="alert"></p>
+      <p
+        id="rc-find-e"
+        class="mt-1 text-sm text-gray-700 dark:text-gray-300"
+      ></p>
+      <p
+        id="rc-find-neighbors"
+        class="mt-1 text-sm text-gray-700 dark:text-gray-300"
+      ></p>
+      <div class="mt-3 flex flex-wrap items-center gap-3">
+        <button id="rc-copy-button" type="button" class="ui-btn" disabled>
+          {t.copy}
+        </button>
+        <button id="rc-use-nearest" type="button" class="ui-btn hidden">
+          {t.useNearest}
+        </button>
+        <span
+          id="rc-copy-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    COLOR_HEX,
+    MULTIPLIER_EXPONENT,
+    TEMPCO_BY_COLOR,
+    TOLERANCE_BY_COLOR,
+    bandRoles,
+    colorsForRole,
+    decodeBands,
+    encodeResistance,
+    formatResistance,
+    nearestESeries,
+    parseResistance,
+    type BandCount,
+    type BandRole,
+    type ColorId,
+    type ESeriesId,
+  } from '../../lib/tools/resistor-color-code';
+  import { copyText } from '../../lib/clipboard';
+
+  type SlotKey = 'd1' | 'd2' | 'd3' | 'mult' | 'tol' | 'tc';
+  interface I18n {
+    bandLabel: string;
+    roleLabels: Record<string, string>;
+    colorNames: Record<ColorId, string>;
+    resultValue: string;
+    rangeLine: string;
+    tempcoLine: string;
+    findEmpty: string;
+    findSummary: string;
+    copied: string;
+    copyFailed: string;
+    errInvalidValue: string;
+    errNotRepresentable: string;
+    errOutOfRange: string;
+    eNearest: string;
+    eExact: string;
+    eNeighbors: string;
+  }
+
+  const root = document.getElementById('rc-root')!;
+  const t = JSON.parse(root.dataset.i18n ?? '{}') as I18n;
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const countButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#rc-count [data-count]',
+  );
+  const seriesSelect = $<HTMLSelectElement>('rc-series');
+  const bandSelects = [0, 1, 2, 3, 4, 5].map((i) =>
+    $<HTMLSelectElement>(`rc-band-${i}`),
+  );
+  const bandWraps = document.querySelectorAll<HTMLElement>('[data-band-wrap]');
+  const valueInput = $<HTMLInputElement>('rc-value');
+  const tolSelect = $<HTMLSelectElement>('rc-tol');
+  const tcSelect = $<HTMLSelectElement>('rc-tc');
+  const tcWrap = $('rc-tc-wrap');
+  const copyButton = $<HTMLButtonElement>('rc-copy-button');
+  const nearestButton = $<HTMLButtonElement>('rc-use-nearest');
+  const copyStatus = $('rc-copy-status');
+
+  let count: BandCount = 4;
+  const slots: Record<SlotKey, ColorId> = {
+    d1: 'yellow',
+    d2: 'violet',
+    d3: 'black',
+    mult: 'red',
+    tol: 'gold',
+    tc: 'brown',
+  };
+  let copyValue = '';
+  let nearestValue: number | null = null;
+
+  function fill(template: string, values: Record<string, string>) {
+    return Object.entries(values).reduce(
+      (text, [key, value]) => text.replaceAll(`{${key}}`, value),
+      template,
+    );
+  }
+
+  function slotsFor(
+    c: BandCount,
+  ): { role: BandRole; key: SlotKey; roleLabel: string }[] {
+    let digit = 0;
+    return bandRoles(c).map((role) => {
+      if (role === 'digit') {
+        digit++;
+        const key = (['d1', 'd2', 'd3'] as const)[digit - 1];
+        return {
+          role,
+          key,
+          roleLabel: t.roleLabels[`digit${digit}`],
+        };
+      }
+      const key =
+        role === 'multiplier' ? 'mult' : role === 'tolerance' ? 'tol' : 'tc';
+      return { role, key, roleLabel: t.roleLabels[role] };
+    });
+  }
+
+  function hint(role: BandRole, color: ColorId): string {
+    switch (role) {
+      case 'digit':
+        return String(colorsForRole('digit').indexOf(color));
+      case 'multiplier':
+        return (
+          '×' +
+          formatResistance(10 ** MULTIPLIER_EXPONENT[color]).replace(/ ?Ω$/, '')
+        );
+      case 'tolerance':
+        return `±${TOLERANCE_BY_COLOR[color]}%`;
+      case 'tempco':
+        return `${TEMPCO_BY_COLOR[color]} ppm/℃`;
+    }
+  }
+
+  function drawBands(container: HTMLElement, colors: readonly ColorId[]) {
+    container.replaceChildren();
+    for (const color of colors) {
+      const band = document.createElement('span');
+      band.className = 'h-9 w-4 shrink-0 rounded-sm border border-gray-500';
+      band.style.backgroundColor = COLOR_HEX[color];
+      container.append(band);
+    }
+  }
+
+  function eLines(
+    ohms: number,
+    lineEl: HTMLElement,
+    neighborsEl: HTMLElement,
+  ): number | null {
+    lineEl.textContent = '';
+    neighborsEl.textContent = '';
+    const series = seriesSelect.value as ESeriesId;
+    const r = nearestESeries(ohms, series);
+    if (!r) return null;
+    if (r.exact) {
+      lineEl.textContent = fill(t.eExact, { series });
+    } else {
+      lineEl.textContent = fill(t.eNearest, {
+        series,
+        value: formatResistance(r.value),
+        dev: `${r.deviationPercent > 0 ? '+' : ''}${r.deviationPercent}`,
+      });
+    }
+    if (r.lower !== null && r.upper !== null) {
+      neighborsEl.textContent = fill(t.eNeighbors, {
+        lower: formatResistance(r.lower),
+        upper: formatResistance(r.upper),
+      });
+    }
+    return r.value;
+  }
+
+  function buildBandSelects() {
+    const list = slotsFor(count);
+    bandSelects.forEach((select, i) => {
+      const wrap = bandWraps[i];
+      const info = list[i];
+      if (!info) {
+        wrap.classList.add('hidden');
+        return;
+      }
+      wrap.classList.remove('hidden');
+      $(`rc-band-label-${i}`).textContent = fill(t.bandLabel, {
+        n: String(i + 1),
+        role: info.roleLabel,
+      });
+      select.replaceChildren();
+      const options = colorsForRole(info.role);
+      for (const color of options) {
+        const option = document.createElement('option');
+        option.value = color;
+        option.textContent = `${t.colorNames[color]} (${hint(info.role, color)})`;
+        select.append(option);
+      }
+      if (!options.includes(slots[info.key])) slots[info.key] = options[0];
+      select.value = slots[info.key];
+    });
+    tcWrap.classList.toggle('hidden', count !== 6);
+  }
+
+  function renderRead() {
+    const list = slotsFor(count);
+    const colors = list.map((_, i) => bandSelects[i].value as ColorId);
+    drawBands($('rc-read-bands'), colors);
+    const valueEl = $('rc-read-value');
+    const rangeEl = $('rc-read-range');
+    const tempcoEl = $('rc-read-tempco');
+    const r = decodeBands(count, colors);
+    rangeEl.textContent = '';
+    tempcoEl.textContent = '';
+    $('rc-read-e').textContent = '';
+    $('rc-read-neighbors').textContent = '';
+    if (!r.ok) {
+      valueEl.textContent = '';
+      return;
+    }
+    valueEl.textContent = fill(t.resultValue, {
+      value: formatResistance(r.ohms),
+      tol: String(r.tolerance),
+    });
+    rangeEl.textContent = fill(t.rangeLine, {
+      min: formatResistance(r.min),
+      max: formatResistance(r.max),
+    });
+    if (r.tempco !== null) {
+      tempcoEl.textContent = fill(t.tempcoLine, { tc: String(r.tempco) });
+    }
+    eLines(r.ohms, $('rc-read-e'), $('rc-read-neighbors'));
+  }
+
+  function renderFind() {
+    const bandsEl = $('rc-find-bands');
+    const summaryEl = $('rc-find-summary');
+    const namesEl = $('rc-find-names');
+    const errorEl = $('rc-find-error');
+    bandsEl.classList.add('hidden');
+    errorEl.classList.add('hidden');
+    errorEl.textContent = '';
+    summaryEl.textContent = '';
+    namesEl.textContent = '';
+    $('rc-find-e').textContent = '';
+    $('rc-find-neighbors').textContent = '';
+    nearestButton.classList.add('hidden');
+    copyButton.disabled = true;
+    copyValue = '';
+    nearestValue = null;
+    copyStatus.textContent = '';
+
+    if (valueInput.value.trim() === '') {
+      summaryEl.textContent = t.findEmpty;
+      summaryEl.className = 'mt-3 text-sm text-gray-600 dark:text-gray-400';
+      return;
+    }
+    summaryEl.className = 'mt-3 text-lg font-semibold';
+
+    const ohms = parseResistance(valueInput.value);
+    const showError = (message: string) => {
+      errorEl.textContent = message;
+      errorEl.classList.remove('hidden');
+    };
+    if (ohms === null) {
+      showError(t.errInvalidValue);
+      return;
+    }
+    const tolerance = Number(tolSelect.value);
+    const r = encodeResistance(
+      ohms,
+      count,
+      tolerance,
+      count === 6 ? Number(tcSelect.value) : undefined,
+    );
+    nearestValue = eLines(ohms, $('rc-find-e'), $('rc-find-neighbors'));
+    if (!r.ok) {
+      showError(
+        r.reason === 'outOfRange' ? t.errOutOfRange : t.errNotRepresentable,
+      );
+      if (nearestValue !== null && r.reason === 'notRepresentable') {
+        nearestButton.classList.remove('hidden');
+      }
+      return;
+    }
+    drawBands(bandsEl, r.colors);
+    bandsEl.classList.remove('hidden');
+    summaryEl.textContent = fill(t.findSummary, {
+      value: formatResistance(ohms),
+      tol: String(tolerance),
+    });
+    copyValue = r.colors.map((c) => t.colorNames[c]).join(' / ');
+    namesEl.textContent = copyValue;
+    copyButton.disabled = false;
+  }
+
+  function renderAll() {
+    renderRead();
+    renderFind();
+  }
+
+  countButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      count = Number(button.dataset.count) as BandCount;
+      countButtons.forEach((b) =>
+        b.setAttribute('aria-pressed', String(b === button)),
+      );
+      buildBandSelects();
+      renderAll();
+    });
+  });
+
+  bandSelects.forEach((select, i) => {
+    select.addEventListener('change', () => {
+      const info = slotsFor(count)[i];
+      if (info) slots[info.key] = select.value as ColorId;
+      renderRead();
+    });
+  });
+
+  seriesSelect.addEventListener('change', renderAll);
+  valueInput.addEventListener('input', renderFind);
+  tolSelect.addEventListener('change', renderFind);
+  tcSelect.addEventListener('change', renderFind);
+
+  nearestButton.addEventListener('click', () => {
+    if (nearestValue === null) return;
+    valueInput.value = String(nearestValue);
+    renderFind();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!copyValue) return;
+    const ok = await copyText(copyValue);
+    copyStatus.textContent = ok ? t.copied : t.copyFailed;
+    copyStatus.className = ok
+      ? 'text-sm text-green-700 dark:text-green-400'
+      : 'text-sm text-red-700 dark:text-red-400';
+  });
+
+  buildBandSelects();
+  renderAll();
+</script>

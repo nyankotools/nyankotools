@@ -1,0 +1,298 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { cookieParserContent } from '../../i18n/tools/cookie-parser';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = cookieParserContent[locale];
+const modes = [
+  { value: 'auto', label: t.modeAuto },
+  { value: 'cookie', label: t.modeCookie },
+  { value: 'set-cookie', label: t.modeSetCookie },
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="cp-root"
+    data-labels={JSON.stringify(t.labels)}
+    data-issues={JSON.stringify(t.issues)}
+    data-summary={t.summary}
+    data-no-result={t.noResult}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-sample-text={t.sampleText}
+  >
+    <label for="cp-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="cp-input"
+      class="ui-input h-32 w-full p-4 font-mono break-all dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+      autocomplete="off"
+      data-no-persist
+    ></textarea>
+
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <label for="cp-mode" class="text-sm font-medium">
+        {t.modeLabel}
+      </label>
+      <select
+        id="cp-mode"
+        class="ui-input h-11 w-auto px-3 dark:bg-gray-900"
+        data-no-persist
+      >
+        {modes.map((m) => (
+          <option value={m.value}>{m.label}</option>
+        ))}
+      </select>
+      <button id="cp-sample-button" type="button" class="ui-btn">
+        {t.sampleButton}
+      </button>
+      <button id="cp-clear-button" type="button" class="ui-btn">
+        {t.clearButton}
+      </button>
+    </div>
+
+    <label class="ui-check mt-3">
+      <input id="cp-reveal" type="checkbox" data-no-persist />
+      <span>{t.revealLabel}</span>
+    </label>
+
+    <div id="cp-results" class="mt-5 hidden">
+      <div class="mb-3 flex flex-wrap items-center gap-3">
+        <p id="cp-summary" class="text-sm font-medium" aria-live="polite"></p>
+        <button id="cp-copy-button" type="button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <span
+          id="cp-copy-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+      <div id="cp-list" class="space-y-4"></div>
+    </div>
+    <p id="cp-empty" class="ui-error mt-4 hidden" role="alert"></p>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    ISSUE_SEVERITY,
+    maskValue,
+    parseCookies,
+    splitDuration,
+    toJson,
+    type CookieEntry,
+    type CookieMode,
+    type IssueCode,
+  } from '../../lib/tools/cookie-parser';
+
+  const root = document.getElementById('cp-root')!;
+  const input = document.getElementById('cp-input') as HTMLTextAreaElement;
+  const modeEl = document.getElementById('cp-mode') as HTMLSelectElement;
+  const revealEl = document.getElementById('cp-reveal') as HTMLInputElement;
+  const resultsEl = document.getElementById('cp-results')!;
+  const summaryEl = document.getElementById('cp-summary')!;
+  const listEl = document.getElementById('cp-list')!;
+  const emptyEl = document.getElementById('cp-empty')!;
+  const copyButton = document.getElementById('cp-copy-button')!;
+  const copyStatus = document.getElementById('cp-copy-status')!;
+
+  const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<
+    string,
+    string
+  >;
+  const issueText = JSON.parse(root.dataset.issues ?? '{}') as Record<
+    IssueCode,
+    string
+  >;
+
+  let entries: CookieEntry[] = [];
+
+  function el(tag: string, className: string, text?: string): HTMLElement {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  }
+
+  function formatDuration(seconds: number): string {
+    const d = splitDuration(seconds);
+    const parts: string[] = [];
+    if (d.days) parts.push(`${d.days}${labels.unitDay}`);
+    if (d.hours) parts.push(`${d.hours}${labels.unitHour}`);
+    if (d.minutes) parts.push(`${d.minutes}${labels.unitMinute}`);
+    if (d.seconds || parts.length === 0) {
+      parts.push(`${d.seconds}${labels.unitSecond}`);
+    }
+    return (seconds < 0 ? '-' : '') + parts.join(' ');
+  }
+
+  function flag(on: boolean): string {
+    return on ? labels.yes : labels.no;
+  }
+
+  function render() {
+    copyStatus.textContent = '';
+    const text = input.value;
+    if (text.trim() === '') {
+      resultsEl.classList.add('hidden');
+      emptyEl.classList.add('hidden');
+      entries = [];
+      return;
+    }
+    const result = parseCookies(text, modeEl.value as CookieMode);
+    entries = result.entries;
+    if (entries.length === 0) {
+      resultsEl.classList.add('hidden');
+      emptyEl.textContent = root.dataset.noResult ?? '';
+      emptyEl.classList.remove('hidden');
+      return;
+    }
+    emptyEl.classList.add('hidden');
+    resultsEl.classList.remove('hidden');
+    summaryEl.textContent = (root.dataset.summary ?? '').replace(
+      '{count}',
+      String(entries.length),
+    );
+
+    const reveal = revealEl.checked;
+    listEl.replaceChildren();
+    for (const e of entries) {
+      const card = el(
+        'section',
+        'rounded-lg border border-gray-300 p-4 dark:border-gray-700',
+      );
+      const head = el('div', 'mb-2 flex flex-wrap items-center gap-2');
+      head.append(
+        el(
+          'h2',
+          'font-mono text-base font-bold break-all',
+          e.name || labels.empty,
+        ),
+        el(
+          'span',
+          'rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+          e.kind === 'set' ? labels.kindSet : labels.kindRequest,
+        ),
+      );
+      card.append(head);
+
+      const rows: [string, string][] = [];
+      const shown = reveal ? e.value : maskValue(e.value);
+      rows.push([labels.value, shown === '' ? labels.empty : shown]);
+      rows.push([labels.length, `${e.value.length} ${labels.chars}`]);
+      if (reveal && e.decoded !== null) rows.push([labels.decoded, e.decoded]);
+      const a = e.attributes;
+      if (a) {
+        rows.push([labels.domain, a.domain ?? labels.notSet]);
+        rows.push([labels.path, a.path ?? labels.notSet]);
+        rows.push([
+          labels.expires,
+          a.expires
+            ? a.expires.ms !== null
+              ? `${a.expires.raw} (${new Date(a.expires.ms).toISOString()})`
+              : a.expires.raw
+            : labels.notSet,
+        ]);
+        rows.push([
+          labels.maxAge,
+          a.maxAge
+            ? a.maxAge.seconds !== null
+              ? `${a.maxAge.raw} (${formatDuration(a.maxAge.seconds)})`
+              : a.maxAge.raw
+            : labels.notSet,
+        ]);
+        rows.push([labels.secure, flag(a.secure)]);
+        rows.push([labels.httpOnly, flag(a.httpOnly)]);
+        rows.push([
+          labels.sameSite,
+          a.sameSite ? a.sameSite.raw : labels.notSet,
+        ]);
+        rows.push([labels.partitioned, flag(a.partitioned)]);
+        if (a.priority) rows.push([labels.priority, a.priority]);
+        const lifetimeLabel =
+          e.lifetime === 'expired'
+            ? labels.lifetimeExpired
+            : e.lifetime === 'persistent'
+              ? labels.lifetimePersistent
+              : labels.lifetimeSession;
+        rows.push([labels.lifetime, lifetimeLabel]);
+      }
+      for (const u of e.unknownAttributes) {
+        rows.push([
+          labels.unknownAttributes,
+          u.value ? `${u.name}=${u.value}` : u.name,
+        ]);
+      }
+
+      const dl = el(
+        'dl',
+        'grid grid-cols-1 gap-x-4 gap-y-1 text-sm sm:grid-cols-[10rem_1fr]',
+      );
+      for (const [k, v] of rows) {
+        dl.append(
+          el('dt', 'font-medium text-gray-600 dark:text-gray-400', k),
+          el('dd', 'font-mono break-all', v),
+        );
+      }
+      card.append(dl);
+
+      if (e.issues.length > 0) {
+        card.append(
+          el('p', 'mt-3 mb-1 text-sm font-medium', labels.issuesHeading),
+        );
+        const ul = el('ul', 'list-inside list-disc space-y-1 text-sm');
+        for (const code of e.issues) {
+          ul.append(
+            el(
+              'li',
+              ISSUE_SEVERITY[code] === 'warn'
+                ? 'text-red-700 dark:text-red-300'
+                : 'text-gray-700 dark:text-gray-300',
+              issueText[code],
+            ),
+          );
+        }
+        card.append(ul);
+      }
+      listEl.append(card);
+    }
+  }
+
+  onTextInput(input, render);
+  modeEl.addEventListener('change', render);
+  revealEl.addEventListener('change', render);
+
+  document.getElementById('cp-sample-button')!.addEventListener('click', () => {
+    input.value = root.dataset.sampleText ?? '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    render();
+  });
+  document.getElementById('cp-clear-button')!.addEventListener('click', () => {
+    input.value = '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    render();
+    input.focus();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (entries.length === 0) return;
+    const ok = await copyText(toJson(entries, revealEl.checked));
+    copyStatus.textContent = ok
+      ? (root.dataset.copied ?? '')
+      : (root.dataset.copyFailed ?? '');
+  });
+
+  render();
+</script>

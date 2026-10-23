@@ -72,7 +72,7 @@ export const updates: UpdateEntry[] = [
     translations: {
       ja: {
         summary:
-          '14個のツールを追加し、運営者情報・FAQ・お問い合わせ・利用規約ページとセキュリティヘッダー（CSP）を整備しました。',
+          '18個のツールを追加し、運営者情報・FAQ・お問い合わせ・利用規約ページとセキュリティヘッダー（CSP）を整備しました。',
       },
       en: {
         summary:
@@ -487,7 +487,7 @@ export const updates: UpdateEntry[] = [
         summary: '4個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 4 new tools.',
+        summary: 'Added 12 new tools.',
       },
     },
   },
@@ -526,7 +526,7 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary: '8個のツールを追加しました。',
+        summary: '12個のツールを追加しました。',
       },
       en: {
         summary: 'Added 8 new tools.',
@@ -989,6 +989,50 @@ export const updates: UpdateEntry[] = [
       },
       en: {
         summary: 'Added 25 new tools.',
+      },
+    },
+  },
+  {
+    date: '2026-10-23',
+    toolSlugs: [
+      'cron-generator',
+      'iso-duration-converter',
+      'cookie-parser',
+      'umask-calculator',
+      'docker-compose-converter',
+      'regex-explainer',
+      'css-unit-converter',
+      'fetch-to-curl',
+      'wifi-qr-generator',
+      'tokushoho-generator',
+      'privacy-policy-generator',
+      'daily-proration-calculator',
+      'business-card-maker',
+      'resume-maker',
+      'luhn-checker',
+      'isbn-checker',
+      'jwk-pem-converter',
+      'shamir-secret-sharing',
+      'rsa-encryptor',
+      'digital-signature-tool',
+      'coordinate-converter',
+      'ohm-calculator',
+      'print-size-converter',
+      'resistor-color-code',
+      'image-compress-to-size',
+      'image-dpi-changer',
+      'image-diff',
+      'image-logo-watermark',
+      'meme-generator',
+      'sticker-outline-maker',
+      'screen-color-picker',
+    ],
+    translations: {
+      ja: {
+        summary: '31個のツールを追加しました。',
+      },
+      en: {
+        summary: 'Added 31 new tools.',
       },
     },
   },

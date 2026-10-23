@@ -1,0 +1,476 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { imageLogoWatermarkContent } from '../../i18n/tools/image-logo-watermark';
+import { MAX_DIMENSION } from '../../lib/tools/image-cropper';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageLogoWatermarkContent[locale];
+
+const numberInput = 'ui-input h-11 w-full px-3 dark:bg-gray-900';
+---
+
+<ToolShell t={t}>
+  <div
+    id="logo-root"
+    data-output-info={t.outputInfo}
+    data-downloaded={t.downloaded}
+    data-error-not-image={t.errorNotImage}
+    data-error-too-large={t.errorTooLarge.replace(
+      '{max}',
+      String(MAX_DIMENSION),
+    )}
+    data-error-load-failed={t.errorLoadFailed}
+    data-error-export-failed={t.errorExportFailed}
+  >
+    <div class="grid gap-4 md:grid-cols-2">
+      <div>
+        <label for="logo-base-file" class="ui-label">
+          {t.baseLabel}
+        </label>
+        <div id="logo-base-dropzone" class="ui-dropzone">
+          <input
+            id="logo-base-file"
+            type="file"
+            accept="image/*"
+            class="ui-file"
+          />
+          <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            {t.baseHint}
+          </p>
+        </div>
+      </div>
+      <div>
+        <label for="logo-logo-file" class="ui-label">
+          {t.logoLabel}
+        </label>
+        <div id="logo-logo-dropzone" class="ui-dropzone">
+          <input
+            id="logo-logo-file"
+            type="file"
+            accept="image/*"
+            class="ui-file"
+          />
+          <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            {t.logoHint}
+          </p>
+        </div>
+      </div>
+    </div>
+    <p
+      id="logo-error"
+      role="alert"
+      hidden
+      class="mt-3 text-sm text-red-600 dark:text-red-400"
+    ></p>
+
+    <div id="logo-workspace" hidden class="mt-6 grid gap-6 md:grid-cols-2">
+      <div>
+        <p id="logo-need" class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+          {t.needLogo}
+        </p>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="col-span-2">
+            <label for="logo-position" class="ui-label">
+              {t.positionLabel}
+            </label>
+            <select
+              id="logo-position"
+              class="ui-input h-11 px-3 dark:bg-gray-900"
+            >
+              {t.positionOptions.map(({ value, label, selected }) => (
+                <option value={value} selected={selected}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div class="col-span-2">
+            <label for="logo-scale" class="ui-label">
+              {t.sizeLabel}
+              <span id="logo-scale-value">20</span>%
+            </label>
+            <input
+              id="logo-scale"
+              type="range"
+              min="1"
+              max="100"
+              value="20"
+              class="h-11 w-full"
+            />
+          </div>
+          <div class="col-span-2">
+            <label for="logo-opacity" class="ui-label">
+              {t.opacityLabel}
+              <span id="logo-opacity-value">100</span>%
+            </label>
+            <input
+              id="logo-opacity"
+              type="range"
+              min="5"
+              max="100"
+              value="100"
+              class="h-11 w-full"
+            />
+          </div>
+          <div>
+            <label for="logo-angle" class="ui-label">
+              {t.angleLabel}
+            </label>
+            <input
+              id="logo-angle"
+              type="number"
+              min="-180"
+              max="180"
+              step="1"
+              value="0"
+              class={numberInput}
+            />
+          </div>
+          <div id="logo-margin-wrap">
+            <label for="logo-margin" class="ui-label">
+              {t.marginLabel}
+            </label>
+            <input
+              id="logo-margin"
+              type="number"
+              min="0"
+              step="1"
+              value="20"
+              class={numberInput}
+            />
+          </div>
+          <div id="logo-gap-wrap" hidden>
+            <label for="logo-gap" class="ui-label">
+              {t.tileGapLabel}
+            </label>
+            <input
+              id="logo-gap"
+              type="number"
+              min="0"
+              step="1"
+              value="60"
+              class={numberInput}
+            />
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap items-end gap-4">
+          <div>
+            <span class="ui-label">{t.formatLabel}</span>
+            <div
+              id="logo-format"
+              class="ui-seg"
+              role="group"
+              aria-label={t.formatLabel}
+            >
+              <button
+                type="button"
+                data-format="png"
+                aria-pressed="true"
+                class="ui-seg-btn"
+              >
+                PNG
+              </button>
+              <button
+                type="button"
+                data-format="jpeg"
+                aria-pressed="false"
+                class="ui-seg-btn"
+              >
+                JPEG
+              </button>
+            </div>
+          </div>
+          <div id="logo-quality-wrap" hidden class="min-w-40 flex-1">
+            <label for="logo-quality" class="ui-label">
+              {t.qualityLabel}
+              <span id="logo-quality-value">90</span>
+            </label>
+            <input
+              id="logo-quality"
+              type="range"
+              min="10"
+              max="100"
+              value="90"
+              class="h-11 w-full"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center gap-3">
+        <p class="ui-label self-start">{t.previewLabel}</p>
+        <div class="ui-checker w-fit max-w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700">
+          <canvas
+            id="logo-canvas"
+            role="img"
+            aria-label={t.previewLabel}
+            class="block h-auto max-h-[70vh] max-w-full"
+          ></canvas>
+        </div>
+        <p
+          id="logo-size-info"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></p>
+        <button
+          id="logo-download"
+          type="button"
+          disabled
+          class="ui-btn-primary"
+        >
+          {t.downloadButton}
+        </button>
+        <span
+          id="logo-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    isWithinSourceLimit,
+    outputFormat,
+    type OutputFormat,
+  } from '../../lib/tools/image-cropper';
+  import {
+    anchorPosition,
+    clampNumber,
+    logoSize,
+    tileCenters,
+    watermarkFileName,
+    type LogoPosition,
+  } from '../../lib/tools/image-logo-watermark';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('logo-root');
+  const baseInput = $<HTMLInputElement>('logo-base-file');
+  const logoInput = $<HTMLInputElement>('logo-logo-file');
+  const errorEl = $('logo-error');
+  const workspace = $('logo-workspace');
+  const needEl = $('logo-need');
+  const canvas = $<HTMLCanvasElement>('logo-canvas');
+  const infoEl = $('logo-size-info');
+  const statusEl = $('logo-status');
+  const downloadButton = $<HTMLButtonElement>('logo-download');
+  const positionSelect = $<HTMLSelectElement>('logo-position');
+  const scaleInput = $<HTMLInputElement>('logo-scale');
+  const scaleValue = $('logo-scale-value');
+  const opacityInput = $<HTMLInputElement>('logo-opacity');
+  const opacityValue = $('logo-opacity-value');
+  const angleInput = $<HTMLInputElement>('logo-angle');
+  const marginInput = $<HTMLInputElement>('logo-margin');
+  const gapInput = $<HTMLInputElement>('logo-gap');
+  const marginWrap = $('logo-margin-wrap');
+  const gapWrap = $('logo-gap-wrap');
+  const qualityWrap = $('logo-quality-wrap');
+  const qualityInput = $<HTMLInputElement>('logo-quality');
+  const qualityValue = $('logo-quality-value');
+  const formatButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#logo-format [data-format]'),
+  );
+
+  const d = root.dataset;
+  let base: ImageBitmap | null = null;
+  let logo: ImageBitmap | null = null;
+  let sourceName: string | null = null;
+  let format: OutputFormat = 'png';
+  // 画像の読み込みは非同期なので、古い読み込みが新しい選択を上書きしないよう世代で管理する
+  let baseGeneration = 0;
+  let logoGeneration = 0;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  function render() {
+    if (!base) return;
+    statusEl.textContent = '';
+    const tile = positionSelect.value === 'tile';
+    marginWrap.hidden = tile;
+    gapWrap.hidden = !tile;
+    needEl.hidden = logo !== null;
+    downloadButton.disabled = logo === null;
+    canvas.width = base.width;
+    canvas.height = base.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return showError(d.errorExportFailed ?? '');
+    if (format === 'jpeg') {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    ctx.drawImage(base, 0, 0);
+    infoEl.textContent = (d.outputInfo ?? '')
+      .replace('{width}', String(canvas.width))
+      .replace('{height}', String(canvas.height));
+    if (!logo) return;
+
+    const image = { width: canvas.width, height: canvas.height };
+    const size = logoSize(
+      image,
+      { width: logo.width, height: logo.height },
+      Number(scaleInput.value),
+    );
+    const angle =
+      (clampNumber(Number(angleInput.value), -180, 180, 0) * Math.PI) / 180;
+    const position = positionSelect.value as LogoPosition;
+    ctx.globalAlpha =
+      clampNumber(Number(opacityInput.value), 5, 100, 100) / 100;
+    const drawLogo = () =>
+      ctx.drawImage(
+        logo!,
+        -size.width / 2,
+        -size.height / 2,
+        size.width,
+        size.height,
+      );
+
+    if (position === 'tile') {
+      const gap = Math.max(0, Number(gapInput.value) || 0);
+      const { points } = tileCenters(image, size, gap);
+      ctx.translate(image.width / 2, image.height / 2);
+      ctx.rotate(angle);
+      for (const p of points) {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        drawLogo();
+        ctx.restore();
+      }
+    } else {
+      const pos = anchorPosition(
+        position,
+        image,
+        size,
+        Number(marginInput.value) || 0,
+      );
+      ctx.translate(pos.x + size.width / 2, pos.y + size.height / 2);
+      ctx.rotate(angle);
+      drawLogo();
+    }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = 1;
+  }
+
+  async function loadBitmap(
+    file: File,
+    isCurrent: () => boolean,
+  ): Promise<ImageBitmap | null> {
+    showError('');
+    statusEl.textContent = '';
+    if (!file.type.startsWith('image/')) {
+      showError(d.errorNotImage ?? '');
+      return null;
+    }
+    let loaded: ImageBitmap;
+    try {
+      loaded = await createImageBitmap(file);
+    } catch {
+      if (isCurrent()) showError(d.errorLoadFailed ?? '');
+      return null;
+    }
+    if (!isCurrent()) {
+      loaded.close();
+      return null;
+    }
+    if (!isWithinSourceLimit({ width: loaded.width, height: loaded.height })) {
+      loaded.close();
+      showError(d.errorTooLarge ?? '');
+      return null;
+    }
+    return loaded;
+  }
+
+  async function loadBase(file: File) {
+    const current = ++baseGeneration;
+    const loaded = await loadBitmap(file, () => current === baseGeneration);
+    if (!loaded) return;
+    base?.close();
+    base = loaded;
+    sourceName = file.name;
+    workspace.hidden = false;
+    render();
+  }
+
+  async function loadLogo(file: File) {
+    const current = ++logoGeneration;
+    const loaded = await loadBitmap(file, () => current === logoGeneration);
+    if (!loaded) return;
+    logo?.close();
+    logo = loaded;
+    render();
+  }
+
+  baseInput.addEventListener('change', () => {
+    const file = baseInput.files?.[0];
+    baseInput.value = '';
+    if (file) void loadBase(file);
+  });
+  logoInput.addEventListener('change', () => {
+    const file = logoInput.files?.[0];
+    logoInput.value = '';
+    if (file) void loadLogo(file);
+  });
+  enableFileDrop($('logo-base-dropzone'), baseInput);
+  enableFileDrop($('logo-logo-dropzone'), logoInput);
+
+  for (const el of [positionSelect, angleInput, marginInput, gapInput]) {
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  }
+  scaleInput.addEventListener('input', () => {
+    scaleValue.textContent = scaleInput.value;
+    render();
+  });
+  opacityInput.addEventListener('input', () => {
+    opacityValue.textContent = opacityInput.value;
+    render();
+  });
+
+  function applyFormat(next: OutputFormat) {
+    format = next;
+    for (const b of formatButtons) {
+      b.setAttribute('aria-pressed', String(b.dataset.format === next));
+    }
+    qualityWrap.hidden = next === 'png';
+    render();
+  }
+  for (const b of formatButtons) {
+    b.addEventListener('click', () =>
+      applyFormat(b.dataset.format as OutputFormat),
+    );
+  }
+  qualityInput.addEventListener('input', () => {
+    qualityValue.textContent = qualityInput.value;
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (!base || !logo) return;
+    const { mime } = outputFormat(format);
+    canvas.toBlob(
+      (blob) => {
+        // 非対応の形式はブラウザがPNGで返すため、種類が違えば失敗として扱う
+        if (!blob || blob.type !== mime) {
+          return showError(d.errorExportFailed ?? '');
+        }
+        showError('');
+        downloadBlob(blob, watermarkFileName(sourceName, format));
+        statusEl.textContent = d.downloaded ?? '';
+      },
+      mime,
+      format === 'png' ? undefined : Number(qualityInput.value) / 100,
+    );
+  });
+</script>

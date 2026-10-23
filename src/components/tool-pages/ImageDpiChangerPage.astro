@@ -1,0 +1,355 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { imageDpiChangerContent } from '../../i18n/tools/image-dpi-changer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = imageDpiChangerContent[locale];
+
+const presets = [72, 96, 150, 300, 350, 600];
+---
+
+<ToolShell t={t}>
+  <label for="idc-file-input" class="ui-label">
+    {t.fileLabel}
+  </label>
+  <div id="idc-dropzone" class="ui-dropzone">
+    <input
+      id="idc-file-input"
+      type="file"
+      accept="image/png,image/jpeg,.png,.jpg,.jpeg"
+      class="ui-file"
+    />
+    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
+  </div>
+
+  <p
+    id="idc-error"
+    role="alert"
+    hidden
+    data-unsupported={t.errorUnsupported}
+    data-corrupt={t.errorCorrupt}
+    data-invalid-dpi={t.errorInvalidDpi}
+    data-too-large={t.errorTooLarge}
+    data-read-failed={t.errorReadFailed}
+    class="ui-error mt-3 max-w-2xl"
+  ></p>
+
+  <div
+    id="idc-result"
+    hidden
+    class="mt-5"
+    data-file-info={t.fileInfoTemplate}
+    data-current-dpi={t.currentDpiTemplate}
+    data-current-dpi-none={t.currentDpiNone}
+    data-current-dpi-different={t.currentDpiDifferentTemplate}
+    data-print-size={t.printSizeTemplate}
+    data-fit-yes={t.paperFitYes}
+    data-fit-no={t.paperFitNo}
+    data-downloaded={t.downloaded}
+  >
+    <p id="idc-file-info" class="text-sm break-all"></p>
+    <p
+      id="idc-current-dpi"
+      class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+
+    <div class="mt-4 max-w-xs">
+      <label for="idc-dpi" class="ui-label">
+        {t.dpiLabel}
+      </label>
+      <input
+        id="idc-dpi"
+        type="number"
+        inputmode="numeric"
+        min="1"
+        max="65535"
+        step="1"
+        value="300"
+        class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900"
+      />
+    </div>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.dpiHint}</p>
+
+    <div class="mt-3 flex flex-wrap items-center gap-2">
+      <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+        {t.presetsLabel}
+      </span>
+      <div
+        id="idc-presets"
+        class="flex flex-wrap gap-2"
+        role="group"
+        aria-label={t.presetsLabel}
+      >
+        {presets.map((p) => (
+          <button type="button" data-dpi={p} class="ui-btn">
+            {p}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <h2 class="mt-6 mb-1 text-base font-semibold">{t.printSizeHeading}</h2>
+    <p id="idc-print-size" class="font-mono text-lg"></p>
+
+    <h2 class="mt-6 mb-1 text-base font-semibold">{t.paperHeading}</h2>
+    <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">{t.paperHint}</p>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm" id="idc-paper-table">
+        <thead>
+          <tr class="border-b border-gray-300 text-left dark:border-gray-700">
+            <th scope="col" class="py-1 pr-2">
+              {t.paperColName}
+            </th>
+            <th scope="col" class="py-1 pr-2">
+              {t.paperColMm}
+            </th>
+            <th scope="col" class="py-1 pr-2">
+              {t.paperColDpi}
+            </th>
+            <th scope="col" class="py-1">
+              {t.paperColFit}
+            </th>
+          </tr>
+        </thead>
+        <tbody class="font-mono" id="idc-paper-body"></tbody>
+      </table>
+    </div>
+
+    <div class="mt-6 flex flex-wrap items-center gap-3">
+      <button
+        id="idc-download-button"
+        type="button"
+        class="ui-btn ui-btn-primary"
+      >
+        {t.downloadButton}
+      </button>
+      <button id="idc-clear-button" type="button" class="ui-btn">
+        {t.clearButton}
+      </button>
+      <span
+        id="idc-status"
+        class="text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    MAX_FILE_SIZE,
+    buildOutputName,
+    isValidDpi,
+    mimeTypeOf,
+    paperFits,
+    printSizeMm,
+    readImageDpi,
+    setImageDpi,
+    type ImageDpiErrorCode,
+    type ImageDpiInfo,
+  } from '../../lib/tools/image-dpi-changer';
+
+  const dropzone = document.getElementById('idc-dropzone')!;
+  const fileInput = document.getElementById(
+    'idc-file-input',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('idc-error')!;
+  const resultEl = document.getElementById('idc-result')!;
+  const fileInfoEl = document.getElementById('idc-file-info')!;
+  const currentDpiEl = document.getElementById('idc-current-dpi')!;
+  const dpiInput = document.getElementById('idc-dpi') as HTMLInputElement;
+  const presetButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#idc-presets [data-dpi]',
+  );
+  const printSizeEl = document.getElementById('idc-print-size')!;
+  const paperBody = document.getElementById('idc-paper-body')!;
+  const downloadButton = document.getElementById(
+    'idc-download-button',
+  ) as HTMLButtonElement;
+  const clearButton = document.getElementById(
+    'idc-clear-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('idc-status')!;
+
+  let bytes: Uint8Array | null = null;
+  let fileName = '';
+  let info: ImageDpiInfo | null = null;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function errorMessage(code: ImageDpiErrorCode): string {
+    switch (code) {
+      case 'unsupported-format':
+        return errorEl.dataset.unsupported ?? '';
+      case 'corrupt':
+        return errorEl.dataset.corrupt ?? '';
+      case 'invalid-dpi':
+        return errorEl.dataset.invalidDpi ?? '';
+    }
+  }
+
+  function fillTemplate(template: string, values: Record<string, string>) {
+    return template.replace(/\{(\w+)\}/g, (m, key: string) => values[key] ?? m);
+  }
+
+  function currentDpi(): number | null {
+    const value = Number(dpiInput.value);
+    return dpiInput.value.trim() !== '' && isValidDpi(value) ? value : null;
+  }
+
+  function renderResult() {
+    if (!info) return;
+    const dpi = currentDpi();
+    if (dpi === null) {
+      downloadButton.disabled = true;
+      printSizeEl.textContent = '';
+      paperBody.textContent = '';
+      showError(errorEl.dataset.invalidDpi ?? '');
+      return;
+    }
+    clearError();
+    downloadButton.disabled = false;
+
+    const size = printSizeMm(info.widthPx, info.heightPx, dpi);
+    printSizeEl.textContent = fillTemplate(resultEl.dataset.printSize ?? '', {
+      w: String(size.widthMm),
+      h: String(size.heightMm),
+    });
+
+    paperBody.textContent = '';
+    for (const fit of paperFits(info.widthPx, info.heightPx, dpi)) {
+      const tr = document.createElement('tr');
+      tr.className = 'border-b border-gray-200 dark:border-gray-800';
+      tr.dataset.paper = fit.name;
+      const th = document.createElement('th');
+      th.scope = 'row';
+      th.className = 'py-1 pr-2 text-left font-semibold';
+      th.textContent = fit.name;
+      tr.appendChild(th);
+      const cells = [
+        `${fit.widthMm}×${fit.heightMm}`,
+        String(fit.fitDpi),
+        (fit.fitsAtDpi ? resultEl.dataset.fitYes : resultEl.dataset.fitNo) ??
+          '',
+      ];
+      cells.forEach((text, index) => {
+        const td = document.createElement('td');
+        td.className = index === 2 ? 'py-1' : 'py-1 pr-2';
+        td.textContent = text;
+        tr.appendChild(td);
+      });
+      paperBody.appendChild(tr);
+    }
+  }
+
+  function showFile(file: File, data: Uint8Array, result: ImageDpiInfo) {
+    bytes = data;
+    fileName = file.name;
+    info = result;
+    statusEl.textContent = '';
+    fileInfoEl.textContent =
+      `${file.name} — ` +
+      fillTemplate(resultEl.dataset.fileInfo ?? '', {
+        format: result.format === 'png' ? 'PNG' : 'JPEG',
+        width: String(result.widthPx),
+        height: String(result.heightPx),
+      });
+    if (result.dpiX === null || result.dpiY === null) {
+      currentDpiEl.textContent = resultEl.dataset.currentDpiNone ?? '';
+    } else if (result.dpiX === result.dpiY) {
+      currentDpiEl.textContent = fillTemplate(
+        resultEl.dataset.currentDpi ?? '',
+        { dpi: String(result.dpiX) },
+      );
+    } else {
+      currentDpiEl.textContent = fillTemplate(
+        resultEl.dataset.currentDpiDifferent ?? '',
+        { x: String(result.dpiX), y: String(result.dpiY) },
+      );
+    }
+    resultEl.hidden = false;
+    renderResult();
+  }
+
+  async function handleFile(file: File) {
+    clearError();
+    if (file.size > MAX_FILE_SIZE) {
+      showError(errorEl.dataset.tooLarge ?? '');
+      return;
+    }
+    let data: Uint8Array;
+    try {
+      data = new Uint8Array(await file.arrayBuffer());
+    } catch {
+      showError(errorEl.dataset.readFailed ?? '');
+      return;
+    }
+    const result = readImageDpi(data);
+    if (!result.ok) {
+      resultEl.hidden = true;
+      bytes = null;
+      info = null;
+      showError(errorMessage(result.error));
+      return;
+    }
+    showFile(file, data, result);
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void handleFile(file);
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  dpiInput.addEventListener('input', () => {
+    statusEl.textContent = '';
+    renderResult();
+  });
+
+  presetButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      dpiInput.value = button.dataset.dpi ?? '300';
+      dpiInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  });
+
+  downloadButton.addEventListener('click', () => {
+    const dpi = currentDpi();
+    if (!bytes || !info || dpi === null) return;
+    const out = setImageDpi(bytes, dpi);
+    if (!out.ok) {
+      showError(errorMessage(out.error));
+      return;
+    }
+    downloadBlob(
+      new Blob([out.data], { type: mimeTypeOf(out.format) }),
+      buildOutputName(fileName, dpi, out.format),
+    );
+    statusEl.textContent = resultEl.dataset.downloaded ?? '';
+  });
+
+  clearButton.addEventListener('click', () => {
+    bytes = null;
+    info = null;
+    fileName = '';
+    resultEl.hidden = true;
+    statusEl.textContent = '';
+    clearError();
+  });
+</script>

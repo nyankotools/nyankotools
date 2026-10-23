@@ -1,0 +1,367 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { coordinateConverterContent } from '../../i18n/tools/coordinate-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = coordinateConverterContent[locale];
+
+const labels = {
+  pointA: t.pointALabel,
+  pointB: t.pointBLabel,
+  lat: t.latLabel,
+  lon: t.lonLabel,
+  decimal: t.decimalRowLabel,
+  dms: t.dmsRowLabel,
+  ddm: t.ddmRowLabel,
+  km: t.kilometersLabel,
+  mi: t.milesLabel,
+  nmi: t.nauticalMilesLabel,
+  m: t.metersLabel,
+  initialBearing: t.initialBearingLabel,
+  finalBearing: t.finalBearingLabel,
+  midpoint: t.midpointLabel,
+  samePoint: t.samePoint,
+  needBothPoints: t.needBothPoints,
+  copied: t.copied,
+  copyFailed: t.copyFailed,
+  errors: t.errors,
+  compassNames: t.compassNames,
+};
+
+const fields = [
+  { point: 'a', axis: 'lat', label: t.latLabel, placeholder: t.latPlaceholder },
+  { point: 'a', axis: 'lon', label: t.lonLabel, placeholder: t.lonPlaceholder },
+  { point: 'b', axis: 'lat', label: t.latLabel, placeholder: t.latPlaceholder },
+  { point: 'b', axis: 'lon', label: t.lonLabel, placeholder: t.lonPlaceholder },
+] as const;
+const decimalOptions = [0, 1, 2, 3, 4];
+---
+
+<ToolShell t={t}>
+  <section id="coord-root" data-labels={JSON.stringify(labels)}>
+    <p id="coord-hint" class="text-sm text-gray-600 dark:text-gray-400">
+      {t.inputHint}
+    </p>
+
+    <div class="mt-4 grid gap-6 md:grid-cols-2">
+      {(['a', 'b'] as const).map((point) => (
+        <fieldset class="min-w-0">
+          <legend class="ui-label">
+            {point === 'a' ? t.pointALabel : t.pointBLabel}
+          </legend>
+          {point === 'b' && (
+            <p class="mb-2 text-sm text-gray-600 dark:text-gray-400">
+              {t.pointBHint}
+            </p>
+          )}
+          <div class="space-y-3">
+            {fields
+              .filter((f) => f.point === point)
+              .map((f) => (
+                <div>
+                  <label for={`coord-${f.point}-${f.axis}`} class="ui-label">
+                    {f.label}
+                  </label>
+                  <input
+                    id={`coord-${f.point}-${f.axis}`}
+                    type="text"
+                    inputmode="text"
+                    autocomplete="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    data-no-persist
+                    aria-describedby={`coord-hint coord-${f.point}-${f.axis}-error`}
+                    class="ui-input h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+                    placeholder={f.placeholder}
+                  />
+                  <p
+                    id={`coord-${f.point}-${f.axis}-error`}
+                    class="mt-1 hidden text-sm text-red-700 dark:text-red-400"
+                    aria-live="polite"
+                  />
+                </div>
+              ))}
+          </div>
+        </fieldset>
+      ))}
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <button type="button" id="coord-sample-button" class="ui-btn">
+        {t.sampleButton}
+      </button>
+      <button type="button" id="coord-clear-button" class="ui-btn">
+        {t.clearButton}
+      </button>
+      <label
+        for="coord-decimals"
+        class="text-sm text-gray-700 dark:text-gray-300"
+      >
+        {t.decimalsLabel}
+      </label>
+      <select
+        id="coord-decimals"
+        data-no-persist
+        class="ui-input h-11 px-3 dark:bg-gray-900"
+      >
+        {decimalOptions.map((n) => (
+          <option value={n} selected={n === 2}>
+            {t.decimalsOption.replace('{n}', String(n))}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div class="mt-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="ui-label">{t.convertedHeading}</h2>
+      <div id="coord-converted" class="space-y-4" aria-live="polite"></div>
+    </div>
+
+    <div class="mt-4 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+      <h2 class="ui-label">{t.distanceHeading}</h2>
+      <p
+        id="coord-distance-message"
+        class="text-sm text-gray-700 dark:text-gray-300"
+        aria-live="polite"
+      ></p>
+      <dl id="coord-distance" class="space-y-2"></dl>
+    </div>
+
+    <div class="mt-3 flex items-center gap-3">
+      <button type="button" id="coord-copy-button" class="ui-btn">
+        {t.copyButton}
+      </button>
+      <span
+        id="coord-copy-status"
+        class="text-sm text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    COMPASS_ABBR,
+    compassIndex,
+    formatDdm,
+    formatDecimal,
+    formatDms,
+    measure,
+    parseAngle,
+    type Axis,
+    type ParseError,
+    type Point,
+  } from '../../lib/tools/coordinate-converter';
+
+  interface Labels {
+    pointA: string;
+    pointB: string;
+    lat: string;
+    lon: string;
+    decimal: string;
+    dms: string;
+    ddm: string;
+    km: string;
+    mi: string;
+    nmi: string;
+    m: string;
+    initialBearing: string;
+    finalBearing: string;
+    midpoint: string;
+    samePoint: string;
+    needBothPoints: string;
+    copied: string;
+    copyFailed: string;
+    errors: Record<ParseError, string>;
+    compassNames: string[];
+  }
+
+  const root = document.getElementById('coord-root')!;
+  const L = JSON.parse(root.dataset.labels ?? '{}') as Labels;
+  const get = (id: string) => document.getElementById(id) as HTMLInputElement;
+  const inputs = {
+    a: { lat: get('coord-a-lat'), lon: get('coord-a-lon') },
+    b: { lat: get('coord-b-lat'), lon: get('coord-b-lon') },
+  };
+  const decimalsSelect = document.getElementById(
+    'coord-decimals',
+  ) as HTMLSelectElement;
+  const convertedEl = document.getElementById('coord-converted')!;
+  const distanceMsg = document.getElementById('coord-distance-message')!;
+  const distanceEl = document.getElementById('coord-distance')!;
+  const copyStatus = document.getElementById('coord-copy-status')!;
+  let lastText = '';
+
+  function parseField(point: 'a' | 'b', axis: Axis): number | null {
+    const input = inputs[point][axis];
+    const errEl = document.getElementById(`coord-${point}-${axis}-error`)!;
+    const r = parseAngle(input.value, axis);
+    if (r.ok) {
+      errEl.classList.add('hidden');
+      errEl.textContent = '';
+      input.removeAttribute('aria-invalid');
+      return r.value;
+    }
+    if (r.error === 'empty') {
+      errEl.classList.add('hidden');
+      errEl.textContent = '';
+      input.removeAttribute('aria-invalid');
+    } else {
+      errEl.textContent = L.errors[r.error];
+      errEl.classList.remove('hidden');
+      input.setAttribute('aria-invalid', 'true');
+    }
+    return null;
+  }
+
+  function row(dl: HTMLElement, label: string, value: string) {
+    const wrap = document.createElement('div');
+    wrap.className = 'sm:flex sm:gap-3';
+    const dt = document.createElement('dt');
+    dt.className =
+      'text-sm font-medium text-gray-700 sm:w-56 sm:shrink-0 dark:text-gray-300';
+    dt.textContent = label;
+    const dd = document.createElement('dd');
+    dd.className =
+      'font-mono text-sm break-all text-gray-900 dark:text-gray-100';
+    dd.textContent = value;
+    wrap.append(dt, dd);
+    dl.append(wrap);
+  }
+
+  function describe(lat: number | null, lon: number | null, dec: number) {
+    const join = (f: (v: number, axis: Axis) => string) =>
+      [lat === null ? null : f(lat, 'lat'), lon === null ? null : f(lon, 'lon')]
+        .filter((s) => s !== null)
+        .join(' , ');
+    return {
+      decimal: join((v) => formatDecimal(v)),
+      dms: join((v, axis) => formatDms(v, axis, dec)),
+      ddm: join((v, axis) => formatDdm(v, axis, 4)),
+    };
+  }
+
+  function bearingText(b: number | null): string {
+    if (b === null) return '-';
+    const name = L.compassNames[compassIndex(b)] ?? '';
+    return `${b.toFixed(2)}° (${COMPASS_ABBR[compassIndex(b)]} ${name})`;
+  }
+
+  function render() {
+    copyStatus.textContent = '';
+    const dec = Number(decimalsSelect.value);
+    const lines: string[] = [];
+    convertedEl.textContent = '';
+    distanceEl.textContent = '';
+    distanceMsg.textContent = '';
+
+    const parsed = {
+      a: { lat: parseField('a', 'lat'), lon: parseField('a', 'lon') },
+      b: { lat: parseField('b', 'lat'), lon: parseField('b', 'lon') },
+    };
+
+    for (const point of ['a', 'b'] as const) {
+      const { lat, lon } = parsed[point];
+      if (lat === null && lon === null) continue;
+      const d = describe(lat, lon, dec);
+      const title = point === 'a' ? L.pointA : L.pointB;
+      const block = document.createElement('div');
+      const h3 = document.createElement('h3');
+      h3.className =
+        'mb-1 text-sm font-semibold text-gray-900 dark:text-gray-100';
+      h3.textContent = title;
+      const dl = document.createElement('dl');
+      dl.className = 'space-y-1';
+      row(dl, L.decimal, d.decimal);
+      row(dl, L.dms, d.dms);
+      row(dl, L.ddm, d.ddm);
+      block.append(h3, dl);
+      convertedEl.append(block);
+      lines.push(
+        title,
+        `${L.decimal}: ${d.decimal}`,
+        `${L.dms}: ${d.dms}`,
+        `${L.ddm}: ${d.ddm}`,
+      );
+    }
+
+    const a: Point | null =
+      parsed.a.lat !== null && parsed.a.lon !== null
+        ? { lat: parsed.a.lat, lon: parsed.a.lon }
+        : null;
+    const b: Point | null =
+      parsed.b.lat !== null && parsed.b.lon !== null
+        ? { lat: parsed.b.lat, lon: parsed.b.lon }
+        : null;
+
+    if (a && b) {
+      const r = measure(a, b);
+      const same = r.meters === 0;
+      if (same) distanceMsg.textContent = L.samePoint;
+      const mid = describe(r.midpoint.lat, r.midpoint.lon, dec);
+      const items: [string, string][] = [
+        [L.km, r.kilometers.toFixed(3)],
+        [L.mi, r.miles.toFixed(3)],
+        [L.nmi, r.nauticalMiles.toFixed(3)],
+        [L.m, r.meters.toFixed(1)],
+      ];
+      if (!same) {
+        items.push(
+          [L.initialBearing, bearingText(r.initialBearing)],
+          [L.finalBearing, bearingText(r.finalBearing)],
+        );
+      }
+      items.push([L.midpoint, `${mid.decimal} / ${mid.dms}`]);
+      for (const [label, value] of items) row(distanceEl, label, value);
+      lines.push('');
+      for (const [label, value] of items) lines.push(`${label}: ${value}`);
+    } else {
+      distanceMsg.textContent = L.needBothPoints;
+    }
+
+    lastText = lines.join('\n');
+  }
+
+  for (const point of ['a', 'b'] as const) {
+    for (const axis of ['lat', 'lon'] as const) {
+      inputs[point][axis].addEventListener('input', render);
+    }
+  }
+  decimalsSelect.addEventListener('change', render);
+
+  document
+    .getElementById('coord-sample-button')!
+    .addEventListener('click', () => {
+      inputs.a.lat.value = '35.681236';
+      inputs.a.lon.value = '139.767125';
+      inputs.b.lat.value = '34.702485';
+      inputs.b.lon.value = '135.495951';
+      render();
+    });
+  document
+    .getElementById('coord-clear-button')!
+    .addEventListener('click', () => {
+      for (const point of ['a', 'b'] as const) {
+        for (const axis of ['lat', 'lon'] as const)
+          inputs[point][axis].value = '';
+      }
+      render();
+    });
+  document
+    .getElementById('coord-copy-button')!
+    .addEventListener('click', async () => {
+      if (!lastText) return;
+      copyStatus.textContent = (await copyText(lastText))
+        ? L.copied
+        : L.copyFailed;
+    });
+
+  render();
+</script>

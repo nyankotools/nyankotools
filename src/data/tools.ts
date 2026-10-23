@@ -913,7 +913,7 @@ export const tools: Tool[] = [
     category: 'datetime',
     addedAt: '2026-09-16',
     updatedAt: '2026-09-16',
-    related: ['unix-timestamp', 'date-calculator', 'regex-tester'],
+    related: ['unix-timestamp', 'date-calculator', 'cron-generator'],
     translations: {
       ja: {
         name: 'Cron式スケジュールシミュレーター',
@@ -1367,7 +1367,7 @@ export const tools: Tool[] = [
     category: 'dev',
     addedAt: '2026-09-17',
     updatedAt: '2026-09-17',
-    related: ['cidr-calculator', 'base-converter', 'cron-parser'],
+    related: ['cidr-calculator', 'base-converter', 'umask-calculator'],
     translations: {
       ja: {
         name: 'Chmodパーミッション計算機',
@@ -12691,6 +12691,1207 @@ export const tools: Tool[] = [
           'nbsp',
           'special characters',
         ],
+      },
+    },
+  },
+  {
+    slug: 'cron-generator',
+    category: 'dev',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['cron-parser', 'unix-timestamp', 'iso-duration-converter'],
+    translations: {
+      ja: {
+        name: 'Cron式ジェネレーター',
+        description:
+          '分・時・日・月・曜日をGUIで選んでcron式を作成。*/5の間隔・範囲・列挙、Quartz形式にも対応します。',
+        keywords: [
+          'cron',
+          'crontab',
+          'cron式 作成',
+          'スケジュール',
+          'Quartz',
+          'GitHub Actions',
+          'cron ジェネレーター',
+        ],
+      },
+      en: {
+        name: 'Cron Expression Generator',
+        description:
+          'Build cron expressions visually by picking minute, hour, day, month and weekday. Supports steps, ranges, lists and Quartz output.',
+        keywords: [
+          'cron',
+          'crontab',
+          'cron generator',
+          'cron builder',
+          'schedule',
+          'quartz',
+          'github actions',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'iso-duration-converter',
+    category: 'dev',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['unix-timestamp', 'date-calculator', 'cron-parser'],
+    translations: {
+      ja: {
+        name: 'ISO 8601 期間（duration）変換',
+        keywords: [
+          'ISO 8601',
+          'duration',
+          '期間',
+          'PT1H30M',
+          'YouTube API',
+          'iCalendar',
+          'OpenAPI',
+        ],
+        description:
+          'ISO 8601の期間（PT1H30M、P1Y2M3D、P2Wなど）を秒・分・時間・日に変換します。秒数からの逆変換や、基準日時への加算にも対応。',
+      },
+      en: {
+        name: 'ISO 8601 Duration Converter',
+        keywords: [
+          'ISO 8601 duration',
+          'duration',
+          'PT1H30M',
+          'YouTube API duration',
+          'iCalendar duration',
+          'seconds to duration',
+        ],
+        description:
+          'Converts ISO 8601 durations (PT1H30M, P1Y2M3D, P2W) to seconds, minutes, hours and days, converts seconds back, and adds a duration to a date.',
+      },
+    },
+  },
+  {
+    slug: 'cookie-parser',
+    category: 'dev',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['http-header-analyzer', 'jwt-decoder', 'http-status-codes'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'Cookie解析（Cookie・Set-Cookie分解）',
+        keywords: [
+          'Cookie',
+          'Set-Cookie',
+          'SameSite',
+          'HttpOnly',
+          'Secure',
+          'Max-Age',
+          'Partitioned',
+          'クッキー',
+        ],
+        description:
+          'CookieヘッダーやSet-Cookieを名前・値・Domain・Path・Expires・Max-Age・Secure・HttpOnly・SameSiteに分解して表示。設定ミスも指摘。値は初期状態でマスク表示します。',
+      },
+      en: {
+        name: 'Cookie Parser (Cookie & Set-Cookie)',
+        keywords: [
+          'cookie',
+          'Set-Cookie',
+          'SameSite',
+          'HttpOnly',
+          'Secure',
+          'Max-Age',
+          'Partitioned',
+          'CHIPS',
+        ],
+        description:
+          'Parses Cookie and Set-Cookie headers into name, value, Domain, Path, Expires, Max-Age, Secure, HttpOnly and SameSite, and flags common mistakes. Values are masked.',
+      },
+    },
+  },
+  {
+    slug: 'umask-calculator',
+    category: 'dev',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['chmod-calculator'],
+    translations: {
+      ja: {
+        name: 'umask計算機',
+        description:
+          'umask値から新規ファイル・ディレクトリの実効パーミッションを算出。欲しいパーミッションからのumask逆算にも対応。',
+        keywords: [
+          'umask',
+          'パーミッション',
+          'chmod',
+          '022',
+          '002',
+          '077',
+          'Linux',
+          '権限',
+        ],
+      },
+      en: {
+        name: 'umask Calculator',
+        description:
+          'Find the permissions new files and directories get from a umask, or work back to the umask you need.',
+        keywords: [
+          'umask',
+          'permissions',
+          'chmod',
+          '022',
+          '002',
+          '077',
+          'linux file mode',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'docker-compose-converter',
+    category: 'dev',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['yaml-formatter', 'env-json-converter', 'curl-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'docker run→docker-compose変換',
+        keywords: [
+          'docker',
+          'docker run',
+          'docker-compose',
+          'compose.yml',
+          'Compose',
+          'コンテナ',
+        ],
+        description:
+          'docker runコマンドをdocker-compose.ymlに変換します。ポート・ボリューム・環境変数・--name・--restartなど主要オプションに対応し、未対応オプションは警告表示。',
+      },
+      en: {
+        name: 'docker run to docker-compose Converter',
+        keywords: [
+          'docker',
+          'docker run',
+          'docker-compose',
+          'compose.yml',
+          'Compose',
+          'container',
+        ],
+        description:
+          'Converts a docker run command to a docker-compose.yml file. Handles ports, volumes, env vars, --name and --restart, and warns about options it cannot convert.',
+      },
+    },
+  },
+  {
+    slug: 'regex-explainer',
+    category: 'dev',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['regex-tester', 'regex-pattern-library', 'text-extractor'],
+    translations: {
+      ja: {
+        name: '正規表現の解説（パターン分解）',
+        keywords: [
+          '正規表現',
+          'regex',
+          '解説',
+          '意味',
+          '先読み',
+          '後読み',
+          '量指定子',
+          'パターン分解',
+        ],
+        description:
+          '正規表現のパターンを文字クラス・量指定子・グループ・先読み・後読み・アンカー・フラグに分解して日本語で解説。不正なパターンはエラー位置つきで表示。',
+      },
+      en: {
+        name: 'Regex Explainer',
+        keywords: [
+          'regex',
+          'regular expression',
+          'explain',
+          'lookahead',
+          'lookbehind',
+          'quantifier',
+          'regex breakdown',
+        ],
+        description:
+          'Break a regular expression into character classes, quantifiers, groups, lookarounds and flags, and read what each part does. Syntax errors show their position.',
+      },
+    },
+  },
+  {
+    slug: 'css-unit-converter',
+    category: 'dev',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['px-rem-converter', 'css-clamp-calculator', 'viewport-checker'],
+    translations: {
+      ja: {
+        name: 'CSS単位換算ツール',
+        description:
+          'px・rem・em・vw・vh・vmin・ch・ptなどCSS単位を画面幅や親フォントサイズを指定して一括換算',
+        keywords: [
+          'CSS単位',
+          'vw',
+          'vh',
+          'em',
+          'pt',
+          'ch',
+          '単位変換',
+          'ビューポート',
+        ],
+      },
+      en: {
+        name: 'CSS Unit Converter',
+        description:
+          'Convert px, rem, em, vw, vh, vmin, ch and pt between each other with your viewport and font sizes.',
+        keywords: [
+          'css units',
+          'vw',
+          'vh',
+          'em',
+          'rem',
+          'pt',
+          'px to vw',
+          'viewport units',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'fetch-to-curl',
+    category: 'dev',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['curl-converter', 'json-formatter', 'http-status-codes'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'Fetch/Axios→cURL変換',
+        keywords: [
+          'fetch',
+          'axios',
+          'curl',
+          'API',
+          'fetchとしてコピー',
+          'JavaScript',
+        ],
+        description:
+          'fetch・axiosのJavaScriptコードをcurlコマンドに変換します。method・headers・JSONボディ・FormDataに対応し、コードは実行せず解析のみ。',
+      },
+      en: {
+        name: 'Fetch / Axios to cURL Converter',
+        keywords: [
+          'fetch',
+          'axios',
+          'curl',
+          'API',
+          'copy as fetch',
+          'JavaScript',
+        ],
+        description:
+          'Converts JavaScript fetch or axios code to a curl command. Handles method, headers, JSON bodies, and FormData; it only parses the code and never runs it.',
+      },
+    },
+  },
+  {
+    slug: 'wifi-qr-generator',
+    category: 'generate',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['qr-generator', 'qr-code-reader', 'password-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'Wi-Fi QRコード生成',
+        keywords: [
+          'Wi-Fi',
+          'WiFi',
+          'QR',
+          'SSID',
+          'ワイファイ',
+          'パスワード',
+          'ゲスト',
+        ],
+        description:
+          'SSIDとパスワードからWi-Fi接続用のQRコードを作成。WPA・WEP・パスワードなし、隠しSSIDに対応',
+      },
+      en: {
+        name: 'Wi-Fi QR Code Generator',
+        keywords: [
+          'wifi qr',
+          'wifi password qr',
+          'ssid',
+          'wpa',
+          'wep',
+          'guest wifi',
+          'hidden ssid',
+        ],
+        description:
+          'Create a Wi-Fi QR code from an SSID and password. Supports WPA, WEP, open and hidden networks',
+      },
+    },
+  },
+  {
+    slug: 'tokushoho-generator',
+    category: 'generate',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: [
+      'privacy-policy-generator',
+      'invoice-generator',
+      'meta-tag-generator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '特定商取引法に基づく表記ジェネレーター',
+        keywords: [
+          '特商法',
+          '特定商取引法',
+          '特定商取引法に基づく表記',
+          '通信販売',
+          'ネットショップ',
+          '返品特約',
+          'ひな形',
+          'テンプレート',
+        ],
+        description:
+          '特定商取引法に基づく表記（通信販売）の必須項目を入力してひな形を作成。テキスト・Markdown・HTML出力、住所・電話番号の非公開表記に対応。法的助言ではありません',
+      },
+      en: {
+        name: 'Tokushoho Notice Generator (Japan Commercial Transactions Act)',
+        keywords: [
+          'tokushoho',
+          'specified commercial transactions act',
+          'japan e-commerce disclosure',
+          'legal notice generator',
+          'online shop japan',
+          'return policy',
+        ],
+        description:
+          'Draft the legal disclosure page required for online sales in Japan from the required items, as text, Markdown or HTML. A template, not legal advice',
+      },
+    },
+  },
+  {
+    slug: 'privacy-policy-generator',
+    category: 'generate',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: [
+      'tokushoho-generator',
+      'robots-txt-generator',
+      'meta-tag-generator',
+    ],
+    translations: {
+      ja: {
+        name: 'プライバシーポリシー雛形生成',
+        keywords: [
+          'プライバシーポリシー',
+          '個人情報保護方針',
+          'Googleアナリティクス',
+          'AdSense',
+          'Cookie',
+          'アフィリエイト',
+          '雛形',
+          'テンプレート',
+        ],
+        description:
+          'Googleアナリティクス・AdSense・Cookie・アフィリエイト対応のプライバシーポリシー雛形を作成。法的助言ではなく雛形です',
+      },
+      en: {
+        name: 'Privacy Policy Template Generator',
+        keywords: [
+          'privacy policy',
+          'privacy policy generator',
+          'Google Analytics',
+          'AdSense',
+          'cookie policy',
+          'affiliate disclosure',
+          'APPI',
+        ],
+        description:
+          'Generate a privacy policy template with Google Analytics, AdSense, cookie and affiliate clauses (Japan). Not legal advice',
+      },
+    },
+  },
+  {
+    slug: 'daily-proration-calculator',
+    category: 'calc',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: [
+      'rent-initial-cost',
+      'salary-take-home-calculator',
+      'date-calculator',
+    ],
+    translations: {
+      ja: {
+        name: '日割り計算機',
+        keywords: [
+          '日割り',
+          '日割り計算',
+          '日割り家賃',
+          '日割り給与',
+          '日割り料金',
+          'サブスク',
+          '月額',
+          '按分',
+        ],
+        description:
+          '月額と日数（または開始日・終了日）から日割額を計算します。家賃・給与・サブスクに対応し、暦日数・30日・年換算の基準と端数処理を選べます',
+      },
+      en: {
+        name: 'Daily Proration Calculator',
+        keywords: [
+          'proration',
+          'prorated rent',
+          'daily rate',
+          'prorate salary',
+          'subscription proration',
+          'pro rata',
+        ],
+        description:
+          'Prorate monthly rent, salary or subscription fees by days or dates, with calendar, 30-day or 365-day basis and rounding options',
+      },
+    },
+  },
+  {
+    slug: 'business-card-maker',
+    category: 'generate',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['vcard-generator', 'envelope-printer', 'qr-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '名刺作成',
+        description:
+          '91×55mmの名刺を縦横・3レイアウトで作成。vCardのQRコード付きでA4に10面付けして実寸印刷できます。',
+        keywords: [
+          '名刺',
+          '名刺作成',
+          '名刺印刷',
+          '名刺QR',
+          'vCard',
+          'A4 面付け',
+          '91×55',
+        ],
+      },
+      en: {
+        name: 'Business Card Maker',
+        description:
+          'Make a 91 × 55 mm business card with a vCard QR code and print it life-size, 10 per A4 sheet.',
+        keywords: [
+          'business card',
+          'business card maker',
+          'print business cards',
+          'QR code business card',
+          'vCard',
+          'A4 imposition',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'resume-maker',
+    category: 'generate',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['id-photo-maker', 'envelope-printer', 'vcard-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '履歴書作成',
+        description:
+          'JIS様式風の履歴書をA4で印刷。学歴・職歴・資格・志望動機を入力し、証明写真も読み込めます',
+        keywords: [
+          '履歴書',
+          '履歴書 印刷',
+          '履歴書 作成',
+          'JIS 履歴書',
+          '証明写真',
+          '学歴 職歴',
+          '志望動機',
+          'rirekisho',
+        ],
+      },
+      en: {
+        name: 'Resume Maker (Rirekisho)',
+        description:
+          'Make a Japanese resume (rirekisho) in a JIS-style layout and print it on A4. Add an ID photo and save a draft in your browser. Nothing is uploaded.',
+        keywords: [
+          'rirekisho',
+          'japanese resume',
+          'resume japan',
+          'jis resume',
+          'cv japan',
+          'print resume',
+          'id photo',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'luhn-checker',
+    category: 'calc',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['my-number-checker', 'checksum-calculator', 'isbn-checker'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'Luhnチェック・カード番号ブランド判定',
+        description:
+          'カード番号などの検査桁をLuhnアルゴリズムで検証し、先頭の桁からブランドを判定。決済テスト用の公開番号付き。',
+        keywords: [
+          'Luhn',
+          'ルーン',
+          'カード番号',
+          'クレジットカード',
+          'チェックデジット',
+          'IIN',
+          'BIN',
+          'テストカード番号',
+        ],
+      },
+      en: {
+        name: 'Luhn Checker & Card Brand Detector',
+        description:
+          'Validate card numbers with the Luhn algorithm and detect the brand by IIN. Includes public payment test numbers.',
+        keywords: [
+          'Luhn',
+          'mod 10',
+          'credit card validator',
+          'card brand',
+          'IIN',
+          'BIN',
+          'test card numbers',
+          'check digit',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'isbn-checker',
+    category: 'calc',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['barcode-generator', 'luhn-checker'],
+    translations: {
+      ja: {
+        name: 'ISBN・JANチェックデジット検証',
+        description:
+          'ISBN-10/13・JAN(EAN-13/8)のチェックデジットを検証・計算し、ISBN-10とISBN-13を相互変換します。',
+        keywords: [
+          'ISBN',
+          'JAN',
+          'EAN',
+          'チェックデジット',
+          'ISBN変換',
+          'ISBN-10',
+          'ISBN-13',
+          '書籍コード',
+        ],
+      },
+      en: {
+        name: 'ISBN & EAN-13 Check Digit Validator',
+        description:
+          'Validate or calculate ISBN-10, ISBN-13 and EAN/JAN check digits and convert ISBN-10 to ISBN-13.',
+        keywords: [
+          'ISBN',
+          'ISBN-10',
+          'ISBN-13',
+          'EAN-13',
+          'JAN',
+          'check digit',
+          'ISBN converter',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'jwk-pem-converter',
+    category: 'encode',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['keypair-generator', 'jwt-decoder', 'base64'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'JWK⇔PEM変換',
+        description:
+          'JWKとPEM（SPKI公開鍵・PKCS#8秘密鍵）を相互に変換。RSA・EC・Ed25519対応。鍵はブラウザ内で処理され、送信されません。',
+        keywords: [
+          'JWK',
+          'PEM',
+          'SPKI',
+          'PKCS#8',
+          'RSA',
+          'ECDSA',
+          'Ed25519',
+          'JWKS',
+        ],
+      },
+      en: {
+        name: 'JWK to PEM Converter',
+        description:
+          'Convert JWK to PEM (SPKI / PKCS#8) and PEM back to JWK for RSA, EC, and Ed25519 keys. Runs in your browser; nothing is sent.',
+        keywords: [
+          'JWK',
+          'PEM',
+          'JSON Web Key',
+          'SPKI',
+          'PKCS#8',
+          'RSA',
+          'Ed25519',
+          'JWKS',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'shamir-secret-sharing',
+    category: 'security',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['crypto-encryptor', 'password-generator', 'keypair-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'Shamir秘密分散（鍵の分割・復元）',
+        description:
+          'テキストの秘密をn個のシェアに分割し、k個以上集めると復元できるShamir秘密分散ツール。ブラウザ内で処理。',
+        keywords: [
+          'シャミア',
+          '秘密分散',
+          '鍵分割',
+          'シェア',
+          '閾値',
+          'Shamir',
+          'secret sharing',
+          '鍵の復元',
+        ],
+      },
+      en: {
+        name: "Shamir's Secret Sharing (Split & Combine)",
+        description:
+          'Split a text secret into n shares and recover it from any k of them with Shamir secret sharing. Runs in your browser.',
+        keywords: [
+          'shamir',
+          'secret sharing',
+          'key splitting',
+          'threshold scheme',
+          'key shares',
+          'GF(256)',
+          'split secret',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'rsa-encryptor',
+    category: 'security',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: [
+      'crypto-encryptor',
+      'keypair-generator',
+      'digital-signature-tool',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'RSA暗号化・復号',
+        description:
+          'PEM形式の公開鍵でRSA-OAEP暗号化し、秘密鍵で復号。平文の上限バイト数も表示',
+        keywords: [
+          'RSA',
+          'RSA-OAEP',
+          '公開鍵暗号',
+          'PEM',
+          '公開鍵',
+          '秘密鍵',
+          '暗号化',
+          '復号',
+        ],
+      },
+      en: {
+        name: 'RSA Encrypt & Decrypt',
+        description:
+          'Encrypt with a PEM public key using RSA-OAEP and decrypt with the private key',
+        keywords: [
+          'RSA',
+          'RSA-OAEP',
+          'public key encryption',
+          'PEM',
+          'SPKI',
+          'PKCS8',
+          'encrypt',
+          'decrypt',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'digital-signature-tool',
+    category: 'security',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['keypair-generator', 'jwt-generator', 'hmac-generator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'デジタル署名の作成・検証',
+        description:
+          'RSA-PSS・ECDSAでテキストのデジタル署名を作成・検証。PEM鍵を貼り付けるだけで、署名はBase64で出力。',
+        keywords: [
+          'デジタル署名',
+          '署名検証',
+          'RSA-PSS',
+          'ECDSA',
+          'PEM',
+          '電子署名',
+          'Web Crypto',
+        ],
+      },
+      en: {
+        name: 'Digital Signature Tool',
+        description:
+          'Create and verify digital signatures with RSA-PSS or ECDSA using PEM keys. Output is Base64.',
+        keywords: [
+          'digital signature',
+          'verify signature',
+          'RSA-PSS',
+          'ECDSA',
+          'PEM',
+          'sign',
+          'Web Crypto',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'print-size-converter',
+    category: 'calc',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['screen-size-calculator', 'css-unit-converter'],
+    translations: {
+      ja: {
+        name: '印刷サイズ換算ツール',
+        description:
+          'DPIを指定してmm・pt・px・inchを換算。A判・B判の用紙サイズ一覧つき',
+        keywords: [
+          '印刷サイズ',
+          'mm px 変換',
+          'pt mm 変換',
+          'DPI',
+          '解像度',
+          'A4 ピクセル',
+          '用紙サイズ',
+          'B5',
+        ],
+      },
+      en: {
+        name: 'Print Size Converter',
+        description:
+          'Convert mm, pt, px and inches by DPI, with an A-series and B-series paper size chart',
+        keywords: [
+          'print size',
+          'mm to px',
+          'pt to mm',
+          'DPI',
+          'A4 pixels',
+          'paper size',
+          'resolution',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'coordinate-converter',
+    category: 'calc',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['unit-converter', 'base-converter', 'ratio-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '緯度経度 度分秒変換・2点間距離',
+        description:
+          '緯度経度を10進度と度分秒で相互変換し、2地点の距離・方位・中間点をHaversine公式で計算。地図は表示せず外部通信なし。',
+        keywords: [
+          '緯度経度',
+          '度分秒',
+          'DMS',
+          '10進度',
+          'ハーバーサイン',
+          'Haversine',
+          '2点間距離',
+          '方位角',
+        ],
+      },
+      en: {
+        name: 'Lat/Long Converter (DMS) & Distance Calculator',
+        description:
+          'Convert latitude and longitude between decimal degrees and DMS, and calculate distance, bearing and midpoint of two points with Haversine.',
+        keywords: [
+          'latitude longitude',
+          'DMS',
+          'decimal degrees',
+          'coordinates',
+          'Haversine',
+          'distance between two points',
+          'bearing',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'ohm-calculator',
+    category: 'calc',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['resistor-color-code', 'unit-converter'],
+    translations: {
+      ja: {
+        name: 'オームの法則・電力計算機',
+        description:
+          '電圧・電流・抵抗・電力のうち2つから残りを計算。直列・並列の合成抵抗とLEDの電流制限抵抗(E24)も求められます。',
+        keywords: [
+          'オームの法則',
+          '電力',
+          '合成抵抗',
+          '直列並列',
+          'LED 抵抗',
+          '電流制限抵抗',
+          'E24',
+          'ワット',
+        ],
+      },
+      en: {
+        name: "Ohm's Law Calculator",
+        description:
+          'Find voltage, current, resistance or power from any two. Also series/parallel resistance and LED resistor values.',
+        keywords: [
+          'ohms law',
+          'power calculator',
+          'series parallel resistance',
+          'led resistor',
+          'current limiting resistor',
+          'E24',
+          'watts',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'resistor-color-code',
+    category: 'calc',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['ohm-calculator'],
+    translations: {
+      ja: {
+        name: '抵抗カラーコード計算',
+        description:
+          '抵抗の色帯（4〜6本線）から抵抗値・許容差を読み取り、抵抗値から色帯も求められます。最も近いE系列の値も表示。',
+        keywords: [
+          '抵抗',
+          'カラーコード',
+          '色帯',
+          '抵抗値',
+          'E系列',
+          'E24',
+          'E96',
+          '許容差',
+        ],
+      },
+      en: {
+        name: 'Resistor Color Code Calculator',
+        description:
+          'Read 4-, 5- and 6-band resistor color codes or convert a resistance to bands, with tolerance and the nearest E series value.',
+        keywords: [
+          'resistor',
+          'color bands',
+          'color code',
+          'resistance',
+          'E series',
+          'E24',
+          'E96',
+          'tolerance',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'image-compress-to-size',
+    category: 'image',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['image-resizer', 'image-converter', 'image-dpi-changer'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像を指定サイズ以下に圧縮',
+        description:
+          '画像を200KB以下などの目標容量に自動圧縮。JPEG・WebPの品質を二分探索で自動調整します。',
+        keywords: [
+          '画像 圧縮',
+          '200KB以下',
+          '容量指定',
+          'ファイルサイズ 指定',
+          '画像 軽量化',
+          'JPEG',
+          'WebP',
+        ],
+      },
+      en: {
+        name: 'Compress Image to Target Size',
+        description:
+          'Compress an image to under a target file size such as 200KB. JPEG or WebP quality is found automatically.',
+        keywords: [
+          'compress image to size',
+          'reduce image size',
+          'under 200kb',
+          'target file size',
+          'image compressor',
+          'jpeg',
+          'webp',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'image-dpi-changer',
+    category: 'image',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['print-size-converter', 'image-resizer', 'image-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像DPI変更',
+        description:
+          'PNG・JPEGのDPIを再圧縮なしで書き換え、印刷サイズ(mm)とA判・B判への収まりを確認',
+        keywords: [
+          'DPI変更',
+          '解像度変更',
+          '画像 dpi',
+          'pHYs',
+          'JFIF',
+          '印刷サイズ',
+          '72dpi',
+          '300dpi',
+        ],
+      },
+      en: {
+        name: 'Image DPI Changer',
+        description:
+          'Change PNG/JPEG DPI without re-encoding and check the print size in mm and paper fit',
+        keywords: [
+          'change dpi',
+          'image resolution',
+          'png dpi',
+          'jpeg dpi',
+          'pHYs',
+          'JFIF',
+          'print size',
+          '300 dpi',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'image-diff',
+    category: 'image',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['image-compare-slider', 'image-resizer', 'image-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像差分比較（ピクセルdiff）',
+        keywords: [
+          '画像差分',
+          '画像比較',
+          'ピクセル比較',
+          'diff',
+          'ヒートマップ',
+          '差異率',
+          'スクリーンショット比較',
+        ],
+        description:
+          '2枚の画像をピクセル単位で比較し、差異率とヒートマップを表示。しきい値の指定、サイズ違いの扱い切り替え、差分画像のPNG保存に対応します。',
+      },
+      en: {
+        name: 'Image Diff (Pixel Comparison)',
+        keywords: [
+          'image diff',
+          'pixel diff',
+          'compare images',
+          'image difference',
+          'heatmap',
+          'screenshot diff',
+        ],
+        description:
+          'Compares two images pixel by pixel and shows the difference rate on a heatmap. Set a tolerance, handle mismatched sizes, and save the diff as PNG.',
+      },
+    },
+  },
+  {
+    slug: 'image-logo-watermark',
+    category: 'image',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['image-text-overlay', 'image-merger', 'image-diff'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '画像ロゴ・透かし合成',
+        keywords: [
+          'ロゴ合成',
+          '透かし',
+          'ウォーターマーク',
+          'ロゴ 重ねる',
+          '画像 合成',
+          'タイル',
+          'watermark',
+          'logo overlay',
+        ],
+        description:
+          'ベース画像にロゴ画像を重ねて透かしを入れます。9分割の位置・サイズ・不透明度・余白・回転・敷き詰めを指定し、PNG/JPEGで保存。ブラウザ内で処理され外部送信なし。',
+      },
+      en: {
+        name: 'Image Logo Watermark',
+        keywords: [
+          'logo watermark',
+          'watermark',
+          'logo overlay',
+          'add logo to image',
+          'tile watermark',
+          'combine images',
+        ],
+        description:
+          'Overlay a logo on an image with nine positions, size, opacity, margin, rotation, and tiling. Save as PNG or JPEG. Runs in your browser; no upload.',
+      },
+    },
+  },
+  {
+    slug: 'meme-generator',
+    category: 'image',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['image-text-overlay', 'image-diff'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ミーム画像ジェネレーター',
+        keywords: [
+          'ミーム',
+          'ミーム画像',
+          'キャプション',
+          '縁取り文字',
+          'Impact',
+          'meme',
+          '画像 文字入れ',
+        ],
+        description:
+          '画像の上下に縁取り付きの太字キャプションを入れてミーム画像を作成。幅に合わせた自動縮小・折り返し、PNG/JPEG保存に対応。',
+      },
+      en: {
+        name: 'Meme Generator',
+        keywords: [
+          'meme',
+          'meme maker',
+          'caption',
+          'top text bottom text',
+          'impact font',
+          'image text',
+        ],
+        description:
+          'Add bold outlined top and bottom captions to any image to make a meme. Text auto-shrinks and wraps to fit. PNG/JPEG, in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'sticker-outline-maker',
+    category: 'image',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: ['image-background-remover', 'image-cropper', 'image-resizer'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ステッカー風の縁取りメーカー',
+        keywords: [
+          '縁取り',
+          'ステッカー',
+          '透過PNG',
+          '輪郭',
+          'フチ',
+          '白フチ',
+          '影',
+        ],
+        description:
+          '切り抜いた透過PNGに、ステッカーのような縁取りを付けます。太さ・色、二重縁、影、内側の穴埋めに対応しています。',
+      },
+      en: {
+        name: 'Sticker Outline Maker',
+        keywords: [
+          'sticker outline',
+          'add border',
+          'transparent png',
+          'cutout stroke',
+          'die cut',
+          'white border',
+          'drop shadow',
+        ],
+        description:
+          'Add a sticker-style outline to a cutout PNG, with custom width and color, a double border, a shadow, and hole filling.',
+      },
+    },
+  },
+  {
+    slug: 'screen-color-picker',
+    category: 'image',
+    addedAt: '2026-10-23',
+    updatedAt: '2026-10-23',
+    related: [
+      'camera-color-picker',
+      'color-converter',
+      'image-palette-extractor',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'スクリーンカラーピッカー',
+        keywords: [
+          'スポイト',
+          'カラーピッカー',
+          'EyeDropper',
+          'スクリーンカラー',
+          'スクショ 色',
+          '色取得',
+          'HEX',
+        ],
+        description:
+          '画面上の好きな場所の色をスポイトで拾い、HEX・RGB・HSLを表示・コピー。非対応ブラウザでは画像を読み込んで取得できます。',
+      },
+      en: {
+        name: 'Screen Color Picker',
+        keywords: [
+          'eyedropper',
+          'color picker',
+          'EyeDropper API',
+          'screen color',
+          'pick color from screen',
+          'hex',
+        ],
+        description:
+          'Pick any color on your screen with the eyedropper and get HEX, RGB and HSL codes. Image mode for other browsers.',
       },
     },
   },

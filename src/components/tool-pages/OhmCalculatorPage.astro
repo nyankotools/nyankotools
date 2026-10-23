@@ -1,0 +1,368 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { ohmCalculatorContent } from '../../i18n/tools/ohm-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = ohmCalculatorContent[locale];
+
+const clientText = JSON.stringify({
+  ohmErrors: t.ohmErrors,
+  combineErrors: t.combineErrors,
+  ledErrors: t.ledErrors,
+  copied: t.copied,
+  copyFailed: t.copyFailed,
+});
+const inputClass =
+  'ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500';
+const cardClass =
+  'rounded-lg border border-gray-200 p-4 dark:border-gray-700 mb-4';
+const cellClass = 'rounded-lg bg-gray-50 p-3 dark:bg-gray-800';
+const dtClass = 'text-sm text-gray-600 dark:text-gray-400';
+const ddClass = 'break-all text-lg font-semibold';
+const errClass = 'mt-2 text-sm text-red-700 dark:text-red-400';
+const ohmFields = [
+  { id: 'v', label: t.voltageLabel },
+  { id: 'i', label: t.currentLabel },
+  { id: 'r', label: t.resistanceLabel },
+  { id: 'p', label: t.powerLabel },
+];
+const ledResults = [
+  { id: 'resistance', label: t.ledResistanceLabel },
+  { id: 'standard', label: t.ledStandardLabel },
+  { id: 'actual', label: t.ledActualCurrentLabel },
+  { id: 'power', label: t.ledPowerLabel },
+  { id: 'drop', label: t.ledDropLabel },
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="oh-root"
+    data-text={clientText}
+    data-combine-sample={t.combineSample}
+  >
+    <section class={cardClass}>
+      <h2 class="mb-1 text-lg font-bold">{t.ohmHeading}</h2>
+      <p class="mb-3 text-sm text-gray-700 dark:text-gray-300">{t.ohmHint}</p>
+      <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {ohmFields.map((f) => (
+          <div>
+            <label for={`oh-${f.id}`} class="ui-label">
+              {f.label}
+            </label>
+            <input
+              id={`oh-${f.id}`}
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              spellcheck="false"
+              class={inputClass}
+            />
+          </div>
+        ))}
+      </div>
+      <button id="oh-clear-button" type="button" class="ui-btn">
+        {t.clearButton}
+      </button>
+      <p id="oh-error" class={errClass} aria-live="polite"></p>
+      <div id="oh-results" class="mt-3 hidden">
+        <dl class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {ohmFields.map((f) => (
+            <div class={cellClass}>
+              <dt class={dtClass}>{f.label}</dt>
+              <dd class={ddClass} id={`oh-res-${f.id}`} />
+            </div>
+          ))}
+        </dl>
+        <button id="oh-copy-button" type="button" class="ui-btn mt-3">
+          {t.copyButton}
+        </button>
+        <span
+          id="oh-copy-status"
+          class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+          role="status"
+        ></span>
+      </div>
+    </section>
+
+    <section class={cardClass}>
+      <h2 class="mb-1 text-lg font-bold">{t.combineHeading}</h2>
+      <p class="mb-3 text-sm text-gray-700 dark:text-gray-300">
+        {t.combineHint}
+      </p>
+      <label for="sp-input" class="ui-label">
+        {t.combineLabel}
+      </label>
+      <textarea
+        id="sp-input"
+        rows="3"
+        spellcheck="false"
+        class={`${inputClass} h-auto py-2 font-mono`}
+      ></textarea>
+      <p id="sp-error" class={errClass} aria-live="polite"></p>
+      <div id="sp-results" class="mt-3 hidden">
+        <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div class={cellClass}>
+            <dt class={dtClass}>{t.seriesLabel}</dt>
+            <dd class={ddClass} id="sp-series"></dd>
+          </div>
+          <div class={cellClass}>
+            <dt class={dtClass}>{t.parallelLabel}</dt>
+            <dd class={ddClass} id="sp-parallel"></dd>
+          </div>
+        </dl>
+        <button id="sp-copy-button" type="button" class="ui-btn mt-3">
+          {t.copyButton}
+        </button>
+        <span
+          id="sp-copy-status"
+          class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+          role="status"
+        ></span>
+      </div>
+    </section>
+
+    <section class={cardClass}>
+      <h2 class="mb-1 text-lg font-bold">{t.ledHeading}</h2>
+      <p class="mb-3 text-sm text-gray-700 dark:text-gray-300">{t.ledHint}</p>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div>
+          <label for="led-supply" class="ui-label">
+            {t.supplyLabel}
+          </label>
+          <input
+            id="led-supply"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            class={inputClass}
+          />
+        </div>
+        <div>
+          <label for="led-forward" class="ui-label">
+            {t.forwardLabel}
+          </label>
+          <input
+            id="led-forward"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            class={inputClass}
+          />
+        </div>
+        <div>
+          <label for="led-current" class="ui-label">
+            {t.ledCurrentLabel}
+          </label>
+          <input
+            id="led-current"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            class={inputClass}
+          />
+        </div>
+      </div>
+      <p id="led-error" class={errClass} aria-live="polite"></p>
+      <div id="led-results" class="mt-3 hidden">
+        <dl class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {ledResults.map((r) => (
+            <div class={cellClass}>
+              <dt class={dtClass}>{r.label}</dt>
+              <dd class={ddClass} id={`led-res-${r.id}`} />
+            </div>
+          ))}
+        </dl>
+        <button id="led-copy-button" type="button" class="ui-btn mt-3">
+          {t.copyButton}
+        </button>
+        <span
+          id="led-copy-status"
+          class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+          role="status"
+        ></span>
+      </div>
+    </section>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    calculateLedResistor,
+    combineResistors,
+    formatSi,
+    solveOhm,
+  } from '../../lib/tools/ohm-calculator';
+  import { copyText } from '../../lib/clipboard';
+
+  const root = document.getElementById('oh-root')!;
+  const text = JSON.parse(root.dataset.text ?? '{}') as {
+    ohmErrors: Record<string, string>;
+    combineErrors: Record<string, string>;
+    ledErrors: Record<string, string>;
+    copied: string;
+    copyFailed: string;
+  };
+
+  const el = (id: string) => document.getElementById(id)!;
+  const field = (id: string) => el(id) as HTMLInputElement;
+  // formatSi は "5m" のように接頭辞を数値に付けるので、「数値 接頭辞+単位」の形（"5 mA"）に組み直す
+  const fmt = (value: number, unit: string) => {
+    const s = formatSi(value);
+    const m = /^(-?[\d.]+)([GMkmµnp]?)$/.exec(s);
+    return m ? `${m[1]} ${m[2]}${unit}` : `${s} ${unit}`;
+  };
+
+  function bindCopy(prefix: string, getText: () => string) {
+    const status = el(`${prefix}-copy-status`);
+    el(`${prefix}-copy-button`).addEventListener('click', async () => {
+      const value = getText();
+      if (value === '') return;
+      status.textContent = (await copyText(value))
+        ? text.copied
+        : text.copyFailed;
+    });
+    return () => {
+      status.textContent = '';
+    };
+  }
+
+  // ---- オームの法則 ----
+  const ohmKeys = [
+    { id: 'v', key: 'voltage', unit: 'V', sym: 'V' },
+    { id: 'i', key: 'current', unit: 'A', sym: 'I' },
+    { id: 'r', key: 'resistance', unit: 'Ω', sym: 'R' },
+    { id: 'p', key: 'power', unit: 'W', sym: 'P' },
+  ] as const;
+  let ohmCopy = '';
+  const resetOhmStatus = bindCopy('oh', () => ohmCopy);
+
+  function renderOhm() {
+    resetOhmStatus();
+    el('oh-error').textContent = '';
+    el('oh-results').classList.add('hidden');
+    const outcome = solveOhm({
+      voltage: field('oh-v').value,
+      current: field('oh-i').value,
+      resistance: field('oh-r').value,
+      power: field('oh-p').value,
+    });
+    if (!outcome.ok) {
+      if (outcome.error !== 'few') {
+        el('oh-error').textContent = text.ohmErrors[outcome.error] ?? '';
+      }
+      return;
+    }
+    const parts: string[] = [];
+    for (const k of ohmKeys) {
+      const value = fmt(outcome.values[k.key], k.unit);
+      el(`oh-res-${k.id}`).textContent = value;
+      parts.push(`${k.sym} = ${value}`);
+    }
+    ohmCopy = parts.join(', ');
+    el('oh-results').classList.remove('hidden');
+  }
+
+  ohmKeys.forEach((k) => {
+    field(`oh-${k.id}`).addEventListener('input', renderOhm);
+  });
+  el('oh-clear-button').addEventListener('click', () => {
+    ohmKeys.forEach((k) => {
+      field(`oh-${k.id}`).value = '';
+    });
+    renderOhm();
+    field('oh-v').focus();
+  });
+
+  // ---- 直列・並列 ----
+  let spCopy = '';
+  const resetSpStatus = bindCopy('sp', () => spCopy);
+
+  function renderCombine() {
+    resetSpStatus();
+    el('sp-error').textContent = '';
+    el('sp-results').classList.add('hidden');
+    const outcome = combineResistors(field('sp-input').value);
+    if (!outcome.ok) {
+      if (outcome.error === 'invalid' || outcome.error === 'negative') {
+        el('sp-error').textContent = text.combineErrors[outcome.error] ?? '';
+      }
+      return;
+    }
+    const series = fmt(outcome.series, 'Ω');
+    const parallel = fmt(outcome.parallel, 'Ω');
+    el('sp-series').textContent = series;
+    el('sp-parallel').textContent = parallel;
+    spCopy = `${series} / ${parallel}`;
+    el('sp-results').classList.remove('hidden');
+  }
+  field('sp-input').addEventListener('input', renderCombine);
+
+  // ---- LED ----
+  let ledCopy = '';
+  const resetLedStatus = bindCopy('led', () => ledCopy);
+
+  function renderLed() {
+    resetLedStatus();
+    el('led-error').textContent = '';
+    el('led-results').classList.add('hidden');
+    const outcome = calculateLedResistor({
+      supplyVoltage: field('led-supply').value,
+      forwardVoltage: field('led-forward').value,
+      current: field('led-current').value,
+    });
+    if (!outcome.ok) {
+      if (outcome.error !== 'few') {
+        el('led-error').textContent = text.ledErrors[outcome.error] ?? '';
+      }
+      return;
+    }
+    const r = outcome.result;
+    const values = {
+      resistance: fmt(r.resistance, 'Ω'),
+      standard: fmt(r.standard, 'Ω'),
+      actual: fmt(r.actualCurrent, 'A'),
+      power: fmt(r.actualPower, 'W'),
+      drop: fmt(r.drop, 'V'),
+    };
+    for (const [id, value] of Object.entries(values)) {
+      el(`led-res-${id}`).textContent = value;
+    }
+    ledCopy = `R = ${values.resistance}, E24 = ${values.standard}, I = ${values.actual}, P = ${values.power}`;
+    el('led-results').classList.remove('hidden');
+  }
+  ['led-supply', 'led-forward', 'led-current'].forEach((id) => {
+    field(id).addEventListener('input', renderLed);
+  });
+
+  // 初期値（sessionStorage の復元は DOMContentLoaded 後に input/change を発火する）
+  field('oh-v').value = '5';
+  field('oh-r').value = '220';
+  field('sp-input').value = root.dataset.combineSample ?? '';
+  field('led-supply').value = '5';
+  field('led-forward').value = '2';
+  field('led-current').value = '20m';
+  renderOhm();
+  renderCombine();
+  renderLed();
+
+  // 復元は change も発火するため、change でも再計算する
+  [
+    ...ohmKeys.map((k) => `oh-${k.id}`),
+    'sp-input',
+    'led-supply',
+    'led-forward',
+    'led-current',
+  ].forEach((id) => {
+    field(id).addEventListener('change', () => {
+      renderOhm();
+      renderCombine();
+      renderLed();
+    });
+  });
+</script>

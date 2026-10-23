@@ -1,0 +1,302 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { screenColorPickerContent } from '../../i18n/tools/screen-color-picker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = screenColorPickerContent[locale];
+
+const FORMATS = ['hex', 'rgb', 'hsl'] as const;
+---
+
+<ToolShell t={t}>
+  <div
+    id="scp-root"
+    data-copy={t.copy}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-pick-failed={t.pickFailed}
+    data-image-load-failed={t.imageLoadFailed}
+    data-history-item-label={t.historyItemLabel}
+  >
+    <p
+      id="scp-unsupported"
+      hidden
+      class="max-w-2xl rounded-lg bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950 dark:text-amber-100"
+    >
+      {t.unsupportedNotice}
+    </p>
+
+    <div id="scp-eyedropper-section" class="max-w-2xl">
+      <button id="scp-pick-button" type="button" class="ui-btn ui-btn-primary">
+        {t.pickButton}
+      </button>
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.pickHint}</p>
+    </div>
+
+    <p id="scp-error" hidden role="alert" class="ui-error mt-3 max-w-2xl"></p>
+
+    <section class="mt-6 max-w-2xl" aria-labelledby="scp-image-heading">
+      <h2 id="scp-image-heading" class="mb-2 text-lg font-bold">
+        {t.imageHeading}
+      </h2>
+      <label for="scp-file-input" class="ui-label">
+        {t.imageLabel}
+      </label>
+      <div id="scp-dropzone" class="ui-dropzone">
+        <input
+          id="scp-file-input"
+          type="file"
+          accept="image/*"
+          class="ui-file"
+          data-no-persist
+        />
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          {t.imageHint}
+        </p>
+      </div>
+      <div class="mt-3 overflow-auto">
+        <canvas
+          id="scp-canvas"
+          hidden
+          role="img"
+          aria-label={t.imageCanvasLabel}
+          class="h-auto max-w-full cursor-crosshair rounded-lg border border-gray-300 dark:border-gray-700"
+        ></canvas>
+      </div>
+    </section>
+
+    <section class="mt-6 max-w-2xl" aria-labelledby="scp-result-heading">
+      <h2 id="scp-result-heading" class="mb-2 text-lg font-bold">
+        {t.resultHeading}
+      </h2>
+      <div class="rounded-xl border border-gray-200 p-3 dark:border-gray-800">
+        <p
+          id="scp-result-empty"
+          class="text-sm text-gray-500 dark:text-gray-400"
+        >
+          {t.resultEmpty}
+        </p>
+        <div id="scp-result" hidden>
+          <div
+            id="scp-swatch"
+            role="img"
+            aria-label={t.swatchLabel}
+            class="mb-3 h-16 w-full rounded-lg border border-gray-300 dark:border-gray-700"
+          ></div>
+          <ul class="space-y-2">
+            {FORMATS.map((f) => (
+              <li class="flex items-center gap-2">
+                <span class="w-10 shrink-0 text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  {f}
+                </span>
+                <code
+                  id={`scp-value-${f}`}
+                  class="min-w-0 flex-1 text-sm break-all"
+                />
+                <button
+                  id={`scp-copy-${f}-button`}
+                  type="button"
+                  class="ui-btn"
+                  data-format={f}
+                >
+                  {t.copy}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <div id="scp-history-wrap" hidden class="mt-6 max-w-2xl">
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-lg font-bold">{t.historyHeading}</h2>
+        <button id="scp-clear-history" type="button" class="ui-btn">
+          {t.clearHistory}
+        </button>
+      </div>
+      <ul id="scp-history" class="flex flex-wrap gap-2"></ul>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    addColorToHistory,
+    describeHex,
+    getEyeDropper,
+    isEyeDropperAbort,
+    mapPointToPixel,
+    parseEyeDropperHex,
+    pixelColorAt,
+    readableTextColor,
+  } from '../../lib/tools/screen-color-picker';
+  import { hexToRgb, rgbToHex } from '../../lib/tools/color-converter';
+
+  const root = document.getElementById('scp-root')!;
+  const d = root.dataset;
+  const pickButton = document.getElementById(
+    'scp-pick-button',
+  ) as HTMLButtonElement;
+  const eyedropperSection = document.getElementById('scp-eyedropper-section')!;
+  const unsupported = document.getElementById('scp-unsupported')!;
+  const errorEl = document.getElementById('scp-error')!;
+  const dropzone = document.getElementById('scp-dropzone')!;
+  const fileInput = document.getElementById(
+    'scp-file-input',
+  ) as HTMLInputElement;
+  const canvas = document.getElementById('scp-canvas') as HTMLCanvasElement;
+  const resultEmpty = document.getElementById('scp-result-empty')!;
+  const resultEl = document.getElementById('scp-result')!;
+  const swatch = document.getElementById('scp-swatch')!;
+  const historyWrap = document.getElementById('scp-history-wrap')!;
+  const historyEl = document.getElementById('scp-history')!;
+  const clearHistoryButton = document.getElementById('scp-clear-history')!;
+
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  const EyeDropperCtor = getEyeDropper(window);
+  let history: string[] = [];
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function showResult(hex: string) {
+    const color = describeHex(hex);
+    if (!color) return;
+    const rgb = hexToRgb(color.hex)!;
+    swatch.style.backgroundColor = color.hex;
+    swatch.style.color = readableTextColor(rgb);
+    document.getElementById('scp-value-hex')!.textContent = color.hex;
+    document.getElementById('scp-value-rgb')!.textContent = color.rgb;
+    document.getElementById('scp-value-hsl')!.textContent = color.hsl;
+    resultEmpty.hidden = true;
+    resultEl.hidden = false;
+  }
+
+  function renderHistory() {
+    historyEl.replaceChildren();
+    historyWrap.hidden = history.length === 0;
+    for (const hex of history) {
+      const li = document.createElement('li');
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className =
+        'flex min-h-11 items-center gap-2 rounded-lg border border-gray-200 px-2 text-xs hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-900';
+      button.title = `${d.historyItemLabel ?? ''}: ${hex}`;
+      const chip = document.createElement('span');
+      chip.className =
+        'size-6 rounded border border-gray-300 dark:border-gray-700';
+      chip.style.backgroundColor = hex;
+      const label = document.createElement('span');
+      label.textContent = hex;
+      button.append(chip, label);
+      button.addEventListener('click', () => showResult(hex));
+      li.append(button);
+      historyEl.append(li);
+    }
+  }
+
+  function commit(hex: string) {
+    errorEl.hidden = true;
+    history = addColorToHistory(history, hex);
+    showResult(hex);
+    renderHistory();
+  }
+
+  if (!EyeDropperCtor) {
+    eyedropperSection.hidden = true;
+    unsupported.hidden = false;
+  }
+
+  pickButton.addEventListener('click', async () => {
+    if (!EyeDropperCtor) return;
+    pickButton.disabled = true;
+    try {
+      const result = await new EyeDropperCtor().open();
+      const hex = parseEyeDropperHex(result.sRGBHex);
+      if (hex) commit(hex);
+      else showError(d.pickFailed ?? '');
+    } catch (error) {
+      // Esc などでユーザーが中断した場合はエラー扱いにしない
+      if (!isEyeDropperAbort(error)) showError(d.pickFailed ?? '');
+    } finally {
+      pickButton.disabled = false;
+    }
+  });
+
+  async function loadImage(file: File) {
+    errorEl.hidden = true;
+    try {
+      const bitmap = await createImageBitmap(file);
+      if (bitmap.width * bitmap.height > 50_000_000) {
+        bitmap.close();
+        throw new Error('too large');
+      }
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bitmap, 0, 0);
+      bitmap.close();
+      canvas.hidden = false;
+    } catch {
+      canvas.hidden = true;
+      showError(d.imageLoadFailed ?? '');
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadImage(file);
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const point = mapPointToPixel(
+      e.clientX - rect.left,
+      e.clientY - rect.top,
+      rect.width,
+      rect.height,
+      canvas.width,
+      canvas.height,
+    );
+    if (!point) return;
+    const { data } = ctx.getImageData(point.x, point.y, 1, 1);
+    const rgb = pixelColorAt(data, 1, 0, 0);
+    if (!rgb) return;
+    commit(rgbToHex(rgb).toUpperCase());
+  });
+
+  clearHistoryButton.addEventListener('click', () => {
+    history = [];
+    renderHistory();
+  });
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>(
+    '[id^="scp-copy-"]',
+  )) {
+    button.addEventListener('click', async () => {
+      const value =
+        document.getElementById(`scp-value-${button.dataset.format}`)
+          ?.textContent ?? '';
+      if (!value) return;
+      const original = d.copy ?? '';
+      button.textContent = (await copyText(value))
+        ? (d.copied ?? '')
+        : (d.copyFailed ?? '');
+      setTimeout(() => {
+        button.textContent = original;
+      }, 1500);
+    });
+  }
+</script>

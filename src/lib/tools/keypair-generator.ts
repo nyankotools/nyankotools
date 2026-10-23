@@ -1,3 +1,7 @@
+import { toPem } from '../pem';
+
+export { toPem };
+
 export type KeyAlgorithm =
   | 'rsa-2048'
   | 'rsa-3072'
@@ -54,17 +58,6 @@ function paramsFor(algorithm: KeyAlgorithm): GenerateParams {
 function usagesFor(algorithm: KeyAlgorithm): KeyUsage[] {
   if (algorithm.startsWith('rsa')) return ['encrypt', 'decrypt'];
   return ['sign', 'verify'];
-}
-
-/** DER（ArrayBuffer）を64文字折り返しのPEMにする */
-export function toPem(der: ArrayBuffer, label: string): string {
-  const bytes = new Uint8Array(der);
-  let binary = '';
-  for (const b of bytes) binary += String.fromCharCode(b);
-  const body = btoa(binary)
-    .replace(/(.{64})/g, '$1\n')
-    .replace(/\n$/, '');
-  return `-----BEGIN ${label}-----\n${body}\n-----END ${label}-----\n`;
 }
 
 /**

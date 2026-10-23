@@ -1,0 +1,183 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { fetchToCurlContent } from '../../i18n/tools/fetch-to-curl';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = fetchToCurlContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="fetch-to-curl-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="fetch-to-curl-input"
+      class="ui-input h-56 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      data-sample={t.sampleCode}
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div
+    id="fetch-to-curl-controls"
+    class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-error-syntax={t.errorSyntax}
+    data-error-no-request={t.errorNoRequest}
+    data-error-no-url={t.errorNoUrl}
+    data-warn-unsupported-option={t.warnUnsupportedOptionTemplate}
+    data-warn-unresolved={t.warnUnresolvedTemplate}
+    data-warn-multiple-requests={t.warnMultipleRequestsTemplate}
+    data-warn-body-not-allowed={t.warnBodyNotAllowedTemplate}
+    data-warn-credentials={t.warnCredentials}
+    data-warn-body-object={t.warnBodyObject}
+    data-warn-relative-url={t.warnRelativeUrlTemplate}
+    data-warn-file-reference={t.warnFileReferenceTemplate}
+  >
+    <label class="ui-check">
+      <input id="fetch-to-curl-multiline" type="checkbox" checked />
+      <span>{t.multilineLabel}</span>
+    </label>
+    <button id="fetch-to-curl-copy-button" type="button" class="ui-btn">
+      {t.copyButton}
+    </button>
+    <span
+      id="fetch-to-curl-status"
+      class="text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+
+  <p
+    id="fetch-to-curl-error"
+    hidden
+    role="alert"
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+  <ul
+    id="fetch-to-curl-warnings"
+    hidden
+    class="mt-4 list-inside list-disc space-y-1 text-sm text-amber-700 dark:text-amber-400"
+  ></ul>
+
+  <div class="mt-4">
+    <label for="fetch-to-curl-output" class="ui-label">
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="fetch-to-curl-output"
+      readonly
+      class="ui-input h-60 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+      spellcheck="false"
+    ></textarea>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { onTextInput } from '../../lib/input-scheduler';
+  import {
+    convertToCurl,
+    type FetchToCurlWarning,
+  } from '../../lib/tools/fetch-to-curl';
+
+  const controls = document.getElementById('fetch-to-curl-controls')!;
+  const input = document.getElementById(
+    'fetch-to-curl-input',
+  ) as HTMLTextAreaElement;
+  const output = document.getElementById(
+    'fetch-to-curl-output',
+  ) as HTMLTextAreaElement;
+  const multiline = document.getElementById(
+    'fetch-to-curl-multiline',
+  ) as HTMLInputElement;
+  const copyButton = document.getElementById('fetch-to-curl-copy-button')!;
+  const statusEl = document.getElementById('fetch-to-curl-status')!;
+  const errorEl = document.getElementById('fetch-to-curl-error')!;
+  const warningsEl = document.getElementById('fetch-to-curl-warnings')!;
+
+  const d = controls.dataset;
+  const errorMessages = {
+    'syntax-error': d.errorSyntax ?? '',
+    'no-request': d.errorNoRequest ?? '',
+    'no-url': d.errorNoUrl ?? '',
+  };
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    let text = template ?? '';
+    for (const [key, value] of Object.entries(values)) {
+      text = text.split(`{${key}}`).join(value);
+    }
+    return text;
+  }
+
+  function describeWarning(warning: FetchToCurlWarning): string {
+    switch (warning.code) {
+      case 'unsupported-option':
+        return fill(d.warnUnsupportedOption, { option: warning.option });
+      case 'unresolved':
+        return fill(d.warnUnresolved, { expr: warning.expr });
+      case 'multiple-requests':
+        return fill(d.warnMultipleRequests, { count: String(warning.count) });
+      case 'body-not-allowed':
+        return fill(d.warnBodyNotAllowed, { method: warning.method });
+      case 'credentials':
+        return d.warnCredentials ?? '';
+      case 'body-object':
+        return d.warnBodyObject ?? '';
+      case 'relative-url':
+        return fill(d.warnRelativeUrl, { url: warning.url });
+      case 'file-reference':
+        return fill(d.warnFileReference, { name: warning.name });
+    }
+  }
+
+  function render() {
+    statusEl.textContent = '';
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+    warningsEl.hidden = true;
+    warningsEl.replaceChildren();
+
+    const result = convertToCurl(input.value, { multiline: multiline.checked });
+    if (!result.success) {
+      output.value = '';
+      if (result.reason !== 'empty') {
+        errorEl.textContent = errorMessages[result.reason];
+        errorEl.hidden = false;
+      }
+      return;
+    }
+
+    output.value = result.command;
+    if (result.warnings.length > 0) {
+      for (const warning of result.warnings) {
+        const li = document.createElement('li');
+        li.textContent = describeWarning(warning);
+        warningsEl.appendChild(li);
+      }
+      warningsEl.hidden = false;
+    }
+  }
+
+  onTextInput(input, render);
+  multiline.addEventListener('change', render);
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+  });
+
+  input.value = input.dataset.sample ?? '';
+  render();
+</script>

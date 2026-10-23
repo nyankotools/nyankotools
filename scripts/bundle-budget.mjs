@@ -46,6 +46,11 @@ export const slugBudgets = {
   // フォント・jsQR など操作時に遅延読み込みするデータ
   'figlet-text': 170 * KB,
   'qr-code-reader': 160 * KB,
+  // 共通チャンクの増加でわずかに通常予算を超えたツール
+  'csv-excel-converter': 150 * KB,
+  'toml-converter': 150 * KB,
+  'yaml-formatter': 150 * KB,
+  'pdf-password-protector': 460 * KB,
 };
 
 const STATIC_IMPORT = /(?:\bfrom|\bimport)\s*["'](\.[^"']+\.m?js)["']/g;

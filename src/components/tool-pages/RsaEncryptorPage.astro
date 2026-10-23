@@ -1,0 +1,309 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { rsaEncryptorContent } from '../../i18n/tools/rsa-encryptor';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = rsaEncryptorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div class="flex flex-wrap items-center gap-3">
+    <div
+      id="rsa-encryptor-mode"
+      class="ui-seg"
+      role="group"
+      aria-label={t.modeLabel}
+    >
+      <button
+        type="button"
+        data-mode="encrypt"
+        aria-pressed="true"
+        class="ui-seg-btn"
+      >
+        {t.modeEncrypt}
+      </button>
+      <button
+        type="button"
+        data-mode="decrypt"
+        aria-pressed="false"
+        class="ui-seg-btn"
+      >
+        {t.modeDecrypt}
+      </button>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <label
+      id="rsa-encryptor-key-label"
+      for="rsa-encryptor-key"
+      class="ui-label"
+      data-label-encrypt={t.keyLabelEncrypt}
+      data-label-decrypt={t.keyLabelDecrypt}
+    >
+      {t.keyLabelEncrypt}
+    </label>
+    <textarea
+      id="rsa-encryptor-key"
+      class="ui-input h-40 w-full p-4 font-mono text-xs dark:bg-gray-900 dark:placeholder-gray-500"
+      data-placeholder-encrypt={t.keyPlaceholderEncrypt}
+      data-placeholder-decrypt={t.keyPlaceholderDecrypt}
+      placeholder={t.keyPlaceholderEncrypt}
+      spellcheck="false"
+      autocomplete="off"
+    ></textarea>
+    <p
+      id="rsa-encryptor-key-info"
+      hidden
+      data-template={t.keyInfo}
+      class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+  </div>
+
+  <div class="mt-4">
+    <label
+      id="rsa-encryptor-input-label"
+      for="rsa-encryptor-input"
+      class="ui-label"
+      data-label-encrypt={t.inputLabelEncrypt}
+      data-label-decrypt={t.inputLabelDecrypt}
+    >
+      {t.inputLabelEncrypt}
+    </label>
+    <textarea
+      id="rsa-encryptor-input"
+      autocomplete="off"
+      class="ui-input h-32 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      data-placeholder-encrypt={t.inputPlaceholderEncrypt}
+      data-placeholder-decrypt={t.inputPlaceholderDecrypt}
+      placeholder={t.inputPlaceholderEncrypt}
+      spellcheck="false"
+    ></textarea>
+    <p
+      id="rsa-encryptor-length"
+      hidden
+      data-template={t.lengthInfo}
+      class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="rsa-encryptor-run-button"
+      type="button"
+      data-label-encrypt={t.runEncrypt}
+      data-label-decrypt={t.runDecrypt}
+      data-running={t.running}
+      class="ui-btn ui-btn-primary"
+    >
+      {t.runEncrypt}
+    </button>
+  </div>
+
+  <p
+    id="rsa-encryptor-error"
+    hidden
+    data-empty-key={t.emptyKey}
+    data-empty-input={t.emptyInput}
+    data-invalid-pem={t.invalidPem}
+    data-need-public-key={t.needPublicKey}
+    data-need-private-key={t.needPrivateKey}
+    data-unsupported-key={t.unsupportedKey}
+    data-too-long={t.tooLong}
+    data-invalid-format={t.invalidFormat}
+    data-decrypt-failed={t.decryptFailed}
+    class="ui-error mt-4 max-w-2xl"
+    role="alert"
+  ></p>
+
+  <div class="mt-4">
+    <label for="rsa-encryptor-output" class="ui-label">
+      {t.outputLabel}
+    </label>
+    <textarea
+      id="rsa-encryptor-output"
+      readonly
+      class="ui-input h-40 w-full bg-gray-50 p-4 font-mono dark:bg-gray-900"
+    ></textarea>
+    <div class="mt-2 flex flex-wrap items-center gap-3">
+      <button
+        id="rsa-encryptor-copy-button"
+        type="button"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="ui-btn"
+      >
+        {t.copy}
+      </button>
+      <span
+        id="rsa-encryptor-status"
+        class="text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    decryptWithPrivateKey,
+    encryptWithPublicKey,
+    loadKey,
+  } from '../../lib/tools/rsa-encryptor';
+
+  type Mode = 'encrypt' | 'decrypt';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(`rsa-encryptor-${id}`) as T;
+  const keyInput = $<HTMLTextAreaElement>('key');
+  const keyLabel = $<HTMLElement>('key-label');
+  const keyInfo = $<HTMLElement>('key-info');
+  const input = $<HTMLTextAreaElement>('input');
+  const inputLabel = $<HTMLElement>('input-label');
+  const lengthEl = $<HTMLElement>('length');
+  const runButton = $<HTMLButtonElement>('run-button');
+  const output = $<HTMLTextAreaElement>('output');
+  const errorEl = $<HTMLElement>('error');
+  const statusEl = $<HTMLElement>('status');
+  const copyButton = $<HTMLButtonElement>('copy-button');
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#rsa-encryptor-mode [data-mode]',
+  );
+
+  let mode: Mode = 'encrypt';
+  let infoSeq = 0;
+
+  const fill = (template: string | undefined, values: Record<string, number>) =>
+    (template ?? '').replace(/\{(\w+)\}/g, (_, k: string) =>
+      String(values[k] ?? ''),
+    );
+
+  function showError(key: string, values: Record<string, number> = {}) {
+    output.value = '';
+    errorEl.textContent = fill(errorEl.dataset[key], values);
+    errorEl.hidden = false;
+  }
+
+  function resetResult() {
+    output.value = '';
+    errorEl.hidden = true;
+    statusEl.textContent = '';
+  }
+
+  /** 鍵の読み込み結果から、ユーザー向けエラーのキーを返す */
+  function keyErrorKey(error: string): string {
+    switch (error) {
+      case 'empty-key':
+        return 'emptyKey';
+      case 'invalid-pem':
+        return 'invalidPem';
+      case 'wrong-kind':
+        return mode === 'encrypt' ? 'needPublicKey' : 'needPrivateKey';
+      default:
+        return 'unsupportedKey';
+    }
+  }
+
+  /** 鍵の情報（ビット数・平文の上限）と入力バイト数を更新する */
+  async function updateInfo() {
+    const seq = ++infoSeq;
+    keyInfo.hidden = true;
+    lengthEl.hidden = true;
+    if (mode !== 'encrypt' || keyInput.value.trim() === '') return;
+    const loaded = await loadKey(keyInput.value, 'public');
+    if (seq !== infoSeq || !loaded.success) return;
+    keyInfo.textContent = fill(keyInfo.dataset.template, {
+      bits: loaded.modulusBits,
+      max: loaded.maxBytes,
+    });
+    keyInfo.hidden = false;
+    const length = new TextEncoder().encode(input.value).length;
+    lengthEl.textContent = fill(lengthEl.dataset.template, {
+      length,
+      max: loaded.maxBytes,
+    });
+    lengthEl.classList.toggle('text-red-700', length > loaded.maxBytes);
+    lengthEl.classList.toggle('dark:text-red-400', length > loaded.maxBytes);
+    lengthEl.hidden = false;
+  }
+
+  function applyMode(next: Mode) {
+    mode = next;
+    modeButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.mode === next)),
+    );
+    const pick = (el: HTMLElement, name: string) =>
+      el.dataset[name + (next === 'encrypt' ? 'Encrypt' : 'Decrypt')] ?? '';
+    keyLabel.textContent = pick(keyLabel, 'label');
+    inputLabel.textContent = pick(inputLabel, 'label');
+    keyInput.placeholder = pick(keyInput, 'placeholder');
+    input.placeholder = pick(input, 'placeholder');
+    runButton.textContent = pick(runButton, 'label');
+    resetResult();
+    void updateInfo();
+  }
+
+  modeButtons.forEach((button) => {
+    button.addEventListener('click', () =>
+      applyMode(button.dataset.mode as Mode),
+    );
+  });
+
+  keyInput.addEventListener('input', () => void updateInfo());
+  input.addEventListener('input', () => void updateInfo());
+
+  runButton.addEventListener('click', async () => {
+    resetResult();
+    if (keyInput.value.trim() === '') return showError('emptyKey');
+    if (input.value.trim() === '') return showError('emptyInput');
+
+    const label = runButton.textContent;
+    runButton.disabled = true;
+    modeButtons.forEach((b) => (b.disabled = true));
+    runButton.textContent = runButton.dataset.running ?? '';
+    try {
+      if (mode === 'encrypt') {
+        const result = await encryptWithPublicKey(input.value, keyInput.value);
+        if (result.success) {
+          output.value = result.ciphertext;
+        } else if (result.error === 'too-long') {
+          showError('tooLong', {
+            length: result.length ?? 0,
+            max: result.maxBytes ?? 0,
+          });
+        } else {
+          showError(keyErrorKey(result.error));
+        }
+      } else {
+        const result = await decryptWithPrivateKey(input.value, keyInput.value);
+        if (result.success) {
+          output.value = result.text;
+        } else if (result.error === 'invalid-format') {
+          showError('invalidFormat');
+        } else if (result.error === 'decrypt-failed') {
+          showError('decryptFailed');
+        } else {
+          showError(keyErrorKey(result.error));
+        }
+      }
+    } finally {
+      runButton.disabled = false;
+      modeButtons.forEach((b) => (b.disabled = false));
+      runButton.textContent = label;
+    }
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!output.value) return;
+    statusEl.textContent = (await copyText(output.value))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+</script>

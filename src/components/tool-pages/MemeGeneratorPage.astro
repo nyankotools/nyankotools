@@ -1,0 +1,433 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { memeGeneratorContent } from '../../i18n/tools/meme-generator';
+import { MAX_DIMENSION } from '../../lib/tools/image-cropper';
+import { MAX_FONT_SIZE, MAX_STROKE } from '../../lib/tools/meme-generator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = memeGeneratorContent[locale];
+
+const numberInput = 'ui-input h-11 w-full px-3 dark:bg-gray-900';
+const colorInput =
+  'h-11 w-16 cursor-pointer rounded border border-gray-300 dark:border-gray-700';
+---
+
+<ToolShell t={t}>
+  <div
+    id="meme-root"
+    data-output-info={t.outputInfo}
+    data-downloaded={t.downloaded}
+    data-default-top={t.defaultTopText}
+    data-default-bottom={t.defaultBottomText}
+    data-error-not-image={t.errorNotImage}
+    data-error-too-large={t.errorTooLarge.replace(
+      '{max}',
+      String(MAX_DIMENSION),
+    )}
+    data-error-load-failed={t.errorLoadFailed}
+    data-error-export-failed={t.errorExportFailed}
+    data-overflow-warning={t.overflowWarning}
+  >
+    <label for="meme-file" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="meme-dropzone" class="ui-dropzone">
+      <input id="meme-file" type="file" accept="image/*" class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="meme-error"
+      role="alert"
+      hidden
+      class="mt-3 text-sm text-red-600 dark:text-red-400"
+    ></p>
+
+    <div id="meme-workspace" hidden class="mt-6 grid gap-6 md:grid-cols-2">
+      <div>
+        <label for="meme-top" class="ui-label">
+          {t.topTextLabel}
+        </label>
+        <textarea
+          id="meme-top"
+          rows="2"
+          placeholder={t.topTextPlaceholder}
+          data-no-count
+          class="ui-input w-full px-3 py-2 dark:bg-gray-900"
+        ></textarea>
+        <label for="meme-bottom" class="ui-label mt-4">
+          {t.bottomTextLabel}
+        </label>
+        <textarea
+          id="meme-bottom"
+          rows="2"
+          placeholder={t.bottomTextPlaceholder}
+          data-no-count
+          class="ui-input w-full px-3 py-2 dark:bg-gray-900"
+        ></textarea>
+
+        <div class="mt-4 grid grid-cols-2 gap-3">
+          <div>
+            <label for="meme-size" class="ui-label">
+              {t.sizeLabel}
+            </label>
+            <input
+              id="meme-size"
+              type="number"
+              min="1"
+              max={MAX_FONT_SIZE}
+              step="1"
+              value="48"
+              data-no-persist
+              class={numberInput}
+            />
+          </div>
+          <div>
+            <label for="meme-stroke" class="ui-label">
+              {t.strokeWidthLabel}
+            </label>
+            <input
+              id="meme-stroke"
+              type="number"
+              min="0"
+              max={MAX_STROKE}
+              step="1"
+              value="6"
+              data-no-persist
+              class={numberInput}
+            />
+          </div>
+          <div>
+            <label for="meme-color" class="ui-label">
+              {t.colorLabel}
+            </label>
+            <input
+              id="meme-color"
+              type="color"
+              value="#ffffff"
+              class={colorInput}
+            />
+          </div>
+          <div>
+            <label for="meme-stroke-color" class="ui-label">
+              {t.strokeColorLabel}
+            </label>
+            <input
+              id="meme-stroke-color"
+              type="color"
+              value="#000000"
+              class={colorInput}
+            />
+          </div>
+        </div>
+        <label class="mt-3 flex items-center gap-2 text-sm">
+          <input id="meme-auto" type="checkbox" checked class="ui-check" />
+          {t.autoFitLabel}
+        </label>
+        <label class="mt-2 flex items-center gap-2 text-sm">
+          <input id="meme-upper" type="checkbox" checked class="ui-check" />
+          {t.uppercaseLabel}
+        </label>
+
+        <div class="mt-4 flex flex-wrap items-end gap-4">
+          <div>
+            <span class="ui-label">{t.formatLabel}</span>
+            <div
+              id="meme-format"
+              class="ui-seg"
+              role="group"
+              aria-label={t.formatLabel}
+            >
+              <button
+                type="button"
+                data-format="png"
+                aria-pressed="true"
+                class="ui-seg-btn"
+              >
+                PNG
+              </button>
+              <button
+                type="button"
+                data-format="jpeg"
+                aria-pressed="false"
+                class="ui-seg-btn"
+              >
+                JPEG
+              </button>
+            </div>
+          </div>
+          <div id="meme-quality-wrap" hidden class="min-w-40 flex-1">
+            <label for="meme-quality" class="ui-label">
+              {t.qualityLabel}
+              <span id="meme-quality-value">90</span>
+            </label>
+            <input
+              id="meme-quality"
+              type="range"
+              min="10"
+              max="100"
+              value="90"
+              class="h-11 w-full"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center gap-3">
+        <p class="ui-label self-start">{t.previewLabel}</p>
+        <div class="w-fit max-w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700">
+          <canvas
+            id="meme-canvas"
+            role="img"
+            aria-label={t.previewLabel}
+            class="block h-auto max-h-[70vh] max-w-full"
+          ></canvas>
+        </div>
+        <p
+          id="meme-size-info"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></p>
+        <p
+          id="meme-warning"
+          hidden
+          class="text-sm text-amber-700 dark:text-amber-400"
+          role="status"
+        ></p>
+        <button
+          id="meme-download"
+          type="button"
+          disabled
+          class="ui-btn-primary"
+        >
+          {t.downloadButton}
+        </button>
+        <span
+          id="meme-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    isWithinSourceLimit,
+    outputFormat,
+    type OutputFormat,
+  } from '../../lib/tools/image-cropper';
+  import {
+    blockTop,
+    buildMemeFont,
+    clampNumber,
+    defaultFontSize,
+    defaultStroke,
+    layoutCaption,
+    MAX_FONT_SIZE,
+    MAX_STROKE,
+    memeFileName,
+    normalizeCaption,
+    type CaptionPlacement,
+  } from '../../lib/tools/meme-generator';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('meme-root');
+  const fileInput = $<HTMLInputElement>('meme-file');
+  const errorEl = $('meme-error');
+  const workspace = $('meme-workspace');
+  const canvas = $<HTMLCanvasElement>('meme-canvas');
+  const infoEl = $('meme-size-info');
+  const warningEl = $('meme-warning');
+  const statusEl = $('meme-status');
+  const downloadButton = $<HTMLButtonElement>('meme-download');
+  const topInput = $<HTMLTextAreaElement>('meme-top');
+  const bottomInput = $<HTMLTextAreaElement>('meme-bottom');
+  const sizeInput = $<HTMLInputElement>('meme-size');
+  const strokeInput = $<HTMLInputElement>('meme-stroke');
+  const colorInput = $<HTMLInputElement>('meme-color');
+  const strokeColorInput = $<HTMLInputElement>('meme-stroke-color');
+  const autoInput = $<HTMLInputElement>('meme-auto');
+  const upperInput = $<HTMLInputElement>('meme-upper');
+  const qualityWrap = $('meme-quality-wrap');
+  const qualityInput = $<HTMLInputElement>('meme-quality');
+  const qualityValue = $('meme-quality-value');
+  const formatButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#meme-format [data-format]'),
+  );
+
+  const d = root.dataset;
+  let bitmap: ImageBitmap | null = null;
+  let sourceName: string | null = null;
+  let format: OutputFormat = 'png';
+  // 画像の読み込みは非同期なので、古い読み込みが新しい選択を上書きしないよう世代で管理する
+  let generation = 0;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  function render() {
+    if (!bitmap) return;
+    statusEl.textContent = '';
+    const width = bitmap.width;
+    const height = bitmap.height;
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return showError(d.errorExportFailed ?? '');
+    if (format === 'jpeg') {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+    }
+    ctx.drawImage(bitmap, 0, 0);
+
+    const baseSize = clampNumber(
+      Number(sizeInput.value),
+      1,
+      MAX_FONT_SIZE,
+      defaultFontSize(width, height),
+    );
+    const stroke = clampNumber(Number(strokeInput.value), 0, MAX_STROKE, 0);
+    const margin = Math.max(4, Math.round(width * 0.02));
+    const maxWidth = Math.max(1, width - margin * 2 - stroke);
+    const maxHeight = Math.max(1, height * 0.3 - stroke);
+    const measure = (text: string, size: number) => {
+      ctx.font = buildMemeFont(size);
+      return ctx.measureText(text).width;
+    };
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = stroke;
+    ctx.fillStyle = colorInput.value;
+    ctx.strokeStyle = strokeColorInput.value;
+
+    let overflow = false;
+    const draw = (text: string, placement: CaptionPlacement) => {
+      const lines = normalizeCaption(text, upperInput.checked);
+      const layout = layoutCaption(
+        lines,
+        { maxWidth, maxHeight, baseSize, autoShrink: autoInput.checked },
+        measure,
+      );
+      if (layout.lines.length === 0) return;
+      if (layout.overflow) overflow = true;
+      ctx.font = buildMemeFont(layout.size);
+      const top = blockTop(placement, height, layout.height, margin);
+      layout.lines.forEach((line, i) => {
+        const y = top + (i + 0.5) * layout.lineHeight;
+        if (stroke > 0) ctx.strokeText(line, width / 2, y);
+        ctx.fillText(line, width / 2, y);
+      });
+    };
+    draw(topInput.value, 'top');
+    draw(bottomInput.value, 'bottom');
+
+    warningEl.textContent = overflow ? (d.overflowWarning ?? '') : '';
+    warningEl.hidden = !overflow;
+    infoEl.textContent = (d.outputInfo ?? '')
+      .replace('{width}', String(width))
+      .replace('{height}', String(height));
+  }
+
+  async function loadFile(file: File) {
+    const current = ++generation;
+    showError('');
+    statusEl.textContent = '';
+    if (!file.type.startsWith('image/'))
+      return showError(d.errorNotImage ?? '');
+    let loaded: ImageBitmap;
+    try {
+      loaded = await createImageBitmap(file);
+    } catch {
+      if (current === generation) showError(d.errorLoadFailed ?? '');
+      return;
+    }
+    if (current !== generation) return loaded.close();
+    if (!isWithinSourceLimit({ width: loaded.width, height: loaded.height })) {
+      loaded.close();
+      return showError(d.errorTooLarge ?? '');
+    }
+    bitmap?.close();
+    bitmap = loaded;
+    sourceName = file.name;
+    // 文字サイズ・縁取りは画像の大きさに合わせた初期値にする
+    const size = defaultFontSize(loaded.width, loaded.height);
+    sizeInput.value = String(size);
+    strokeInput.value = String(defaultStroke(size));
+    if (topInput.value === '' && bottomInput.value === '') {
+      topInput.value = d.defaultTop ?? '';
+      bottomInput.value = d.defaultBottom ?? '';
+    }
+    workspace.hidden = false;
+    downloadButton.disabled = false;
+    render();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop($('meme-dropzone'), fileInput);
+
+  for (const el of [
+    topInput,
+    bottomInput,
+    sizeInput,
+    strokeInput,
+    colorInput,
+    strokeColorInput,
+    autoInput,
+    upperInput,
+  ]) {
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  }
+
+  function applyFormat(next: OutputFormat) {
+    format = next;
+    for (const b of formatButtons) {
+      b.setAttribute('aria-pressed', String(b.dataset.format === next));
+    }
+    qualityWrap.hidden = next === 'png';
+    render();
+  }
+  for (const b of formatButtons) {
+    b.addEventListener('click', () =>
+      applyFormat(b.dataset.format as OutputFormat),
+    );
+  }
+  qualityInput.addEventListener('input', () => {
+    qualityValue.textContent = qualityInput.value;
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (!bitmap) return;
+    const { mime } = outputFormat(format);
+    canvas.toBlob(
+      (blob) => {
+        // 非対応の形式はブラウザがPNGで返すため、種類が違えば失敗として扱う
+        if (!blob || blob.type !== mime) {
+          return showError(d.errorExportFailed ?? '');
+        }
+        showError('');
+        downloadBlob(blob, memeFileName(sourceName, format));
+        statusEl.textContent = d.downloaded ?? '';
+      },
+      mime,
+      format === 'png' ? undefined : Number(qualityInput.value) / 100,
+    );
+  });
+</script>

@@ -1,0 +1,195 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { dockerComposeConverterContent } from '../../i18n/tools/docker-compose-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = dockerComposeConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="dc-root"
+    data-warnings={JSON.stringify(t.warnings)}
+    data-errors={JSON.stringify(t.errors)}
+    data-summary={t.summary}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-sample-text={t.sampleText}
+  >
+    <label for="dc-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <textarea
+      id="dc-input"
+      class="ui-input h-40 w-full p-4 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      placeholder={t.inputPlaceholder}
+      spellcheck="false"
+      autocomplete="off"
+      data-no-persist
+    ></textarea>
+
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button id="dc-sample-button" type="button" class="ui-btn">
+        {t.sampleButton}
+      </button>
+      <button id="dc-clear-button" type="button" class="ui-btn">
+        {t.clearButton}
+      </button>
+    </div>
+
+    <label class="ui-check mt-3">
+      <input id="dc-container-name" type="checkbox" checked data-no-persist />
+      <span>{t.containerNameLabel}</span>
+    </label>
+
+    <p id="dc-error" class="ui-error mt-4 hidden" role="alert"></p>
+
+    <div id="dc-results" class="mt-5 hidden">
+      <p
+        id="dc-summary"
+        class="mb-2 text-sm font-medium"
+        aria-live="polite"
+      ></p>
+      <label for="dc-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="dc-output"
+        class="ui-input h-64 w-full p-4 font-mono dark:bg-gray-900"
+        readonly
+        spellcheck="false"
+        data-no-count
+        data-no-persist
+      ></textarea>
+      <div class="mt-3 flex flex-wrap items-center gap-3">
+        <button id="dc-copy-button" type="button" class="ui-btn ui-btn-primary">
+          {t.copyButton}
+        </button>
+        <button id="dc-download-button" type="button" class="ui-btn">
+          {t.downloadButton}
+        </button>
+        <span
+          id="dc-copy-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+
+      <div id="dc-warnings" class="mt-5 hidden">
+        <h2 class="mb-1 text-base font-bold">{t.warningsHeading}</h2>
+        <ul
+          id="dc-warning-list"
+          class="list-inside list-disc space-y-1 text-sm text-red-700 dark:text-red-300"
+        ></ul>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { onTextInput } from '../../lib/input-scheduler';
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    convertDockerRun,
+    type ConvertErrorCode,
+    type WarningCode,
+  } from '../../lib/tools/docker-compose-converter';
+
+  const root = document.getElementById('dc-root')!;
+  const input = document.getElementById('dc-input') as HTMLTextAreaElement;
+  const containerNameEl = document.getElementById(
+    'dc-container-name',
+  ) as HTMLInputElement;
+  const output = document.getElementById('dc-output') as HTMLTextAreaElement;
+  const resultsEl = document.getElementById('dc-results')!;
+  const errorEl = document.getElementById('dc-error')!;
+  const summaryEl = document.getElementById('dc-summary')!;
+  const warningsEl = document.getElementById('dc-warnings')!;
+  const warningList = document.getElementById('dc-warning-list')!;
+  const copyStatus = document.getElementById('dc-copy-status')!;
+
+  const warningText = JSON.parse(root.dataset.warnings ?? '{}') as Record<
+    WarningCode,
+    string
+  >;
+  const errorText = JSON.parse(root.dataset.errors ?? '{}') as Record<
+    ConvertErrorCode,
+    string
+  >;
+
+  function render() {
+    copyStatus.textContent = '';
+    if (input.value.trim() === '') {
+      resultsEl.classList.add('hidden');
+      errorEl.classList.add('hidden');
+      output.value = '';
+      return;
+    }
+    const result = convertDockerRun(input.value, {
+      containerName: containerNameEl.checked,
+    });
+    if (result.error) {
+      resultsEl.classList.add('hidden');
+      output.value = '';
+      errorEl.textContent = errorText[result.error];
+      errorEl.classList.remove('hidden');
+      return;
+    }
+    errorEl.classList.add('hidden');
+    resultsEl.classList.remove('hidden');
+    output.value = result.yaml;
+    summaryEl.textContent = (root.dataset.summary ?? '').replace(
+      '{name}',
+      result.serviceName,
+    );
+    warningList.replaceChildren();
+    for (const w of result.warnings) {
+      const li = document.createElement('li');
+      li.textContent = warningText[w.code].replace('{detail}', w.detail);
+      warningList.append(li);
+    }
+    warningsEl.classList.toggle('hidden', result.warnings.length === 0);
+  }
+
+  onTextInput(input, render);
+  containerNameEl.addEventListener('change', render);
+
+  document.getElementById('dc-sample-button')!.addEventListener('click', () => {
+    input.value = root.dataset.sampleText ?? '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    render();
+  });
+  document.getElementById('dc-clear-button')!.addEventListener('click', () => {
+    input.value = '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    render();
+    input.focus();
+  });
+
+  document
+    .getElementById('dc-copy-button')!
+    .addEventListener('click', async () => {
+      if (output.value === '') return;
+      const ok = await copyText(output.value);
+      copyStatus.textContent = ok
+        ? (root.dataset.copied ?? '')
+        : (root.dataset.copyFailed ?? '');
+    });
+  document
+    .getElementById('dc-download-button')!
+    .addEventListener('click', () => {
+      if (output.value === '') return;
+      downloadBlob(
+        new Blob([output.value], { type: 'text/yaml;charset=utf-8' }),
+        'docker-compose.yml',
+      );
+    });
+
+  render();
+</script>

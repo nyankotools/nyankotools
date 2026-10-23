@@ -1,0 +1,390 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { dailyProrationContent } from '../../i18n/tools/daily-proration-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = dailyProrationContent[locale];
+
+const clientText = JSON.stringify({
+  errors: t.errors,
+  presets: Object.fromEntries(t.presets.map((p) => [p.value, p.resultLabel])),
+  formulaThirty: t.formulaThirty,
+  formulaYear365: t.formulaYear365,
+  segmentTemplate: t.segmentTemplate,
+  daysSuffix: t.daysSuffix,
+  copied: t.copied,
+  copyFailed: t.copyFailed,
+});
+const inputClass =
+  'ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500';
+---
+
+<ToolShell t={t}>
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    id="dp-root"
+    data-number-locale={t.numberLocale}
+    data-text={clientText}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div>
+        <label for="dp-preset" class="ui-label">
+          {t.presetLabel}
+        </label>
+        <select id="dp-preset" class={inputClass}>
+          {t.presets.map((p) => (
+            <option value={p.value}>{p.label}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="dp-amount" class="ui-label">
+          {t.amountLabel}
+        </label>
+        <input
+          id="dp-amount"
+          type="text"
+          inputmode="numeric"
+          class={inputClass}
+        />
+      </div>
+    </div>
+
+    <fieldset class="mb-3">
+      <legend class="ui-label">{t.modeLabel}</legend>
+      <div class="flex flex-wrap gap-x-5">
+        <label class="ui-check">
+          <input
+            id="dp-mode-days"
+            type="radio"
+            name="dp-mode"
+            value="days"
+            checked
+          />
+          {t.modeDaysLabel}
+        </label>
+        <label class="ui-check">
+          <input id="dp-mode-range" type="radio" name="dp-mode" value="range" />
+          {t.modeRangeLabel}
+        </label>
+      </div>
+    </fieldset>
+
+    <div id="dp-days-group" class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div>
+        <label for="dp-month" class="ui-label">
+          {t.monthLabel}
+        </label>
+        <input id="dp-month" type="month" class={inputClass} />
+      </div>
+      <div>
+        <label for="dp-days" class="ui-label">
+          {t.daysLabel}
+        </label>
+        <input
+          id="dp-days"
+          type="number"
+          inputmode="numeric"
+          min="0"
+          max="366"
+          step="1"
+          class={inputClass}
+        />
+      </div>
+    </div>
+
+    <div
+      id="dp-range-group"
+      class="mb-3 hidden grid-cols-1 gap-3 sm:grid-cols-2"
+    >
+      <div>
+        <label for="dp-start" class="ui-label">
+          {t.startLabel}
+        </label>
+        <input id="dp-start" type="date" class={inputClass} />
+      </div>
+      <div>
+        <label for="dp-end" class="ui-label">
+          {t.endLabel}
+        </label>
+        <input id="dp-end" type="date" class={inputClass} />
+      </div>
+    </div>
+
+    <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div>
+        <label for="dp-basis" class="ui-label">
+          {t.basisLabel}
+        </label>
+        <select id="dp-basis" class={inputClass}>
+          {t.basisOptions.map((o) => (
+            <option value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="dp-rounding" class="ui-label">
+          {t.roundingLabel}
+        </label>
+        <select id="dp-rounding" class={inputClass}>
+          {t.roundingOptions.map((o) => (
+            <option value={o.value}>{o.label}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+
+    <p
+      id="dp-error"
+      class="mt-2 text-sm text-red-700 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="dp-results" class="mt-4 hidden" aria-live="polite">
+      <div class="rounded-lg bg-blue-50 p-3 dark:bg-blue-950">
+        <p
+          id="dp-result-label"
+          class="text-sm font-bold text-gray-700 dark:text-gray-300"
+        ></p>
+        <p
+          id="dp-amount-result"
+          class="break-all text-2xl font-bold text-blue-700 dark:text-blue-400"
+        ></p>
+        <button
+          id="dp-copy-button"
+          type="button"
+          class="ui-btn mt-2"
+          data-copy-label={t.copyButton}
+        >
+          {t.copyButton}
+        </button>
+        <span
+          id="dp-copy-status"
+          class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+          role="status"
+        ></span>
+      </div>
+
+      <dl class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.daysResultLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="dp-days-result"></dd>
+        </div>
+        <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.dailyRateLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="dp-daily-result"></dd>
+        </div>
+        <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.rawAmountLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="dp-raw-result"></dd>
+        </div>
+      </dl>
+
+      <div
+        id="dp-formula-block"
+        class="mt-3 hidden rounded-lg border border-gray-200 p-3 text-sm dark:border-gray-700"
+      >
+        <p class="font-bold text-gray-700 dark:text-gray-300">
+          {t.formulaLabel}
+        </p>
+        <p id="dp-formula" class="mt-1"></p>
+      </div>
+
+      <div
+        id="dp-segments-block"
+        class="mt-3 hidden rounded-lg border border-gray-200 p-3 text-sm dark:border-gray-700"
+      >
+        <p class="font-bold text-gray-700 dark:text-gray-300">
+          {t.segmentsHeading}
+        </p>
+        <ul id="dp-segments" class="mt-1 list-disc pl-5"></ul>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    calculateProration,
+    type ProrationBasis,
+    type ProrationRounding,
+  } from '../../lib/tools/daily-proration-calculator';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+
+  const root = document.getElementById('dp-root')!;
+  const numberLocale = root.dataset.numberLocale ?? 'en-US';
+  const text = JSON.parse(root.dataset.text ?? '{}') as {
+    errors: Record<string, string>;
+    presets: Record<string, string>;
+    formulaThirty: string;
+    formulaYear365: string;
+    segmentTemplate: string;
+    daysSuffix: string;
+    copied: string;
+    copyFailed: string;
+  };
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const decimal = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 2,
+  });
+
+  const input = (id: string) =>
+    document.getElementById(`dp-${id}`) as HTMLInputElement;
+  const select = (id: string) =>
+    document.getElementById(`dp-${id}`) as HTMLSelectElement;
+  const node = (id: string) => document.getElementById(`dp-${id}`)!;
+
+  attachCommaFormatting(input('amount'));
+
+  const errorEl = node('error');
+  const resultsEl = node('results');
+  const daysGroup = node('days-group');
+  const rangeGroup = node('range-group');
+  const formulaBlock = node('formula-block');
+  const segmentsBlock = node('segments-block');
+  const segmentsEl = node('segments');
+  const copyStatus = node('copy-status');
+
+  const mode = () =>
+    input('mode-range').checked ? ('range' as const) : ('days' as const);
+
+  function fill(template: string, values: Record<string, string | number>) {
+    return template.replace(/\{(\w+)\}/g, (_, k: string) =>
+      String(values[k] ?? ''),
+    );
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    copyStatus.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    const range = mode() === 'range';
+    daysGroup.classList.toggle('hidden', range);
+    daysGroup.classList.toggle('grid', !range);
+    rangeGroup.classList.toggle('hidden', !range);
+    rangeGroup.classList.toggle('grid', range);
+
+    const amountText = stripCommas(input('amount').value.trim());
+    if (amountText === '') return;
+    const basis = select('basis').value as ProrationBasis;
+
+    const daysText = input('days').value.trim();
+    const outcome = calculateProration({
+      amount: Number(amountText),
+      basis,
+      rounding: select('rounding').value as ProrationRounding,
+      period: range
+        ? {
+            kind: 'range',
+            start: input('start').value,
+            end: input('end').value,
+          }
+        : {
+            kind: 'days',
+            days: daysText === '' ? NaN : Number(daysText),
+            month: input('month').value,
+          },
+    });
+
+    if (!outcome.ok) {
+      // 日付や日数が未入力の間は、エラーではなく未計算として扱う
+      const blank = range
+        ? input('start').value === '' || input('end').value === ''
+        : daysText === '';
+      if (!blank) errorEl.textContent = text.errors[outcome.error] ?? '';
+      return;
+    }
+
+    const r = outcome.result;
+    node('result-label').textContent = text.presets[select('preset').value];
+    node('amount-result').textContent = yen.format(r.amount);
+    node('days-result').textContent = `${r.days}${text.daysSuffix}`;
+    node('daily-result').textContent =
+      r.dailyRate === null ? '-' : decimal.format(r.dailyRate);
+    node('raw-result').textContent = decimal.format(r.rawAmount);
+
+    if (basis === 'calendar') {
+      formulaBlock.classList.add('hidden');
+      segmentsEl.replaceChildren(
+        ...r.segments.map((s) => {
+          const li = document.createElement('li');
+          li.textContent = fill(text.segmentTemplate, {
+            year: s.year,
+            month: s.month,
+            days: s.days,
+            dim: s.daysInMonth,
+          });
+          return li;
+        }),
+      );
+      segmentsBlock.classList.remove('hidden');
+    } else {
+      segmentsBlock.classList.add('hidden');
+      node('formula').textContent = fill(
+        basis === 'thirty' ? text.formulaThirty : text.formulaYear365,
+        { days: r.days },
+      );
+      formulaBlock.classList.remove('hidden');
+    }
+    resultsEl.classList.remove('hidden');
+  }
+
+  [
+    'preset',
+    'amount',
+    'mode-days',
+    'mode-range',
+    'month',
+    'days',
+    'start',
+    'end',
+    'basis',
+    'rounding',
+  ].forEach((id) => {
+    const el = node(id);
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  });
+
+  node('copy-button').addEventListener('click', async () => {
+    const value = node('amount-result').textContent ?? '';
+    if (value === '') return;
+    copyStatus.textContent = (await copyText(value))
+      ? text.copied
+      : text.copyFailed;
+  });
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+  input('amount').value = formatNumberWithCommas('80000');
+  input('month').value = ym;
+  input('days').value = '10';
+  input('start').value = `${ym}-01`;
+  input('end').value = `${ym}-10`;
+  render();
+</script>

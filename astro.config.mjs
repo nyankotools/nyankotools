@@ -106,6 +106,11 @@ export default defineConfig({
   ],
   vite: {
     plugins: [tailwindcss()],
+    build: {
+      // 小さいフォントファイル（@fontsourceの文字サブセット等）が data: URI に埋め込まれると、
+      // CSPの font-src 'self' にブロックされて本番でだけフォントが読めない。フォントは常に別ファイルにする。
+      assetsInlineLimit: (file) => (/\.woff2?$/.test(file) ? false : undefined),
+    },
     // devサーバーはクライアントで使う外部ライブラリを初回アクセス時に遅延発見して再最適化する。
     // キャッシュのないCI環境では、この再最適化と並行して読み込まれたページで
     // `504 (Outdated Optimize Dep)` が発生してツールのスクリプトが動かず、E2Eが失敗した。

@@ -92,7 +92,6 @@ const t = pixelArtEditorContent[locale];
           data-color={hex}
           aria-label={hex}
           aria-pressed={i === 0 ? 'true' : 'false'}
-          style={`background-color:${hex}`}
           class="h-9 w-9 rounded border-2 border-gray-300 aria-pressed:border-blue-600 aria-pressed:ring-2 aria-pressed:ring-blue-400 dark:border-gray-600"
         />
       ))}
@@ -144,8 +143,7 @@ const t = pixelArtEditorContent[locale];
       id="pa-canvas"
       role="img"
       aria-label={t.canvasLabel}
-      style="touch-action:none;image-rendering:pixelated;width:min(100%,512px)"
-      class="block aspect-square max-w-none cursor-crosshair select-none rounded-lg border border-gray-300 dark:border-gray-700"
+      class="block aspect-square w-[min(100%,512px)] max-w-none cursor-crosshair touch-none select-none [image-rendering:pixelated] rounded-lg border border-gray-300 dark:border-gray-700"
     ></canvas>
   </div>
 
@@ -526,6 +524,11 @@ const t = pixelArtEditorContent[locale];
   });
 
   setCurrent(current);
+  // CSPのstyle-srcでstyle属性が使えないため、パレットの色はここでCSSOM経由で設定する
+  paletteButtons().forEach((b) => {
+    b.style.backgroundColor = b.dataset.color ?? '';
+  });
+
   render();
   updateUi();
 </script>

@@ -7,6 +7,7 @@ import { howToSlugs } from './helpers/how-to-slugs';
 //   - ページが表示される（h1が1つだけ表示される）
 //   - 375px幅（FAQ展開時を含む）でも横スクロールが発生しない（growth.md のレスポンシブ要件）
 //   - FAQ見出し・FAQPage JSON-LD・「使い方」セクション（howToSlugs のツールだけ）が出力される
+//   - コンソールエラー（CSP違反を含む）が出ない
 //   - フッターが main の最後の子である
 //   - サイドバーに全ツールへのリンクがあり、各カテゴリの先頭ツールへ遷移できる
 //   - axe（WCAG 2.x A/AA）でコントラスト・ラベル欠落などの違反がない
@@ -59,8 +60,18 @@ for (const {
       test(`${tool.slug}: 375px幅で表示され、横スクロールがなく、FAQと使い方が正しく出力される`, async ({
         page,
       }) => {
+        // CSP違反（style属性・data:フォント等）はastro devでは検出できないため、本番ビルドを配信する
+        // このE2Eでコンソールエラーとして拾う。
+        const consoleErrors: string[] = [];
+        page.on('console', (m) => {
+          if (m.type() === 'error') consoleErrors.push(m.text().slice(0, 200));
+        });
+        page.on('pageerror', (e) =>
+          consoleErrors.push(String(e).slice(0, 200)),
+        );
         await page.setViewportSize({ width: 375, height: 800 });
         await page.goto(toolPath);
+        await page.waitForLoadState('load');
 
         await expect.soft(page.locator('main h1')).toBeVisible();
 
@@ -69,6 +80,9 @@ for (const {
             () => document.documentElement.scrollWidth > window.innerWidth + 1,
           );
         expect.soft(await hasOverflow(), '375px幅で横スクロール').toBe(false);
+        expect
+          .soft(consoleErrors, 'コンソールエラー（CSP違反など）')
+          .toEqual([]);
 
         // FAQを持たないツールでも失敗させない（開くのは存在するものだけ）
         await page.evaluate(() => {

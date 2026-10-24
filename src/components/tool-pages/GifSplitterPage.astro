@@ -1,0 +1,516 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { gifSplitterContent } from '../../i18n/tools/gif-splitter';
+import { MAX_FRAMES } from '../../lib/tools/gif-splitter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = gifSplitterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="gs-root"
+    data-file-info={t.fileInfo}
+    data-loop-infinite={t.loopInfinite}
+    data-loop-none={t.loopNone}
+    data-loop-times={t.loopTimes}
+    data-selected-count={t.selectedCount}
+    data-include-aria={t.includeAria}
+    data-frame-caption={t.frameCaption}
+    data-result-info={t.resultInfo}
+    data-progress-frames={t.progressFrames}
+    data-progress-gif={t.progressGif}
+    data-zip-done={t.zipDone}
+    data-downloaded={t.downloaded}
+    data-label-speed={t.valueLabelSpeed}
+    data-label-fixed={t.valueLabelFixed}
+    data-error-not-gif={t.errorNotGif}
+    data-error-truncated={t.errorTruncated}
+    data-error-corrupt={t.errorCorrupt}
+    data-error-too-large={t.errorTooLarge}
+    data-error-too-many={t.errorTooMany.replace('{max}', String(MAX_FRAMES))}
+    data-error-no-frames={t.errorNoFrames}
+    data-error-no-selection={t.errorNoSelection}
+    data-error-failed={t.errorFailed}
+  >
+    <label for="gs-file" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="gs-dropzone" class="ui-dropzone">
+      <input id="gs-file" type="file" accept="image/gif,.gif" class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="gs-error"
+      role="alert"
+      hidden
+      class="mt-3 text-sm whitespace-pre-line text-red-600 dark:text-red-400"
+    ></p>
+
+    <div id="gs-workspace" hidden class="mt-6">
+      <div class="flex flex-col items-center gap-2 sm:flex-row sm:items-start">
+        <div class="ui-checker w-fit max-w-full shrink-0 overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700">
+          <img
+            id="gs-original"
+            alt={t.originalLabel}
+            class="block max-h-60 max-w-full"
+          />
+        </div>
+        <p
+          id="gs-info"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></p>
+      </div>
+
+      <div class="mt-6 flex flex-wrap items-center justify-between gap-2">
+        <span class="ui-label mb-0">{t.framesLabel}</span>
+        <div class="flex flex-wrap items-center gap-2">
+          <span
+            id="gs-selected"
+            class="text-sm text-gray-600 dark:text-gray-400"
+            aria-live="polite"
+          ></span>
+          <button id="gs-select-all" type="button" class="ui-btn px-3">
+            {t.selectAllButton}
+          </button>
+          <button id="gs-select-none" type="button" class="ui-btn px-3">
+            {t.selectNoneButton}
+          </button>
+        </div>
+      </div>
+      <ol
+        id="gs-frames"
+        class="mt-2 grid max-h-96 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3 md:grid-cols-4"
+      ></ol>
+
+      <div class="mt-6 grid gap-6 md:grid-cols-2">
+        <div>
+          <h2 class="mb-2 text-base font-semibold">{t.zipHeading}</h2>
+          <button id="gs-zip-button" type="button" class="ui-btn-primary">
+            {t.zipButton}
+          </button>
+        </div>
+
+        <div>
+          <h2 class="mb-2 text-base font-semibold">{t.gifHeading}</h2>
+          <label for="gs-mode" class="ui-label">
+            {t.modeLabel}
+          </label>
+          <select
+            id="gs-mode"
+            data-no-persist
+            class="ui-input h-11 px-3 dark:bg-gray-900"
+          >
+            <option value="speed" selected>
+              {t.modeSpeed}
+            </option>
+            <option value="fixed">{t.modeFixed}</option>
+          </select>
+          <label for="gs-value" id="gs-value-label" class="ui-label mt-3">
+            {t.valueLabelSpeed}
+          </label>
+          <input
+            id="gs-value"
+            data-no-persist
+            type="number"
+            min="0.1"
+            max="10"
+            step="any"
+            value="2"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+          <label class="mt-3 flex items-center gap-2 text-sm">
+            <input id="gs-loop" type="checkbox" checked class="ui-check" />
+            {t.loopLabel}
+          </label>
+          <button
+            id="gs-generate-button"
+            type="button"
+            class="ui-btn-primary mt-3"
+          >
+            {t.gifButton}
+          </button>
+        </div>
+      </div>
+
+      <div id="gs-result" hidden class="mt-6 flex flex-col items-center gap-3">
+        <p class="ui-label self-start">{t.previewLabel}</p>
+        <div class="ui-checker w-fit max-w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700">
+          <img
+            id="gs-preview"
+            alt={t.previewLabel}
+            class="block max-h-[70vh] max-w-full"
+          />
+        </div>
+        <p
+          id="gs-result-info"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></p>
+        <button id="gs-download" type="button" class="ui-btn">
+          {t.downloadButton}
+        </button>
+      </div>
+      <p
+        id="gs-status"
+        class="mt-3 text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></p>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import {
+    changeDelays,
+    decodeGif,
+    encodeRgbaGif,
+    frameFileName,
+    gifNameFor,
+    resolveLoopCount,
+    totalDurationMs,
+    zipNameFor,
+    type DecodedGif,
+    type DelayMode,
+    type GifDecodeError,
+  } from '../../lib/tools/gif-splitter';
+  import { createZip } from '../../lib/tools/zip-tool';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('gs-root');
+  const fileInput = $<HTMLInputElement>('gs-file');
+  const errorEl = $('gs-error');
+  const workspace = $('gs-workspace');
+  const originalImg = $<HTMLImageElement>('gs-original');
+  const infoEl = $('gs-info');
+  const framesEl = $('gs-frames');
+  const selectedEl = $('gs-selected');
+  const modeSelect = $<HTMLSelectElement>('gs-mode');
+  const valueInput = $<HTMLInputElement>('gs-value');
+  const valueLabel = $('gs-value-label');
+  const loopInput = $<HTMLInputElement>('gs-loop');
+  const zipButton = $<HTMLButtonElement>('gs-zip-button');
+  const generateButton = $<HTMLButtonElement>('gs-generate-button');
+  const resultEl = $('gs-result');
+  const previewImg = $<HTMLImageElement>('gs-preview');
+  const resultInfoEl = $('gs-result-info');
+  const downloadButton = $<HTMLButtonElement>('gs-download');
+  const statusEl = $('gs-status');
+
+  const d = root.dataset;
+  const THUMB = 160;
+
+  let gif: DecodedGif | null = null;
+  let fileName = '';
+  let originalUrl: string | null = null;
+  let resultBlob: Blob | null = null;
+  let resultUrl: string | null = null;
+  let selected: boolean[] = [];
+  let busy = false;
+  // 読み込みの世代。古い読み込みの結果が新しいファイルを上書きしないようにする
+  let generation = 0;
+
+  const fill = (template: string | undefined, values: Record<string, string>) =>
+    Object.entries(values).reduce(
+      (s, [k, v]) => s.split(`{${k}}`).join(v),
+      template ?? '',
+    );
+  const seconds = (ms: number) => (ms / 1000).toFixed(2).replace(/\.?0+$/, '');
+  const formatSize = (bytes: number) =>
+    bytes < 1024 * 1024
+      ? `${Math.max(1, Math.round(bytes / 1024))} KB`
+      : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  const yieldToBrowser = () => new Promise((r) => setTimeout(r, 0));
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  const errorMessages: Record<GifDecodeError, string | undefined> = {
+    'not-gif': d.errorNotGif,
+    truncated: d.errorTruncated,
+    corrupt: d.errorCorrupt,
+    'too-large': d.errorTooLarge,
+    'too-many-frames': d.errorTooMany,
+    'no-frames': d.errorNoFrames,
+  };
+
+  function clearResult() {
+    if (resultUrl) URL.revokeObjectURL(resultUrl);
+    resultUrl = null;
+    resultBlob = null;
+    resultEl.hidden = true;
+    previewImg.removeAttribute('src');
+    resultInfoEl.textContent = '';
+    statusEl.textContent = '';
+  }
+
+  function reset() {
+    generation++;
+    gif = null;
+    clearResult();
+    if (originalUrl) URL.revokeObjectURL(originalUrl);
+    originalUrl = null;
+    originalImg.removeAttribute('src');
+    framesEl.replaceChildren();
+    workspace.hidden = true;
+  }
+
+  function updateSelectedCount() {
+    if (!gif) return;
+    selectedEl.textContent = fill(d.selectedCount, {
+      selected: String(selected.filter(Boolean).length),
+      total: String(gif.frames.length),
+    });
+  }
+
+  function loopText(g: DecodedGif) {
+    if (g.loopCount === null) return d.loopNone ?? '';
+    if (g.loopCount === 0) return d.loopInfinite ?? '';
+    return fill(d.loopTimes, { n: String(g.loopCount) });
+  }
+
+  async function renderFrames(g: DecodedGif, gen: number) {
+    framesEl.replaceChildren();
+    const full = document.createElement('canvas');
+    full.width = g.width;
+    full.height = g.height;
+    const fullCtx = full.getContext('2d');
+    if (!fullCtx) throw new Error('no canvas');
+    const scale = Math.min(1, THUMB / g.width);
+    const tw = Math.max(1, Math.round(g.width * scale));
+    const th = Math.max(1, Math.round(g.height * scale));
+    for (let i = 0; i < g.frames.length; i++) {
+      if (gen !== generation) return;
+      const frame = g.frames[i];
+      fullCtx.putImageData(
+        new ImageData(new Uint8ClampedArray(frame.rgba), g.width, g.height),
+        0,
+        0,
+      );
+      const thumb = document.createElement('canvas');
+      thumb.width = tw;
+      thumb.height = th;
+      const ctx = thumb.getContext('2d');
+      ctx?.drawImage(full, 0, 0, tw, th);
+      thumb.className =
+        'ui-checker block max-w-full rounded border border-gray-300 dark:border-gray-700';
+      thumb.setAttribute('aria-hidden', 'true');
+
+      const li = document.createElement('li');
+      li.className =
+        'flex flex-col items-center gap-1 rounded-lg border border-gray-300 p-2 text-xs dark:border-gray-700';
+      const label = document.createElement('label');
+      label.className = 'flex cursor-pointer flex-col items-center gap-1';
+      const check = document.createElement('input');
+      check.type = 'checkbox';
+      check.className = 'ui-check';
+      check.checked = selected[i] ?? true;
+      check.setAttribute(
+        'aria-label',
+        fill(d.includeAria, { n: String(i + 1) }),
+      );
+      check.addEventListener('change', () => {
+        selected[i] = check.checked;
+        updateSelectedCount();
+        clearResult();
+      });
+      const caption = document.createElement('span');
+      caption.textContent = fill(d.frameCaption, {
+        n: String(i + 1),
+        delay: String(frame.delayMs),
+      });
+      label.append(thumb, check, caption);
+      li.append(label);
+      framesEl.append(li);
+      if (i % 20 === 19) await yieldToBrowser();
+    }
+  }
+
+  async function loadFile(file: File) {
+    reset();
+    showError('');
+    const gen = generation;
+    let bytes: Uint8Array;
+    try {
+      bytes = new Uint8Array(await file.arrayBuffer());
+    } catch {
+      return showError(d.errorFailed ?? '');
+    }
+    if (gen !== generation) return;
+    const result = decodeGif(bytes);
+    if (!result.ok) return showError(errorMessages[result.error] ?? '');
+    const g = result.gif;
+    gif = g;
+    fileName = file.name;
+    selected = g.frames.map(() => true);
+    originalUrl = URL.createObjectURL(file);
+    originalImg.src = originalUrl;
+    infoEl.textContent = fill(d.fileInfo, {
+      width: String(g.width),
+      height: String(g.height),
+      frames: String(g.frames.length),
+      duration: seconds(totalDurationMs(g.frames.map((f) => f.delayMs))),
+      loop: loopText(g),
+    });
+    loopInput.checked = g.loopCount !== null;
+    workspace.hidden = false;
+    updateSelectedCount();
+    try {
+      await renderFrames(g, gen);
+    } catch {
+      showError(d.errorFailed ?? '');
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file && !busy) void loadFile(file);
+  });
+  enableFileDrop($('gs-dropzone'), fileInput);
+
+  function setAll(value: boolean) {
+    if (!gif || busy) return;
+    selected = selected.map(() => value);
+    framesEl
+      .querySelectorAll<HTMLInputElement>('input[type="checkbox"]')
+      .forEach((c) => (c.checked = value));
+    updateSelectedCount();
+    clearResult();
+  }
+  $('gs-select-all').addEventListener('click', () => setAll(true));
+  $('gs-select-none').addEventListener('click', () => setAll(false));
+
+  function updateModeLabel() {
+    valueLabel.textContent =
+      (modeSelect.value === 'fixed' ? d.labelFixed : d.labelSpeed) ?? '';
+  }
+  modeSelect.addEventListener('change', () => {
+    updateModeLabel();
+    const fixed = modeSelect.value === 'fixed';
+    valueInput.min = fixed ? '20' : '0.1';
+    valueInput.max = fixed ? '10000' : '10';
+    valueInput.value = fixed ? '100' : '2';
+    clearResult();
+  });
+  valueInput.addEventListener('input', clearResult);
+  loopInput.addEventListener('change', clearResult);
+
+  const selectedIndexes = () => selected.flatMap((on, i) => (on ? [i] : []));
+
+  function setBusy(value: boolean) {
+    busy = value;
+    zipButton.disabled = value;
+    generateButton.disabled = value;
+  }
+
+  zipButton.addEventListener('click', async () => {
+    if (!gif || busy) return;
+    const g = gif;
+    const indexes = selectedIndexes();
+    if (indexes.length === 0) return showError(d.errorNoSelection ?? '');
+    showError('');
+    setBusy(true);
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = g.width;
+      canvas.height = g.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('no canvas');
+      const files: { name: string; data: Uint8Array }[] = [];
+      for (const [n, i] of indexes.entries()) {
+        statusEl.textContent = fill(d.progressFrames, {
+          current: String(n + 1),
+          total: String(indexes.length),
+        });
+        await yieldToBrowser();
+        ctx.putImageData(
+          new ImageData(
+            new Uint8ClampedArray(g.frames[i].rgba),
+            g.width,
+            g.height,
+          ),
+          0,
+          0,
+        );
+        const blob = await new Promise<Blob | null>((resolve) =>
+          canvas.toBlob(resolve, 'image/png'),
+        );
+        if (!blob) throw new Error('png failed');
+        files.push({
+          name: frameFileName(i, g.frames.length),
+          data: new Uint8Array(await blob.arrayBuffer()),
+        });
+      }
+      const zip = createZip(files, 0);
+      downloadBlob(
+        new Blob([zip as BlobPart], { type: 'application/zip' }),
+        zipNameFor(fileName),
+      );
+      statusEl.textContent = d.zipDone ?? '';
+    } catch {
+      statusEl.textContent = '';
+      showError(d.errorFailed ?? '');
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  generateButton.addEventListener('click', async () => {
+    if (!gif || busy) return;
+    const g = gif;
+    const indexes = selectedIndexes();
+    if (indexes.length === 0) return showError(d.errorNoSelection ?? '');
+    showError('');
+    clearResult();
+    setBusy(true);
+    try {
+      statusEl.textContent = d.progressGif ?? '';
+      await yieldToBrowser();
+      const mode: DelayMode = modeSelect.value === 'fixed' ? 'fixed' : 'speed';
+      const delays = changeDelays(
+        indexes.map((i) => g.frames[i].delayMs),
+        mode,
+        Number(valueInput.value),
+      );
+      const bytes = encodeRgbaGif(
+        g.width,
+        g.height,
+        indexes.map((i, n) => ({ rgba: g.frames[i].rgba, delayMs: delays[n] })),
+        resolveLoopCount(loopInput.checked, g.loopCount),
+      );
+      resultBlob = new Blob([bytes as BlobPart], { type: 'image/gif' });
+      resultUrl = URL.createObjectURL(resultBlob);
+      previewImg.src = resultUrl;
+      resultEl.hidden = false;
+      resultInfoEl.textContent = fill(d.resultInfo, {
+        frames: String(indexes.length),
+        duration: seconds(totalDurationMs(delays)),
+        size: formatSize(resultBlob.size),
+      });
+      statusEl.textContent = '';
+    } catch {
+      clearResult();
+      showError(d.errorFailed ?? '');
+    } finally {
+      setBusy(false);
+    }
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (!resultBlob) return;
+    downloadBlob(resultBlob, gifNameFor(fileName));
+    statusEl.textContent = d.downloaded ?? '';
+  });
+</script>

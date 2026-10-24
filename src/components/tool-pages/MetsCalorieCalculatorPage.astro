@@ -1,0 +1,401 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { metsCalorieCalculatorContent } from '../../i18n/tools/mets-calorie-calculator';
+import {
+  exerciseGroups,
+  exercises,
+} from '../../lib/tools/mets-calorie-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = metsCalorieCalculatorContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="mets-calc"
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-default-weight={t.defaultWeight}
+    data-weight-error={t.weightError}
+    data-entry-error={t.entryError}
+    data-kcal-unit={t.kcalUnit}
+    data-hours-unit={t.hoursUnit}
+    data-minutes-unit={t.minutesUnit}
+    data-mets-label={t.metsInputLabel}
+    data-mets-unit={t.metsUnit}
+    data-remove-label={t.removeButton}
+    data-remove-suffix={t.removeAriaSuffix}
+    data-hours-suffix={t.hoursAriaLabel}
+    data-minutes-suffix={t.minutesAriaLabel}
+    data-custom-name={t.customName}
+    data-total-label={t.totalLabel}
+    data-total-time-label={t.totalTimeLabel}
+    data-copied={t.copiedMessage}
+    data-copy-failed={t.copyFailedMessage}
+  >
+    <p class="mb-4 rounded-md bg-gray-50 p-3 text-sm dark:bg-gray-800">
+      <span class="font-medium">{t.formulaHeading}</span>:
+      <span id="mets-formula">{t.formulaText}</span>
+    </p>
+
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="mets-weight-input" class="ui-label">
+          {t.weightLabel}
+        </label>
+        <input
+          id="mets-weight-input"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          placeholder={t.weightPlaceholder}
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div>
+        <label for="mets-weight-unit" class="ui-label">
+          {t.weightUnitLabel}
+        </label>
+        <select
+          id="mets-weight-unit"
+          class="ui-input h-11 w-20 px-3 dark:bg-gray-900"
+        >
+          <option value="kg" selected={t.defaultWeightUnit === 'kg'}>
+            kg
+          </option>
+          <option value="lb" selected={t.defaultWeightUnit === 'lb'}>
+            lb
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <label class="mt-3 flex items-start gap-2 text-sm">
+      <input id="mets-exclude-rest" type="checkbox" class="mt-1" />
+      <span>{t.excludeRestingLabel}</span>
+    </label>
+
+    <h2 class="mt-6 mb-1 text-base font-bold">{t.tableHeading}</h2>
+    <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">{t.tableHint}</p>
+    <div class="space-y-4">
+      {exerciseGroups.map((group) => (
+        <div>
+          <h3 class="mb-1 text-sm font-medium">{t.groupLabels[group]}</h3>
+          <ul class="divide-y divide-gray-200 rounded-md border border-gray-200 dark:divide-gray-700 dark:border-gray-700">
+            {exercises
+              .filter((e) => e.group === group)
+              .map((e) => (
+                <li class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-3 py-2 text-sm">
+                  <span class="min-w-0 flex-1 basis-48">
+                    {t.exerciseNames[e.id]}
+                  </span>
+                  <span class="font-semibold">
+                    {e.mets.toFixed(1)} {t.metsUnit}
+                  </span>
+                  <button
+                    type="button"
+                    class="ui-btn mets-add-button h-9 px-3"
+                    data-mets={e.mets}
+                    data-name={t.exerciseNames[e.id]}
+                    aria-label={`${t.exerciseNames[e.id]}${t.addAriaSuffix}`}
+                  >
+                    {t.addButton}
+                  </button>
+                </li>
+              ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+    <button type="button" id="mets-add-custom" class="ui-btn mt-3">
+      {t.addCustomButton}
+    </button>
+
+    <h2 class="mt-6 mb-2 text-base font-bold">{t.entriesHeading}</h2>
+    <p id="mets-empty" class="text-sm text-gray-600 dark:text-gray-400">
+      {t.entriesEmpty}
+    </p>
+    <ul id="mets-entries" class="space-y-2"></ul>
+
+    <p
+      id="mets-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="mets-results" class="mt-4 hidden" aria-live="polite">
+      <dl class="space-y-2">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.totalLabel}
+          </dt>
+          <dd class="text-2xl font-semibold" id="mets-total"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.totalTimeLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="mets-total-time"></dd>
+        </div>
+      </dl>
+      <div class="mt-3 flex flex-wrap items-center gap-3">
+        <button type="button" id="mets-copy-button" class="ui-btn">
+          {t.copyButton}
+        </button>
+        <span
+          id="mets-copy-status"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    lbToKg,
+    summarize,
+    toMinutes,
+  } from '../../lib/tools/mets-calorie-calculator';
+
+  const section = document.getElementById('mets-calc')!;
+  const d = section.dataset;
+  const numberLocale = d.numberLocale ?? 'en-US';
+  const kcalUnit = d.kcalUnit ?? 'kcal';
+
+  const kcalFormat = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 0,
+  });
+  const formatKcal = (v: number) => `${kcalFormat.format(v)} ${kcalUnit}`;
+  const formatTime = (minutes: number) => {
+    const total = Math.round(minutes);
+    const h = Math.floor(total / 60);
+    const m = total % 60;
+    const parts: string[] = [];
+    if (h > 0) parts.push(`${h}${d.hoursUnit ?? 'h'}`);
+    if (m > 0 || h === 0) parts.push(`${m}${d.minutesUnit ?? 'min'}`);
+    return parts.join(' ');
+  };
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const weightInput = $<HTMLInputElement>('mets-weight-input');
+  const weightUnit = $<HTMLSelectElement>('mets-weight-unit');
+  const excludeRest = $<HTMLInputElement>('mets-exclude-rest');
+  const entriesEl = $<HTMLUListElement>('mets-entries');
+  const emptyEl = $('mets-empty');
+  const errorEl = $('mets-error');
+  const resultsEl = $('mets-results');
+  const copyStatus = $('mets-copy-status');
+
+  const inputClass =
+    'ui-input h-10 px-2 dark:bg-gray-900 dark:placeholder-gray-500';
+  const unitClass = 'text-sm text-gray-500 dark:text-gray-400';
+
+  function numberField(
+    cls: string,
+    width: string,
+    ariaLabel: string,
+    value: string,
+    step: string,
+  ): HTMLInputElement {
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.inputMode = 'decimal';
+    input.min = '0';
+    input.step = step;
+    input.value = value;
+    input.className = `${inputClass} ${width} ${cls}`;
+    input.setAttribute('aria-label', ariaLabel);
+    input.addEventListener('input', render);
+    return input;
+  }
+
+  function unitLabel(text: string): HTMLSpanElement {
+    const span = document.createElement('span');
+    span.className = unitClass;
+    span.textContent = text;
+    return span;
+  }
+
+  function addEntry(name: string, mets: string, minutes: number) {
+    const li = document.createElement('li');
+    li.className =
+      'rounded-md border border-gray-200 p-3 dark:border-gray-700 mets-entry';
+    li.dataset.name = name;
+
+    const title = document.createElement('p');
+    title.className = 'mb-2 text-sm font-medium';
+    title.textContent = name;
+    li.append(title);
+
+    const row = document.createElement('div');
+    row.className = 'flex flex-wrap items-center gap-x-2 gap-y-2';
+
+    const metsField = numberField(
+      'mets-in-mets',
+      'w-20',
+      `${name}: ${d.metsLabel ?? 'METs'}`,
+      mets,
+      '0.1',
+    );
+    const hoursField = numberField(
+      'mets-in-hours',
+      'w-16',
+      `${name}${d.hoursSuffix ?? ''}`,
+      minutes >= 60 ? String(Math.floor(minutes / 60)) : '',
+      '1',
+    );
+    const minutesField = numberField(
+      'mets-in-minutes',
+      'w-16',
+      `${name}${d.minutesSuffix ?? ''}`,
+      minutes % 60 > 0 || minutes < 60 ? String(minutes % 60) : '',
+      '1',
+    );
+    const kcal = document.createElement('span');
+    kcal.className = 'mets-row-kcal ml-auto text-sm font-semibold';
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'ui-btn h-10 px-3';
+    remove.textContent = d.removeLabel ?? 'Remove';
+    remove.setAttribute('aria-label', `${name}${d.removeSuffix ?? ''}`);
+    remove.addEventListener('click', () => {
+      li.remove();
+      render();
+    });
+
+    row.append(
+      metsField,
+      unitLabel(d.metsUnit ?? 'METs'),
+      hoursField,
+      unitLabel(d.hoursUnit ?? 'h'),
+      minutesField,
+      unitLabel(d.minutesUnit ?? 'min'),
+      kcal,
+      remove,
+    );
+    li.append(row);
+    entriesEl.append(li);
+    render();
+  }
+
+  function weightKg(): number | null {
+    if (weightInput.value.trim() === '') return null;
+    const v = Number(weightInput.value);
+    return weightUnit.value === 'lb' ? lbToKg(v) : v;
+  }
+
+  function readEntries() {
+    return Array.from(
+      entriesEl.querySelectorAll<HTMLLIElement>('.mets-entry'),
+    ).map((li) => {
+      const q = (cls: string) => li.querySelector<HTMLInputElement>(cls)!;
+      const mets = q('.mets-in-mets').value.trim();
+      const hoursText = q('.mets-in-hours').value.trim();
+      const minutesText = q('.mets-in-minutes').value.trim();
+      const minutes = toMinutes(
+        hoursText === '' ? 0 : Number(hoursText),
+        minutesText === '' ? 0 : Number(minutesText),
+      );
+      return {
+        li,
+        name: li.dataset.name ?? '',
+        metsText: mets,
+        mets: mets === '' ? NaN : Number(mets),
+        minutes: minutes ?? NaN,
+        blank: mets === '' && hoursText === '' && minutesText === '',
+      };
+    });
+  }
+
+  let lastText = '';
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+    copyStatus.textContent = '';
+
+    const rows = readEntries();
+    emptyEl.classList.toggle('hidden', rows.length > 0);
+    rows.forEach((r) => {
+      const el = r.li.querySelector('.mets-row-kcal')!;
+      el.textContent = '';
+    });
+
+    const w = weightKg();
+    if (w === null) return;
+    const wOk = isFinite(w) && w > 0 && w <= 500;
+    if (!wOk) {
+      errorEl.textContent = d.weightError ?? '';
+      return;
+    }
+    if (rows.length === 0) return;
+
+    const summary = summarize(
+      rows.map((r) => ({ mets: r.mets, minutes: r.minutes })),
+      w,
+      excludeRest.checked,
+    );
+    let hasInvalid = false;
+    const lines: string[] = [];
+    rows.forEach((r, i) => {
+      const k = summary.items[i];
+      const el = r.li.querySelector('.mets-row-kcal')!;
+      if (k === null) {
+        el.textContent = '—';
+        if (!r.blank) hasInvalid = true;
+      } else {
+        el.textContent = formatKcal(k);
+        lines.push(`${r.name}: ${formatKcal(k)}`);
+      }
+    });
+    if (hasInvalid) errorEl.textContent = d.entryError ?? '';
+    if (summary.validCount === 0) return;
+
+    $('mets-total').textContent = formatKcal(summary.totalKcal);
+    $('mets-total-time').textContent = formatTime(summary.totalMinutes);
+    lines.push(
+      `${d.totalLabel}: ${formatKcal(summary.totalKcal)} (${formatTime(summary.totalMinutes)})`,
+    );
+    lastText = lines.join('\n');
+    resultsEl.classList.remove('hidden');
+  }
+
+  document
+    .querySelectorAll<HTMLButtonElement>('.mets-add-button')
+    .forEach((btn) =>
+      btn.addEventListener('click', () =>
+        addEntry(btn.dataset.name ?? '', btn.dataset.mets ?? '', 30),
+      ),
+    );
+  $('mets-add-custom').addEventListener('click', () =>
+    addEntry(d.customName ?? '', '', 30),
+  );
+
+  weightInput.addEventListener('input', render);
+  weightUnit.addEventListener('change', render);
+  excludeRest.addEventListener('change', render);
+
+  $('mets-copy-button').addEventListener('click', async () => {
+    if (!lastText) return;
+    copyStatus.textContent = (await copyText(lastText))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+  });
+
+  // 初期値
+  weightInput.value = d.defaultWeight ?? '60';
+  const firstWalk = document.querySelector<HTMLButtonElement>(
+    '.mets-add-button[data-mets="3"]',
+  );
+  if (firstWalk) addEntry(firstWalk.dataset.name ?? '', '3', 30);
+  render();
+</script>

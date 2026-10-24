@@ -94,10 +94,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary: '12個のツールを追加しました。',
+        summary: '16個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 12 new tools.',
+        summary: 'Added 16 new tools.',
       },
     },
   },
@@ -487,7 +487,7 @@ export const updates: UpdateEntry[] = [
         summary: '4個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 12 new tools.',
+        summary: 'Added 16 new tools.',
       },
     },
   },
@@ -526,7 +526,7 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary: '12個のツールを追加しました。',
+        summary: '16個のツールを追加しました。',
       },
       en: {
         summary: 'Added 8 new tools.',
@@ -823,10 +823,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary: '12個のツールを追加しました。',
+        summary: '16個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 12 new tools.',
+        summary: 'Added 16 new tools.',
       },
     },
   },
@@ -1033,6 +1033,35 @@ export const updates: UpdateEntry[] = [
       },
       en: {
         summary: 'Added 31 new tools.',
+      },
+    },
+  },
+  {
+    date: '2026-10-24',
+    toolSlugs: [
+      'photo-collage-maker',
+      'document-scan-filter',
+      'svg-path-viewer',
+      'color-mixer',
+      'gif-splitter',
+      'withholding-tax-calculator',
+      'stamp-duty-calculator',
+      'gift-tax-calculator',
+      'pdf-nup',
+      'pdf-crop',
+      'depreciation-calculator',
+      'parcel-size-checker',
+      'pdf-stamp',
+      'pdf-image-extractor',
+      'fx-calculator',
+      'mets-calorie-calculator',
+    ],
+    translations: {
+      ja: {
+        summary: '16個のツールを追加しました。',
+      },
+      en: {
+        summary: 'Added 16 new tools.',
       },
     },
   },

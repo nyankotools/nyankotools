@@ -1,0 +1,799 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { photoCollageMakerContent } from '../../i18n/tools/photo-collage-maker';
+import {
+  ASPECTS,
+  MAX_BORDER,
+  MAX_GAP,
+  MAX_IMAGES,
+  MAX_RADIUS,
+} from '../../lib/tools/photo-collage-maker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = photoCollageMakerContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="pc-root"
+    data-output-info={t.outputInfo}
+    data-downloaded={t.downloaded}
+    data-move-up-aria={t.moveUpAria}
+    data-move-down-aria={t.moveDownAria}
+    data-remove-aria={t.removeAria}
+    data-select-aria={t.selectAria}
+    data-move-up={t.moveUpButton}
+    data-move-down={t.moveDownButton}
+    data-remove={t.removeButton}
+    data-select={t.selectButton}
+    data-adjust-target={t.adjustTarget}
+    data-template-names={JSON.stringify(t.templateNames)}
+    data-max-images={MAX_IMAGES}
+    data-error-not-image={t.errorNotImage}
+    data-error-load-failed={t.errorLoadFailed}
+    data-error-too-large={t.errorTooLarge}
+    data-error-too-many={t.errorTooMany.replace('{max}', String(MAX_IMAGES))}
+    data-error-export-failed={t.errorExportFailed}
+  >
+    <label for="pc-file" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="pc-dropzone" class="ui-dropzone">
+      <input
+        id="pc-file"
+        type="file"
+        accept="image/*"
+        multiple
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="pc-error"
+      role="alert"
+      hidden
+      class="mt-3 text-sm whitespace-pre-line text-red-600 dark:text-red-400"
+    ></p>
+
+    <div id="pc-workspace" hidden class="mt-6 grid gap-6 md:grid-cols-2">
+      <div>
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span class="ui-label mb-0">{t.listLabel}</span>
+          <button id="pc-clear" type="button" class="ui-btn px-3">
+            {t.clearButton}
+          </button>
+        </div>
+        <ol id="pc-list" class="mt-2 grid gap-2"></ol>
+
+        <div class="mt-4">
+          <span class="ui-label">{t.templateLabel}</span>
+          <div
+            id="pc-templates"
+            class="ui-seg flex-wrap"
+            role="group"
+            aria-label={t.templateLabel}
+          ></div>
+          <p
+            id="pc-template-hint"
+            class="mt-1 text-xs text-gray-600 dark:text-gray-400"
+          >
+            {t.templateNeedMore}
+          </p>
+        </div>
+
+        <div class="mt-4 grid grid-cols-2 gap-3">
+          <div>
+            <label for="pc-aspect" class="ui-label">
+              {t.aspectLabel}
+            </label>
+            <select id="pc-aspect" class="ui-input h-11 px-3 dark:bg-gray-900">
+              {ASPECTS.map((a) => (
+                <option value={a} selected={a === '1:1'}>
+                  {a}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label for="pc-size" class="ui-label">
+              {t.sizeLabel}
+            </label>
+            <select id="pc-size" class="ui-input h-11 px-3 dark:bg-gray-900">
+              {t.sizeOptions.map(({ value, label }) => (
+                <option value={value} selected={value === '2000'}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label for="pc-gap" class="ui-label">
+              {t.gapLabel}
+            </label>
+            <input
+              id="pc-gap"
+              type="number"
+              min="0"
+              max={MAX_GAP}
+              step="1"
+              value="16"
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            />
+          </div>
+          <div>
+            <label for="pc-margin" class="ui-label">
+              {t.marginLabel}
+            </label>
+            <input
+              id="pc-margin"
+              type="number"
+              min="0"
+              max={MAX_GAP}
+              step="1"
+              value="16"
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            />
+          </div>
+          <div>
+            <label for="pc-border" class="ui-label">
+              {t.borderWidthLabel}
+            </label>
+            <input
+              id="pc-border"
+              type="number"
+              min="0"
+              max={MAX_BORDER}
+              step="1"
+              value="0"
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            />
+          </div>
+          <div>
+            <label for="pc-radius" class="ui-label">
+              {t.radiusLabel}
+            </label>
+            <input
+              id="pc-radius"
+              type="number"
+              min="0"
+              max={MAX_RADIUS}
+              step="1"
+              value="0"
+              class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+            />
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-wrap items-end gap-4">
+          <div>
+            <label for="pc-bg" class="ui-label">
+              {t.backgroundLabel}
+            </label>
+            <input
+              id="pc-bg"
+              type="color"
+              value="#ffffff"
+              class="h-11 w-16 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+            />
+          </div>
+          <div>
+            <label for="pc-border-color" class="ui-label">
+              {t.borderColorLabel}
+            </label>
+            <input
+              id="pc-border-color"
+              type="color"
+              value="#000000"
+              class="h-11 w-16 cursor-pointer rounded border border-gray-300 dark:border-gray-700"
+            />
+          </div>
+        </div>
+
+        <fieldset class="mt-4 rounded-lg border border-gray-300 p-3 dark:border-gray-700">
+          <legend class="px-1 text-sm font-medium">{t.adjustLabel}</legend>
+          <p
+            id="pc-adjust-none"
+            class="text-sm text-gray-600 dark:text-gray-400"
+          >
+            {t.adjustNone}
+          </p>
+          <div id="pc-adjust" hidden class="grid gap-3">
+            <p id="pc-adjust-target" class="text-sm break-all"></p>
+            <div>
+              <label for="pc-zoom" class="ui-label">
+                {t.zoomLabel}
+              </label>
+              <input
+                id="pc-zoom"
+                type="range"
+                min="100"
+                max="400"
+                step="5"
+                value="100"
+                class="h-11 w-full"
+              />
+            </div>
+            <div>
+              <label for="pc-posx" class="ui-label">
+                {t.posXLabel}
+              </label>
+              <input
+                id="pc-posx"
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value="50"
+                class="h-11 w-full"
+              />
+            </div>
+            <div>
+              <label for="pc-posy" class="ui-label">
+                {t.posYLabel}
+              </label>
+              <input
+                id="pc-posy"
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value="50"
+                class="h-11 w-full"
+              />
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="mt-4 flex flex-wrap items-end gap-4">
+          <div>
+            <span class="ui-label">{t.formatLabel}</span>
+            <div
+              id="pc-format"
+              class="ui-seg"
+              role="group"
+              aria-label={t.formatLabel}
+            >
+              <button
+                type="button"
+                data-format="png"
+                aria-pressed="true"
+                class="ui-seg-btn"
+              >
+                PNG
+              </button>
+              <button
+                type="button"
+                data-format="jpeg"
+                aria-pressed="false"
+                class="ui-seg-btn"
+              >
+                JPEG
+              </button>
+              <button
+                type="button"
+                data-format="webp"
+                aria-pressed="false"
+                class="ui-seg-btn"
+              >
+                WebP
+              </button>
+            </div>
+          </div>
+          <div id="pc-quality-wrap" hidden class="min-w-40 flex-1">
+            <label for="pc-quality" class="ui-label">
+              {t.qualityLabel}
+              <span id="pc-quality-value">90</span>
+            </label>
+            <input
+              id="pc-quality"
+              type="range"
+              min="10"
+              max="100"
+              value="90"
+              class="h-11 w-full"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col items-center gap-3">
+        <p class="ui-label self-start">{t.previewLabel}</p>
+        <p class="self-start text-xs text-gray-600 dark:text-gray-400">
+          {t.dragHint}
+        </p>
+        <div class="w-fit max-w-full overflow-hidden rounded-lg border border-gray-300 dark:border-gray-700">
+          <canvas
+            id="pc-canvas"
+            role="img"
+            aria-label={t.previewLabel}
+            class="block max-h-[70vh] max-w-full cursor-grab touch-none"
+          ></canvas>
+        </div>
+        <p
+          id="pc-size-info"
+          class="text-sm text-gray-600 dark:text-gray-400"
+          aria-live="polite"
+        ></p>
+        <button id="pc-download" type="button" disabled class="ui-btn-primary">
+          {t.downloadButton}
+        </button>
+        <span
+          id="pc-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { fill } from '../../lib/format-template';
+  import {
+    isWithinSourceLimit,
+    outputFormat,
+    type OutputFormat,
+  } from '../../lib/tools/image-cropper';
+  import {
+    canvasSize,
+    cellRects,
+    collageFileName,
+    coverPlacement,
+    hitCell,
+    isCanvasWithinLimit,
+    MAX_BORDER,
+    moveItem,
+    panPosition,
+    templatesFor,
+    type AspectId,
+    type CollageTemplate,
+  } from '../../lib/tools/photo-collage-maker';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('pc-root');
+  const fileInput = $<HTMLInputElement>('pc-file');
+  const errorEl = $('pc-error');
+  const workspace = $('pc-workspace');
+  const listEl = $('pc-list');
+  const templatesEl = $('pc-templates');
+  const templateHint = $('pc-template-hint');
+  const canvas = $<HTMLCanvasElement>('pc-canvas');
+  const sizeInfo = $('pc-size-info');
+  const statusEl = $('pc-status');
+  const downloadButton = $<HTMLButtonElement>('pc-download');
+  const aspectSelect = $<HTMLSelectElement>('pc-aspect');
+  const sizeSelect = $<HTMLSelectElement>('pc-size');
+  const gapInput = $<HTMLInputElement>('pc-gap');
+  const marginInput = $<HTMLInputElement>('pc-margin');
+  const borderInput = $<HTMLInputElement>('pc-border');
+  const radiusInput = $<HTMLInputElement>('pc-radius');
+  const bgInput = $<HTMLInputElement>('pc-bg');
+  const borderColorInput = $<HTMLInputElement>('pc-border-color');
+  const adjustNone = $('pc-adjust-none');
+  const adjustPanel = $('pc-adjust');
+  const adjustTarget = $('pc-adjust-target');
+  const zoomInput = $<HTMLInputElement>('pc-zoom');
+  const posXInput = $<HTMLInputElement>('pc-posx');
+  const posYInput = $<HTMLInputElement>('pc-posy');
+  const qualityWrap = $('pc-quality-wrap');
+  const qualityInput = $<HTMLInputElement>('pc-quality');
+  const qualityValue = $('pc-quality-value');
+  const formatButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#pc-format [data-format]'),
+  );
+
+  const d = root.dataset;
+  const maxImages = Number(d.maxImages);
+  const templateNames = JSON.parse(d.templateNames ?? '{}') as Record<
+    string,
+    string
+  >;
+  interface Item {
+    name: string;
+    bitmap: ImageBitmap;
+    posX: number;
+    posY: number;
+    zoom: number;
+  }
+  let items: Item[] = [];
+  let selected: Item | null = null;
+  let templateId = 'grid';
+  let format: OutputFormat = 'png';
+  let loadMessage = '';
+  let loading = 0;
+  // 読み込みは順番に1回ずつ行う（上限の判定が競合しないように）
+  let queue: Promise<void> = Promise.resolve();
+  let currentTemplates: CollageTemplate[] = [];
+  let cells: ReturnType<typeof cellRects> = [];
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  function currentTemplate(): CollageTemplate {
+    return (
+      currentTemplates.find((t) => t.id === templateId) ?? currentTemplates[0]
+    );
+  }
+
+  function renderTemplateButtons() {
+    currentTemplates = templatesFor(items.length);
+    if (!currentTemplates.some((t) => t.id === templateId)) {
+      templateId = currentTemplates[0].id;
+    }
+    templatesEl.replaceChildren();
+    for (const tpl of currentTemplates) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ui-seg-btn';
+      b.dataset.template = tpl.id;
+      b.textContent = templateNames[tpl.kind] ?? tpl.kind;
+      b.setAttribute('aria-pressed', String(tpl.id === templateId));
+      b.addEventListener('click', () => {
+        templateId = tpl.id;
+        for (const other of templatesEl.querySelectorAll('button')) {
+          other.setAttribute(
+            'aria-pressed',
+            String(other.dataset.template === templateId),
+          );
+        }
+        render();
+      });
+      templatesEl.append(b);
+    }
+    // 1枚だけのときはテンプレートを選べない
+    templatesEl.hidden = items.length < 2;
+    templateHint.hidden = items.length >= 2;
+  }
+
+  function renderAdjust() {
+    adjustNone.hidden = selected !== null;
+    adjustPanel.hidden = selected === null;
+    if (!selected) return;
+    adjustTarget.textContent = fill(d.adjustTarget ?? '', {
+      name: selected.name,
+    });
+    zoomInput.value = String(Math.round(selected.zoom * 100));
+    posXInput.value = String(Math.round(selected.posX * 100));
+    posYInput.value = String(Math.round(selected.posY * 100));
+  }
+
+  function roundedPath(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    r: number,
+  ) {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, Math.max(0, Math.min(r, w / 2, h / 2)));
+  }
+
+  function render() {
+    statusEl.textContent = '';
+    workspace.hidden = items.length === 0;
+    if (items.length === 0) {
+      downloadButton.disabled = true;
+      showError(loadMessage);
+      return;
+    }
+    const size = canvasSize(
+      aspectSelect.value as AspectId,
+      Number(sizeSelect.value),
+    );
+    const tpl = currentTemplate();
+    cells = cellRects(
+      tpl.cells,
+      size,
+      Number(marginInput.value),
+      Number(gapInput.value),
+    );
+    const ok = isCanvasWithinLimit(size);
+    downloadButton.disabled = !ok;
+    canvas.width = size.width;
+    canvas.height = size.height;
+    showError(loadMessage);
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return showError(d.errorExportFailed ?? '');
+    ctx.fillStyle = bgInput.value;
+    ctx.fillRect(0, 0, size.width, size.height);
+    ctx.imageSmoothingQuality = 'high';
+    const radius = Math.max(0, Number(radiusInput.value) || 0);
+    const border = Math.min(
+      MAX_BORDER,
+      Math.max(0, Number(borderInput.value) || 0),
+    );
+    items.forEach((item, i) => {
+      const cell = cells[i];
+      if (!cell) return;
+      const p = coverPlacement(
+        { width: item.bitmap.width, height: item.bitmap.height },
+        cell,
+        item.zoom,
+        item.posX,
+        item.posY,
+      );
+      ctx.save();
+      roundedPath(ctx, cell.x, cell.y, cell.width, cell.height, radius);
+      ctx.clip();
+      ctx.drawImage(item.bitmap, p.x, p.y, p.width, p.height);
+      ctx.restore();
+      if (border > 0) {
+        // 線の外半分がはみ出さないよう、枠の内側に描く
+        ctx.strokeStyle = borderColorInput.value;
+        ctx.lineWidth = border;
+        roundedPath(
+          ctx,
+          cell.x + border / 2,
+          cell.y + border / 2,
+          Math.max(1, cell.width - border),
+          Math.max(1, cell.height - border),
+          radius - border / 2,
+        );
+        ctx.stroke();
+      }
+    });
+    sizeInfo.textContent = fill(d.outputInfo ?? '', {
+      width: String(size.width),
+      height: String(size.height),
+      count: String(items.length),
+    });
+  }
+
+  function renderList() {
+    listEl.replaceChildren();
+    items.forEach((item, i) => {
+      const li = document.createElement('li');
+      li.className =
+        'flex flex-wrap items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm dark:border-gray-700';
+      const label = document.createElement('span');
+      label.className = 'min-w-0 flex-1 break-all';
+      label.textContent = `${i + 1}. ${item.name}`;
+      li.append(label);
+      const actions: [string, string, () => void, boolean, boolean][] = [
+        [d.select ?? '', d.selectAria ?? '', () => select(item), false, true],
+        [
+          d.moveUp ?? '',
+          d.moveUpAria ?? '',
+          () => move(i, i - 1),
+          i === 0,
+          false,
+        ],
+        [
+          d.moveDown ?? '',
+          d.moveDownAria ?? '',
+          () => move(i, i + 1),
+          i === items.length - 1,
+          false,
+        ],
+        [d.remove ?? '', d.removeAria ?? '', () => remove(i), false, false],
+      ];
+      for (const [text, aria, onClick, disabled, isSelect] of actions) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'ui-btn px-3';
+        b.textContent = text;
+        b.setAttribute('aria-label', fill(aria, { name: item.name }));
+        if (isSelect) b.setAttribute('aria-pressed', String(item === selected));
+        b.disabled = disabled;
+        b.addEventListener('click', onClick);
+        li.append(b);
+      }
+      listEl.append(li);
+    });
+  }
+
+  function refresh() {
+    renderTemplateButtons();
+    renderList();
+    renderAdjust();
+    render();
+  }
+
+  function select(item: Item | null) {
+    selected = item;
+    renderList();
+    renderAdjust();
+  }
+
+  function move(from: number, to: number) {
+    if (loading > 0) return;
+    items = moveItem(items, from, to);
+    refresh();
+  }
+
+  function remove(index: number) {
+    if (loading > 0) return;
+    if (items[index] === selected) selected = null;
+    items[index].bitmap.close();
+    items = items.filter((_, i) => i !== index);
+    refresh();
+  }
+
+  async function addFiles(files: File[]) {
+    const messages: string[] = [];
+    loading++;
+    for (const file of files) {
+      if (items.length >= maxImages) {
+        messages.push(d.errorTooMany ?? '');
+        break;
+      }
+      if (!file.type.startsWith('image/')) {
+        messages.push(fill(d.errorNotImage ?? '', { name: file.name }));
+        continue;
+      }
+      let bitmap: ImageBitmap;
+      try {
+        bitmap = await createImageBitmap(file);
+      } catch {
+        messages.push(fill(d.errorLoadFailed ?? '', { name: file.name }));
+        continue;
+      }
+      if (
+        !isWithinSourceLimit({ width: bitmap.width, height: bitmap.height })
+      ) {
+        bitmap.close();
+        messages.push(fill(d.errorTooLarge ?? '', { name: file.name }));
+        continue;
+      }
+      items.push({ name: file.name, bitmap, posX: 0.5, posY: 0.5, zoom: 1 });
+    }
+    loading--;
+    loadMessage = messages.join('\n');
+    refresh();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const files = Array.from(fileInput.files ?? []);
+    fileInput.value = '';
+    if (files.length > 0) queue = queue.then(() => addFiles(files));
+  });
+  enableFileDrop($('pc-dropzone'), fileInput);
+
+  $('pc-clear').addEventListener('click', () => {
+    if (loading > 0) return;
+    for (const item of items) item.bitmap.close();
+    items = [];
+    selected = null;
+    loadMessage = '';
+    refresh();
+  });
+
+  for (const el of [
+    aspectSelect,
+    sizeSelect,
+    gapInput,
+    marginInput,
+    borderInput,
+    radiusInput,
+    bgInput,
+    borderColorInput,
+  ]) {
+    el.addEventListener('input', render);
+    el.addEventListener('change', render);
+  }
+
+  // スライダーによる位置・拡大の調整（ドラッグ操作の代わりにもなる）
+  function onSlider() {
+    if (!selected) return;
+    selected.zoom = Number(zoomInput.value) / 100;
+    selected.posX = Number(posXInput.value) / 100;
+    selected.posY = Number(posYInput.value) / 100;
+    render();
+  }
+  for (const el of [zoomInput, posXInput, posYInput]) {
+    el.addEventListener('input', onSlider);
+  }
+
+  // プレビュー上のドラッグで、枠の中の写真を動かす
+  interface Drag {
+    item: Item;
+    startX: number;
+    startY: number;
+    posX: number;
+    posY: number;
+    slackX: number;
+    slackY: number;
+    scale: number;
+  }
+  let drag: Drag | null = null;
+  canvas.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0 || items.length === 0) return;
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0) return;
+    const scale = canvas.width / rect.width;
+    const index = hitCell(
+      cells,
+      (e.clientX - rect.left) * scale,
+      (e.clientY - rect.top) * scale,
+    );
+    const item = items[index];
+    if (!item) return;
+    select(item);
+    const p = coverPlacement(
+      { width: item.bitmap.width, height: item.bitmap.height },
+      cells[index],
+      item.zoom,
+      item.posX,
+      item.posY,
+    );
+    drag = {
+      item,
+      startX: e.clientX,
+      startY: e.clientY,
+      posX: item.posX,
+      posY: item.posY,
+      slackX: p.slackX,
+      slackY: p.slackY,
+      scale,
+    };
+    canvas.setPointerCapture(e.pointerId);
+    canvas.classList.replace('cursor-grab', 'cursor-grabbing');
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    drag.item.posX = panPosition(
+      drag.posX,
+      (e.clientX - drag.startX) * drag.scale,
+      drag.slackX,
+    );
+    drag.item.posY = panPosition(
+      drag.posY,
+      (e.clientY - drag.startY) * drag.scale,
+      drag.slackY,
+    );
+    posXInput.value = String(Math.round(drag.item.posX * 100));
+    posYInput.value = String(Math.round(drag.item.posY * 100));
+    render();
+  });
+  const endDrag = () => {
+    drag = null;
+    canvas.classList.replace('cursor-grabbing', 'cursor-grab');
+  };
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+
+  function applyFormat(next: OutputFormat) {
+    format = next;
+    for (const b of formatButtons) {
+      b.setAttribute('aria-pressed', String(b.dataset.format === next));
+    }
+    qualityWrap.hidden = next === 'png';
+  }
+  for (const b of formatButtons) {
+    b.addEventListener('click', () =>
+      applyFormat(b.dataset.format as OutputFormat),
+    );
+  }
+  qualityInput.addEventListener('input', () => {
+    qualityValue.textContent = qualityInput.value;
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (items.length === 0 || downloadButton.disabled) return;
+    const { mime } = outputFormat(format);
+    canvas.toBlob(
+      (blob) => {
+        // 非対応の形式はブラウザがPNGで返すため、種類が違えば失敗として扱う
+        if (!blob || blob.type !== mime) {
+          return showError(d.errorExportFailed ?? '');
+        }
+        showError(loadMessage);
+        downloadBlob(blob, collageFileName(format));
+        statusEl.textContent = d.downloaded ?? '';
+      },
+      mime,
+      format === 'png' ? undefined : Number(qualityInput.value) / 100,
+    );
+  });
+</script>

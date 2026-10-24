@@ -239,7 +239,8 @@ describe('registry integrity - page meta', () => {
       }
     }
     expect(problems).toEqual([]);
-  });
+    // ツール数の二乗の総当たり比較なので、ツール数が増えても CI で 5 秒を超えないよう余裕を持たせる
+  }, 30_000);
 
   it('英語版の title / description が日本語と同一（未翻訳）でない', () => {
     const problems: string[] = [];

@@ -1,0 +1,302 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { colorMixerContent } from '../../i18n/tools/color-mixer';
+import { MAX_STEPS, MIN_STEPS, mixSpaces } from '../../lib/tools/color-mixer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = colorMixerContent[locale];
+const colorInputs = [
+  {
+    id: 'a',
+    label: t.colorALabel,
+    aria: t.pickerAAriaLabel,
+    value: '#ef4444',
+  },
+  {
+    id: 'b',
+    label: t.colorBLabel,
+    aria: t.pickerBAriaLabel,
+    value: '#3b82f6',
+  },
+];
+---
+
+<ToolShell t={t}>
+  <div class="space-y-5">
+    <div class="grid gap-4 sm:grid-cols-2">
+      {colorInputs.map((c) => (
+        <div class="flex items-end gap-3">
+          <input
+            id={`color-mixer-picker-${c.id}`}
+            type="color"
+            value={c.value}
+            aria-label={c.aria}
+            class="h-11 w-16 shrink-0 cursor-pointer rounded-lg border border-gray-300 bg-transparent p-1 dark:border-gray-700"
+          />
+          <div class="min-w-0 flex-1">
+            <label for={`color-mixer-hex-${c.id}`} class="ui-label">
+              {c.label}
+            </label>
+            <input
+              id={`color-mixer-hex-${c.id}`}
+              type="text"
+              value={c.value}
+              placeholder={t.hexPlaceholder}
+              spellcheck="false"
+              class="ui-input h-11 w-full min-w-0 px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div class="min-w-0 sm:col-span-1">
+        <label for="color-mixer-ratio" class="ui-label">
+          {t.ratioLabel}: <span id="color-mixer-ratio-value">50</span>%
+        </label>
+        <input
+          id="color-mixer-ratio"
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value="50"
+          class="h-11 w-full"
+        />
+      </div>
+      <div class="min-w-0">
+        <label for="color-mixer-space" class="ui-label">
+          {t.spaceLabel}
+        </label>
+        <select
+          id="color-mixer-space"
+          class="ui-input h-11 w-full min-w-0 px-3 dark:bg-gray-900"
+        >
+          {mixSpaces.map((s) => (
+            <option value={s}>{t.spaces[s]}</option>
+          ))}
+        </select>
+      </div>
+      <div class="min-w-0">
+        <label for="color-mixer-steps" class="ui-label">
+          {t.stepsLabel}
+        </label>
+        <input
+          id="color-mixer-steps"
+          type="number"
+          min={MIN_STEPS}
+          max={MAX_STEPS}
+          step="1"
+          value="5"
+          inputmode="numeric"
+          class="ui-input h-11 w-full min-w-0 px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+
+    <p
+      id="color-mixer-error"
+      data-hex-error={t.hexError}
+      class="text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div>
+      <h2 class="ui-label">{t.mixedHeading}</h2>
+      <div id="color-mixer-mixed" data-action={t.swatchAction}></div>
+    </div>
+
+    <div>
+      <h2 class="ui-label">{t.stepsHeading}</h2>
+      <div
+        id="color-mixer-swatches"
+        data-action={t.swatchAction}
+        class="grid grid-cols-2 gap-2 sm:grid-cols-4 md:grid-cols-7"
+      ></div>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2">
+      <div>
+        <div class="mb-1 flex items-center justify-between gap-2">
+          <label for="color-mixer-css" class="ui-label mb-0">
+            {t.cssLabel}
+          </label>
+          <button
+            id="color-mixer-css-copy-button"
+            type="button"
+            data-copy-target="color-mixer-css"
+            class="ui-btn shrink-0"
+          >
+            {t.copy}
+          </button>
+        </div>
+        <textarea
+          id="color-mixer-css"
+          readonly
+          rows="6"
+          spellcheck="false"
+          data-no-count
+          class="ui-input w-full px-3 py-2 font-mono text-sm dark:bg-gray-900"
+        ></textarea>
+      </div>
+      <div>
+        <div class="mb-1 flex items-center justify-between gap-2">
+          <label for="color-mixer-list" class="ui-label mb-0">
+            {t.listLabel}
+          </label>
+          <button
+            id="color-mixer-list-copy-button"
+            type="button"
+            data-copy-target="color-mixer-list"
+            class="ui-btn shrink-0"
+          >
+            {t.copy}
+          </button>
+        </div>
+        <textarea
+          id="color-mixer-list"
+          readonly
+          rows="6"
+          spellcheck="false"
+          data-no-count
+          class="ui-input w-full px-3 py-2 font-mono text-sm dark:bg-gray-900"
+        ></textarea>
+      </div>
+    </div>
+
+    <span
+      id="color-mixer-status"
+      data-copied={t.copied}
+      data-copy-failed={t.copyFailed}
+      class="block text-sm text-green-700 dark:text-green-400"
+      aria-live="polite"
+    ></span>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { hexToRgb, normalizeHex } from '../../lib/tools/color-converter';
+  import {
+    generateSteps,
+    mixColors,
+    toCssVariables,
+    toHexList,
+    type MixSpace,
+  } from '../../lib/tools/color-mixer';
+
+  const byId = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const pickerA = byId<HTMLInputElement>('color-mixer-picker-a');
+  const pickerB = byId<HTMLInputElement>('color-mixer-picker-b');
+  const hexA = byId<HTMLInputElement>('color-mixer-hex-a');
+  const hexB = byId<HTMLInputElement>('color-mixer-hex-b');
+  const ratio = byId<HTMLInputElement>('color-mixer-ratio');
+  const ratioValue = byId('color-mixer-ratio-value');
+  const space = byId<HTMLSelectElement>('color-mixer-space');
+  const stepsInput = byId<HTMLInputElement>('color-mixer-steps');
+  const errorEl = byId('color-mixer-error');
+  const mixedEl = byId('color-mixer-mixed');
+  const swatches = byId('color-mixer-swatches');
+  const cssOut = byId<HTMLTextAreaElement>('color-mixer-css');
+  const listOut = byId<HTMLTextAreaElement>('color-mixer-list');
+  const statusEl = byId('color-mixer-status');
+
+  function textColorFor(hex: string): string {
+    const rgb = hexToRgb(hex)!;
+    const lin = (v: number) => {
+      const s = v / 255;
+      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+    const lum = 0.2126 * lin(rgb.r) + 0.7152 * lin(rgb.g) + 0.0722 * lin(rgb.b);
+    return lum > 0.179 ? '#000000' : '#ffffff';
+  }
+
+  function makeSwatch(hex: string, action: string, tall: boolean) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = hex;
+    button.setAttribute('aria-label', `${hex}${action}`);
+    button.className = `${tall ? 'h-24 w-full' : 'h-20'} rounded-lg border border-gray-300 font-mono text-sm font-semibold dark:border-gray-700`;
+    button.style.backgroundColor = hex;
+    button.style.color = textColorFor(hex);
+    button.addEventListener('click', () => void copy(hex));
+    return button;
+  }
+
+  function render() {
+    statusEl.textContent = '';
+    ratioValue.textContent = ratio.value;
+    const a = hexA.value;
+    const b = hexB.value;
+    const spaceValue = space.value as MixSpace;
+    const mixed = mixColors(a, b, Number(ratio.value) / 100, spaceValue);
+    const steps = generateSteps(a, b, Number(stepsInput.value), spaceValue);
+    if (!mixed || !steps) {
+      errorEl.textContent =
+        a && b && Number.isFinite(Number(stepsInput.value))
+          ? (errorEl.dataset.hexError ?? '')
+          : '';
+      mixedEl.replaceChildren();
+      swatches.replaceChildren();
+      cssOut.value = '';
+      listOut.value = '';
+      return;
+    }
+    errorEl.textContent = '';
+    mixedEl.replaceChildren(
+      makeSwatch(mixed, mixedEl.dataset.action ?? '', true),
+    );
+    swatches.replaceChildren(
+      ...steps.map((hex) =>
+        makeSwatch(hex, swatches.dataset.action ?? '', false),
+      ),
+    );
+    cssOut.value = toCssVariables(steps);
+    listOut.value = toHexList(steps);
+  }
+
+  async function copy(text: string) {
+    if (!text) return;
+    statusEl.textContent = (await copyText(text))
+      ? (statusEl.dataset.copied ?? '')
+      : (statusEl.dataset.copyFailed ?? '');
+  }
+
+  for (const [picker, hex] of [
+    [pickerA, hexA],
+    [pickerB, hexB],
+  ] as const) {
+    hex.addEventListener('input', () => {
+      const normalized = normalizeHex(hex.value);
+      if (normalized) picker.value = normalized;
+      render();
+    });
+    picker.addEventListener('input', () => {
+      hex.value = picker.value;
+      render();
+    });
+  }
+  ratio.addEventListener('input', render);
+  space.addEventListener('change', render);
+  stepsInput.addEventListener('input', render);
+
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-copy-target]')
+    .forEach((button) => {
+      button.addEventListener('click', () => {
+        const target = document.getElementById(
+          button.dataset.copyTarget!,
+        ) as HTMLTextAreaElement;
+        void copy(target.value);
+      });
+    });
+
+  render();
+</script>

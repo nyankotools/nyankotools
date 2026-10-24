@@ -24,11 +24,12 @@ const KB = 1024;
  * それぞれに余裕を持たせた値）。
  * 2026-10-21: ツールが約700ページ分に増え、全ページの total に含まれる遅延読み込みのツール登録簿（tools.*.js、gzip後 約82KB）
  * が膨らんだため、通常ページ120→140KB、figlet-text 150→170KB、qr-code-reader 140→160KB に見直した。
+ * 2026-10-24: 登録簿の増加で通常ページ140→145KB、figlet-text 170→175KB、qr-code-reader 160→165KB、heic-converter 870→875KB に見直した。
  * wasm・PDFワーカーなど、JSの静的/動的importで辿れないアセット（qpdf.wasm 等）は計測対象外。
  */
 export const budgets = {
   // 通常ページ・通常ツール（initial / total の両方に適用）
-  normal: 140 * KB,
+  normal: 145 * KB,
   // heavy ツールの total（PDF・wasm・大きめのライブラリ。遅延読み込み先を含む）
   heavy: 440 * KB,
   // heavy ツールの initial（最初に読み込むJS）。重い処理は操作時の動的importに逃がすこと
@@ -40,17 +41,19 @@ export const budgets = {
  * heic-to（gzip後 約720KB）を遅延読み込みする heic-converter のみ。
  */
 export const slugBudgets = {
-  'heic-converter': 870 * KB,
+  'heic-converter': 875 * KB,
   // prettier・terser・csso を言語・操作ごとに遅延読み込みするため、全体は大きいが初回は小さい
   'code-minifier': 600 * KB,
   // フォント・jsQR など操作時に遅延読み込みするデータ
-  'figlet-text': 170 * KB,
-  'qr-code-reader': 160 * KB,
+  'figlet-text': 175 * KB,
+  'qr-code-reader': 165 * KB,
   // 共通チャンクの増加でわずかに通常予算を超えたツール
   'csv-excel-converter': 150 * KB,
   'toml-converter': 150 * KB,
   'yaml-formatter': 150 * KB,
   'pdf-password-protector': 460 * KB,
+  // pdf.js に fflate が加わり heavy 予算をわずかに超える
+  'pdf-image-extractor': 460 * KB,
 };
 
 const STATIC_IMPORT = /(?:\bfrom|\bimport)\s*["'](\.[^"']+\.m?js)["']/g;

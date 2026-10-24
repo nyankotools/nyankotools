@@ -1,0 +1,301 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { stampDutyCalculatorContent } from '../../i18n/tools/stamp-duty-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = stampDutyCalculatorContent[locale];
+---
+
+<ToolShell t={t}>
+  <p
+    class="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+    role="note"
+  >
+    {t.disclaimer}
+  </p>
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+    data-status-non-taxable={t.statusNonTaxable}
+    data-status-no-amount={t.statusNoAmount}
+    data-status-demand-bill={t.statusDemandBill}
+    data-status-bracket={t.statusBracket}
+    data-status-fixed={t.statusFixed}
+    data-status-relief={t.statusRelief}
+    data-relief-expired={t.reliefExpiredMessage}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-3">
+      <label for="stamp-doc" class="ui-label">
+        {t.docLabel}
+      </label>
+      <select
+        id="stamp-doc"
+        class="ui-input h-11 w-full max-w-xl px-3 dark:bg-gray-900"
+      >
+        {t.docTypes.map((d) => (
+          <option value={d.id} data-hint={d.hint}>
+            {d.label}
+          </option>
+        ))}
+      </select>
+      <p
+        id="stamp-doc-hint"
+        class="mt-1 max-w-xl text-xs text-gray-600 dark:text-gray-400"
+      ></p>
+    </div>
+
+    <div id="stamp-amount-group" class="mb-3">
+      <label for="stamp-amount" class="ui-label">
+        {t.amountLabel}
+      </label>
+      <input
+        id="stamp-amount"
+        type="text"
+        inputmode="numeric"
+        placeholder={t.amountPlaceholder}
+        class="ui-input h-11 w-48 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+      <p class="mt-1 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+        {t.amountHint}
+      </p>
+    </div>
+
+    <div id="stamp-no-amount-group" class="mb-2">
+      <label class="flex items-center gap-2 text-sm">
+        <input id="stamp-no-amount" type="checkbox" />
+        {t.noAmountLabel}
+      </label>
+    </div>
+
+    <div id="stamp-demand-group" class="mb-2">
+      <label class="flex items-center gap-2 text-sm">
+        <input id="stamp-demand" type="checkbox" />
+        {t.demandLabel}
+      </label>
+    </div>
+
+    <div id="stamp-relief-group" class="mb-3">
+      <label class="flex items-center gap-2 text-sm">
+        <input id="stamp-relief" type="checkbox" />
+        {t.reliefLabel}
+      </label>
+      <p class="mt-1 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+        {t.reliefHint}
+      </p>
+      <div class="mt-2">
+        <label for="stamp-date" class="ui-label">
+          {t.dateLabel}
+        </label>
+        <input
+          id="stamp-date"
+          type="date"
+          class="ui-input h-11 w-48 px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+
+    <p
+      id="stamp-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="stamp-results" class="mt-4 hidden" aria-live="polite">
+      <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultTaxLabel}
+          </dt>
+          <dd class="text-2xl font-bold break-words" id="stamp-result-tax"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultStatusLabel}
+          </dt>
+          <dd
+            class="text-lg font-semibold break-words"
+            id="stamp-result-status"
+          ></dd>
+        </div>
+        <div id="stamp-normal-group" class="hidden">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultNormalLabel}
+          </dt>
+          <dd
+            class="text-lg font-semibold break-words"
+            id="stamp-result-normal"
+          ></dd>
+        </div>
+        <div id="stamp-saving-group" class="hidden">
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.resultSavingLabel}
+          </dt>
+          <dd
+            class="text-lg font-semibold break-words"
+            id="stamp-result-saving"
+          ></dd>
+        </div>
+      </dl>
+      <p
+        id="stamp-expired"
+        class="mt-3 hidden text-sm text-amber-800 dark:text-amber-300"
+      ></p>
+      <p
+        id="stamp-nontaxable-note"
+        class="mt-3 hidden max-w-xl text-xs text-gray-600 dark:text-gray-400"
+      >
+        {t.nonTaxableNote}
+      </p>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    calculateStampDuty,
+    getDocTypeTraits,
+    isDocTypeId,
+  } from '../../lib/tools/stamp-duty-calculator';
+  import {
+    attachCommaFormatting,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
+  const errorMessage = configEl.dataset.error ?? '';
+  const statusTexts = {
+    nonTaxable: configEl.dataset.statusNonTaxable ?? '',
+    noAmount: configEl.dataset.statusNoAmount ?? '',
+    demandBill: configEl.dataset.statusDemandBill ?? '',
+    bracket: configEl.dataset.statusBracket ?? '',
+    fixed: configEl.dataset.statusFixed ?? '',
+  };
+  const reliefText = configEl.dataset.statusRelief ?? '';
+  const expiredText = configEl.dataset.reliefExpired ?? '';
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+
+  const docSelect = document.getElementById('stamp-doc') as HTMLSelectElement;
+  const docHint = document.getElementById('stamp-doc-hint')!;
+  const amountInput = document.getElementById(
+    'stamp-amount',
+  ) as HTMLInputElement;
+  const noAmountInput = document.getElementById(
+    'stamp-no-amount',
+  ) as HTMLInputElement;
+  const demandInput = document.getElementById(
+    'stamp-demand',
+  ) as HTMLInputElement;
+  const reliefInput = document.getElementById(
+    'stamp-relief',
+  ) as HTMLInputElement;
+  const dateInput = document.getElementById('stamp-date') as HTMLInputElement;
+  const amountGroup = document.getElementById('stamp-amount-group')!;
+  const noAmountGroup = document.getElementById('stamp-no-amount-group')!;
+  const demandGroup = document.getElementById('stamp-demand-group')!;
+  const reliefGroup = document.getElementById('stamp-relief-group')!;
+  const errorEl = document.getElementById('stamp-error')!;
+  const resultsEl = document.getElementById('stamp-results')!;
+  const normalGroup = document.getElementById('stamp-normal-group')!;
+  const savingGroup = document.getElementById('stamp-saving-group')!;
+  const expiredEl = document.getElementById('stamp-expired')!;
+  const nonTaxableNote = document.getElementById('stamp-nontaxable-note')!;
+
+  function setText(id: string, text: string) {
+    document.getElementById(id)!.textContent = text;
+  }
+
+  function toggle(el: HTMLElement, show: boolean) {
+    el.classList.toggle('hidden', !show);
+  }
+
+  function todayLocal(): string {
+    const d = new Date();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${mm}-${dd}`;
+  }
+
+  attachCommaFormatting(amountInput);
+  dateInput.value = todayLocal();
+
+  function render() {
+    errorEl.textContent = '';
+    toggle(resultsEl, false);
+
+    const docType = docSelect.value;
+    if (!isDocTypeId(docType)) return;
+    const traits = getDocTypeTraits(docType);
+
+    const noAmount = traits.allowsNoAmount && noAmountInput.checked;
+    docHint.textContent = docSelect.selectedOptions[0]?.dataset.hint ?? '';
+    // 金額が不要な文書と、記載なしのときは金額欄を隠す
+    toggle(amountGroup, traits.needsAmount && !noAmount);
+    toggle(noAmountGroup, traits.allowsNoAmount);
+    toggle(demandGroup, traits.allowsDemandPayment);
+    toggle(reliefGroup, traits.reliefEligible);
+
+    let amount: number | null = null;
+    if (traits.needsAmount && !noAmount) {
+      if (amountInput.value.trim() === '') return;
+      amount = Number(stripCommas(amountInput.value));
+    }
+
+    const result = calculateStampDuty({
+      docType,
+      amount,
+      noAmount,
+      demandPayment: traits.allowsDemandPayment && demandInput.checked,
+      relief: traits.reliefEligible && reliefInput.checked,
+      createdOn: dateInput.value || undefined,
+    });
+
+    if (result === null) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    setText('stamp-result-tax', yen.format(result.tax));
+    setText(
+      'stamp-result-status',
+      result.reliefApplied
+        ? `${statusTexts[result.basis]} / ${reliefText}`
+        : statusTexts[result.basis],
+    );
+    toggle(normalGroup, result.reliefApplied);
+    toggle(savingGroup, result.reliefApplied);
+    setText('stamp-result-normal', yen.format(result.normalTax));
+    setText('stamp-result-saving', yen.format(result.normalTax - result.tax));
+    expiredEl.textContent = result.reliefExpired ? expiredText : '';
+    toggle(expiredEl, result.reliefExpired);
+    toggle(nonTaxableNote, result.basis === 'nonTaxable');
+    toggle(resultsEl, true);
+  }
+
+  for (const el of [amountInput, dateInput]) {
+    el.addEventListener('input', render);
+  }
+  for (const el of [docSelect, noAmountInput, demandInput, reliefInput]) {
+    el.addEventListener('change', render);
+  }
+
+  docSelect.value = 'no2-construction';
+  amountInput.value = '5,000,000';
+  render();
+</script>

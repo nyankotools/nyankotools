@@ -1,0 +1,858 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { pdfStampContent } from '../../i18n/tools/pdf-stamp';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = pdfStampContent[locale];
+const buttonClass = 'ui-btn';
+---
+
+<ToolShell t={t}>
+  <p
+    id="ps-disclaimer"
+    class="mb-4 max-w-3xl rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100"
+  >
+    {t.disclaimer}
+  </p>
+
+  <div>
+    <label for="ps-file" class="ui-label">
+      {t.fileLabel}
+    </label>
+    <div id="ps-drop" class="ui-dropzone">
+      <input
+        id="ps-file"
+        type="file"
+        accept=".pdf,application/pdf"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
+    </div>
+    <p
+      id="ps-info"
+      hidden
+      data-template={t.pagesTemplate}
+      data-separator={t.infoSeparator}
+      class="mt-2 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+  </div>
+
+  <div class="mt-4">
+    <label for="ps-image" class="ui-label">
+      {t.imageLabel}
+    </label>
+    <div id="ps-image-drop" class="ui-dropzone">
+      <input id="ps-image" type="file" accept="image/*" class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+        {t.imageDropHint}
+      </p>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.imageHint}</p>
+    </div>
+    <p
+      id="ps-image-info"
+      hidden
+      class="mt-2 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+  </div>
+
+  <section
+    id="ps-editor"
+    hidden
+    class="mt-4 max-w-3xl"
+    data-indicator={t.pageIndicatorTemplate}
+    data-canvas-label={t.canvasLabelTemplate}
+  >
+    <h2 class="mb-1 text-lg font-semibold">{t.editorHeading}</h2>
+    <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">{t.editorHint}</p>
+
+    <div class="mb-3 flex flex-wrap items-center gap-2">
+      <button id="ps-prev" type="button" class={buttonClass}>
+        {t.prevPage}
+      </button>
+      <span
+        id="ps-indicator"
+        class="px-1 text-sm text-gray-700 dark:text-gray-300"
+        aria-live="polite"
+      ></span>
+      <button id="ps-next" type="button" class={buttonClass}>
+        {t.nextPage}
+      </button>
+    </div>
+
+    <div
+      id="ps-stage"
+      class="relative w-full overflow-hidden rounded-lg border border-gray-300 bg-white select-none dark:border-gray-700"
+    >
+      <canvas id="ps-canvas" class="block h-auto w-full" role="img"></canvas>
+      <div id="ps-layer" hidden class="absolute">
+        <button
+          id="ps-stamp"
+          type="button"
+          aria-label={t.stampLabel}
+          class="absolute inset-0 cursor-move touch-none border border-dashed border-blue-600 bg-transparent p-0 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-600"
+        >
+          <img
+            id="ps-stamp-img"
+            alt=""
+            draggable="false"
+            class="pointer-events-none block h-full w-full object-fill"
+          />
+        </button>
+        <button
+          id="ps-handle"
+          type="button"
+          aria-label={t.resizeHandleLabel}
+          class="absolute right-0 bottom-0 h-6 w-6 cursor-nwse-resize touch-none border-2 border-white bg-blue-600 p-0 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-blue-600"
+        ></button>
+      </div>
+    </div>
+
+    <div class="mt-4 flex flex-wrap gap-6">
+      <div>
+        <label
+          for="ps-size"
+          class="mb-1 block text-sm text-gray-700 dark:text-gray-300"
+        >
+          {t.sizeLabel}: <output id="ps-size-value">25</output>%
+        </label>
+        <input
+          id="ps-size"
+          type="range"
+          min="3"
+          max="100"
+          step="1"
+          value="25"
+          class="w-56 max-w-full"
+        />
+      </div>
+      <div>
+        <label
+          for="ps-opacity"
+          class="mb-1 block text-sm text-gray-700 dark:text-gray-300"
+        >
+          {t.opacityLabel}: <output id="ps-opacity-value">100</output>%
+        </label>
+        <input
+          id="ps-opacity"
+          type="range"
+          min="10"
+          max="100"
+          step="5"
+          value="100"
+          class="w-56 max-w-full"
+        />
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <button id="ps-reset" type="button" class={buttonClass}>
+        {t.resetPosition}
+      </button>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-center gap-2">
+      <span class="ui-label mb-0">{t.targetLabel}</span>
+      <div class="ui-seg" role="group" aria-label={t.targetLabel}>
+        <button
+          id="ps-target-all"
+          type="button"
+          class="ui-seg-btn"
+          aria-pressed="true"
+        >
+          {t.targetAll}
+        </button>
+        <button
+          id="ps-target-current"
+          type="button"
+          class="ui-seg-btn"
+          aria-pressed="false"
+        >
+          {t.targetCurrent}
+        </button>
+        <button
+          id="ps-target-range"
+          type="button"
+          class="ui-seg-btn"
+          aria-pressed="false"
+        >
+          {t.targetRange}
+        </button>
+      </div>
+    </div>
+    <div id="ps-range-wrap" hidden class="mt-3">
+      <label
+        for="ps-range"
+        class="mb-1 block text-sm text-gray-700 dark:text-gray-300"
+      >
+        {t.rangeLabel}
+      </label>
+      <input
+        id="ps-range"
+        type="text"
+        inputmode="text"
+        autocomplete="off"
+        placeholder={t.rangePlaceholder}
+        class="ui-input h-11 w-48 px-2"
+      />
+    </div>
+  </section>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="ps-run"
+      type="button"
+      data-run={t.run}
+      data-processing={t.processing}
+      class="ui-btn-primary"
+    >
+      {t.run}
+    </button>
+    <button id="ps-clear" type="button" class={buttonClass}>
+      {t.clear}
+    </button>
+  </div>
+
+  <p
+    id="ps-error"
+    role="alert"
+    hidden
+    data-no-file={t.errorNoFile}
+    data-no-image={t.errorNoImage}
+    data-not-pdf={t.errorNotPdf}
+    data-not-image={t.errorNotImage}
+    data-invalid={t.errorInvalid}
+    data-encrypted={t.errorEncrypted}
+    data-bad-image={t.errorBadImage}
+    data-empty-range={t.errorEmptyRange}
+    data-bad-range={t.errorBadRange}
+    data-out-of-range={t.errorOutOfRange}
+    data-no-target={t.errorNoTarget}
+    data-failed={t.errorFailed}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+
+  <section
+    id="ps-result"
+    hidden
+    class="mt-6"
+    data-summary={t.resultSummaryTemplate}
+    data-download={t.downloadTemplate}
+  >
+    <h2 class="mb-2 text-lg font-semibold">{t.resultHeading}</h2>
+    <p
+      id="ps-result-summary"
+      class="mb-3 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+    <button id="ps-download" type="button" class={buttonClass}></button>
+  </section>
+</ToolShell>
+
+<script>
+  import { fill } from '../../lib/format-template';
+  import { paren } from '../../lib/paren';
+  import { loadPdfjs } from '../../lib/pdfjs-loader';
+  import { getPageCount, PdfToolError } from '../../lib/tools/pdf-merge-split';
+  import { clampScale } from '../../lib/tools/pdf-image-converter';
+  import {
+    buildStampedPdf,
+    clampPlacement,
+    DEFAULT_PLACEMENT,
+    PdfStampError,
+    placementHeight,
+    resizeAround,
+    resolveTargetPages,
+    stampedFileName,
+    type StampPlacement,
+    type StampTargetMode,
+  } from '../../lib/tools/pdf-stamp';
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { preloadPdfLibs } from '../../lib/pdf-preload';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const fileInput = $<HTMLInputElement>('ps-file');
+  const imageInput = $<HTMLInputElement>('ps-image');
+  const info = $('ps-info');
+  const imageInfo = $('ps-image-info');
+  const editor = $('ps-editor');
+  const prevButton = $<HTMLButtonElement>('ps-prev');
+  const nextButton = $<HTMLButtonElement>('ps-next');
+  const indicator = $('ps-indicator');
+  const stage = $('ps-stage');
+  const canvas = $<HTMLCanvasElement>('ps-canvas');
+  const layer = $('ps-layer');
+  const stampButton = $<HTMLButtonElement>('ps-stamp');
+  const stampImg = $<HTMLImageElement>('ps-stamp-img');
+  const handle = $<HTMLButtonElement>('ps-handle');
+  const sizeInput = $<HTMLInputElement>('ps-size');
+  const sizeValue = $('ps-size-value');
+  const opacityInput = $<HTMLInputElement>('ps-opacity');
+  const opacityValue = $('ps-opacity-value');
+  const resetButton = $<HTMLButtonElement>('ps-reset');
+  const targetButtons: Record<StampTargetMode, HTMLButtonElement> = {
+    all: $<HTMLButtonElement>('ps-target-all'),
+    current: $<HTMLButtonElement>('ps-target-current'),
+    range: $<HTMLButtonElement>('ps-target-range'),
+  };
+  const rangeWrap = $('ps-range-wrap');
+  const rangeInput = $<HTMLInputElement>('ps-range');
+  const runButton = $<HTMLButtonElement>('ps-run');
+  const clearButton = $<HTMLButtonElement>('ps-clear');
+  const errorEl = $('ps-error');
+  const resultEl = $('ps-result');
+  const resultSummary = $('ps-result-summary');
+  const downloadButton = $<HTMLButtonElement>('ps-download');
+
+  enableFileDrop($('ps-drop'), fileInput, () =>
+    preloadPdfLibs({ pdfLib: true, pdfjs: true }),
+  );
+  enableFileDrop($('ps-image-drop'), imageInput, () =>
+    preloadPdfLibs({ pdfLib: true }),
+  );
+
+  /** 画像の長辺の上限（px）。署名・印影には十分で、書き出しファイルが大きくなりすぎない */
+  const MAX_IMAGE_SIDE = 2000;
+
+  let pdfBytes: Uint8Array | null = null;
+  let pdfName = '';
+  let pdfDoc: Awaited<ReturnType<typeof openPdf>>['doc'] | null = null;
+  let pdfTask: Awaited<ReturnType<typeof openPdf>>['task'] | null = null;
+  let pageCount = 0;
+  let current = 0;
+  /** 表示上のページサイズ（pt）。プレビューを描画したページだけ入る */
+  let sizes: ({ w: number; h: number } | undefined)[] = [];
+  let imageBytes: Uint8Array | null = null;
+  let imageUrl = '';
+  let aspect = 1;
+  let placement: StampPlacement = { ...DEFAULT_PLACEMENT };
+  let target: StampTargetMode = 'all';
+  let resultBlob: Blob | null = null;
+  let resultName = '';
+  let renderToken = 0;
+  let renderTask: { cancel(): void } | null = null;
+  let busy = false;
+
+  function showError(key: string) {
+    hideResult();
+    errorEl.textContent = errorEl.dataset[key] ?? '';
+    errorEl.hidden = false;
+  }
+
+  function hideError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function hideResult() {
+    resultBlob = null;
+    resultSummary.textContent = '';
+    resultEl.hidden = true;
+  }
+
+  function formatBytes(bytes: number): string {
+    return bytes < 1024
+      ? `${bytes} B`
+      : bytes < 1048576
+        ? `${(bytes / 1024).toFixed(1)} KB`
+        : `${(bytes / 1048576).toFixed(2)} MB`;
+  }
+
+  /** pdf.js の例外を tool のエラーキーに変換する */
+  function pdfErrorKey(e: unknown): string {
+    const name = (e as { name?: string } | null)?.name ?? '';
+    const message = (e as { message?: string } | null)?.message ?? '';
+    if (name === 'PasswordException' || /password/i.test(message))
+      return 'encrypted';
+    if (name === 'InvalidPDFException' || name === 'FormatError')
+      return 'invalid';
+    console.error(e);
+    return 'failed';
+  }
+
+  function errorKey(e: unknown): string {
+    if (e instanceof PdfToolError) {
+      return [
+        'invalid',
+        'encrypted',
+        'emptyRange',
+        'badRange',
+        'outOfRange',
+      ].includes(e.code)
+        ? e.code
+        : 'failed';
+    }
+    if (e instanceof PdfStampError) return e.code;
+    return pdfErrorKey(e);
+  }
+
+  async function openPdf(bytes: Uint8Array) {
+    // pdf.js は渡したバッファを worker に転送（detach）するためコピーを渡す
+    const pdfjs = await loadPdfjs();
+    const task = pdfjs.getDocument({ data: bytes.slice() });
+    try {
+      return { doc: await task.promise, task };
+    } catch (e) {
+      void task.destroy();
+      if (pdfErrorKey(e) !== 'failed') throw e;
+      // 一部の暗号化PDFは pdf.js が UnknownErrorException で失敗するため、pdf-lib の判定で原因を補う
+      try {
+        await getPageCount(bytes);
+      } catch (fallback) {
+        if (fallback instanceof PdfToolError) throw fallback;
+      }
+      throw e;
+    }
+  }
+
+  function closeDocument() {
+    renderToken++;
+    renderTask?.cancel();
+    renderTask = null;
+    void pdfTask?.destroy();
+    pdfDoc = null;
+    pdfTask = null;
+  }
+
+  function resetDocument() {
+    closeDocument();
+    pdfBytes = null;
+    sizes = [];
+    pageCount = 0;
+    current = 0;
+    info.hidden = true;
+    editor.hidden = true;
+    canvas.width = canvas.height = 0;
+  }
+
+  function resetImage() {
+    if (imageUrl) URL.revokeObjectURL(imageUrl);
+    imageUrl = '';
+    imageBytes = null;
+    stampImg.removeAttribute('src');
+    imageInfo.hidden = true;
+    layer.hidden = true;
+  }
+
+  function currentSize() {
+    return sizes[current];
+  }
+
+  /** 現在のページに収めた配置 */
+  function shown(): StampPlacement | null {
+    const size = currentSize();
+    if (!size || !imageBytes) return null;
+    return clampPlacement(placement, aspect, size.w, size.h);
+  }
+
+  function updateOverlay() {
+    const size = currentSize();
+    const p = shown();
+    if (!size || !p) {
+      layer.hidden = true;
+      return;
+    }
+    layer.hidden = false;
+    const h = placementHeight(p.w, aspect, size.w, size.h);
+    layer.style.left = `${p.x * 100}%`;
+    layer.style.top = `${p.y * 100}%`;
+    layer.style.width = `${p.w * 100}%`;
+    layer.style.height = `${h * 100}%`;
+    stampImg.style.opacity = String(Number(opacityInput.value) / 100);
+    const pct = Math.round(p.w * 100);
+    sizeInput.value = String(pct);
+    sizeValue.textContent = String(pct);
+    opacityValue.textContent = opacityInput.value;
+  }
+
+  function updateControls() {
+    indicator.textContent = fill(editor.dataset.indicator ?? '', {
+      n: String(current + 1),
+      total: String(pageCount),
+    });
+    prevButton.disabled = busy || current <= 0;
+    nextButton.disabled = busy || current >= pageCount - 1;
+    updateOverlay();
+  }
+
+  function onChanged() {
+    hideResult();
+    hideError();
+  }
+
+  async function renderPage() {
+    if (!pdfDoc) return;
+    const token = ++renderToken;
+    renderTask?.cancel();
+    renderTask = null;
+    updateControls();
+    canvas.setAttribute(
+      'aria-label',
+      fill(editor.dataset.canvasLabel ?? '', { n: String(current + 1) }),
+    );
+    const page = await pdfDoc.getPage(current + 1);
+    try {
+      if (token !== renderToken) return;
+      const base = page.getViewport({ scale: 1 });
+      sizes[current] = { w: base.width, h: base.height };
+      const cssWidth = Math.max(1, stage.clientWidth);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const scale = clampScale(
+        base.width,
+        base.height,
+        (cssWidth / base.width) * dpr,
+      );
+      const viewport = page.getViewport({ scale });
+      // 描画中のキャンバスを直接いじると切り替え時にちらつくため、オフスクリーンに描いて差し替える
+      const off = document.createElement('canvas');
+      off.width = Math.max(1, Math.round(viewport.width));
+      off.height = Math.max(1, Math.round(viewport.height));
+      const ctx = off.getContext('2d')!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, off.width, off.height);
+      const task = page.render({ canvas: off, canvasContext: ctx, viewport });
+      renderTask = task;
+      await task.promise;
+      if (token !== renderToken) return;
+      canvas.width = off.width;
+      canvas.height = off.height;
+      canvas.getContext('2d')!.drawImage(off, 0, 0);
+      updateOverlay();
+    } catch (e) {
+      const name = (e as { name?: string } | null)?.name ?? '';
+      // 次のページへ切り替えたときのキャンセルは正常動作
+      if (name !== 'RenderingCancelledException') {
+        console.error(e);
+        if (token === renderToken) showError('failed');
+      }
+    } finally {
+      page.cleanup();
+    }
+  }
+
+  function goTo(index: number) {
+    if (busy || drag || index < 0 || index >= pageCount) return;
+    current = index;
+    void renderPage();
+  }
+
+  prevButton.addEventListener('click', () => goTo(current - 1));
+  nextButton.addEventListener('click', () => goTo(current + 1));
+
+  // 画像のドラッグ移動・リサイズ
+  let drag: {
+    mode: 'move' | 'resize';
+    startX: number;
+    startY: number;
+    origin: StampPlacement;
+  } | null = null;
+
+  function pointerPos(e: PointerEvent) {
+    const box = canvas.getBoundingClientRect();
+    return {
+      x: (e.clientX - box.left) / Math.max(1, box.width),
+      y: (e.clientY - box.top) / Math.max(1, box.height),
+    };
+  }
+
+  function startDrag(e: PointerEvent, mode: 'move' | 'resize') {
+    const p = shown();
+    if (busy || drag || !e.isPrimary || e.button !== 0 || !p) return;
+    e.preventDefault();
+    e.stopPropagation();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    placement = p;
+    const pos = pointerPos(e);
+    drag = { mode, startX: pos.x, startY: pos.y, origin: p };
+  }
+
+  function moveDrag(e: PointerEvent) {
+    const size = currentSize();
+    if (!drag || !size) return;
+    const pos = pointerPos(e);
+    if (drag.mode === 'move') {
+      placement = clampPlacement(
+        {
+          x: drag.origin.x + pos.x - drag.startX,
+          y: drag.origin.y + pos.y - drag.startY,
+          w: drag.origin.w,
+        },
+        aspect,
+        size.w,
+        size.h,
+      );
+    } else {
+      // 右下の角を押さえた位置に合わせて幅を決める（左上は動かさない）
+      const w = Math.max(0.03, pos.x - drag.origin.x);
+      placement = clampPlacement(
+        { x: drag.origin.x, y: drag.origin.y, w },
+        aspect,
+        size.w,
+        size.h,
+      );
+    }
+    updateOverlay();
+  }
+
+  function endDrag() {
+    if (!drag) return;
+    drag = null;
+    onChanged();
+  }
+
+  for (const [el, mode] of [
+    [stampButton, 'move'],
+    [handle, 'resize'],
+  ] as const) {
+    el.addEventListener('pointerdown', (e) => startDrag(e, mode));
+    el.addEventListener('pointermove', moveDrag);
+    el.addEventListener('pointerup', endDrag);
+    el.addEventListener('pointercancel', endDrag);
+  }
+
+  stampButton.addEventListener('keydown', (e) => {
+    const size = currentSize();
+    const p = shown();
+    if (busy || !size || !p) return;
+    const step = e.shiftKey ? 0.02 : 0.005;
+    const move: Record<string, [number, number]> = {
+      ArrowLeft: [-step, 0],
+      ArrowRight: [step, 0],
+      ArrowUp: [0, -step],
+      ArrowDown: [0, step],
+    };
+    const d = move[e.key];
+    if (!d) return;
+    e.preventDefault();
+    placement = clampPlacement(
+      { x: p.x + d[0], y: p.y + d[1], w: p.w },
+      aspect,
+      size.w,
+      size.h,
+    );
+    onChanged();
+    updateOverlay();
+  });
+
+  sizeInput.addEventListener('input', () => {
+    const size = currentSize();
+    const p = shown();
+    if (!size || !p) {
+      sizeValue.textContent = sizeInput.value;
+      return;
+    }
+    placement = resizeAround(
+      p,
+      Number(sizeInput.value) / 100,
+      aspect,
+      size.w,
+      size.h,
+    );
+    onChanged();
+    updateOverlay();
+  });
+
+  opacityInput.addEventListener('input', () => {
+    onChanged();
+    updateOverlay();
+    opacityValue.textContent = opacityInput.value;
+  });
+
+  resetButton.addEventListener('click', () => {
+    if (busy) return;
+    placement = { ...DEFAULT_PLACEMENT, w: placement.w };
+    onChanged();
+    updateOverlay();
+  });
+
+  function setTarget(next: StampTargetMode) {
+    if (busy) return;
+    target = next;
+    for (const [mode, button] of Object.entries(targetButtons)) {
+      button.setAttribute('aria-pressed', String(mode === next));
+    }
+    rangeWrap.hidden = next !== 'range';
+    onChanged();
+  }
+  for (const [mode, button] of Object.entries(targetButtons)) {
+    button.addEventListener('click', () => setTarget(mode as StampTargetMode));
+  }
+  rangeInput.addEventListener('input', onChanged);
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    // 処理中のドロップで状態が差し替わらないようにする
+    if (busy || !file) return;
+    resetDocument();
+    hideResult();
+    hideError();
+    if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+      showError('notPdf');
+      return;
+    }
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const { doc, task } = await openPdf(bytes);
+      pdfDoc = doc;
+      pdfTask = task;
+      pdfBytes = bytes;
+      pdfName = file.name;
+      pageCount = doc.numPages;
+      sizes = new Array(pageCount).fill(undefined);
+      current = 0;
+      info.textContent = `${file.name}${paren(`${fill(info.dataset.template ?? '', { pages: String(doc.numPages) })}${info.dataset.separator ?? ''}${formatBytes(bytes.length)}`)}`;
+      info.hidden = false;
+      editor.hidden = false;
+      await renderPage();
+    } catch (e) {
+      resetDocument();
+      showError(errorKey(e));
+    }
+  });
+
+  /** 画像を（EXIFの向きを反映して）PNGに変換する。署名・印影向けに長辺を MAX_IMAGE_SIDE までに収める */
+  async function imageToPng(
+    file: File,
+  ): Promise<{ bytes: Uint8Array; url: string; aspect: number }> {
+    const srcUrl = URL.createObjectURL(file);
+    try {
+      const img = new Image();
+      img.src = srcUrl;
+      await img.decode();
+      const nw = img.naturalWidth;
+      const nh = img.naturalHeight;
+      if (!(nw > 0) || !(nh > 0)) throw new Error('empty image');
+      const k = Math.min(1, MAX_IMAGE_SIDE / Math.max(nw, nh));
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(nw * k));
+      c.height = Math.max(1, Math.round(nh * k));
+      c.getContext('2d')!.drawImage(img, 0, 0, c.width, c.height);
+      const blob = await new Promise<Blob | null>((resolve) =>
+        c.toBlob(resolve, 'image/png'),
+      );
+      if (!blob) throw new Error('toBlob failed');
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const aspectRatio = c.width / c.height;
+      c.width = c.height = 0;
+      return {
+        bytes,
+        url: URL.createObjectURL(
+          new Blob([bytes as BlobPart], { type: 'image/png' }),
+        ),
+        aspect: aspectRatio,
+      };
+    } finally {
+      URL.revokeObjectURL(srcUrl);
+    }
+  }
+
+  imageInput.addEventListener('change', async () => {
+    const file = imageInput.files?.[0];
+    imageInput.value = '';
+    if (busy || !file) return;
+    hideResult();
+    hideError();
+    if (!file.type.startsWith('image/')) {
+      showError('notImage');
+      return;
+    }
+    try {
+      const converted = await imageToPng(file);
+      resetImage();
+      imageBytes = converted.bytes;
+      imageUrl = converted.url;
+      aspect = converted.aspect;
+      stampImg.src = imageUrl;
+      imageInfo.textContent = file.name;
+      imageInfo.hidden = false;
+      updateControls();
+    } catch (e) {
+      console.error(e);
+      showError('badImage');
+    }
+  });
+
+  // 画面幅が変わったらプレビューの解像度を合わせ直す
+  let lastWidth = 0;
+  new ResizeObserver(() => {
+    const w = stage.clientWidth;
+    if (!pdfDoc || w === 0 || w === lastWidth) return;
+    const first = lastWidth === 0;
+    lastWidth = w;
+    if (!first) void renderPage();
+  }).observe(stage);
+
+  function setBusy(value: boolean) {
+    busy = value;
+    runButton.disabled = value;
+    clearButton.disabled = value;
+    fileInput.disabled = value;
+    imageInput.disabled = value;
+    resetButton.disabled = value;
+    sizeInput.disabled = value;
+    opacityInput.disabled = value;
+    rangeInput.disabled = value;
+    for (const b of Object.values(targetButtons)) b.disabled = value;
+    stampButton.disabled = value;
+    handle.disabled = value;
+    if (pdfDoc) updateControls();
+  }
+
+  runButton.addEventListener('click', async () => {
+    hideError();
+    hideResult();
+    if (!pdfBytes) return showError('noFile');
+    if (!imageBytes) return showError('noImage');
+    setBusy(true);
+    runButton.textContent = runButton.dataset.processing ?? '';
+    try {
+      const pages = resolveTargetPages(
+        target,
+        rangeInput.value,
+        current,
+        pageCount,
+      );
+      const out = await buildStampedPdf(
+        pdfBytes,
+        { bytes: imageBytes, type: 'png' },
+        placement,
+        pages,
+        { opacity: Number(opacityInput.value) / 100 },
+      );
+      resultBlob = new Blob([out as BlobPart], { type: 'application/pdf' });
+      resultName = stampedFileName(pdfName);
+      resultSummary.textContent = fill(resultEl.dataset.summary ?? '', {
+        pages: String(pages.length),
+      });
+      downloadButton.textContent = `${(resultEl.dataset.download ?? '').replace('{name}', () => resultName)} (${formatBytes(resultBlob.size)})`;
+      resultEl.hidden = false;
+    } catch (e) {
+      showError(errorKey(e));
+    } finally {
+      setBusy(false);
+      runButton.textContent = runButton.dataset.run ?? '';
+    }
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (resultBlob) downloadBlob(resultBlob, resultName);
+  });
+
+  clearButton.addEventListener('click', () => {
+    resetDocument();
+    resetImage();
+    placement = { ...DEFAULT_PLACEMENT };
+    rangeInput.value = '';
+    sizeInput.value = String(Math.round(DEFAULT_PLACEMENT.w * 100));
+    sizeValue.textContent = sizeInput.value;
+    hideError();
+    hideResult();
+  });
+</script>

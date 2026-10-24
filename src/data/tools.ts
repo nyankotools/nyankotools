@@ -13895,6 +13895,627 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'photo-collage-maker',
+    category: 'image',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['image-merger', 'image-logo-watermark', 'image-cropper'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'フォトコラージュ作成',
+        keywords: [
+          'コラージュ',
+          '写真 コラージュ',
+          '写真を並べる',
+          '画像 レイアウト',
+          'フォトコラージュ',
+          'collage',
+          '枠線',
+          '角丸',
+        ],
+        description:
+          '2〜9枚の写真をテンプレートの枠に並べて1枚のコラージュにします。枠の間隔・余白・枠線・角丸・背景色を調整し、ドラッグで表示位置も動かせます。ブラウザ内で処理され外部送信なし。',
+      },
+      en: {
+        name: 'Photo Collage Maker',
+        keywords: [
+          'photo collage',
+          'collage maker',
+          'photo grid',
+          'picture layout',
+          'combine photos',
+          'photo frame template',
+        ],
+        description:
+          'Make a collage from 2-9 photos with layout templates. Set spacing, borders, corners and background; save as PNG, JPEG or WebP. Runs in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'document-scan-filter',
+    category: 'image',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['image-filter', 'image-cropper', 'pdf-image-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '書類スキャン風補正（影除去・白黒化）',
+        keywords: [
+          '書類スキャン',
+          '影除去',
+          '白黒化',
+          '2値化',
+          'グレースケール',
+          'レシート',
+          '書類 写真 補正',
+          'ドキュメントスキャン',
+        ],
+        description:
+          'スマホで撮った書類の写真から影を除去し、紙を白く・文字をくっきり補正。カラー・グレー・白黒2値に対応。',
+      },
+      en: {
+        name: 'Document Scan Filter (Shadow Removal & B&W)',
+        keywords: [
+          'document scan',
+          'remove shadow',
+          'binarize',
+          'black and white',
+          'grayscale',
+          'receipt',
+          'scanner effect',
+          'otsu',
+        ],
+        description:
+          'Remove shadows and whiten phone photos of documents. Choose color, grayscale or black & white. Runs in your browser; nothing is uploaded.',
+      },
+    },
+  },
+  {
+    slug: 'svg-path-viewer',
+    category: 'image',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['svg-optimizer', 'svg-wave-generator', 'svg-to-data-uri'],
+    translations: {
+      ja: {
+        name: 'SVGパスビューア',
+        keywords: [
+          'SVG',
+          'path',
+          'd属性',
+          'パス',
+          'ベジェ',
+          '制御点',
+          'パスデータ',
+          'ビューア',
+        ],
+        description:
+          'SVGのpath要素のd属性をコマンド別に分解し、始点・終点・制御点を重ねて表示。座標の編集や小数桁の削減もできます。',
+      },
+      en: {
+        name: 'SVG Path Viewer',
+        keywords: [
+          'svg path',
+          'd attribute',
+          'path data',
+          'bezier',
+          'control points',
+          'path viewer',
+          'svg arc',
+          'optimize path',
+        ],
+        description:
+          'Split an SVG path d attribute into commands and see start, end and control points on the shape. Edit coordinates or trim decimals.',
+      },
+    },
+  },
+  {
+    slug: 'color-mixer',
+    category: 'image',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: [
+      'color-palette-generator',
+      'color-space-converter',
+      'color-converter',
+    ],
+    translations: {
+      ja: {
+        name: '色ミキサー',
+        keywords: [
+          '色ミキサー',
+          '混色',
+          '中間色',
+          'カラーミキサー',
+          'グラデーション',
+          'OKLab',
+          '色 混ぜる',
+        ],
+        description: '2色を割合指定で混色し、RGB/OKLabで中間色をN段生成',
+      },
+      en: {
+        name: 'Color Mixer',
+        keywords: [
+          'color mixer',
+          'color blend',
+          'mix colors',
+          'intermediate color',
+          'gradient steps',
+          'OKLab',
+          'color interpolation',
+        ],
+        description:
+          'Mix two colors by ratio and generate N intermediate shades in RGB or OKLab',
+      },
+    },
+  },
+  {
+    slug: 'gif-splitter',
+    category: 'image',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['gif-maker', 'video-to-gif', 'zip-tool'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'GIF分解・フレーム抽出・速度変更',
+        keywords: [
+          'GIF分解',
+          'GIFフレーム抽出',
+          'GIF 速度変更',
+          'GIF 連番PNG',
+          'GIFをPNGに',
+          'アニメーションGIF',
+          'GIF 分割',
+        ],
+        description:
+          'アニメーションGIFを1コマずつに分解してPNG連番のZIPで保存。表示時間（速度）を倍率や固定msで一括変更してGIFを作り直せます。ブラウザ内で処理され、アップロード不要です。',
+      },
+      en: {
+        name: 'GIF Splitter & Speed Changer',
+        keywords: [
+          'gif splitter',
+          'extract gif frames',
+          'gif to png sequence',
+          'change gif speed',
+          'gif frame delay',
+          'split gif',
+        ],
+        description:
+          'Split an animated GIF into frames and save a PNG sequence as ZIP, or change the frame delay in bulk and rebuild the GIF. Runs in your browser, no upload.',
+      },
+    },
+  },
+  {
+    slug: 'withholding-tax-calculator',
+    category: 'calc',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: [
+      'freelance-income-calculator',
+      'tax-calculator',
+      'invoice-generator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '源泉徴収税額の計算（報酬・原稿料・デザイン料）',
+        keywords: [
+          '源泉徴収',
+          '源泉徴収税 計算',
+          '報酬 源泉',
+          '原稿料',
+          'デザイン料',
+          '10.21%',
+          '司法書士 報酬',
+          '手取り 逆算',
+        ],
+        description:
+          '報酬・原稿料・デザイン料の源泉徴収税額（10.21%・100万円超は20.42%）と振込額を計算。消費税の区分や手取りからの逆算に対応。',
+      },
+      en: {
+        name: 'Withholding Tax Calculator for Fees',
+        keywords: [
+          'withholding tax',
+          'freelance fee',
+          'manuscript fee',
+          'design fee',
+          '10.21%',
+          'reconstruction surtax',
+          'net to gross',
+          'judicial scrivener',
+        ],
+        description:
+          'Calculate Japanese withholding tax on freelance fees (10.21%, 20.42% above ¥1M), the amount transferred, and net-to-invoice reverse math.',
+      },
+    },
+  },
+  {
+    slug: 'stamp-duty-calculator',
+    category: 'calc',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['invoice-generator', 'tax-calculator'],
+    translations: {
+      ja: {
+        name: '印紙税額計算（契約書・領収書）',
+        keywords: [
+          '印紙税',
+          '収入印紙',
+          '印紙代',
+          '領収書 印紙',
+          '契約書 印紙',
+          '印紙税額一覧',
+          '軽減措置',
+        ],
+        description:
+          '契約書・領収書・手形などの文書の種類と記載金額から、収入印紙の税額を計算。不動産譲渡・建設工事請負の軽減措置、領収書の5万円未満非課税にも対応。',
+      },
+      en: {
+        name: 'Stamp Duty Calculator (Contracts & Receipts)',
+        keywords: [
+          'stamp duty',
+          'revenue stamp',
+          'inshizei',
+          'receipt stamp',
+          'contract stamp tax',
+          'Japan stamp tax',
+        ],
+        description:
+          'Look up the Japanese revenue stamp tax for contracts, receipts and bills by document type and amount, including the relief rates.',
+      },
+    },
+  },
+  {
+    slug: 'gift-tax-calculator',
+    category: 'calc',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['retirement-allowance-tax', 'tax-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '贈与税計算（暦年課税・特例税率）',
+        keywords: [
+          '贈与税',
+          '暦年課税',
+          '基礎控除',
+          '特例税率',
+          '一般税率',
+          '生前贈与',
+          '速算表',
+          '贈与',
+        ],
+        description:
+          '年間の贈与額から贈与税を計算。基礎控除110万円、特例税率・一般税率の速算表、両方ある場合の按分計算に対応。',
+      },
+      en: {
+        name: 'Gift Tax Calculator (Japan, Calendar-Year)',
+        keywords: [
+          'gift tax',
+          'japan gift tax',
+          'calendar-year taxation',
+          'basic deduction',
+          'special rate',
+          'general rate',
+        ],
+        description:
+          'Estimate Japanese gift tax with the ¥1.1M basic deduction, special and general rate tables, and split calculation for mixed gifts.',
+      },
+    },
+  },
+  {
+    slug: 'pdf-nup',
+    category: 'pdf',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['pdf-page-editor', 'pdf-merge-split', 'pdf-crop'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: 'PDF割付（2in1・4in1）',
+        keywords: [
+          'PDF割付',
+          'N-up',
+          '2in1',
+          '4in1',
+          'PDFまとめて印刷',
+          '配布資料',
+          'PDF縮小配置',
+          'ハンドアウト',
+        ],
+        description:
+          'PDFの複数ページを1枚の用紙に縮小して並べます。2in1・4in1・6in1・8in1・9in1に対応し、向き・順序・余白・枠線を指定できます。',
+      },
+      en: {
+        name: 'PDF N-up (2-up, 4-up Pages per Sheet)',
+        keywords: [
+          'PDF N-up',
+          '2-up',
+          '4-up',
+          'multiple pages per sheet',
+          'PDF handout',
+          'PDF imposition',
+          'combine PDF pages',
+        ],
+        description:
+          'Shrink several PDF pages onto one sheet with 2-up, 4-up, 6-up, 8-up or 9-up layouts. Set orientation, order, margin and borders.',
+      },
+    },
+  },
+  {
+    slug: 'pdf-crop',
+    category: 'pdf',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['pdf-page-editor', 'pdf-nup', 'pdf-redactor'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: 'PDF余白トリミング（クロップ）',
+        keywords: [
+          'PDF余白',
+          'PDFトリミング',
+          'PDFクロップ',
+          'PDF余白削除',
+          'PDF切り抜き',
+          'CropBox',
+        ],
+        description:
+          'PDFの余白を数値入力・ドラッグ・自動検出で切り抜き。全ページ一括もページごとも指定できます。',
+      },
+      en: {
+        name: 'PDF Margin Cropper',
+        keywords: [
+          'crop PDF',
+          'trim PDF margins',
+          'remove PDF white space',
+          'PDF CropBox',
+          'auto crop PDF',
+        ],
+        description:
+          'Crop PDF margins by number, drag or auto-detect. Trim all pages at once or page by page, and save the file with a new CropBox.',
+      },
+    },
+  },
+  {
+    slug: 'depreciation-calculator',
+    category: 'calc',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['tax-calculator', 'stamp-duty-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '減価償却計算機（定額法・定率法）',
+        keywords: [
+          '減価償却',
+          '定額法',
+          '定率法',
+          '耐用年数',
+          '償却率',
+          '少額減価償却資産',
+          '一括償却資産',
+          '月割',
+        ],
+        description:
+          '取得価額と耐用年数から定額法・200%定率法の年別償却費を計算。月割、改定償却率、少額減価償却資産の判定に対応。',
+      },
+      en: {
+        name: 'Depreciation Calculator (Japan, Straight-Line & Declining)',
+        keywords: [
+          'depreciation',
+          'straight-line',
+          'declining balance',
+          'useful life',
+          'depreciation rate',
+          'small asset',
+          'fixed asset',
+          'japan tax',
+        ],
+        description:
+          'Yearly depreciation from cost and useful life: straight-line and 200% declining balance, monthly proration, and Japan small-asset checks.',
+      },
+    },
+  },
+  {
+    slug: 'parcel-size-checker',
+    category: 'calc',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['unit-converter'],
+    translations: {
+      ja: {
+        name: '宅配サイズ判定（3辺合計・重量区分）',
+        keywords: [
+          '宅配サイズ',
+          '3辺合計',
+          '宅急便 サイズ',
+          'ゆうパック サイズ',
+          '佐川急便 サイズ',
+          'ネコポス',
+          'ゆうパケット',
+          'レターパック',
+        ],
+        description:
+          '縦・横・高さと重さから、宅急便・ゆうパック・飛脚宅配便のサイズ区分とネコポス・ゆうパケット・レターパック等の利用可否を判定。上限を超えた理由も表示（令和8年時点）。',
+      },
+      en: {
+        name: 'Parcel Size Checker (Sum of Sides & Weight Class)',
+        keywords: [
+          'parcel size',
+          'takkyubin size',
+          'yu-pack size',
+          'Yamato size',
+          'Japan Post size',
+          'nekopos',
+          'letter pack',
+          'Sagawa size',
+        ],
+        description:
+          'Enter length, width, height and weight to see the Yamato, Yu-Pack and Sagawa size class and whether Nekopos, Yu-Packet or Letter Pack fits. Shows the limit exceeded.',
+      },
+    },
+  },
+  {
+    slug: 'pdf-stamp',
+    category: 'pdf',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: [
+      'signature-pad',
+      'seal-stamp-generator',
+      'pdf-page-number-watermark',
+    ],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: 'PDF署名・スタンプ挿入',
+        keywords: [
+          'PDF署名',
+          'PDFハンコ',
+          'PDF印鑑',
+          'PDF画像挿入',
+          'PDFスタンプ',
+          'PDF押印',
+          'PDF 署名 貼り付け',
+        ],
+        description:
+          'PDFに署名やハンコの画像を貼り付け。ドラッグで位置、スライダーで大きさを決め、複数ページにも適用できます（電子署名ではありません）。',
+      },
+      en: {
+        name: 'PDF Signature & Stamp Placer',
+        keywords: [
+          'sign PDF',
+          'add signature to PDF',
+          'stamp PDF',
+          'insert image into PDF',
+          'PDF seal',
+          'PDF hanko',
+        ],
+        description:
+          'Place a signature or stamp image on a PDF: drag to position, resize, and apply to one or many pages. Not a digital signature; runs in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'pdf-image-extractor',
+    category: 'pdf',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['pdf-image-converter', 'pdf-compressor', 'zip-tool'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: 'PDF画像抽出（埋め込み画像をPNG保存）',
+        keywords: [
+          'PDF画像抽出',
+          'PDFから画像を取り出す',
+          'PDF画像保存',
+          'PDF埋め込み画像',
+          'PDF画像ZIP',
+          'PDF写真抽出',
+        ],
+        description:
+          'PDFに埋め込まれた画像だけをPNGで取り出し、ZIPで一括保存。ページ範囲指定と小さい画像の除外に対応。',
+      },
+      en: {
+        name: 'PDF Image Extractor',
+        keywords: [
+          'extract images from PDF',
+          'PDF image extractor',
+          'save PDF images',
+          'PDF embedded images',
+          'PDF to PNG ZIP',
+          'get pictures from PDF',
+        ],
+        description:
+          'Extract the images embedded in a PDF as PNG and save them all as a ZIP. Supports a page range and a small-image filter.',
+      },
+    },
+  },
+  {
+    slug: 'fx-calculator',
+    category: 'calc',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['investment-simulator', 'unit-converter'],
+    translations: {
+      ja: {
+        name: 'FX計算機（pips・ロット・必要証拠金）',
+        keywords: [
+          'FX',
+          '為替',
+          'pips',
+          'ピップス',
+          'ロット',
+          '必要証拠金',
+          'レバレッジ',
+          '損益計算',
+        ],
+        description:
+          '通貨ペア・ロット・レバレッジ・エントリー/決済レートから、FXの損益（pips・円）と必要証拠金を計算します。円ペア以外にも対応。',
+      },
+      en: {
+        name: 'FX Calculator (Pips, Lot Size, Margin)',
+        keywords: [
+          'forex calculator',
+          'pip calculator',
+          'lot size',
+          'margin calculator',
+          'leverage',
+          'profit loss',
+          'fx',
+        ],
+        description:
+          'Calculate forex profit and loss in pips and yen plus required margin from the pair, lots, leverage, direction, entry and exit rate.',
+      },
+    },
+  },
+  {
+    slug: 'mets-calorie-calculator',
+    category: 'calc',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['bmr-calorie-calculator', 'bmi-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'METs消費カロリー計算機',
+        keywords: [
+          'METs',
+          'メッツ',
+          '運動 消費カロリー',
+          'ウォーキング',
+          'ジョギング',
+          '身体活動',
+          'ダイエット',
+        ],
+        description:
+          '運動の消費カロリーを METs × 体重 × 時間 × 1.05 で計算。ウォーキング・ジョギング・水泳・筋トレ・家事などのMETs表から選び、複数の運動を合計できます。',
+      },
+      en: {
+        name: 'METs Calorie Calculator',
+        keywords: [
+          'METs',
+          'metabolic equivalent',
+          'calories burned',
+          'exercise calories',
+          'workout',
+          'MET-hours',
+        ],
+        description:
+          'Calculates calories burned from METs, body weight, and time. Includes a METs table of common activities and totals several exercises.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

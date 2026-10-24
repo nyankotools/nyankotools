@@ -1,0 +1,344 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { giftTaxCalculatorContent } from '../../i18n/tools/gift-tax-calculator';
+import {
+  GENERAL_BRACKETS,
+  SPECIAL_BRACKETS,
+  type GiftTaxBracket,
+} from '../../lib/tools/gift-tax-calculator';
+import { fill } from '../../lib/format-template';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = giftTaxCalculatorContent[locale];
+
+const yen = new Intl.NumberFormat(t.numberLocale, {
+  style: 'currency',
+  currency: 'JPY',
+  maximumFractionDigits: 0,
+});
+
+function rangeText(brackets: readonly GiftTaxBracket[], i: number): string {
+  const low = i > 0 ? yen.format(brackets[i - 1].upTo) : '';
+  if (!Number.isFinite(brackets[i].upTo)) {
+    return fill(t.rangeOver, { low });
+  }
+  const high = yen.format(brackets[i].upTo);
+  return i === 0
+    ? fill(t.rangeUpTo, { high })
+    : fill(t.rangeBetween, { low, high });
+}
+
+const tables = [
+  { id: 'special', caption: t.tableSpecialCaption, brackets: SPECIAL_BRACKETS },
+  { id: 'general', caption: t.tableGeneralCaption, brackets: GENERAL_BRACKETS },
+];
+
+const results = [
+  { id: 'payable', label: t.resultPayableLabel },
+  { id: 'calculated', label: t.resultCalculatedLabel },
+  { id: 'effective', label: t.resultEffectiveLabel },
+  { id: 'total', label: t.resultTotalLabel },
+  { id: 'deduction', label: t.resultDeductionLabel },
+  { id: 'taxable', label: t.resultTaxableLabel },
+  { id: 'special-rate', label: t.resultSpecialRateLabel },
+  { id: 'general-rate', label: t.resultGeneralRateLabel },
+  { id: 'special-share', label: t.resultSpecialShareLabel },
+  { id: 'general-share', label: t.resultGeneralShareLabel },
+];
+---
+
+<ToolShell t={t}>
+  <p
+    class="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+    role="note"
+  >
+    {t.disclaimer}
+  </p>
+  <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">{t.basisLine}</p>
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+    data-na={t.notApplicable}
+    data-rate-format={t.rateFormat}
+    data-zero-note={t.zeroNote}
+    data-compare-special={t.compareSpecialBetter}
+    data-compare-general={t.compareGeneralBetter}
+    data-compare-same={t.compareSame}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-3 flex flex-wrap items-start gap-4">
+      <div class="max-w-sm">
+        <label for="gift-special" class="ui-label">
+          {t.specialLabel}
+        </label>
+        <input
+          id="gift-special"
+          type="text"
+          inputmode="numeric"
+          placeholder="5000000"
+          class="ui-input h-11 w-48 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          {t.specialHint}
+        </p>
+      </div>
+      <div class="max-w-sm">
+        <label for="gift-general" class="ui-label">
+          {t.generalLabel}
+        </label>
+        <input
+          id="gift-general"
+          type="text"
+          inputmode="numeric"
+          placeholder="0"
+          class="ui-input h-11 w-48 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          {t.generalHint}
+        </p>
+      </div>
+    </div>
+
+    <p
+      id="gift-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="gift-results" class="mt-4 hidden" aria-live="polite">
+      <p
+        id="gift-zero-note"
+        class="mb-3 hidden rounded-md bg-green-50 p-2 text-sm text-green-900 dark:bg-green-950 dark:text-green-100"
+      ></p>
+      <dl class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {results.map((r) => (
+          <div>
+            <dt class="text-sm text-gray-600 dark:text-gray-400">{r.label}</dt>
+            <dd
+              class="text-lg font-semibold break-words"
+              id={`gift-result-${r.id}`}
+            />
+          </div>
+        ))}
+      </dl>
+
+      <h3 class="mt-5 mb-2 text-base font-bold">{t.compareHeading}</h3>
+      <dl class="grid grid-cols-2 gap-3">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.compareAllSpecialLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="gift-result-all-special"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.compareAllGeneralLabel}
+          </dt>
+          <dd class="text-lg font-semibold" id="gift-result-all-general"></dd>
+        </div>
+      </dl>
+      <p id="gift-result-compare" class="mt-2 text-sm"></p>
+    </div>
+  </section>
+
+  <section class="mt-6">
+    <h2 class="mb-3 text-lg font-bold">{t.tableHeading}</h2>
+    <div class="grid gap-4 md:grid-cols-2">
+      {tables.map((tbl) => (
+        <div
+          class="overflow-x-auto"
+          tabindex="0"
+          role="region"
+          aria-label={tbl.caption}
+        >
+          <table class="w-full text-sm">
+            <caption class="mb-1 text-left font-semibold">
+              {tbl.caption}
+            </caption>
+            <thead>
+              <tr class="border-b border-gray-300 text-left dark:border-gray-600">
+                <th scope="col" class="py-1 pr-2">
+                  {t.tableHeadRange}
+                </th>
+                <th scope="col" class="py-1 pr-2">
+                  {t.tableHeadRate}
+                </th>
+                <th scope="col" class="py-1">
+                  {t.tableHeadDeduction}
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {tbl.brackets.map((b, i) => (
+                <tr
+                  id={`gift-row-${tbl.id}-${i}`}
+                  class="border-b border-gray-200 dark:border-gray-700"
+                >
+                  <td class="py-1 pr-2">{rangeText(tbl.brackets, i)}</td>
+                  <td class="py-1 pr-2">{b.ratePercent}%</td>
+                  <td class="py-1">{yen.format(b.deduction)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    GENERAL_BRACKETS,
+    SPECIAL_BRACKETS,
+    calculateGiftTax,
+    type GiftTaxBracketUse,
+  } from '../../lib/tools/gift-tax-calculator';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+  import { fill } from '../../lib/format-template';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
+  const errorMessage = configEl.dataset.error ?? '';
+  const naText = configEl.dataset.na ?? '';
+  const rateFormat = configEl.dataset.rateFormat ?? '';
+  const zeroNote = configEl.dataset.zeroNote ?? '';
+  const compareSpecial = configEl.dataset.compareSpecial ?? '';
+  const compareGeneral = configEl.dataset.compareGeneral ?? '';
+  const compareSame = configEl.dataset.compareSame ?? '';
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const percent = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 2,
+  });
+
+  const specialInput = document.getElementById(
+    'gift-special',
+  ) as HTMLInputElement;
+  const generalInput = document.getElementById(
+    'gift-general',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('gift-error')!;
+  const resultsEl = document.getElementById('gift-results')!;
+  const zeroNoteEl = document.getElementById('gift-zero-note')!;
+  const compareEl = document.getElementById('gift-result-compare')!;
+
+  const HIGHLIGHT = [
+    'bg-yellow-100',
+    'font-bold',
+    'dark:bg-yellow-900',
+    'dark:text-yellow-50',
+    'text-gray-900',
+  ];
+
+  function setResult(id: string, text: string) {
+    document.getElementById(`gift-result-${id}`)!.textContent = text;
+  }
+
+  function rateText(use: GiftTaxBracketUse | null): string {
+    if (!use) return naText;
+    return fill(rateFormat, {
+      rate: String(use.bracket.ratePercent),
+      deduction: yen.format(use.bracket.deduction),
+    });
+  }
+
+  function highlight(
+    kind: string,
+    count: number,
+    use: GiftTaxBracketUse | null,
+  ) {
+    for (let i = 0; i < count; i++) {
+      const row = document.getElementById(`gift-row-${kind}-${i}`)!;
+      row.classList.toggle('is-current', use?.index === i);
+      for (const c of HIGHLIGHT) row.classList.toggle(c, use?.index === i);
+    }
+  }
+
+  attachCommaFormatting(specialInput);
+  attachCommaFormatting(generalInput);
+
+  function readAmount(input: HTMLInputElement): number {
+    const v = stripCommas(input.value).trim();
+    return v === '' ? 0 : Number(v);
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+    highlight('special', SPECIAL_BRACKETS.length, null);
+    highlight('general', GENERAL_BRACKETS.length, null);
+
+    if (specialInput.value.trim() === '' && generalInput.value.trim() === '') {
+      return;
+    }
+
+    const r = calculateGiftTax({
+      specialAmount: readAmount(specialInput),
+      generalAmount: readAmount(generalInput),
+    });
+    if (r === null) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    setResult('payable', yen.format(r.payableTax));
+    setResult('calculated', yen.format(r.calculatedTax));
+    setResult('effective', `${percent.format(r.effectiveRate)}%`);
+    setResult('total', yen.format(r.totalGift));
+    setResult('deduction', yen.format(r.appliedDeduction));
+    setResult('taxable', yen.format(r.taxablePrice));
+    setResult('special-rate', rateText(r.specialBracket));
+    setResult('general-rate', rateText(r.generalBracket));
+    setResult(
+      'special-share',
+      r.specialAmount > 0 ? yen.format(r.specialShareTax) : naText,
+    );
+    setResult(
+      'general-share',
+      r.generalAmount > 0 ? yen.format(r.generalShareTax) : naText,
+    );
+    setResult('all-special', yen.format(r.allSpecialPayable));
+    setResult('all-general', yen.format(r.allGeneralPayable));
+
+    const diff = r.comparisonDifference;
+    compareEl.textContent =
+      diff === 0
+        ? compareSame
+        : fill(diff > 0 ? compareSpecial : compareGeneral, {
+            amount: yen.format(Math.abs(diff)),
+          });
+
+    zeroNoteEl.textContent = zeroNote;
+    zeroNoteEl.classList.toggle('hidden', r.taxablePrice > 0);
+
+    highlight('special', SPECIAL_BRACKETS.length, r.specialBracket);
+    highlight('general', GENERAL_BRACKETS.length, r.generalBracket);
+    resultsEl.classList.remove('hidden');
+  }
+
+  specialInput.addEventListener('input', render);
+  generalInput.addEventListener('input', render);
+
+  specialInput.value = formatNumberWithCommas('5000000');
+  generalInput.value = '';
+  render();
+</script>

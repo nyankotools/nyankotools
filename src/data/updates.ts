@@ -1036,6 +1036,23 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-24',
+    toolSlugs: [
+      'photo-collage-maker',
+      'document-scan-filter',
+      'svg-path-viewer',
+      'color-mixer',
+    ],
+    translations: {
+      ja: {
+        summary: '4個のツールを追加しました。',
+      },
+      en: {
+        summary: 'Added 4 new tools.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

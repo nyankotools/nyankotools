@@ -13895,6 +13895,163 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'photo-collage-maker',
+    category: 'image',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['image-merger', 'image-logo-watermark', 'image-cropper'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'フォトコラージュ作成',
+        keywords: [
+          'コラージュ',
+          '写真 コラージュ',
+          '写真を並べる',
+          '画像 レイアウト',
+          'フォトコラージュ',
+          'collage',
+          '枠線',
+          '角丸',
+        ],
+        description:
+          '2〜9枚の写真をテンプレートの枠に並べて1枚のコラージュにします。枠の間隔・余白・枠線・角丸・背景色を調整し、ドラッグで表示位置も動かせます。ブラウザ内で処理され外部送信なし。',
+      },
+      en: {
+        name: 'Photo Collage Maker',
+        keywords: [
+          'photo collage',
+          'collage maker',
+          'photo grid',
+          'picture layout',
+          'combine photos',
+          'photo frame template',
+        ],
+        description:
+          'Make a collage from 2-9 photos with layout templates. Set spacing, borders, corners and background; save as PNG, JPEG or WebP. Runs in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'document-scan-filter',
+    category: 'image',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['image-filter', 'image-cropper', 'pdf-image-converter'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '書類スキャン風補正（影除去・白黒化）',
+        keywords: [
+          '書類スキャン',
+          '影除去',
+          '白黒化',
+          '2値化',
+          'グレースケール',
+          'レシート',
+          '書類 写真 補正',
+          'ドキュメントスキャン',
+        ],
+        description:
+          'スマホで撮った書類の写真から影を除去し、紙を白く・文字をくっきり補正。カラー・グレー・白黒2値に対応。',
+      },
+      en: {
+        name: 'Document Scan Filter (Shadow Removal & B&W)',
+        keywords: [
+          'document scan',
+          'remove shadow',
+          'binarize',
+          'black and white',
+          'grayscale',
+          'receipt',
+          'scanner effect',
+          'otsu',
+        ],
+        description:
+          'Remove shadows and whiten phone photos of documents. Choose color, grayscale or black & white. Runs in your browser; nothing is uploaded.',
+      },
+    },
+  },
+  {
+    slug: 'svg-path-viewer',
+    category: 'image',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['svg-optimizer', 'svg-wave-generator', 'svg-to-data-uri'],
+    translations: {
+      ja: {
+        name: 'SVGパスビューア',
+        keywords: [
+          'SVG',
+          'path',
+          'd属性',
+          'パス',
+          'ベジェ',
+          '制御点',
+          'パスデータ',
+          'ビューア',
+        ],
+        description:
+          'SVGのpath要素のd属性をコマンド別に分解し、始点・終点・制御点を重ねて表示。座標の編集や小数桁の削減もできます。',
+      },
+      en: {
+        name: 'SVG Path Viewer',
+        keywords: [
+          'svg path',
+          'd attribute',
+          'path data',
+          'bezier',
+          'control points',
+          'path viewer',
+          'svg arc',
+          'optimize path',
+        ],
+        description:
+          'Split an SVG path d attribute into commands and see start, end and control points on the shape. Edit coordinates or trim decimals.',
+      },
+    },
+  },
+  {
+    slug: 'color-mixer',
+    category: 'image',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: [
+      'color-palette-generator',
+      'color-space-converter',
+      'color-converter',
+    ],
+    translations: {
+      ja: {
+        name: '色ミキサー',
+        keywords: [
+          '色ミキサー',
+          '混色',
+          '中間色',
+          'カラーミキサー',
+          'グラデーション',
+          'OKLab',
+          '色 混ぜる',
+        ],
+        description: '2色を割合指定で混色し、RGB/OKLabで中間色をN段生成',
+      },
+      en: {
+        name: 'Color Mixer',
+        keywords: [
+          'color mixer',
+          'color blend',
+          'mix colors',
+          'intermediate color',
+          'gradient steps',
+          'OKLab',
+          'color interpolation',
+        ],
+        description:
+          'Mix two colors by ratio and generate N intermediate shades in RGB or OKLab',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

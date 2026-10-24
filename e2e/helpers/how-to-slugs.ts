@@ -198,4 +198,8 @@ export const howToSlugs = [
   'meme-generator',
   'sticker-outline-maker',
   'screen-color-picker',
+  'photo-collage-maker',
+  'document-scan-filter',
+  'svg-path-viewer',
+  'color-mixer',
 ];

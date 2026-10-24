@@ -1,0 +1,566 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { documentScanFilterContent } from '../../i18n/tools/document-scan-filter';
+import {
+  DEFAULT_SCAN_SETTINGS,
+  OUTPUT_FORMAT_OPTIONS,
+  SCAN_MODES,
+  SCAN_PRESETS,
+} from '../../lib/tools/document-scan-filter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = documentScanFilterContent[locale];
+const formatLabels: Record<string, string> = {
+  png: 'PNG',
+  webp: 'WebP',
+  jpeg: 'JPEG',
+};
+const d = DEFAULT_SCAN_SETTINGS;
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="ds-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="ds-dropzone" class="ui-dropzone">
+      <input
+        id="ds-file-input"
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="ds-source-info"
+      data-template={t.sourceInfoTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="ds-error"
+      role="alert"
+      hidden
+      data-unsupported={t.errorUnsupportedFile}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-too-many-pixels={t.errorTooManyPixels}
+      data-failed={t.errorConversionFailed}
+      class="mt-1 text-xs text-red-600 dark:text-red-400"
+    ></p>
+  </div>
+
+  <div class="mt-4">
+    <span class="ui-label">{t.presetsLabel}</span>
+    <div class="flex flex-wrap gap-2" id="ds-presets">
+      {SCAN_PRESETS.map((p) => (
+        <button
+          type="button"
+          data-preset={p.id}
+          class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {t.presetLabels[p.id]}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-6">
+    <div>
+      <span class="ui-label">{t.modeLabel}</span>
+      <div id="ds-mode" class="ui-seg" role="group" aria-label={t.modeLabel}>
+        {SCAN_MODES.map((m) => (
+          <button
+            type="button"
+            data-mode={m}
+            aria-pressed={m === d.mode ? 'true' : 'false'}
+            class="ui-seg-btn disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {t.modeLabels[m]}
+          </button>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 grid gap-x-6 gap-y-2 sm:grid-cols-2">
+    <div>
+      <label for="ds-shadow" class="ui-label">
+        {t.shadowLabel}
+        <span id="ds-shadow-value" class="tabular-nums"></span>
+      </label>
+      <input
+        id="ds-shadow"
+        type="range"
+        min="0"
+        max="100"
+        value={d.shadow}
+        class="h-11 w-full"
+      />
+    </div>
+    <div>
+      <label for="ds-contrast" class="ui-label">
+        {t.contrastLabel}
+        <span id="ds-contrast-value" class="tabular-nums"></span>
+      </label>
+      <input
+        id="ds-contrast"
+        type="range"
+        min="0"
+        max="100"
+        value={d.contrast}
+        class="h-11 w-full"
+      />
+    </div>
+  </div>
+
+  <div id="ds-threshold-group" hidden class="mt-2">
+    <label class="ui-check">
+      <input id="ds-auto-threshold" type="checkbox" checked />
+      {t.autoThresholdLabel}
+    </label>
+    <label for="ds-threshold" class="ui-label">
+      {t.thresholdLabel}
+      <span id="ds-threshold-value" class="tabular-nums"></span>
+    </label>
+    <input
+      id="ds-threshold"
+      type="range"
+      min="1"
+      max="254"
+      value={d.threshold}
+      disabled
+      class="h-11 w-full sm:w-1/2"
+    />
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-end gap-6">
+    <div>
+      <span class="ui-label">{t.formatLabel}</span>
+      <div
+        id="ds-format"
+        class="ui-seg"
+        role="group"
+        aria-label={t.formatLabel}
+      >
+        {OUTPUT_FORMAT_OPTIONS.map((o) => (
+          <button
+            type="button"
+            data-format={o.value}
+            aria-pressed={o.value === 'png' ? 'true' : 'false'}
+            class="ui-seg-btn"
+          >
+            {formatLabels[o.value]}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <div class="min-w-48 flex-1">
+      <label for="ds-quality" class="ui-label">
+        {t.qualityLabel}
+        <span id="ds-quality-value" class="tabular-nums"></span>
+      </label>
+      <input
+        id="ds-quality"
+        type="range"
+        min="1"
+        max="100"
+        value="90"
+        disabled
+        class="h-11 w-full"
+      />
+      <p
+        id="ds-quality-note"
+        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+      >
+        {t.qualityPngNote}
+      </p>
+    </div>
+
+    <button
+      id="ds-reset-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.resetButton}
+    </button>
+    <button
+      id="ds-clear-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.clearButton}
+    </button>
+  </div>
+
+  <div id="ds-results-section" hidden class="mt-6">
+    <h2 class="mb-2 text-lg font-bold">{t.resultsHeading}</h2>
+    <div class="flex flex-wrap gap-4">
+      <div class="min-w-40 flex-1">
+        <p class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t.originalPreviewLabel}
+        </p>
+        <canvas
+          id="ds-original-canvas"
+          class="w-full rounded-lg border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
+        ></canvas>
+      </div>
+      <div class="min-w-40 flex-1">
+        <p class="mb-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t.resultPreviewLabel}
+        </p>
+        <canvas
+          id="ds-result-canvas"
+          class="w-full rounded-lg border border-gray-300 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
+        ></canvas>
+      </div>
+    </div>
+    <p
+      id="ds-scaled-note"
+      hidden
+      class="mt-2 text-xs text-gray-500 dark:text-gray-400"
+    >
+      {t.previewScaledNote}
+    </p>
+    <button
+      id="ds-download-button"
+      type="button"
+      data-processing={t.processing}
+      data-label={t.downloadButton}
+      class="ui-btn ui-btn-primary mt-3 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.downloadButton}
+    </button>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    DEFAULT_SCAN_SETTINGS,
+    MAX_FILE_SIZE,
+    MAX_PIXELS,
+    SCAN_PRESETS,
+    applyDocumentScan,
+    buildOutputFileName,
+    computeWorkSize,
+    formatFileSize,
+    getOutputFormatOption,
+    isAcceptedImageFile,
+    normalizeSettings,
+    type OutputFormat,
+    type ScanMode,
+    type ScanSettings,
+  } from '../../lib/tools/document-scan-filter';
+
+  const PREVIEW_MAX_EDGE = 640;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const dropzone = $('ds-dropzone');
+  const fileInput = $<HTMLInputElement>('ds-file-input');
+  const sourceInfoEl = $('ds-source-info');
+  const errorEl = $('ds-error');
+  const resultsSection = $('ds-results-section');
+  const originalCanvas = $<HTMLCanvasElement>('ds-original-canvas');
+  const resultCanvas = $<HTMLCanvasElement>('ds-result-canvas');
+  const scaledNote = $('ds-scaled-note');
+  const downloadButton = $<HTMLButtonElement>('ds-download-button');
+  const resetButton = $<HTMLButtonElement>('ds-reset-button');
+  const clearButton = $<HTMLButtonElement>('ds-clear-button');
+  const shadowInput = $<HTMLInputElement>('ds-shadow');
+  const contrastInput = $<HTMLInputElement>('ds-contrast');
+  const thresholdInput = $<HTMLInputElement>('ds-threshold');
+  const autoThresholdInput = $<HTMLInputElement>('ds-auto-threshold');
+  const thresholdGroup = $('ds-threshold-group');
+  const qualityInput = $<HTMLInputElement>('ds-quality');
+  const qualityNoteEl = $('ds-quality-note');
+  const presetButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#ds-presets [data-preset]',
+  );
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#ds-mode [data-mode]',
+  );
+  const formatButtons = document.querySelectorAll<HTMLButtonElement>(
+    '#ds-format [data-format]',
+  );
+
+  let bitmap: ImageBitmap | null = null;
+  let fileName = '';
+  let format: OutputFormat = 'png';
+  let mode: ScanMode = DEFAULT_SCAN_SETTINGS.mode;
+  let previewSource: ImageData | null = null;
+  let renderTimer: ReturnType<typeof setTimeout> | undefined;
+
+  function readSettings(): ScanSettings {
+    return normalizeSettings({
+      mode,
+      shadow: Number(shadowInput.value),
+      contrast: Number(contrastInput.value),
+      autoThreshold: autoThresholdInput.checked,
+      threshold: Number(thresholdInput.value),
+    });
+  }
+
+  function writeSettings(s: ScanSettings) {
+    mode = s.mode;
+    shadowInput.value = String(s.shadow);
+    contrastInput.value = String(s.contrast);
+    autoThresholdInput.checked = s.autoThreshold;
+    thresholdInput.value = String(s.threshold);
+    modeButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.mode === mode)),
+    );
+  }
+
+  function isDefault(s: ScanSettings): boolean {
+    const d = DEFAULT_SCAN_SETTINGS;
+    return (
+      s.mode === d.mode &&
+      s.shadow === d.shadow &&
+      s.contrast === d.contrast &&
+      s.autoThreshold === d.autoThreshold &&
+      s.threshold === d.threshold
+    );
+  }
+
+  function updateLabels() {
+    $('ds-shadow-value').textContent = ` ${shadowInput.value}`;
+    $('ds-contrast-value').textContent = ` ${contrastInput.value}`;
+    $('ds-threshold-value').textContent = ` ${thresholdInput.value}`;
+    $('ds-quality-value').textContent = ` ${qualityInput.value}%`;
+  }
+
+  function updateButtons() {
+    const has = bitmap !== null;
+    resetButton.disabled = !has || isDefault(readSettings());
+    clearButton.disabled = !has;
+    presetButtons.forEach((b) => (b.disabled = !has));
+    modeButtons.forEach((b) => (b.disabled = !has));
+    shadowInput.disabled = !has;
+    contrastInput.disabled = !has;
+    autoThresholdInput.disabled = !has;
+    thresholdInput.disabled = !has || autoThresholdInput.checked;
+    thresholdGroup.hidden = mode !== 'bw';
+    downloadButton.disabled = !has;
+    const supportsQuality = getOutputFormatOption(format).supportsQuality;
+    qualityInput.disabled = !supportsQuality || !has;
+    qualityNoteEl.hidden = supportsQuality;
+  }
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.textContent = '';
+    errorEl.hidden = true;
+  }
+
+  function drawPreviewBase() {
+    if (!bitmap) return;
+    const size = computeWorkSize(bitmap.width, bitmap.height, PREVIEW_MAX_EDGE);
+    originalCanvas.width = size.width;
+    originalCanvas.height = size.height;
+    const ctx = originalCanvas.getContext('2d', { willReadFrequently: true })!;
+    ctx.clearRect(0, 0, size.width, size.height);
+    ctx.drawImage(bitmap, 0, 0, size.width, size.height);
+    previewSource = ctx.getImageData(0, 0, size.width, size.height);
+    resultCanvas.width = size.width;
+    resultCanvas.height = size.height;
+    scaledNote.hidden = size.scale >= 1;
+  }
+
+  function renderPreview() {
+    if (!previewSource) return;
+    const out = applyDocumentScan(
+      previewSource.data,
+      previewSource.width,
+      previewSource.height,
+      readSettings(),
+    );
+    resultCanvas
+      .getContext('2d')!
+      .putImageData(
+        new ImageData(out, previewSource.width, previewSource.height),
+        0,
+        0,
+      );
+  }
+
+  function scheduleRender() {
+    updateLabels();
+    updateButtons();
+    clearTimeout(renderTimer);
+    renderTimer = setTimeout(renderPreview, 60);
+  }
+
+  async function loadFile(file: File) {
+    clearError();
+    if (!isAcceptedImageFile(file)) {
+      showError(errorEl.dataset.unsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace(
+          '{max}',
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+    let next: ImageBitmap;
+    try {
+      next = await createImageBitmap(file);
+    } catch {
+      showError(errorEl.dataset.failed ?? '');
+      return;
+    }
+    if (next.width * next.height > MAX_PIXELS) {
+      next.close();
+      showError(errorEl.dataset.tooManyPixels ?? '');
+      return;
+    }
+    bitmap?.close();
+    bitmap = next;
+    fileName = file.name;
+    sourceInfoEl.textContent = (sourceInfoEl.dataset.template ?? '')
+      .replace('{width}', String(next.width))
+      .replace('{height}', String(next.height))
+      .replace('{size}', formatFileSize(file.size));
+    resultsSection.hidden = false;
+    writeSettings(DEFAULT_SCAN_SETTINGS);
+    updateLabels();
+    drawPreviewBase();
+    updateButtons();
+    renderPreview();
+  }
+
+  function clearAll() {
+    clearTimeout(renderTimer);
+    bitmap?.close();
+    bitmap = null;
+    previewSource = null;
+    fileName = '';
+    sourceInfoEl.textContent = '';
+    resultsSection.hidden = true;
+    writeSettings(DEFAULT_SCAN_SETTINGS);
+    updateLabels();
+    clearError();
+    updateButtons();
+  }
+
+  async function download() {
+    const bm = bitmap;
+    if (!bm) return;
+    const option = getOutputFormatOption(format);
+    const label = downloadButton.dataset.label ?? '';
+    downloadButton.disabled = true;
+    downloadButton.textContent = downloadButton.dataset.processing ?? '';
+    // ラベル更新を描画させてから重い処理を始める
+    await new Promise((r) => setTimeout(r, 30));
+    try {
+      const size = computeWorkSize(bm.width, bm.height);
+      const canvas = document.createElement('canvas');
+      canvas.width = size.width;
+      canvas.height = size.height;
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+      ctx.drawImage(bm, 0, 0, size.width, size.height);
+      const src = ctx.getImageData(0, 0, size.width, size.height);
+      const out = applyDocumentScan(
+        src.data,
+        src.width,
+        src.height,
+        readSettings(),
+      );
+      ctx.putImageData(new ImageData(out, src.width, src.height), 0, 0);
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(
+          resolve,
+          option.mimeType,
+          option.supportsQuality ? Number(qualityInput.value) / 100 : undefined,
+        ),
+      );
+      if (!blob || blob.type !== option.mimeType) {
+        showError(errorEl.dataset.failed ?? '');
+        return;
+      }
+      clearError();
+      downloadBlob(blob, buildOutputFileName(fileName, format));
+    } catch {
+      showError(errorEl.dataset.failed ?? '');
+    } finally {
+      downloadButton.textContent = label;
+      updateButtons();
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  for (const el of [
+    shadowInput,
+    contrastInput,
+    thresholdInput,
+    autoThresholdInput,
+  ]) {
+    el.addEventListener('input', scheduleRender);
+    el.addEventListener('change', scheduleRender);
+  }
+
+  presetButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      const preset = SCAN_PRESETS.find((p) => p.id === b.dataset.preset);
+      if (!preset) return;
+      writeSettings(preset.settings);
+      scheduleRender();
+    }),
+  );
+
+  modeButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      mode = b.dataset.mode as ScanMode;
+      modeButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      scheduleRender();
+    }),
+  );
+
+  formatButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      format = b.dataset.format as OutputFormat;
+      formatButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      updateButtons();
+    }),
+  );
+
+  qualityInput.addEventListener('input', updateLabels);
+  resetButton.addEventListener('click', () => {
+    writeSettings(DEFAULT_SCAN_SETTINGS);
+    scheduleRender();
+  });
+  clearButton.addEventListener('click', clearAll);
+  downloadButton.addEventListener('click', () => void download());
+
+  writeSettings(DEFAULT_SCAN_SETTINGS);
+  updateLabels();
+  updateButtons();
+</script>

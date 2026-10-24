@@ -1,0 +1,491 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { pdfImageExtractorContent } from '../../i18n/tools/pdf-image-extractor';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = pdfImageExtractorContent[locale];
+const selectClass =
+  'min-h-11 rounded-lg border border-gray-300 px-2 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="ext-file" class="ui-label">
+      {t.fileLabel}
+    </label>
+    <div id="ext-drop" class="ui-dropzone">
+      <input
+        id="ext-file"
+        type="file"
+        accept=".pdf,application/pdf"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
+    </div>
+    <p
+      id="ext-info"
+      hidden
+      data-template={t.pagesTemplate}
+      class="mt-2 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+  </div>
+
+  <div class="mt-4 flex max-w-2xl flex-col gap-4">
+    <div class="max-w-xl">
+      <label for="ext-range" class="ui-label">
+        {t.rangeLabel}
+      </label>
+      <input
+        id="ext-range"
+        type="text"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder={t.rangePlaceholder}
+        class="ui-input min-h-11 w-full px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+      />
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.rangeHint}</p>
+    </div>
+    <label class="flex max-w-xs flex-col gap-1 text-sm text-gray-700 dark:text-gray-300">
+      {t.minSizeLabel}
+      <select id="ext-min-size" class={selectClass}>
+        <option value="0">{t.minSizeNone}</option>
+        <option value="32">{t.minSize32}</option>
+        <option value="100">{t.minSize100}</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="ext-run"
+      type="button"
+      data-run={t.run}
+      data-processing={t.processing}
+      class="ui-btn-primary"
+    >
+      {t.run}
+    </button>
+    <button id="ext-clear" type="button" class="ui-btn">
+      {t.clear}
+    </button>
+  </div>
+
+  <p
+    id="ext-error"
+    role="alert"
+    hidden
+    data-no-file={t.errorNoFile}
+    data-not-pdf={t.errorNotPdf}
+    data-invalid={t.errorInvalid}
+    data-encrypted={t.errorEncrypted}
+    data-empty-range={t.errorEmptyRange}
+    data-bad-range={t.errorBadRange}
+    data-out-of-range={t.errorOutOfRange}
+    data-failed={t.errorFailed}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+
+  <section
+    id="ext-result"
+    hidden
+    class="mt-6"
+    data-summary={t.summaryTemplate}
+    data-truncated={t.truncatedTemplate}
+    data-skipped={t.skippedTemplate}
+    data-no-images={t.noImages}
+    data-caption={t.captionTemplate}
+    data-save={t.saveOne}
+  >
+    <h2 class="mb-2 text-lg font-semibold">{t.resultHeading}</h2>
+    <p
+      id="ext-summary"
+      role="status"
+      class="mb-3 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+    <button
+      id="ext-zip-button"
+      type="button"
+      hidden
+      class="ui-btn-primary mb-4"
+    >
+      {t.zipButton}
+    </button>
+    <ul
+      id="ext-list"
+      class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+    ></ul>
+  </section>
+</ToolShell>
+
+<script>
+  import { paren } from '../../lib/paren';
+  import { loadPdfjs } from '../../lib/pdfjs-loader';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { preloadPdfLibs } from '../../lib/pdf-preload';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    getPageCount,
+    parsePageRange,
+    PdfToolError,
+  } from '../../lib/tools/pdf-merge-split';
+  import {
+    baseNameOf,
+    buildZip,
+    collectImageRefs,
+    formatBytes,
+    imageEntryName,
+    isCommonObjectName,
+    MAX_EXTRACTED_IMAGES,
+    passesSizeFilter,
+    toRgba,
+  } from '../../lib/tools/pdf-image-extractor';
+
+  interface Extracted {
+    name: string;
+    page: number;
+    width: number;
+    height: number;
+    blob: Blob;
+  }
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const fileInput = $<HTMLInputElement>('ext-file');
+  const info = $('ext-info');
+  const rangeInput = $<HTMLInputElement>('ext-range');
+  const minSizeSelect = $<HTMLSelectElement>('ext-min-size');
+  const runButton = $<HTMLButtonElement>('ext-run');
+  const clearButton = $<HTMLButtonElement>('ext-clear');
+  const errorEl = $('ext-error');
+  const resultEl = $('ext-result');
+  const summaryEl = $('ext-summary');
+  const zipButton = $<HTMLButtonElement>('ext-zip-button');
+  const list = $('ext-list');
+
+  enableFileDrop($('ext-drop'), fileInput, () =>
+    preloadPdfLibs({ pdfLib: true, pdfjs: true }),
+  );
+
+  let pdfBytes: Uint8Array | null = null;
+  let pdfName = '';
+  let pdfPages = 0;
+  let extracted: Extracted[] = [];
+  let urls: string[] = [];
+
+  function showError(key: string, pages?: number) {
+    hideResult();
+    errorEl.textContent = (errorEl.dataset[key] ?? '').replace(
+      '{pages}',
+      String(pages ?? ''),
+    );
+    errorEl.hidden = false;
+  }
+
+  function hideError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function hideResult() {
+    urls.forEach((u) => URL.revokeObjectURL(u));
+    urls = [];
+    extracted = [];
+    list.replaceChildren();
+    zipButton.hidden = true;
+    resultEl.hidden = true;
+  }
+
+  /** pdf.js の例外を tool のエラーキーに変換する */
+  function pdfErrorKey(e: unknown): string {
+    const name = (e as { name?: string } | null)?.name ?? '';
+    const message = (e as { message?: string } | null)?.message ?? '';
+    if (name === 'PasswordException' || /password/i.test(message))
+      return 'encrypted';
+    if (name === 'InvalidPDFException' || name === 'FormatError')
+      return 'invalid';
+    console.error(e);
+    return 'failed';
+  }
+
+  async function openPdf(bytes: Uint8Array) {
+    // pdf.js は渡したバッファを worker に転送（detach）するためコピーを渡す
+    const pdfjs = await loadPdfjs();
+    const task = pdfjs.getDocument({ data: bytes.slice() });
+    try {
+      return { pdfjs, doc: await task.promise, task };
+    } catch (e) {
+      void task.destroy();
+      if (pdfErrorKey(e) !== 'failed') throw e;
+      // 一部の暗号化PDFは pdf.js が UnknownErrorException で失敗するため、pdf-lib の判定で原因を補う
+      try {
+        await getPageCount(bytes);
+      } catch (fallback) {
+        if (fallback instanceof PdfToolError) throw fallback;
+      }
+      throw e;
+    }
+  }
+
+  interface PdfJsImage {
+    width: number;
+    height: number;
+    kind?: number;
+    data?: ArrayLike<number>;
+    bitmap?: ImageBitmap;
+  }
+
+  /** objs / commonObjs から画像オブジェクトを取り出す（解決待ちのものは待つ。長時間解決しなければ諦める） */
+  function getObject(
+    store: { get: (id: string, cb?: (v: unknown) => void) => unknown },
+    name: string,
+  ): Promise<PdfJsImage | null> {
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => resolve(null), 10_000);
+      try {
+        store.get(name, (v) => {
+          clearTimeout(timer);
+          resolve((v as PdfJsImage | null) ?? null);
+        });
+      } catch {
+        clearTimeout(timer);
+        resolve(null);
+      }
+    });
+  }
+
+  /** 画像を PNG の Blob にする。変換できなければ null */
+  async function toPngBlob(img: PdfJsImage): Promise<{
+    blob: Blob;
+    width: number;
+    height: number;
+  } | null> {
+    const canvas = document.createElement('canvas');
+    try {
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+      if (img.bitmap) {
+        canvas.width = img.bitmap.width;
+        canvas.height = img.bitmap.height;
+        ctx.drawImage(img.bitmap, 0, 0);
+      } else if (img.data && img.kind) {
+        const rgba = toRgba(img.kind, img.width, img.height, img.data);
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.putImageData(new ImageData(rgba, img.width, img.height), 0, 0);
+      } else {
+        return null;
+      }
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, 'image/png'),
+      );
+      return blob ? { blob, width: canvas.width, height: canvas.height } : null;
+    } catch {
+      return null;
+    } finally {
+      canvas.width = canvas.height = 0;
+    }
+  }
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (!file) return;
+    hideResult();
+    hideError();
+    if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+      showError('notPdf');
+      return;
+    }
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const { doc, task } = await openPdf(bytes);
+      pdfPages = doc.numPages;
+      void task.destroy();
+      pdfBytes = bytes;
+      pdfName = file.name;
+      info.textContent = `${file.name}${paren((info.dataset.template ?? '').replace('{pages}', String(pdfPages)))}`;
+      info.hidden = false;
+    } catch (e) {
+      pdfBytes = null;
+      info.hidden = true;
+      showError(e instanceof PdfToolError ? e.code : pdfErrorKey(e));
+    }
+  });
+
+  function renderResult(
+    pagesScanned: number,
+    skipped: number,
+    truncated: boolean,
+  ) {
+    const d = resultEl.dataset;
+    const parts: string[] = [];
+    if (extracted.length === 0) {
+      parts.push(d.noImages ?? '');
+    } else {
+      parts.push(
+        (d.summary ?? '')
+          .replace('{count}', String(extracted.length))
+          .replace('{pages}', String(pagesScanned)),
+      );
+    }
+    if (skipped > 0)
+      parts.push((d.skipped ?? '').replace('{skipped}', String(skipped)));
+    if (truncated)
+      parts.push(
+        (d.truncated ?? '').replace('{max}', String(MAX_EXTRACTED_IMAGES)),
+      );
+    summaryEl.textContent = parts.join(' ');
+    zipButton.hidden = extracted.length === 0;
+
+    for (const item of extracted) {
+      const url = URL.createObjectURL(item.blob);
+      urls.push(url);
+      const li = document.createElement('li');
+      li.className =
+        'flex flex-col gap-2 rounded-lg border border-gray-300 p-2 dark:border-gray-700';
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = item.name;
+      img.loading = 'lazy';
+      img.className =
+        'h-32 w-full rounded border border-gray-200 bg-[repeating-conic-gradient(#e5e7eb_0%_25%,#ffffff_0%_50%)] bg-[length:16px_16px] object-contain dark:border-gray-700';
+      const caption = document.createElement('p');
+      caption.className = 'break-all text-xs text-gray-700 dark:text-gray-300';
+      caption.textContent = `${item.name}\n${(d.caption ?? '')
+        .replace('{page}', String(item.page))
+        .replace('{w}', String(item.width))
+        .replace('{h}', String(item.height))
+        .replace('{size}', formatBytes(item.blob.size))}`;
+      caption.style.whiteSpace = 'pre-line';
+      const save = document.createElement('button');
+      save.type = 'button';
+      save.className = 'ui-btn';
+      save.textContent = d.save ?? '';
+      save.setAttribute('aria-label', `${d.save ?? ''} ${item.name}`);
+      save.addEventListener('click', () => downloadBlob(item.blob, item.name));
+      li.append(img, caption, save);
+      list.append(li);
+    }
+    resultEl.hidden = false;
+  }
+
+  async function extract() {
+    if (!pdfBytes) return showError('noFile');
+    const indices = rangeInput.value.trim()
+      ? parsePageRange(rangeInput.value, pdfPages)
+      : Array.from({ length: pdfPages }, (_, i) => i);
+    const minSize = Number(minSizeSelect.value);
+    const base = baseNameOf(pdfName);
+    const { pdfjs, doc, task } = await openPdf(pdfBytes);
+    const ops = {
+      paintImageXObject: pdfjs.OPS.paintImageXObject,
+      paintInlineImageXObject: pdfjs.OPS.paintInlineImageXObject,
+    };
+    const seenCommon = new Set<string>();
+    let skipped = 0;
+    let truncated = false;
+    let scanned = 0;
+    try {
+      pages: for (const index of indices) {
+        const page = await doc.getPage(index + 1);
+        try {
+          const opList = await page.getOperatorList();
+          const refs = collectImageRefs(opList.fnArray, opList.argsArray, ops);
+          let n = 0;
+          for (const ref of refs) {
+            let img: PdfJsImage | null;
+            if (ref.type === 'inline') {
+              img = ref.data as PdfJsImage;
+            } else {
+              const common = isCommonObjectName(ref.name);
+              if (common) {
+                if (seenCommon.has(ref.name)) continue;
+                seenCommon.add(ref.name);
+              }
+              img = await getObject(
+                common ? page.commonObjs : page.objs,
+                ref.name,
+              );
+            }
+            if (!img || !(img.width > 0) || !(img.height > 0)) {
+              skipped++;
+              continue;
+            }
+            if (!passesSizeFilter(img.width, img.height, minSize)) continue;
+            if (extracted.length >= MAX_EXTRACTED_IMAGES) {
+              truncated = true;
+              break pages;
+            }
+            const png = await toPngBlob(img);
+            if (!png) {
+              skipped++;
+              continue;
+            }
+            n++;
+            extracted.push({
+              name: imageEntryName(base, index + 1, n, pdfPages),
+              page: index + 1,
+              width: png.width,
+              height: png.height,
+              blob: png.blob,
+            });
+          }
+        } finally {
+          page.cleanup();
+        }
+        scanned++;
+      }
+    } finally {
+      void task.destroy();
+    }
+    renderResult(scanned, skipped, truncated);
+  }
+
+  runButton.addEventListener('click', async () => {
+    hideError();
+    hideResult();
+    runButton.disabled = true;
+    clearButton.disabled = true;
+    runButton.textContent = runButton.dataset.processing ?? '';
+    try {
+      await extract();
+    } catch (e) {
+      if (e instanceof PdfToolError) showError(e.code, pdfPages);
+      else showError(pdfErrorKey(e));
+    } finally {
+      runButton.disabled = false;
+      clearButton.disabled = false;
+      runButton.textContent = runButton.dataset.run ?? '';
+    }
+  });
+
+  zipButton.addEventListener('click', async () => {
+    if (extracted.length === 0) return;
+    const entries = await Promise.all(
+      extracted.map(async (e) => ({
+        name: e.name,
+        data: new Uint8Array(await e.blob.arrayBuffer()),
+      })),
+    );
+    const zip = buildZip(entries);
+    downloadBlob(
+      new Blob([zip as BlobPart], { type: 'application/zip' }),
+      `${baseNameOf(pdfName)}_images.zip`,
+    );
+  });
+
+  clearButton.addEventListener('click', () => {
+    pdfBytes = null;
+    pdfPages = 0;
+    info.hidden = true;
+    rangeInput.value = '';
+    hideError();
+    hideResult();
+  });
+</script>

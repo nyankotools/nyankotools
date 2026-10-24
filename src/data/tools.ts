@@ -14362,6 +14362,160 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'pdf-stamp',
+    category: 'pdf',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: [
+      'signature-pad',
+      'seal-stamp-generator',
+      'pdf-page-number-watermark',
+    ],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: 'PDF署名・スタンプ挿入',
+        keywords: [
+          'PDF署名',
+          'PDFハンコ',
+          'PDF印鑑',
+          'PDF画像挿入',
+          'PDFスタンプ',
+          'PDF押印',
+          'PDF 署名 貼り付け',
+        ],
+        description:
+          'PDFに署名やハンコの画像を貼り付け。ドラッグで位置、スライダーで大きさを決め、複数ページにも適用できます（電子署名ではありません）。',
+      },
+      en: {
+        name: 'PDF Signature & Stamp Placer',
+        keywords: [
+          'sign PDF',
+          'add signature to PDF',
+          'stamp PDF',
+          'insert image into PDF',
+          'PDF seal',
+          'PDF hanko',
+        ],
+        description:
+          'Place a signature or stamp image on a PDF: drag to position, resize, and apply to one or many pages. Not a digital signature; runs in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'pdf-image-extractor',
+    category: 'pdf',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['pdf-image-converter', 'pdf-compressor', 'zip-tool'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: 'PDF画像抽出（埋め込み画像をPNG保存）',
+        keywords: [
+          'PDF画像抽出',
+          'PDFから画像を取り出す',
+          'PDF画像保存',
+          'PDF埋め込み画像',
+          'PDF画像ZIP',
+          'PDF写真抽出',
+        ],
+        description:
+          'PDFに埋め込まれた画像だけをPNGで取り出し、ZIPで一括保存。ページ範囲指定と小さい画像の除外に対応。',
+      },
+      en: {
+        name: 'PDF Image Extractor',
+        keywords: [
+          'extract images from PDF',
+          'PDF image extractor',
+          'save PDF images',
+          'PDF embedded images',
+          'PDF to PNG ZIP',
+          'get pictures from PDF',
+        ],
+        description:
+          'Extract the images embedded in a PDF as PNG and save them all as a ZIP. Supports a page range and a small-image filter.',
+      },
+    },
+  },
+  {
+    slug: 'fx-calculator',
+    category: 'calc',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['investment-simulator', 'unit-converter'],
+    translations: {
+      ja: {
+        name: 'FX計算機（pips・ロット・必要証拠金）',
+        keywords: [
+          'FX',
+          '為替',
+          'pips',
+          'ピップス',
+          'ロット',
+          '必要証拠金',
+          'レバレッジ',
+          '損益計算',
+        ],
+        description:
+          '通貨ペア・ロット・レバレッジ・エントリー/決済レートから、FXの損益（pips・円）と必要証拠金を計算します。円ペア以外にも対応。',
+      },
+      en: {
+        name: 'FX Calculator (Pips, Lot Size, Margin)',
+        keywords: [
+          'forex calculator',
+          'pip calculator',
+          'lot size',
+          'margin calculator',
+          'leverage',
+          'profit loss',
+          'fx',
+        ],
+        description:
+          'Calculate forex profit and loss in pips and yen plus required margin from the pair, lots, leverage, direction, entry and exit rate.',
+      },
+    },
+  },
+  {
+    slug: 'mets-calorie-calculator',
+    category: 'calc',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['bmr-calorie-calculator', 'bmi-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'METs消費カロリー計算機',
+        keywords: [
+          'METs',
+          'メッツ',
+          '運動 消費カロリー',
+          'ウォーキング',
+          'ジョギング',
+          '身体活動',
+          'ダイエット',
+        ],
+        description:
+          '運動の消費カロリーを METs × 体重 × 時間 × 1.05 で計算。ウォーキング・ジョギング・水泳・筋トレ・家事などのMETs表から選び、複数の運動を合計できます。',
+      },
+      en: {
+        name: 'METs Calorie Calculator',
+        keywords: [
+          'METs',
+          'metabolic equivalent',
+          'calories burned',
+          'exercise calories',
+          'workout',
+          'MET-hours',
+        ],
+        description:
+          'Calculates calories burned from METs, body weight, and time. Includes a METs table of common activities and totals several exercises.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

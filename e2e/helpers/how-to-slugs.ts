@@ -206,4 +206,6 @@ export const howToSlugs = [
   'withholding-tax-calculator',
   'pdf-nup',
   'pdf-crop',
+  'pdf-stamp',
+  'pdf-image-extractor',
 ];

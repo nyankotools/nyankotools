@@ -1,0 +1,327 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { fxCalculatorContent } from '../../i18n/tools/fx-calculator';
+import { PAIRS } from '../../lib/tools/fx-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = fxCalculatorContent[locale];
+---
+
+<ToolShell t={t}>
+  <p
+    class="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+    role="note"
+  >
+    {t.disclaimer}
+  </p>
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error-units={t.errorUnits}
+    data-error-leverage={t.errorLeverage}
+    data-error-entry={t.errorEntry}
+    data-error-exit={t.errorExit}
+    data-error-quote-rate={t.errorQuoteRate}
+    data-quote-rate-label={t.quoteRateLabel}
+    data-profit-quote-label={t.profitQuoteLabel}
+    data-units-suffix={t.unitsSuffix}
+    data-pips-suffix={t.pipsSuffix}
+    data-yen-suffix={t.yenSuffix}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div>
+        <label for="fx-pair" class="ui-label">
+          {t.pairLabel}
+        </label>
+        <select id="fx-pair" class="ui-input h-11 w-full px-3 dark:bg-gray-900">
+          {PAIRS.map((p) => (
+            <option value={p}>{p}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="fx-direction" class="ui-label">
+          {t.directionLabel}
+        </label>
+        <select
+          id="fx-direction"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          <option value="buy">{t.directionBuy}</option>
+          <option value="sell">{t.directionSell}</option>
+        </select>
+      </div>
+      <div>
+        <label for="fx-lots" class="ui-label">
+          {t.lotsLabel}
+        </label>
+        <input
+          id="fx-lots"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          value="1"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="fx-lot-size" class="ui-label">
+          {t.lotSizeLabel}
+        </label>
+        <select
+          id="fx-lot-size"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          <option value="100000">{t.lotSize100k}</option>
+          <option value="10000">{t.lotSize10k}</option>
+        </select>
+      </div>
+      <div>
+        <label for="fx-leverage" class="ui-label">
+          {t.leverageLabel}
+        </label>
+        <input
+          id="fx-leverage"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          value="25"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          {t.leverageHint}
+        </p>
+      </div>
+      <div></div>
+      <div>
+        <label for="fx-entry" class="ui-label">
+          {t.entryLabel}
+        </label>
+        <input
+          id="fx-entry"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          value="150"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="fx-exit" class="ui-label">
+          {t.exitLabel}
+        </label>
+        <input
+          id="fx-exit"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          value="150.5"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+
+    <div id="fx-quote-rate-group" class="mb-3 hidden max-w-sm">
+      <label for="fx-quote-rate" id="fx-quote-rate-label" class="ui-label">
+        {t.quoteRateLabel}
+      </label>
+      <input
+        id="fx-quote-rate"
+        type="number"
+        inputmode="decimal"
+        min="0"
+        step="any"
+        value="150"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      />
+      <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+        {t.quoteRateHint}
+      </p>
+    </div>
+
+    <p
+      id="fx-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="fx-results" class="mt-4 hidden" aria-live="polite">
+      <h3 class="mb-2 text-base font-bold">{t.resultHeading}</h3>
+      <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.pipsLabel}
+          </dt>
+          <dd class="text-xl font-bold break-words" id="fx-pips"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.profitJpyLabel}
+          </dt>
+          <dd class="text-xl font-bold break-words" id="fx-profit-jpy"></dd>
+        </div>
+        <div id="fx-profit-quote-group">
+          <dt
+            class="text-sm text-gray-600 dark:text-gray-400"
+            id="fx-profit-quote-label"
+          ></dt>
+          <dd class="text-xl font-bold break-words" id="fx-profit-quote"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.marginLabel}
+          </dt>
+          <dd class="text-xl font-bold break-words" id="fx-margin"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.pipValueLabel}
+          </dt>
+          <dd class="text-lg font-semibold break-words" id="fx-pip-value"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.notionalLabel}
+          </dt>
+          <dd class="text-lg font-semibold break-words" id="fx-notional"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.unitsLabel}
+          </dt>
+          <dd class="text-lg font-semibold break-words" id="fx-units"></dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { calculateFx, quoteCurrency } from '../../lib/tools/fx-calculator';
+  import type { Direction, FxField } from '../../lib/tools/fx-calculator';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const d = configEl.dataset;
+  const numberLocale = d.numberLocale ?? 'en-US';
+  const errors: Record<FxField, string> = {
+    units: d.errorUnits ?? '',
+    leverage: d.errorLeverage ?? '',
+    entry: d.errorEntry ?? '',
+    exit: d.errorExit ?? '',
+    quoteRate: d.errorQuoteRate ?? '',
+  };
+  const quoteRateLabelTemplate = d.quoteRateLabel ?? '{quote}';
+  const profitQuoteLabelTemplate = d.profitQuoteLabel ?? '{quote}';
+  const unitsSuffix = d.unitsSuffix ?? '';
+  const pipsSuffix = d.pipsSuffix ?? 'pips';
+  const yenSuffix = d.yenSuffix ?? '';
+
+  const intFmt = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 0,
+  });
+  const pipsFmt = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 1,
+  });
+  const decFmt = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 2,
+  });
+
+  const el = (id: string) => document.getElementById(id)!;
+  const pairSel = el('fx-pair') as HTMLSelectElement;
+  const dirSel = el('fx-direction') as HTMLSelectElement;
+  const lotsInput = el('fx-lots') as HTMLInputElement;
+  const lotSizeSel = el('fx-lot-size') as HTMLSelectElement;
+  const leverageInput = el('fx-leverage') as HTMLInputElement;
+  const entryInput = el('fx-entry') as HTMLInputElement;
+  const exitInput = el('fx-exit') as HTMLInputElement;
+  const quoteRateInput = el('fx-quote-rate') as HTMLInputElement;
+  const quoteGroup = el('fx-quote-rate-group');
+  const errorEl = el('fx-error');
+  const resultsEl = el('fx-results');
+
+  function signed(text: string, n: number): string {
+    return n > 0 ? `+${text}` : text;
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    const quote = quoteCurrency(pairSel.value);
+    const isJpy = quote === 'JPY';
+    quoteGroup.classList.toggle('hidden', isJpy);
+    el('fx-quote-rate-label').textContent = quoteRateLabelTemplate.replaceAll(
+      '{quote}',
+      quote,
+    );
+
+    const raw = [lotsInput, leverageInput, entryInput, exitInput].map((i) =>
+      i.value.trim(),
+    );
+    if (raw.some((v) => v === '')) return;
+    if (!isJpy && quoteRateInput.value.trim() === '') return;
+
+    const outcome = calculateFx({
+      pair: pairSel.value,
+      lots: Number(raw[0]),
+      lotSize: Number(lotSizeSel.value),
+      leverage: Number(raw[1]),
+      direction: dirSel.value as Direction,
+      entry: Number(raw[2]),
+      exit: Number(raw[3]),
+      quoteJpyRate: Number(quoteRateInput.value),
+    });
+    if (!outcome.ok) {
+      errorEl.textContent = errors[outcome.field];
+      return;
+    }
+    const r = outcome.result;
+
+    el('fx-pips').textContent =
+      `${signed(pipsFmt.format(r.pips), r.pips)} ${pipsSuffix}`;
+    el('fx-profit-jpy').textContent =
+      `${signed(intFmt.format(r.profitJpy), r.profitJpy)} ${yenSuffix}`;
+    el('fx-profit-quote-group').classList.toggle('hidden', isJpy);
+    el('fx-profit-quote-label').textContent =
+      profitQuoteLabelTemplate.replaceAll('{quote}', quote);
+    el('fx-profit-quote').textContent =
+      `${signed(decFmt.format(r.profitQuote), r.profitQuote)} ${quote}`;
+    el('fx-margin').textContent = `${intFmt.format(r.marginJpy)} ${yenSuffix}`;
+    el('fx-pip-value').textContent =
+      `${decFmt.format(r.pipValueJpy)} ${yenSuffix}`;
+    el('fx-notional').textContent =
+      `${intFmt.format(r.notionalJpy)} ${yenSuffix}`;
+    el('fx-units').textContent = `${intFmt.format(r.units)} ${unitsSuffix}`;
+
+    resultsEl.classList.remove('hidden');
+  }
+
+  for (const input of [
+    lotsInput,
+    leverageInput,
+    entryInput,
+    exitInput,
+    quoteRateInput,
+  ]) {
+    input.addEventListener('input', render);
+  }
+  for (const sel of [pairSel, dirSel, lotSizeSel]) {
+    sel.addEventListener('change', render);
+  }
+
+  render();
+</script>

@@ -52,6 +52,8 @@ export const slugBudgets = {
   'toml-converter': 150 * KB,
   'yaml-formatter': 150 * KB,
   'pdf-password-protector': 460 * KB,
+  // pdf.js に fflate が加わり heavy 予算をわずかに超える
+  'pdf-image-extractor': 460 * KB,
 };
 
 const STATIC_IMPORT = /(?:\bfrom|\bimport)\s*["'](\.[^"']+\.m?js)["']/g;

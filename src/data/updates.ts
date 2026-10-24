@@ -487,7 +487,7 @@ export const updates: UpdateEntry[] = [
         summary: '4個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 12 new tools.',
+        summary: 'Added 16 new tools.',
       },
     },
   },
@@ -526,7 +526,7 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary: '12個のツールを追加しました。',
+        summary: '16個のツールを追加しました。',
       },
       en: {
         summary: 'Added 8 new tools.',
@@ -823,10 +823,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary: '12個のツールを追加しました。',
+        summary: '16個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 12 new tools.',
+        summary: 'Added 16 new tools.',
       },
     },
   },
@@ -1058,10 +1058,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary: '12個のツールを追加しました。',
+        summary: '16個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 12 new tools.',
+        summary: 'Added 16 new tools.',
       },
     },
   },

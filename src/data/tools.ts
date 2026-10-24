@@ -14207,6 +14207,161 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'pdf-nup',
+    category: 'pdf',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['pdf-page-editor', 'pdf-merge-split', 'pdf-crop'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: 'PDF割付（2in1・4in1）',
+        keywords: [
+          'PDF割付',
+          'N-up',
+          '2in1',
+          '4in1',
+          'PDFまとめて印刷',
+          '配布資料',
+          'PDF縮小配置',
+          'ハンドアウト',
+        ],
+        description:
+          'PDFの複数ページを1枚の用紙に縮小して並べます。2in1・4in1・6in1・8in1・9in1に対応し、向き・順序・余白・枠線を指定できます。',
+      },
+      en: {
+        name: 'PDF N-up (2-up, 4-up Pages per Sheet)',
+        keywords: [
+          'PDF N-up',
+          '2-up',
+          '4-up',
+          'multiple pages per sheet',
+          'PDF handout',
+          'PDF imposition',
+          'combine PDF pages',
+        ],
+        description:
+          'Shrink several PDF pages onto one sheet with 2-up, 4-up, 6-up, 8-up or 9-up layouts. Set orientation, order, margin and borders.',
+      },
+    },
+  },
+  {
+    slug: 'pdf-crop',
+    category: 'pdf',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['pdf-page-editor', 'pdf-nup', 'pdf-redactor'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: 'PDF余白トリミング（クロップ）',
+        keywords: [
+          'PDF余白',
+          'PDFトリミング',
+          'PDFクロップ',
+          'PDF余白削除',
+          'PDF切り抜き',
+          'CropBox',
+        ],
+        description:
+          'PDFの余白を数値入力・ドラッグ・自動検出で切り抜き。全ページ一括もページごとも指定できます。',
+      },
+      en: {
+        name: 'PDF Margin Cropper',
+        keywords: [
+          'crop PDF',
+          'trim PDF margins',
+          'remove PDF white space',
+          'PDF CropBox',
+          'auto crop PDF',
+        ],
+        description:
+          'Crop PDF margins by number, drag or auto-detect. Trim all pages at once or page by page, and save the file with a new CropBox.',
+      },
+    },
+  },
+  {
+    slug: 'depreciation-calculator',
+    category: 'calc',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['tax-calculator', 'stamp-duty-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '減価償却計算機（定額法・定率法）',
+        keywords: [
+          '減価償却',
+          '定額法',
+          '定率法',
+          '耐用年数',
+          '償却率',
+          '少額減価償却資産',
+          '一括償却資産',
+          '月割',
+        ],
+        description:
+          '取得価額と耐用年数から定額法・200%定率法の年別償却費を計算。月割、改定償却率、少額減価償却資産の判定に対応。',
+      },
+      en: {
+        name: 'Depreciation Calculator (Japan, Straight-Line & Declining)',
+        keywords: [
+          'depreciation',
+          'straight-line',
+          'declining balance',
+          'useful life',
+          'depreciation rate',
+          'small asset',
+          'fixed asset',
+          'japan tax',
+        ],
+        description:
+          'Yearly depreciation from cost and useful life: straight-line and 200% declining balance, monthly proration, and Japan small-asset checks.',
+      },
+    },
+  },
+  {
+    slug: 'parcel-size-checker',
+    category: 'calc',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['unit-converter'],
+    translations: {
+      ja: {
+        name: '宅配サイズ判定（3辺合計・重量区分）',
+        keywords: [
+          '宅配サイズ',
+          '3辺合計',
+          '宅急便 サイズ',
+          'ゆうパック サイズ',
+          '佐川急便 サイズ',
+          'ネコポス',
+          'ゆうパケット',
+          'レターパック',
+        ],
+        description:
+          '縦・横・高さと重さから、宅急便・ゆうパック・飛脚宅配便のサイズ区分とネコポス・ゆうパケット・レターパック等の利用可否を判定。上限を超えた理由も表示（令和8年時点）。',
+      },
+      en: {
+        name: 'Parcel Size Checker (Sum of Sides & Weight Class)',
+        keywords: [
+          'parcel size',
+          'takkyubin size',
+          'yu-pack size',
+          'Yamato size',
+          'Japan Post size',
+          'nekopos',
+          'letter pack',
+          'Sagawa size',
+        ],
+        description:
+          'Enter length, width, height and weight to see the Yamato, Yu-Pack and Sagawa size class and whether Nekopos, Yu-Packet or Letter Pack fits. Shows the limit exceeded.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

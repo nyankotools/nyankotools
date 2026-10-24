@@ -1,0 +1,829 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { pdfCropContent } from '../../i18n/tools/pdf-crop';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = pdfCropContent[locale];
+const buttonClass = 'ui-btn';
+const marginFields = [
+  { id: 'pc-top', label: t.marginTop },
+  { id: 'pc-right', label: t.marginRight },
+  { id: 'pc-bottom', label: t.marginBottom },
+  { id: 'pc-left', label: t.marginLeft },
+];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="pc-file" class="ui-label">
+      {t.fileLabel}
+    </label>
+    <div id="pc-drop" class="ui-dropzone">
+      <input
+        id="pc-file"
+        type="file"
+        accept=".pdf,application/pdf"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
+    </div>
+    <p
+      id="pc-info"
+      hidden
+      data-template={t.pagesTemplate}
+      data-separator={t.infoSeparator}
+      class="mt-2 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+  </div>
+
+  <section
+    id="pc-editor"
+    hidden
+    class="mt-4 max-w-3xl"
+    data-indicator={t.pageIndicatorTemplate}
+    data-size={t.sizeTemplate}
+    data-canvas-label={t.canvasLabelTemplate}
+    data-detect-blank={t.detectBlank}
+    data-detect-done={t.detectDone}
+  >
+    <h2 class="mb-1 text-lg font-semibold">{t.editorHeading}</h2>
+    <p class="mb-3 text-xs text-gray-500 dark:text-gray-400">{t.editorHint}</p>
+
+    <div class="mb-3 flex flex-wrap items-center gap-2">
+      <span class="ui-label mb-0">{t.scopeLabel}</span>
+      <div class="ui-seg" role="group" aria-label={t.scopeLabel}>
+        <button
+          id="pc-scope-all"
+          type="button"
+          class="ui-seg-btn"
+          aria-pressed="true"
+        >
+          {t.scopeAll}
+        </button>
+        <button
+          id="pc-scope-page"
+          type="button"
+          class="ui-seg-btn"
+          aria-pressed="false"
+        >
+          {t.scopePage}
+        </button>
+      </div>
+    </div>
+
+    <div class="mb-3 flex flex-wrap items-center gap-2">
+      <button id="pc-prev" type="button" class={buttonClass}>
+        {t.prevPage}
+      </button>
+      <span
+        id="pc-indicator"
+        class="px-1 text-sm text-gray-700 dark:text-gray-300"
+        aria-live="polite"
+      ></span>
+      <button id="pc-next" type="button" class={buttonClass}>
+        {t.nextPage}
+      </button>
+    </div>
+
+    <div
+      id="pc-stage"
+      class="relative w-full cursor-crosshair touch-none overflow-hidden rounded-lg border border-gray-300 bg-white select-none dark:border-gray-700"
+    >
+      <canvas id="pc-canvas" class="block h-auto w-full" role="img"></canvas>
+      <div
+        id="pc-keep"
+        class="pointer-events-none absolute border border-dashed border-red-500 shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] dark:border-red-400"
+      ></div>
+    </div>
+
+    <p
+      id="pc-size"
+      aria-live="polite"
+      class="mt-2 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+
+    <fieldset class="mt-4">
+      <legend class="ui-label">{t.marginsLabel}</legend>
+      <div class="flex flex-wrap gap-3">
+        {marginFields.map((f) => (
+          <label class="flex flex-col gap-1 text-sm text-gray-700 dark:text-gray-300">
+            {f.label}
+            <input
+              id={f.id}
+              type="number"
+              inputmode="decimal"
+              min="0"
+              step="0.5"
+              value="0"
+              class="ui-input h-11 w-24 px-2"
+            />
+          </label>
+        ))}
+      </div>
+    </fieldset>
+
+    <div class="mt-4">
+      <label
+        for="pc-padding"
+        class="mb-1 block text-sm text-gray-700 dark:text-gray-300"
+      >
+        {t.paddingLabel}
+      </label>
+      <input
+        id="pc-padding"
+        type="number"
+        inputmode="decimal"
+        min="0"
+        step="0.5"
+        value="3"
+        class="ui-input h-11 w-24 px-2"
+      />
+    </div>
+
+    <div class="mt-3 flex flex-wrap items-center gap-2">
+      <button
+        id="pc-detect"
+        type="button"
+        class={buttonClass}
+        data-label={t.detect}
+        data-detecting={t.detecting}
+        data-progress={t.detectProgressTemplate}
+      >
+        {t.detect}
+      </button>
+      <button
+        id="pc-detect-each"
+        type="button"
+        hidden
+        class={buttonClass}
+        data-label={t.detectEach}
+        data-detecting={t.detecting}
+        data-progress={t.detectProgressTemplate}
+      >
+        {t.detectEach}
+      </button>
+      <button id="pc-reset" type="button" class={buttonClass}>
+        {t.resetCrop}
+      </button>
+    </div>
+    <p
+      id="pc-status"
+      aria-live="polite"
+      class="mt-2 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+  </section>
+
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      id="pc-run"
+      type="button"
+      data-run={t.run}
+      data-processing={t.processing}
+      class="ui-btn-primary"
+    >
+      {t.run}
+    </button>
+    <button id="pc-clear" type="button" class={buttonClass}>
+      {t.clear}
+    </button>
+  </div>
+
+  <p
+    id="pc-error"
+    role="alert"
+    hidden
+    data-no-file={t.errorNoFile}
+    data-not-pdf={t.errorNotPdf}
+    data-invalid={t.errorInvalid}
+    data-encrypted={t.errorEncrypted}
+    data-no-crop={t.errorNoCrop}
+    data-failed={t.errorFailed}
+    class="ui-error mt-4 max-w-2xl"
+  ></p>
+
+  <section
+    id="pc-result"
+    hidden
+    class="mt-6"
+    data-summary={t.resultSummaryTemplate}
+    data-download={t.downloadTemplate}
+  >
+    <h2 class="mb-2 text-lg font-semibold">{t.resultHeading}</h2>
+    <p
+      id="pc-result-summary"
+      class="mb-3 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+    <button id="pc-download" type="button" class={buttonClass}></button>
+  </section>
+</ToolShell>
+
+<script>
+  import { fill } from '../../lib/format-template';
+  import { paren } from '../../lib/paren';
+  import { loadPdfjs } from '../../lib/pdfjs-loader';
+  import { getPageCount, PdfToolError } from '../../lib/tools/pdf-merge-split';
+  import { clampScale } from '../../lib/tools/pdf-image-converter';
+  import {
+    boundsToMargins,
+    buildCroppedPdf,
+    clampMargins,
+    commonMargins,
+    croppedFileName,
+    detectContentBounds,
+    hasAnyCrop,
+    marginsToRect,
+    mmToPt,
+    ptToMm,
+    rectToMargins,
+    ZERO_MARGINS,
+    type Margins,
+  } from '../../lib/tools/pdf-crop';
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { preloadPdfLibs } from '../../lib/pdf-preload';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const fileInput = $<HTMLInputElement>('pc-file');
+  const info = $('pc-info');
+  const editor = $('pc-editor');
+  const scopeAllButton = $<HTMLButtonElement>('pc-scope-all');
+  const scopePageButton = $<HTMLButtonElement>('pc-scope-page');
+  const prevButton = $<HTMLButtonElement>('pc-prev');
+  const nextButton = $<HTMLButtonElement>('pc-next');
+  const indicator = $('pc-indicator');
+  const stage = $('pc-stage');
+  const canvas = $<HTMLCanvasElement>('pc-canvas');
+  const keepEl = $('pc-keep');
+  const sizeEl = $('pc-size');
+  const fields = {
+    top: $<HTMLInputElement>('pc-top'),
+    right: $<HTMLInputElement>('pc-right'),
+    bottom: $<HTMLInputElement>('pc-bottom'),
+    left: $<HTMLInputElement>('pc-left'),
+  };
+  const paddingInput = $<HTMLInputElement>('pc-padding');
+  const detectButton = $<HTMLButtonElement>('pc-detect');
+  const detectEachButton = $<HTMLButtonElement>('pc-detect-each');
+  const resetButton = $<HTMLButtonElement>('pc-reset');
+  const statusEl = $('pc-status');
+  const runButton = $<HTMLButtonElement>('pc-run');
+  const clearButton = $<HTMLButtonElement>('pc-clear');
+  const errorEl = $('pc-error');
+  const resultEl = $('pc-result');
+  const resultSummary = $('pc-result-summary');
+  const downloadButton = $<HTMLButtonElement>('pc-download');
+
+  enableFileDrop($('pc-drop'), fileInput, () =>
+    preloadPdfLibs({ pdfLib: true, pdfjs: true }),
+  );
+
+  /** 自動検出に使う画像の長辺（px） */
+  const DETECT_LONG_SIDE = 900;
+
+  let pdfBytes: Uint8Array | null = null;
+  let pdfName = '';
+  let pdfDoc: Awaited<ReturnType<typeof openPdf>>['doc'] | null = null;
+  let pdfTask: Awaited<ReturnType<typeof openPdf>>['task'] | null = null;
+  let scope: 'all' | 'page' = 'all';
+  let shared: Margins = { ...ZERO_MARGINS };
+  let pageMargins: Margins[] = [];
+  /** 表示上のページサイズ（pt）。プレビューを描画したページだけ入る */
+  let sizes: ({ w: number; h: number } | undefined)[] = [];
+  let pageCount = 0;
+  let current = 0;
+  let resultBlob: Blob | null = null;
+  let resultName = '';
+  /** 古い描画結果が新しいページを上書きしないための世代番号 */
+  let renderToken = 0;
+  let renderTask: { cancel(): void } | null = null;
+  let busy = false;
+
+  function showError(key: string) {
+    hideResult();
+    errorEl.textContent = errorEl.dataset[key] ?? '';
+    errorEl.hidden = false;
+  }
+
+  function hideError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function hideResult() {
+    resultBlob = null;
+    resultSummary.textContent = '';
+    resultEl.hidden = true;
+  }
+
+  function formatBytes(bytes: number): string {
+    return bytes < 1024
+      ? `${bytes} B`
+      : bytes < 1048576
+        ? `${(bytes / 1024).toFixed(1)} KB`
+        : `${(bytes / 1048576).toFixed(2)} MB`;
+  }
+
+  /** pdf.js の例外を tool のエラーキーに変換する */
+  function pdfErrorKey(e: unknown): string {
+    const name = (e as { name?: string } | null)?.name ?? '';
+    const message = (e as { message?: string } | null)?.message ?? '';
+    if (name === 'PasswordException' || /password/i.test(message))
+      return 'encrypted';
+    if (name === 'InvalidPDFException' || name === 'FormatError')
+      return 'invalid';
+    console.error(e);
+    return 'failed';
+  }
+
+  async function openPdf(bytes: Uint8Array) {
+    // pdf.js は渡したバッファを worker に転送（detach）するためコピーを渡す
+    const pdfjs = await loadPdfjs();
+    const task = pdfjs.getDocument({ data: bytes.slice() });
+    try {
+      return { doc: await task.promise, task };
+    } catch (e) {
+      void task.destroy();
+      if (pdfErrorKey(e) !== 'failed') throw e;
+      // 一部の暗号化PDFは pdf.js が UnknownErrorException で失敗するため、pdf-lib の判定で原因を補う
+      try {
+        await getPageCount(bytes);
+      } catch (fallback) {
+        if (fallback instanceof PdfToolError) throw fallback;
+      }
+      throw e;
+    }
+  }
+
+  function closeDocument() {
+    renderToken++;
+    renderTask?.cancel();
+    renderTask = null;
+    void pdfTask?.destroy();
+    pdfDoc = null;
+    pdfTask = null;
+  }
+
+  function resetDocument() {
+    closeDocument();
+    pdfBytes = null;
+    pageMargins = [];
+    shared = { ...ZERO_MARGINS };
+    sizes = [];
+    pageCount = 0;
+    current = 0;
+    info.hidden = true;
+    editor.hidden = true;
+    statusEl.textContent = '';
+    canvas.width = canvas.height = 0;
+    for (const f of Object.values(fields)) f.value = '0';
+  }
+
+  function getMargins(i: number): Margins {
+    return scope === 'all' ? shared : (pageMargins[i] ?? ZERO_MARGINS);
+  }
+
+  function setMargins(i: number, m: Margins) {
+    if (scope === 'all') shared = m;
+    else pageMargins[i] = m;
+  }
+
+  function currentSize() {
+    return sizes[current];
+  }
+
+  /** 入力欄を現在の切り落とし量（mm）に合わせる */
+  function syncFields() {
+    const m = getMargins(current);
+    for (const key of ['top', 'right', 'bottom', 'left'] as const) {
+      fields[key].value = String(Math.round(ptToMm(m[key]) * 10) / 10);
+    }
+  }
+
+  /** 残す範囲の枠・サイズ表示を更新する */
+  function updateOverlay() {
+    const size = currentSize();
+    const m = getMargins(current);
+    if (!size) {
+      keepEl.hidden = true;
+      sizeEl.textContent = '';
+      return;
+    }
+    keepEl.hidden = false;
+    const c = clampMargins(m, size.w, size.h);
+    const r = marginsToRect(c, size.w, size.h);
+    keepEl.style.left = `${r.x * 100}%`;
+    keepEl.style.top = `${r.y * 100}%`;
+    keepEl.style.width = `${r.w * 100}%`;
+    keepEl.style.height = `${r.h * 100}%`;
+    sizeEl.textContent = fill(editor.dataset.size ?? '', {
+      w: ptToMm(size.w - c.left - c.right).toFixed(1),
+      h: ptToMm(size.h - c.top - c.bottom).toFixed(1),
+    });
+  }
+
+  function updateControls() {
+    indicator.textContent = fill(editor.dataset.indicator ?? '', {
+      n: String(current + 1),
+      total: String(pageCount),
+    });
+    prevButton.disabled = busy || current <= 0;
+    nextButton.disabled = busy || current >= pageCount - 1;
+    syncFields();
+    updateOverlay();
+  }
+
+  function setScope(next: 'all' | 'page') {
+    if (busy || next === scope) return;
+    if (next === 'page' && !hasAnyCrop(pageMargins)) {
+      // 初めて「ページごと」にするときは、共通の設定を引き継ぐ
+      pageMargins = Array.from({ length: pageCount }, () => ({ ...shared }));
+    }
+    scope = next;
+    scopeAllButton.setAttribute('aria-pressed', String(next === 'all'));
+    scopePageButton.setAttribute('aria-pressed', String(next === 'page'));
+    detectEachButton.hidden = next === 'all';
+    statusEl.textContent = '';
+    hideResult();
+    updateControls();
+  }
+
+  async function renderPage() {
+    if (!pdfDoc) return;
+    const token = ++renderToken;
+    renderTask?.cancel();
+    renderTask = null;
+    updateControls();
+    canvas.setAttribute(
+      'aria-label',
+      fill(editor.dataset.canvasLabel ?? '', { n: String(current + 1) }),
+    );
+    const page = await pdfDoc.getPage(current + 1);
+    try {
+      if (token !== renderToken) return;
+      const base = page.getViewport({ scale: 1 });
+      sizes[current] = { w: base.width, h: base.height };
+      const cssWidth = Math.max(1, stage.clientWidth);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const scale = clampScale(
+        base.width,
+        base.height,
+        (cssWidth / base.width) * dpr,
+      );
+      const viewport = page.getViewport({ scale });
+      // 描画中のキャンバスを直接いじると切り替え時にちらつくため、オフスクリーンに描いて差し替える
+      const off = document.createElement('canvas');
+      off.width = Math.max(1, Math.round(viewport.width));
+      off.height = Math.max(1, Math.round(viewport.height));
+      const ctx = off.getContext('2d')!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, off.width, off.height);
+      const task = page.render({ canvas: off, canvasContext: ctx, viewport });
+      renderTask = task;
+      await task.promise;
+      if (token !== renderToken) return;
+      canvas.width = off.width;
+      canvas.height = off.height;
+      canvas.getContext('2d')!.drawImage(off, 0, 0);
+      updateOverlay();
+    } catch (e) {
+      const name = (e as { name?: string } | null)?.name ?? '';
+      // 次のページへ切り替えたときのキャンセルは正常動作
+      if (name !== 'RenderingCancelledException') {
+        console.error(e);
+        if (token === renderToken) showError('failed');
+      }
+    } finally {
+      page.cleanup();
+    }
+  }
+
+  function goTo(index: number) {
+    if (busy || dragStart || index < 0 || index >= pageCount) return;
+    current = index;
+    statusEl.textContent = '';
+    void renderPage();
+  }
+
+  prevButton.addEventListener('click', () => goTo(current - 1));
+  nextButton.addEventListener('click', () => goTo(current + 1));
+  scopeAllButton.addEventListener('click', () => setScope('all'));
+  scopePageButton.addEventListener('click', () => setScope('page'));
+
+  // 数値入力
+  function readFields(): Margins {
+    const num = (el: HTMLInputElement) => {
+      const v = Number(el.value);
+      return Number.isFinite(v) && v > 0 ? mmToPt(v) : 0;
+    };
+    return {
+      top: num(fields.top),
+      right: num(fields.right),
+      bottom: num(fields.bottom),
+      left: num(fields.left),
+    };
+  }
+
+  for (const f of Object.values(fields)) {
+    f.addEventListener('input', () => {
+      if (!pdfDoc) return;
+      const size = currentSize();
+      const m = readFields();
+      setMargins(current, size ? clampMargins(m, size.w, size.h) : m);
+      hideResult();
+      hideError();
+      updateOverlay();
+    });
+    // 入力が終わったら、補正後の値で欄を揃える
+    f.addEventListener('change', () => {
+      if (pdfDoc) syncFields();
+    });
+  }
+
+  resetButton.addEventListener('click', () => {
+    if (busy || !pdfDoc) return;
+    setMargins(current, { ...ZERO_MARGINS });
+    statusEl.textContent = '';
+    hideResult();
+    updateControls();
+  });
+
+  // ドラッグで残す範囲を指定する
+  let dragStart: { x: number; y: number } | null = null;
+  let dragBackup: Margins | null = null;
+
+  function pointerPos(e: PointerEvent) {
+    const box = canvas.getBoundingClientRect();
+    return {
+      x: Math.min(1, Math.max(0, (e.clientX - box.left) / box.width)),
+      y: Math.min(1, Math.max(0, (e.clientY - box.top) / box.height)),
+    };
+  }
+
+  function dragMargins(e: PointerEvent): Margins | null {
+    const size = currentSize();
+    if (!dragStart || !size) return null;
+    const p = pointerPos(e);
+    const x = Math.min(dragStart.x, p.x);
+    const y = Math.min(dragStart.y, p.y);
+    const w = Math.abs(dragStart.x - p.x);
+    const h = Math.abs(dragStart.y - p.y);
+    // 誤クリック程度の動きは範囲として扱わない
+    if (w < 0.01 || h < 0.01) return null;
+    return rectToMargins({ x, y, w, h }, size.w, size.h);
+  }
+
+  function endDrag(revert: boolean) {
+    if (revert && dragBackup) setMargins(current, dragBackup);
+    dragStart = null;
+    dragBackup = null;
+    updateControls();
+  }
+
+  stage.addEventListener('pointerdown', (e) => {
+    if (
+      busy ||
+      dragStart ||
+      !e.isPrimary ||
+      !pdfDoc ||
+      e.button !== 0 ||
+      canvas.width === 0 ||
+      !currentSize()
+    )
+      return;
+    e.preventDefault();
+    stage.setPointerCapture(e.pointerId);
+    dragStart = pointerPos(e);
+    dragBackup = { ...getMargins(current) };
+  });
+
+  stage.addEventListener('pointermove', (e) => {
+    if (!dragStart) return;
+    const m = dragMargins(e);
+    if (m) {
+      setMargins(current, m);
+      updateOverlay();
+    }
+  });
+
+  stage.addEventListener('pointerup', (e) => {
+    if (!dragStart) return;
+    const m = dragMargins(e);
+    if (m) {
+      setMargins(current, m);
+      hideResult();
+      hideError();
+      statusEl.textContent = '';
+      endDrag(false);
+    } else {
+      endDrag(true);
+    }
+  });
+
+  stage.addEventListener('pointercancel', () => endDrag(true));
+
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    // 処理中のドロップで状態が差し替わらないようにする
+    if (busy || !file) return;
+    resetDocument();
+    hideResult();
+    hideError();
+    if (!/\.pdf$/i.test(file.name) && file.type !== 'application/pdf') {
+      showError('notPdf');
+      return;
+    }
+    try {
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const { doc, task } = await openPdf(bytes);
+      pdfDoc = doc;
+      pdfTask = task;
+      pdfBytes = bytes;
+      pdfName = file.name;
+      pageCount = doc.numPages;
+      pageMargins = Array.from({ length: pageCount }, () => ({
+        ...ZERO_MARGINS,
+      }));
+      sizes = new Array(pageCount).fill(undefined);
+      current = 0;
+      info.textContent = `${file.name}${paren(`${fill(info.dataset.template ?? '', { pages: String(doc.numPages) })}${info.dataset.separator ?? ''}${formatBytes(bytes.length)}`)}`;
+      info.hidden = false;
+      editor.hidden = false;
+      await renderPage();
+    } catch (e) {
+      resetDocument();
+      showError(e instanceof PdfToolError ? e.code : pdfErrorKey(e));
+    }
+  });
+
+  // 画面幅が変わったらプレビューの解像度を合わせ直す
+  let lastWidth = 0;
+  new ResizeObserver(() => {
+    const w = stage.clientWidth;
+    if (!pdfDoc || w === 0 || w === lastWidth) return;
+    const first = lastWidth === 0;
+    lastWidth = w;
+    if (!first) void renderPage();
+  }).observe(stage);
+
+  /** 1ページを低解像度で描画し、内容がある範囲から切り落とし量を求める。内容がなければ null */
+  async function detectPage(n: number): Promise<{
+    margins: Margins;
+    size: { w: number; h: number };
+  } | null> {
+    const page = await pdfDoc!.getPage(n);
+    try {
+      const base = page.getViewport({ scale: 1 });
+      const scale = DETECT_LONG_SIDE / Math.max(base.width, base.height);
+      const viewport = page.getViewport({ scale });
+      const off = document.createElement('canvas');
+      off.width = Math.max(1, Math.round(viewport.width));
+      off.height = Math.max(1, Math.round(viewport.height));
+      const ctx = off.getContext('2d', { willReadFrequently: true })!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, off.width, off.height);
+      await page.render({ canvas: off, canvasContext: ctx, viewport }).promise;
+      const { data } = ctx.getImageData(0, 0, off.width, off.height);
+      const bounds = detectContentBounds(data, off.width, off.height, {
+        threshold: 235,
+        minCount: 2,
+      });
+      const size = { w: base.width, h: base.height };
+      const padding = Math.max(0, Number(paddingInput.value) || 0);
+      off.width = off.height = 0;
+      if (!bounds) return null;
+      return {
+        margins: boundsToMargins(
+          bounds,
+          Math.round(viewport.width),
+          Math.round(viewport.height),
+          size.w,
+          size.h,
+          mmToPt(padding),
+        ),
+        size,
+      };
+    } finally {
+      page.cleanup();
+    }
+  }
+
+  function setBusy(value: boolean) {
+    busy = value;
+    runButton.disabled = value;
+    clearButton.disabled = value;
+    fileInput.disabled = value;
+    detectButton.disabled = value;
+    detectEachButton.disabled = value;
+    resetButton.disabled = value;
+    scopeAllButton.disabled = value;
+    scopePageButton.disabled = value;
+    paddingInput.disabled = value;
+    for (const f of Object.values(fields)) f.disabled = value;
+    if (pdfDoc) updateControls();
+  }
+
+  async function runDetect(button: HTMLButtonElement, each: boolean) {
+    if (!pdfDoc || busy) return;
+    hideError();
+    hideResult();
+    statusEl.textContent = '';
+    setBusy(true);
+    button.textContent = button.dataset.detecting ?? '';
+    const startPage = current;
+    try {
+      const targets = scope === 'all' || each ? pageCount : 1;
+      const found: Margins[] = [];
+      const results: (Margins | null)[] = [];
+      for (let k = 0; k < targets; k++) {
+        const n = scope === 'all' || each ? k + 1 : startPage + 1;
+        button.textContent = fill(button.dataset.progress ?? '', {
+          done: String(k + 1),
+          total: String(targets),
+        });
+        const r = await detectPage(n);
+        results.push(r ? r.margins : null);
+        if (r) found.push(r.margins);
+      }
+      if (found.length === 0 && !each) {
+        statusEl.textContent = editor.dataset.detectBlank ?? '';
+        return;
+      }
+      if (scope === 'all') {
+        shared = commonMargins(found);
+      } else if (each) {
+        pageMargins = results.map((m) => m ?? { ...ZERO_MARGINS });
+      } else {
+        pageMargins[startPage] = results[0]!;
+      }
+      statusEl.textContent = editor.dataset.detectDone ?? '';
+    } catch (e) {
+      showError(pdfErrorKey(e));
+    } finally {
+      button.textContent = button.dataset.label ?? '';
+      setBusy(false);
+    }
+  }
+
+  detectButton.addEventListener(
+    'click',
+    () => void runDetect(detectButton, false),
+  );
+  detectEachButton.addEventListener(
+    'click',
+    () => void runDetect(detectEachButton, true),
+  );
+
+  runButton.addEventListener('click', async () => {
+    hideError();
+    hideResult();
+    if (!pdfBytes) return showError('noFile');
+    const list =
+      scope === 'all'
+        ? Array.from({ length: pageCount }, () => ({ ...shared }))
+        : pageMargins.map((m) => ({ ...m }));
+    if (!hasAnyCrop(list)) return showError('noCrop');
+    setBusy(true);
+    runButton.textContent = runButton.dataset.processing ?? '';
+    try {
+      const out = await buildCroppedPdf(pdfBytes, list);
+      resultBlob = new Blob([out as BlobPart], { type: 'application/pdf' });
+      resultName = croppedFileName(pdfName);
+      resultSummary.textContent = fill(resultEl.dataset.summary ?? '', {
+        pages: String(list.filter((m) => hasAnyCrop([m])).length),
+      });
+      downloadButton.textContent = `${(resultEl.dataset.download ?? '').replace('{name}', () => resultName)} (${formatBytes(resultBlob.size)})`;
+      resultEl.hidden = false;
+    } catch (e) {
+      if (e instanceof PdfToolError) {
+        const key =
+          e.code === 'noOperation'
+            ? 'noCrop'
+            : e.code === 'invalid' || e.code === 'encrypted'
+              ? e.code
+              : 'failed';
+        showError(key);
+      } else showError(pdfErrorKey(e));
+    } finally {
+      setBusy(false);
+      runButton.textContent = runButton.dataset.run ?? '';
+    }
+  });
+
+  downloadButton.addEventListener('click', () => {
+    if (resultBlob) downloadBlob(resultBlob, resultName);
+  });
+
+  clearButton.addEventListener('click', () => {
+    resetDocument();
+    hideError();
+    hideResult();
+  });
+</script>

@@ -1,0 +1,513 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { depreciationCalculatorContent } from '../../i18n/tools/depreciation-calculator';
+import {
+  DECLINING_TABLE,
+  straightLineRateMilli,
+} from '../../lib/tools/depreciation-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = depreciationCalculatorContent[locale];
+
+const milli = (n: number) => (n / 1000).toFixed(3);
+const e5 = (n: number) => (n / 100000).toFixed(5);
+
+const results = [
+  { id: 'rate', label: t.resultRateLabel },
+  { id: 'revised', label: t.resultRevisedLabel },
+  { id: 'guarantee', label: t.resultGuaranteeLabel },
+  { id: 'first', label: t.resultFirstYearLabel },
+  { id: 'total', label: t.resultTotalLabel },
+  { id: 'years', label: t.resultYearsLabel },
+];
+---
+
+<ToolShell t={t}>
+  <p
+    class="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+    role="note"
+  >
+    {t.disclaimer}
+  </p>
+  <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">{t.basisLine}</p>
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error-cost={t.errorCost}
+    data-error-life={t.errorLife}
+    data-error-months={t.errorMonths}
+    data-error-year={t.errorYear}
+    data-error-declining={t.errorDeclining}
+    data-na={t.notApplicable}
+    data-years-unit={t.yearsUnit}
+    data-note-revised-start={t.noteRevisedStart}
+    data-note-revised={t.noteRevised}
+    data-note-memorandum={t.noteMemorandum}
+    data-judge-expense={t.judgeExpense}
+    data-judge-lump-sum={t.judgeLumpSum}
+    data-judge-sme-old={t.judgeSmeOld}
+    data-judge-sme-new={t.judgeSmeNew}
+    data-judge-none={t.judgeNone}
+    data-judge-date-error={t.judgeDateError}
+    data-lump-sum-line={t.lumpSumLine}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-3 flex flex-wrap items-start gap-4">
+      <div class="max-w-sm">
+        <label for="dep-cost" class="ui-label">
+          {t.costLabel}
+        </label>
+        <input
+          id="dep-cost"
+          type="text"
+          inputmode="numeric"
+          placeholder="1000000"
+          class="ui-input h-11 w-48 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          {t.costHint}
+        </p>
+      </div>
+      <div class="max-w-sm">
+        <label for="dep-asset" class="ui-label">
+          {t.assetLabel}
+        </label>
+        <select
+          id="dep-asset"
+          class="ui-input h-11 w-full max-w-xs px-3 dark:bg-gray-900"
+        >
+          {t.assetOptions.map((o, i) => (
+            <option value={String(i)} data-life={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div class="max-w-sm">
+        <label for="dep-life" class="ui-label">
+          {t.lifeLabel}
+        </label>
+        <input
+          id="dep-life"
+          type="text"
+          inputmode="numeric"
+          placeholder="4"
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          {t.lifeHint}
+        </p>
+      </div>
+    </div>
+
+    <div class="mb-3 flex flex-wrap items-start gap-4">
+      <div class="max-w-sm">
+        <label for="dep-method" class="ui-label">
+          {t.methodLabel}
+        </label>
+        <select
+          id="dep-method"
+          class="ui-input h-11 w-56 px-3 dark:bg-gray-900"
+        >
+          <option value="declining">{t.methodDeclining}</option>
+          <option value="straight">{t.methodStraight}</option>
+        </select>
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          {t.methodHint}
+        </p>
+      </div>
+      <div class="max-w-sm">
+        <label for="dep-months" class="ui-label">
+          {t.monthsLabel}
+        </label>
+        <input
+          id="dep-months"
+          type="text"
+          inputmode="numeric"
+          placeholder="12"
+          class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          {t.monthsHint}
+        </p>
+      </div>
+      <div class="max-w-sm">
+        <label for="dep-year" class="ui-label">
+          {t.startYearLabel}
+        </label>
+        <input
+          id="dep-year"
+          type="text"
+          inputmode="numeric"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          {t.startYearHint}
+        </p>
+      </div>
+    </div>
+
+    <p
+      id="dep-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="dep-results" class="mt-4 hidden" aria-live="polite">
+      <dl class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {results.map((r) => (
+          <div>
+            <dt class="text-sm text-gray-600 dark:text-gray-400">{r.label}</dt>
+            <dd
+              class="text-lg font-semibold break-words"
+              id={`dep-result-${r.id}`}
+            />
+          </div>
+        ))}
+      </dl>
+
+      <h3 class="mt-5 mb-2 text-base font-bold">{t.scheduleHeading}</h3>
+      <div
+        class="overflow-x-auto"
+        tabindex="0"
+        role="region"
+        aria-label={t.scheduleHeading}
+      >
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-gray-300 text-left dark:border-gray-600">
+              <th scope="col" class="py-1 pr-2">
+                {t.headYear}
+              </th>
+              <th scope="col" class="py-1 pr-2 text-right">
+                {t.headOpening}
+              </th>
+              <th scope="col" class="py-1 pr-2 text-right">
+                {t.headDepreciation}
+              </th>
+              <th scope="col" class="py-1 pr-2 text-right">
+                {t.headClosing}
+              </th>
+              <th scope="col" class="py-1">
+                {t.headNote}
+              </th>
+            </tr>
+          </thead>
+          <tbody id="dep-schedule"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="mt-6 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <h2 class="mb-3 text-lg font-bold">{t.smallHeading}</h2>
+    <div class="mb-3 flex flex-wrap items-start gap-4">
+      <div class="max-w-sm">
+        <label for="dep-date" class="ui-label">
+          {t.dateLabel}
+        </label>
+        <input
+          id="dep-date"
+          type="date"
+          class="ui-input h-11 w-48 px-3 dark:bg-gray-900"
+        />
+        <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          {t.dateHint}
+        </p>
+      </div>
+      <div class="max-w-sm">
+        <label class="ui-check" for="dep-sme">
+          <input id="dep-sme" type="checkbox" class="h-5 w-5" />
+          <span>{t.smeLabel}</span>
+        </label>
+        <p class="text-xs text-gray-600 dark:text-gray-400">{t.smeHint}</p>
+      </div>
+    </div>
+    <div id="dep-judge" class="hidden space-y-2 text-sm" aria-live="polite">
+      <ul id="dep-judge-list" class="list-disc space-y-1 pl-5"></ul>
+      <p id="dep-judge-lump" class="font-semibold"></p>
+    </div>
+  </section>
+
+  <section class="mt-6">
+    <h2 class="mb-3 text-lg font-bold">{t.ratesHeading}</h2>
+    <div
+      class="overflow-x-auto"
+      tabindex="0"
+      role="region"
+      aria-label={t.ratesHeading}
+    >
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-gray-300 text-left dark:border-gray-600">
+            <th scope="col" class="py-1 pr-2">
+              {t.ratesLifeHead}
+            </th>
+            <th scope="col" class="py-1 pr-2">
+              {t.ratesStraightHead}
+            </th>
+            <th scope="col" class="py-1 pr-2">
+              {t.ratesDecliningHead}
+            </th>
+            <th scope="col" class="py-1 pr-2">
+              {t.ratesRevisedHead}
+            </th>
+            <th scope="col" class="py-1">
+              {t.ratesGuaranteeHead}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {DECLINING_TABLE.map((r) => (
+            <tr
+              id={`dep-rate-row-${r.life}`}
+              class="border-b border-gray-200 dark:border-gray-700"
+            >
+              <td class="py-1 pr-2">{r.life}</td>
+              <td class="py-1 pr-2">{milli(straightLineRateMilli(r.life))}</td>
+              <td class="py-1 pr-2">{milli(r.rateMilli)}</td>
+              <td class="py-1 pr-2">
+                {r.revisedMilli === null ? '-' : milli(r.revisedMilli)}
+              </td>
+              <td class="py-1">
+                {r.guaranteeE5 === null ? '-' : e5(r.guaranteeE5)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    DECLINING_TABLE,
+    calculateDepreciation,
+    isValidDateString,
+    judgeSmallAsset,
+    lumpSumSchedule,
+    type DepreciationErrorReason,
+    type DepreciationMethod,
+  } from '../../lib/tools/depreciation-calculator';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+  import { fill } from '../../lib/format-template';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const d = configEl.dataset;
+  const numberLocale = d.numberLocale ?? 'en-US';
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const errorMessages: Record<DepreciationErrorReason, string> = {
+    cost: d.errorCost ?? '',
+    life: d.errorLife ?? '',
+    months: d.errorMonths ?? '',
+    year: d.errorYear ?? '',
+    'declining-unsupported': d.errorDeclining ?? '',
+  };
+
+  const costInput = document.getElementById('dep-cost') as HTMLInputElement;
+  const assetSelect = document.getElementById('dep-asset') as HTMLSelectElement;
+  const lifeInput = document.getElementById('dep-life') as HTMLInputElement;
+  const methodSelect = document.getElementById(
+    'dep-method',
+  ) as HTMLSelectElement;
+  const monthsInput = document.getElementById('dep-months') as HTMLInputElement;
+  const yearInput = document.getElementById('dep-year') as HTMLInputElement;
+  const dateInput = document.getElementById('dep-date') as HTMLInputElement;
+  const smeInput = document.getElementById('dep-sme') as HTMLInputElement;
+  const errorEl = document.getElementById('dep-error')!;
+  const resultsEl = document.getElementById('dep-results')!;
+  const scheduleEl = document.getElementById('dep-schedule')!;
+  const judgeEl = document.getElementById('dep-judge')!;
+  const judgeListEl = document.getElementById('dep-judge-list')!;
+  const judgeLumpEl = document.getElementById('dep-judge-lump')!;
+
+  const HIGHLIGHT = [
+    'bg-yellow-100',
+    'font-bold',
+    'dark:bg-yellow-900',
+    'dark:text-yellow-50',
+    'text-gray-900',
+  ];
+
+  function setResult(id: string, text: string) {
+    document.getElementById(`dep-result-${id}`)!.textContent = text;
+  }
+
+  function toInt(input: HTMLInputElement): number {
+    const v = stripCommas(input.value).trim();
+    return v === '' ? NaN : Number(v);
+  }
+
+  function milli(n: number): string {
+    return (n / 1000).toFixed(3);
+  }
+
+  function highlightRateRow(life: number | null) {
+    for (const r of DECLINING_TABLE) {
+      const row = document.getElementById(`dep-rate-row-${r.life}`)!;
+      row.classList.toggle('is-current', life === r.life);
+      for (const c of HIGHLIGHT) row.classList.toggle(c, life === r.life);
+    }
+  }
+
+  function addCell(
+    tr: HTMLTableRowElement,
+    text: string,
+    right: boolean,
+    last = false,
+  ) {
+    const td = document.createElement('td');
+    td.className = `py-1 ${last ? '' : 'pr-2'} ${right ? 'text-right' : ''}`;
+    td.textContent = text;
+    tr.appendChild(td);
+  }
+
+  function renderJudgement(cost: number) {
+    judgeEl.classList.add('hidden');
+    judgeListEl.textContent = '';
+    judgeLumpEl.textContent = '';
+    if (!Number.isFinite(cost)) return;
+
+    if (!isValidDateString(dateInput.value)) {
+      const li = document.createElement('li');
+      li.textContent = d.judgeDateError ?? '';
+      judgeListEl.appendChild(li);
+      judgeEl.classList.remove('hidden');
+      return;
+    }
+    const j = judgeSmallAsset({
+      cost,
+      acquisitionDate: dateInput.value,
+      smallBusiness: smeInput.checked,
+    });
+    if (j === null) return;
+    const messages: string[] = [];
+    for (const o of j.options) {
+      if (o === 'expense') messages.push(d.judgeExpense ?? '');
+      else if (o === 'lump-sum') messages.push(d.judgeLumpSum ?? '');
+      else if (o === 'sme-special-old') messages.push(d.judgeSmeOld ?? '');
+      else messages.push(d.judgeSmeNew ?? '');
+    }
+    if (messages.length === 0) messages.push(d.judgeNone ?? '');
+    for (const m of messages) {
+      const li = document.createElement('li');
+      li.textContent = m;
+      judgeListEl.appendChild(li);
+    }
+    if (j.options.includes('lump-sum')) {
+      const [each, , last] = lumpSumSchedule(cost);
+      judgeLumpEl.textContent = fill(d.lumpSumLine ?? '', {
+        each: yen.format(each),
+        last: yen.format(last),
+      });
+    }
+    judgeEl.classList.remove('hidden');
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+    scheduleEl.textContent = '';
+    highlightRateRow(null);
+
+    const cost = toInt(costInput);
+    renderJudgement(cost);
+
+    if (
+      costInput.value.trim() === '' ||
+      lifeInput.value.trim() === '' ||
+      monthsInput.value.trim() === '' ||
+      yearInput.value.trim() === ''
+    ) {
+      return;
+    }
+
+    const life = toInt(lifeInput);
+    const r = calculateDepreciation({
+      cost,
+      usefulLife: life,
+      method: methodSelect.value as DepreciationMethod,
+      firstYearMonths: toInt(monthsInput),
+      startYear: toInt(yearInput),
+    });
+    if (!r.ok) {
+      errorEl.textContent = errorMessages[r.reason];
+      return;
+    }
+
+    const na = d.na ?? '';
+    setResult('rate', milli(r.rateMilli));
+    setResult('revised', r.revisedMilli === null ? na : milli(r.revisedMilli));
+    setResult(
+      'guarantee',
+      r.guaranteeAmount === null ? na : yen.format(r.guaranteeAmount),
+    );
+    setResult('first', yen.format(r.firstYearDepreciation));
+    setResult('total', yen.format(r.totalDepreciation));
+    setResult('years', fill(d.yearsUnit ?? '', { years: String(r.years) }));
+
+    const last = r.rows.length - 1;
+    r.rows.forEach((row, i) => {
+      const tr = document.createElement('tr');
+      tr.className = 'border-b border-gray-200 dark:border-gray-700';
+      addCell(tr, String(row.year), false);
+      addCell(tr, yen.format(row.openingBalance), true);
+      addCell(tr, yen.format(row.depreciation), true);
+      addCell(tr, yen.format(row.closingBalance), true);
+      const notes: string[] = [];
+      if (row.revisedStart) notes.push(d.noteRevisedStart ?? '');
+      else if (row.revised) notes.push(d.noteRevised ?? '');
+      if (i === last) notes.push(d.noteMemorandum ?? '');
+      addCell(tr, notes.join(' / '), false, true);
+      scheduleEl.appendChild(tr);
+    });
+
+    highlightRateRow(life);
+    resultsEl.classList.remove('hidden');
+  }
+
+  attachCommaFormatting(costInput);
+
+  assetSelect.addEventListener('change', () => {
+    const opt = assetSelect.selectedOptions[0];
+    const life = opt?.dataset.life;
+    if (life && life !== 'custom') {
+      lifeInput.value = life;
+      lifeInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  });
+
+  for (const el of [costInput, lifeInput, monthsInput, yearInput, dateInput]) {
+    el.addEventListener('input', render);
+  }
+  for (const el of [methodSelect, smeInput, dateInput]) {
+    el.addEventListener('change', render);
+  }
+
+  const today = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  costInput.value = formatNumberWithCommas('1000000');
+  lifeInput.value = '4';
+  monthsInput.value = '12';
+  yearInput.value = String(today.getFullYear());
+  dateInput.value = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+  render();
+</script>

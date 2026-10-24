@@ -1047,13 +1047,17 @@ export const updates: UpdateEntry[] = [
       'withholding-tax-calculator',
       'stamp-duty-calculator',
       'gift-tax-calculator',
+      'pdf-nup',
+      'pdf-crop',
+      'depreciation-calculator',
+      'parcel-size-checker',
     ],
     translations: {
       ja: {
-        summary: '8個のツールを追加しました。',
+        summary: '12個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 8 new tools.',
+        summary: 'Added 12 new tools.',
       },
     },
   },

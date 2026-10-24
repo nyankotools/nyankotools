@@ -1,0 +1,287 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { parcelSizeCheckerContent } from '../../i18n/tools/parcel-size-checker';
+import {
+  SERVICES,
+  type ParcelGroup,
+} from '../../lib/tools/parcel-size-checker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = parcelSizeCheckerContent[locale];
+
+const groups: ParcelGroup[] = ['yamato', 'jp', 'sagawa'];
+const serviceGroups = groups.map((group) => ({
+  group,
+  label: t.groupLabels[group],
+  items: t.services.filter(
+    (s) => SERVICES.find((d) => d.id === s.id)?.group === group,
+  ),
+}));
+---
+
+<ToolShell t={t}>
+  <p
+    class="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+    role="note"
+  >
+    {t.disclaimer}
+  </p>
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+    data-status-fit={t.statusFit}
+    data-status-no-fit={t.statusNoFit}
+    data-tier-format={t.tierFormat}
+    data-decided-sum={t.decidedBySum}
+    data-decided-weight={t.decidedByWeight}
+    data-reason-sum={t.reasonSum}
+    data-reason-longest={t.reasonLongest}
+    data-reason-middle={t.reasonMiddle}
+    data-reason-thickness={t.reasonThickness}
+    data-reason-weight={t.reasonWeight}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div>
+        <label for="parcel-length" class="ui-label">
+          {t.lengthLabel}
+        </label>
+        <input
+          id="parcel-length"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="parcel-width" class="ui-label">
+          {t.widthLabel}
+        </label>
+        <input
+          id="parcel-width"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="parcel-height" class="ui-label">
+          {t.heightLabel}
+        </label>
+        <input
+          id="parcel-height"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div>
+        <label for="parcel-weight" class="ui-label">
+          {t.weightLabel}
+        </label>
+        <input
+          id="parcel-weight"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          step="any"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+    <p class="max-w-xl text-xs text-gray-600 dark:text-gray-400">
+      {t.inputHint}
+    </p>
+
+    <p
+      id="parcel-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="parcel-results" class="mt-4 hidden" aria-live="polite">
+      <h3 class="mb-2 text-base font-bold">{t.summaryHeading}</h3>
+      <dl class="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.summarySumLabel}
+          </dt>
+          <dd class="text-xl font-bold break-words" id="parcel-sum"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.summaryLongestLabel}
+          </dt>
+          <dd class="text-xl font-bold break-words" id="parcel-longest"></dd>
+        </div>
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">
+            {t.summaryShortestLabel}
+          </dt>
+          <dd class="text-xl font-bold break-words" id="parcel-shortest"></dd>
+        </div>
+      </dl>
+
+      <h3 class="mb-2 text-base font-bold">{t.resultsHeading}</h3>
+      {serviceGroups.map((g) => (
+        <div class="mb-4">
+          <h4 class="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+            {g.label}
+          </h4>
+          <ul class="space-y-2">
+            {g.items.map((s) => (
+              <li
+                id={`parcel-svc-${s.id}`}
+                class="rounded-md border border-gray-200 p-3 dark:border-gray-700"
+              >
+                <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                  <span class="font-semibold">{s.name}</span>
+                  <span
+                    class="parcel-status text-sm font-bold break-words"
+                    data-role="status"
+                  />
+                </div>
+                <p
+                  class="parcel-detail mt-1 text-sm break-words"
+                  data-role="detail"
+                />
+                <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+                  {s.note}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { checkParcel } from '../../lib/tools/parcel-size-checker';
+  import type { LimitKind } from '../../lib/tools/parcel-size-checker';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
+  const d = configEl.dataset;
+  const errorMessage = d.error ?? '';
+  const statusFit = d.statusFit ?? '';
+  const statusNoFit = d.statusNoFit ?? '';
+  const tierFormat = d.tierFormat ?? '{size}';
+  const decidedText = {
+    sum: d.decidedSum ?? '',
+    weight: d.decidedWeight ?? '',
+  };
+  const reasonText: Record<LimitKind, string> = {
+    sum: d.reasonSum ?? '',
+    longest: d.reasonLongest ?? '',
+    middle: d.reasonMiddle ?? '',
+    thickness: d.reasonThickness ?? '',
+    weight: d.reasonWeight ?? '',
+  };
+
+  const num = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 2,
+  });
+
+  const lengthInput = document.getElementById(
+    'parcel-length',
+  ) as HTMLInputElement;
+  const widthInput = document.getElementById(
+    'parcel-width',
+  ) as HTMLInputElement;
+  const heightInput = document.getElementById(
+    'parcel-height',
+  ) as HTMLInputElement;
+  const weightInput = document.getElementById(
+    'parcel-weight',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('parcel-error')!;
+  const resultsEl = document.getElementById('parcel-results')!;
+
+  function setText(id: string, text: string) {
+    document.getElementById(id)!.textContent = text;
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    const raw = [lengthInput, widthInput, heightInput, weightInput].map((el) =>
+      el.value.trim(),
+    );
+    if (raw.every((v) => v === '')) return;
+    if (raw.some((v) => v === '')) return;
+
+    const result = checkParcel({
+      lengthCm: Number(raw[0]),
+      widthCm: Number(raw[1]),
+      heightCm: Number(raw[2]),
+      weightKg: Number(raw[3]),
+    });
+    if (result === null) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    setText('parcel-sum', `${num.format(result.sum)} cm`);
+    setText('parcel-longest', `${num.format(result.longest)} cm`);
+    setText('parcel-shortest', `${num.format(result.shortest)} cm`);
+
+    for (const s of result.services) {
+      const li = document.getElementById(`parcel-svc-${s.id}`);
+      if (!li) continue;
+      const status = li.querySelector<HTMLElement>('[data-role="status"]')!;
+      const detail = li.querySelector<HTMLElement>('[data-role="detail"]')!;
+      status.textContent = s.fits ? statusFit : statusNoFit;
+      status.classList.toggle('text-green-800', s.fits);
+      status.classList.toggle('dark:text-green-300', s.fits);
+      status.classList.toggle('text-red-700', !s.fits);
+      status.classList.toggle('dark:text-red-300', !s.fits);
+
+      const lines: string[] = [];
+      if (s.fits && s.size !== null) {
+        lines.push(tierFormat.replace('{size}', String(s.size)));
+        if (s.decidedBy) lines.push(decidedText[s.decidedBy]);
+      }
+      for (const e of s.exceeded) {
+        lines.push(
+          reasonText[e.kind]
+            .replace('{limit}', num.format(e.limit))
+            .replace('{actual}', num.format(e.actual)),
+        );
+      }
+      detail.textContent = lines.join(' / ');
+      detail.classList.toggle('hidden', lines.length === 0);
+      detail.classList.toggle('font-semibold', s.fits);
+    }
+
+    resultsEl.classList.remove('hidden');
+  }
+
+  for (const el of [lengthInput, widthInput, heightInput, weightInput]) {
+    el.addEventListener('input', render);
+  }
+
+  lengthInput.value = '40';
+  widthInput.value = '30';
+  heightInput.value = '20';
+  weightInput.value = '3';
+  render();
+</script>

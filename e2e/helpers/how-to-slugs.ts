@@ -204,4 +204,6 @@ export const howToSlugs = [
   'color-mixer',
   'gif-splitter',
   'withholding-tax-calculator',
+  'pdf-nup',
+  'pdf-crop',
 ];

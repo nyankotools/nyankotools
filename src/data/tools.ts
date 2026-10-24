@@ -14052,6 +14052,161 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'gif-splitter',
+    category: 'image',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['gif-maker', 'video-to-gif', 'zip-tool'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'GIF分解・フレーム抽出・速度変更',
+        keywords: [
+          'GIF分解',
+          'GIFフレーム抽出',
+          'GIF 速度変更',
+          'GIF 連番PNG',
+          'GIFをPNGに',
+          'アニメーションGIF',
+          'GIF 分割',
+        ],
+        description:
+          'アニメーションGIFを1コマずつに分解してPNG連番のZIPで保存。表示時間（速度）を倍率や固定msで一括変更してGIFを作り直せます。ブラウザ内で処理され、アップロード不要です。',
+      },
+      en: {
+        name: 'GIF Splitter & Speed Changer',
+        keywords: [
+          'gif splitter',
+          'extract gif frames',
+          'gif to png sequence',
+          'change gif speed',
+          'gif frame delay',
+          'split gif',
+        ],
+        description:
+          'Split an animated GIF into frames and save a PNG sequence as ZIP, or change the frame delay in bulk and rebuild the GIF. Runs in your browser, no upload.',
+      },
+    },
+  },
+  {
+    slug: 'withholding-tax-calculator',
+    category: 'calc',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: [
+      'freelance-income-calculator',
+      'tax-calculator',
+      'invoice-generator',
+    ],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '源泉徴収税額の計算（報酬・原稿料・デザイン料）',
+        keywords: [
+          '源泉徴収',
+          '源泉徴収税 計算',
+          '報酬 源泉',
+          '原稿料',
+          'デザイン料',
+          '10.21%',
+          '司法書士 報酬',
+          '手取り 逆算',
+        ],
+        description:
+          '報酬・原稿料・デザイン料の源泉徴収税額（10.21%・100万円超は20.42%）と振込額を計算。消費税の区分や手取りからの逆算に対応。',
+      },
+      en: {
+        name: 'Withholding Tax Calculator for Fees',
+        keywords: [
+          'withholding tax',
+          'freelance fee',
+          'manuscript fee',
+          'design fee',
+          '10.21%',
+          'reconstruction surtax',
+          'net to gross',
+          'judicial scrivener',
+        ],
+        description:
+          'Calculate Japanese withholding tax on freelance fees (10.21%, 20.42% above ¥1M), the amount transferred, and net-to-invoice reverse math.',
+      },
+    },
+  },
+  {
+    slug: 'stamp-duty-calculator',
+    category: 'calc',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['invoice-generator', 'tax-calculator'],
+    translations: {
+      ja: {
+        name: '印紙税額計算（契約書・領収書）',
+        keywords: [
+          '印紙税',
+          '収入印紙',
+          '印紙代',
+          '領収書 印紙',
+          '契約書 印紙',
+          '印紙税額一覧',
+          '軽減措置',
+        ],
+        description:
+          '契約書・領収書・手形などの文書の種類と記載金額から、収入印紙の税額を計算。不動産譲渡・建設工事請負の軽減措置、領収書の5万円未満非課税にも対応。',
+      },
+      en: {
+        name: 'Stamp Duty Calculator (Contracts & Receipts)',
+        keywords: [
+          'stamp duty',
+          'revenue stamp',
+          'inshizei',
+          'receipt stamp',
+          'contract stamp tax',
+          'Japan stamp tax',
+        ],
+        description:
+          'Look up the Japanese revenue stamp tax for contracts, receipts and bills by document type and amount, including the relief rates.',
+      },
+    },
+  },
+  {
+    slug: 'gift-tax-calculator',
+    category: 'calc',
+    addedAt: '2026-10-24',
+    updatedAt: '2026-10-24',
+    related: ['retirement-allowance-tax', 'tax-calculator'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '贈与税計算（暦年課税・特例税率）',
+        keywords: [
+          '贈与税',
+          '暦年課税',
+          '基礎控除',
+          '特例税率',
+          '一般税率',
+          '生前贈与',
+          '速算表',
+          '贈与',
+        ],
+        description:
+          '年間の贈与額から贈与税を計算。基礎控除110万円、特例税率・一般税率の速算表、両方ある場合の按分計算に対応。',
+      },
+      en: {
+        name: 'Gift Tax Calculator (Japan, Calendar-Year)',
+        keywords: [
+          'gift tax',
+          'japan gift tax',
+          'calendar-year taxation',
+          'basic deduction',
+          'special rate',
+          'general rate',
+        ],
+        description:
+          'Estimate Japanese gift tax with the ¥1.1M basic deduction, special and general rate tables, and split calculation for mixed gifts.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

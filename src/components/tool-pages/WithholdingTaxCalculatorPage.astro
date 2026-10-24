@@ -1,0 +1,199 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { withholdingTaxCalculatorContent } from '../../i18n/tools/withholding-tax-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = withholdingTaxCalculatorContent[locale];
+
+const results = [
+  { id: 'withholding', label: t.resultWithholdingLabel },
+  { id: 'payment', label: t.resultPaymentLabel },
+  { id: 'invoice-total', label: t.resultInvoiceTotalLabel },
+  { id: 'target', label: t.resultTargetLabel },
+  { id: 'consumption', label: t.resultConsumptionLabel },
+  { id: 'tax-base', label: t.resultTaxBaseLabel },
+  { id: 'band', label: t.resultBandLabel },
+  { id: 'rate', label: t.resultRateLabel },
+];
+---
+
+<ToolShell t={t}>
+  <p
+    class="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+    role="note"
+  >
+    {t.disclaimer}
+  </p>
+
+  <section
+    class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-number-locale={t.numberLocale}
+    data-error={t.error}
+    data-inexact={t.inexactNote}
+    data-band-low={t.bandLow}
+    data-band-high={t.bandHigh}
+    data-consumption-none={t.resultConsumptionNone}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.sectionHeading}</h2>
+
+    <div class="mb-3 flex flex-wrap items-end gap-3">
+      <div class="max-w-full">
+        <label for="wh-mode" class="ui-label">
+          {t.modeLabel}
+        </label>
+        <select
+          id="wh-mode"
+          class="ui-input h-11 max-w-full px-3 dark:bg-gray-900"
+        >
+          <option value="excl">{t.modeExcl}</option>
+          <option value="incl">{t.modeIncl}</option>
+          <option value="net-excl">{t.modeNetExcl}</option>
+          <option value="net-incl">{t.modeNetIncl}</option>
+        </select>
+      </div>
+      <div>
+        <label for="wh-amount" class="ui-label">
+          {t.amountLabel}
+        </label>
+        <input
+          id="wh-amount"
+          type="text"
+          inputmode="numeric"
+          placeholder={t.amountPlaceholder}
+          class="ui-input h-11 w-44 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+    </div>
+    <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+      {t.modeHint}
+    </p>
+
+    <div class="mb-2">
+      <label class="flex items-center gap-2 text-sm">
+        <input id="wh-judicial" type="checkbox" />
+        {t.judicialLabel}
+      </label>
+    </div>
+    <p class="mb-3 max-w-xl text-xs text-gray-600 dark:text-gray-400">
+      {t.judicialHint}
+    </p>
+
+    <p
+      id="wh-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+    <p
+      id="wh-inexact"
+      class="mt-2 text-sm text-amber-800 dark:text-amber-300"
+      aria-live="polite"
+    ></p>
+
+    <dl
+      id="wh-results"
+      class="mt-4 hidden grid grid-cols-2 gap-3 sm:grid-cols-3"
+      aria-live="polite"
+    >
+      {results.map((r) => (
+        <div>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">{r.label}</dt>
+          <dd
+            class="text-lg font-semibold break-words"
+            id={`wh-result-${r.id}`}
+          />
+        </div>
+      ))}
+    </dl>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    calculateWithholding,
+    type WithholdingMode,
+  } from '../../lib/tools/withholding-tax-calculator';
+  import {
+    attachCommaFormatting,
+    formatNumberWithCommas,
+    stripCommas,
+  } from '../../lib/comma-number-input';
+
+  const configEl = document.querySelector<HTMLElement>(
+    'section[data-number-locale]',
+  )!;
+  const numberLocale = configEl.dataset.numberLocale ?? 'en-US';
+  const errorMessage = configEl.dataset.error ?? '';
+  const inexactMessage = configEl.dataset.inexact ?? '';
+  const bandLow = configEl.dataset.bandLow ?? '';
+  const bandHigh = configEl.dataset.bandHigh ?? '';
+  const consumptionNone = configEl.dataset.consumptionNone ?? '';
+
+  const yen = new Intl.NumberFormat(numberLocale, {
+    style: 'currency',
+    currency: 'JPY',
+    maximumFractionDigits: 0,
+  });
+  const percent = new Intl.NumberFormat(numberLocale, {
+    maximumFractionDigits: 2,
+  });
+
+  const modeInput = document.getElementById('wh-mode') as HTMLSelectElement;
+  const amountInput = document.getElementById('wh-amount') as HTMLInputElement;
+  const judicialInput = document.getElementById(
+    'wh-judicial',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('wh-error')!;
+  const inexactEl = document.getElementById('wh-inexact')!;
+  const resultsEl = document.getElementById('wh-results')!;
+
+  function setResult(id: string, text: string) {
+    document.getElementById(`wh-result-${id}`)!.textContent = text;
+  }
+
+  attachCommaFormatting(amountInput);
+
+  function render() {
+    errorEl.textContent = '';
+    inexactEl.textContent = '';
+    resultsEl.classList.add('hidden');
+
+    if (amountInput.value.trim() === '') return;
+
+    const result = calculateWithholding({
+      mode: modeInput.value as WithholdingMode,
+      amount: Number(stripCommas(amountInput.value)),
+      judicial: judicialInput.checked,
+    });
+
+    if (result === null) {
+      errorEl.textContent = errorMessage;
+      return;
+    }
+
+    setResult('withholding', yen.format(result.withholding));
+    setResult('payment', yen.format(result.payment));
+    setResult('invoice-total', yen.format(result.invoiceTotal));
+    setResult('target', yen.format(result.targetAmount));
+    setResult(
+      'consumption',
+      result.taxSeparated ? yen.format(result.consumptionTax) : consumptionNone,
+    );
+    setResult('tax-base', yen.format(result.taxBase));
+    setResult('band', result.overThreshold ? bandHigh : bandLow);
+    setResult('rate', `${percent.format(result.effectiveRate)}%`);
+    if (!result.exact) inexactEl.textContent = inexactMessage;
+    resultsEl.classList.remove('hidden');
+  }
+
+  amountInput.addEventListener('input', render);
+  modeInput.addEventListener('change', render);
+  judicialInput.addEventListener('change', render);
+
+  amountInput.value = formatNumberWithCommas('100000');
+  render();
+</script>

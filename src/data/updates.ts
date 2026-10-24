@@ -1043,13 +1043,17 @@ export const updates: UpdateEntry[] = [
       'document-scan-filter',
       'svg-path-viewer',
       'color-mixer',
+      'gif-splitter',
+      'withholding-tax-calculator',
+      'stamp-duty-calculator',
+      'gift-tax-calculator',
     ],
     translations: {
       ja: {
-        summary: '4個のツールを追加しました。',
+        summary: '8個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 4 new tools.',
+        summary: 'Added 8 new tools.',
       },
     },
   },

@@ -202,4 +202,6 @@ export const howToSlugs = [
   'document-scan-filter',
   'svg-path-viewer',
   'color-mixer',
+  'gif-splitter',
+  'withholding-tax-calculator',
 ];

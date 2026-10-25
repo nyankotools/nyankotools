@@ -14633,6 +14633,84 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'video-speed-changer',
+    category: 'media',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['media-converter', 'audio-speed-changer', 'video-to-gif'],
+    heavy: true,
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '動画の再生速度変更（倍速・スロー）',
+        description:
+          '動画の再生速度を0.25倍〜4倍に変更して倍速・スロー動画を作成。MP4・WebMで保存でき、ブラウザ内で処理されアップロード不要',
+        keywords: [
+          '動画 倍速',
+          '動画 スロー',
+          'スローモーション',
+          '再生速度',
+          '動画 速度変更',
+          '早送り',
+          'タイムラプス風',
+          'MP4 速度',
+        ],
+      },
+      en: {
+        name: 'Video Speed Changer (Fast Forward & Slow Motion)',
+        description:
+          'Speed up or slow down a video from 0.25x to 4x and save as MP4 or WebM. Runs in your browser, no upload',
+        keywords: [
+          'video speed changer',
+          'slow motion video',
+          'fast forward video',
+          'speed up video',
+          'slow down video',
+          'change video speed',
+          'video playback speed',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'histogram-maker',
+    category: 'calc',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['statistics-calculator', 'chart-maker', 'linear-regression'],
+    translations: {
+      ja: {
+        name: '度数分布表・ヒストグラム作成',
+        description:
+          'データを貼り付けて階級幅を指定するだけで、度数・相対度数・累積度数の表とヒストグラムを作成。PNG保存・表のコピーに対応。',
+        keywords: [
+          'ヒストグラム',
+          '度数分布表',
+          '階級幅',
+          '相対度数',
+          '累積度数',
+          '階級',
+          'スタージェス',
+          '柱状グラフ',
+        ],
+      },
+      en: {
+        name: 'Histogram Maker & Frequency Table',
+        description:
+          'Make a frequency distribution table (relative and cumulative) and a histogram from pasted data. Set the bin width and save as PNG.',
+        keywords: [
+          'histogram',
+          'frequency table',
+          'frequency distribution',
+          'bin width',
+          'relative frequency',
+          'cumulative frequency',
+          'sturges rule',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

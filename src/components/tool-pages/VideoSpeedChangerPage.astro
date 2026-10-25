@@ -1,0 +1,472 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { videoSpeedChangerContent } from '../../i18n/tools/video-speed-changer';
+import {
+  DEFAULT_SPEED,
+  HEIGHT_OPTIONS,
+  MAX_SPEED,
+  MIN_SPEED,
+  SPEED_PRESETS,
+} from '../../lib/tools/video-speed-changer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = videoSpeedChangerContent[locale];
+
+const qualityOptions = [
+  { value: 'high', label: t.qualityHigh },
+  { value: 'medium', label: t.qualityMedium },
+  { value: 'low', label: t.qualityLow },
+  { value: 'veryLow', label: t.qualityVeryLow },
+];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="vs-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="vs-dropzone" class="ui-dropzone">
+      <input
+        id="vs-file-input"
+        type="file"
+        accept="video/*,.mkv,.mov,.m4v,.ts"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="vs-source-info"
+      data-template={t.sourceInfoTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="vs-error"
+      role="alert"
+      hidden
+      data-unsupported={t.errorUnsupportedFile}
+      data-unreadable={t.errorUnreadable}
+      data-no-video={t.errorNoVideo}
+      data-unsupported-input={t.errorUnsupportedInput}
+      data-unsupported-output={t.errorUnsupportedOutput}
+      data-failed={t.errorFailed}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-speed-template={t.errorSpeedTemplate}
+      data-speed-min={String(MIN_SPEED)}
+      data-speed-max={String(MAX_SPEED)}
+      data-canceled={t.errorCanceled}
+      class="ui-error mt-2"
+    ></p>
+  </div>
+
+  <div class="mt-4">
+    <label for="vs-speed" class="ui-label">
+      {t.speedLabel}
+    </label>
+    <input
+      id="vs-speed"
+      type="text"
+      inputmode="decimal"
+      autocomplete="off"
+      value={String(DEFAULT_SPEED)}
+      class="ui-input h-11 w-32 px-3 dark:bg-gray-900"
+    />
+    <div
+      role="group"
+      aria-label={t.speedPresetsLabel}
+      class="mt-2 flex flex-wrap gap-2"
+    >
+      {SPEED_PRESETS.map((s) => (
+        <button type="button" data-speed-preset={String(s)} class="ui-btn">
+          {s}x
+        </button>
+      ))}
+    </div>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.speedHint}</p>
+    <p
+      id="vs-speed-result"
+      data-template={t.speedResultTemplate}
+      class="mt-1 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-start gap-4">
+    <div class="min-w-48 flex-1">
+      <label for="vs-format" class="ui-label">
+        {t.formatLabel}
+      </label>
+      <select id="vs-format" class="ui-input h-11 w-full px-3 dark:bg-gray-900">
+        <option value="mp4" selected>
+          {t.formatMp4}
+        </option>
+        <option value="webm">{t.formatWebm}</option>
+      </select>
+    </div>
+    <div class="min-w-48 flex-1">
+      <label for="vs-quality" class="ui-label">
+        {t.qualityLabel}
+      </label>
+      <select
+        id="vs-quality"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      >
+        {qualityOptions.map((o) => (
+          <option value={o.value} selected={o.value === 'medium'}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div class="min-w-48 flex-1">
+      <label for="vs-height" class="ui-label">
+        {t.heightLabel}
+      </label>
+      <select id="vs-height" class="ui-input h-11 w-full px-3 dark:bg-gray-900">
+        {HEIGHT_OPTIONS.map((h) => (
+          <option value={String(h)}>
+            {h === 0
+              ? t.heightOriginal
+              : t.heightTemplate.replace('{height}', String(h))}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+
+  <label class="ui-check mt-2">
+    <input id="vs-remove-audio" type="checkbox" class="h-4 w-4" />
+    {t.removeAudioLabel}
+  </label>
+  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.pitchNote}</p>
+
+  <div class="mt-4 flex flex-wrap gap-3">
+    <button
+      id="vs-convert-button"
+      type="button"
+      disabled
+      class="ui-btn-primary"
+    >
+      {t.convertButton}
+    </button>
+    <button id="vs-cancel-button" type="button" hidden class="ui-btn">
+      {t.cancelButton}
+    </button>
+    <button
+      id="vs-clear-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.clearButton}
+    </button>
+  </div>
+
+  <div id="vs-progress-section" hidden class="mt-4">
+    <p
+      id="vs-progress-text"
+      data-template={t.progressTemplate}
+      class="mb-1 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+    <progress
+      id="vs-progress"
+      max="100"
+      value="0"
+      aria-label={t.progressLabel}
+      class="h-2 w-full"
+    ></progress>
+  </div>
+
+  <div id="vs-results-section" hidden class="mt-6">
+    <h2 class="mb-2 text-lg font-bold">{t.resultsHeading}</h2>
+    <video
+      id="vs-result-video"
+      controls
+      class="max-h-96 w-full rounded-lg border border-gray-300 bg-black dark:border-gray-700"
+    ></video>
+    <p
+      id="vs-result-size"
+      data-template={t.resultSizeTemplate}
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+    <button id="vs-download-button" type="button" class="ui-btn-primary mt-3">
+      {t.downloadButton}
+    </button>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    MAX_FILE_SIZE,
+    SpeedChangeError,
+    buildSpeedFileName,
+    changeVideoSpeed,
+    formatDuration,
+    formatFileSize,
+    formatSpeed,
+    isAcceptedMediaFile,
+    isQualityId,
+    isSpeedOutputFormat,
+    outputDuration,
+    parseSpeed,
+    readMediaInfo,
+    type MediaInfo,
+    type SpeedChangeHandle,
+  } from '../../lib/tools/video-speed-changer';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const dropzone = $('vs-dropzone');
+  const fileInput = $<HTMLInputElement>('vs-file-input');
+  const sourceInfoEl = $('vs-source-info');
+  const errorEl = $('vs-error');
+  const speedInput = $<HTMLInputElement>('vs-speed');
+  const speedResultEl = $('vs-speed-result');
+  const presetButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-speed-preset]'),
+  );
+  const formatSelect = $<HTMLSelectElement>('vs-format');
+  const qualitySelect = $<HTMLSelectElement>('vs-quality');
+  const heightSelect = $<HTMLSelectElement>('vs-height');
+  const removeAudioCheck = $<HTMLInputElement>('vs-remove-audio');
+  const convertButton = $<HTMLButtonElement>('vs-convert-button');
+  const cancelButton = $<HTMLButtonElement>('vs-cancel-button');
+  const clearButton = $<HTMLButtonElement>('vs-clear-button');
+  const progressSection = $('vs-progress-section');
+  const progressText = $('vs-progress-text');
+  const progressBar = $<HTMLProgressElement>('vs-progress');
+  const resultsSection = $('vs-results-section');
+  const resultVideo = $<HTMLVideoElement>('vs-result-video');
+  const resultSizeEl = $('vs-result-size');
+  const downloadButton = $<HTMLButtonElement>('vs-download-button');
+
+  let currentFile: File | null = null;
+  let currentInfo: MediaInfo | null = null;
+  let resultBlob: Blob | null = null;
+  let resultName = '';
+  let resultUrl: string | null = null;
+  let handle: SpeedChangeHandle | null = null;
+  // ファイル選択のやり直しなどで古い非同期処理の結果を捨てるための世代番号
+  let generation = 0;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function updateSpeedResult() {
+    const parsed = parseSpeed(speedInput.value);
+    if (!parsed.ok || !currentInfo) {
+      speedResultEl.textContent = '';
+      return;
+    }
+    speedResultEl.textContent = (speedResultEl.dataset.template ?? '')
+      .replace('{speed}', formatSpeed(parsed.value))
+      .replace(
+        '{duration}',
+        formatDuration(outputDuration(currentInfo.duration, parsed.value)),
+      );
+  }
+
+  function revokeResult() {
+    if (resultUrl) URL.revokeObjectURL(resultUrl);
+    resultUrl = null;
+    resultBlob = null;
+    resultVideo.removeAttribute('src');
+    resultVideo.load();
+    resultsSection.hidden = true;
+    resultSizeEl.textContent = '';
+  }
+
+  function setBusy(busy: boolean) {
+    convertButton.hidden = busy;
+    cancelButton.hidden = !busy;
+    progressSection.hidden = !busy;
+    for (const el of [
+      fileInput,
+      speedInput,
+      formatSelect,
+      qualitySelect,
+      heightSelect,
+      removeAudioCheck,
+      clearButton,
+      ...presetButtons,
+    ]) {
+      el.disabled = busy;
+    }
+    if (!busy) clearButton.disabled = currentFile === null;
+  }
+
+  function setProgress(ratio: number) {
+    const percent = Math.floor(ratio * 100);
+    progressBar.value = percent;
+    progressText.textContent = (progressText.dataset.template ?? '').replace(
+      '{percent}',
+      String(percent),
+    );
+  }
+
+  function resetAll() {
+    generation++;
+    handle?.cancel();
+    handle = null;
+    revokeResult();
+    currentFile = null;
+    currentInfo = null;
+    sourceInfoEl.textContent = '';
+    speedResultEl.textContent = '';
+    convertButton.disabled = true;
+    clearButton.disabled = true;
+    setBusy(false);
+  }
+
+  async function loadFile(file: File) {
+    clearError();
+    resetAll();
+    const gen = generation;
+
+    if (!isAcceptedMediaFile(file)) {
+      showError(errorEl.dataset.unsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace(
+          '{max}',
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+
+    let info: MediaInfo;
+    try {
+      info = await readMediaInfo(file);
+    } catch {
+      if (gen === generation) showError(errorEl.dataset.unreadable ?? '');
+      return;
+    }
+    if (gen !== generation) return;
+    if (!info.hasVideo) {
+      showError(errorEl.dataset.noVideo ?? '');
+      return;
+    }
+
+    currentFile = file;
+    currentInfo = info;
+    sourceInfoEl.textContent = (sourceInfoEl.dataset.template ?? '')
+      .replace('{resolution}', `${info.width}×${info.height}`)
+      .replace('{duration}', formatDuration(info.duration))
+      .replace('{size}', formatFileSize(file.size));
+    convertButton.disabled = false;
+    clearButton.disabled = false;
+    updateSpeedResult();
+  }
+
+  const errorKeyByCode: Record<string, string> = {
+    'unsupported-input': 'unsupportedInput',
+    'unsupported-output': 'unsupportedOutput',
+    canceled: 'canceled',
+    failed: 'failed',
+  };
+
+  async function startConversion() {
+    if (!currentFile || !currentInfo || handle) return;
+    clearError();
+    revokeResult();
+
+    const speed = parseSpeed(speedInput.value);
+    if (!speed.ok) {
+      showError(
+        (errorEl.dataset.speedTemplate ?? '')
+          .replace('{min}', errorEl.dataset.speedMin ?? '')
+          .replace('{max}', errorEl.dataset.speedMax ?? ''),
+      );
+      return;
+    }
+
+    const format = isSpeedOutputFormat(formatSelect.value)
+      ? formatSelect.value
+      : 'mp4';
+    const quality = isQualityId(qualitySelect.value)
+      ? qualitySelect.value
+      : 'medium';
+    const file = currentFile;
+    const info = currentInfo;
+    const gen = generation;
+
+    setBusy(true);
+    setProgress(0);
+    const current = changeVideoSpeed(file, {
+      format,
+      quality,
+      speed: speed.value,
+      maxHeight: Number(heightSelect.value) || 0,
+      removeAudio: removeAudioCheck.checked,
+      sourceHeight: info.height,
+      onProgress: (ratio) => {
+        if (gen === generation) setProgress(ratio);
+      },
+    });
+    handle = current;
+
+    try {
+      const { blob } = await current.promise;
+      if (gen !== generation) return;
+      resultBlob = blob;
+      resultName = buildSpeedFileName(file.name, format, speed.value);
+      resultUrl = URL.createObjectURL(blob);
+      resultVideo.src = resultUrl;
+      resultSizeEl.textContent = (resultSizeEl.dataset.template ?? '')
+        .replace('{size}', formatFileSize(blob.size))
+        .replace(
+          '{duration}',
+          formatDuration(outputDuration(info.duration, speed.value)),
+        );
+      resultsSection.hidden = false;
+    } catch (e) {
+      if (gen !== generation) return;
+      const code = e instanceof SpeedChangeError ? e.code : 'failed';
+      showError(errorEl.dataset[errorKeyByCode[code] ?? 'failed'] ?? '');
+    } finally {
+      if (handle === current) handle = null;
+      if (gen === generation) setBusy(false);
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+
+  enableFileDrop(dropzone, fileInput);
+
+  speedInput.addEventListener('input', updateSpeedResult);
+  for (const button of presetButtons) {
+    button.addEventListener('click', () => {
+      speedInput.value = button.dataset.speedPreset ?? '';
+      speedInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+  }
+  convertButton.addEventListener('click', () => void startConversion());
+  cancelButton.addEventListener('click', () => handle?.cancel());
+  clearButton.addEventListener('click', () => {
+    resetAll();
+    clearError();
+  });
+  downloadButton.addEventListener('click', () => {
+    if (resultBlob) downloadBlob(resultBlob, resultName);
+  });
+</script>

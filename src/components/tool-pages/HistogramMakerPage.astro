@@ -1,0 +1,621 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { histogramMakerContent } from '../../i18n/tools/histogram-maker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = histogramMakerContent[locale];
+
+const sizes = ['800x500', '1200x750', '1000x1000'];
+const headers = {
+  bin: t.thBin,
+  midpoint: t.thMidpoint,
+  count: t.thCount,
+  relative: t.thRelative,
+  cumulative: t.thCumulative,
+  cumulativeRelative: t.thCumulativeRelative,
+};
+---
+
+<ToolShell t={t}>
+  <section
+    id="hm"
+    class="space-y-5"
+    data-sample={t.sampleData}
+    data-headers={JSON.stringify(headers)}
+    data-total-row={t.totalRow}
+    data-downloaded={t.downloaded}
+    data-download-failed={t.downloadFailed}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-axis-count={t.axisCount}
+    data-axis-relative={t.axisRelative}
+    data-summary={t.summaryTemplate}
+    data-ignored={t.ignoredTemplate}
+    data-excluded={t.excludedTemplate}
+    data-err-empty={t.errorEmpty}
+    data-err-too-many={t.errorTooManyTemplate}
+    data-err-invalid-width={t.errorInvalidWidth}
+    data-err-invalid-start={t.errorInvalidStart}
+    data-err-too-many-bins={t.errorTooManyBinsTemplate}
+    data-err-too-small={t.errorTooSmall}
+  >
+    <div>
+      <label for="hm-data" class="ui-label">
+        {t.dataLabel}
+      </label>
+      <textarea
+        id="hm-data"
+        rows="6"
+        spellcheck="false"
+        aria-describedby="hm-data-hint hm-error"
+        class="ui-input w-full px-3 py-2 font-mono text-sm dark:bg-gray-900"
+      >{t.sampleData}</textarea>
+      <p
+        id="hm-data-hint"
+        class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+      >
+        {t.dataHint}
+      </p>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <button id="hm-sample" type="button" class="ui-btn">
+          {t.sampleButton}
+        </button>
+        <button id="hm-clear" type="button" class="ui-btn">
+          {t.clearButton}
+        </button>
+      </div>
+      <p
+        id="hm-error"
+        class="ui-error mt-2 empty:hidden"
+        aria-live="polite"
+      ></p>
+    </div>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <label for="hm-width" class="ui-label">
+          {t.widthLabel}
+        </label>
+        <input
+          id="hm-width"
+          type="number"
+          inputmode="decimal"
+          step="any"
+          min="0"
+          placeholder={t.widthPlaceholder}
+          aria-describedby="hm-width-hint"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+        <p
+          id="hm-width-hint"
+          class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+        >
+          {t.widthHint}
+        </p>
+      </div>
+      <div>
+        <label for="hm-start" class="ui-label">
+          {t.startLabel}
+        </label>
+        <input
+          id="hm-start"
+          type="number"
+          inputmode="decimal"
+          step="any"
+          placeholder={t.startPlaceholder}
+          aria-describedby="hm-start-hint"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+        <p
+          id="hm-start-hint"
+          class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+        >
+          {t.startHint}
+        </p>
+      </div>
+    </div>
+
+    <p id="hm-summary" class="text-sm font-medium" aria-live="polite"></p>
+    <p
+      id="hm-notice"
+      class="text-sm text-gray-600 dark:text-gray-400"
+      aria-live="polite"
+    ></p>
+
+    <div id="hm-table-wrap" class="hidden">
+      <h2 class="mb-2 text-lg font-semibold">{t.tableHeading}</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm" id="hm-table">
+          <thead>
+            <tr class="border-b border-gray-300 dark:border-gray-600">
+              <th scope="col" class="py-2 pr-3">
+                {t.thBin}
+              </th>
+              <th scope="col" class="py-2 pr-3 text-right">
+                {t.thMidpoint}
+              </th>
+              <th scope="col" class="py-2 pr-3 text-right">
+                {t.thCount}
+              </th>
+              <th scope="col" class="py-2 pr-3 text-right">
+                {t.thRelative}
+              </th>
+              <th scope="col" class="py-2 pr-3 text-right">
+                {t.thCumulative}
+              </th>
+              <th scope="col" class="py-2 text-right">
+                {t.thCumulativeRelative}
+              </th>
+            </tr>
+          </thead>
+          <tbody id="hm-tbody"></tbody>
+        </table>
+      </div>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button id="hm-copy-button" type="button" class="ui-btn">
+          {t.copyTsvButton}
+        </button>
+        <button id="hm-copy-csv-button" type="button" class="ui-btn">
+          {t.copyCsvButton}
+        </button>
+      </div>
+      <p
+        id="hm-copy-status"
+        class="mt-2 min-h-5 text-sm text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></p>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <span id="hm-ymode-label" class="ui-label">
+          {t.yModeLabel}
+        </span>
+        <div class="ui-seg" role="group" aria-labelledby="hm-ymode-label">
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-ymode="count"
+            aria-pressed="true"
+          >
+            {t.yModeCount}
+          </button>
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-ymode="relative"
+            aria-pressed="false"
+          >
+            {t.yModeRelative}
+          </button>
+        </div>
+      </div>
+      <div class="min-w-48 flex-1">
+        <label for="hm-title" class="ui-label">
+          {t.titleLabel}
+        </label>
+        <input
+          id="hm-title"
+          type="text"
+          placeholder={t.titlePlaceholder}
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+      <div class="min-w-48 flex-1">
+        <label for="hm-xlabel" class="ui-label">
+          {t.xLabel}
+        </label>
+        <input
+          id="hm-xlabel"
+          type="text"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-4">
+      <div>
+        <label for="hm-size" class="ui-label">
+          {t.sizeLabel}
+        </label>
+        <select id="hm-size" class="ui-input h-11 px-3 dark:bg-gray-900">
+          {sizes.map((s) => (
+            <option value={s}>{s.replace('x', ' × ')}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label for="hm-scale" class="ui-label">
+          {t.scaleLabel}
+        </label>
+        <select id="hm-scale" class="ui-input h-11 px-3 dark:bg-gray-900">
+          <option value="1">1×</option>
+          <option value="2">2×</option>
+        </select>
+      </div>
+      <label class="ui-check">
+        <input id="hm-grid" type="checkbox" checked />
+        <span>{t.optionGrid}</span>
+      </label>
+      <label class="ui-check">
+        <input id="hm-transparent" type="checkbox" />
+        <span>{t.optionTransparent}</span>
+      </label>
+    </div>
+
+    <div>
+      <canvas
+        id="hm-canvas"
+        role="img"
+        aria-label={t.canvasLabel}
+        class="block h-auto w-full rounded-lg border border-gray-400 bg-white dark:border-gray-700"
+      ></canvas>
+      <p
+        id="hm-status"
+        class="mt-2 min-h-5 text-sm text-gray-600 dark:text-gray-400"
+        aria-live="polite"
+      ></p>
+    </div>
+
+    <button id="hm-download-button" type="button" class="ui-btn ui-btn-primary">
+      {t.downloadButton}
+    </button>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    MAX_BINS,
+    MAX_STATISTICS_VALUES,
+    binLabel,
+    buildHistogram,
+    histogramFilename,
+    histogramToDelimited,
+    parseNumbers,
+    percentText,
+    type Histogram,
+    type HistogramError,
+    type HistogramTableHeaders,
+  } from '../../lib/tools/histogram-maker';
+  import { computeValueAxis, formatTick } from '../../lib/tools/chart-maker';
+  import { fill } from '../../lib/format-template';
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+
+  const root = document.getElementById('hm')!;
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const dataInput = $<HTMLTextAreaElement>('hm-data');
+  const widthInput = $<HTMLInputElement>('hm-width');
+  const startInput = $<HTMLInputElement>('hm-start');
+  const errorEl = $('hm-error');
+  const summaryEl = $('hm-summary');
+  const noticeEl = $('hm-notice');
+  const tableWrap = $('hm-table-wrap');
+  const tbody = $('hm-tbody');
+  const copyStatus = $('hm-copy-status');
+  const statusEl = $('hm-status');
+  const canvas = $<HTMLCanvasElement>('hm-canvas');
+  const titleInput = $<HTMLInputElement>('hm-title');
+  const xLabelInput = $<HTMLInputElement>('hm-xlabel');
+  const sizeSelect = $<HTMLSelectElement>('hm-size');
+  const scaleSelect = $<HTMLSelectElement>('hm-scale');
+  const gridCheck = $<HTMLInputElement>('hm-grid');
+  const transparentCheck = $<HTMLInputElement>('hm-transparent');
+  const downloadButton = $<HTMLButtonElement>('hm-download-button');
+  const yButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-ymode]'),
+  );
+  const headers = JSON.parse(
+    root.dataset.headers ?? '{}',
+  ) as HistogramTableHeaders;
+
+  const FONT = "'Hiragino Sans','Yu Gothic','Meiryo','Noto Sans JP',sans-serif";
+  const INK = '#1f2937';
+  const MUTED = '#6b7280';
+  const GRID = '#e5e7eb';
+  const BAR = '#2563eb';
+
+  let yMode: 'count' | 'relative' = 'count';
+  let current: Histogram | null = null;
+
+  function errorMessage(e: HistogramError): string {
+    const d = root.dataset;
+    switch (e) {
+      case 'empty':
+        return d.errEmpty ?? '';
+      case 'tooMany':
+        return fill(d.errTooMany ?? '', { max: String(MAX_STATISTICS_VALUES) });
+      case 'invalidWidth':
+        return d.errInvalidWidth ?? '';
+      case 'invalidStart':
+        return d.errInvalidStart ?? '';
+      case 'tooManyBins':
+        return fill(d.errTooManyBins ?? '', { max: String(MAX_BINS) });
+    }
+  }
+
+  function clip(ctx: CanvasRenderingContext2D, text: string, maxW: number) {
+    if (ctx.measureText(text).width <= maxW) return text;
+    let s = text;
+    while (s.length > 1 && ctx.measureText(`${s}…`).width > maxW) {
+      s = s.slice(0, -1);
+    }
+    return `${s}…`;
+  }
+
+  function draw(ctx: CanvasRenderingContext2D, h: Histogram, k: number) {
+    const W = canvas.width;
+    const H = canvas.height;
+    const font = 12 * k;
+    const title = titleInput.value.trim();
+    const xLabel = xLabelInput.value.trim();
+    const yLabel =
+      yMode === 'count'
+        ? (root.dataset.axisCount ?? '')
+        : (root.dataset.axisRelative ?? '');
+
+    let top = 16 * k;
+    if (title) {
+      ctx.font = `bold ${20 * k}px ${FONT}`;
+      ctx.fillStyle = INK;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(clip(ctx, title, W - 40 * k), W / 2, top);
+      top += 20 * k * 1.4 + 8 * k;
+    } else {
+      top += 8 * k;
+    }
+
+    const yValues = h.bins.map((b) =>
+      yMode === 'count' ? b.count : Number(percentText(b.relative)),
+    );
+    const axis = computeValueAxis(yValues, true);
+    ctx.font = `${font}px ${FONT}`;
+    const tickTexts = axis.ticks.map((v) => formatTick(v, axis.step));
+    const tickW = Math.max(...tickTexts.map((s) => ctx.measureText(s).width));
+    const left = 14 * k + font * 1.4 + tickW + 10 * k;
+    const right = W - 24 * k;
+    const plotW = right - left;
+    const bottom = H - font * 1.6 - (xLabel ? font * 1.8 : 0) - 14 * k;
+    const plotH = bottom - top;
+    if (plotW < 40 || plotH < 40) return false;
+
+    const n = h.bins.length;
+    const slot = plotW / n;
+    const yOf = (v: number) =>
+      bottom - ((v - axis.min) / (axis.max - axis.min)) * plotH;
+
+    ctx.lineWidth = Math.max(1, k);
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    axis.ticks.forEach((v, i) => {
+      const y = yOf(v);
+      if (gridCheck.checked) {
+        ctx.strokeStyle = GRID;
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(right, y);
+        ctx.stroke();
+      }
+      ctx.fillStyle = MUTED;
+      ctx.fillText(tickTexts[i], left - 6 * k, y);
+    });
+
+    // 階級は隣り合わせに描く（左閉右開の区間が連続していることを示す）
+    ctx.fillStyle = BAR;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = Math.max(1, k);
+    yValues.forEach((v, i) => {
+      if (v <= 0) return;
+      const x = left + slot * i;
+      const y = yOf(v);
+      ctx.fillRect(x, y, slot, bottom - y);
+      if (slot > 4 * k) ctx.strokeRect(x, y, slot, bottom - y);
+    });
+
+    ctx.strokeStyle = '#9ca3af';
+    ctx.lineWidth = Math.max(1, k);
+    ctx.beginPath();
+    ctx.moveTo(left, top);
+    ctx.lineTo(left, bottom);
+    ctx.lineTo(right, bottom);
+    ctx.stroke();
+
+    // 階級の境界値を横軸に表示（混み合うときは間引く）
+    ctx.font = `${font}px ${FONT}`;
+    ctx.fillStyle = MUTED;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const edges = [h.bins[0].lower, ...h.bins.map((b) => b.upper)].map(String);
+    const maxLabelW = Math.max(...edges.map((s) => ctx.measureText(s).width));
+    const skip = Math.max(1, Math.ceil((maxLabelW * 1.3) / slot));
+    edges.forEach((text, i) => {
+      if (i % skip !== 0) return;
+      ctx.fillText(text, left + slot * i, bottom + 6 * k);
+    });
+
+    ctx.fillStyle = INK;
+    if (xLabel) {
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      ctx.fillText(
+        clip(ctx, xLabel, plotW),
+        left + plotW / 2,
+        bottom + font * 1.6 + 6 * k,
+      );
+    }
+    ctx.save();
+    ctx.translate(14 * k, top + plotH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(clip(ctx, yLabel, plotH), 0, 0);
+    ctx.restore();
+    return true;
+  }
+
+  function cell(text: string, right: boolean, head = false) {
+    const el = document.createElement(head ? 'th' : 'td');
+    el.textContent = text;
+    el.className = `py-1.5 pr-3 ${right ? 'text-right tabular-nums' : ''} ${head ? 'font-normal' : ''}`;
+    if (head) el.setAttribute('scope', 'row');
+    return el;
+  }
+
+  function renderTable(h: Histogram) {
+    tbody.textContent = '';
+    for (const b of h.bins) {
+      const tr = document.createElement('tr');
+      tr.className = 'border-b border-gray-100 dark:border-gray-800';
+      tr.append(
+        cell(binLabel(b), false, true),
+        cell(String(b.midpoint), true),
+        cell(String(b.count), true),
+        cell(percentText(b.relative), true),
+        cell(String(b.cumulative), true),
+        cell(percentText(b.cumulativeRelative), true),
+      );
+      tbody.append(tr);
+    }
+    const tr = document.createElement('tr');
+    tr.className = 'font-semibold';
+    tr.append(
+      cell(root.dataset.totalRow ?? '', false, true),
+      cell('', true),
+      cell(String(h.total), true),
+      cell('100.00', true),
+      cell('', true),
+      cell('', true),
+    );
+    tbody.append(tr);
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    summaryEl.textContent = '';
+    noticeEl.textContent = '';
+    statusEl.textContent = '';
+    copyStatus.textContent = '';
+    const [w, hh] = sizeSelect.value.split('x').map(Number);
+    const scale = Number(scaleSelect.value);
+    canvas.width = w * scale;
+    canvas.height = hh * scale;
+    const ctx = canvas.getContext('2d');
+    const k = (w * scale) / 800;
+    ctx?.clearRect(0, 0, canvas.width, canvas.height);
+    current = null;
+    tableWrap.classList.add('hidden');
+    downloadButton.disabled = true;
+
+    const parsed = parseNumbers(dataInput.value);
+    const widthText = widthInput.value.trim();
+    const startText = startInput.value.trim();
+    const result = buildHistogram(parsed.values, {
+      width: widthText === '' ? null : Number(widthText),
+      start: startText === '' ? null : Number(startText),
+    });
+    if ('error' in result) {
+      errorEl.textContent = errorMessage(result.error);
+      return;
+    }
+    current = result;
+    summaryEl.textContent = fill(root.dataset.summary ?? '', {
+      total: String(result.total),
+      width: String(result.width),
+      start: String(result.start),
+      bins: String(result.bins.length),
+    });
+    const notices: string[] = [];
+    if (parsed.invalidCount > 0) {
+      notices.push(
+        fill(root.dataset.ignored ?? '', { n: String(parsed.invalidCount) }),
+      );
+    }
+    if (result.excluded > 0) {
+      notices.push(
+        fill(root.dataset.excluded ?? '', { n: String(result.excluded) }),
+      );
+    }
+    noticeEl.textContent = notices.join(' ');
+    renderTable(result);
+    tableWrap.classList.remove('hidden');
+
+    if (!ctx) return;
+    if (!transparentCheck.checked) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    if (!draw(ctx, result, k)) {
+      errorEl.textContent = root.dataset.errTooSmall ?? '';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      return;
+    }
+    downloadButton.disabled = false;
+  }
+
+  yButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      yMode = b.dataset.ymode === 'relative' ? 'relative' : 'count';
+      yButtons.forEach((o) => o.setAttribute('aria-pressed', String(o === b)));
+      render();
+    }),
+  );
+  for (const el of [
+    dataInput,
+    widthInput,
+    startInput,
+    titleInput,
+    xLabelInput,
+    sizeSelect,
+    scaleSelect,
+    gridCheck,
+    transparentCheck,
+  ]) {
+    el.addEventListener('input', render);
+    if (el instanceof HTMLSelectElement || el instanceof HTMLInputElement) {
+      if (el.type === 'checkbox' || el instanceof HTMLSelectElement) {
+        el.addEventListener('change', render);
+      }
+    }
+  }
+  $('hm-sample').addEventListener('click', () => {
+    dataInput.value = root.dataset.sample ?? '';
+    render();
+  });
+  $('hm-clear').addEventListener('click', () => {
+    dataInput.value = '';
+    render();
+  });
+
+  async function copyTable(delimiter: ',' | '\t') {
+    if (!current) return;
+    const ok = await copyText(
+      histogramToDelimited(current.bins, headers, delimiter),
+    );
+    copyStatus.textContent = ok
+      ? (root.dataset.copied ?? '')
+      : (root.dataset.copyFailed ?? '');
+  }
+  $('hm-copy-button').addEventListener('click', () => void copyTable('\t'));
+  $('hm-copy-csv-button').addEventListener('click', () => void copyTable(','));
+
+  downloadButton.addEventListener('click', () => {
+    if (!current) return;
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        statusEl.textContent = root.dataset.downloadFailed ?? '';
+        return;
+      }
+      downloadBlob(blob, histogramFilename());
+      statusEl.textContent = root.dataset.downloaded ?? '';
+    }, 'image/png');
+  });
+
+  render();
+</script>

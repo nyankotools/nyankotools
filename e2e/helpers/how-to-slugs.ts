@@ -211,4 +211,6 @@ export const howToSlugs = [
   'subtitle-converter',
   'bpm-detector',
   'note-frequency-converter',
+  'video-speed-changer',
+  'histogram-maker',
 ];

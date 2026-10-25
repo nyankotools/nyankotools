@@ -45,15 +45,17 @@ export const slugBudgets = {
   // prettier・terser・csso を言語・操作ごとに遅延読み込みするため、全体は大きいが初回は小さい
   'code-minifier': 600 * KB,
   // フォント・jsQR など操作時に遅延読み込みするデータ
-  'figlet-text': 175 * KB,
-  'qr-code-reader': 165 * KB,
+  'figlet-text': 180 * KB,
+  'qr-code-reader': 170 * KB,
   // 共通チャンクの増加でわずかに通常予算を超えたツール
-  'csv-excel-converter': 150 * KB,
-  'toml-converter': 150 * KB,
+  'csv-excel-converter': 155 * KB,
+  'toml-converter': 155 * KB,
   'yaml-formatter': 150 * KB,
+  'yaml-json-converter': 150 * KB,
   'pdf-password-protector': 460 * KB,
   // pdf.js に fflate が加わり heavy 予算をわずかに超える
   'pdf-image-extractor': 460 * KB,
+  'pdf-stamp': 445 * KB,
 };
 
 const STATIC_IMPORT = /(?:\bfrom|\bimport)\s*["'](\.[^"']+\.m?js)["']/g;

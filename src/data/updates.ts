@@ -1071,13 +1071,15 @@ export const updates: UpdateEntry[] = [
       'subtitle-converter',
       'bpm-detector',
       'note-frequency-converter',
+      'video-speed-changer',
+      'histogram-maker',
     ],
     translations: {
       ja: {
-        summary: '3個のツールを追加しました。',
+        summary: '5個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 3 new tools.',
+        summary: 'Added 5 new tools.',
       },
     },
   },

@@ -14865,6 +14865,154 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'device-info-viewer',
+    category: 'hardware',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['user-agent-parser', 'viewport-checker', 'screen-capture'],
+    translations: {
+      ja: {
+        name: '端末情報ビューア',
+        description:
+          '画面解像度・DPR・CPUコア数・メモリ目安・GPU・タッチ/ポインタ・対応Web APIを一覧表示してコピー。',
+        keywords: [
+          '端末情報',
+          'デバイス情報',
+          '画面解像度',
+          'DPR',
+          'GPU',
+          'CPUコア数',
+          'メモリ',
+          'WebGL',
+        ],
+      },
+      en: {
+        name: 'Device Info Viewer',
+        description:
+          'View screen resolution, DPR, CPU cores, memory, GPU, touch input and supported Web APIs, and copy the report.',
+        keywords: [
+          'device info',
+          'screen resolution',
+          'device pixel ratio',
+          'GPU renderer',
+          'CPU cores',
+          'deviceMemory',
+          'WebGL',
+          'browser capabilities',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'midi-tester',
+    category: 'hardware',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['virtual-piano', 'instrument-tuner', 'speaker-tester'],
+    translations: {
+      ja: {
+        name: 'MIDIデバイステスター',
+        description:
+          'MIDIキーボードやコントローラの接続と入力をブラウザで確認。ノート・CC・ピッチベンドをリアルタイム表示',
+        keywords: [
+          'MIDI',
+          'Web MIDI',
+          'MIDIキーボード',
+          'MIDIモニター',
+          'MIDI入力確認',
+          'コントローラ',
+          'ベロシティ',
+        ],
+      },
+      en: {
+        name: 'MIDI Device Tester',
+        description:
+          'Check MIDI keyboard and controller connections in your browser and watch notes, CC and pitch bend live',
+        keywords: [
+          'MIDI',
+          'Web MIDI',
+          'MIDI monitor',
+          'MIDI keyboard test',
+          'MIDI input',
+          'velocity',
+          'controller',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'duplicate-file-finder',
+    category: 'file',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['file-hash-calculator', 'hash-generator', 'zip-tool'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '重複ファイル検出',
+        keywords: [
+          '重複ファイル',
+          '重複検出',
+          'ハッシュ比較',
+          'SHA-256',
+          '同じファイル',
+          'ファイル整理',
+        ],
+        description:
+          '複数のファイルやフォルダから、中身が同じ重複ファイルをSHA-256で検出します。グループごとの無駄な容量も表示し、結果はコピーやCSVで保存できます。',
+      },
+      en: {
+        name: 'Duplicate File Finder',
+        keywords: [
+          'duplicate files',
+          'find duplicates',
+          'hash compare',
+          'SHA-256',
+          'same file',
+          'disk cleanup',
+        ],
+        description:
+          'Find duplicate files by SHA-256 hash from multiple files or a folder, see the wasted space per group, and copy or export the results as CSV.',
+      },
+    },
+  },
+  {
+    slug: 'file-splitter',
+    category: 'file',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['zip-tool', 'file-hash-calculator', 'csv-split-merge'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ファイル分割・結合',
+        keywords: [
+          'ファイル分割',
+          'ファイル結合',
+          '.001',
+          '容量制限',
+          'メール添付',
+          '分割ダウンロード',
+        ],
+        description:
+          '大きなファイルを指定サイズ（KB・MB）で分割して .001 .002 … のパーツにし、あとで結合して元に戻せます。メール添付の容量対策に。',
+      },
+      en: {
+        name: 'File Splitter & Joiner',
+        keywords: [
+          'split file',
+          'join file',
+          'merge parts',
+          '.001',
+          'email attachment limit',
+          'file chunks',
+        ],
+        description:
+          'Split a large file into .001, .002 parts of any size to fit email limits, then join them back into the original.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

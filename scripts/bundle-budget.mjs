@@ -58,6 +58,8 @@ export const slugBudgets = {
   'pdf-stamp': 445 * KB,
   'pdf-crop': 445 * KB,
   'pdf-to-markdown': 445 * KB,
+  'pdf-page-editor': 445 * KB,
+  'pdf-redactor': 445 * KB,
   'exif-viewer': 150 * KB,
   'markdown-preview': 150 * KB,
 };

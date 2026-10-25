@@ -217,4 +217,7 @@ export const howToSlugs = [
   'audio-silence-remover',
   'screen-capture',
   'week-number-calculator',
+  'midi-tester',
+  'duplicate-file-finder',
+  'file-splitter',
 ];

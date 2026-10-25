@@ -467,10 +467,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary: '9個のツールを追加しました。',
+        summary: '13個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 9 new tools.',
+        summary: 'Added 13 new tools.',
       },
     },
   },
@@ -1077,6 +1077,10 @@ export const updates: UpdateEntry[] = [
       'audio-silence-remover',
       'screen-capture',
       'week-number-calculator',
+      'device-info-viewer',
+      'midi-tester',
+      'duplicate-file-finder',
+      'file-splitter',
     ],
     translations: {
       ja: {

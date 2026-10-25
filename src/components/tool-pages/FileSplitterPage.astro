@@ -1,0 +1,592 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { fileSplitterContent } from '../../i18n/tools/file-splitter';
+import { MAX_PART_COUNT, WARN_PART_COUNT } from '../../lib/tools/file-splitter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = fileSplitterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="fs-root"
+    data-max-parts={MAX_PART_COUNT}
+    data-warn-parts={WARN_PART_COUNT}
+    data-file-info={t.splitFileInfo}
+    data-split-preview={t.splitPreview}
+    data-split-done={t.splitDone}
+    data-download={t.download}
+    data-remove={t.remove}
+    data-warn-many-parts={t.warnManyParts}
+    data-warn-large-file={t.warnLargeFile}
+    data-error-too-many-parts={t.errorTooManyParts}
+    data-error-invalid-size={t.errorInvalidSize}
+    data-error-empty-file={t.errorEmptyFile}
+    data-error-zip-too-large={t.errorZipTooLarge}
+    data-error-read-failed={t.errorReadFailed}
+    data-merge-done={t.mergeDone}
+    data-issue-not-part={t.issueNotPart}
+    data-issue-mixed-base={t.issueMixedBase}
+    data-issue-duplicate={t.issueDuplicate}
+    data-issue-missing={t.issueMissing}
+    data-issue-not-from-one={t.issueNotFromOne}
+  >
+    <div class="flex flex-wrap items-center gap-3">
+      <div id="fs-mode" class="ui-seg" role="group" aria-label={t.modeLabel}>
+        <button
+          type="button"
+          data-mode="split"
+          aria-pressed="true"
+          class="ui-seg-btn"
+        >
+          {t.modeSplit}
+        </button>
+        <button
+          type="button"
+          data-mode="merge"
+          aria-pressed="false"
+          class="ui-seg-btn"
+        >
+          {t.modeMerge}
+        </button>
+      </div>
+    </div>
+
+    <p id="fs-error" role="alert" hidden class="ui-error mt-4 max-w-2xl"></p>
+
+    <section id="fs-split" class="mt-4">
+      <label for="fs-split-input" class="ui-label">
+        {t.splitDropLabel}
+      </label>
+      <div id="fs-split-drop" class="ui-dropzone">
+        <input id="fs-split-input" type="file" class="ui-file" />
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          {t.splitDropHint}
+        </p>
+      </div>
+      <p
+        id="fs-file-info"
+        class="mt-2 text-sm break-all text-gray-700 dark:text-gray-300"
+      ></p>
+
+      <div class="mt-4 grid max-w-xl grid-cols-2 gap-4">
+        <div>
+          <label for="fs-size" class="ui-label">
+            {t.sizeLabel}
+          </label>
+          <input
+            id="fs-size"
+            type="number"
+            min="1"
+            step="any"
+            value="8"
+            inputmode="decimal"
+            class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+          />
+        </div>
+        <div>
+          <label for="fs-unit" class="ui-label">
+            {t.unitLabel}
+          </label>
+          <select
+            id="fs-unit"
+            class="min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:outline-blue-400"
+          >
+            <option value="KB">KB</option>
+            <option value="MB" selected>
+              MB
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <p
+        id="fs-preview"
+        class="mt-3 text-sm break-all text-gray-700 dark:text-gray-300"
+      ></p>
+      <p
+        id="fs-warning"
+        role="status"
+        hidden
+        class="mt-2 max-w-2xl rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+      ></p>
+
+      <button
+        id="fs-split-button"
+        type="button"
+        disabled
+        class="ui-btn-primary mt-4 h-12"
+      >
+        {t.splitButton}
+      </button>
+      <p
+        id="fs-split-status"
+        role="status"
+        class="mt-3 text-sm text-green-700 dark:text-green-400"
+      ></p>
+
+      <div id="fs-parts-wrap" hidden>
+        <h2 class="mt-6 mb-2 text-lg font-bold">{t.partsHeading}</h2>
+        <div class="mb-3 flex flex-wrap gap-2">
+          <button id="fs-download-all" type="button" class="ui-btn">
+            {t.downloadAll}
+          </button>
+          <button id="fs-download-zip" type="button" class="ui-btn">
+            {t.downloadZip}
+          </button>
+        </div>
+        <ul
+          id="fs-parts"
+          tabindex="0"
+          class="max-h-80 space-y-2 overflow-y-auto"
+        ></ul>
+      </div>
+    </section>
+
+    <section id="fs-merge" hidden class="mt-4">
+      <label for="fs-merge-input" class="ui-label">
+        {t.mergeDropLabel}
+      </label>
+      <div id="fs-merge-drop" class="ui-dropzone">
+        <input id="fs-merge-input" type="file" multiple class="ui-file" />
+        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+          {t.mergeDropHint}
+        </p>
+      </div>
+
+      <h2 class="mt-6 mb-2 text-lg font-bold">{t.mergeListHeading}</h2>
+      <p id="fs-merge-empty" class="text-sm text-gray-600 dark:text-gray-400">
+        {t.mergeEmpty}
+      </p>
+      <ol
+        id="fs-merge-list"
+        tabindex="0"
+        class="max-h-80 space-y-2 overflow-y-auto"
+      ></ol>
+      <button id="fs-merge-clear" type="button" hidden class="ui-btn mt-3">
+        {t.clearAll}
+      </button>
+      <ul
+        id="fs-issues"
+        role="alert"
+        hidden
+        class="ui-error mt-4 max-w-2xl list-disc space-y-1 pl-6"
+      ></ul>
+
+      <div class="mt-4 max-w-xl">
+        <label for="fs-merge-name" class="ui-label">
+          {t.mergeNameLabel}
+        </label>
+        <input
+          id="fs-merge-name"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+      </div>
+
+      <button
+        id="fs-merge-button"
+        type="button"
+        disabled
+        class="ui-btn-primary mt-4 h-12"
+      >
+        {t.mergeButton}
+      </button>
+      <p
+        id="fs-merge-status"
+        role="status"
+        class="mt-3 text-sm text-green-700 dark:text-green-400"
+      ></p>
+    </section>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { fill } from '../../lib/format-template';
+  import {
+    FileSplitterError,
+    ZIP_MAX_BYTES,
+    countParts,
+    formatBytes,
+    formatNumberList,
+    partName,
+    planMerge,
+    planSplit,
+    safeFileName,
+    sliceBlob,
+    splitWarnings,
+    toBytes,
+    type MergeIssue,
+    type PartRange,
+    type SizeUnit,
+  } from '../../lib/tools/file-splitter';
+  import { createZip } from '../../lib/tools/zip-tool';
+
+  const root = document.getElementById('fs-root')!;
+  const d = root.dataset;
+  const modeButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#fs-mode [data-mode]'),
+  );
+  const errorEl = document.getElementById('fs-error')!;
+  const splitSection = document.getElementById('fs-split')!;
+  const mergeSection = document.getElementById('fs-merge')!;
+  const splitInput = document.getElementById(
+    'fs-split-input',
+  ) as HTMLInputElement;
+  const fileInfo = document.getElementById('fs-file-info')!;
+  const sizeInput = document.getElementById('fs-size') as HTMLInputElement;
+  const unitSelect = document.getElementById('fs-unit') as HTMLSelectElement;
+  const preview = document.getElementById('fs-preview')!;
+  const warningEl = document.getElementById('fs-warning')!;
+  const splitButton = document.getElementById(
+    'fs-split-button',
+  ) as HTMLButtonElement;
+  const splitStatus = document.getElementById('fs-split-status')!;
+  const partsWrap = document.getElementById('fs-parts-wrap')!;
+  const partsList = document.getElementById('fs-parts')!;
+  const downloadAllButton = document.getElementById(
+    'fs-download-all',
+  ) as HTMLButtonElement;
+  const downloadZipButton = document.getElementById(
+    'fs-download-zip',
+  ) as HTMLButtonElement;
+  const mergeInput = document.getElementById(
+    'fs-merge-input',
+  ) as HTMLInputElement;
+  const mergeEmpty = document.getElementById('fs-merge-empty')!;
+  const mergeList = document.getElementById('fs-merge-list')!;
+  const mergeClear = document.getElementById(
+    'fs-merge-clear',
+  ) as HTMLButtonElement;
+  const issuesEl = document.getElementById('fs-issues')!;
+  const mergeNameInput = document.getElementById(
+    'fs-merge-name',
+  ) as HTMLInputElement;
+  const mergeButton = document.getElementById(
+    'fs-merge-button',
+  ) as HTMLButtonElement;
+  const mergeStatus = document.getElementById('fs-merge-status')!;
+
+  let sourceFile: File | null = null;
+  let ranges: PartRange[] = [];
+  let partsFileName = '';
+  let mergeFiles: File[] = [];
+  let nameEdited = false;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  function errorMessage(error: unknown): string {
+    if (error instanceof FileSplitterError) {
+      switch (error.code) {
+        case 'too-many-parts':
+          return fill(d.errorTooManyParts ?? '', {
+            max: String(d.maxParts ?? ''),
+          });
+        case 'empty-file':
+          return d.errorEmptyFile ?? '';
+        default:
+          return d.errorInvalidSize ?? '';
+      }
+    }
+    return d.errorReadFailed ?? '';
+  }
+
+  function setMode(mode: string) {
+    modeButtons.forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.mode === mode)),
+    );
+    splitSection.hidden = mode !== 'split';
+    mergeSection.hidden = mode !== 'merge';
+    showError('');
+  }
+
+  function partBytes(): number | null {
+    return toBytes(Number(sizeInput.value), unitSelect.value as SizeUnit);
+  }
+
+  function clearParts() {
+    ranges = [];
+    partsList.replaceChildren();
+    partsWrap.hidden = true;
+    splitStatus.textContent = '';
+  }
+
+  function updatePreview() {
+    showError('');
+    warningEl.hidden = true;
+    preview.textContent = '';
+    splitButton.disabled = true;
+    if (!sourceFile) return;
+    const bytes = partBytes();
+    if (bytes === null) {
+      showError(d.errorInvalidSize ?? '');
+      return;
+    }
+    if (sourceFile.size === 0) {
+      showError(d.errorEmptyFile ?? '');
+      return;
+    }
+    const n = countParts(sourceFile.size, bytes);
+    if (n > Number(d.maxParts)) {
+      showError(fill(d.errorTooManyParts ?? '', { max: d.maxParts ?? '' }));
+      return;
+    }
+    preview.textContent = fill(d.splitPreview ?? '', {
+      count: String(n),
+      first: partName(sourceFile.name, 1, n),
+      last: partName(sourceFile.name, n, n),
+    });
+    const messages = splitWarnings(sourceFile.size, bytes).map((w) =>
+      w === 'many-parts'
+        ? fill(d.warnManyParts ?? '', { count: String(n) })
+        : (d.warnLargeFile ?? ''),
+    );
+    if (messages.length > 0) {
+      warningEl.textContent = messages.join(' ');
+      warningEl.hidden = false;
+    }
+    splitButton.disabled = false;
+  }
+
+  splitInput.addEventListener('change', () => {
+    const file = splitInput.files?.[0];
+    splitInput.value = '';
+    if (!file) return;
+    sourceFile = file;
+    clearParts();
+    fileInfo.textContent = fill(d.fileInfo ?? '', {
+      name: file.name,
+      size: formatBytes(file.size),
+    });
+    updatePreview();
+  });
+  sizeInput.addEventListener('input', () => {
+    clearParts();
+    updatePreview();
+  });
+  unitSelect.addEventListener('change', () => {
+    clearParts();
+    updatePreview();
+  });
+
+  function renderParts() {
+    partsList.replaceChildren();
+    const total = ranges.length;
+    for (const range of ranges) {
+      const name = partName(partsFileName, range.index, total);
+      const li = document.createElement('li');
+      li.className =
+        'flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-gray-700';
+      const label = document.createElement('span');
+      label.className = 'min-w-0 break-all text-gray-900 dark:text-gray-100';
+      label.textContent = `${name} (${formatBytes(range.end - range.start)})`;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'ui-btn shrink-0';
+      button.textContent = d.download ?? '';
+      button.setAttribute('aria-label', `${d.download ?? ''}: ${name}`);
+      button.addEventListener('click', () => {
+        if (!sourceFile) return;
+        downloadBlob(sliceBlob(sourceFile, range), name);
+      });
+      li.append(label, button);
+      partsList.append(li);
+    }
+    partsWrap.hidden = total === 0;
+  }
+
+  splitButton.addEventListener('click', () => {
+    if (!sourceFile) return;
+    showError('');
+    const bytes = partBytes();
+    try {
+      if (bytes === null) throw new FileSplitterError('invalid-size');
+      ranges = planSplit(sourceFile.size, bytes);
+      partsFileName = sourceFile.name;
+      renderParts();
+      splitStatus.textContent = fill(d.splitDone ?? '', {
+        count: String(ranges.length),
+      });
+    } catch (error) {
+      clearParts();
+      showError(errorMessage(error));
+    }
+  });
+
+  downloadAllButton.addEventListener('click', async () => {
+    if (!sourceFile) return;
+    const file = sourceFile;
+    const total = ranges.length;
+    downloadAllButton.disabled = true;
+    try {
+      for (const range of ranges) {
+        downloadBlob(
+          sliceBlob(file, range),
+          partName(partsFileName, range.index, total),
+        );
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+    } finally {
+      downloadAllButton.disabled = false;
+    }
+  });
+
+  downloadZipButton.addEventListener('click', async () => {
+    if (!sourceFile) return;
+    showError('');
+    if (sourceFile.size > ZIP_MAX_BYTES) {
+      showError(d.errorZipTooLarge ?? '');
+      return;
+    }
+    const file = sourceFile;
+    const total = ranges.length;
+    downloadZipButton.disabled = true;
+    try {
+      const files = await Promise.all(
+        ranges.map(async (range) => ({
+          name: partName(partsFileName, range.index, total),
+          data: new Uint8Array(await sliceBlob(file, range).arrayBuffer()),
+        })),
+      );
+      const zip = createZip(files, 0);
+      downloadBlob(
+        new Blob([zip as BlobPart], { type: 'application/zip' }),
+        `${safeFileName(partsFileName)}.parts.zip`,
+      );
+    } catch {
+      showError(d.errorZipTooLarge ?? '');
+    } finally {
+      downloadZipButton.disabled = false;
+    }
+  });
+
+  function issueMessage(issue: MergeIssue): string {
+    switch (issue.type) {
+      case 'not-part':
+        return fill(d.issueNotPart ?? '', { names: issue.names.join(', ') });
+      case 'mixed-base':
+        return fill(d.issueMixedBase ?? '', { names: issue.bases.join(', ') });
+      case 'duplicate':
+        return fill(d.issueDuplicate ?? '', {
+          numbers: formatNumberList(issue.numbers),
+        });
+      case 'missing':
+        return fill(d.issueMissing ?? '', {
+          numbers: formatNumberList(issue.numbers),
+        });
+      default:
+        return fill(d.issueNotFromOne ?? '', { first: String(issue.first) });
+    }
+  }
+
+  function renderMerge() {
+    mergeStatus.textContent = '';
+    mergeList.replaceChildren();
+    issuesEl.replaceChildren();
+    const plan = planMerge(mergeFiles.map((f) => ({ name: f.name, file: f })));
+    for (const item of plan.ordered) {
+      const li = document.createElement('li');
+      li.className =
+        'flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-3 py-2 text-sm dark:border-gray-700';
+      const label = document.createElement('span');
+      label.className = 'min-w-0 break-all text-gray-900 dark:text-gray-100';
+      label.textContent = `${item.name} (${formatBytes(item.file.size)})`;
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'ui-btn shrink-0';
+      remove.textContent = d.remove ?? '';
+      remove.setAttribute('aria-label', `${d.remove ?? ''}: ${item.name}`);
+      remove.addEventListener('click', () => {
+        mergeFiles.splice(mergeFiles.indexOf(item.file), 1);
+        renderMerge();
+      });
+      li.append(label, remove);
+      mergeList.append(li);
+    }
+    // パーツ名でないファイルも、削除できるよう末尾に並べる
+    for (const file of mergeFiles) {
+      if (plan.ordered.some((p) => p.file === file)) continue;
+      const li = document.createElement('li');
+      li.className =
+        'flex items-center justify-between gap-3 rounded-lg border border-red-300 px-3 py-2 text-sm dark:border-red-700';
+      const label = document.createElement('span');
+      label.className = 'min-w-0 break-all text-gray-900 dark:text-gray-100';
+      label.textContent = `${file.name} (${formatBytes(file.size)})`;
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'ui-btn shrink-0';
+      remove.textContent = d.remove ?? '';
+      remove.setAttribute('aria-label', `${d.remove ?? ''}: ${file.name}`);
+      remove.addEventListener('click', () => {
+        mergeFiles.splice(mergeFiles.indexOf(file), 1);
+        renderMerge();
+      });
+      li.append(label, remove);
+      mergeList.append(li);
+    }
+    for (const issue of plan.issues) {
+      const li = document.createElement('li');
+      li.textContent = issueMessage(issue);
+      issuesEl.append(li);
+    }
+    issuesEl.hidden = plan.issues.length === 0;
+    mergeEmpty.hidden = mergeFiles.length > 0;
+    mergeClear.hidden = mergeFiles.length === 0;
+    if (!nameEdited && plan.outputName) mergeNameInput.value = plan.outputName;
+    mergeButton.disabled = plan.ordered.length === 0 || plan.issues.length > 0;
+  }
+
+  mergeNameInput.addEventListener('input', () => {
+    nameEdited = true;
+  });
+
+  mergeInput.addEventListener('change', () => {
+    const files = Array.from(mergeInput.files ?? []);
+    mergeInput.value = '';
+    if (files.length === 0) return;
+    showError('');
+    mergeFiles.push(...files);
+    renderMerge();
+  });
+
+  mergeClear.addEventListener('click', () => {
+    mergeFiles = [];
+    nameEdited = false;
+    renderMerge();
+  });
+
+  mergeButton.addEventListener('click', () => {
+    showError('');
+    const plan = planMerge(mergeFiles.map((f) => ({ name: f.name, file: f })));
+    if (plan.ordered.length === 0 || plan.issues.length > 0) return;
+    const name = safeFileName(
+      mergeNameInput.value.trim() || plan.outputName || '',
+    );
+    // Blob は各パーツを参照するだけなので、全体を JS のメモリにコピーしない
+    const blob = new Blob(plan.ordered.map((p) => p.file));
+    downloadBlob(blob, name);
+    mergeStatus.textContent = fill(d.mergeDone ?? '', {
+      name,
+      size: formatBytes(blob.size),
+    });
+  });
+
+  modeButtons.forEach((b) =>
+    b.addEventListener('click', () => setMode(b.dataset.mode ?? 'split')),
+  );
+  enableFileDrop(document.getElementById('fs-split-drop')!, splitInput);
+  enableFileDrop(document.getElementById('fs-merge-drop')!, mergeInput);
+  renderMerge();
+</script>

@@ -1,0 +1,291 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { weekNumberCalculatorContent } from '../../i18n/tools/week-number-calculator';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = weekNumberCalculatorContent[locale];
+
+const rows = [
+  { id: 'week', label: t.weekNumberLabel },
+  { id: 'isoyear', label: t.isoYearLabel },
+  { id: 'weekday', label: t.weekdayLabel },
+  { id: 'dayofyear', label: t.dayOfYearLabel },
+  { id: 'remaining', label: t.remainingLabel },
+  { id: 'quarter', label: t.quarterLabel },
+  { id: 'range', label: t.weekRangeLabel },
+  { id: 'weeksinyear', label: t.weeksInYearLabel },
+];
+---
+
+<ToolShell t={t}>
+  <section
+    id="weekno-root"
+    class="mb-8 rounded-lg border border-gray-200 p-4 dark:border-gray-700"
+    data-format={JSON.stringify(t.resultFormat)}
+    data-error-date={t.errorNonexistentDate}
+    data-error-week={t.errorInvalidWeek}
+  >
+    <h2 class="mb-3 text-lg font-bold">{t.lookupHeading}</h2>
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <span id="weekno-date-label" class="ui-label">
+          {t.dateLabel}
+        </span>
+        <div
+          class="flex items-center gap-1"
+          role="group"
+          aria-labelledby="weekno-date-label"
+        >
+          <input
+            id="weekno-year"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="9999"
+            placeholder={t.yearPlaceholder}
+            aria-label={t.yearAriaLabel}
+            class="ui-input h-11 w-24 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.yearUnit}
+          </span>
+          <input
+            id="weekno-month"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="12"
+            placeholder={t.monthPlaceholder}
+            aria-label={t.monthAriaLabel}
+            class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          <span class="text-sm text-gray-600 dark:text-gray-400">
+            {t.monthUnit}
+          </span>
+          <input
+            id="weekno-day"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="31"
+            placeholder={t.dayPlaceholder}
+            aria-label={t.dayAriaLabel}
+            class="ui-input h-11 w-16 px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+          />
+          {t.dayUnit && (
+            <span class="text-sm text-gray-600 dark:text-gray-400">
+              {t.dayUnit}
+            </span>
+          )}
+        </div>
+      </div>
+      <button id="weekno-today-button" type="button" class="ui-btn h-11">
+        {t.todayButton}
+      </button>
+    </div>
+    <p
+      id="weekno-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+    <dl
+      id="weekno-result"
+      class="mt-4 grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-[auto_1fr]"
+      hidden
+    >
+      {rows.map((r) => (
+        <>
+          <dt class="text-sm text-gray-600 dark:text-gray-400">{r.label}</dt>
+          <dd id={`weekno-r-${r.id}`} class="mb-2 font-bold sm:mb-0"></dd>
+        </>
+      ))}
+    </dl>
+  </section>
+
+  <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+    <h2 class="mb-3 text-lg font-bold">{t.reverseHeading}</h2>
+    <div class="flex flex-wrap items-end gap-3">
+      <div class="w-32">
+        <label for="weekno-rev-year" class="ui-label">
+          {t.reverseYearLabel}
+        </label>
+        <input
+          id="weekno-rev-year"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="9999"
+          placeholder={t.reverseYearPlaceholder}
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+      <div class="w-28">
+        <label for="weekno-rev-week" class="ui-label">
+          {t.reverseWeekLabel}
+        </label>
+        <input
+          id="weekno-rev-week"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="53"
+          placeholder={t.reverseWeekPlaceholder}
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900 dark:placeholder-gray-500"
+        />
+      </div>
+    </div>
+    <p
+      id="weekno-rev-error"
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+      aria-live="polite"
+    ></p>
+    <p
+      class="mt-4 text-sm text-gray-600 dark:text-gray-400"
+      id="weekno-rev-label"
+      hidden
+    >
+      {t.reverseResultLabel}
+    </p>
+    <p id="weekno-rev-result" class="text-xl font-bold" aria-live="polite"></p>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    getWeekInfo,
+    getWeekRange,
+    isValidDate,
+    type DateParts,
+  } from '../../lib/tools/week-number-calculator';
+  import { fill } from '../../lib/format-template';
+  import type { WeekResultFormat } from '../../i18n/tools/week-number-calculator';
+
+  const root = document.getElementById('weekno-root')!;
+  const format: WeekResultFormat = JSON.parse(root.dataset.format ?? '{}');
+  const errorDate = root.dataset.errorDate ?? '';
+  const errorWeek = root.dataset.errorWeek ?? '';
+
+  const yearInput = document.getElementById('weekno-year') as HTMLInputElement;
+  const monthInput = document.getElementById(
+    'weekno-month',
+  ) as HTMLInputElement;
+  const dayInput = document.getElementById('weekno-day') as HTMLInputElement;
+  const todayButton = document.getElementById('weekno-today-button')!;
+  const errorEl = document.getElementById('weekno-error')!;
+  const resultList = document.getElementById('weekno-result')!;
+  const cell = (id: string) => document.getElementById(`weekno-r-${id}`)!;
+
+  const revYearInput = document.getElementById(
+    'weekno-rev-year',
+  ) as HTMLInputElement;
+  const revWeekInput = document.getElementById(
+    'weekno-rev-week',
+  ) as HTMLInputElement;
+  const revErrorEl = document.getElementById('weekno-rev-error')!;
+  const revResultEl = document.getElementById('weekno-rev-result')!;
+  const revLabelEl = document.getElementById('weekno-rev-label')!;
+
+  const pad2 = (n: number) => String(n).padStart(2, '0');
+
+  function formatDate(p: DateParts) {
+    return fill(format.date, {
+      y: String(p.year),
+      m: String(p.month),
+      d: String(p.day),
+      mm: pad2(p.month),
+      dd: pad2(p.day),
+    });
+  }
+
+  function render() {
+    errorEl.textContent = '';
+    resultList.hidden = true;
+    if (
+      yearInput.value.trim() === '' ||
+      monthInput.value.trim() === '' ||
+      dayInput.value.trim() === ''
+    ) {
+      return;
+    }
+    const y = Number(yearInput.value);
+    const m = Number(monthInput.value);
+    const d = Number(dayInput.value);
+    if (!isValidDate(y, m, d)) {
+      errorEl.textContent = errorDate;
+      return;
+    }
+    const info = getWeekInfo(y, m, d)!;
+    cell('week').textContent = fill(format.week, {
+      w: String(info.week),
+      iso: String(info.isoYear),
+      ww: pad2(info.week),
+    });
+    cell('isoyear').textContent = String(info.isoYear);
+    cell('weekday').textContent = format.weekdayLabels[info.weekday];
+    cell('dayofyear').textContent = fill(format.dayOfYear, {
+      n: String(info.dayOfYear),
+    });
+    cell('remaining').textContent = fill(format.remaining, {
+      n: String(info.daysRemaining),
+    });
+    cell('quarter').textContent = fill(format.quarter, {
+      q: String(info.quarter),
+    });
+    cell('range').textContent = fill(format.range, {
+      start: formatDate(info.weekStart),
+      end: formatDate(info.weekEnd),
+    });
+    cell('weeksinyear').textContent = fill(format.weeksInYear, {
+      n: String(info.weeksInIsoYear),
+    });
+    resultList.hidden = false;
+  }
+
+  function renderReverse() {
+    revErrorEl.textContent = '';
+    revResultEl.textContent = '';
+    revLabelEl.hidden = true;
+    if (revYearInput.value.trim() === '' || revWeekInput.value.trim() === '') {
+      return;
+    }
+    const range = getWeekRange(
+      Number(revYearInput.value),
+      Number(revWeekInput.value),
+    );
+    if (!range) {
+      revErrorEl.textContent = errorWeek;
+      return;
+    }
+    revLabelEl.hidden = false;
+    revResultEl.textContent = fill(format.range, {
+      start: formatDate(range.start),
+      end: formatDate(range.end),
+    });
+  }
+
+  function setToday() {
+    const now = new Date();
+    yearInput.value = String(now.getFullYear());
+    monthInput.value = String(now.getMonth() + 1);
+    dayInput.value = String(now.getDate());
+    render();
+  }
+
+  for (const el of [yearInput, monthInput, dayInput]) {
+    el.addEventListener('input', render);
+  }
+  for (const el of [revYearInput, revWeekInput]) {
+    el.addEventListener('input', renderReverse);
+  }
+  todayButton.addEventListener('click', setToday);
+
+  setToday();
+  revYearInput.value = yearInput.value;
+  revWeekInput.value = '1';
+  renderReverse();
+</script>

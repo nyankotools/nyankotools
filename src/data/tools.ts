@@ -14711,6 +14711,160 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'video-merger',
+    category: 'media',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['video-speed-changer', 'media-converter', 'audio-merger'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: '動画結合',
+        description:
+          '複数の動画を並べ替えてつなげ、1本のMP4・WebMに。解像度とfpsは先頭の動画に揃え、音声のない動画は無音で補う。ブラウザ内で処理。',
+        keywords: [
+          '動画結合',
+          '動画連結',
+          '動画つなげる',
+          'ビデオ結合',
+          'mp4結合',
+          'webm結合',
+          '動画マージ',
+          '動画 くっつける',
+        ],
+      },
+      en: {
+        name: 'Video Merger',
+        description:
+          'Join multiple videos into one MP4 or WebM in your browser. Reorder clips; size and fps follow the first video. Silent clips are padded. No upload.',
+        keywords: [
+          'merge videos',
+          'join videos',
+          'combine videos',
+          'concatenate video',
+          'video joiner',
+          'mp4 merger',
+          'webm merger',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'audio-silence-remover',
+    category: 'media',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['audio-merger', 'audio-speed-changer', 'media-converter'],
+    translations: {
+      ja: {
+        name: '音声の無音カット',
+        description:
+          '音声の無音区間を波形で確認しながら検出し、しきい値(dB)・最小無音長・余白を指定してカット・短縮。処理前後の長さを表示しWAVで保存します。',
+        keywords: [
+          '無音カット',
+          '無音削除',
+          '無音除去',
+          '無音検出',
+          'サイレンス',
+          '音声編集',
+          '波形',
+          'WAV',
+        ],
+      },
+      en: {
+        name: 'Audio Silence Remover',
+        description:
+          'Detect silent parts in audio on a waveform, then cut or shorten them with a dB threshold, minimum length and padding. Save as WAV.',
+        keywords: [
+          'remove silence',
+          'silence remover',
+          'cut silence',
+          'silence detection',
+          'trim silence',
+          'audio editor',
+          'waveform',
+          'wav',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'screen-capture',
+    category: 'hardware',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['screen-recorder', 'screenshot-annotator', 'screen-color-picker'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'スクリーンショット撮影',
+        description:
+          '画面全体・ウィンドウ・ブラウザのタブをブラウザだけで撮影し、PNGで保存・コピーできます。遅延タイマー付き。ソフトのインストール不要。',
+        keywords: [
+          'スクリーンショット',
+          'スクショ',
+          '画面キャプチャ',
+          '画面撮影',
+          'PNG保存',
+          'screenshot',
+          'screen capture',
+        ],
+      },
+      en: {
+        name: 'Screenshot Capture',
+        description:
+          'Take a screenshot of your screen, a window or a browser tab in the browser and save or copy it as PNG. Delay timer included. No install needed.',
+        keywords: [
+          'screenshot',
+          'screen capture',
+          'take screenshot',
+          'capture screen',
+          'save screen as PNG',
+          'delay timer',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'week-number-calculator',
+    category: 'datetime',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['date-calculator', 'calendar-generator', 'due-date-calculator'],
+    translations: {
+      ja: {
+        name: '週番号計算（ISO週番号）',
+        description:
+          '日付からISO週番号・ISO週年・曜日・年の何日目・残り日数・四半期を表示。年と週番号から月曜〜日曜の日付も逆引きできます。',
+        keywords: [
+          '週番号',
+          'ISO週番号',
+          'ISO8601',
+          '第何週',
+          '年の何日目',
+          '四半期',
+          '週数',
+          'W53',
+        ],
+      },
+      en: {
+        name: 'Week Number Calculator',
+        description:
+          "Find the ISO week number, ISO year, weekday, day of year and quarter for any date, or look up a week's Monday-to-Sunday dates.",
+        keywords: [
+          'week number',
+          'ISO week',
+          'ISO 8601',
+          'day of year',
+          'quarter',
+          'what week is it',
+          'week to date',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

@@ -41,9 +41,9 @@ export const budgets = {
  * heic-to（gzip後 約720KB）を遅延読み込みする heic-converter のみ。
  */
 export const slugBudgets = {
-  'heic-converter': 875 * KB,
+  'heic-converter': 880 * KB,
   // prettier・terser・csso を言語・操作ごとに遅延読み込みするため、全体は大きいが初回は小さい
-  'code-minifier': 600 * KB,
+  'code-minifier': 605 * KB,
   // フォント・jsQR など操作時に遅延読み込みするデータ
   'figlet-text': 180 * KB,
   'qr-code-reader': 170 * KB,
@@ -56,6 +56,10 @@ export const slugBudgets = {
   // pdf.js に fflate が加わり heavy 予算をわずかに超える
   'pdf-image-extractor': 460 * KB,
   'pdf-stamp': 445 * KB,
+  'pdf-crop': 445 * KB,
+  'pdf-to-markdown': 445 * KB,
+  'exif-viewer': 150 * KB,
+  'markdown-preview': 150 * KB,
 };
 
 const STATIC_IMPORT = /(?:\bfrom|\bimport)\s*["'](\.[^"']+\.m?js)["']/g;

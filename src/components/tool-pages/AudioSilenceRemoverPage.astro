@@ -1,0 +1,682 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { audioSilenceRemoverContent } from '../../i18n/tools/audio-silence-remover';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = audioSilenceRemoverContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="asr-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="asr-dropzone" class="ui-dropzone">
+      <input
+        id="asr-file-input"
+        type="file"
+        accept="audio/*,video/mp4,video/webm,.mp3,.wav,.m4a,.aac,.ogg,.opus,.flac,.aif,.aiff"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="asr-source-info"
+      data-template={t.sourceInfoTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="asr-error"
+      role="alert"
+      hidden
+      data-unsupported={t.errorUnsupportedFile}
+      data-decode={t.errorDecode}
+      data-too-long={t.errorTooLong}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-threshold-invalid={t.errorThresholdInvalid}
+      data-threshold-out-of-range={t.errorThresholdOutOfRange}
+      data-min-silence-invalid={t.errorMinSilenceInvalid}
+      data-min-silence-out-of-range={t.errorMinSilenceOutOfRange}
+      data-padding-invalid={t.errorPaddingInvalid}
+      data-padding-out-of-range={t.errorPaddingOutOfRange}
+      data-shorten-invalid={t.errorShortenInvalid}
+      data-shorten-out-of-range={t.errorShortenOutOfRange}
+      data-nothing-to-cut={t.errorNothingToCut}
+      data-all-silent={t.errorAllSilent}
+      data-failed={t.errorFailed}
+      class="ui-error mt-2"
+    ></p>
+  </div>
+
+  <div id="asr-waveform-section" hidden class="mt-6">
+    <h2 class="mb-2 text-lg font-bold">{t.waveformHeading}</h2>
+    <canvas
+      id="asr-canvas"
+      role="img"
+      aria-label={t.waveformLabel}
+      class="block h-40 w-full rounded-lg border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-900"
+    ></canvas>
+    <div class="mt-1 flex justify-between text-xs text-gray-500 dark:text-gray-400">
+      <span>0:00</span>
+      <span id="asr-end-time"></span>
+    </div>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+      {t.waveformLegend}
+    </p>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-start gap-4">
+    <div class="min-w-48 flex-1">
+      <label for="asr-threshold" class="ui-label">
+        {t.thresholdLabel}
+      </label>
+      <input
+        id="asr-threshold"
+        type="text"
+        inputmode="decimal"
+        autocomplete="off"
+        value="-40"
+        aria-describedby="asr-threshold-hint"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      />
+      <p
+        id="asr-threshold-hint"
+        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+      >
+        {t.thresholdHint}
+      </p>
+    </div>
+    <div class="min-w-48 flex-1">
+      <label for="asr-min-silence" class="ui-label">
+        {t.minSilenceLabel}
+      </label>
+      <input
+        id="asr-min-silence"
+        type="text"
+        inputmode="decimal"
+        autocomplete="off"
+        value="0.5"
+        aria-describedby="asr-min-silence-hint"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      />
+      <p
+        id="asr-min-silence-hint"
+        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+      >
+        {t.minSilenceHint}
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <label for="asr-mode" class="ui-label">
+      {t.modeLabel}
+    </label>
+    <select id="asr-mode" class="ui-input h-11 w-full px-3 dark:bg-gray-900">
+      <option value="cut" selected>
+        {t.modeCut}
+      </option>
+      <option value="shorten">{t.modeShorten}</option>
+    </select>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-start gap-4">
+    <div class="min-w-48 flex-1">
+      <label for="asr-padding" class="ui-label">
+        {t.paddingLabel}
+      </label>
+      <input
+        id="asr-padding"
+        type="text"
+        inputmode="decimal"
+        autocomplete="off"
+        value="0.1"
+        aria-describedby="asr-padding-hint"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      />
+      <p
+        id="asr-padding-hint"
+        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+      >
+        {t.paddingHint}
+      </p>
+    </div>
+    <div class="min-w-48 flex-1">
+      <label for="asr-shorten" class="ui-label">
+        {t.shortenLabel}
+      </label>
+      <input
+        id="asr-shorten"
+        type="text"
+        inputmode="decimal"
+        autocomplete="off"
+        value="0.3"
+        aria-describedby="asr-shorten-hint"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      />
+      <p
+        id="asr-shorten-hint"
+        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+      >
+        {t.shortenHint}
+      </p>
+    </div>
+  </div>
+
+  <p
+    id="asr-analysis"
+    role="status"
+    data-analysis-template={t.analysisTemplate}
+    data-summary-template={t.summaryTemplate}
+    class="mt-4 text-sm text-gray-700 dark:text-gray-300"
+  ></p>
+
+  <div class="mt-4 flex flex-wrap gap-3">
+    <button
+      id="asr-process-button"
+      type="button"
+      disabled
+      class="ui-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.processButton}
+    </button>
+    <button
+      id="asr-clear-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.clearButton}
+    </button>
+  </div>
+
+  <p
+    id="asr-status"
+    role="status"
+    hidden
+    class="mt-3 text-sm text-gray-700 dark:text-gray-300"
+  >
+    {t.processing}
+  </p>
+
+  <div id="asr-results-section" hidden class="mt-6">
+    <h2 class="mb-2 text-lg font-bold">{t.resultsHeading}</h2>
+    <audio id="asr-result-audio" controls class="w-full"></audio>
+    <p
+      id="asr-result-info"
+      data-template={t.resultInfoTemplate}
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+    <button id="asr-download-button" type="button" class="ui-btn-primary mt-3">
+      {t.downloadButton}
+    </button>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    MAX_DURATION_SECONDS,
+    MAX_FILE_SIZE,
+    amplitudeToDisplay,
+    applyRemovals,
+    buildOutputFileName,
+    computeEnvelope,
+    computePeaks,
+    computeRemovals,
+    dbToAmplitude,
+    detectSilence,
+    encodeWavBlob,
+    formatDuration,
+    formatFileSize,
+    formatPreciseDuration,
+    isAcceptedAudioFile,
+    keepSegments,
+    parseMinSilence,
+    parsePadding,
+    parseShortenSeconds,
+    parseThresholdDb,
+    summarize,
+    windowFrames,
+    type FrameRange,
+    type RemovalOptions,
+    type RemovalSummary,
+  } from '../../lib/tools/audio-silence-remover';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const dropzone = $('asr-dropzone');
+  const fileInput = $<HTMLInputElement>('asr-file-input');
+  const sourceInfoEl = $('asr-source-info');
+  const errorEl = $('asr-error');
+  const waveformSection = $('asr-waveform-section');
+  const canvas = $<HTMLCanvasElement>('asr-canvas');
+  const endTimeEl = $('asr-end-time');
+  const thresholdInput = $<HTMLInputElement>('asr-threshold');
+  const minSilenceInput = $<HTMLInputElement>('asr-min-silence');
+  const modeSelect = $<HTMLSelectElement>('asr-mode');
+  const paddingInput = $<HTMLInputElement>('asr-padding');
+  const shortenInput = $<HTMLInputElement>('asr-shorten');
+  const analysisEl = $('asr-analysis');
+  const processButton = $<HTMLButtonElement>('asr-process-button');
+  const clearButton = $<HTMLButtonElement>('asr-clear-button');
+  const statusEl = $('asr-status');
+  const resultsSection = $('asr-results-section');
+  const resultAudio = $<HTMLAudioElement>('asr-result-audio');
+  const resultInfoEl = $('asr-result-info');
+  const downloadButton = $<HTMLButtonElement>('asr-download-button');
+
+  interface Decoded {
+    channels: Float32Array[];
+    sampleRate: number;
+    frames: number;
+    duration: number;
+    envelope: Float32Array;
+    peaks: Float32Array;
+  }
+
+  interface Plan {
+    thresholdDb: number;
+    silences: FrameRange[];
+    removals: FrameRange[];
+    summary: RemovalSummary;
+  }
+
+  const PEAK_BUCKETS = 4000;
+
+  let currentFile: File | null = null;
+  let decoded: Decoded | null = null;
+  let plan: Plan | null = null;
+  let resultBlob: Blob | null = null;
+  let resultName = '';
+  let resultUrl: string | null = null;
+  let generation = 0;
+  let busy = false;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function revokeResult() {
+    if (resultUrl) URL.revokeObjectURL(resultUrl);
+    resultUrl = null;
+    resultBlob = null;
+    resultAudio.pause();
+    resultAudio.removeAttribute('src');
+    resultAudio.load();
+    resultsSection.hidden = true;
+    resultInfoEl.textContent = '';
+  }
+
+  function updateUi() {
+    const shorten = modeSelect.value === 'shorten';
+    paddingInput.disabled = busy || shorten;
+    shortenInput.disabled = busy || !shorten;
+    thresholdInput.disabled = busy;
+    minSilenceInput.disabled = busy;
+    modeSelect.disabled = busy;
+    fileInput.disabled = busy;
+    processButton.disabled = busy || !decoded;
+    clearButton.disabled = busy || !decoded;
+    statusEl.hidden = !busy;
+    waveformSection.hidden = !decoded;
+  }
+
+  function resetAll() {
+    generation++;
+    revokeResult();
+    currentFile = null;
+    decoded = null;
+    plan = null;
+    busy = false;
+    sourceInfoEl.textContent = '';
+    analysisEl.textContent = '';
+    updateUi();
+  }
+
+  function fill(template: string, values: Record<string, string>): string {
+    return Object.entries(values).reduce(
+      (text, [key, value]) => text.split(`{${key}}`).join(value),
+      template,
+    );
+  }
+
+  function summaryValues(s: RemovalSummary): Record<string, string> {
+    return {
+      before: formatPreciseDuration(s.originalSeconds),
+      after: formatPreciseDuration(s.resultSeconds),
+      removed: formatPreciseDuration(s.removedSeconds),
+      percent: s.removedPercent.toFixed(1),
+    };
+  }
+
+  /* ------------------------------ 波形の描画 ------------------------------ */
+
+  function draw() {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    const width = Math.max(1, Math.floor(canvas.clientWidth));
+    const height = Math.max(1, Math.floor(canvas.clientHeight));
+    canvas.width = Math.floor(width * dpr);
+    canvas.height = Math.floor(height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+    if (!decoded) return;
+
+    const mid = height / 2;
+    // カット対象の無音（背景として先に塗る）
+    if (plan) {
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.28)';
+      for (const r of plan.removals) {
+        const x1 = (r.start / decoded.frames) * width;
+        const x2 = (r.end / decoded.frames) * width;
+        ctx.fillRect(x1, 0, Math.max(1, x2 - x1), height);
+      }
+    }
+
+    // 波形（dB の対数表示）
+    const peaks = decoded.peaks;
+    ctx.fillStyle = '#2563eb';
+    for (let x = 0; x < width; x++) {
+      const from = Math.floor((x / width) * peaks.length);
+      const to = Math.max(
+        from + 1,
+        Math.floor(((x + 1) / width) * peaks.length),
+      );
+      let peak = 0;
+      for (let i = from; i < Math.min(to, peaks.length); i++) {
+        if (peaks[i] > peak) peak = peaks[i];
+      }
+      const h = Math.max(1, amplitudeToDisplay(peak) * (height - 4));
+      ctx.fillRect(x, mid - h / 2, 1, h);
+    }
+
+    // しきい値
+    if (plan) {
+      const h =
+        amplitudeToDisplay(dbToAmplitude(plan.thresholdDb)) * (height - 4);
+      ctx.strokeStyle = '#ea580c';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 3]);
+      for (const y of [mid - h / 2, mid + h / 2]) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+    }
+  }
+
+  /* ------------------------------ 解析 ------------------------------ */
+
+  function readSettings(): {
+    thresholdDb: number;
+    minSilenceSeconds: number;
+    removal: RemovalOptions;
+  } | null {
+    const d = errorEl.dataset;
+    const threshold = parseThresholdDb(thresholdInput.value);
+    if (!threshold.ok) {
+      showError(
+        (threshold.error === 'invalid'
+          ? d.thresholdInvalid
+          : d.thresholdOutOfRange) ?? '',
+      );
+      return null;
+    }
+    const minSilence = parseMinSilence(minSilenceInput.value);
+    if (!minSilence.ok) {
+      showError(
+        (minSilence.error === 'invalid'
+          ? d.minSilenceInvalid
+          : d.minSilenceOutOfRange) ?? '',
+      );
+      return null;
+    }
+    const mode = modeSelect.value === 'shorten' ? 'shorten' : 'cut';
+    let paddingSeconds = 0;
+    let shortenSeconds = 0;
+    if (mode === 'cut') {
+      const padding = parsePadding(paddingInput.value);
+      if (!padding.ok) {
+        showError(
+          (padding.error === 'invalid'
+            ? d.paddingInvalid
+            : d.paddingOutOfRange) ?? '',
+        );
+        return null;
+      }
+      paddingSeconds = padding.value;
+    } else {
+      const shorten = parseShortenSeconds(shortenInput.value);
+      if (!shorten.ok) {
+        showError(
+          (shorten.error === 'invalid'
+            ? d.shortenInvalid
+            : d.shortenOutOfRange) ?? '',
+        );
+        return null;
+      }
+      shortenSeconds = shorten.value;
+    }
+    return {
+      thresholdDb: threshold.value,
+      minSilenceSeconds: minSilence.value,
+      removal: { mode, paddingSeconds, shortenSeconds },
+    };
+  }
+
+  function analyze() {
+    if (!decoded) return;
+    clearError();
+    revokeResult();
+    const settings = readSettings();
+    if (!settings) {
+      plan = null;
+      analysisEl.textContent = '';
+      draw();
+      return;
+    }
+    const silences = detectSilence(
+      decoded.envelope,
+      windowFrames(decoded.sampleRate),
+      decoded.frames,
+      decoded.sampleRate,
+      {
+        thresholdDb: settings.thresholdDb,
+        minSilenceSeconds: settings.minSilenceSeconds,
+      },
+    );
+    const removals = computeRemovals(
+      silences,
+      decoded.frames,
+      decoded.sampleRate,
+      settings.removal,
+    );
+    const summary = summarize(
+      decoded.frames,
+      decoded.sampleRate,
+      silences,
+      removals,
+    );
+    plan = { thresholdDb: settings.thresholdDb, silences, removals, summary };
+    analysisEl.textContent =
+      fill(analysisEl.dataset.analysisTemplate ?? '', {
+        count: String(summary.silenceCount),
+        cuts: String(summary.cutCount),
+      }) +
+      ' / ' +
+      fill(analysisEl.dataset.summaryTemplate ?? '', summaryValues(summary));
+    draw();
+  }
+
+  /* ------------------------------ 読み込み ------------------------------ */
+
+  async function decodeFile(file: File) {
+    const data = await file.arrayBuffer();
+    const ctx = new OfflineAudioContext(1, 1, 48000);
+    const buffer = await ctx.decodeAudioData(data);
+    const channels: Float32Array[] = [];
+    for (let i = 0; i < buffer.numberOfChannels; i++) {
+      channels.push(buffer.getChannelData(i).slice());
+    }
+    return {
+      channels,
+      sampleRate: buffer.sampleRate,
+      duration: buffer.duration,
+    };
+  }
+
+  async function loadFile(file: File) {
+    clearError();
+    resetAll();
+    const gen = generation;
+
+    if (!isAcceptedAudioFile(file)) {
+      showError(errorEl.dataset.unsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace(
+          '{max}',
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+
+    let result: Awaited<ReturnType<typeof decodeFile>>;
+    try {
+      result = await decodeFile(file);
+    } catch {
+      if (gen === generation) showError(errorEl.dataset.decode ?? '');
+      return;
+    }
+    if (gen !== generation) return;
+    if (result.duration > MAX_DURATION_SECONDS) {
+      showError(errorEl.dataset.tooLong ?? '');
+      return;
+    }
+
+    const frames = Math.min(...result.channels.map((c) => c.length));
+    currentFile = file;
+    decoded = {
+      channels: result.channels,
+      sampleRate: result.sampleRate,
+      frames,
+      duration: result.duration,
+      envelope: computeEnvelope(
+        result.channels,
+        windowFrames(result.sampleRate),
+      ),
+      peaks: computePeaks(result.channels, PEAK_BUCKETS),
+    };
+    sourceInfoEl.textContent = (sourceInfoEl.dataset.template ?? '')
+      .replace('{duration}', formatDuration(result.duration))
+      .replace('{rate}', String(result.sampleRate))
+      .replace('{channels}', String(result.channels.length))
+      .replace('{size}', formatFileSize(file.size));
+    endTimeEl.textContent = formatPreciseDuration(result.duration);
+    updateUi();
+    analyze();
+  }
+
+  /* ------------------------------ 書き出し ------------------------------ */
+
+  async function startProcessing() {
+    if (!decoded || !currentFile || busy) return;
+    clearError();
+    analyze();
+    if (!plan) return;
+    if (plan.removals.length === 0) {
+      showError(errorEl.dataset.nothingToCut ?? '');
+      return;
+    }
+    if (keepSegments(decoded.frames, plan.removals).length === 0) {
+      showError(errorEl.dataset.allSilent ?? '');
+      return;
+    }
+
+    const gen = generation;
+    const source = decoded;
+    const file = currentFile;
+    const removals = plan.removals;
+    const summary = plan.summary;
+    busy = true;
+    updateUi();
+    // 「処理中」の表示を先に描画させる
+    await new Promise((resolve) => setTimeout(resolve, 30));
+
+    try {
+      const out = applyRemovals(source.channels, removals, source.sampleRate);
+      if (gen !== generation) return;
+      const blob = encodeWavBlob(out, source.sampleRate);
+      resultBlob = blob;
+      resultName = buildOutputFileName(file.name);
+      resultUrl = URL.createObjectURL(blob);
+      resultAudio.src = resultUrl;
+      resultInfoEl.textContent = fill(resultInfoEl.dataset.template ?? '', {
+        ...summaryValues(summary),
+        size: formatFileSize(blob.size),
+      });
+      resultsSection.hidden = false;
+    } catch {
+      if (gen === generation) showError(errorEl.dataset.failed ?? '');
+    } finally {
+      if (gen === generation) {
+        busy = false;
+        updateUi();
+      }
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+
+  enableFileDrop(dropzone, fileInput);
+
+  for (const el of [
+    thresholdInput,
+    minSilenceInput,
+    paddingInput,
+    shortenInput,
+  ]) {
+    el.addEventListener('input', analyze);
+  }
+  modeSelect.addEventListener('change', () => {
+    updateUi();
+    analyze();
+  });
+  processButton.addEventListener('click', () => void startProcessing());
+  clearButton.addEventListener('click', () => {
+    resetAll();
+    clearError();
+  });
+  downloadButton.addEventListener('click', () => {
+    if (resultBlob) downloadBlob(resultBlob, resultName);
+  });
+  window.addEventListener('resize', () => {
+    if (decoded) draw();
+  });
+
+  updateUi();
+</script>

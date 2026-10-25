@@ -213,4 +213,8 @@ export const howToSlugs = [
   'note-frequency-converter',
   'video-speed-changer',
   'histogram-maker',
+  'video-merger',
+  'audio-silence-remover',
+  'screen-capture',
+  'week-number-calculator',
 ];

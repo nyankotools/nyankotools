@@ -1073,13 +1073,17 @@ export const updates: UpdateEntry[] = [
       'note-frequency-converter',
       'video-speed-changer',
       'histogram-maker',
+      'video-merger',
+      'audio-silence-remover',
+      'screen-capture',
+      'week-number-calculator',
     ],
     translations: {
       ja: {
-        summary: '5個のツールを追加しました。',
+        summary: '9個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 5 new tools.',
+        summary: 'Added 9 new tools.',
       },
     },
   },

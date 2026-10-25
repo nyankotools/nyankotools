@@ -467,10 +467,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary: '9個のツールを追加しました。',
+        summary: '13個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 9 new tools.',
+        summary: 'Added 13 new tools.',
       },
     },
   },
@@ -684,10 +684,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary: '9個のツールを追加しました。',
+        summary: '13個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 9 new tools.',
+        summary: 'Added 13 new tools.',
       },
     },
   },
@@ -1062,6 +1062,36 @@ export const updates: UpdateEntry[] = [
       },
       en: {
         summary: 'Added 16 new tools.',
+      },
+    },
+  },
+  {
+    date: '2026-10-25',
+    toolSlugs: [
+      'subtitle-converter',
+      'bpm-detector',
+      'note-frequency-converter',
+      'video-speed-changer',
+      'histogram-maker',
+      'video-merger',
+      'audio-silence-remover',
+      'screen-capture',
+      'week-number-calculator',
+      'device-info-viewer',
+      'midi-tester',
+      'duplicate-file-finder',
+      'file-splitter',
+      'bulk-file-renamer',
+      'hex-viewer',
+      'coin-toss',
+      'lottery-number-picker',
+    ],
+    translations: {
+      ja: {
+        summary: '17個のツールを追加しました。',
+      },
+      en: {
+        summary: 'Added 17 new tools.',
       },
     },
   },

@@ -14516,6 +14516,653 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'subtitle-converter',
+    category: 'media',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['media-converter', 'audio-merger'],
+    translations: {
+      ja: {
+        name: '字幕SRT⇔VTT変換・時間ずらし',
+        description:
+          'SRTとWebVTTの相互変換、字幕全体の時間シフト、フレームレート補正、Shift_JIS/UTF-8の文字コード判定に対応。',
+        keywords: [
+          '字幕',
+          'SRT',
+          'VTT',
+          'WebVTT',
+          '字幕 時間ずらし',
+          '字幕 変換',
+          'Shift_JIS',
+          'フレームレート',
+        ],
+      },
+      en: {
+        name: 'SRT ⇔ VTT Subtitle Converter',
+        description:
+          'Convert subtitles between SRT and WebVTT, shift timings, fix frame rate drift, and detect Shift_JIS or UTF-8 encoding.',
+        keywords: [
+          'srt',
+          'vtt',
+          'webvtt',
+          'subtitle converter',
+          'subtitle sync',
+          'shift subtitles',
+          'caption',
+          'frame rate',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'bpm-detector',
+    category: 'media',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['metronome-bpm', 'bpm-delay-calculator', 'audio-speed-changer'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '音声ファイルのBPM検出',
+        keywords: [
+          'BPM検出',
+          'BPM解析',
+          'BPM測定',
+          'テンポ検出',
+          'テンポ測定',
+          'オンセット',
+          'DJ',
+          '曲のBPM',
+        ],
+        description:
+          'MP3・WAVなどの音声ファイルからBPM(テンポ)を自動で検出。半分・2倍の候補も表示。ブラウザ完結',
+      },
+      en: {
+        name: 'BPM Detector',
+        keywords: [
+          'bpm detector',
+          'bpm finder',
+          'tempo detector',
+          'detect bpm',
+          'bpm analyzer',
+          'beats per minute',
+          'song bpm',
+          'dj',
+        ],
+        description:
+          'Detect the BPM (tempo) of an MP3 or WAV file automatically, with half and double tempo candidates. Runs in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'note-frequency-converter',
+    category: 'media',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['instrument-tuner', 'metronome-bpm', 'bpm-delay-calculator'],
+    translations: {
+      ja: {
+        name: '音名⇔周波数変換（Hz・MIDI・セント）',
+        description:
+          '音名・MIDIノート番号・周波数（Hz）を平均律で相互変換。基準ピッチ（A4=440Hzなど）を変更でき、セントのずれや全音域の周波数一覧表も確認できます',
+        keywords: [
+          '音名',
+          '周波数',
+          'Hz',
+          'MIDIノート番号',
+          'セント',
+          '平均律',
+          '基準ピッチ',
+          'A4 440Hz',
+        ],
+      },
+      en: {
+        name: 'Note to Frequency Converter (Hz, MIDI, Cents)',
+        description:
+          'Convert note names, MIDI note numbers and frequencies in Hz. Change the A4 reference pitch and see cents offsets and a frequency table',
+        keywords: [
+          'note to frequency',
+          'pitch to hz',
+          'midi note number',
+          'cents',
+          'a4 440',
+          'equal temperament',
+          'note frequency chart',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'video-speed-changer',
+    category: 'media',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['media-converter', 'audio-speed-changer', 'video-to-gif'],
+    heavy: true,
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '動画の再生速度変更（倍速・スロー）',
+        description:
+          '動画の再生速度を0.25倍〜4倍に変更して倍速・スロー動画を作成。MP4・WebMで保存でき、ブラウザ内で処理されアップロード不要',
+        keywords: [
+          '動画 倍速',
+          '動画 スロー',
+          'スローモーション',
+          '再生速度',
+          '動画 速度変更',
+          '早送り',
+          'タイムラプス風',
+          'MP4 速度',
+        ],
+      },
+      en: {
+        name: 'Video Speed Changer (Fast Forward & Slow Motion)',
+        description:
+          'Speed up or slow down a video from 0.25x to 4x and save as MP4 or WebM. Runs in your browser, no upload',
+        keywords: [
+          'video speed changer',
+          'slow motion video',
+          'fast forward video',
+          'speed up video',
+          'slow down video',
+          'change video speed',
+          'video playback speed',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'histogram-maker',
+    category: 'calc',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['statistics-calculator', 'chart-maker', 'linear-regression'],
+    translations: {
+      ja: {
+        name: '度数分布表・ヒストグラム作成',
+        description:
+          'データを貼り付けて階級幅を指定するだけで、度数・相対度数・累積度数の表とヒストグラムを作成。PNG保存・表のコピーに対応。',
+        keywords: [
+          'ヒストグラム',
+          '度数分布表',
+          '階級幅',
+          '相対度数',
+          '累積度数',
+          '階級',
+          'スタージェス',
+          '柱状グラフ',
+        ],
+      },
+      en: {
+        name: 'Histogram Maker & Frequency Table',
+        description:
+          'Make a frequency distribution table (relative and cumulative) and a histogram from pasted data. Set the bin width and save as PNG.',
+        keywords: [
+          'histogram',
+          'frequency table',
+          'frequency distribution',
+          'bin width',
+          'relative frequency',
+          'cumulative frequency',
+          'sturges rule',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'video-merger',
+    category: 'media',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['video-speed-changer', 'media-converter', 'audio-merger'],
+    sensitive: true,
+    heavy: true,
+    translations: {
+      ja: {
+        name: '動画結合',
+        description:
+          '複数の動画を並べ替えてつなげ、1本のMP4・WebMに。解像度とfpsは先頭の動画に揃え、音声のない動画は無音で補う。ブラウザ内で処理。',
+        keywords: [
+          '動画結合',
+          '動画連結',
+          '動画つなげる',
+          'ビデオ結合',
+          'mp4結合',
+          'webm結合',
+          '動画マージ',
+          '動画 くっつける',
+        ],
+      },
+      en: {
+        name: 'Video Merger',
+        description:
+          'Join multiple videos into one MP4 or WebM in your browser. Reorder clips; size and fps follow the first video. Silent clips are padded. No upload.',
+        keywords: [
+          'merge videos',
+          'join videos',
+          'combine videos',
+          'concatenate video',
+          'video joiner',
+          'mp4 merger',
+          'webm merger',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'audio-silence-remover',
+    category: 'media',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['audio-merger', 'audio-speed-changer', 'media-converter'],
+    translations: {
+      ja: {
+        name: '音声の無音カット',
+        description:
+          '音声の無音区間を波形で確認しながら検出し、しきい値(dB)・最小無音長・余白を指定してカット・短縮。処理前後の長さを表示しWAVで保存します。',
+        keywords: [
+          '無音カット',
+          '無音削除',
+          '無音除去',
+          '無音検出',
+          'サイレンス',
+          '音声編集',
+          '波形',
+          'WAV',
+        ],
+      },
+      en: {
+        name: 'Audio Silence Remover',
+        description:
+          'Detect silent parts in audio on a waveform, then cut or shorten them with a dB threshold, minimum length and padding. Save as WAV.',
+        keywords: [
+          'remove silence',
+          'silence remover',
+          'cut silence',
+          'silence detection',
+          'trim silence',
+          'audio editor',
+          'waveform',
+          'wav',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'screen-capture',
+    category: 'hardware',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['screen-recorder', 'screenshot-annotator', 'screen-color-picker'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'スクリーンショット撮影',
+        description:
+          '画面全体・ウィンドウ・ブラウザのタブをブラウザだけで撮影し、PNGで保存・コピーできます。遅延タイマー付き。ソフトのインストール不要。',
+        keywords: [
+          'スクリーンショット',
+          'スクショ',
+          '画面キャプチャ',
+          '画面撮影',
+          'PNG保存',
+          'screenshot',
+          'screen capture',
+        ],
+      },
+      en: {
+        name: 'Screenshot Capture',
+        description:
+          'Take a screenshot of your screen, a window or a browser tab in the browser and save or copy it as PNG. Delay timer included. No install needed.',
+        keywords: [
+          'screenshot',
+          'screen capture',
+          'take screenshot',
+          'capture screen',
+          'save screen as PNG',
+          'delay timer',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'week-number-calculator',
+    category: 'datetime',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['date-calculator', 'calendar-generator', 'due-date-calculator'],
+    translations: {
+      ja: {
+        name: '週番号計算（ISO週番号）',
+        description:
+          '日付からISO週番号・ISO週年・曜日・年の何日目・残り日数・四半期を表示。年と週番号から月曜〜日曜の日付も逆引きできます。',
+        keywords: [
+          '週番号',
+          'ISO週番号',
+          'ISO8601',
+          '第何週',
+          '年の何日目',
+          '四半期',
+          '週数',
+          'W53',
+        ],
+      },
+      en: {
+        name: 'Week Number Calculator',
+        description:
+          "Find the ISO week number, ISO year, weekday, day of year and quarter for any date, or look up a week's Monday-to-Sunday dates.",
+        keywords: [
+          'week number',
+          'ISO week',
+          'ISO 8601',
+          'day of year',
+          'quarter',
+          'what week is it',
+          'week to date',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'device-info-viewer',
+    category: 'hardware',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['user-agent-parser', 'viewport-checker', 'screen-capture'],
+    translations: {
+      ja: {
+        name: '端末情報ビューア',
+        description:
+          '画面解像度・DPR・CPUコア数・メモリ目安・GPU・タッチ/ポインタ・対応Web APIを一覧表示してコピー。',
+        keywords: [
+          '端末情報',
+          'デバイス情報',
+          '画面解像度',
+          'DPR',
+          'GPU',
+          'CPUコア数',
+          'メモリ',
+          'WebGL',
+        ],
+      },
+      en: {
+        name: 'Device Info Viewer',
+        description:
+          'View screen resolution, DPR, CPU cores, memory, GPU, touch input and supported Web APIs, and copy the report.',
+        keywords: [
+          'device info',
+          'screen resolution',
+          'device pixel ratio',
+          'GPU renderer',
+          'CPU cores',
+          'deviceMemory',
+          'WebGL',
+          'browser capabilities',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'midi-tester',
+    category: 'hardware',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['virtual-piano', 'instrument-tuner', 'speaker-tester'],
+    translations: {
+      ja: {
+        name: 'MIDIデバイステスター',
+        description:
+          'MIDIキーボードやコントローラの接続と入力をブラウザで確認。ノート・CC・ピッチベンドをリアルタイム表示',
+        keywords: [
+          'MIDI',
+          'Web MIDI',
+          'MIDIキーボード',
+          'MIDIモニター',
+          'MIDI入力確認',
+          'コントローラ',
+          'ベロシティ',
+        ],
+      },
+      en: {
+        name: 'MIDI Device Tester',
+        description:
+          'Check MIDI keyboard and controller connections in your browser and watch notes, CC and pitch bend live',
+        keywords: [
+          'MIDI',
+          'Web MIDI',
+          'MIDI monitor',
+          'MIDI keyboard test',
+          'MIDI input',
+          'velocity',
+          'controller',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'duplicate-file-finder',
+    category: 'file',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['file-hash-calculator', 'hash-generator', 'zip-tool'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '重複ファイル検出',
+        keywords: [
+          '重複ファイル',
+          '重複検出',
+          'ハッシュ比較',
+          'SHA-256',
+          '同じファイル',
+          'ファイル整理',
+        ],
+        description:
+          '複数のファイルやフォルダから、中身が同じ重複ファイルをSHA-256で検出します。グループごとの無駄な容量も表示し、結果はコピーやCSVで保存できます。',
+      },
+      en: {
+        name: 'Duplicate File Finder',
+        keywords: [
+          'duplicate files',
+          'find duplicates',
+          'hash compare',
+          'SHA-256',
+          'same file',
+          'disk cleanup',
+        ],
+        description:
+          'Find duplicate files by SHA-256 hash from multiple files or a folder, see the wasted space per group, and copy or export the results as CSV.',
+      },
+    },
+  },
+  {
+    slug: 'file-splitter',
+    category: 'file',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['zip-tool', 'file-hash-calculator', 'csv-split-merge'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ファイル分割・結合',
+        keywords: [
+          'ファイル分割',
+          'ファイル結合',
+          '.001',
+          '容量制限',
+          'メール添付',
+          '分割ダウンロード',
+        ],
+        description:
+          '大きなファイルを指定サイズ（KB・MB）で分割して .001 .002 … のパーツにし、あとで結合して元に戻せます。メール添付の容量対策に。',
+      },
+      en: {
+        name: 'File Splitter & Joiner',
+        keywords: [
+          'split file',
+          'join file',
+          'merge parts',
+          '.001',
+          'email attachment limit',
+          'file chunks',
+        ],
+        description:
+          'Split a large file into .001, .002 parts of any size to fit email limits, then join them back into the original.',
+      },
+    },
+  },
+  {
+    slug: 'bulk-file-renamer',
+    category: 'file',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['zip-tool', 'file-splitter', 'duplicate-file-finder'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ファイル名一括変更',
+        keywords: [
+          'リネーム',
+          '連番',
+          '一括置換',
+          'ファイル名変更',
+          '正規表現',
+          'rename',
+          'batch rename',
+        ],
+        description:
+          '複数ファイルの名前を連番・置換・大文字小文字変換でまとめて変更し、変更後の名前でZIPに保存',
+      },
+      en: {
+        name: 'Bulk File Renamer',
+        keywords: [
+          'batch rename',
+          'rename files',
+          'sequence number',
+          'regex replace',
+          'file name',
+          'zip',
+        ],
+        description:
+          'Rename many files with numbering, find and replace, and case changes, then save them as a ZIP',
+      },
+    },
+  },
+  {
+    slug: 'hex-viewer',
+    category: 'file',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['file-type-detector', 'file-hash-calculator', 'mime-type-lookup'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '16進ダンプビューア',
+        keywords: [
+          'バイナリビューア',
+          '16進ダンプ',
+          'hexdump',
+          'ヘックスエディタ',
+          'バイナリ表示',
+          'バイト列検索',
+          'オフセット',
+        ],
+        description:
+          'ファイルを16進とASCIIで表示するバイナリビューア。オフセットへ移動、16進・テキストでのバイト列検索に対応し、大きなファイルも軽く閲覧できます',
+      },
+      en: {
+        name: 'Hex Viewer',
+        keywords: [
+          'hex viewer',
+          'hex dump',
+          'hexdump',
+          'binary viewer',
+          'hex editor',
+          'byte search',
+          'offset',
+        ],
+        description:
+          'View any file as hex and ASCII, jump to an offset, and search for hex or text bytes, even in large files',
+      },
+    },
+  },
+  {
+    slug: 'coin-toss',
+    category: 'games',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['roulette-dice', 'janken-game'],
+    translations: {
+      ja: {
+        name: 'コイントス',
+        keywords: [
+          'コイントス',
+          'コイン投げ',
+          '表裏',
+          '表か裏か',
+          'コインフリップ',
+          '二択',
+          '順番決め',
+        ],
+        description:
+          '表か裏かをボタン1つで決めるコイントス。3Dのコインが回転し、連続で投げる回数の指定や履歴・連続記録の確認ができます。',
+      },
+      en: {
+        name: 'Coin Toss',
+        keywords: [
+          'coin toss',
+          'coin flip',
+          'heads or tails',
+          'flip a coin',
+          'coin flipper',
+          'decision maker',
+        ],
+        description:
+          'Flip a coin online and see heads or tails on a 3D coin. Flip several times in a row and track history and streaks using cryptographic randomness.',
+      },
+    },
+  },
+  {
+    slug: 'lottery-number-picker',
+    category: 'games',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['roulette-dice', 'random-generator'],
+    translations: {
+      ja: {
+        name: 'ロト・ナンバーズ番号ランダム選出',
+        keywords: [
+          'ロト6',
+          'ミニロト',
+          'ロト7',
+          'ナンバーズ',
+          '宝くじ',
+          '番号選び',
+          'ランダム',
+          'クイックピック',
+        ],
+        description:
+          'ロト6・ミニロト・ロト7・ナンバーズ3/4の番号をランダムに選ぶ娯楽用ツール。複数口を一括生成できます。',
+      },
+      en: {
+        name: 'Loto & Numbers Number Picker',
+        keywords: [
+          'loto 6',
+          'mini loto',
+          'loto 7',
+          'numbers 3',
+          'numbers 4',
+          'lottery',
+          'quick pick',
+          'random numbers',
+        ],
+        description:
+          'Pick random numbers for Japan’s Loto 6, Mini Loto, Loto 7 and Numbers 3/4, just for fun. Runs in your browser.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

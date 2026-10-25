@@ -1,0 +1,535 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { hexViewerContent } from '../../i18n/tools/hex-viewer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = hexViewerContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="hv-root"
+    data-file-info={t.fileInfo}
+    data-rows-info={t.rowsInfo}
+    data-range-info={t.rangeInfo}
+    data-jump-done={t.jumpDone}
+    data-found={t.found}
+    data-not-found={t.notFound}
+    data-searching={t.searching}
+    data-error-no-file={t.errorNoFile}
+    data-error-jump-empty={t.errorJumpEmpty}
+    data-error-jump-invalid={t.errorJumpInvalid}
+    data-error-jump-range={t.errorJumpRange}
+    data-error-hex-empty={t.errorHexEmpty}
+    data-error-hex-invalid={t.errorHexInvalid}
+    data-error-hex-odd={t.errorHexOdd}
+    data-error-text-empty={t.errorTextEmpty}
+    data-error-text-unmappable={t.errorTextUnmappable}
+    data-empty-file={t.emptyFile}
+    data-error-read-failed={t.errorReadFailed}
+  >
+    <label for="hv-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="hv-dropzone" class="ui-dropzone">
+      <input id="hv-file-input" type="file" class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+
+    <p
+      id="hv-info"
+      hidden
+      class="mt-3 break-all text-sm font-medium text-gray-900 dark:text-gray-100"
+    ></p>
+
+    <div id="hv-tools" hidden class="mt-4 space-y-4">
+      <div>
+        <label for="hv-jump-input" class="ui-label">
+          {t.jumpLabel}
+        </label>
+        <div class="flex flex-wrap gap-2">
+          <input
+            id="hv-jump-input"
+            type="text"
+            inputmode="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder={t.jumpPlaceholder}
+            data-no-persist
+            class="ui-input h-11 w-full min-w-0 bg-white px-3 font-mono sm:w-64 dark:bg-gray-900"
+          />
+          <button id="hv-jump-button" type="button" class="ui-btn">
+            {t.jumpButton}
+          </button>
+        </div>
+      </div>
+
+      <fieldset>
+        <legend class="ui-label">{t.searchLabel}</legend>
+        <div class="flex flex-wrap gap-x-6">
+          <label class="ui-check">
+            <input
+              id="hv-mode-hex"
+              type="radio"
+              name="hv-mode"
+              value="hex"
+              checked
+            />
+            {t.searchModeHex}
+          </label>
+          <label class="ui-check">
+            <input id="hv-mode-text" type="radio" name="hv-mode" value="text" />
+            {t.searchModeText}
+          </label>
+        </div>
+        <div class="mt-1 flex flex-wrap items-end gap-2">
+          <div class="min-w-0 flex-1 basis-56">
+            <label for="hv-search-input" class="sr-only">
+              {t.searchLabel}
+            </label>
+            <input
+              id="hv-search-input"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder={t.searchHexPlaceholder}
+              data-hex-placeholder={t.searchHexPlaceholder}
+              data-text-placeholder={t.searchTextPlaceholder}
+              data-no-persist
+              class="ui-input h-11 w-full bg-white px-3 font-mono dark:bg-gray-900"
+            />
+          </div>
+          <div id="hv-encoding-wrap" hidden>
+            <label for="hv-encoding" class="ui-label">
+              {t.encodingLabel}
+            </label>
+            <select
+              id="hv-encoding"
+              class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
+            >
+              <option value="utf-8">{t.encodingUtf8}</option>
+              <option value="utf-16le">{t.encodingUtf16}</option>
+              <option value="latin1">{t.encodingLatin1}</option>
+            </select>
+          </div>
+          <button id="hv-prev-button" type="button" class="ui-btn">
+            {t.findPrev}
+          </button>
+          <button id="hv-next-button" type="button" class="ui-btn-primary">
+            {t.findNext}
+          </button>
+        </div>
+      </fieldset>
+
+      <p id="hv-message" role="status" class="min-h-5 text-sm"></p>
+    </div>
+
+    <p
+      id="hv-range"
+      hidden
+      class="mt-3 text-xs text-gray-600 dark:text-gray-400"
+    ></p>
+    <div
+      id="hv-viewer"
+      hidden
+      tabindex="0"
+      role="region"
+      aria-label={t.viewerLabel}
+      class="relative mt-1 h-[30rem] overflow-auto rounded-md border border-gray-300 bg-gray-50 font-mono text-xs text-gray-900 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+    >
+      <div id="hv-spacer" class="relative w-px">
+        <div id="hv-content" class="absolute left-0 top-0 w-max px-2"></div>
+      </div>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { fill } from '../../lib/format-template';
+  import {
+    BYTES_PER_ROW,
+    byteToAscii,
+    byteToHex,
+    contentTop,
+    encodeTextPattern,
+    formatFileSize,
+    formatOffset,
+    MAX_SPACER_HEIGHT,
+    formatRow,
+    parseHexPattern,
+    parseOffset,
+    rowFromScroll,
+    scrollFromRow,
+    searchBackward,
+    searchForward,
+    spacerHeight,
+    totalRows,
+    type ReadRange,
+    type TextEncoding,
+  } from '../../lib/tools/hex-viewer';
+
+  /** 行の高さ（px）。見た目は Tailwind の h-5 / leading-5（1.25rem = 20px）と一致させる */
+  const ROW_HEIGHT = 20;
+
+  const root = document.getElementById('hv-root')!;
+  const d = root.dataset;
+  const dropzone = document.getElementById('hv-dropzone')!;
+  const fileInput = document.getElementById(
+    'hv-file-input',
+  ) as HTMLInputElement;
+  const info = document.getElementById('hv-info')!;
+  const tools = document.getElementById('hv-tools')!;
+  const jumpInput = document.getElementById(
+    'hv-jump-input',
+  ) as HTMLInputElement;
+  const jumpButton = document.getElementById('hv-jump-button')!;
+  const modeHex = document.getElementById('hv-mode-hex') as HTMLInputElement;
+  const modeText = document.getElementById('hv-mode-text') as HTMLInputElement;
+  const searchInput = document.getElementById(
+    'hv-search-input',
+  ) as HTMLInputElement;
+  const encodingWrap = document.getElementById('hv-encoding-wrap')!;
+  const encodingSelect = document.getElementById(
+    'hv-encoding',
+  ) as HTMLSelectElement;
+  const prevButton = document.getElementById('hv-prev-button')!;
+  const nextButton = document.getElementById('hv-next-button')!;
+  const message = document.getElementById('hv-message')!;
+  const rangeEl = document.getElementById('hv-range')!;
+  const viewer = document.getElementById('hv-viewer')!;
+  const spacer = document.getElementById('hv-spacer')!;
+  const content = document.getElementById('hv-content')!;
+
+  let file: File | null = null;
+  let size = 0;
+  let highlight: { start: number; end: number } | null = null;
+  /** 検索・移動の基準位置と、その位置が直前の一致かどうか */
+  let cursor = 0;
+  let cursorIsMatch = false;
+  /** 巨大ファイルでスクロール量が縮小される場合でも、移動先の行を正確に出すための固定 */
+  let pinned: { row: number; scrollTop: number } | null = null;
+  let renderToken = 0;
+  let searchToken = 0;
+  let frame = 0;
+
+  function layout() {
+    return {
+      rows: totalRows(size),
+      rowHeight: ROW_HEIGHT,
+      viewportHeight: viewer.clientHeight,
+    };
+  }
+
+  const read: ReadRange = async (start, end) =>
+    new Uint8Array(await file!.slice(start, end).arrayBuffer());
+
+  function showMessage(text: string, kind: 'ok' | 'error' | 'info') {
+    message.textContent = text;
+    message.className =
+      'min-h-5 text-sm ' +
+      (kind === 'error'
+        ? 'text-red-600 dark:text-red-400'
+        : kind === 'ok'
+          ? 'text-green-700 dark:text-green-400'
+          : 'text-gray-700 dark:text-gray-300');
+  }
+
+  function inHighlight(index: number) {
+    return (
+      highlight !== null && index >= highlight.start && index < highlight.end
+    );
+  }
+
+  function mark(text: string) {
+    const el = document.createElement('mark');
+    el.className = 'bg-yellow-300 text-gray-900 dark:bg-yellow-400';
+    el.textContent = text;
+    return el;
+  }
+
+  function buildRow(rowIndex: number, bytes: Uint8Array): HTMLElement {
+    const rowStart = rowIndex * BYTES_PER_ROW;
+    const row = document.createElement('div');
+    row.className = 'h-5 whitespace-pre leading-5';
+
+    const offsetEl = document.createElement('span');
+    offsetEl.className = 'text-gray-600 dark:text-gray-400';
+    offsetEl.textContent = formatOffset(rowStart) + '  ';
+    row.append(offsetEl);
+
+    const overlaps =
+      highlight !== null &&
+      highlight.start < rowStart + bytes.length &&
+      highlight.end > rowStart;
+    if (!overlaps) {
+      const { hex, ascii } = formatRow(bytes);
+      row.append(`${hex} |${ascii}|`);
+      return row;
+    }
+
+    // 一致箇所を含む行だけ、1バイトずつ組み立てて強調する
+    for (let i = 0; i < BYTES_PER_ROW; i++) {
+      const cell =
+        (i < bytes.length ? byteToHex(bytes[i]) + ' ' : '   ') +
+        (i === BYTES_PER_ROW / 2 - 1 ? ' ' : '');
+      row.append(
+        i < bytes.length && inHighlight(rowStart + i) ? mark(cell) : cell,
+      );
+    }
+    row.append(' |');
+    for (let i = 0; i < bytes.length; i++) {
+      const ch = byteToAscii(bytes[i]);
+      row.append(inHighlight(rowStart + i) ? mark(ch) : ch);
+    }
+    row.append('|');
+    return row;
+  }
+
+  async function render() {
+    if (!file || size === 0) return;
+    const token = ++renderToken;
+    const l = layout();
+    const scrollTop = viewer.scrollTop;
+    const firstRow =
+      pinned && Math.abs(pinned.scrollTop - scrollTop) < 1
+        ? pinned.row
+        : rowFromScroll(scrollTop, l);
+    const visible = Math.ceil(l.viewportHeight / ROW_HEIGHT) + 1;
+    const lastRow = Math.min(l.rows, firstRow + visible);
+    const start = firstRow * BYTES_PER_ROW;
+    const end = Math.min(size, lastRow * BYTES_PER_ROW);
+    let data: Uint8Array;
+    try {
+      data = await read(start, end);
+    } catch {
+      showMessage(fill(d.errorReadFailed ?? '', { name: file.name }), 'error');
+      return;
+    }
+    if (token !== renderToken) return;
+    const rows: HTMLElement[] = [];
+    for (let r = firstRow; r < lastRow; r++) {
+      const from = r * BYTES_PER_ROW - start;
+      rows.push(buildRow(r, data.subarray(from, from + BYTES_PER_ROW)));
+    }
+    content.replaceChildren(...rows);
+    content.style.transform = `translateY(${contentTop(scrollTop, firstRow, l)}px)`;
+    rangeEl.textContent = fill(d.rangeInfo ?? '', {
+      from: formatOffset(start),
+      to: formatOffset(Math.max(start, end - 1)),
+    });
+  }
+
+  function scheduleRender() {
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      void render();
+    });
+  }
+
+  /** 指定行が先頭付近に来るようにスクロールして描画する */
+  function scrollToRow(row: number) {
+    const target = Math.max(0, row - 3);
+    viewer.scrollTop = scrollFromRow(target, layout());
+    // 縮小なしではブラウザが丸めた scrollTop から行が決まるので固定しない（末尾付近で描画位置がずれる）
+    const l = layout();
+    pinned =
+      l.rows * l.rowHeight > MAX_SPACER_HEIGHT
+        ? {
+            row: Math.min(
+              target,
+              Math.max(0, l.rows - Math.ceil(l.viewportHeight / l.rowHeight)),
+            ),
+            scrollTop: viewer.scrollTop,
+          }
+        : null;
+    void render();
+  }
+
+  function resetState() {
+    searchToken++;
+    renderToken++;
+    highlight = null;
+    cursor = 0;
+    cursorIsMatch = false;
+    pinned = null;
+    message.textContent = '';
+    content.replaceChildren();
+    viewer.scrollTop = 0;
+  }
+
+  function loadFile(next: File) {
+    resetState();
+    file = next;
+    size = next.size;
+    info.hidden = false;
+    info.textContent =
+      fill(d.fileInfo ?? '', {
+        name: next.name,
+        size: formatFileSize(size),
+      }) +
+      ' / ' +
+      fill(d.rowsInfo ?? '', { size: size.toLocaleString('en-US') });
+    const empty = size === 0;
+    tools.hidden = empty;
+    viewer.hidden = empty;
+    rangeEl.hidden = empty;
+    if (empty) {
+      info.textContent += ' / ' + (d.emptyFile ?? '');
+      return;
+    }
+    spacer.style.height = `${spacerHeight(layout())}px`;
+    void render();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const next = fileInput.files?.[0];
+    fileInput.value = '';
+    if (next) loadFile(next);
+  });
+  enableFileDrop(dropzone, fileInput);
+
+  viewer.addEventListener('scroll', scheduleRender, { passive: true });
+
+  function requireFile(): boolean {
+    if (file && size > 0) return true;
+    showMessage(d.errorNoFile ?? '', 'error');
+    return false;
+  }
+
+  function jump() {
+    if (!requireFile()) return;
+    const result = parseOffset(jumpInput.value, size);
+    if (!result.ok) {
+      const text =
+        result.reason === 'empty'
+          ? d.errorJumpEmpty
+          : result.reason === 'invalid'
+            ? d.errorJumpInvalid
+            : fill(d.errorJumpRange ?? '', {
+                max: `0x${formatOffset(size - 1)}`,
+              });
+      showMessage(text ?? '', 'error');
+      return;
+    }
+    searchToken++;
+    highlight = { start: result.offset, end: result.offset + 1 };
+    cursor = result.offset;
+    cursorIsMatch = false;
+    scrollToRow(Math.floor(result.offset / BYTES_PER_ROW));
+    showMessage(
+      fill(d.jumpDone ?? '', { offset: `0x${formatOffset(result.offset)}` }),
+      'ok',
+    );
+  }
+
+  jumpButton.addEventListener('click', jump);
+  jumpInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      jump();
+    }
+  });
+
+  function syncMode() {
+    const isText = modeText.checked;
+    encodingWrap.hidden = !isText;
+    searchInput.placeholder =
+      (isText
+        ? searchInput.dataset.textPlaceholder
+        : searchInput.dataset.hexPlaceholder) ?? '';
+  }
+  modeHex.addEventListener('change', syncMode);
+  modeText.addEventListener('change', syncMode);
+  syncMode();
+
+  function readNeedle(): Uint8Array | null {
+    if (modeText.checked) {
+      const r = encodeTextPattern(
+        searchInput.value,
+        encodingSelect.value as TextEncoding,
+      );
+      if (r.ok) return r.bytes;
+      showMessage(
+        (r.reason === 'empty' ? d.errorTextEmpty : d.errorTextUnmappable) ?? '',
+        'error',
+      );
+      return null;
+    }
+    const r = parseHexPattern(searchInput.value);
+    if (r.ok) return r.bytes;
+    showMessage(
+      (r.reason === 'empty'
+        ? d.errorHexEmpty
+        : r.reason === 'invalid'
+          ? d.errorHexInvalid
+          : d.errorHexOdd) ?? '',
+      'error',
+    );
+    return null;
+  }
+
+  async function find(direction: 'next' | 'prev') {
+    if (!requireFile()) return;
+    const needle = readNeedle();
+    if (!needle) return;
+    const token = ++searchToken;
+    const options = {
+      isCancelled: () => token !== searchToken,
+      onProgress: (ratio: number) =>
+        showMessage(
+          fill(d.searching ?? '', { percent: String(Math.floor(ratio * 100)) }),
+          'info',
+        ),
+    };
+    showMessage(fill(d.searching ?? '', { percent: '0' }), 'info');
+    try {
+      const result =
+        direction === 'next'
+          ? await searchForward(
+              read,
+              size,
+              needle,
+              cursorIsMatch ? cursor + 1 : cursor,
+              options,
+            )
+          : await searchBackward(read, size, needle, cursor, options);
+      if (result.status === 'cancelled' || token !== searchToken) return;
+      if (result.status === 'not-found') {
+        showMessage(d.notFound ?? '', 'error');
+        return;
+      }
+      cursor = result.offset;
+      cursorIsMatch = true;
+      highlight = { start: result.offset, end: result.offset + needle.length };
+      scrollToRow(Math.floor(result.offset / BYTES_PER_ROW));
+      showMessage(
+        fill(d.found ?? '', {
+          offset: `0x${formatOffset(result.offset)}`,
+          length: String(needle.length),
+        }),
+        'ok',
+      );
+    } catch {
+      showMessage(
+        fill(d.errorReadFailed ?? '', { name: file?.name ?? '' }),
+        'error',
+      );
+    }
+  }
+
+  nextButton.addEventListener('click', () => void find('next'));
+  prevButton.addEventListener('click', () => void find('prev'));
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      void find(e.shiftKey ? 'prev' : 'next');
+    }
+  });
+</script>

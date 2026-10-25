@@ -1,0 +1,294 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { bpmDetectorContent } from '../../i18n/tools/bpm-detector';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = bpmDetectorContent[locale];
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="bpm-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="bpm-dropzone" class="ui-dropzone">
+      <input
+        id="bpm-file-input"
+        type="file"
+        accept="audio/*,video/mp4,video/webm,.mp3,.wav,.m4a,.aac,.ogg,.opus,.flac,.aif,.aiff"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p
+      id="bpm-source-info"
+      data-template={t.sourceInfoTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="bpm-error"
+      role="alert"
+      hidden
+      data-unsupported={t.errorUnsupportedFile}
+      data-decode={t.errorDecode}
+      data-too-long={t.errorTooLong}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-no-result={t.errorNoResult}
+      data-failed={t.errorFailed}
+      class="ui-error mt-2"
+    ></p>
+  </div>
+
+  <div class="mt-4 flex flex-wrap gap-3">
+    <button
+      id="bpm-clear-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.clearButton}
+    </button>
+  </div>
+
+  <p
+    id="bpm-status"
+    role="status"
+    hidden
+    class="mt-3 text-sm text-gray-700 dark:text-gray-300"
+  >
+    {t.analyzing}
+  </p>
+
+  <div id="bpm-results-section" hidden class="mt-6">
+    <h2 class="mb-2 text-lg font-bold">{t.resultsHeading}</h2>
+    <p class="text-4xl font-bold tabular-nums">
+      <span id="bpm-value"></span>
+      <span class="text-lg font-normal text-gray-600 dark:text-gray-400">
+        {t.bpmUnit}
+      </span>
+    </p>
+    <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">
+      {t.confidenceLabel}:
+      <span
+        id="bpm-confidence"
+        data-high={t.confidenceHigh}
+        data-medium={t.confidenceMedium}
+        data-low={t.confidenceLow}
+      ></span>
+    </p>
+    <p
+      id="bpm-alternatives"
+      data-template={t.alternativesTemplate}
+      class="mt-1 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+    <p
+      id="bpm-partial"
+      hidden
+      data-template={t.partialTemplate}
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.disclaimer}</p>
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button
+        id="bpm-copy-button"
+        type="button"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+        class="ui-btn-primary"
+      >
+        {t.copyButton}
+      </button>
+      <span
+        id="bpm-copy-status"
+        role="status"
+        class="text-sm text-gray-600 dark:text-gray-400"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { copyText } from '../../lib/clipboard';
+  import {
+    MAX_ANALYZE_SECONDS,
+    MAX_DURATION_SECONDS,
+    MAX_FILE_SIZE,
+    confidenceLevel,
+    detectBpm,
+    formatBpm,
+    formatDuration,
+    formatFileSize,
+    isAcceptedAudioFile,
+    mixToMono,
+  } from '../../lib/tools/bpm-detector';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const dropzone = $('bpm-dropzone');
+  const fileInput = $<HTMLInputElement>('bpm-file-input');
+  const sourceInfoEl = $('bpm-source-info');
+  const errorEl = $('bpm-error');
+  const clearButton = $<HTMLButtonElement>('bpm-clear-button');
+  const statusEl = $('bpm-status');
+  const resultsSection = $('bpm-results-section');
+  const valueEl = $('bpm-value');
+  const confidenceEl = $('bpm-confidence');
+  const alternativesEl = $('bpm-alternatives');
+  const partialEl = $('bpm-partial');
+  const copyButton = $<HTMLButtonElement>('bpm-copy-button');
+  const copyStatusEl = $('bpm-copy-status');
+
+  let generation = 0;
+  let busy = false;
+  let loaded = false;
+  let currentBpmText = '';
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function updateUi() {
+    fileInput.disabled = busy;
+    clearButton.disabled = busy || !loaded;
+    statusEl.hidden = !busy;
+  }
+
+  function resetAll() {
+    generation++;
+    busy = false;
+    loaded = false;
+    currentBpmText = '';
+    resultsSection.hidden = true;
+    sourceInfoEl.textContent = '';
+    copyStatusEl.textContent = '';
+    updateUi();
+  }
+
+  async function decodeFile(file: File) {
+    const data = await file.arrayBuffer();
+    const ctx = new OfflineAudioContext(1, 1, 48000);
+    const buffer = await ctx.decodeAudioData(data);
+    const channels: Float32Array[] = [];
+    for (let i = 0; i < buffer.numberOfChannels; i++) {
+      channels.push(buffer.getChannelData(i));
+    }
+    return {
+      channels,
+      sampleRate: buffer.sampleRate,
+      duration: buffer.duration,
+    };
+  }
+
+  async function loadFile(file: File) {
+    clearError();
+    resetAll();
+    const gen = generation;
+
+    if (!isAcceptedAudioFile(file)) {
+      showError(errorEl.dataset.unsupported ?? '');
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      showError(
+        (errorEl.dataset.tooLargeTemplate ?? '').replace(
+          '{max}',
+          formatFileSize(MAX_FILE_SIZE),
+        ),
+      );
+      return;
+    }
+
+    busy = true;
+    updateUi();
+    try {
+      let decoded;
+      try {
+        decoded = await decodeFile(file);
+      } catch {
+        if (gen === generation) showError(errorEl.dataset.decode ?? '');
+        return;
+      }
+      if (gen !== generation) return;
+      if (decoded.duration > MAX_DURATION_SECONDS) {
+        showError(errorEl.dataset.tooLong ?? '');
+        return;
+      }
+
+      loaded = true;
+      sourceInfoEl.textContent = (sourceInfoEl.dataset.template ?? '')
+        .replace('{duration}', formatDuration(decoded.duration))
+        .replace('{rate}', String(decoded.sampleRate))
+        .replace('{channels}', String(decoded.channels.length))
+        .replace('{size}', formatFileSize(file.size));
+
+      // 「解析中」の表示を先に描画させる
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      if (gen !== generation) return;
+
+      const result = detectBpm(mixToMono(decoded.channels), decoded.sampleRate);
+      if (!result) {
+        showError(errorEl.dataset.noResult ?? '');
+        return;
+      }
+
+      currentBpmText = formatBpm(result.bpm);
+      valueEl.textContent = currentBpmText;
+      confidenceEl.textContent =
+        confidenceEl.dataset[confidenceLevel(result.confidence)] ?? '';
+      const [half, double] = [result.bpm / 2, result.bpm * 2];
+      alternativesEl.textContent = (alternativesEl.dataset.template ?? '')
+        .replace('{half}', formatBpm(half))
+        .replace('{double}', formatBpm(double));
+      const partial = decoded.duration > MAX_ANALYZE_SECONDS;
+      partialEl.hidden = !partial;
+      partialEl.textContent = partial
+        ? (partialEl.dataset.template ?? '').replace(
+            '{seconds}',
+            String(MAX_ANALYZE_SECONDS),
+          )
+        : '';
+      resultsSection.hidden = false;
+    } catch {
+      if (gen === generation) showError(errorEl.dataset.failed ?? '');
+    } finally {
+      if (gen === generation) {
+        busy = false;
+        updateUi();
+      }
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void loadFile(file);
+  });
+
+  enableFileDrop(dropzone, fileInput);
+
+  clearButton.addEventListener('click', () => {
+    resetAll();
+    clearError();
+  });
+  copyButton.addEventListener('click', async () => {
+    if (!currentBpmText) return;
+    copyStatusEl.textContent = (await copyText(currentBpmText))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+
+  updateUi();
+</script>

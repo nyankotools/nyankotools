@@ -1,0 +1,459 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { coinTossContent } from '../../i18n/tools/coin-toss';
+import { MAX_TOSS_COUNT } from '../../lib/tools/coin-toss';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = coinTossContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="ct-root"
+    data-heads={t.headsLabel}
+    data-tails={t.tailsLabel}
+    data-count-error={t.countError}
+    data-result-single={t.resultSingle}
+    data-result-multi={t.resultMulti}
+    data-stats-empty={t.statsEmpty}
+    data-stats-line={t.statsLine}
+    data-current-streak={t.currentStreak}
+    data-longest-streak={t.longestStreak}
+    data-history-empty={t.historyEmpty}
+    data-sequence-label={t.sequenceLabel}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <div
+      id="ct-coins"
+      class="flex min-h-44 flex-wrap items-center justify-center gap-3"
+      aria-hidden="true"
+    ></div>
+    <template id="ct-coin-template">
+      <div class="ct-coin-wrap [perspective:800px]">
+        <div class="ct-coin relative h-full w-full [transform-style:preserve-3d]">
+          <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-full border-4 border-amber-500 bg-amber-200 font-bold text-amber-950 [backface-visibility:hidden]">
+            <svg viewBox="0 0 64 64" class="h-3/5 w-3/5" fill="none">
+              <path
+                d="M12 30 L14 8 L28 18 Z M52 30 L50 8 L36 18 Z"
+                fill="#f59e0b"
+                stroke="#78350f"
+                stroke-width="3"
+                stroke-linejoin="round"
+              ></path>
+              <ellipse
+                cx="32"
+                cy="36"
+                rx="24"
+                ry="20"
+                fill="#fbbf24"
+                stroke="#78350f"
+                stroke-width="3"
+              ></ellipse>
+              <circle cx="23" cy="33" r="3.2" fill="#78350f"></circle>
+              <circle cx="41" cy="33" r="3.2" fill="#78350f"></circle>
+              <path
+                d="M29 40 L35 40 L32 44 Z"
+                fill="#ec4899"
+                stroke="#78350f"
+                stroke-width="1.5"
+                stroke-linejoin="round"
+              ></path>
+              <path
+                d="M32 44 Q28 49 24 46 M32 44 Q36 49 40 46"
+                stroke="#78350f"
+                stroke-width="2"
+                stroke-linecap="round"
+              ></path>
+              <path
+                d="M6 36 L17 38 M6 44 L17 42 M58 36 L47 38 M58 44 L47 42"
+                stroke="#78350f"
+                stroke-width="2"
+                stroke-linecap="round"
+              ></path>
+            </svg>
+          </div>
+          <div class="absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-full border-4 border-pink-400 bg-pink-100 font-bold text-pink-950 [backface-visibility:hidden] [transform:rotateX(180deg)]">
+            <svg viewBox="0 0 64 64" class="h-3/5 w-3/5" fill="none">
+              <g
+                fill="#f9a8d4"
+                stroke="#be185d"
+                stroke-width="2"
+                stroke-linejoin="round"
+              >
+                <path d="M32 30 C22 22 22 8 29 4 L32 9 L35 4 C42 8 42 22 32 30 Z"></path>
+                <path
+                  d="M32 30 C22 22 22 8 29 4 L32 9 L35 4 C42 8 42 22 32 30 Z"
+                  transform="rotate(72 32 32)"
+                ></path>
+                <path
+                  d="M32 30 C22 22 22 8 29 4 L32 9 L35 4 C42 8 42 22 32 30 Z"
+                  transform="rotate(144 32 32)"
+                ></path>
+                <path
+                  d="M32 30 C22 22 22 8 29 4 L32 9 L35 4 C42 8 42 22 32 30 Z"
+                  transform="rotate(216 32 32)"
+                ></path>
+                <path
+                  d="M32 30 C22 22 22 8 29 4 L32 9 L35 4 C42 8 42 22 32 30 Z"
+                  transform="rotate(288 32 32)"
+                ></path>
+              </g>
+              <circle cx="32" cy="32" r="3" fill="#be185d"></circle>
+              <path
+                d="M32 32 L32 22 M32 32 L41 26 M32 32 L40 38 M32 32 L24 38 M32 32 L23 26"
+                stroke="#be185d"
+                stroke-width="1.2"
+                stroke-linecap="round"
+              ></path>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <div class="mt-4">
+      <label for="ct-count" class="ui-label">
+        {t.countLabel}
+      </label>
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <input
+          id="ct-count"
+          type="number"
+          min="1"
+          max={MAX_TOSS_COUNT}
+          step="1"
+          value="1"
+          inputmode="numeric"
+          aria-describedby="ct-count-hint"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+        <ul class="flex items-center gap-3 text-sm text-gray-800 dark:text-gray-200">
+          <li class="flex items-center gap-1">
+            <span
+              class="ct-legend-icon h-9 w-9 shrink-0 rounded-full border-2 border-amber-500 bg-amber-200 p-0.5"
+              data-face="0"
+              aria-hidden="true"
+            ></span>
+            {t.headsLabel}
+          </li>
+          <li class="flex items-center gap-1">
+            <span
+              class="ct-legend-icon h-9 w-9 shrink-0 rounded-full border-2 border-pink-400 bg-pink-100 p-0.5"
+              data-face="1"
+              aria-hidden="true"
+            ></span>
+            {t.tailsLabel}
+          </li>
+        </ul>
+      </div>
+      <p
+        id="ct-count-hint"
+        class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+      >
+        {t.countHint}
+      </p>
+    </div>
+
+    <button id="ct-toss-button" type="button" class="ui-btn-primary mt-3">
+      {t.toss}
+    </button>
+
+    <div id="ct-error" class="ui-error empty:hidden mt-3" role="alert"></div>
+
+    <div id="ct-result" class="mt-4" aria-live="polite" hidden>
+      <p
+        id="ct-result-title"
+        class="text-xl font-bold break-all text-gray-900 dark:text-gray-100"
+      ></p>
+      <p
+        id="ct-result-sequence"
+        class="mt-1 text-sm break-all text-gray-700 dark:text-gray-300"
+      ></p>
+      <div class="mt-3 flex items-center gap-3">
+        <button id="ct-copy-button" type="button" class="ui-btn">
+          {t.copy}
+        </button>
+        <span
+          id="ct-status"
+          class="text-sm text-green-700 dark:text-green-400"
+          aria-live="polite"
+        ></span>
+      </div>
+    </div>
+
+    <h2 class="mt-8 text-lg font-bold text-gray-900 dark:text-gray-100">
+      {t.statsHeading}
+    </h2>
+    <div class="mt-2 space-y-1 text-sm text-gray-800 dark:text-gray-200">
+      <p id="ct-stats-line"></p>
+      <p id="ct-current-streak"></p>
+      <p id="ct-longest-streak"></p>
+    </div>
+
+    <div class="mt-4">
+      <span class="ui-label">{t.historyLabel}</span>
+      <ol
+        id="ct-history"
+        class="flex max-h-48 flex-wrap gap-1 overflow-y-auto"
+        aria-label={t.historyLabel}
+      ></ol>
+      <p id="ct-history-empty" class="text-sm text-gray-600 dark:text-gray-400">
+        {t.historyEmpty}
+      </p>
+      <button id="ct-clear-button" type="button" class="ui-btn mt-3">
+        {t.clearHistory}
+      </button>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    appendHistory,
+    coinRotation,
+    flipCoins,
+    summarizeHistory,
+    validateTossCount,
+  } from '../../lib/tools/coin-toss';
+  import type { CoinSide } from '../../lib/tools/coin-toss';
+
+  const SPIN_MS = 1600;
+
+  const root = document.getElementById('ct-root')!;
+  const msg = root.dataset as Record<string, string | undefined>;
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const coinsEl = $('ct-coins');
+  const coinTemplate = $<HTMLTemplateElement>('ct-coin-template');
+  const countInput = $<HTMLInputElement>('ct-count');
+  const tossButton = $<HTMLButtonElement>('ct-toss-button');
+  const errorEl = $('ct-error');
+  const resultEl = $('ct-result');
+  const resultTitle = $('ct-result-title');
+  const resultSequence = $('ct-result-sequence');
+  const copyButton = $<HTMLButtonElement>('ct-copy-button');
+  const statusEl = $('ct-status');
+  const statsLine = $('ct-stats-line');
+  const currentStreakEl = $('ct-current-streak');
+  const longestStreakEl = $('ct-longest-streak');
+  const historyEl = $('ct-history');
+  const historyEmpty = $('ct-history-empty');
+  const clearButton = $<HTMLButtonElement>('ct-clear-button');
+
+  let history: CoinSide[] = [];
+  let rotations: number[] = [];
+  let tossing = false;
+  let lastResultText = '';
+
+  const reducedMotion = () =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const sideName = (side: CoinSide) =>
+    (side === 'heads' ? msg.heads : msg.tails) ?? '';
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return Object.entries(values).reduce(
+      (acc, [key, value]) => acc.replaceAll(`{${key}}`, value),
+      template ?? '',
+    );
+  }
+
+  function percent(ratio: number): string {
+    return String(Math.round(ratio * 1000) / 10);
+  }
+
+  function renderStats() {
+    const stats = summarizeHistory(history);
+    historyEmpty.hidden = history.length > 0;
+    clearButton.disabled = history.length === 0 || tossing;
+    if (stats.total === 0) {
+      statsLine.textContent = msg.statsEmpty ?? '';
+      currentStreakEl.textContent = '';
+      longestStreakEl.textContent = '';
+      historyEl.replaceChildren();
+      return;
+    }
+    statsLine.textContent = fill(msg.statsLine, {
+      total: String(stats.total),
+      heads: String(stats.heads),
+      headsPct: percent(stats.headsRatio),
+      tails: String(stats.tails),
+      tailsPct: percent(1 - stats.headsRatio),
+    });
+    const streakText = (
+      template: string | undefined,
+      streak: { side: CoinSide; length: number } | null,
+    ) =>
+      streak
+        ? fill(template, {
+            side: sideName(streak.side),
+            length: String(streak.length),
+          })
+        : '';
+    currentStreakEl.textContent = streakText(
+      msg.currentStreak,
+      stats.currentStreak,
+    );
+    longestStreakEl.textContent = streakText(
+      msg.longestStreak,
+      stats.longestStreak,
+    );
+    historyEl.replaceChildren(
+      ...history.map((side) => {
+        const li = document.createElement('li');
+        li.className =
+          side === 'heads'
+            ? 'rounded border border-amber-500 bg-amber-100 px-1.5 text-xs font-bold text-amber-950'
+            : 'rounded border border-gray-500 bg-gray-200 px-1.5 text-xs font-bold text-gray-900';
+        li.textContent = sideName(side);
+        return li;
+      }),
+    );
+  }
+
+  function showResult(results: CoinSide[]) {
+    const last = results[results.length - 1];
+    const heads = results.filter((s) => s === 'heads').length;
+    const title =
+      results.length === 1
+        ? fill(msg.resultSingle, { side: sideName(last) })
+        : fill(msg.resultMulti, {
+            count: String(results.length),
+            heads: String(heads),
+            tails: String(results.length - heads),
+          });
+    resultTitle.textContent = title;
+    const sequence =
+      results.length === 1
+        ? ''
+        : `${msg.sequenceLabel ?? ''}: ${results.map(sideName).join(' ')}`;
+    resultSequence.textContent = sequence;
+    resultSequence.hidden = sequence === '';
+    lastResultText = sequence ? `${title}\n${sequence}` : title;
+    statusEl.textContent = '';
+    resultEl.hidden = false;
+  }
+
+  /** コインの大きさ。枚数が多いほど小さくする */
+  function coinSizeClass(count: number): string {
+    if (count === 1) return 'h-44 w-44';
+    if (count <= 4) return 'h-28 w-28';
+    return 'h-20 w-20';
+  }
+
+  /** 枚数に合わせてコインを並べ直す（同じ枚数なら回転角を引き継ぐ） */
+  function layoutCoins(count: number) {
+    if (rotations.length !== count) {
+      rotations = Array.from({ length: count }, () => 0);
+      coinsEl.replaceChildren(
+        ...rotations.map(() => {
+          const node = coinTemplate.content.cloneNode(true) as DocumentFragment;
+          node.querySelector('.ct-coin-wrap')!.className +=
+            ` ${coinSizeClass(count)}`;
+          return node;
+        }),
+      );
+    }
+    return Array.from(coinsEl.querySelectorAll<HTMLElement>('.ct-coin'));
+  }
+
+  function setRotation(
+    coin: HTMLElement,
+    index: number,
+    degrees: number,
+    animate: boolean,
+  ) {
+    rotations[index] = degrees;
+    coin.style.transition = animate
+      ? `transform ${SPIN_MS}ms cubic-bezier(0.2, 0.7, 0.2, 1)`
+      : 'none';
+    coin.style.transform = `rotateX(${degrees}deg)`;
+  }
+
+  function finish(results: CoinSide[]) {
+    history = appendHistory(history, results);
+    tossing = false;
+    tossButton.disabled = false;
+    showResult(results);
+    renderStats();
+  }
+
+  tossButton.addEventListener('click', () => {
+    if (tossing) return;
+    errorEl.textContent = '';
+    const count = countInput.value === '' ? NaN : Number(countInput.value);
+    if (validateTossCount(count) !== null) {
+      errorEl.textContent = msg.countError ?? '';
+      return;
+    }
+    const results = flipCoins(count);
+    tossing = true;
+    tossButton.disabled = true;
+    resultEl.hidden = true;
+    clearButton.disabled = true;
+    const coins = layoutCoins(count);
+    if (reducedMotion()) {
+      coins.forEach((coin, i) =>
+        setRotation(coin, i, coinRotation(rotations[i], results[i], 0), false),
+      );
+      finish(results);
+      return;
+    }
+    // 直前の回転角を確定させてから、次の回転をアニメーションさせる
+    void coinsEl.getBoundingClientRect();
+    coins.forEach((coin, i) =>
+      setRotation(coin, i, coinRotation(rotations[i], results[i], 5), true),
+    );
+    let done = false;
+    const end = () => {
+      if (done) return;
+      done = true;
+      finish(results);
+    };
+    coins[0].addEventListener('transitionend', end, { once: true });
+    window.setTimeout(end, SPIN_MS + 300);
+  });
+
+  // 回数を変えた時点で、表示するコインの枚数も合わせる
+  countInput.addEventListener('input', () => {
+    if (tossing || countInput.value === '') return;
+    const count = Number(countInput.value);
+    if (validateTossCount(count) === null) layoutCoins(count);
+  });
+
+  clearButton.addEventListener('click', () => {
+    if (tossing) return;
+    history = [];
+    resultEl.hidden = true;
+    lastResultText = '';
+    renderStats();
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!lastResultText) return;
+    statusEl.textContent = (await copyText(lastResultText))
+      ? (msg.copied ?? '')
+      : (msg.copyFailed ?? '');
+  });
+
+  // 表（猫）・裏（桜）の柄を、コインの絵からコピーして凡例に使う
+  const faceIcons = coinTemplate.content.querySelectorAll('svg');
+  document.querySelectorAll<HTMLElement>('.ct-legend-icon').forEach((el) => {
+    const svg = faceIcons[Number(el.dataset.face)];
+    if (svg) {
+      const icon = svg.cloneNode(true) as SVGElement;
+      icon.setAttribute('class', 'h-full w-full');
+      el.append(icon);
+    }
+  });
+  layoutCoins(1);
+  renderStats();
+</script>

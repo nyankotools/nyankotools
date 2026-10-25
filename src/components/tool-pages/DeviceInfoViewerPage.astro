@@ -1,0 +1,260 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { API_DEFINITIONS } from '../../lib/tools/device-info-viewer';
+import { deviceInfoViewerContent } from '../../i18n/tools/device-info-viewer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = deviceInfoViewerContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="device-root"
+    data-labels={JSON.stringify(t.valueLabels)}
+    data-api-heading={t.apiHeading}
+  >
+    <div class="mb-4 flex flex-wrap items-center gap-3">
+      <button
+        id="device-copy-button"
+        type="button"
+        class="ui-btn ui-btn-primary"
+        data-copied={t.copied}
+        data-copy-failed={t.copyFailed}
+      >
+        {t.copy}
+      </button>
+      <span
+        id="device-copy-status"
+        class="text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></span>
+    </div>
+
+    {t.groups.map((group) => (
+      <section class="mb-6">
+        <h2 class="mb-2 text-lg font-bold">{group.heading}</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[320px] border-collapse text-sm">
+            <tbody>
+              {group.rows.map(({ id, label }) => (
+                <tr
+                  class="border-b border-gray-100 dark:border-gray-800"
+                  data-row={id}
+                >
+                  <th
+                    scope="row"
+                    class="py-2 pr-4 text-left font-normal text-gray-600 dark:text-gray-400"
+                  >
+                    {label}
+                  </th>
+                  <td
+                    id={`device-${id}`}
+                    class="py-2 text-right font-mono break-all text-gray-900 dark:text-gray-100"
+                  />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    ))}
+
+    <section class="mb-6">
+      <h2 class="mb-1 text-lg font-bold">{t.apiHeading}</h2>
+      <p
+        id="device-api-summary"
+        class="mb-2 text-sm text-gray-600 dark:text-gray-400"
+      ></p>
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[320px] border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-gray-200 dark:border-gray-800">
+              <th class="py-2 pr-4 text-left text-gray-600 dark:text-gray-400">
+                {t.columnApi}
+              </th>
+              <th class="py-2 text-right text-gray-600 dark:text-gray-400">
+                {t.columnStatus}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {API_DEFINITIONS.map((api) => (
+              <tr class="border-b border-gray-100 dark:border-gray-800">
+                <td class="py-2 pr-4">{api.name}</td>
+                <td
+                  id={`device-api-${api.id}`}
+                  class="py-2 text-right font-mono"
+                />
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    API_DEFINITIONS,
+    buildReport,
+    classifyPointer,
+    countSupported,
+    describeCpuCores,
+    describeDeviceMemory,
+    detectApiSupport,
+    formatDpr,
+    formatResolution,
+    normalizeGpuString,
+    physicalResolution,
+    type ReportRow,
+  } from '../../lib/tools/device-info-viewer';
+
+  const root = document.getElementById('device-root')!;
+  const labels = JSON.parse(root.dataset.labels ?? '{}') as Record<
+    string,
+    string
+  >;
+  const unknown = labels.unknown ?? '';
+
+  function setField(id: string, value: string | null) {
+    document.getElementById(`device-${id}`)!.textContent = value ?? unknown;
+  }
+
+  let gpuCache: { renderer: string | null; vendor: string | null } | null =
+    null;
+
+  function readGpu(): { renderer: string | null; vendor: string | null } {
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = (canvas.getContext('webgl') ??
+        canvas.getContext(
+          'experimental-webgl',
+        )) as WebGLRenderingContext | null;
+      if (!gl) return { renderer: null, vendor: null };
+      const ext = gl.getExtension('WEBGL_debug_renderer_info');
+      if (!ext) return { renderer: null, vendor: null };
+      return {
+        renderer: normalizeGpuString(
+          gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) as string,
+        ),
+        vendor: normalizeGpuString(
+          gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) as string,
+        ),
+      };
+    } catch {
+      return { renderer: null, vendor: null };
+    }
+  }
+
+  function fill() {
+    const dpr = window.devicePixelRatio;
+    setField('resolution', formatResolution(screen.width, screen.height));
+    setField('physical', physicalResolution(screen.width, screen.height, dpr));
+    setField('avail', formatResolution(screen.availWidth, screen.availHeight));
+    setField('dpr', formatDpr(dpr));
+    setField(
+      'colordepth',
+      screen.colorDepth > 0
+        ? (labels.bits ?? '').replace('{bits}', String(screen.colorDepth))
+        : null,
+    );
+
+    setField(
+      'cpu',
+      describeCpuCores(navigator.hardwareConcurrency)?.toString() ?? null,
+    );
+
+    const mem = describeDeviceMemory(
+      (navigator as Navigator & { deviceMemory?: number }).deviceMemory,
+    );
+    setField(
+      'memory',
+      mem
+        ? (mem.capped ? labels.memoryCapped : labels.memory)!.replace(
+            '{gb}',
+            String(mem.gb),
+          )
+        : null,
+    );
+
+    // resizeのたびにWebGLコンテキストを作らないよう、GPU情報は初回だけ取得する
+    gpuCache ??= readGpu();
+    const gpu = gpuCache;
+    setField('gpu-renderer', gpu.renderer);
+    setField('gpu-vendor', gpu.vendor);
+
+    setField('touch-points', String(navigator.maxTouchPoints ?? 0));
+    const pointer = classifyPointer(
+      window.matchMedia('(pointer: fine)').matches,
+      window.matchMedia('(pointer: coarse)').matches,
+    );
+    setField(
+      'pointer',
+      pointer === 'fine'
+        ? (labels.pointerFine ?? '')
+        : pointer === 'coarse'
+          ? (labels.pointerCoarse ?? '')
+          : (labels.pointerNone ?? ''),
+    );
+    setField(
+      'hover',
+      window.matchMedia('(hover: hover)').matches
+        ? (labels.hoverYes ?? '')
+        : (labels.hoverNo ?? ''),
+    );
+
+    const apiRows = detectApiSupport(window, navigator);
+    for (const row of apiRows) {
+      const el = document.getElementById(`device-api-${row.id}`)!;
+      el.textContent = row.supported
+        ? (labels.supported ?? '')
+        : (labels.notSupported ?? '');
+      el.classList.toggle('text-green-700', row.supported);
+      el.classList.toggle('dark:text-green-400', row.supported);
+      el.classList.toggle('text-gray-600', !row.supported);
+      el.classList.toggle('dark:text-gray-400', !row.supported);
+    }
+    document.getElementById('device-api-summary')!.textContent = (
+      labels.apiSummary ?? ''
+    )
+      .replace('{count}', String(countSupported(apiRows)))
+      .replace('{total}', String(API_DEFINITIONS.length));
+  }
+
+  function collectReport(): string {
+    const rows: ReportRow[] = [];
+    document.querySelectorAll<HTMLElement>('tr[data-row]').forEach((tr) => {
+      rows.push({
+        label: tr.querySelector('th')!.textContent!.trim(),
+        value: tr.querySelector('td')!.textContent!.trim(),
+      });
+    });
+    const apiLines = API_DEFINITIONS.map((api) => ({
+      label: api.name,
+      value: document
+        .getElementById(`device-api-${api.id}`)!
+        .textContent!.trim(),
+    }));
+    return `${buildReport(rows)}\n\n${root.dataset.apiHeading ?? ''}\n${buildReport(apiLines)}`;
+  }
+
+  fill();
+  window.addEventListener('resize', fill);
+
+  const copyButton = document.getElementById(
+    'device-copy-button',
+  ) as HTMLButtonElement;
+  const copyStatus = document.getElementById('device-copy-status')!;
+  copyButton.addEventListener('click', async () => {
+    copyStatus.textContent = (await copyText(collectReport()))
+      ? (copyButton.dataset.copied ?? '')
+      : (copyButton.dataset.copyFailed ?? '');
+  });
+</script>

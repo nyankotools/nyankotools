@@ -1,0 +1,299 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { duplicateFileFinderContent } from '../../i18n/tools/duplicate-file-finder';
+import { MAX_FILE_SIZE } from '../../lib/tools/duplicate-file-finder';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = duplicateFileFinderContent[locale];
+const maxMb = String(MAX_FILE_SIZE / 1024 / 1024);
+---
+
+<ToolShell t={t}>
+  <div
+    id="dff-root"
+    data-max-mb={maxMb}
+    data-max-bytes={MAX_FILE_SIZE}
+    data-progress={t.progress}
+    data-loaded-files={t.loadedFiles}
+    data-summary={t.summary}
+    data-no-duplicates={t.noDuplicates}
+    data-group-title={t.groupTitle}
+    data-error-too-large={t.errorTooLarge}
+    data-error-read-failed={t.errorReadFailed}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-csv-header={JSON.stringify(t.csvHeader)}
+  >
+    <label for="dff-file-input" class="ui-label">
+      {t.filesLabel}
+    </label>
+    <div id="dff-dropzone" class="ui-dropzone">
+      <input id="dff-file-input" type="file" multiple class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+
+    <div class="mt-4">
+      <label for="dff-folder-input" class="ui-label">
+        {t.folderLabel}
+      </label>
+      <input id="dff-folder-input" type="file" class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+        {t.folderHint}
+      </p>
+    </div>
+
+    <p
+      id="dff-error"
+      role="alert"
+      hidden
+      class="mt-2 text-sm text-red-600 dark:text-red-400"
+    ></p>
+
+    <p
+      id="dff-status"
+      class="mt-4 text-sm text-gray-700 dark:text-gray-300"
+      aria-live="polite"
+    ></p>
+
+    <div class="mt-3 flex flex-wrap gap-2">
+      <button id="dff-copy-button" type="button" class="ui-btn" disabled>
+        {t.copy}
+      </button>
+      <button id="dff-csv-button" type="button" class="ui-btn" disabled>
+        {t.csv}
+      </button>
+      <button id="dff-clear-button" type="button" class="ui-btn" disabled>
+        {t.clear}
+      </button>
+    </div>
+
+    <p
+      id="dff-summary"
+      class="mt-4 text-sm font-semibold text-gray-900 dark:text-gray-100"
+      role="status"
+      hidden
+    ></p>
+    <div id="dff-results" class="mt-3 space-y-4"></div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { fill } from '../../lib/format-template';
+  import {
+    buildDuplicateGroups,
+    filesToHash,
+    formatBytes,
+    groupsToCsv,
+    groupsToText,
+    sha256Hex,
+    summarizeGroups,
+    type DuplicateGroup,
+    type FileInfo,
+  } from '../../lib/tools/duplicate-file-finder';
+
+  const root = document.getElementById('dff-root')!;
+  const dropzone = document.getElementById('dff-dropzone')!;
+  const fileInput = document.getElementById(
+    'dff-file-input',
+  ) as HTMLInputElement;
+  const folderInput = document.getElementById(
+    'dff-folder-input',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('dff-error')!;
+  const statusEl = document.getElementById('dff-status')!;
+  const summaryEl = document.getElementById('dff-summary')!;
+  const resultsEl = document.getElementById('dff-results')!;
+  const copyButton = document.getElementById(
+    'dff-copy-button',
+  ) as HTMLButtonElement;
+  const csvButton = document.getElementById(
+    'dff-csv-button',
+  ) as HTMLButtonElement;
+  const clearButton = document.getElementById(
+    'dff-clear-button',
+  ) as HTMLButtonElement;
+
+  const d = root.dataset;
+  const maxBytes = Number(d.maxBytes);
+  const csvHeader = JSON.parse(d.csvHeader ?? '[]') as [
+    string,
+    string,
+    string,
+    string,
+  ];
+
+  interface Item {
+    info: FileInfo;
+    file: File;
+    key: string;
+  }
+  let items: Item[] = [];
+  let nextId = 1;
+  const hashCache = new Map<number, string>();
+  const failed = new Set<number>();
+  let groups: DuplicateGroup[] = [];
+  /** 新しい解析が始まったら古い解析を打ち切るための番号 */
+  let runToken = 0;
+
+  function groupTitle(index: number, g: DuplicateGroup) {
+    return fill(d.groupTitle ?? '', {
+      index: String(index),
+      count: String(g.files.length),
+      size: formatBytes(g.size),
+      wasted: formatBytes(g.wastedBytes),
+    });
+  }
+
+  function renderGroups() {
+    resultsEl.textContent = '';
+    const summary = summarizeGroups(groups);
+    summaryEl.hidden = false;
+    summaryEl.textContent =
+      groups.length === 0
+        ? (d.noDuplicates ?? '')
+        : fill(d.summary ?? '', {
+            groups: String(summary.groupCount),
+            files: String(summary.fileCount),
+            wasted: formatBytes(summary.wastedBytes),
+          });
+    groups.forEach((g, i) => {
+      const card = document.createElement('section');
+      card.className =
+        'rounded-lg border border-gray-200 p-4 dark:border-gray-700';
+      const title = document.createElement('h2');
+      title.className =
+        'text-sm font-semibold text-gray-900 dark:text-gray-100';
+      title.textContent = groupTitle(i + 1, g);
+      const list = document.createElement('ul');
+      list.className =
+        'mt-2 list-disc space-y-1 pl-5 text-sm break-all text-gray-800 dark:text-gray-200';
+      for (const file of g.files) {
+        const li = document.createElement('li');
+        li.textContent = file.path;
+        list.append(li);
+      }
+      card.append(title, list);
+      resultsEl.append(card);
+    });
+    const has = groups.length > 0;
+    copyButton.disabled = !has;
+    csvButton.disabled = !has;
+  }
+
+  function showErrors(messages: string[]) {
+    errorEl.textContent = messages.join(' ');
+    errorEl.hidden = messages.length === 0;
+  }
+
+  async function analyze() {
+    const token = ++runToken;
+    const infos = items.map((i) => i.info);
+    const errors: string[] = [];
+    const targets = filesToHash(infos);
+    const byId = new Map(items.map((i) => [i.info.id, i]));
+    let done = 0;
+    for (const info of targets) {
+      if (token !== runToken) return;
+      done += 1;
+      if (hashCache.has(info.id) || failed.has(info.id)) continue;
+      const item = byId.get(info.id)!;
+      if (info.size > maxBytes) {
+        failed.add(info.id);
+        errors.push(
+          fill(d.errorTooLarge ?? '', {
+            name: info.path,
+            max: d.maxMb ?? '',
+          }),
+        );
+        continue;
+      }
+      statusEl.textContent = fill(d.progress ?? '', {
+        done: String(done),
+        total: String(targets.length),
+      });
+      // 進捗表示を先に描画させる
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      try {
+        const buffer = await item.file.arrayBuffer();
+        hashCache.set(info.id, await sha256Hex(new Uint8Array(buffer)));
+      } catch {
+        failed.add(info.id);
+        errors.push(fill(d.errorReadFailed ?? '', { name: info.path }));
+      }
+    }
+    if (token !== runToken) return;
+    statusEl.textContent = fill(d.loadedFiles ?? '', {
+      count: String(items.length),
+    });
+    groups = buildDuplicateGroups(infos, hashCache);
+    showErrors(errors);
+    renderGroups();
+  }
+
+  function addFiles(files: File[]) {
+    const known = new Set(items.map((i) => i.key));
+    for (const file of files) {
+      const path = file.webkitRelativePath || file.name;
+      const key = `${path}\u0000${file.size}\u0000${file.lastModified}`;
+      if (known.has(key)) continue;
+      known.add(key);
+      items.push({
+        info: { id: nextId++, path, size: file.size },
+        file,
+        key,
+      });
+    }
+    clearButton.disabled = items.length === 0;
+    void analyze();
+  }
+
+  function onPick(input: HTMLInputElement) {
+    const files = Array.from(input.files ?? []);
+    input.value = '';
+    if (files.length > 0) addFiles(files);
+  }
+
+  folderInput.setAttribute('webkitdirectory', '');
+  fileInput.addEventListener('change', () => onPick(fileInput));
+  folderInput.addEventListener('change', () => onPick(folderInput));
+  enableFileDrop(dropzone, fileInput);
+
+  clearButton.addEventListener('click', () => {
+    runToken += 1;
+    items = [];
+    groups = [];
+    hashCache.clear();
+    failed.clear();
+    resultsEl.textContent = '';
+    summaryEl.hidden = true;
+    statusEl.textContent = '';
+    showErrors([]);
+    copyButton.disabled = true;
+    csvButton.disabled = true;
+    clearButton.disabled = true;
+  });
+
+  copyButton.addEventListener('click', async () => {
+    const text = groupsToText(groups, groupTitle);
+    statusEl.textContent = (await copyText(text))
+      ? (d.copied ?? '')
+      : (d.copyFailed ?? '');
+  });
+
+  csvButton.addEventListener('click', () => {
+    const csv = groupsToCsv(groups, csvHeader);
+    // Excelで文字化けしないようBOMを付ける
+    downloadBlob(
+      new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }),
+      'duplicate-files.csv',
+    );
+  });
+</script>

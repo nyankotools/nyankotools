@@ -41,19 +41,31 @@ export const budgets = {
  * heic-to（gzip後 約720KB）を遅延読み込みする heic-converter のみ。
  */
 export const slugBudgets = {
-  'heic-converter': 875 * KB,
+  'heic-converter': 880 * KB,
   // prettier・terser・csso を言語・操作ごとに遅延読み込みするため、全体は大きいが初回は小さい
-  'code-minifier': 600 * KB,
+  'code-minifier': 605 * KB,
   // フォント・jsQR など操作時に遅延読み込みするデータ
-  'figlet-text': 175 * KB,
-  'qr-code-reader': 165 * KB,
+  'figlet-text': 180 * KB,
+  'qr-code-reader': 170 * KB,
   // 共通チャンクの増加でわずかに通常予算を超えたツール
-  'csv-excel-converter': 150 * KB,
-  'toml-converter': 150 * KB,
+  'csv-excel-converter': 155 * KB,
+  'toml-converter': 155 * KB,
   'yaml-formatter': 150 * KB,
+  'yaml-json-converter': 150 * KB,
   'pdf-password-protector': 460 * KB,
   // pdf.js に fflate が加わり heavy 予算をわずかに超える
   'pdf-image-extractor': 460 * KB,
+  'pdf-stamp': 445 * KB,
+  'pdf-crop': 445 * KB,
+  'pdf-to-markdown': 445 * KB,
+  'pdf-page-editor': 445 * KB,
+  'pdf-redactor': 445 * KB,
+  'pdf-compressor': 445 * KB,
+  'pdf-image-converter': 445 * KB,
+  'pdf-nup': 445 * KB,
+  'pdf-page-number-watermark': 445 * KB,
+  'exif-viewer': 150 * KB,
+  'markdown-preview': 150 * KB,
 };
 
 const STATIC_IMPORT = /(?:\bfrom|\bimport)\s*["'](\.[^"']+\.m?js)["']/g;

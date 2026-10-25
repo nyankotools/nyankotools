@@ -1,0 +1,464 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { midiTesterContent } from '../../i18n/tools/midi-tester';
+import { MAX_LOG } from '../../lib/tools/midi-tester';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = midiTesterContent[locale];
+
+const selectClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:focus:border-blue-400 dark:focus:outline-blue-400 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100';
+
+const labels = {
+  kinds: t.kindLabels,
+  noteDetail: t.noteDetail,
+  controllerDetail: t.controllerDetail,
+  valueDetail: t.valueDetail,
+  bendDetail: t.bendDetail,
+  channelText: t.channelText,
+  portStateLog: t.portStateLog,
+  portConnected: t.portConnected,
+  portDisconnected: t.portDisconnected,
+  noInputs: t.noInputs,
+  noOutputs: t.noOutputs,
+  logEmpty: t.logEmpty,
+  statusConnecting: t.statusConnecting,
+  statusConnected: t.statusConnected,
+  unsupportedError: t.unsupportedError,
+  insecureError: t.insecureError,
+  deniedError: t.deniedError,
+  genericError: t.genericError,
+  sentMessage: t.sentMessage,
+  copiedMessage: t.copiedMessage,
+  copyFailedMessage: t.copyFailedMessage,
+};
+---
+
+<ToolShell t={t}>
+  <div id="mt-root" data-labels={JSON.stringify(labels)} data-max-log={MAX_LOG}>
+    <div class="flex flex-wrap items-center gap-3">
+      <button
+        id="mt-connect-button"
+        type="button"
+        class="ui-btn ui-btn-primary"
+      >
+        {t.connectLabel}
+      </button>
+      <p
+        id="mt-status"
+        role="status"
+        class="min-w-0 flex-1 text-sm text-gray-600 dark:text-gray-400"
+      >
+        {t.statusIdle}
+      </p>
+    </div>
+    <p id="mt-error" hidden role="alert" class="ui-error mt-3 max-w-2xl"></p>
+
+    <div class="mt-5 grid gap-5 sm:grid-cols-2">
+      <section aria-labelledby="mt-inputs-heading">
+        <h2
+          id="mt-inputs-heading"
+          class="mb-2 text-base font-bold text-gray-900 dark:text-gray-100"
+        >
+          {t.inputsHeading}
+        </h2>
+        <ul
+          id="mt-inputs"
+          class="space-y-1 text-sm text-gray-800 dark:text-gray-200"
+        >
+          <li class="text-gray-600 dark:text-gray-400">{t.noInputs}</li>
+        </ul>
+      </section>
+      <section aria-labelledby="mt-outputs-heading">
+        <h2
+          id="mt-outputs-heading"
+          class="mb-2 text-base font-bold text-gray-900 dark:text-gray-100"
+        >
+          {t.outputsHeading}
+        </h2>
+        <ul
+          id="mt-outputs"
+          class="space-y-1 text-sm text-gray-800 dark:text-gray-200"
+        >
+          <li class="text-gray-600 dark:text-gray-400">{t.noOutputs}</li>
+        </ul>
+      </section>
+    </div>
+
+    <div id="mt-send" hidden class="mt-5 grid max-w-2xl gap-3 sm:grid-cols-3">
+      <div class="sm:col-span-2">
+        <label for="mt-output-select" class="ui-label">
+          {t.outputSelectLabel}
+        </label>
+        <select id="mt-output-select" class={selectClass}></select>
+      </div>
+      <div>
+        <label for="mt-channel" class="ui-label">
+          {t.channelLabel}
+        </label>
+        <select id="mt-channel" class={selectClass}>
+          {Array.from({ length: 16 }, (_, i) => (
+            <option value={i + 1}>{i + 1}</option>
+          ))}
+        </select>
+      </div>
+      <div class="flex flex-wrap items-center gap-3 sm:col-span-3">
+        <button id="mt-send-button" type="button" class="ui-btn">
+          {t.sendTestLabel}
+        </button>
+        <span class="text-sm text-gray-600 dark:text-gray-400">
+          {t.sendTestNote}
+        </span>
+      </div>
+    </div>
+
+    <h2 class="mt-6 mb-2 text-base font-bold text-gray-900 dark:text-gray-100">
+      {t.logHeading}
+    </h2>
+    <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+      <label class="ui-check">
+        <input id="mt-show-clock" type="checkbox" />
+        {t.showClockLabel}
+      </label>
+    </div>
+    <div class="mt-2 flex flex-wrap items-center gap-2">
+      <button id="mt-clear-button" type="button" class="ui-btn">
+        {t.clearLabel}
+      </button>
+      <button id="mt-copy-button" type="button" class="ui-btn">
+        {t.copyLabel}
+      </button>
+      <span
+        id="mt-copy-status"
+        role="status"
+        class="text-sm text-gray-600 dark:text-gray-400"
+      ></span>
+    </div>
+    <div
+      class="mt-3 max-h-96 overflow-auto rounded-lg border border-gray-300 bg-white dark:border-gray-700 dark:bg-gray-900"
+      tabindex="0"
+      role="region"
+      aria-label={t.logHeading}
+    >
+      <ol
+        id="mt-log"
+        class="divide-y divide-gray-200 font-mono text-xs text-gray-900 dark:divide-gray-800 dark:text-gray-100"
+      ></ol>
+      <p id="mt-log-empty" class="p-3 text-sm text-gray-600 dark:text-gray-400">
+        {t.logEmpty}
+      </p>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    TEST_NOTE,
+    TEST_NOTE_MS,
+    TEST_VELOCITY,
+    clampChannel,
+    controllerName,
+    formatBytes,
+    isNoisy,
+    noteOffMessage,
+    noteOnMessage,
+    parseMidiMessage,
+    pushLog,
+  } from '../../lib/tools/midi-tester';
+  import type { MidiEvent, MidiKind } from '../../lib/tools/midi-tester';
+
+  interface Labels {
+    kinds: Record<MidiKind, string>;
+    noteDetail: string;
+    controllerDetail: string;
+    valueDetail: string;
+    bendDetail: string;
+    channelText: string;
+    portStateLog: string;
+    portConnected: string;
+    portDisconnected: string;
+    noInputs: string;
+    noOutputs: string;
+    logEmpty: string;
+    statusConnecting: string;
+    statusConnected: string;
+    unsupportedError: string;
+    insecureError: string;
+    deniedError: string;
+    genericError: string;
+    sentMessage: string;
+    copiedMessage: string;
+    copyFailedMessage: string;
+  }
+
+  interface LogEntry {
+    time: string;
+    port: string;
+    type: string;
+    detail: string;
+    bytes: string;
+  }
+
+  const root = document.getElementById('mt-root')!;
+  const L = JSON.parse(root.dataset.labels ?? '{}') as Labels;
+  const maxLog = Number(root.dataset.maxLog) || 200;
+  const connectButton = document.getElementById(
+    'mt-connect-button',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('mt-status')!;
+  const errorEl = document.getElementById('mt-error')!;
+  const inputsEl = document.getElementById('mt-inputs')!;
+  const outputsEl = document.getElementById('mt-outputs')!;
+  const sendBox = document.getElementById('mt-send')!;
+  const outputSelect = document.getElementById(
+    'mt-output-select',
+  ) as HTMLSelectElement;
+  const channelSelect = document.getElementById(
+    'mt-channel',
+  ) as HTMLSelectElement;
+  const sendButton = document.getElementById(
+    'mt-send-button',
+  ) as HTMLButtonElement;
+  const showClock = document.getElementById(
+    'mt-show-clock',
+  ) as HTMLInputElement;
+  const clearButton = document.getElementById(
+    'mt-clear-button',
+  ) as HTMLButtonElement;
+  const copyButton = document.getElementById(
+    'mt-copy-button',
+  ) as HTMLButtonElement;
+  const copyStatus = document.getElementById('mt-copy-status')!;
+  const logEl = document.getElementById('mt-log')!;
+  const logEmpty = document.getElementById('mt-log-empty')!;
+
+  let access: MIDIAccess | null = null;
+  let log: LogEntry[] = [];
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function fill(template: string, values: Record<string, string | number>) {
+    return template.replace(/\{(\w+)\}/g, (m, key: string) =>
+      key in values ? String(values[key]) : m,
+    );
+  }
+
+  function describe(event: MidiEvent): string {
+    switch (event.kind) {
+      case 'noteOn':
+      case 'noteOff':
+      case 'polyPressure':
+        return fill(L.noteDetail, {
+          note: event.noteName ?? '',
+          num: event.note ?? 0,
+          value: event.value ?? 0,
+        });
+      case 'controlChange':
+        return fill(L.controllerDetail, {
+          controller: event.controller ?? 0,
+          name: controllerName(event.controller ?? -1) ?? '-',
+          value: event.value ?? 0,
+        }).replace(' - =', ' =');
+      case 'pitchBend':
+        return fill(L.bendDetail, { bend: event.bend ?? 0 });
+      case 'programChange':
+      case 'channelPressure':
+        return fill(L.valueDetail, { value: event.value ?? 0 });
+      default:
+        return '';
+    }
+  }
+
+  function timeText(date: Date): string {
+    const p = (n: number, w = 2) => String(n).padStart(w, '0');
+    return `${p(date.getHours())}:${p(date.getMinutes())}:${p(date.getSeconds())}.${p(date.getMilliseconds(), 3)}`;
+  }
+
+  function renderLog() {
+    logEmpty.hidden = log.length > 0;
+    const items = log.map((entry) => {
+      const li = document.createElement('li');
+      li.className = 'flex flex-wrap gap-x-3 px-3 py-1.5';
+      const parts: [string, string][] = [
+        [entry.time, 'text-gray-600 dark:text-gray-400'],
+        [entry.port, 'text-gray-600 dark:text-gray-400'],
+        [entry.type, 'font-bold'],
+        [entry.detail, ''],
+        [entry.bytes, 'text-gray-600 dark:text-gray-400'],
+      ];
+      for (const [text, cls] of parts) {
+        if (!text) continue;
+        const span = document.createElement('span');
+        span.className = cls;
+        span.textContent = text;
+        li.append(span);
+      }
+      return li;
+    });
+    logEl.replaceChildren(...items);
+  }
+
+  function addLog(entry: LogEntry) {
+    log = pushLog(log, entry, maxLog);
+    renderLog();
+  }
+
+  function onMessage(port: MIDIInput, e: MIDIMessageEvent) {
+    if (!e.data) return;
+    const event = parseMidiMessage(e.data);
+    if (!event) return;
+    if (isNoisy(event) && !showClock.checked) return;
+    const type =
+      L.kinds[event.kind] +
+      (event.channel !== null
+        ? ` ${fill(L.channelText, { ch: event.channel })}`
+        : '');
+    addLog({
+      time: timeText(new Date()),
+      port: port.name ?? port.id,
+      type,
+      detail: describe(event),
+      bytes: formatBytes(event.bytes),
+    });
+  }
+
+  function portItem(port: MIDIPort): HTMLLIElement {
+    const li = document.createElement('li');
+    const state =
+      port.state === 'connected' ? L.portConnected : L.portDisconnected;
+    li.textContent = `${port.name ?? port.id}${port.manufacturer ? ` (${port.manufacturer})` : ''} - ${state}`;
+    return li;
+  }
+
+  function refreshPorts() {
+    if (!access) return;
+    const inputs = [...access.inputs.values()];
+    const outputs = [...access.outputs.values()];
+    for (const input of inputs) {
+      input.onmidimessage = (e) => onMessage(input, e);
+    }
+    inputsEl.replaceChildren(
+      ...(inputs.length
+        ? inputs.map(portItem)
+        : [
+            Object.assign(document.createElement('li'), {
+              textContent: L.noInputs,
+            }),
+          ]),
+    );
+    outputsEl.replaceChildren(
+      ...(outputs.length
+        ? outputs.map(portItem)
+        : [
+            Object.assign(document.createElement('li'), {
+              textContent: L.noOutputs,
+            }),
+          ]),
+    );
+
+    const previous = outputSelect.value;
+    outputSelect.replaceChildren(
+      ...outputs.map((o) => {
+        const opt = document.createElement('option');
+        opt.value = o.id;
+        opt.textContent = o.name ?? o.id;
+        return opt;
+      }),
+    );
+    if (outputs.some((o) => o.id === previous)) outputSelect.value = previous;
+    sendBox.hidden = outputs.length === 0;
+  }
+
+  connectButton.addEventListener('click', async () => {
+    errorEl.hidden = true;
+    if (!window.isSecureContext) {
+      showError(L.insecureError);
+      return;
+    }
+    if (typeof navigator.requestMIDIAccess !== 'function') {
+      showError(L.unsupportedError);
+      return;
+    }
+    statusEl.textContent = L.statusConnecting;
+    try {
+      access = await navigator.requestMIDIAccess({ sysex: false });
+    } catch (err) {
+      statusEl.textContent = '';
+      const name = err instanceof DOMException ? err.name : '';
+      showError(
+        name === 'SecurityError' || name === 'NotAllowedError'
+          ? L.deniedError
+          : L.genericError,
+      );
+      return;
+    }
+    statusEl.textContent = L.statusConnected;
+    refreshPorts();
+    access.onstatechange = (e) => {
+      refreshPorts();
+      const port = e.port;
+      if (port) {
+        addLog({
+          time: timeText(new Date()),
+          port: port.name ?? port.id,
+          type: fill(L.portStateLog, {
+            name: port.type,
+            state:
+              port.state === 'connected' ? L.portConnected : L.portDisconnected,
+          }),
+          detail: '',
+          bytes: '',
+        });
+      }
+    };
+  });
+
+  sendButton.addEventListener('click', () => {
+    if (!access) return;
+    const output = access.outputs.get(outputSelect.value);
+    if (!output) return;
+    const channel = clampChannel(Number(channelSelect.value));
+    try {
+      output.send(noteOnMessage(channel, TEST_NOTE, TEST_VELOCITY));
+      window.setTimeout(() => {
+        try {
+          output.send(noteOffMessage(channel, TEST_NOTE));
+        } catch {
+          // 切断された場合は無視する
+        }
+      }, TEST_NOTE_MS);
+      statusEl.textContent = L.sentMessage;
+    } catch {
+      showError(L.genericError);
+    }
+  });
+
+  clearButton.addEventListener('click', () => {
+    log = [];
+    renderLog();
+  });
+
+  let copyTimer: number | undefined;
+  copyButton.addEventListener('click', async () => {
+    const text = log
+      .map((e) =>
+        [e.time, e.port, e.type, e.detail, e.bytes].filter(Boolean).join('  '),
+      )
+      .join('\n');
+    const ok = await copyText(text);
+    copyStatus.textContent = ok ? L.copiedMessage : L.copyFailedMessage;
+    window.clearTimeout(copyTimer);
+    copyTimer = window.setTimeout(() => (copyStatus.textContent = ''), 2000);
+  });
+
+  renderLog();
+</script>

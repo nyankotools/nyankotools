@@ -1,0 +1,589 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { videoMergerContent } from '../../i18n/tools/video-merger';
+import {
+  HEIGHT_OPTIONS,
+  MAX_CLIPS,
+  MAX_FILE_SIZE,
+  MAX_TOTAL_SECONDS,
+  MAX_TOTAL_SIZE,
+  formatDuration,
+  formatFileSize,
+} from '../../lib/tools/video-merger';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = videoMergerContent[locale];
+
+const qualityOptions = [
+  { value: 'high', label: t.qualityHigh },
+  { value: 'medium', label: t.qualityMedium },
+  { value: 'low', label: t.qualityLow },
+  { value: 'veryLow', label: t.qualityVeryLow },
+];
+
+const limitsText = t.limitsTemplate
+  .replace('{count}', String(MAX_CLIPS))
+  .replace('{file}', formatFileSize(MAX_FILE_SIZE))
+  .replace('{total}', formatFileSize(MAX_TOTAL_SIZE))
+  .replace('{duration}', formatDuration(MAX_TOTAL_SECONDS));
+---
+
+<ToolShell t={t}>
+  <div>
+    <label for="vm-file-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="vm-dropzone" class="ui-dropzone">
+      <input
+        id="vm-file-input"
+        type="file"
+        multiple
+        accept="video/*,.mkv,.mov,.m4v,.ts"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{limitsText}</p>
+    <p
+      id="vm-error"
+      role="alert"
+      hidden
+      data-unsupported={t.errorUnsupportedFile}
+      data-unreadable-template={t.errorUnreadableTemplate}
+      data-no-video-template={t.errorNoVideoTemplate}
+      data-unsupported-input={t.errorUnsupportedInput}
+      data-unsupported-output={t.errorUnsupportedOutput}
+      data-failed={t.errorFailed}
+      data-canceled={t.errorCanceled}
+      data-too-large-template={t.errorFileTooLargeTemplate}
+      data-too-many-template={t.errorTooManyTemplate}
+      data-total-too-large-template={t.errorTotalTooLargeTemplate}
+      data-total-too-long-template={t.errorTotalTooLongTemplate}
+      data-max-file={formatFileSize(MAX_FILE_SIZE)}
+      data-max-total={formatFileSize(MAX_TOTAL_SIZE)}
+      data-max-duration={formatDuration(MAX_TOTAL_SECONDS)}
+      class="ui-error mt-2"
+    ></p>
+  </div>
+
+  <div class="mt-4">
+    <h2 class="mb-2 text-lg font-bold">{t.listHeading}</h2>
+    <p id="vm-empty" class="text-sm text-gray-500 dark:text-gray-400">
+      {t.listEmpty}
+    </p>
+    <ol
+      id="vm-list"
+      hidden
+      data-info-template={t.itemInfoTemplate}
+      data-has-audio={t.itemHasAudio}
+      data-no-audio={t.itemNoAudio}
+      data-up-aria={t.moveUpAria}
+      data-down-aria={t.moveDownAria}
+      data-remove-aria={t.removeAria}
+      data-up-label={t.moveUpButton}
+      data-down-label={t.moveDownButton}
+      data-remove-label={t.removeButton}
+      class="space-y-2"
+    ></ol>
+    <p
+      id="vm-summary"
+      data-template={t.summaryTemplate}
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+  </div>
+
+  <div class="mt-4 flex flex-wrap items-start gap-4">
+    <div class="min-w-48 flex-1">
+      <label for="vm-format" class="ui-label">
+        {t.formatLabel}
+      </label>
+      <select id="vm-format" class="ui-input h-11 w-full px-3 dark:bg-gray-900">
+        <option value="mp4" selected>
+          {t.formatMp4}
+        </option>
+        <option value="webm">{t.formatWebm}</option>
+      </select>
+    </div>
+    <div class="min-w-48 flex-1">
+      <label for="vm-quality" class="ui-label">
+        {t.qualityLabel}
+      </label>
+      <select
+        id="vm-quality"
+        class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+      >
+        {qualityOptions.map((o) => (
+          <option value={o.value} selected={o.value === 'medium'}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div class="min-w-48 flex-1">
+      <label for="vm-height" class="ui-label">
+        {t.heightLabel}
+      </label>
+      <select id="vm-height" class="ui-input h-11 w-full px-3 dark:bg-gray-900">
+        {HEIGHT_OPTIONS.map((h) => (
+          <option value={String(h)}>
+            {h === 0
+              ? t.heightOriginal
+              : t.heightTemplate.replace('{height}', String(h))}
+          </option>
+        ))}
+      </select>
+    </div>
+  </div>
+
+  <label class="ui-check mt-2">
+    <input id="vm-remove-audio" type="checkbox" class="h-4 w-4" />
+    {t.removeAudioLabel}
+  </label>
+  <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{t.audioNote}</p>
+
+  <div class="mt-4 flex flex-wrap gap-3">
+    <button
+      id="vm-merge-button"
+      type="button"
+      disabled
+      class="ui-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.mergeButton}
+    </button>
+    <button id="vm-cancel-button" type="button" hidden class="ui-btn">
+      {t.cancelButton}
+    </button>
+    <button
+      id="vm-clear-button"
+      type="button"
+      disabled
+      class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      {t.clearButton}
+    </button>
+  </div>
+
+  <p
+    id="vm-status"
+    role="status"
+    hidden
+    data-loading={t.loading}
+    class="mt-3 text-sm text-gray-700 dark:text-gray-300"
+  ></p>
+
+  <div id="vm-progress-section" hidden class="mt-4">
+    <p
+      id="vm-progress-text"
+      data-template={t.progressTemplate}
+      class="mb-1 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+    <progress
+      id="vm-progress"
+      max="100"
+      value="0"
+      aria-label={t.progressLabel}
+      class="h-2 w-full"
+    ></progress>
+  </div>
+
+  <div id="vm-results-section" hidden class="mt-6">
+    <h2 class="mb-2 text-lg font-bold">{t.resultsHeading}</h2>
+    <video
+      id="vm-result-video"
+      controls
+      class="max-h-96 w-full rounded-lg border border-gray-300 bg-black dark:border-gray-700"
+    ></video>
+    <p
+      id="vm-result-info"
+      data-template={t.resultInfoTemplate}
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+    <button id="vm-download-button" type="button" class="ui-btn-primary mt-3">
+      {t.downloadButton}
+    </button>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import {
+    MAX_CLIPS,
+    MergeError,
+    buildMergedFileName,
+    checkAddLimit,
+    computeOutputSize,
+    formatDuration,
+    formatFileSize,
+    isAcceptedMediaFile,
+    isMergeOutputFormat,
+    isQualityId,
+    mergeVideos,
+    moveItem,
+    readMediaInfo,
+    removeItem,
+    sumDuration,
+    sumSize,
+    type MediaInfo,
+    type MergeHandle,
+  } from '../../lib/tools/video-merger';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  const dropzone = $('vm-dropzone');
+  const fileInput = $<HTMLInputElement>('vm-file-input');
+  const errorEl = $('vm-error');
+  const emptyEl = $('vm-empty');
+  const listEl = $('vm-list');
+  const summaryEl = $('vm-summary');
+  const formatSelect = $<HTMLSelectElement>('vm-format');
+  const qualitySelect = $<HTMLSelectElement>('vm-quality');
+  const heightSelect = $<HTMLSelectElement>('vm-height');
+  const removeAudioCheck = $<HTMLInputElement>('vm-remove-audio');
+  const mergeButton = $<HTMLButtonElement>('vm-merge-button');
+  const cancelButton = $<HTMLButtonElement>('vm-cancel-button');
+  const clearButton = $<HTMLButtonElement>('vm-clear-button');
+  const statusEl = $('vm-status');
+  const progressSection = $('vm-progress-section');
+  const progressText = $('vm-progress-text');
+  const progressBar = $<HTMLProgressElement>('vm-progress');
+  const resultsSection = $('vm-results-section');
+  const resultVideo = $<HTMLVideoElement>('vm-result-video');
+  const resultInfoEl = $('vm-result-info');
+  const downloadButton = $<HTMLButtonElement>('vm-download-button');
+
+  interface Item {
+    file: File;
+    info: MediaInfo;
+  }
+
+  let items: Item[] = [];
+  let resultBlob: Blob | null = null;
+  let resultName = '';
+  let resultUrl: string | null = null;
+  let handle: MergeHandle | null = null;
+  let generation = 0;
+  let busy: 'loading' | 'merging' | null = null;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function revokeResult() {
+    if (resultUrl) URL.revokeObjectURL(resultUrl);
+    resultUrl = null;
+    resultBlob = null;
+    resultVideo.removeAttribute('src');
+    resultVideo.load();
+    resultsSection.hidden = true;
+    resultInfoEl.textContent = '';
+  }
+
+  function summaries(list: Item[] = items) {
+    return list.map((i) => ({ size: i.file.size, duration: i.info.duration }));
+  }
+
+  function outputSize() {
+    const first = items[0];
+    if (!first) return { width: 0, height: 0 };
+    return computeOutputSize(
+      first.info.width,
+      first.info.height,
+      Number(heightSelect.value) || 0,
+    );
+  }
+
+  function setProgress(ratio: number) {
+    const percent = Math.floor(ratio * 100);
+    progressBar.value = percent;
+    progressText.textContent = (progressText.dataset.template ?? '').replace(
+      '{percent}',
+      String(percent),
+    );
+  }
+
+  function renderList() {
+    listEl.textContent = '';
+    const ds = listEl.dataset;
+    items.forEach((item, index) => {
+      const li = document.createElement('li');
+      li.className =
+        'flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 dark:border-gray-700';
+
+      const text = document.createElement('div');
+      text.className = 'min-w-0 flex-1';
+      const nameEl = document.createElement('p');
+      nameEl.className = 'truncate text-sm font-medium';
+      nameEl.textContent = `${index + 1}. ${item.file.name}`;
+      const infoEl = document.createElement('p');
+      infoEl.className = 'text-xs text-gray-500 dark:text-gray-400';
+      infoEl.textContent = (ds.infoTemplate ?? '')
+        .replace('{resolution}', `${item.info.width}×${item.info.height}`)
+        .replace('{duration}', formatDuration(item.info.duration))
+        .replace('{size}', formatFileSize(item.file.size))
+        .replace(
+          '{audio}',
+          (item.info.hasAudio ? ds.hasAudio : ds.noAudio) ?? '',
+        );
+      text.append(nameEl, infoEl);
+
+      const makeButton = (
+        action: string,
+        label: string,
+        aria: string,
+        disabled: boolean,
+      ) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className =
+          'ui-btn h-9 px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50';
+        b.textContent = label;
+        b.dataset.action = action;
+        b.dataset.index = String(index);
+        b.setAttribute('aria-label', aria.replace('{name}', item.file.name));
+        b.disabled = disabled || busy !== null;
+        return b;
+      };
+      const actions = document.createElement('div');
+      actions.className = 'flex gap-2';
+      actions.append(
+        makeButton('up', ds.upLabel ?? '', ds.upAria ?? '', index === 0),
+        makeButton(
+          'down',
+          ds.downLabel ?? '',
+          ds.downAria ?? '',
+          index === items.length - 1,
+        ),
+        makeButton('remove', ds.removeLabel ?? '', ds.removeAria ?? '', false),
+      );
+      li.append(text, actions);
+      listEl.append(li);
+    });
+  }
+
+  function updateUi() {
+    const locked = busy !== null;
+    fileInput.disabled = locked;
+    formatSelect.disabled = locked;
+    qualitySelect.disabled = locked;
+    heightSelect.disabled = locked;
+    removeAudioCheck.disabled = locked;
+    mergeButton.hidden = busy === 'merging';
+    cancelButton.hidden = busy !== 'merging';
+    mergeButton.disabled = locked || items.length === 0;
+    clearButton.disabled = locked || items.length === 0;
+    progressSection.hidden = busy !== 'merging';
+    statusEl.hidden = busy !== 'loading';
+    if (busy === 'loading')
+      statusEl.textContent = statusEl.dataset.loading ?? '';
+    emptyEl.hidden = items.length > 0;
+    listEl.hidden = items.length === 0;
+    if (items.length === 0) {
+      summaryEl.textContent = '';
+    } else {
+      const size = outputSize();
+      summaryEl.textContent = (summaryEl.dataset.template ?? '')
+        .replace('{count}', String(items.length))
+        .replace('{duration}', formatDuration(sumDuration(summaries())))
+        .replace('{size}', formatFileSize(sumSize(summaries())))
+        .replace('{resolution}', `${size.width}×${size.height}`);
+    }
+    renderList();
+  }
+
+  function setItems(next: Item[]) {
+    items = next;
+    revokeResult();
+    updateUi();
+  }
+
+  function limitMessage(code: string): string {
+    const ds = errorEl.dataset;
+    switch (code) {
+      case 'tooMany':
+        return (ds.tooManyTemplate ?? '').replace('{max}', String(MAX_CLIPS));
+      case 'fileTooLarge':
+        return (ds.tooLargeTemplate ?? '').replace('{max}', ds.maxFile ?? '');
+      case 'totalTooLarge':
+        return (ds.totalTooLargeTemplate ?? '').replace(
+          '{max}',
+          ds.maxTotal ?? '',
+        );
+      default:
+        return (ds.totalTooLongTemplate ?? '').replace(
+          '{max}',
+          ds.maxDuration ?? '',
+        );
+    }
+  }
+
+  async function addFiles(files: File[]) {
+    clearError();
+    if (busy || files.length === 0) return;
+    const gen = generation;
+    busy = 'loading';
+    updateUi();
+    let next = items.slice();
+    let errorMessage = '';
+    for (const file of files) {
+      if (!isAcceptedMediaFile(file)) {
+        errorMessage = errorEl.dataset.unsupported ?? '';
+        continue;
+      }
+      let info: MediaInfo;
+      try {
+        info = await readMediaInfo(file);
+      } catch {
+        errorMessage = (errorEl.dataset.unreadableTemplate ?? '').replace(
+          '{name}',
+          file.name,
+        );
+        continue;
+      }
+      if (gen !== generation) return;
+      if (!info.hasVideo) {
+        errorMessage = (errorEl.dataset.noVideoTemplate ?? '').replace(
+          '{name}',
+          file.name,
+        );
+        continue;
+      }
+      const limit = checkAddLimit(
+        next.map((i) => ({ size: i.file.size, duration: i.info.duration })),
+        { size: file.size, duration: info.duration },
+      );
+      if (limit) {
+        errorMessage = limitMessage(limit);
+        if (limit === 'tooMany') break;
+        continue;
+      }
+      next = [...next, { file, info }];
+    }
+    if (gen !== generation) return;
+    busy = null;
+    if (errorMessage) showError(errorMessage);
+    setItems(next);
+  }
+
+  const errorKeyByCode: Record<string, string> = {
+    'unsupported-input': 'unsupportedInput',
+    'unsupported-output': 'unsupportedOutput',
+    canceled: 'canceled',
+    failed: 'failed',
+  };
+
+  async function startMerge() {
+    if (busy || items.length === 0) return;
+    clearError();
+    revokeResult();
+
+    const format = isMergeOutputFormat(formatSelect.value)
+      ? formatSelect.value
+      : 'mp4';
+    const quality = isQualityId(qualitySelect.value)
+      ? qualitySelect.value
+      : 'medium';
+    const sources = items.slice();
+    const gen = generation;
+    const totalDuration = sumDuration(summaries(sources));
+
+    busy = 'merging';
+    updateUi();
+    setProgress(0);
+    const current = mergeVideos(
+      sources.map((s) => ({
+        file: s.file,
+        duration: s.info.duration,
+        hasAudio: s.info.hasAudio,
+      })),
+      {
+        format,
+        quality,
+        maxHeight: Number(heightSelect.value) || 0,
+        removeAudio: removeAudioCheck.checked,
+        firstWidth: sources[0].info.width,
+        firstHeight: sources[0].info.height,
+        onProgress: (ratio) => {
+          if (gen === generation) setProgress(ratio);
+        },
+      },
+    );
+    handle = current;
+
+    try {
+      const { blob } = await current.promise;
+      if (gen !== generation) return;
+      resultBlob = blob;
+      resultName = buildMergedFileName(
+        sources.map((s) => s.file.name),
+        format,
+      );
+      resultUrl = URL.createObjectURL(blob);
+      resultVideo.src = resultUrl;
+      resultInfoEl.textContent = (resultInfoEl.dataset.template ?? '')
+        .replace('{size}', formatFileSize(blob.size))
+        .replace('{duration}', formatDuration(totalDuration));
+      resultsSection.hidden = false;
+    } catch (e) {
+      if (gen !== generation) return;
+      const code = e instanceof MergeError ? e.code : 'failed';
+      showError(errorEl.dataset[errorKeyByCode[code] ?? 'failed'] ?? '');
+    } finally {
+      if (handle === current) handle = null;
+      if (gen === generation) {
+        busy = null;
+        updateUi();
+      }
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    const files = Array.from(fileInput.files ?? []);
+    fileInput.value = '';
+    void addFiles(files);
+  });
+
+  enableFileDrop(dropzone, fileInput);
+
+  listEl.addEventListener('click', (e) => {
+    const target = (e.target as HTMLElement).closest('button');
+    if (!target || busy) return;
+    const index = Number(target.dataset.index);
+    clearError();
+    if (target.dataset.action === 'up') setItems(moveItem(items, index, -1));
+    else if (target.dataset.action === 'down') {
+      setItems(moveItem(items, index, 1));
+    } else if (target.dataset.action === 'remove') {
+      setItems(removeItem(items, index));
+    }
+  });
+
+  heightSelect.addEventListener('change', updateUi);
+  mergeButton.addEventListener('click', () => void startMerge());
+  cancelButton.addEventListener('click', () => handle?.cancel());
+  clearButton.addEventListener('click', () => {
+    generation++;
+    handle?.cancel();
+    handle = null;
+    busy = null;
+    clearError();
+    setItems([]);
+  });
+  downloadButton.addEventListener('click', () => {
+    if (resultBlob) downloadBlob(resultBlob, resultName);
+  });
+
+  updateUi();
+</script>

@@ -1,0 +1,294 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { screenCaptureContent } from '../../i18n/tools/screen-capture';
+import { DELAY_OPTIONS } from '../../lib/tools/screen-capture';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = screenCaptureContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="sc-root"
+    data-countdown={t.countdown}
+    data-capturing={t.capturing}
+    data-size-info={t.sizeInfo}
+    data-error-cancelled={t.errors.cancelled}
+    data-error-unsupported={t.errors.unsupported}
+    data-error-insecure={t.errors.insecure}
+    data-error-unknown={t.errors.unknown}
+    data-error-frame={t.errors.frame}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+  >
+    <label for="sc-delay" class="ui-label">
+      {t.delayLabel}
+    </label>
+    <select id="sc-delay" class="ui-input h-11 w-40 px-3 dark:bg-gray-900">
+      {DELAY_OPTIONS.map((n) => (
+        <option value={n}>
+          {n === 0 ? t.delayNone : t.delayOption.replace('{n}', String(n))}
+        </option>
+      ))}
+    </select>
+
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button id="sc-capture" type="button" class="ui-btn-primary h-12">
+        {t.captureLabel}
+      </button>
+      <span
+        id="sc-status"
+        hidden
+        role="status"
+        class="text-sm font-medium text-blue-700 dark:text-blue-400"
+      ></span>
+    </div>
+    <p id="sc-idle" class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+      {t.idleMessage}
+    </p>
+    <p id="sc-error" hidden role="alert" class="ui-error mt-4 max-w-2xl"></p>
+    <p id="sc-unsupported" hidden class="ui-error mt-2 max-w-2xl">
+      {t.unsupportedMessage}
+    </p>
+
+    <div id="sc-result" hidden class="mt-6 max-w-3xl">
+      <h2 class="mb-2 text-lg font-bold">{t.previewHeading}</h2>
+      <img
+        id="sc-image"
+        alt={t.previewAriaLabel}
+        class="h-auto w-full rounded-lg border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-800"
+      />
+      <p id="sc-size" class="mt-2 text-sm text-gray-600 dark:text-gray-400"></p>
+      <div class="mt-3 flex flex-wrap gap-3">
+        <button id="sc-download" type="button" class="ui-btn-primary">
+          {t.downloadLabel}
+        </button>
+        <button id="sc-copy-button" type="button" class="ui-btn">
+          {t.copyLabel}
+        </button>
+        <button id="sc-discard" type="button" class="ui-btn">
+          {t.discardLabel}
+        </button>
+      </div>
+      <p
+        id="sc-copy-status"
+        role="status"
+        class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+      ></p>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { trackEvent } from '../../lib/analytics';
+  import {
+    captureFileName,
+    classifyDisplayError,
+    formatDimensions,
+    normalizeDelay,
+    type ScreenCaptureErrorKind,
+  } from '../../lib/tools/screen-capture';
+
+  const root = document.getElementById('sc-root')!;
+  const d = root.dataset;
+  const delaySelect = document.getElementById('sc-delay') as HTMLSelectElement;
+  const captureButton = document.getElementById(
+    'sc-capture',
+  ) as HTMLButtonElement;
+  const statusEl = document.getElementById('sc-status')!;
+  const idleEl = document.getElementById('sc-idle')!;
+  const errorEl = document.getElementById('sc-error')!;
+  const unsupportedEl = document.getElementById('sc-unsupported')!;
+  const resultEl = document.getElementById('sc-result')!;
+  const imageEl = document.getElementById('sc-image') as HTMLImageElement;
+  const sizeEl = document.getElementById('sc-size')!;
+  const downloadButton = document.getElementById(
+    'sc-download',
+  ) as HTMLButtonElement;
+  const copyButton = document.getElementById(
+    'sc-copy-button',
+  ) as HTMLButtonElement;
+  const discardButton = document.getElementById(
+    'sc-discard',
+  ) as HTMLButtonElement;
+  const copyStatus = document.getElementById('sc-copy-status')!;
+
+  const ERROR_TEXT: Record<ScreenCaptureErrorKind | 'frame', string> = {
+    cancelled: d.errorCancelled ?? '',
+    unsupported: d.errorUnsupported ?? '',
+    insecure: d.errorInsecure ?? '',
+    unknown: d.errorUnknown ?? '',
+    frame: d.errorFrame ?? '',
+  };
+
+  let stream: MediaStream | null = null;
+  let busy = false;
+  let blob: Blob | null = null;
+  let blobUrl: string | null = null;
+
+  if (!navigator.mediaDevices?.getDisplayMedia && window.isSecureContext) {
+    unsupportedEl.hidden = false;
+    captureButton.disabled = true;
+  }
+
+  function showError(kind: ScreenCaptureErrorKind | 'frame') {
+    errorEl.textContent = ERROR_TEXT[kind];
+    errorEl.hidden = false;
+  }
+
+  function releaseStream() {
+    stream?.getTracks().forEach((track) => track.stop());
+    stream = null;
+  }
+
+  function clearResult() {
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
+    blobUrl = null;
+    blob = null;
+    imageEl.removeAttribute('src');
+    copyStatus.textContent = '';
+    resultEl.hidden = true;
+  }
+
+  function setStatus(text: string | null) {
+    statusEl.hidden = text === null;
+    statusEl.textContent = text ?? '';
+  }
+
+  const sleep = (ms: number) =>
+    new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+
+  /** 共有の映像から1フレームだけ取り出して PNG にする。 */
+  async function grabFrame(media: MediaStream): Promise<Blob | null> {
+    const video = document.createElement('video');
+    video.muted = true;
+    video.playsInline = true;
+    video.srcObject = media;
+    try {
+      try {
+        await video.play();
+      } catch {
+        return null;
+      }
+      // 最初のフレームが描画されるまで待つ
+      for (
+        let i = 0;
+        i < 50 && (video.readyState < 2 || !video.videoWidth);
+        i++
+      )
+        await sleep(100);
+      if (!video.videoWidth || !video.videoHeight) return null;
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+      ctx.drawImage(video, 0, 0);
+      return await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, 'image/png'),
+      );
+    } finally {
+      video.pause();
+      video.srcObject = null;
+    }
+  }
+
+  async function capture() {
+    if (busy) return;
+    busy = true;
+    captureButton.disabled = true;
+    errorEl.hidden = true;
+    try {
+      if (!navigator.mediaDevices?.getDisplayMedia) {
+        showError(window.isSecureContext ? 'unsupported' : 'insecure');
+        return;
+      }
+      let media: MediaStream;
+      try {
+        media = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: false,
+        });
+      } catch (error) {
+        showError(
+          classifyDisplayError((error as DOMException | undefined)?.name),
+        );
+        return;
+      }
+      stream = media;
+      let aborted = false;
+      media.getVideoTracks()[0]?.addEventListener('ended', () => {
+        aborted = true;
+      });
+
+      idleEl.hidden = true;
+      const delay = normalizeDelay(Number(delaySelect.value));
+      for (let left = delay; left > 0; left--) {
+        setStatus((d.countdown ?? '').replace('{n}', String(left)));
+        await sleep(1000);
+        if (aborted) break;
+      }
+      if (aborted) {
+        showError('cancelled');
+        return;
+      }
+      setStatus(d.capturing ?? '');
+      const png = await grabFrame(media);
+      if (!png) {
+        showError('frame');
+        return;
+      }
+      clearResult();
+      blob = png;
+      blobUrl = URL.createObjectURL(png);
+      imageEl.onload = () => {
+        sizeEl.textContent = (d.sizeInfo ?? '').replace(
+          '{size}',
+          formatDimensions(imageEl.naturalWidth, imageEl.naturalHeight),
+        );
+      };
+      imageEl.src = blobUrl;
+      resultEl.hidden = false;
+    } finally {
+      // 成否にかかわらず、撮影後は必ず共有を止める
+      releaseStream();
+      setStatus(null);
+      idleEl.hidden = false;
+      captureButton.disabled = false;
+      busy = false;
+    }
+  }
+
+  captureButton.addEventListener('click', () => void capture());
+
+  downloadButton.addEventListener('click', () => {
+    if (!blob) return;
+    downloadBlob(blob, captureFileName(new Date()));
+  });
+
+  copyButton.addEventListener('click', async () => {
+    if (!blob) return;
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({ 'image/png': blob }),
+      ]);
+      trackEvent('copy');
+      copyStatus.textContent = d.copied ?? '';
+    } catch {
+      copyStatus.textContent = d.copyFailed ?? '';
+    }
+  });
+
+  discardButton.addEventListener('click', clearResult);
+
+  window.addEventListener('pagehide', () => {
+    releaseStream();
+    if (blobUrl) URL.revokeObjectURL(blobUrl);
+  });
+</script>

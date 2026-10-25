@@ -1,0 +1,429 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { subtitleConverterContent } from '../../i18n/tools/subtitle-converter';
+import { FRAME_RATES } from '../../lib/tools/subtitle-converter';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = subtitleConverterContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="sub-root"
+    data-detected-template={t.detectedTemplate}
+    data-invalid-template={t.invalidTemplate}
+    data-summary-template={t.summaryTemplate}
+    data-skipped-template={t.skippedTemplate}
+    data-dropped-template={t.droppedTemplate}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-error-offset-invalid={t.errorOffsetInvalid}
+    data-error-offset-out-of-range={t.errorOffsetOutOfRange}
+    data-error-fps-pair={t.errorFpsPair}
+    data-error-no-cues={t.errorNoCues}
+    data-error-read-failed={t.errorReadFailed}
+    data-label-utf8={t.encodingUtf8}
+    data-label-shift-jis={t.encodingShiftJis}
+  >
+    <label for="sub-file-input" class="ui-label">
+      {t.fileLabel}
+    </label>
+    <div id="sub-dropzone" class="ui-dropzone">
+      <input
+        id="sub-file-input"
+        type="file"
+        accept=".srt,.vtt,.txt,text/vtt,text/plain"
+        class="ui-file"
+      />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.fileHint}</p>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-end gap-4">
+      <div class="min-w-48 flex-1">
+        <label for="sub-encoding" class="ui-label">
+          {t.encodingLabel}
+        </label>
+        <select
+          id="sub-encoding"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          <option value="auto" selected>
+            {t.encodingAuto}
+          </option>
+          <option value="utf-8">{t.encodingUtf8}</option>
+          <option value="shift_jis">{t.encodingShiftJis}</option>
+        </select>
+      </div>
+      <div class="min-w-48 flex-1">
+        <label for="sub-format" class="ui-label">
+          {t.formatLabel}
+        </label>
+        <select
+          id="sub-format"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          <option value="vtt" selected>
+            {t.formatVtt}
+          </option>
+          <option value="srt">{t.formatSrt}</option>
+        </select>
+      </div>
+    </div>
+    <p
+      id="sub-detected"
+      aria-live="polite"
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    ></p>
+    <p
+      id="sub-invalid"
+      hidden
+      class="mt-2 max-w-2xl rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300"
+    ></p>
+
+    <div class="mt-4">
+      <label for="sub-input" class="ui-label">
+        {t.inputLabel}
+      </label>
+      <textarea
+        id="sub-input"
+        spellcheck="false"
+        placeholder={t.inputPlaceholder}
+        class="ui-input h-56 w-full p-3 font-mono text-sm dark:bg-gray-900"
+      ></textarea>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-start gap-4">
+      <div class="min-w-48 flex-1">
+        <label for="sub-offset" class="ui-label">
+          {t.offsetLabel}
+        </label>
+        <input
+          id="sub-offset"
+          type="text"
+          inputmode="decimal"
+          autocomplete="off"
+          value="0"
+          aria-describedby="sub-offset-hint"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        />
+        <p
+          id="sub-offset-hint"
+          class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+        >
+          {t.offsetHint}
+        </p>
+      </div>
+      <div class="min-w-48 flex-1">
+        <label for="sub-fps-from" class="ui-label">
+          {t.fpsFromLabel}
+        </label>
+        <select
+          id="sub-fps-from"
+          aria-describedby="sub-fps-hint"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          <option value="none" selected>
+            {t.fpsNone}
+          </option>
+          {FRAME_RATES.map((r) => (
+            <option value={String(r)}>{r} fps</option>
+          ))}
+        </select>
+      </div>
+      <div class="min-w-48 flex-1">
+        <label for="sub-fps-to" class="ui-label">
+          {t.fpsToLabel}
+        </label>
+        <select
+          id="sub-fps-to"
+          aria-describedby="sub-fps-hint"
+          class="ui-input h-11 w-full px-3 dark:bg-gray-900"
+        >
+          <option value="none" selected>
+            {t.fpsNone}
+          </option>
+          {FRAME_RATES.map((r) => (
+            <option value={String(r)}>{r} fps</option>
+          ))}
+        </select>
+      </div>
+    </div>
+    <p id="sub-fps-hint" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+      {t.fpsHint}
+    </p>
+
+    <p id="sub-error" role="alert" hidden class="ui-error mt-3"></p>
+
+    <div class="mt-4">
+      <label for="sub-output" class="ui-label">
+        {t.outputLabel}
+      </label>
+      <textarea
+        id="sub-output"
+        readonly
+        spellcheck="false"
+        class="ui-input h-56 w-full p-3 font-mono text-sm dark:bg-gray-900"
+      ></textarea>
+      <p
+        id="sub-summary"
+        class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+      ></p>
+      <p
+        id="sub-notice"
+        hidden
+        class="mt-2 max-w-2xl rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300"
+      ></p>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <button
+        id="sub-copy-button"
+        type="button"
+        disabled
+        class="ui-btn disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {t.copyButton}
+      </button>
+      <button
+        id="sub-download-button"
+        type="button"
+        disabled
+        class="ui-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {t.downloadButton}
+      </button>
+      <button id="sub-clear-button" type="button" class="ui-btn">
+        {t.clearButton}
+      </button>
+      <span
+        id="sub-copy-status"
+        role="status"
+        class="text-sm text-green-700 dark:text-green-400"
+      ></span>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { downloadBlob } from '../../lib/download';
+  import { copyText } from '../../lib/clipboard';
+  import { fill } from '../../lib/format-template';
+  import { onTextInput } from '../../lib/input-scheduler';
+  import {
+    buildOutputFileName,
+    convertFrameRate,
+    decodeSubtitleBytes,
+    parseOffsetSeconds,
+    parseSubtitle,
+    serializeSubtitle,
+    shiftCues,
+    type SubtitleEncoding,
+    type SubtitleFormat,
+  } from '../../lib/tools/subtitle-converter';
+
+  const root = document.getElementById('sub-root')!;
+  const fileInput = document.getElementById(
+    'sub-file-input',
+  ) as HTMLInputElement;
+  const encodingSelect = document.getElementById(
+    'sub-encoding',
+  ) as HTMLSelectElement;
+  const formatSelect = document.getElementById(
+    'sub-format',
+  ) as HTMLSelectElement;
+  const detectedEl = document.getElementById('sub-detected')!;
+  const invalidEl = document.getElementById('sub-invalid')!;
+  const inputArea = document.getElementById('sub-input') as HTMLTextAreaElement;
+  const offsetInput = document.getElementById('sub-offset') as HTMLInputElement;
+  const fpsFrom = document.getElementById('sub-fps-from') as HTMLSelectElement;
+  const fpsTo = document.getElementById('sub-fps-to') as HTMLSelectElement;
+  const errorEl = document.getElementById('sub-error')!;
+  const outputArea = document.getElementById(
+    'sub-output',
+  ) as HTMLTextAreaElement;
+  const summaryEl = document.getElementById('sub-summary')!;
+  const noticeEl = document.getElementById('sub-notice')!;
+  const copyButton = document.getElementById(
+    'sub-copy-button',
+  ) as HTMLButtonElement;
+  const downloadButton = document.getElementById(
+    'sub-download-button',
+  ) as HTMLButtonElement;
+  const clearButton = document.getElementById('sub-clear-button')!;
+  const copyStatus = document.getElementById('sub-copy-status')!;
+
+  const d = root.dataset;
+  let fileBytes: Uint8Array | null = null;
+  let fileName = 'subtitle';
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = false;
+  }
+
+  function setOutput(text: string) {
+    outputArea.value = text;
+    copyButton.disabled = text === '';
+    downloadButton.disabled = text === '';
+  }
+
+  function update() {
+    copyStatus.textContent = '';
+    errorEl.hidden = true;
+    noticeEl.hidden = true;
+    summaryEl.textContent = '';
+    setOutput('');
+
+    const source = inputArea.value;
+    if (source.trim() === '') return;
+
+    const offset = parseOffsetSeconds(offsetInput.value);
+    if (!offset.ok) {
+      showError(
+        offset.error === 'invalid'
+          ? (d.errorOffsetInvalid ?? '')
+          : (d.errorOffsetOutOfRange ?? ''),
+      );
+      return;
+    }
+    const hasFrom = fpsFrom.value !== 'none';
+    const hasTo = fpsTo.value !== 'none';
+    if (hasFrom !== hasTo) {
+      showError(d.errorFpsPair ?? '');
+      return;
+    }
+
+    const parsed = parseSubtitle(source);
+    if (parsed.cues.length === 0) {
+      showError(d.errorNoCues ?? '');
+      return;
+    }
+
+    let cues = parsed.cues;
+    if (hasFrom && hasTo) {
+      cues = convertFrameRate(cues, Number(fpsFrom.value), Number(fpsTo.value));
+    }
+    cues = shiftCues(cues, offset.value);
+    const dropped = parsed.cues.length - cues.length;
+
+    const format = formatSelect.value as SubtitleFormat;
+    setOutput(serializeSubtitle(cues, format));
+    summaryEl.textContent = fill(d.summaryTemplate ?? '', {
+      from: parsed.format.toUpperCase(),
+      to: format.toUpperCase(),
+      count: String(cues.length),
+    });
+
+    const notices: string[] = [];
+    if (parsed.skipped > 0) {
+      notices.push(
+        fill(d.skippedTemplate ?? '', { count: String(parsed.skipped) }),
+      );
+    }
+    if (dropped > 0) {
+      notices.push(fill(d.droppedTemplate ?? '', { count: String(dropped) }));
+    }
+    if (notices.length > 0) {
+      noticeEl.textContent = notices.join(' ');
+      noticeEl.hidden = false;
+    }
+  }
+
+  /** 読み込んだバイト列を選択中の文字コードでテキストにする */
+  function decodeFile() {
+    if (!fileBytes) return;
+    const result = decodeSubtitleBytes(
+      fileBytes,
+      encodingSelect.value as SubtitleEncoding,
+    );
+    inputArea.value = result.text;
+    if (encodingSelect.value === 'auto') {
+      const label =
+        result.encoding === 'shift_jis'
+          ? (d.labelShiftJis ?? '')
+          : result.encoding === 'utf-8'
+            ? (d.labelUtf8 ?? '')
+            : result.encoding.toUpperCase();
+      detectedEl.textContent = fill(d.detectedTemplate ?? '', {
+        encoding: label,
+      });
+    } else {
+      detectedEl.textContent = '';
+    }
+    if (result.invalidCount > 0) {
+      invalidEl.textContent = fill(d.invalidTemplate ?? '', {
+        count: String(result.invalidCount),
+      });
+      invalidEl.hidden = false;
+    } else {
+      invalidEl.hidden = true;
+    }
+    update();
+  }
+
+  async function handleFile(file: File) {
+    try {
+      fileBytes = new Uint8Array(await file.arrayBuffer());
+    } catch {
+      fileBytes = null;
+      showError(d.errorReadFailed ?? '');
+      return;
+    }
+    fileName = file.name;
+    decodeFile();
+    // 読み込んだ形式と反対の形式を出力の初期値にする
+    const parsed = parseSubtitle(inputArea.value);
+    formatSelect.value = parsed.format === 'vtt' ? 'srt' : 'vtt';
+    update();
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    fileInput.value = '';
+    if (file) void handleFile(file);
+  });
+  enableFileDrop(document.getElementById('sub-dropzone')!, fileInput);
+
+  encodingSelect.addEventListener('change', decodeFile);
+  onTextInput(inputArea, () => {
+    // 貼り付けや手編集した内容は、読み込んだファイルのバイト列とは切り離す
+    detectedEl.textContent = '';
+    invalidEl.hidden = true;
+    update();
+  });
+  offsetInput.addEventListener('input', update);
+  formatSelect.addEventListener('change', update);
+  fpsFrom.addEventListener('change', update);
+  fpsTo.addEventListener('change', update);
+
+  copyButton.addEventListener('click', async () => {
+    const ok = await copyText(outputArea.value);
+    copyStatus.textContent = ok ? (d.copied ?? '') : (d.copyFailed ?? '');
+  });
+
+  downloadButton.addEventListener('click', () => {
+    const format = formatSelect.value as SubtitleFormat;
+    const blob = new Blob([outputArea.value], {
+      type:
+        format === 'vtt'
+          ? 'text/vtt;charset=utf-8'
+          : 'text/plain;charset=utf-8',
+    });
+    downloadBlob(blob, buildOutputFileName(fileName, format));
+  });
+
+  clearButton.addEventListener('click', () => {
+    fileBytes = null;
+    fileName = 'subtitle';
+    inputArea.value = '';
+    detectedEl.textContent = '';
+    invalidEl.hidden = true;
+    update();
+  });
+</script>

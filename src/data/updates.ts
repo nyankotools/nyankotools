@@ -1065,6 +1065,22 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-25',
+    toolSlugs: [
+      'subtitle-converter',
+      'bpm-detector',
+      'note-frequency-converter',
+    ],
+    translations: {
+      ja: {
+        summary: '3個のツールを追加しました。',
+      },
+      en: {
+        summary: 'Added 3 new tools.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

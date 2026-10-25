@@ -208,4 +208,7 @@ export const howToSlugs = [
   'pdf-crop',
   'pdf-stamp',
   'pdf-image-extractor',
+  'subtitle-converter',
+  'bpm-detector',
+  'note-frequency-converter',
 ];

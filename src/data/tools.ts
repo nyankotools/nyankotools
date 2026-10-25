@@ -14516,6 +14516,123 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'subtitle-converter',
+    category: 'media',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['media-converter', 'audio-merger'],
+    translations: {
+      ja: {
+        name: '字幕SRT⇔VTT変換・時間ずらし',
+        description:
+          'SRTとWebVTTの相互変換、字幕全体の時間シフト、フレームレート補正、Shift_JIS/UTF-8の文字コード判定に対応。',
+        keywords: [
+          '字幕',
+          'SRT',
+          'VTT',
+          'WebVTT',
+          '字幕 時間ずらし',
+          '字幕 変換',
+          'Shift_JIS',
+          'フレームレート',
+        ],
+      },
+      en: {
+        name: 'SRT ⇔ VTT Subtitle Converter',
+        description:
+          'Convert subtitles between SRT and WebVTT, shift timings, fix frame rate drift, and detect Shift_JIS or UTF-8 encoding.',
+        keywords: [
+          'srt',
+          'vtt',
+          'webvtt',
+          'subtitle converter',
+          'subtitle sync',
+          'shift subtitles',
+          'caption',
+          'frame rate',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'bpm-detector',
+    category: 'media',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['metronome-bpm', 'bpm-delay-calculator', 'audio-speed-changer'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '音声ファイルのBPM検出',
+        keywords: [
+          'BPM検出',
+          'BPM解析',
+          'BPM測定',
+          'テンポ検出',
+          'テンポ測定',
+          'オンセット',
+          'DJ',
+          '曲のBPM',
+        ],
+        description:
+          'MP3・WAVなどの音声ファイルからBPM(テンポ)を自動で検出。半分・2倍の候補も表示。ブラウザ完結',
+      },
+      en: {
+        name: 'BPM Detector',
+        keywords: [
+          'bpm detector',
+          'bpm finder',
+          'tempo detector',
+          'detect bpm',
+          'bpm analyzer',
+          'beats per minute',
+          'song bpm',
+          'dj',
+        ],
+        description:
+          'Detect the BPM (tempo) of an MP3 or WAV file automatically, with half and double tempo candidates. Runs in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'note-frequency-converter',
+    category: 'media',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['instrument-tuner', 'metronome-bpm', 'bpm-delay-calculator'],
+    translations: {
+      ja: {
+        name: '音名⇔周波数変換（Hz・MIDI・セント）',
+        description:
+          '音名・MIDIノート番号・周波数（Hz）を平均律で相互変換。基準ピッチ（A4=440Hzなど）を変更でき、セントのずれや全音域の周波数一覧表も確認できます',
+        keywords: [
+          '音名',
+          '周波数',
+          'Hz',
+          'MIDIノート番号',
+          'セント',
+          '平均律',
+          '基準ピッチ',
+          'A4 440Hz',
+        ],
+      },
+      en: {
+        name: 'Note to Frequency Converter (Hz, MIDI, Cents)',
+        description:
+          'Convert note names, MIDI note numbers and frequencies in Hz. Change the A4 reference pitch and see cents offsets and a frequency table',
+        keywords: [
+          'note to frequency',
+          'pitch to hz',
+          'midi note number',
+          'cents',
+          'a4 440',
+          'equal temperament',
+          'note frequency chart',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

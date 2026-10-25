@@ -121,17 +121,37 @@ const t = coinTossContent[locale];
       <label for="ct-count" class="ui-label">
         {t.countLabel}
       </label>
-      <input
-        id="ct-count"
-        type="number"
-        min="1"
-        max={MAX_TOSS_COUNT}
-        step="1"
-        value="1"
-        inputmode="numeric"
-        aria-describedby="ct-count-hint"
-        class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
-      />
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <input
+          id="ct-count"
+          type="number"
+          min="1"
+          max={MAX_TOSS_COUNT}
+          step="1"
+          value="1"
+          inputmode="numeric"
+          aria-describedby="ct-count-hint"
+          class="ui-input h-11 w-28 px-3 dark:bg-gray-900"
+        />
+        <ul class="flex items-center gap-3 text-sm text-gray-800 dark:text-gray-200">
+          <li class="flex items-center gap-1">
+            <span
+              class="ct-legend-icon h-9 w-9 shrink-0 rounded-full border-2 border-amber-500 bg-amber-200 p-0.5"
+              data-face="0"
+              aria-hidden="true"
+            ></span>
+            {t.headsLabel}
+          </li>
+          <li class="flex items-center gap-1">
+            <span
+              class="ct-legend-icon h-9 w-9 shrink-0 rounded-full border-2 border-pink-400 bg-pink-100 p-0.5"
+              data-face="1"
+              aria-hidden="true"
+            ></span>
+            {t.tailsLabel}
+          </li>
+        </ul>
+      </div>
       <p
         id="ct-count-hint"
         class="mt-1 text-sm text-gray-600 dark:text-gray-400"
@@ -424,6 +444,16 @@ const t = coinTossContent[locale];
       : (msg.copyFailed ?? '');
   });
 
+  // 表（猫）・裏（桜）の柄を、コインの絵からコピーして凡例に使う
+  const faceIcons = coinTemplate.content.querySelectorAll('svg');
+  document.querySelectorAll<HTMLElement>('.ct-legend-icon').forEach((el) => {
+    const svg = faceIcons[Number(el.dataset.face)];
+    if (svg) {
+      const icon = svg.cloneNode(true) as SVGElement;
+      icon.setAttribute('class', 'h-full w-full');
+      el.append(icon);
+    }
+  });
   layoutCoins(1);
   renderStats();
 </script>

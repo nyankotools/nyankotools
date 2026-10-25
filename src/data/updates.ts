@@ -1088,10 +1088,10 @@ export const updates: UpdateEntry[] = [
     ],
     translations: {
       ja: {
-        summary: '9個のツールを追加しました。',
+        summary: '17個のツールを追加しました。',
       },
       en: {
-        summary: 'Added 9 new tools.',
+        summary: 'Added 17 new tools.',
       },
     },
   },

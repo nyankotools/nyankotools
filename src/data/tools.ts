@@ -15013,6 +15013,156 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'bulk-file-renamer',
+    category: 'file',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['zip-tool', 'file-splitter', 'duplicate-file-finder'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: 'ファイル名一括変更',
+        keywords: [
+          'リネーム',
+          '連番',
+          '一括置換',
+          'ファイル名変更',
+          '正規表現',
+          'rename',
+          'batch rename',
+        ],
+        description:
+          '複数ファイルの名前を連番・置換・大文字小文字変換でまとめて変更し、変更後の名前でZIPに保存',
+      },
+      en: {
+        name: 'Bulk File Renamer',
+        keywords: [
+          'batch rename',
+          'rename files',
+          'sequence number',
+          'regex replace',
+          'file name',
+          'zip',
+        ],
+        description:
+          'Rename many files with numbering, find and replace, and case changes, then save them as a ZIP',
+      },
+    },
+  },
+  {
+    slug: 'hex-viewer',
+    category: 'file',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['file-type-detector', 'file-hash-calculator', 'mime-type-lookup'],
+    sensitive: true,
+    translations: {
+      ja: {
+        name: '16進ダンプビューア',
+        keywords: [
+          'バイナリビューア',
+          '16進ダンプ',
+          'hexdump',
+          'ヘックスエディタ',
+          'バイナリ表示',
+          'バイト列検索',
+          'オフセット',
+        ],
+        description:
+          'ファイルを16進とASCIIで表示するバイナリビューア。オフセットへ移動、16進・テキストでのバイト列検索に対応し、大きなファイルも軽く閲覧できます',
+      },
+      en: {
+        name: 'Hex Viewer',
+        keywords: [
+          'hex viewer',
+          'hex dump',
+          'hexdump',
+          'binary viewer',
+          'hex editor',
+          'byte search',
+          'offset',
+        ],
+        description:
+          'View any file as hex and ASCII, jump to an offset, and search for hex or text bytes, even in large files',
+      },
+    },
+  },
+  {
+    slug: 'coin-toss',
+    category: 'games',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['roulette-dice', 'janken-game'],
+    translations: {
+      ja: {
+        name: 'コイントス',
+        keywords: [
+          'コイントス',
+          'コイン投げ',
+          '表裏',
+          '表か裏か',
+          'コインフリップ',
+          '二択',
+          '順番決め',
+        ],
+        description:
+          '表か裏かをボタン1つで決めるコイントス。3Dのコインが回転し、連続で投げる回数の指定や履歴・連続記録の確認ができます。',
+      },
+      en: {
+        name: 'Coin Toss',
+        keywords: [
+          'coin toss',
+          'coin flip',
+          'heads or tails',
+          'flip a coin',
+          'coin flipper',
+          'decision maker',
+        ],
+        description:
+          'Flip a coin online and see heads or tails on a 3D coin. Flip several times in a row and track history and streaks using cryptographic randomness.',
+      },
+    },
+  },
+  {
+    slug: 'lottery-number-picker',
+    category: 'games',
+    addedAt: '2026-10-25',
+    updatedAt: '2026-10-25',
+    related: ['roulette-dice', 'random-generator'],
+    translations: {
+      ja: {
+        name: 'ロト・ナンバーズ番号ランダム選出',
+        keywords: [
+          'ロト6',
+          'ミニロト',
+          'ロト7',
+          'ナンバーズ',
+          '宝くじ',
+          '番号選び',
+          'ランダム',
+          'クイックピック',
+        ],
+        description:
+          'ロト6・ミニロト・ロト7・ナンバーズ3/4の番号をランダムに選ぶ娯楽用ツール。複数口を一括生成できます。',
+      },
+      en: {
+        name: 'Loto & Numbers Number Picker',
+        keywords: [
+          'loto 6',
+          'mini loto',
+          'loto 7',
+          'numbers 3',
+          'numbers 4',
+          'lottery',
+          'quick pick',
+          'random numbers',
+        ],
+        description:
+          'Pick random numbers for Japan’s Loto 6, Mini Loto, Loto 7 and Numbers 3/4, just for fun. Runs in your browser.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

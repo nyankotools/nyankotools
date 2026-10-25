@@ -220,4 +220,6 @@ export const howToSlugs = [
   'midi-tester',
   'duplicate-file-finder',
   'file-splitter',
+  'bulk-file-renamer',
+  'hex-viewer',
 ];

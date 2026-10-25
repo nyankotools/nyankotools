@@ -1,0 +1,603 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { bulkFileRenamerContent } from '../../i18n/tools/bulk-file-renamer';
+import { MAX_FILES } from '../../lib/tools/bulk-file-renamer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = bulkFileRenamerContent[locale];
+
+const selectClass =
+  'min-h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-2 focus:outline-blue-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-blue-400 dark:focus:outline-blue-400';
+const inputClass = 'ui-input h-11 w-full px-3 dark:bg-gray-900';
+const legendClass = 'mb-2 text-sm font-bold text-gray-900 dark:text-gray-100';
+---
+
+<ToolShell t={t}>
+  <div
+    id="br-root"
+    data-max-files={MAX_FILES}
+    data-file-summary={t.fileSummary}
+    data-summary={t.summary}
+    data-more-rows={t.moreRows}
+    data-status-ok={t.statusOk}
+    data-status-unchanged={t.statusUnchanged}
+    data-issue-empty={t.issueEmpty}
+    data-issue-duplicate={t.issueDuplicate}
+    data-issue-sanitized={t.issueSanitized}
+    data-issue-reserved={t.issueReserved}
+    data-issue-too-long={t.issueTooLong}
+    data-zip-done={t.zipDone}
+    data-error-too-many-files={t.errorTooManyFiles}
+    data-error-invalid-regex={t.errorInvalidRegex}
+    data-error-pattern-too-long={t.errorPatternTooLong}
+    data-error-invalid-number={t.errorInvalidNumber}
+    data-error-text-too-long={t.errorTextTooLong}
+    data-error-blocked={t.errorBlocked}
+    data-error-zip-too-large={t.errorZipTooLarge}
+    data-error-zip-failed={t.errorZipFailed}
+  >
+    <label for="br-input" class="ui-label">
+      {t.dropLabel}
+    </label>
+    <div id="br-drop" class="ui-dropzone">
+      <input id="br-input" type="file" multiple class="ui-file" />
+      <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">{t.dropHint}</p>
+    </div>
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <p
+        id="br-file-summary"
+        class="text-sm text-gray-700 dark:text-gray-300"
+      ></p>
+      <button id="br-clear" type="button" hidden class="ui-btn">
+        {t.clearAll}
+      </button>
+    </div>
+
+    <p id="br-error" role="alert" hidden class="ui-error mt-4 max-w-2xl"></p>
+
+    <div class="mt-4 grid gap-6 md:grid-cols-2">
+      <fieldset class="min-w-0">
+        <legend class={legendClass}>{t.replaceLegend}</legend>
+        <div class="space-y-3">
+          <div>
+            <label for="br-find" class="ui-label">
+              {t.findLabel}
+            </label>
+            <input
+              id="br-find"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              class={inputClass}
+            />
+          </div>
+          <div>
+            <label for="br-replace" class="ui-label">
+              {t.replaceLabel}
+            </label>
+            <input
+              id="br-replace"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              class={inputClass}
+            />
+          </div>
+          <div class="flex flex-wrap gap-x-6">
+            <label class="ui-check">
+              <input id="br-regex" type="checkbox" />
+              {t.regexLabel}
+            </label>
+            <label class="ui-check">
+              <input id="br-ignore-case" type="checkbox" />
+              {t.ignoreCaseLabel}
+            </label>
+          </div>
+          <div>
+            <label for="br-case" class="ui-label">
+              {t.caseLabel}
+            </label>
+            <select id="br-case" class={selectClass}>
+              <option value="none">{t.caseNone}</option>
+              <option value="lower">{t.caseLower}</option>
+              <option value="upper">{t.caseUpper}</option>
+            </select>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="min-w-0">
+        <legend class={legendClass}>{t.affixLegend}</legend>
+        <div class="space-y-3">
+          <div>
+            <label for="br-prefix" class="ui-label">
+              {t.prefixLabel}
+            </label>
+            <input
+              id="br-prefix"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              class={inputClass}
+            />
+          </div>
+          <div>
+            <label for="br-suffix" class="ui-label">
+              {t.suffixLabel}
+            </label>
+            <input
+              id="br-suffix"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              class={inputClass}
+            />
+          </div>
+        </div>
+
+        <div class="mt-6 space-y-3">
+          <p class={legendClass}>{t.extLegend}</p>
+          <div>
+            <label for="br-ext-mode" class="ui-label">
+              {t.extLabel}
+            </label>
+            <select id="br-ext-mode" class={selectClass}>
+              <option value="keep">{t.extKeep}</option>
+              <option value="lower">{t.extLower}</option>
+              <option value="upper">{t.extUpper}</option>
+              <option value="change">{t.extChange}</option>
+              <option value="remove">{t.extRemove}</option>
+            </select>
+          </div>
+          <div id="br-new-ext-wrap" hidden>
+            <label for="br-new-ext" class="ui-label">
+              {t.newExtLabel}
+            </label>
+            <input
+              id="br-new-ext"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              class={inputClass}
+            />
+          </div>
+        </div>
+      </fieldset>
+    </div>
+
+    <fieldset class="mt-6 max-w-3xl min-w-0">
+      <legend class={legendClass}>{t.numberingLegend}</legend>
+      <label class="ui-check">
+        <input id="br-num-enable" type="checkbox" />
+        {t.numberingEnable}
+      </label>
+      <div class="mt-2 grid grid-cols-2 gap-4 md:grid-cols-3">
+        <div>
+          <label for="br-num-start" class="ui-label">
+            {t.startLabel}
+          </label>
+          <input
+            id="br-num-start"
+            type="number"
+            min="0"
+            max="999999999"
+            step="1"
+            value="1"
+            inputmode="numeric"
+            class={inputClass}
+          />
+        </div>
+        <div>
+          <label for="br-num-step" class="ui-label">
+            {t.stepLabel}
+          </label>
+          <input
+            id="br-num-step"
+            type="number"
+            min="1"
+            max="99999"
+            step="1"
+            value="1"
+            inputmode="numeric"
+            class={inputClass}
+          />
+        </div>
+        <div>
+          <label for="br-num-digits" class="ui-label">
+            {t.digitsLabel}
+          </label>
+          <input
+            id="br-num-digits"
+            type="number"
+            min="1"
+            max="10"
+            step="1"
+            value="3"
+            inputmode="numeric"
+            class={inputClass}
+          />
+        </div>
+        <div>
+          <label for="br-num-position" class="ui-label">
+            {t.positionLabel}
+          </label>
+          <select id="br-num-position" class={selectClass}>
+            <option value="suffix">{t.posSuffix}</option>
+            <option value="prefix">{t.posPrefix}</option>
+            <option value="replace">{t.posReplace}</option>
+          </select>
+        </div>
+        <div>
+          <label for="br-num-sep" class="ui-label">
+            {t.separatorLabel}
+          </label>
+          <input
+            id="br-num-sep"
+            type="text"
+            value="_"
+            autocomplete="off"
+            spellcheck="false"
+            class={inputClass}
+          />
+        </div>
+        <div>
+          <label for="br-sort" class="ui-label">
+            {t.sortLabel}
+          </label>
+          <select id="br-sort" class={selectClass}>
+            <option value="selection">{t.sortSelection}</option>
+            <option value="name">{t.sortName}</option>
+          </select>
+        </div>
+      </div>
+    </fieldset>
+
+    <h2 class="mt-8 mb-2 text-lg font-bold">{t.previewHeading}</h2>
+    <p
+      id="br-summary"
+      role="status"
+      class="mb-2 text-sm text-gray-700 dark:text-gray-300"
+    ></p>
+    <p id="br-empty" class="text-sm text-gray-600 dark:text-gray-400">
+      {t.emptyList}
+    </p>
+    <div
+      id="br-table-wrap"
+      hidden
+      tabindex="0"
+      role="region"
+      aria-label={t.previewHeading}
+      class="max-h-96 overflow-auto rounded-lg border border-gray-200 dark:border-gray-700"
+    >
+      <table class="w-full min-w-[32rem] text-left text-sm">
+        <thead class="sticky top-0 bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100">
+          <tr>
+            <th scope="col" class="px-3 py-2">
+              {t.colOriginal}
+            </th>
+            <th scope="col" class="px-3 py-2">
+              {t.colRenamed}
+            </th>
+            <th scope="col" class="px-3 py-2">
+              {t.colStatus}
+            </th>
+          </tr>
+        </thead>
+        <tbody id="br-rows"></tbody>
+      </table>
+    </div>
+    <p
+      id="br-more"
+      hidden
+      class="mt-2 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+
+    <div class="mt-6 max-w-xl">
+      <label for="br-zip-name" class="ui-label">
+        {t.zipNameLabel}
+      </label>
+      <input
+        id="br-zip-name"
+        type="text"
+        value="renamed"
+        autocomplete="off"
+        spellcheck="false"
+        class={inputClass}
+      />
+    </div>
+    <button
+      id="br-zip-button"
+      type="button"
+      disabled
+      class="ui-btn-primary mt-4 h-12"
+    >
+      {t.zipButton}
+    </button>
+    <p
+      id="br-zip-status"
+      role="status"
+      class="mt-3 text-sm text-green-700 dark:text-green-400"
+    ></p>
+  </div>
+</ToolShell>
+
+<script>
+  import { downloadBlob } from '../../lib/download';
+  import { enableFileDrop } from '../../lib/file-drop';
+  import { fill } from '../../lib/format-template';
+  import {
+    MAX_FILES,
+    compareNatural,
+    planRenames,
+    type CaseMode,
+    type ExtMode,
+    type NumberPosition,
+    type RenameErrorCode,
+    type RenameIssueType,
+    type RenameOptions,
+    type RenamePlan,
+  } from '../../lib/tools/bulk-file-renamer';
+  import {
+    MAX_TOTAL_BYTES,
+    createZip,
+    formatBytes,
+    zipFileName,
+  } from '../../lib/tools/zip-tool';
+
+  const PREVIEW_LIMIT = 300;
+
+  const root = document.getElementById('br-root')!;
+  const d = root.dataset;
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const input = $<HTMLInputElement>('br-input');
+  const summaryEl = $('br-file-summary');
+  const clearButton = $<HTMLButtonElement>('br-clear');
+  const errorEl = $('br-error');
+  const findInput = $<HTMLInputElement>('br-find');
+  const replaceInput = $<HTMLInputElement>('br-replace');
+  const regexCheck = $<HTMLInputElement>('br-regex');
+  const ignoreCaseCheck = $<HTMLInputElement>('br-ignore-case');
+  const caseSelect = $<HTMLSelectElement>('br-case');
+  const prefixInput = $<HTMLInputElement>('br-prefix');
+  const suffixInput = $<HTMLInputElement>('br-suffix');
+  const extModeSelect = $<HTMLSelectElement>('br-ext-mode');
+  const newExtWrap = $('br-new-ext-wrap');
+  const newExtInput = $<HTMLInputElement>('br-new-ext');
+  const numEnable = $<HTMLInputElement>('br-num-enable');
+  const numStart = $<HTMLInputElement>('br-num-start');
+  const numStep = $<HTMLInputElement>('br-num-step');
+  const numDigits = $<HTMLInputElement>('br-num-digits');
+  const numPosition = $<HTMLSelectElement>('br-num-position');
+  const numSep = $<HTMLInputElement>('br-num-sep');
+  const sortSelect = $<HTMLSelectElement>('br-sort');
+  const previewSummary = $('br-summary');
+  const emptyEl = $('br-empty');
+  const tableWrap = $('br-table-wrap');
+  const rowsEl = $('br-rows');
+  const moreEl = $('br-more');
+  const zipNameInput = $<HTMLInputElement>('br-zip-name');
+  const zipButton = $<HTMLButtonElement>('br-zip-button');
+  const zipStatus = $('br-zip-status');
+
+  let files: File[] = [];
+  let ordered: File[] = [];
+  let plan: RenamePlan | null = null;
+
+  function showError(message: string) {
+    errorEl.textContent = message;
+    errorEl.hidden = message === '';
+  }
+
+  function readOptions(): RenameOptions {
+    return {
+      find: findInput.value,
+      replaceWith: replaceInput.value,
+      useRegex: regexCheck.checked,
+      ignoreCase: ignoreCaseCheck.checked,
+      caseMode: caseSelect.value as CaseMode,
+      prefix: prefixInput.value,
+      suffix: suffixInput.value,
+      numbering: {
+        enabled: numEnable.checked,
+        start: Number(numStart.value),
+        step: Number(numStep.value),
+        digits: Number(numDigits.value),
+        position: numPosition.value as NumberPosition,
+        separator: numSep.value,
+      },
+      extMode: extModeSelect.value as ExtMode,
+      newExt: newExtInput.value,
+    };
+  }
+
+  function planError(code: RenameErrorCode): string {
+    switch (code) {
+      case 'too-many-files':
+        return fill(d.errorTooManyFiles ?? '', { max: String(MAX_FILES) });
+      case 'invalid-regex':
+        return d.errorInvalidRegex ?? '';
+      case 'pattern-too-long':
+        return d.errorPatternTooLong ?? '';
+      case 'text-too-long':
+        return d.errorTextTooLong ?? '';
+      default:
+        return d.errorInvalidNumber ?? '';
+    }
+  }
+
+  function issueText(issue: RenameIssueType): string {
+    switch (issue) {
+      case 'empty':
+        return d.issueEmpty ?? '';
+      case 'duplicate':
+        return d.issueDuplicate ?? '';
+      case 'sanitized':
+        return d.issueSanitized ?? '';
+      case 'reserved':
+        return d.issueReserved ?? '';
+      default:
+        return d.issueTooLong ?? '';
+    }
+  }
+
+  function totalSize(): number {
+    return files.reduce((sum, f) => sum + f.size, 0);
+  }
+
+  function refresh() {
+    zipStatus.textContent = '';
+    showError('');
+    newExtWrap.hidden = extModeSelect.value !== 'change';
+    ordered =
+      sortSelect.value === 'name'
+        ? [...files].sort((a, b) => compareNatural(a.name, b.name))
+        : [...files];
+    summaryEl.textContent =
+      files.length === 0
+        ? ''
+        : fill(d.fileSummary ?? '', {
+            count: String(files.length),
+            size: formatBytes(totalSize()),
+          });
+    clearButton.hidden = files.length === 0;
+    rowsEl.replaceChildren();
+    moreEl.hidden = true;
+    previewSummary.textContent = '';
+    plan = planRenames(
+      ordered.map((f) => f.name),
+      readOptions(),
+    );
+    emptyEl.hidden = files.length > 0;
+    tableWrap.hidden = files.length === 0 || plan.error !== undefined;
+    zipButton.disabled = true;
+    if (plan.error) {
+      showError(planError(plan.error));
+      return;
+    }
+    if (files.length === 0) return;
+
+    previewSummary.textContent = fill(d.summary ?? '', {
+      changed: String(plan.changedCount),
+      total: String(plan.rows.length),
+    });
+    const fragment = document.createDocumentFragment();
+    for (const row of plan.rows.slice(0, PREVIEW_LIMIT)) {
+      const tr = document.createElement('tr');
+      tr.className = 'border-t border-gray-200 dark:border-gray-700';
+      const blocking = row.issues.some(
+        (i) => i === 'empty' || i === 'duplicate' || i === 'too-long',
+      );
+      const cells = [row.original, row.renamed];
+      for (const text of cells) {
+        const td = document.createElement('td');
+        td.className = 'px-3 py-2 break-all text-gray-900 dark:text-gray-100';
+        td.textContent = text;
+        tr.append(td);
+      }
+      const status = document.createElement('td');
+      status.className = blocking
+        ? 'px-3 py-2 font-medium text-red-700 dark:text-red-400'
+        : row.issues.length > 0
+          ? 'px-3 py-2 text-amber-800 dark:text-amber-300'
+          : 'px-3 py-2 text-gray-700 dark:text-gray-300';
+      status.textContent =
+        row.issues.length > 0
+          ? row.issues.map(issueText).join(' / ')
+          : row.changed
+            ? (d.statusOk ?? '')
+            : (d.statusUnchanged ?? '');
+      tr.append(status);
+      fragment.append(tr);
+    }
+    rowsEl.append(fragment);
+    if (plan.rows.length > PREVIEW_LIMIT) {
+      moreEl.textContent = fill(d.moreRows ?? '', {
+        n: String(plan.rows.length - PREVIEW_LIMIT),
+      });
+      moreEl.hidden = false;
+    }
+    if (plan.blocked) showError(d.errorBlocked ?? '');
+    zipButton.disabled = plan.blocked;
+  }
+
+  input.addEventListener('change', () => {
+    const picked = Array.from(input.files ?? []);
+    input.value = '';
+    if (picked.length === 0) return;
+    files.push(...picked);
+    refresh();
+  });
+
+  clearButton.addEventListener('click', () => {
+    files = [];
+    refresh();
+  });
+
+  for (const el of [
+    findInput,
+    replaceInput,
+    prefixInput,
+    suffixInput,
+    newExtInput,
+    numStart,
+    numStep,
+    numDigits,
+    numSep,
+  ]) {
+    el.addEventListener('input', refresh);
+  }
+  for (const el of [
+    regexCheck,
+    ignoreCaseCheck,
+    caseSelect,
+    extModeSelect,
+    numEnable,
+    numPosition,
+    sortSelect,
+  ]) {
+    el.addEventListener('change', refresh);
+  }
+
+  zipButton.addEventListener('click', async () => {
+    if (!plan || plan.error || plan.blocked || ordered.length === 0) return;
+    if (totalSize() > MAX_TOTAL_BYTES) {
+      showError(d.errorZipTooLarge ?? '');
+      return;
+    }
+    showError('');
+    const rows = plan.rows;
+    const source = ordered;
+    zipButton.disabled = true;
+    try {
+      const entries = await Promise.all(
+        source.map(async (file, i) => ({
+          name: rows[i].renamed,
+          data: new Uint8Array(await file.arrayBuffer()),
+        })),
+      );
+      const zip = createZip(entries, 0);
+      const name = zipFileName(zipNameInput.value);
+      downloadBlob(
+        new Blob([zip as BlobPart], { type: 'application/zip' }),
+        name,
+      );
+      zipStatus.textContent = fill(d.zipDone ?? '', {
+        count: String(entries.length),
+        name,
+      });
+    } catch {
+      showError(d.errorZipFailed ?? '');
+    } finally {
+      zipButton.disabled = plan?.blocked ?? true;
+    }
+  });
+
+  enableFileDrop($('br-drop'), input);
+  refresh();
+</script>

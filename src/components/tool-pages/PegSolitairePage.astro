@@ -1,0 +1,289 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { pegSolitaireContent } from '../../i18n/tools/peg-solitaire';
+import { BOARD_TYPES } from '../../lib/tools/peg-solitaire';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = pegSolitaireContent[locale];
+const typeNames = { english: t.typeEnglish, european: t.typeEuropean };
+---
+
+<ToolShell t={t}>
+  <section
+    id="ps-root"
+    data-cell-peg={t.cellPeg}
+    data-cell-peg-selected={t.cellPegSelected}
+    data-cell-empty={t.cellEmpty}
+    data-cell-target={t.cellTarget}
+    data-status-start={t.statusStart}
+    data-status-select={t.statusSelect}
+    data-status-selected={t.statusSelected}
+    data-status-no-moves={t.statusNoMoves}
+    data-status-perfect={t.statusPerfect}
+    data-status-solved={t.statusSolved}
+    data-status-stuck={t.statusStuck}
+    data-rank-genius={t.rankGenius}
+    data-rank-good={t.rankGood}
+    data-rank-average={t.rankAverage}
+    data-rank-beginner={t.rankBeginner}
+  >
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <span id="ps-type-label" class="ui-label">
+          {t.typeLabel}
+        </span>
+        <div class="ui-seg" role="group" aria-labelledby="ps-type-label">
+          {BOARD_TYPES.map((b) => (
+            <button
+              type="button"
+              class="ui-seg-btn"
+              data-board={b}
+              aria-pressed={b === 'english' ? 'true' : 'false'}
+            >
+              {typeNames[b]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <button id="ps-undo-button" type="button" class="ui-btn" disabled>
+        {t.undoButton}
+      </button>
+      <button id="ps-reset-button" type="button" class="ui-btn">
+        {t.resetButton}
+      </button>
+    </div>
+
+    <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
+      <div class="flex gap-2">
+        <dt>{t.remainingLabel}</dt>
+        <dd id="ps-remaining" class="font-semibold tabular-nums"></dd>
+      </div>
+      <div class="flex gap-2">
+        <dt>{t.movesLabel}</dt>
+        <dd id="ps-moves" class="font-semibold tabular-nums">
+          0
+        </dd>
+      </div>
+    </dl>
+
+    <div
+      id="ps-board"
+      role="group"
+      aria-label={t.boardLabel}
+      class="mt-3 grid w-full max-w-md grid-cols-7 gap-1 sm:gap-2"
+    ></div>
+
+    <p
+      id="ps-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+    <p
+      id="ps-rank"
+      class="min-h-6 text-sm font-semibold text-gray-800 dark:text-gray-200"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    GRID,
+    applyMove,
+    evaluate,
+    findMove,
+    isHoleIndex,
+    movesFrom,
+    newGame,
+    pegCount,
+    rankFor,
+    toRowCol,
+    undo,
+    type BoardType,
+    type GameState,
+  } from '../../lib/tools/peg-solitaire';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('ps-root');
+  const msg = root.dataset;
+  const boardEl = $('ps-board');
+  const statusEl = $('ps-status');
+  const rankEl = $('ps-rank');
+  const undoBtn = $<HTMLButtonElement>('ps-undo-button');
+  const typeButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-board]'),
+  );
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  let type: BoardType = 'english';
+  let state: GameState = newGame(type);
+  let selected: number | null = null;
+  let notice: string | null = null;
+  let cells: (HTMLButtonElement | null)[] = [];
+
+  const BASE =
+    'flex aspect-square min-w-0 items-center justify-center rounded-full border-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600';
+  const TONE_PEG =
+    'cursor-pointer border-blue-900 bg-blue-700 hover:bg-blue-600 dark:border-blue-300 dark:bg-blue-600 dark:hover:bg-blue-500';
+  const TONE_SELECTED =
+    'cursor-pointer border-amber-500 bg-blue-700 ring-4 ring-amber-400 dark:bg-blue-600';
+  const TONE_EMPTY =
+    'border-gray-400 bg-gray-200 dark:border-gray-500 dark:bg-gray-700';
+  const TONE_TARGET =
+    'cursor-pointer border-green-700 bg-green-200 hover:bg-green-300 dark:border-green-400 dark:bg-green-900 dark:hover:bg-green-800';
+
+  function buildBoard() {
+    boardEl.replaceChildren();
+    cells = [];
+    for (let i = 0; i < GRID * GRID; i++) {
+      if (!isHoleIndex(type, i)) {
+        const spacer = document.createElement('div');
+        spacer.setAttribute('aria-hidden', 'true');
+        boardEl.append(spacer);
+        cells.push(null);
+        continue;
+      }
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.index = String(i);
+      boardEl.append(b);
+      cells.push(b);
+    }
+  }
+
+  function rankText(remaining: number) {
+    const r = rankFor(remaining);
+    if (r === 'genius') return msg.rankGenius ?? '';
+    if (r === 'good') return msg.rankGood ?? '';
+    if (r === 'average') return msg.rankAverage ?? '';
+    return msg.rankBeginner ?? '';
+  }
+
+  function render() {
+    const targets = new Set(
+      selected === null
+        ? []
+        : movesFrom(type, state.pegs, selected).map((m) => m.to),
+    );
+    cells.forEach((cell, i) => {
+      if (!cell) return;
+      const { row, col } = toRowCol(i);
+      const pos = { row: String(row + 1), col: String(col + 1) };
+      let tone = TONE_EMPTY;
+      let template = msg.cellEmpty;
+      if (state.pegs[i]) {
+        const isSel = i === selected;
+        tone = isSel ? TONE_SELECTED : TONE_PEG;
+        template = isSel ? msg.cellPegSelected : msg.cellPeg;
+      } else if (targets.has(i)) {
+        tone = TONE_TARGET;
+        template = msg.cellTarget;
+      }
+      cell.className = `${BASE} ${tone}`;
+      cell.setAttribute('aria-label', fill(template, pos));
+      if (state.pegs[i]) {
+        cell.setAttribute('aria-pressed', String(i === selected));
+      } else {
+        cell.removeAttribute('aria-pressed');
+      }
+    });
+
+    const remaining = pegCount(state);
+    $('ps-remaining').textContent = String(remaining);
+    $('ps-moves').textContent = String(state.history.length);
+    undoBtn.disabled = state.history.length === 0;
+
+    const outcome = evaluate(state);
+    rankEl.textContent = '';
+    if (outcome === 'perfect') {
+      statusEl.textContent = fill(msg.statusPerfect, {
+        n: String(state.history.length),
+      });
+      rankEl.textContent = rankText(remaining);
+    } else if (outcome === 'solved') {
+      statusEl.textContent = msg.statusSolved ?? '';
+      rankEl.textContent = rankText(remaining);
+    } else if (outcome === 'stuck') {
+      statusEl.textContent = fill(msg.statusStuck, { n: String(remaining) });
+      rankEl.textContent = rankText(remaining);
+    } else if (notice) {
+      statusEl.textContent = notice;
+    } else if (selected !== null) {
+      statusEl.textContent = msg.statusSelected ?? '';
+    } else {
+      statusEl.textContent =
+        (state.history.length === 0 ? msg.statusStart : msg.statusSelect) ?? '';
+    }
+  }
+
+  function resetGame() {
+    state = newGame(type);
+    selected = null;
+    notice = null;
+    buildBoard();
+    render();
+  }
+
+  function clickCell(i: number) {
+    notice = null;
+    if (evaluate(state) !== 'playing') return;
+    if (selected !== null) {
+      const move = findMove(state, selected, i);
+      if (move) {
+        state = applyMove(state, move);
+        selected = null;
+        render();
+        return;
+      }
+    }
+    if (state.pegs[i]) {
+      if (i === selected) {
+        selected = null;
+      } else if (movesFrom(type, state.pegs, i).length === 0) {
+        selected = null;
+        notice = msg.statusNoMoves ?? '';
+      } else {
+        selected = i;
+      }
+    } else {
+      selected = null;
+    }
+    render();
+  }
+
+  boardEl.addEventListener('click', (e) => {
+    const target = (e.target as HTMLElement).closest<HTMLElement>(
+      '[data-index]',
+    );
+    if (target) clickCell(Number(target.dataset.index));
+  });
+
+  undoBtn.addEventListener('click', () => {
+    state = undo(state);
+    selected = null;
+    notice = null;
+    render();
+  });
+  $('ps-reset-button').addEventListener('click', resetGame);
+  typeButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      type = b.dataset.board as BoardType;
+      typeButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      resetGame();
+    }),
+  );
+
+  resetGame();
+</script>

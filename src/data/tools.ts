@@ -15302,6 +15302,149 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'cat-clicker',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['aim-trainer', 'whack-a-mole'],
+    translations: {
+      ja: {
+        name: '猫クリッカー',
+        keywords: [
+          'クリッカー',
+          '放置ゲーム',
+          'ねこ',
+          '猫',
+          'インクリメンタル',
+          '育成',
+        ],
+        description:
+          '猫をクリックして育てる放置系クリッカーゲーム。アップグレードで自動化、進行はブラウザに自動保存。',
+      },
+      en: {
+        name: 'Cat Clicker',
+        keywords: [
+          'cat clicker',
+          'idle game',
+          'clicker',
+          'incremental',
+          'cat game',
+        ],
+        description:
+          'A cozy idle clicker: pet the cat, buy upgrades and watch fish pile up. Progress is saved in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'tower-of-hanoi',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['memory-match', 'whack-a-mole', 'aim-trainer'],
+    translations: {
+      ja: {
+        name: 'ハノイの塔',
+        keywords: [
+          'ハノイの塔',
+          'パズル',
+          'ゲーム',
+          '再帰',
+          '最短手数',
+          '頭の体操',
+        ],
+        description:
+          '円盤3〜8枚のハノイの塔。手数を数えて最短手数と比較でき、最適解の自動再生にも対応。',
+      },
+      en: {
+        name: 'Tower of Hanoi',
+        keywords: [
+          'tower of hanoi',
+          'hanoi',
+          'puzzle',
+          'recursion',
+          'brain teaser',
+          'game',
+        ],
+        description:
+          'Play the Tower of Hanoi with 3 to 8 discs, compare your moves with the minimum, and watch the optimal solution.',
+      },
+    },
+  },
+  {
+    slug: 'flappy-cat',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['reaction-test', 'whack-a-mole', 'aim-trainer'],
+    translations: {
+      ja: {
+        name: '猫ジャンプゲーム',
+        keywords: [
+          '猫ジャンプ',
+          '1ボタンゲーム',
+          'ミニゲーム',
+          'ネコ',
+          'フラップゲーム',
+          '暇つぶし',
+          'スマホゲーム',
+        ],
+        description:
+          'クリック・タップ・スペースキーだけで猫を操り、土管のすき間をくぐる1ボタンのミニゲーム。ベストスコアも保存',
+      },
+      en: {
+        name: 'Cat Jump Game',
+        keywords: [
+          'cat jump',
+          'cat game',
+          'one button game',
+          'flap game',
+          'mini game',
+          'tap game',
+          'browser game',
+        ],
+        description:
+          'Flap a cat through pipe gaps with one button. Tap, click or press Space. Saves your best score. Free, mobile friendly.',
+      },
+    },
+  },
+  {
+    slug: 'peg-solitaire',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['memory-match', 'sudoku', 'whack-a-mole'],
+    translations: {
+      ja: {
+        name: 'ペグソリティア',
+        keywords: [
+          'ペグソリティア',
+          'ペグパズル',
+          'ソリティア',
+          '飛び越え',
+          '一人用パズル',
+          'ボードゲーム',
+          'peg solitaire',
+        ],
+        description:
+          '駒を飛び越えて取り、最後の1個を目指すひとり用パズル。英国式33穴・欧州式37穴、残数表示と1手戻す機能付き。',
+      },
+      en: {
+        name: 'Peg Solitaire',
+        keywords: [
+          'peg solitaire',
+          'solitaire',
+          'peg puzzle',
+          'marble solitaire',
+          'brainvita',
+          'jumping puzzle',
+          'board game',
+        ],
+        description:
+          'Jump pegs to remove them and leave just one. English 33-hole and European 37-hole boards, with undo.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

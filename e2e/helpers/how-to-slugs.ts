@@ -226,4 +226,8 @@ export const howToSlugs = [
   'whack-a-mole',
   'simon-game',
   'number-memory-test',
+  'cat-clicker',
+  'tower-of-hanoi',
+  'flappy-cat',
+  'peg-solitaire',
 ];

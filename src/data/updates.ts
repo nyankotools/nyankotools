@@ -1095,6 +1095,36 @@ export const updates: UpdateEntry[] = [
       },
     },
   },
+  {
+    date: '2026-10-26',
+    toolSlugs: [
+      'aim-trainer',
+      'whack-a-mole',
+      'simon-game',
+      'number-memory-test',
+      'cat-clicker',
+      'tower-of-hanoi',
+      'cat-jump',
+      'peg-solitaire',
+      'hangman',
+      'tic-tac-toe',
+      'gomoku',
+      'sokoban',
+      'blackjack',
+      'optical-illusions',
+      'one-stroke-puzzle',
+      'word-guess-game',
+      'large-number-chart',
+    ],
+    translations: {
+      ja: {
+        summary: '17個のツールを追加しました。',
+      },
+      en: {
+        summary: 'Added 17 new tools.',
+      },
+    },
+  },
 ];
 
 /** 表示用に日付の新しい順へ並び替える */

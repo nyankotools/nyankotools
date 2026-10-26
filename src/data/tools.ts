@@ -15588,6 +15588,119 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'blackjack',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['roulette-dice', 'coin-toss', 'tic-tac-toe'],
+    translations: {
+      ja: {
+        name: 'ブラックジャック',
+        description:
+          'CPUディーラーと対戦するブラックジャック。ヒット・スタンド・ダブルダウンに対応。換金できない仮想チップを使う娯楽用ゲームです。',
+        keywords: [
+          'ブラックジャック',
+          'トランプ',
+          'カードゲーム',
+          '21',
+          'ヒット',
+          'ダブルダウン',
+          'CPU対戦',
+          'blackjack',
+        ],
+      },
+      en: {
+        name: 'Blackjack',
+        description:
+          'Play blackjack against a computer dealer. Hit, stand or double down with virtual chips that have no cash value. For fun only.',
+        keywords: [
+          'blackjack',
+          'twenty-one',
+          '21',
+          'card game',
+          'hit or stand',
+          'double down',
+          'dealer',
+          'virtual chips',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'optical-illusions',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['memory-match', 'lights-out', 'contrast-checker'],
+    translations: {
+      ja: {
+        name: '錯視ギャラリー',
+        description:
+          'ミュラー・リヤー、ポンゾ、カフェウォールなど定番の錯視9種。補助線の表示や強さの調整で「実は同じ・平行」を確かめられます。',
+        keywords: [
+          '錯視',
+          '錯覚',
+          'ミュラー・リヤー',
+          'ポンゾ錯視',
+          'カフェウォール',
+          'チェッカーシャドウ',
+          'ヘルマン格子',
+          '目の錯覚',
+        ],
+      },
+      en: {
+        name: 'Optical Illusions Gallery',
+        description:
+          'Try 9 classic optical illusions such as Müller-Lyer and café wall. Show guide lines to see what is really equal or parallel.',
+        keywords: [
+          'optical illusion',
+          'visual illusion',
+          'muller-lyer',
+          'ponzo',
+          'cafe wall',
+          'checker shadow',
+          'hermann grid',
+          'eye trick',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'one-stroke-puzzle',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['sokoban', 'tower-of-hanoi', 'lights-out'],
+    translations: {
+      ja: {
+        name: '一筆書きパズル',
+        keywords: [
+          '一筆書き',
+          'オイラー路',
+          'パズル',
+          'ゲーム',
+          '一筆書きパズル',
+          '頭の体操',
+        ],
+        description:
+          '全ての線を1回ずつなぞる一筆書きパズル。難易度3段階、1手戻す・ヒント・新しい問題に対応。',
+      },
+      en: {
+        name: 'One-Stroke Puzzle',
+        keywords: [
+          'one stroke',
+          'eulerian path',
+          'draw without lifting',
+          'puzzle',
+          'game',
+          'brain teaser',
+        ],
+        description:
+          'Trace every line exactly once in one stroke. Three difficulty levels with undo, hints and endless new puzzles.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

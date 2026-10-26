@@ -1,0 +1,378 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { oneStrokePuzzleContent } from '../../i18n/tools/one-stroke-puzzle';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = oneStrokePuzzleContent[locale];
+
+const levels: [string, string][] = [
+  ['easy', t.levelEasy],
+  ['normal', t.levelNormal],
+  ['hard', t.levelHard],
+];
+
+const stats: [string, string, string][] = [
+  ['used', t.progressLabel, '0 / 0'],
+  ['odd', t.oddLabel, '0'],
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="os-root"
+    data-state="ready"
+    data-vertex-label={t.vertexLabel}
+    data-vertex-current={t.vertexCurrent}
+    data-ready={t.ready}
+    data-started={t.started}
+    data-moved={t.moved}
+    data-invalid={t.invalid}
+    data-stuck={t.stuck}
+    data-undone={t.undone}
+    data-solved={t.solved}
+    data-hint-start={t.hintStart}
+    data-hint-edge={t.hintEdge}
+    data-hint-none={t.hintNone}
+    data-hint-solved={t.hintSolved}
+    data-new-board={t.newBoard}
+    data-reset-done={t.resetDone}
+  >
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="os-level" class="ui-label">
+          {t.levelLabel}
+        </label>
+        <select id="os-level" class="ui-input h-11 w-36 px-3 dark:bg-gray-900">
+          {levels.map(([value, label]) => (
+            <option value={value} selected={value === 'easy'}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <button id="os-undo" type="button" class="ui-btn" disabled>
+        {t.undoLabel}
+      </button>
+      <button id="os-reset" type="button" class="ui-btn">
+        {t.resetLabel}
+      </button>
+      <button id="os-hint" type="button" class="ui-btn">
+        {t.hintLabel}
+      </button>
+      <button id="os-new" type="button" class="ui-btn ui-btn-primary">
+        {t.newLabel}
+      </button>
+    </div>
+
+    <dl class="mt-4 grid max-w-md grid-cols-2 gap-x-4 gap-y-1 text-sm">
+      {stats.map(([id, label, value]) => (
+        <div>
+          <dt class="text-gray-600 dark:text-gray-400">{label}</dt>
+          <dd
+            id={`os-${id}`}
+            class="text-lg font-bold text-gray-900 tabular-nums dark:text-gray-100"
+          >
+            {value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+
+    <svg
+      id="os-board"
+      viewBox="0 0 300 300"
+      role="group"
+      aria-label={t.boardLabel}
+      class="mt-4 block aspect-square w-full max-w-md touch-none rounded-xl border-2 border-gray-300 bg-gray-50 select-none dark:border-gray-600 dark:bg-gray-800"
+    ></svg>
+
+    <p
+      id="os-status"
+      role="status"
+      class="mt-3 min-h-6 max-w-xl text-sm font-medium text-gray-800 dark:text-gray-200"
+    >
+      {t.ready}
+    </p>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    canFinish,
+    createGame,
+    currentVertex,
+    generatePuzzle,
+    getHint,
+    isDeadEnd,
+    isDifficulty,
+    isSolved,
+    move,
+    oddVertices,
+    start,
+    undo,
+  } from '../../lib/tools/one-stroke-puzzle';
+  import type { GameState, Hint } from '../../lib/tools/one-stroke-puzzle';
+
+  const SIZE = 300;
+  const RADIUS = 15;
+  const HIT = 24;
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  const root = document.getElementById('os-root')!;
+  const d = root.dataset;
+  const svg = document.getElementById('os-board') as unknown as SVGSVGElement;
+  const levelSelect = document.getElementById('os-level') as HTMLSelectElement;
+  const undoButton = document.getElementById('os-undo') as HTMLButtonElement;
+  const resetButton = document.getElementById('os-reset')!;
+  const hintButton = document.getElementById('os-hint')!;
+  const newButton = document.getElementById('os-new')!;
+  const statusEl = document.getElementById('os-status')!;
+  const el = (id: string) => document.getElementById(`os-${id}`)!;
+
+  let game: GameState = createGame({ points: [], edges: [] });
+  let hint: Hint | null = null;
+  let dragging = false;
+  let edgeEls: SVGLineElement[] = [];
+  let vertexEls: {
+    g: SVGGElement;
+    circle: SVGCircleElement;
+    text: SVGTextElement;
+  }[] = [];
+
+  function fill(template: string, values: Record<string, string>): string {
+    return template.replace(/\{(\w+)\}/g, (m, k: string) => values[k] ?? m);
+  }
+
+  function say(message: string) {
+    statusEl.textContent = message;
+  }
+
+  function svgEl<K extends keyof SVGElementTagNameMap>(
+    name: K,
+    attrs: Record<string, string>,
+  ): SVGElementTagNameMap[K] {
+    const node = document.createElementNS(SVG_NS, name);
+    for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+    return node;
+  }
+
+  function buildBoard() {
+    const { points, edges } = game.puzzle;
+    svg.replaceChildren();
+    edgeEls = edges.map(([a, b]) => {
+      const line = svgEl('line', {
+        x1: String(points[a]!.x * SIZE),
+        y1: String(points[a]!.y * SIZE),
+        x2: String(points[b]!.x * SIZE),
+        y2: String(points[b]!.y * SIZE),
+        'stroke-width': '6',
+        'stroke-linecap': 'round',
+      });
+      svg.append(line);
+      return line;
+    });
+    vertexEls = points.map((p, i) => {
+      const g = svgEl('g', {
+        tabindex: '0',
+        role: 'button',
+        'data-vertex': String(i),
+      });
+      const circle = svgEl('circle', {
+        cx: String(p.x * SIZE),
+        cy: String(p.y * SIZE),
+        r: String(RADIUS),
+        'stroke-width': '3',
+      });
+      const text = svgEl('text', {
+        x: String(p.x * SIZE),
+        y: String(p.y * SIZE),
+        'text-anchor': 'middle',
+        'dominant-baseline': 'central',
+        'font-size': '14',
+        'font-weight': '700',
+      });
+      text.textContent = String(i + 1);
+      g.append(circle, text);
+      g.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          act(i, false);
+        }
+      });
+      svg.append(g);
+      return { g, circle, text };
+    });
+    el('odd').textContent = String(oddVertices(game.puzzle).length);
+  }
+
+  function render() {
+    const cur = currentVertex(game);
+    edgeEls.forEach((line, i) => {
+      const isUsed = game.used.includes(i);
+      const isHint = hint?.kind === 'edge' && hint.edge === i;
+      line.setAttribute(
+        'class',
+        isUsed
+          ? 'stroke-blue-600 dark:stroke-blue-400'
+          : isHint
+            ? 'stroke-amber-500 [stroke-dasharray:10_8]'
+            : 'stroke-gray-400 dark:stroke-gray-500',
+      );
+    });
+    vertexEls.forEach(({ g, circle, text }, i) => {
+      const isCur = cur === i;
+      const isHint =
+        (hint?.kind === 'start' && hint.vertex === i) ||
+        (hint?.kind === 'edge' && hint.to === i);
+      circle.setAttribute(
+        'class',
+        isCur
+          ? 'fill-blue-600 stroke-blue-900 dark:fill-blue-500 dark:stroke-blue-200'
+          : isHint
+            ? 'fill-amber-300 stroke-amber-700'
+            : 'fill-white stroke-gray-700 dark:fill-gray-900 dark:stroke-gray-300',
+      );
+      text.setAttribute(
+        'class',
+        isCur
+          ? 'fill-white'
+          : isHint
+            ? 'fill-gray-900'
+            : 'fill-gray-900 dark:fill-gray-100',
+      );
+      g.setAttribute(
+        'class',
+        'cursor-pointer focus:outline-2 focus:outline-blue-600',
+      );
+      const label = fill(d.vertexLabel!, { n: String(i + 1) });
+      g.setAttribute(
+        'aria-label',
+        isCur ? `${label} (${d.vertexCurrent})` : label,
+      );
+    });
+    el('used').textContent =
+      `${game.used.length} / ${game.puzzle.edges.length}`;
+    undoButton.disabled = game.path.length === 0;
+  }
+
+  function afterChange(message: string) {
+    hint = null;
+    if (game.path.length === 0) {
+      root.dataset.state = 'ready';
+      say(message);
+    } else if (isSolved(game)) {
+      root.dataset.state = 'solved';
+      say(fill(d.solved!, { edges: String(game.puzzle.edges.length) }));
+    } else if (isDeadEnd(game) || !canFinish(game)) {
+      root.dataset.state = 'stuck';
+      say(d.stuck!);
+    } else {
+      root.dataset.state = 'playing';
+      say(message);
+    }
+    render();
+  }
+
+  function act(vertex: number, fromDrag: boolean) {
+    if (isSolved(game)) return;
+    if (game.path.length === 0) {
+      const next = start(game, vertex);
+      if (!next) return;
+      game = next;
+      afterChange(fill(d.started!, { n: String(vertex + 1) }));
+      return;
+    }
+    if (currentVertex(game) === vertex) return;
+    const next = move(game, vertex);
+    if (!next) {
+      if (!fromDrag) say(d.invalid!);
+      return;
+    }
+    game = next;
+    afterChange(fill(d.moved!, { n: String(vertex + 1) }));
+  }
+
+  function newPuzzle() {
+    const level = isDifficulty(levelSelect.value) ? levelSelect.value : 'easy';
+    game = createGame(generatePuzzle(level));
+    buildBoard();
+    afterChange(d.newBoard!);
+  }
+
+  function nearest(event: PointerEvent, radius: number): number {
+    const rect = svg.getBoundingClientRect();
+    if (rect.width === 0) return -1;
+    const x = ((event.clientX - rect.left) / rect.width) * SIZE;
+    const y = ((event.clientY - rect.top) / rect.height) * SIZE;
+    let best = -1;
+    let bestDist = radius;
+    game.puzzle.points.forEach((p, i) => {
+      const dist = Math.hypot(p.x * SIZE - x, p.y * SIZE - y);
+      if (dist <= bestDist) {
+        best = i;
+        bestDist = dist;
+      }
+    });
+    return best;
+  }
+
+  svg.addEventListener('pointerdown', (event) => {
+    const v = nearest(event, HIT);
+    if (v < 0) return;
+    event.preventDefault();
+    dragging = true;
+    try {
+      svg.setPointerCapture(event.pointerId);
+    } catch {
+      // キャプチャできない環境でもタップ操作は動く
+    }
+    act(v, false);
+  });
+  svg.addEventListener('pointermove', (event) => {
+    if (!dragging) return;
+    const v = nearest(event, RADIUS + 4);
+    if (v >= 0) act(v, true);
+  });
+  const endDrag = () => {
+    dragging = false;
+  };
+  svg.addEventListener('pointerup', endDrag);
+  svg.addEventListener('pointercancel', endDrag);
+
+  levelSelect.addEventListener('change', newPuzzle);
+  newButton.addEventListener('click', newPuzzle);
+  resetButton.addEventListener('click', () => {
+    game = createGame(game.puzzle);
+    afterChange(d.resetDone!);
+  });
+  undoButton.addEventListener('click', () => {
+    if (game.path.length === 0) return;
+    game = undo(game);
+    afterChange(d.undone!);
+  });
+  hintButton.addEventListener('click', () => {
+    if (isSolved(game)) {
+      say(d.hintSolved!);
+      return;
+    }
+    const h = getHint(game);
+    if (!h) {
+      say(d.hintNone!);
+      return;
+    }
+    hint = h;
+    if (h.kind === 'start') {
+      say(fill(d.hintStart!, { n: String(h.vertex + 1) }));
+    } else {
+      say(fill(d.hintEdge!, { n: String(h.to + 1) }));
+    }
+    render();
+  });
+
+  newPuzzle();
+</script>

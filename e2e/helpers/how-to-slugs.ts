@@ -234,4 +234,7 @@ export const howToSlugs = [
   'tic-tac-toe',
   'gomoku',
   'sokoban',
+  'blackjack',
+  'optical-illusions',
+  'one-stroke-puzzle',
 ];

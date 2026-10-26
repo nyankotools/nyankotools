@@ -1,0 +1,240 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { opticalIllusionsContent } from '../../i18n/tools/optical-illusions';
+import {
+  DEFAULT_STRENGTH,
+  ILLUSION_IDS,
+  MAX_STRENGTH,
+  MIN_STRENGTH,
+  VIEW_HEIGHT,
+  VIEW_WIDTH,
+} from '../../lib/tools/optical-illusions';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = opticalIllusionsContent[locale];
+const names = Object.fromEntries(
+  ILLUSION_IDS.map((id) => [id, t.illusions[id].name]),
+);
+---
+
+<ToolShell t={t}>
+  <section
+    id="oi-root"
+    data-figure-label={t.figureLabel}
+    data-strength-unused={t.strengthUnused}
+    data-names={JSON.stringify(names)}
+  >
+    <div class="flex flex-wrap items-end gap-x-3 gap-y-2">
+      <div>
+        <label for="oi-select" class="ui-label">
+          {t.illusionLabel}
+        </label>
+        <select
+          id="oi-select"
+          class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
+        >
+          {ILLUSION_IDS.map((id) => (
+            <option value={id}>{t.illusions[id].name}</option>
+          ))}
+        </select>
+      </div>
+      <button id="oi-next-button" type="button" class="ui-btn">
+        {t.nextButton}
+      </button>
+    </div>
+
+    <div class="mt-3 flex flex-wrap items-center gap-x-6 gap-y-1">
+      <label class="ui-check">
+        <input id="oi-guides" type="checkbox" class="h-4 w-4" />
+        {t.guidesLabel}
+      </label>
+      <label class="ui-check">
+        <input id="oi-inducers" type="checkbox" class="h-4 w-4" />
+        {t.hideInducersLabel}
+      </label>
+    </div>
+
+    <div class="mt-1 max-w-md">
+      <label for="oi-strength" class="ui-label">
+        {t.strengthLabel}
+        <output id="oi-strength-out" class="ml-1 font-mono"></output>
+      </label>
+      <input
+        id="oi-strength"
+        type="range"
+        min={MIN_STRENGTH}
+        max={MAX_STRENGTH}
+        step="1"
+        value={DEFAULT_STRENGTH}
+        class="block h-11 w-full"
+      />
+      <p
+        id="oi-strength-note"
+        class="text-sm text-gray-700 dark:text-gray-300"
+        hidden
+      >
+        {t.strengthUnused}
+      </p>
+    </div>
+
+    <div class="mt-3 w-full max-w-xl overflow-hidden rounded-lg border border-gray-300 bg-white dark:border-gray-600">
+      <svg
+        id="oi-svg"
+        viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
+        class="block h-auto w-full"
+        role="img"
+      ></svg>
+    </div>
+
+    <div class="mt-4 space-y-3" aria-live="polite">
+      {ILLUSION_IDS.map((id) => (
+        <div data-info={id} hidden>
+          <h2 class="text-base font-semibold">{t.illusions[id].name}</h2>
+          <p class="mt-2 text-sm">
+            <strong>{t.lookHeading}</strong>
+            {t.illusions[id].look}
+          </p>
+          <p class="mt-1 text-sm">
+            <strong>{t.truthHeading}</strong>
+            {t.illusions[id].truth}
+          </p>
+        </div>
+      ))}
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    buildIllusion,
+    clampStrength,
+    hasInducers,
+    isIllusionId,
+    nextIllusion,
+    usesStrength,
+    visibleShapes,
+    type IllusionId,
+    type Shape,
+  } from '../../lib/tools/optical-illusions';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('oi-root');
+  const select = $<HTMLSelectElement>('oi-select');
+  const guides = $<HTMLInputElement>('oi-guides');
+  const inducers = $<HTMLInputElement>('oi-inducers');
+  const strength = $<HTMLInputElement>('oi-strength');
+  const strengthOut = $('oi-strength-out');
+  const strengthNote = $('oi-strength-note');
+  const svg = document.getElementById('oi-svg') as unknown as SVGSVGElement;
+  const infos = Array.from(root.querySelectorAll<HTMLElement>('[data-info]'));
+  const names = JSON.parse(root.dataset.names ?? '{}') as Record<
+    string,
+    string
+  >;
+  const NS = 'http://www.w3.org/2000/svg';
+
+  function el(name: string, attrs: Record<string, string | number>) {
+    const node = document.createElementNS(NS, name);
+    for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, String(v));
+    return node;
+  }
+
+  function toNode(s: Shape): SVGElement {
+    switch (s.kind) {
+      case 'line':
+        return el('line', {
+          x1: s.x1,
+          y1: s.y1,
+          x2: s.x2,
+          y2: s.y2,
+          stroke: s.stroke,
+          'stroke-width': s.width,
+          'stroke-linecap': 'round',
+          ...(s.dash ? { 'stroke-dasharray': '6 4' } : {}),
+        });
+      case 'rect':
+        return el('rect', {
+          x: s.x,
+          y: s.y,
+          width: s.w,
+          height: s.h,
+          fill: s.fill,
+          ...(s.opacity !== undefined ? { 'fill-opacity': s.opacity } : {}),
+        });
+      case 'circle':
+        return el('circle', {
+          cx: s.cx,
+          cy: s.cy,
+          r: s.r,
+          fill: s.fill ?? 'none',
+          ...(s.stroke
+            ? { stroke: s.stroke, 'stroke-width': s.width ?? 1 }
+            : {}),
+          ...(s.dash ? { 'stroke-dasharray': '6 4' } : {}),
+        });
+      case 'polygon':
+        return el('polygon', {
+          points: s.points.map(([x, y]) => `${x},${y}`).join(' '),
+          fill: s.fill,
+          ...(s.opacity !== undefined ? { 'fill-opacity': s.opacity } : {}),
+        });
+      case 'text': {
+        const node = el('text', {
+          x: s.x,
+          y: s.y,
+          fill: s.fill,
+          'font-size': s.size,
+          'font-weight': 'bold',
+          'text-anchor': 'middle',
+        });
+        node.textContent = s.text;
+        return node;
+      }
+    }
+  }
+
+  function current(): IllusionId {
+    return isIllusionId(select.value) ? select.value : 'muller-lyer';
+  }
+
+  function render() {
+    const id = current();
+    const s = clampStrength(Number(strength.value));
+    const usable = usesStrength(id);
+    strength.disabled = !usable;
+    strengthNote.hidden = usable;
+    strengthOut.textContent = usable ? String(s) : '';
+    inducers.disabled = !hasInducers(id);
+
+    const ill = buildIllusion(id, s);
+    const shapes = visibleShapes(ill.shapes, {
+      showGuides: guides.checked,
+      hideInducers: inducers.checked && hasInducers(id),
+    });
+    svg.replaceChildren(...shapes.map(toNode));
+    svg.setAttribute(
+      'aria-label',
+      (root.dataset.figureLabel ?? '').replace('{name}', names[id] ?? id),
+    );
+    infos.forEach((info) => {
+      info.hidden = info.dataset.info !== id;
+    });
+  }
+
+  select.addEventListener('change', render);
+  guides.addEventListener('change', render);
+  inducers.addEventListener('change', render);
+  strength.addEventListener('input', render);
+  $('oi-next-button').addEventListener('click', () => {
+    select.value = nextIllusion(current());
+    render();
+  });
+
+  render();
+</script>

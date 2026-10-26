@@ -1,0 +1,351 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { wordGuessGameContent } from '../../i18n/tools/word-guess-game';
+import { MAX_ATTEMPTS, WORD_LENGTH } from '../../lib/tools/word-guess-game';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = wordGuessGameContent[locale];
+const rows = Array.from({ length: MAX_ATTEMPTS }, (_, r) => r);
+const cols = Array.from({ length: WORD_LENGTH }, (_, c) => c);
+const keyRows = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'].map((r) => r.split(''));
+---
+
+<ToolShell t={t}>
+  <section
+    id="wg-root"
+    data-started={t.started}
+    data-won={t.won}
+    data-lost={t.lost}
+    data-gave-up={t.gaveUp}
+    data-error-length={t.errorLength}
+    data-error-chars={t.errorChars}
+    data-error-unknown={t.errorUnknown}
+    data-attempts-value={t.attemptsValue}
+    data-tile-label={t.tileLabel}
+    data-tile-empty={t.tileEmpty}
+    data-state-correct={t.stateCorrect}
+    data-state-present={t.statePresent}
+    data-state-absent={t.stateAbsent}
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-max-attempts={MAX_ATTEMPTS}
+  >
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <button id="wg-new-button" type="button" class="ui-btn-primary">
+        {t.newGame}
+      </button>
+      <button id="wg-giveup-button" type="button" class="ui-btn">
+        {t.giveUp}
+      </button>
+      <button id="wg-copy-button" type="button" class="ui-btn" disabled>
+        {t.copyResult}
+      </button>
+      <p class="text-sm text-gray-700 dark:text-gray-300">
+        {t.attemptsLabel}:
+        <span id="wg-attempts" class="font-semibold tabular-nums"></span>
+      </p>
+    </div>
+
+    <div
+      id="wg-board"
+      class="mt-4 grid w-max grid-cols-5 gap-1.5"
+      role="group"
+      aria-label={t.boardLabel}
+    >
+      {rows.map((r) =>
+        cols.map((c) => (
+          <span
+            role="img"
+            data-row={r}
+            data-col={c}
+            class="flex h-12 w-12 items-center justify-center border-2 border-gray-300 text-2xl font-bold uppercase select-none sm:h-14 sm:w-14 dark:border-gray-700"
+          />
+        )),
+      )}
+    </div>
+
+    <p
+      id="wg-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+    <p id="wg-error" class="ui-error mt-2" role="alert" hidden></p>
+
+    <div
+      class="mt-3 max-w-md space-y-1.5"
+      role="group"
+      aria-label={t.keyboardLabel}
+    >
+      {keyRows.map((letters, i) => (
+        <div class="flex gap-1">
+          {i === 2 && <div class="flex-[2.3]" aria-hidden="true" />}
+          {letters.map((l) => (
+            <button
+              type="button"
+              class="ui-btn h-12 min-h-0 min-w-0 flex-1 px-0 uppercase"
+              data-key={l}
+            >
+              {l}
+            </button>
+          ))}
+          {i === 0 && (
+            <button
+              type="button"
+              class="ui-btn h-12 min-h-0 min-w-0 flex-[1.6] px-0 text-xs"
+              data-key="back"
+            >
+              {t.backspaceKey}
+            </button>
+          )}
+          {i === 1 && (
+            <button
+              type="button"
+              class="ui-btn h-12 min-h-0 min-w-0 flex-[1.6] px-0 text-xs"
+              data-key="enter"
+            >
+              {t.enterKey}
+            </button>
+          )}
+          {i === 2 && <div class="flex-[2.3]" aria-hidden="true" />}
+        </div>
+      ))}
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    MAX_ATTEMPTS,
+    WORD_LENGTH,
+    evaluateGuess,
+    giveUp,
+    keyStates,
+    newGame,
+    normalizeLetter,
+    resultGrid,
+    submitGuess,
+    type GameState,
+    type LetterState,
+  } from '../../lib/tools/word-guess-game';
+  import { copyText } from '../../lib/clipboard';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('wg-root');
+  const msg = root.dataset;
+  const statusEl = $('wg-status');
+  const errorEl = $('wg-error');
+  const attemptsEl = $('wg-attempts');
+  const giveUpButton = $<HTMLButtonElement>('wg-giveup-button');
+  const copyButton = $<HTMLButtonElement>('wg-copy-button');
+  const tiles = Array.from(
+    root.querySelectorAll<HTMLElement>('#wg-board [data-row]'),
+  );
+  const keyButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-key]'),
+  );
+
+  // Tailwind が拾えるよう、クラス名はリテラルで書く
+  const TILE_CLASSES: Record<LetterState, string[]> = {
+    correct: ['border-green-700', 'bg-green-700', 'text-white'],
+    present: ['border-yellow-500', 'bg-yellow-500', 'text-gray-900'],
+    absent: [
+      'border-gray-600',
+      'bg-gray-600',
+      'text-white',
+      'dark:border-gray-700',
+      'dark:bg-gray-700',
+    ],
+  };
+  const KEY_CLASSES: Record<LetterState, string[]> = {
+    correct: ['border-green-700', 'bg-green-700', 'text-white'],
+    present: ['border-yellow-500', 'bg-yellow-500', 'text-gray-900'],
+    absent: ['border-gray-600', 'bg-gray-600', 'text-white'],
+  };
+  const FILLED_CLASSES = ['border-gray-600', 'dark:border-gray-400'];
+  const EMPTY_CLASSES = ['border-gray-300', 'dark:border-gray-700'];
+  const allTileClasses = [
+    ...new Set([
+      ...Object.values(TILE_CLASSES).flat(),
+      ...FILLED_CLASSES,
+      ...EMPTY_CLASSES,
+    ]),
+  ];
+  const allKeyClasses = [...new Set(Object.values(KEY_CLASSES).flat())];
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  function stateName(s: LetterState) {
+    return s === 'correct'
+      ? (msg.stateCorrect ?? '')
+      : s === 'present'
+        ? (msg.statePresent ?? '')
+        : (msg.stateAbsent ?? '');
+  }
+
+  let state: GameState = newGame();
+  let current = '';
+
+  function showError(text: string) {
+    errorEl.textContent = text;
+    errorEl.hidden = false;
+  }
+
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function render() {
+    const finished = state.phase !== 'playing';
+    const results = state.guesses.map((g) => evaluateGuess(g, state.answer));
+    for (const tile of tiles) {
+      const r = Number(tile.dataset.row);
+      const c = Number(tile.dataset.col);
+      tile.classList.remove(...allTileClasses);
+      if (r < state.guesses.length) {
+        const letter = state.guesses[r][c];
+        const s = results[r][c];
+        tile.textContent = letter;
+        tile.classList.add(...TILE_CLASSES[s]);
+        tile.setAttribute(
+          'aria-label',
+          fill(msg.tileLabel, {
+            n: String(r + 1),
+            letter: letter.toUpperCase(),
+            state: stateName(s),
+          }),
+        );
+      } else if (
+        r === state.guesses.length &&
+        !finished &&
+        c < current.length
+      ) {
+        tile.textContent = current[c];
+        tile.classList.add(...FILLED_CLASSES);
+        tile.setAttribute('aria-label', current[c].toUpperCase());
+      } else {
+        tile.textContent = '';
+        tile.classList.add(...EMPTY_CLASSES);
+        tile.setAttribute('aria-label', msg.tileEmpty ?? '');
+      }
+    }
+
+    const states = keyStates(state);
+    for (const b of keyButtons) {
+      const s = states[b.dataset.key ?? ''];
+      b.classList.remove(...allKeyClasses);
+      if (s) b.classList.add(...KEY_CLASSES[s]);
+      b.disabled = finished;
+    }
+
+    attemptsEl.textContent = fill(msg.attemptsValue, {
+      n: String(state.guesses.length),
+      max: String(MAX_ATTEMPTS),
+    });
+    giveUpButton.disabled = finished;
+    copyButton.disabled = !finished || state.guesses.length === 0;
+  }
+
+  function startGame() {
+    state = newGame(undefined, state.answer);
+    current = '';
+    clearError();
+    render();
+    statusEl.textContent = msg.started ?? '';
+  }
+
+  function typeLetter(input: string) {
+    if (state.phase !== 'playing') return;
+    const letter = normalizeLetter(input);
+    if (letter === null || current.length >= WORD_LENGTH) return;
+    current += letter;
+    clearError();
+    render();
+  }
+
+  function backspace() {
+    if (state.phase !== 'playing' || current === '') return;
+    current = current.slice(0, -1);
+    clearError();
+    render();
+  }
+
+  function submit() {
+    if (state.phase !== 'playing') return;
+    const result = submitGuess(state, current);
+    if (!result.ok) {
+      if (result.error === 'length') showError(msg.errorLength ?? '');
+      else if (result.error === 'chars') showError(msg.errorChars ?? '');
+      else if (result.error === 'unknown') showError(msg.errorUnknown ?? '');
+      return;
+    }
+    clearError();
+    state = result.state;
+    current = '';
+    render();
+    const answer = state.answer.toUpperCase();
+    if (state.phase === 'won') {
+      statusEl.textContent = fill(msg.won, { n: String(state.guesses.length) });
+    } else if (state.phase === 'lost') {
+      statusEl.textContent = fill(msg.lost, { word: answer });
+    } else {
+      statusEl.textContent = '';
+    }
+  }
+
+  keyButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      const key = b.dataset.key ?? '';
+      if (key === 'enter') submit();
+      else if (key === 'back') backspace();
+      else typeLetter(key);
+      // 物理キーボードの Enter が、フォーカスの残ったキーを押し直さないようにする
+      b.blur();
+    }),
+  );
+
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const target = e.target as HTMLElement | null;
+    if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+    if (e.key === 'Enter') {
+      // フォーカス中のボタン・リンクの Enter は、そのまま押下として扱う
+      if (target && /^(BUTTON|A)$/.test(target.tagName)) return;
+      if (state.phase !== 'playing') return;
+      e.preventDefault();
+      submit();
+    } else if (e.key === 'Backspace') {
+      backspace();
+    } else if (e.key.length === 1) {
+      typeLetter(e.key);
+    }
+  });
+
+  giveUpButton.addEventListener('click', () => {
+    state = giveUp(state);
+    current = '';
+    clearError();
+    render();
+    statusEl.textContent = fill(msg.gaveUp, {
+      word: state.answer.toUpperCase(),
+    });
+  });
+  $('wg-new-button').addEventListener('click', startGame);
+  copyButton.addEventListener('click', async () => {
+    const ok = await copyText(resultGrid(state));
+    statusEl.textContent = (ok ? msg.copied : msg.copyFailed) ?? '';
+  });
+
+  render();
+  statusEl.textContent = msg.started ?? '';
+</script>

@@ -1,0 +1,322 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { blackjackContent } from '../../i18n/tools/blackjack';
+import { BET_OPTIONS, STARTING_CHIPS } from '../../lib/tools/blackjack';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = blackjackContent[locale];
+---
+
+<ToolShell t={t}>
+  <section
+    id="bj-root"
+    data-starting-chips={STARTING_CHIPS}
+    data-total={t.totalText}
+    data-soft-total={t.softTotalText}
+    data-hidden-card={t.hiddenCard}
+    data-card-label={t.cardLabel}
+    data-suit-s={t.suitS}
+    data-suit-h={t.suitH}
+    data-suit-d={t.suitD}
+    data-suit-c={t.suitC}
+    data-bet-option={t.betOption}
+    data-status-betting={t.statusBetting}
+    data-status-player={t.statusPlayer}
+    data-result-blackjack={t.resultBlackjack}
+    data-result-win={t.resultWin}
+    data-result-dealer-bust={t.resultDealerBust}
+    data-result-push={t.resultPush}
+    data-result-lose={t.resultLose}
+    data-result-bust={t.resultBust}
+    data-broke={t.broke}
+    data-reset-done={t.resetDone}
+  >
+    <p class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
+      {t.entertainmentNote}
+    </p>
+
+    <dl class="mt-4 flex flex-wrap gap-x-8 gap-y-2">
+      <div>
+        <dt class="ui-label">{t.chipsLabel}</dt>
+        <dd
+          id="bj-chips"
+          class="text-2xl font-bold text-gray-900 tabular-nums dark:text-gray-100"
+        >
+          {STARTING_CHIPS}
+        </dd>
+      </div>
+      <div>
+        <dt class="ui-label">{t.bestLabel}</dt>
+        <dd
+          id="bj-best"
+          class="text-2xl font-bold text-gray-900 tabular-nums dark:text-gray-100"
+        >
+          {STARTING_CHIPS}
+        </dd>
+      </div>
+    </dl>
+
+    <div
+      role="group"
+      aria-label={t.boardLabel}
+      class="mt-4 rounded-xl bg-green-800 p-3 text-white sm:p-4"
+    >
+      <h2 class="text-sm font-semibold">{t.dealerLabel}</h2>
+      <div
+        id="bj-dealer"
+        class="mt-2 flex min-h-20 flex-wrap gap-2 sm:min-h-24"
+      ></div>
+      <p id="bj-dealer-total" class="mt-1 min-h-5 text-sm"></p>
+
+      <h2 class="mt-4 text-sm font-semibold">{t.playerLabel}</h2>
+      <div
+        id="bj-player"
+        class="mt-2 flex min-h-20 flex-wrap gap-2 sm:min-h-24"
+      ></div>
+      <p id="bj-player-total" class="mt-1 min-h-5 text-sm"></p>
+    </div>
+
+    <p
+      id="bj-status"
+      role="status"
+      class="mt-3 min-h-12 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+
+    <div id="bj-bet-area" class="mt-2">
+      <span id="bj-bet-label" class="ui-label">
+        {t.betLabel}
+      </span>
+      <div class="ui-seg flex-wrap" role="group" aria-labelledby="bj-bet-label">
+        {BET_OPTIONS.map((amount) => (
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-bet={amount}
+            aria-pressed="false"
+          >
+            {amount}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button id="bj-deal-button" type="button" class="ui-btn-primary">
+        {t.deal}
+      </button>
+      <button id="bj-hit-button" type="button" class="ui-btn" disabled>
+        {t.hit}
+      </button>
+      <button id="bj-stand-button" type="button" class="ui-btn" disabled>
+        {t.stand}
+      </button>
+      <button id="bj-double-button" type="button" class="ui-btn" disabled>
+        {t.doubleDown}
+      </button>
+      <button id="bj-reset-button" type="button" class="ui-btn">
+        {t.resetChips}
+      </button>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    DEFAULT_BET,
+    STARTING_CHIPS,
+    canDouble,
+    clampBet,
+    deal,
+    doubleDown,
+    handValue,
+    hit,
+    initialState,
+    isBroke,
+    nextRound,
+    parseSave,
+    serializeSave,
+    stand,
+    type Card,
+    type GameState,
+    type Outcome,
+  } from '../../lib/tools/blackjack';
+
+  const STORAGE_KEY = 'nyankotools:blackjack';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('bj-root');
+  const msg = root.dataset;
+  const chipsEl = $('bj-chips');
+  const bestEl = $('bj-best');
+  const dealerEl = $('bj-dealer');
+  const playerEl = $('bj-player');
+  const dealerTotalEl = $('bj-dealer-total');
+  const playerTotalEl = $('bj-player-total');
+  const statusEl = $('bj-status');
+  const dealButton = $<HTMLButtonElement>('bj-deal-button');
+  const hitButton = $<HTMLButtonElement>('bj-hit-button');
+  const standButton = $<HTMLButtonElement>('bj-stand-button');
+  const doubleButton = $<HTMLButtonElement>('bj-double-button');
+  const resetButton = $<HTMLButtonElement>('bj-reset-button');
+  const betButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-bet]'),
+  );
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  // localStorageが使えない環境では、このページを開いている間だけの記録にする
+  let save = (() => {
+    try {
+      return parseSave(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      return parseSave(null);
+    }
+  })();
+
+  function persist() {
+    save = {
+      chips: state.chips,
+      best: Math.max(save.best, state.chips),
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, serializeSave(save));
+    } catch {
+      // 保存できない環境では何もしない
+    }
+  }
+
+  let state: GameState = initialState(save.chips);
+  let wantedBet = DEFAULT_BET;
+  let notice = '';
+
+  const SUIT_SYMBOL = { S: '♠', H: '♥', D: '♦', C: '♣' } as const;
+  const CARD_BASE =
+    'flex h-20 w-14 flex-col items-center justify-center rounded-md border border-gray-400 bg-white text-lg font-bold leading-tight shadow sm:h-24 sm:w-16 sm:text-xl';
+
+  function suitName(suit: Card['suit']) {
+    const key = `suit${suit}` as 'suitS' | 'suitH' | 'suitD' | 'suitC';
+    return msg[key] ?? '';
+  }
+
+  function cardElement(card: Card | null) {
+    const el = document.createElement('div');
+    if (!card) {
+      el.className = `${CARD_BASE} border-blue-900 bg-blue-700 text-white`;
+      el.setAttribute('role', 'img');
+      el.setAttribute('aria-label', msg.hiddenCard ?? '');
+      el.textContent = '?';
+      return el;
+    }
+    const red = card.suit === 'H' || card.suit === 'D';
+    el.className = `${CARD_BASE} ${red ? 'text-red-700' : 'text-gray-900'}`;
+    el.setAttribute('role', 'img');
+    el.setAttribute(
+      'aria-label',
+      fill(msg.cardLabel, { rank: card.rank, suit: suitName(card.suit) }),
+    );
+    const rank = document.createElement('span');
+    rank.textContent = card.rank;
+    const suit = document.createElement('span');
+    suit.textContent = SUIT_SYMBOL[card.suit];
+    el.append(rank, suit);
+    return el;
+  }
+
+  function totalText(cards: readonly Card[]) {
+    if (cards.length === 0) return '';
+    const { total, soft } = handValue(cards);
+    return fill(soft && total <= 21 ? msg.softTotal : msg.total, {
+      total: String(total),
+    });
+  }
+
+  const RESULT_KEY: Record<Outcome, string> = {
+    blackjack: 'resultBlackjack',
+    win: 'resultWin',
+    dealerBust: 'resultDealerBust',
+    push: 'resultPush',
+    lose: 'resultLose',
+    bust: 'resultBust',
+  };
+
+  function statusText() {
+    if (state.phase === 'betting') {
+      return isBroke(state) ? (msg.broke ?? '') : (msg.statusBetting ?? '');
+    }
+    if (state.phase === 'player') return msg.statusPlayer ?? '';
+    const outcome = state.outcome as Outcome;
+    const result = fill(msg[RESULT_KEY[outcome]], {
+      amount: String(state.payout),
+    });
+    return isBroke(state) ? `${result} ${msg.broke ?? ''}` : result;
+  }
+
+  function render() {
+    const playing = state.phase === 'player';
+    const broke = isBroke(state);
+    chipsEl.textContent = String(state.chips);
+    bestEl.textContent = String(save.best);
+
+    dealerEl.replaceChildren(
+      ...state.dealer.map((card, i) =>
+        cardElement(playing && i === 1 ? null : card),
+      ),
+    );
+    playerEl.replaceChildren(...state.player.map((card) => cardElement(card)));
+    dealerTotalEl.textContent = playing ? '' : totalText(state.dealer);
+    playerTotalEl.textContent = totalText(state.player);
+
+    const bet = clampBet(state.chips, wantedBet);
+    betButtons.forEach((b) => {
+      const amount = Number(b.dataset.bet);
+      b.disabled = playing || amount > state.chips;
+      b.setAttribute('aria-pressed', String(amount === bet && !b.disabled));
+    });
+    dealButton.disabled = playing || broke || bet < 1;
+    resetButton.disabled = playing;
+    hitButton.disabled = !playing;
+    standButton.disabled = !playing;
+    doubleButton.disabled = !canDouble(state);
+    statusEl.textContent = [notice, statusText()].filter(Boolean).join(' ');
+  }
+
+  function update(next: GameState) {
+    state = next;
+    notice = '';
+    if (next.phase !== 'player') persist();
+    render();
+  }
+
+  betButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      wantedBet = Number(b.dataset.bet);
+      render();
+    }),
+  );
+  dealButton.addEventListener('click', () => {
+    const base = nextRound(state);
+    const bet = clampBet(base.chips, wantedBet);
+    update(deal(base, bet));
+  });
+  hitButton.addEventListener('click', () => update(hit(state)));
+  standButton.addEventListener('click', () => update(stand(state)));
+  doubleButton.addEventListener('click', () => update(doubleDown(state)));
+  resetButton.addEventListener('click', () => {
+    state = initialState(STARTING_CHIPS);
+    persist();
+    notice = msg.resetDone ?? '';
+    render();
+  });
+
+  render();
+</script>

@@ -15163,6 +15163,618 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'aim-trainer',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['reaction-test', 'mouse-tester', 'memory-match'],
+    translations: {
+      ja: {
+        name: 'エイム練習',
+        keywords: [
+          'エイム',
+          'エイム練習',
+          '的クリック',
+          'FPS',
+          'マウス',
+          '精度',
+          'aim trainer',
+        ],
+        description:
+          '出てくる的を20個クリックして、命中までの平均時間・精度・ミス回数を測るエイム練習。ベスト記録も保存。',
+      },
+      en: {
+        name: 'Aim Trainer',
+        keywords: [
+          'aim trainer',
+          'aim practice',
+          'target click',
+          'FPS',
+          'mouse accuracy',
+          'click speed',
+        ],
+        description:
+          'Click 20 targets to measure your average hit time, accuracy and misses. Best score saved in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'whack-a-mole',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['reaction-test', 'memory-match', 'breakout-game'],
+    translations: {
+      ja: {
+        name: 'モグラ叩きゲーム',
+        keywords: [
+          'モグラ叩き',
+          'もぐらたたき',
+          'ミニゲーム',
+          '反射神経',
+          'ネコ',
+          'whack a mole',
+        ],
+        description:
+          '穴から出るネコを30秒で何匹叩けるか挑戦。時間とともに速くなり、ベストスコアも保存',
+      },
+      en: {
+        name: 'Whack-a-Mole Game',
+        keywords: [
+          'whack a mole',
+          'mole game',
+          'mini game',
+          'reflex game',
+          'tap game',
+          'cat',
+        ],
+        description:
+          'Whack the cats popping out of holes in 30 seconds. It speeds up as you play and saves your best score.',
+      },
+    },
+  },
+  {
+    slug: 'simon-game',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['memory-match', 'number-memory-test', 'reaction-test'],
+    translations: {
+      ja: {
+        name: '色と音の記憶ゲーム',
+        keywords: [
+          '記憶ゲーム',
+          '記憶力',
+          '色と音',
+          '順番',
+          'メモリーゲーム',
+          'ワーキングメモリ',
+        ],
+        description:
+          '4色のパネルが光る順番と音を覚えて再現する記憶力ゲーム。キーボード1〜4にも対応',
+      },
+      en: {
+        name: 'Color & Sound Memory Game',
+        keywords: [
+          'memory game',
+          'sequence memory',
+          'color sound game',
+          'pattern memory',
+          'repeat the pattern',
+        ],
+        description:
+          'Remember and repeat the order of four glowing, sounding panels. Keys 1-4 supported.',
+      },
+    },
+  },
+  {
+    slug: 'number-memory-test',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['memory-match', 'simon-game', 'reaction-test'],
+    translations: {
+      ja: {
+        name: '数字記憶テスト',
+        keywords: [
+          '数字記憶',
+          '記憶力テスト',
+          '短期記憶',
+          'ナンバーメモリー',
+          '桁数',
+          '記憶ゲーム',
+        ],
+        description:
+          '一瞬表示される数字を覚えて入力。正解のたびに桁数が増える短期記憶ゲーム',
+      },
+      en: {
+        name: 'Number Memory Test',
+        keywords: [
+          'number memory',
+          'memory test',
+          'digit span',
+          'short-term memory',
+          'memory game',
+        ],
+        description:
+          'Memorize a number flashed on screen and type it back. One more digit each round.',
+      },
+    },
+  },
+  {
+    slug: 'cat-clicker',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['aim-trainer', 'whack-a-mole'],
+    translations: {
+      ja: {
+        name: '猫クリッカー',
+        keywords: [
+          'クリッカー',
+          '放置ゲーム',
+          'ねこ',
+          '猫',
+          'インクリメンタル',
+          '育成',
+        ],
+        description:
+          '猫をクリックして育てる放置系クリッカーゲーム。アップグレードで自動化、進行はブラウザに自動保存。',
+      },
+      en: {
+        name: 'Cat Clicker',
+        keywords: [
+          'cat clicker',
+          'idle game',
+          'clicker',
+          'incremental',
+          'cat game',
+        ],
+        description:
+          'A cozy idle clicker: pet the cat, buy upgrades and watch fish pile up. Progress is saved in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'tower-of-hanoi',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['memory-match', 'whack-a-mole', 'aim-trainer'],
+    translations: {
+      ja: {
+        name: 'ハノイの塔',
+        keywords: [
+          'ハノイの塔',
+          'パズル',
+          'ゲーム',
+          '再帰',
+          '最短手数',
+          '頭の体操',
+        ],
+        description:
+          '円盤3〜8枚のハノイの塔。手数を数えて最短手数と比較でき、最適解の自動再生にも対応。',
+      },
+      en: {
+        name: 'Tower of Hanoi',
+        keywords: [
+          'tower of hanoi',
+          'hanoi',
+          'puzzle',
+          'recursion',
+          'brain teaser',
+          'game',
+        ],
+        description:
+          'Play the Tower of Hanoi with 3 to 8 discs, compare your moves with the minimum, and watch the optimal solution.',
+      },
+    },
+  },
+  {
+    slug: 'cat-jump',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['reaction-test', 'whack-a-mole', 'aim-trainer'],
+    translations: {
+      ja: {
+        name: '猫ジャンプゲーム',
+        keywords: [
+          '猫ジャンプ',
+          '1ボタンゲーム',
+          'ミニゲーム',
+          'ネコ',
+          'フラップゲーム',
+          '暇つぶし',
+          'スマホゲーム',
+        ],
+        description:
+          'クリック・タップ・スペースキーだけで猫を操り、土管のすき間をくぐる1ボタンのミニゲーム。ベストスコアも保存',
+      },
+      en: {
+        name: 'Cat Jump Game',
+        keywords: [
+          'cat jump',
+          'cat game',
+          'one button game',
+          'flap game',
+          'mini game',
+          'tap game',
+          'browser game',
+        ],
+        description:
+          'Flap a cat through pipe gaps with one button. Tap, click or press Space. Saves your best score. Free, mobile friendly.',
+      },
+    },
+  },
+  {
+    slug: 'peg-solitaire',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['memory-match', 'sudoku', 'whack-a-mole'],
+    translations: {
+      ja: {
+        name: 'ペグソリティア',
+        keywords: [
+          'ペグソリティア',
+          'ペグパズル',
+          'ソリティア',
+          '飛び越え',
+          '一人用パズル',
+          'ボードゲーム',
+          'peg solitaire',
+        ],
+        description:
+          '駒を飛び越えて取り、最後の1個を目指すひとり用パズル。英国式33穴・欧州式37穴、残数表示と1手戻す機能付き。',
+      },
+      en: {
+        name: 'Peg Solitaire',
+        keywords: [
+          'peg solitaire',
+          'solitaire',
+          'peg puzzle',
+          'marble solitaire',
+          'brainvita',
+          'jumping puzzle',
+          'board game',
+        ],
+        description:
+          'Jump pegs to remove them and leave just one. English 33-hole and European 37-hole boards, with undo.',
+      },
+    },
+  },
+  {
+    slug: 'hangman',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['hit-and-blow', 'sudoku', 'word-search-generator'],
+    translations: {
+      ja: {
+        name: 'ハングマン（英単語当て）',
+        description:
+          '文字を1つずつ推測して英単語を当てるハングマン。動物・食べ物・旅行などカテゴリを選べ、英語の語彙学習にも使えます。',
+        keywords: [
+          'ハングマン',
+          '英単語',
+          '英単語ゲーム',
+          '単語当て',
+          '文字当て',
+          'hangman',
+          '語彙学習',
+          '英語学習',
+        ],
+      },
+      en: {
+        name: 'Hangman',
+        description:
+          'Guess the hidden English word one letter at a time. Pick a category like animals, food or travel.',
+        keywords: [
+          'hangman',
+          'word game',
+          'guess the word',
+          'vocabulary game',
+          'letter guessing',
+          'english vocabulary',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'tic-tac-toe',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['connect-four', 'reversi', 'gomoku'],
+    translations: {
+      ja: {
+        name: '三目並べ（○×ゲーム）',
+        description:
+          '3段階のCPUと対戦できる三目並べ。最強はミニマックスで負けません。先手・後手も選べます。',
+        keywords: [
+          '三目並べ',
+          '○×ゲーム',
+          'マルバツゲーム',
+          'tic-tac-toe',
+          'CPU対戦',
+          'ミニマックス',
+          'ボードゲーム',
+        ],
+      },
+      en: {
+        name: 'Tic-Tac-Toe',
+        description:
+          'Play against the computer at three levels, including an unbeatable minimax mode. Choose to move first or second.',
+        keywords: [
+          'tic-tac-toe',
+          'noughts and crosses',
+          'xo game',
+          'minimax',
+          'vs computer',
+          'board game',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'gomoku',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['connect-four', 'reversi', 'tic-tac-toe'],
+    translations: {
+      ja: {
+        name: '五目並べ',
+        description:
+          '15×15の盤面でCPUと対戦。強さ4段階、先手・後手を選べて「待った」も可。禁じ手なし。',
+        keywords: [
+          '五目並べ',
+          'ごもくならべ',
+          'gomoku',
+          '5目並べ',
+          '五目',
+          'CPU対戦',
+          'ボードゲーム',
+        ],
+      },
+      en: {
+        name: 'Gomoku (Five in a Row)',
+        description:
+          'Play Gomoku against the computer on a 15×15 board. Four levels, choose first or second, undo moves, no restricted moves.',
+        keywords: [
+          'gomoku',
+          'five in a row',
+          'five in a line',
+          'board game',
+          'vs computer',
+          'connect five',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'sokoban',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['peg-solitaire', 'tower-of-hanoi', 'lights-out'],
+    translations: {
+      ja: {
+        name: '箱押しパズル',
+        description:
+          '箱を押してすべてのゴールに運ぶパズル。全20面、キー・スワイプ・ボタン操作、1手戻す、最短手数の記録つき。',
+        keywords: [
+          '倉庫番',
+          '箱押し',
+          'ソコバン',
+          'sokoban',
+          'パズル',
+          'ブラウザゲーム',
+        ],
+      },
+      en: {
+        name: 'Box Push Puzzle',
+        description:
+          'Push every box onto a goal across 20 levels. Arrow keys, swipe or buttons, undo, and best-move records. Free browser puzzle.',
+        keywords: [
+          'sokoban',
+          'box push',
+          'crate puzzle',
+          'warehouse puzzle',
+          'puzzle game',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'blackjack',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['roulette-dice', 'coin-toss', 'tic-tac-toe'],
+    translations: {
+      ja: {
+        name: 'ブラックジャック',
+        description:
+          'CPUディーラーと対戦するブラックジャック。ヒット・スタンド・ダブルダウンに対応。換金できない仮想チップを使う娯楽用ゲームです。',
+        keywords: [
+          'ブラックジャック',
+          'トランプ',
+          'カードゲーム',
+          '21',
+          'ヒット',
+          'ダブルダウン',
+          'CPU対戦',
+          'blackjack',
+        ],
+      },
+      en: {
+        name: 'Blackjack',
+        description:
+          'Play blackjack against a computer dealer. Hit, stand or double down with virtual chips that have no cash value. For fun only.',
+        keywords: [
+          'blackjack',
+          'twenty-one',
+          '21',
+          'card game',
+          'hit or stand',
+          'double down',
+          'dealer',
+          'virtual chips',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'optical-illusions',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['memory-match', 'lights-out', 'contrast-checker'],
+    translations: {
+      ja: {
+        name: '錯視ギャラリー',
+        description:
+          'ミュラー・リヤー、ポンゾ、カフェウォールなど定番の錯視9種。補助線の表示や強さの調整で「実は同じ・平行」を確かめられます。',
+        keywords: [
+          '錯視',
+          '錯覚',
+          'ミュラー・リヤー',
+          'ポンゾ錯視',
+          'カフェウォール',
+          'チェッカーシャドウ',
+          'ヘルマン格子',
+          '目の錯覚',
+        ],
+      },
+      en: {
+        name: 'Optical Illusions Gallery',
+        description:
+          'Try 9 classic optical illusions such as Müller-Lyer and café wall. Show guide lines to see what is really equal or parallel.',
+        keywords: [
+          'optical illusion',
+          'visual illusion',
+          'muller-lyer',
+          'ponzo',
+          'cafe wall',
+          'checker shadow',
+          'hermann grid',
+          'eye trick',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'one-stroke-puzzle',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['sokoban', 'tower-of-hanoi', 'lights-out'],
+    translations: {
+      ja: {
+        name: '一筆書きパズル',
+        keywords: [
+          '一筆書き',
+          'オイラー路',
+          'パズル',
+          'ゲーム',
+          '一筆書きパズル',
+          '頭の体操',
+        ],
+        description:
+          '全ての線を1回ずつなぞる一筆書きパズル。難易度3段階、1手戻す・ヒント・新しい問題に対応。',
+      },
+      en: {
+        name: 'One-Stroke Puzzle',
+        keywords: [
+          'one stroke',
+          'eulerian path',
+          'draw without lifting',
+          'puzzle',
+          'game',
+          'brain teaser',
+        ],
+        description:
+          'Trace every line exactly once in one stroke. Three difficulty levels with undo, hints and endless new puzzles.',
+      },
+    },
+  },
+  {
+    slug: 'word-guess-game',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['hangman', 'hit-and-blow', 'word-search-generator'],
+    translations: {
+      ja: {
+        name: '英単語5文字当てゲーム',
+        description:
+          '6回以内に5文字の英単語を当てる言葉ゲーム。緑・黄・灰の色ヒントで推理でき、英語の語彙学習にも使えます。',
+        keywords: [
+          '5文字当て',
+          '英単語',
+          '英単語ゲーム',
+          '単語当て',
+          '言葉ゲーム',
+          'ワードゲーム',
+          '5文字',
+          '英語学習',
+        ],
+      },
+      en: {
+        name: '5-Letter Word Guessing Game',
+        description:
+          'Guess the hidden five-letter English word in six tries, using green, yellow and gray clues.',
+        keywords: [
+          '5 letter word game',
+          'word guessing game',
+          'five letter words',
+          'word puzzle',
+          'guess the word',
+          'vocabulary game',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'large-number-chart',
+    category: 'calc',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['cat-clicker', 'kanji-number-converter', 'base-converter'],
+    translations: {
+      ja: {
+        name: '大きな数の早見表',
+        keywords: [
+          '放置ゲーム',
+          'インクリメンタル',
+          'K M B T',
+          '万 億 兆',
+          '桁区切り',
+          '位取り',
+          '単位換算',
+        ],
+        description:
+          '放置ゲームの大きな数を、カンマ区切り・K/M/B/T表記・万/億/兆表記で一覧・相互変換する早見表。',
+      },
+      en: {
+        name: 'Large Number Chart',
+        keywords: [
+          'incremental game',
+          'idle game',
+          'K M B T',
+          'number suffix',
+          'oku cho',
+          'thousands separator',
+          'scientific notation',
+        ],
+        description:
+          'Idle-game number cheat sheet: compare commas, K/M/B/T suffixes and Japanese units (万・億・兆), and convert any value.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

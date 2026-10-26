@@ -1,0 +1,254 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { largeNumberChartContent } from '../../i18n/tools/large-number-chart';
+import {
+  SHORT_SUFFIXES,
+  annotateJaReadings,
+  buildChartRows,
+} from '../../lib/tools/large-number-chart';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = largeNumberChartContent[locale];
+
+const rows = buildChartRows();
+const results = [
+  { id: 'commas', label: t.commasLabel },
+  { id: 'short', label: t.shortLabel },
+  { id: 'ja', label: t.jaLabel },
+  { id: 'scientific', label: t.scientificLabel },
+] as const;
+
+function shortName(exponent: number): string {
+  return exponent % 3 === 0 ? (SHORT_SUFFIXES[exponent / 3]?.name ?? '') : '';
+}
+---
+
+<ToolShell t={t}>
+  <div
+    id="large-number-root"
+    data-copied={t.copied}
+    data-copy-failed={t.copyFailed}
+    data-error-invalid={t.errorInvalid}
+    data-error-fraction={t.errorFraction}
+    data-error-too-large={t.errorTooLarge}
+    data-not-available={t.notAvailable}
+    data-digits-unit={t.digitsUnit}
+  >
+    <label for="large-number-input" class="ui-label">
+      {t.inputLabel}
+    </label>
+    <input
+      id="large-number-input"
+      type="text"
+      inputmode="text"
+      autocomplete="off"
+      spellcheck="false"
+      data-query-target="text"
+      placeholder={t.inputPlaceholder}
+      aria-describedby="large-number-hint large-number-error"
+      class="ui-input h-11 w-full max-w-2xl px-3 font-mono dark:bg-gray-900 dark:placeholder-gray-500"
+    />
+    <p
+      id="large-number-hint"
+      class="mt-1 text-xs text-gray-500 dark:text-gray-400"
+    >
+      {t.inputHint}
+    </p>
+    <p
+      id="large-number-error"
+      class="ui-error mt-2 max-w-2xl empty:hidden"
+      aria-live="polite"
+    ></p>
+
+    <section
+      class="mt-6 max-w-2xl"
+      aria-labelledby="large-number-result-heading"
+    >
+      <h2 id="large-number-result-heading" class="mb-2 text-lg font-bold">
+        {t.resultHeading}
+      </h2>
+      <dl class="space-y-3">
+        {results.map((row) => (
+          <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-gray-900">
+            <dt class="text-xs text-gray-500 dark:text-gray-400">
+              {row.label}
+            </dt>
+            <dd class="mt-1 flex items-start justify-between gap-2">
+              <span
+                id={`large-number-${row.id}`}
+                class="min-w-0 break-all font-mono text-lg font-semibold"
+              >
+                {t.notAvailable}
+              </span>
+              <button
+                type="button"
+                id={`large-number-copy-${row.id}`}
+                data-copy-source={`large-number-${row.id}`}
+                class="ui-btn shrink-0"
+              >
+                {t.copyButton}
+              </button>
+            </dd>
+          </div>
+        ))}
+        <div class="rounded-lg bg-white p-3 shadow-sm dark:bg-gray-900">
+          <dt class="text-xs text-gray-500 dark:text-gray-400">
+            {t.digitsLabel}
+          </dt>
+          <dd
+            id="large-number-digits"
+            class="mt-1 font-mono text-lg font-semibold"
+          >
+            {t.notAvailable}
+          </dd>
+        </div>
+      </dl>
+      <p
+        id="large-number-status"
+        class="mt-2 text-sm text-green-700 dark:text-green-400"
+        aria-live="polite"
+      ></p>
+    </section>
+
+    <section class="mt-10" aria-labelledby="large-number-chart-heading">
+      <h2 id="large-number-chart-heading" class="mb-1 text-lg font-bold">
+        {t.chartHeading}
+      </h2>
+      <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+        {t.chartIntro}
+      </p>
+      <div
+        class="max-h-[32rem] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800"
+        tabindex="0"
+        role="region"
+        aria-label={t.chartHeading}
+      >
+        <table id="large-number-chart" class="w-full text-left text-sm">
+          <thead class="sticky top-0 bg-gray-100 dark:bg-gray-800">
+            <tr>
+              <th scope="col" class="whitespace-nowrap px-3 py-2">
+                {t.columnPower}
+              </th>
+              <th scope="col" class="whitespace-nowrap px-3 py-2">
+                {t.columnShort}
+              </th>
+              <th scope="col" class="whitespace-nowrap px-3 py-2">
+                {t.columnShortName}
+              </th>
+              <th scope="col" class="whitespace-nowrap px-3 py-2">
+                {t.columnJa}
+              </th>
+              <th scope="col" class="whitespace-nowrap px-3 py-2">
+                {t.columnCommas}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr class="border-t border-gray-200 dark:border-gray-800">
+                <th
+                  scope="row"
+                  class="whitespace-nowrap px-3 py-1.5 font-mono font-normal"
+                >
+                  10<sup>{row.exponent}</sup>
+                </th>
+                <td class="whitespace-nowrap px-3 py-1.5 font-mono">
+                  {row.short}
+                </td>
+                <td class="whitespace-nowrap px-3 py-1.5">
+                  {shortName(row.exponent)}
+                </td>
+                <td class="whitespace-nowrap px-3 py-1.5">
+                  {annotateJaReadings(row.ja, locale)}
+                </td>
+                <td class="whitespace-nowrap px-3 py-1.5 font-mono">
+                  {row.commas}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</ToolShell>
+
+<script>
+  import { copyText } from '../../lib/clipboard';
+  import {
+    formatJa,
+    formatScientific,
+    formatShort,
+    formatWithCommas,
+    parseLargeNumber,
+  } from '../../lib/tools/large-number-chart';
+
+  const root = document.getElementById('large-number-root')!;
+  const input = document.getElementById(
+    'large-number-input',
+  ) as HTMLInputElement;
+  const errorEl = document.getElementById('large-number-error')!;
+  const statusEl = document.getElementById('large-number-status')!;
+  const digitsEl = document.getElementById('large-number-digits')!;
+  const outputs = {
+    commas: document.getElementById('large-number-commas')!,
+    short: document.getElementById('large-number-short')!,
+    ja: document.getElementById('large-number-ja')!,
+    scientific: document.getElementById('large-number-scientific')!,
+  };
+  const notAvailable = root.dataset.notAvailable ?? '';
+  const digitsUnit = root.dataset.digitsUnit ?? '';
+  const errorMessages = {
+    empty: '',
+    invalid: root.dataset.errorInvalid ?? '',
+    fraction: root.dataset.errorFraction ?? '',
+    tooLarge: root.dataset.errorTooLarge ?? '',
+  };
+
+  function clearOutputs() {
+    for (const el of Object.values(outputs)) el.textContent = notAvailable;
+    digitsEl.textContent = notAvailable;
+  }
+
+  function update() {
+    statusEl.textContent = '';
+    const result = parseLargeNumber(input.value);
+    if (!result.ok) {
+      errorEl.textContent = errorMessages[result.error];
+      clearOutputs();
+      return;
+    }
+    errorEl.textContent = '';
+    const value = result.value;
+    const short = formatShort(value);
+    const ja = formatJa(value);
+    outputs.commas.textContent = formatWithCommas(value);
+    outputs.short.textContent = short ?? notAvailable;
+    outputs.ja.textContent = ja ?? notAvailable;
+    outputs.scientific.textContent = formatScientific(value);
+    digitsEl.textContent = `${value.toString().length} ${digitsUnit}`;
+  }
+
+  input.addEventListener('input', update);
+
+  document
+    .querySelectorAll<HTMLButtonElement>('[data-copy-source]')
+    .forEach((button) => {
+      button.addEventListener('click', async () => {
+        const text =
+          document.getElementById(button.dataset.copySource!)?.textContent ??
+          '';
+        if (!text || text === notAvailable) return;
+        statusEl.textContent = (await copyText(text))
+          ? (root.dataset.copied ?? '')
+          : (root.dataset.copyFailed ?? '');
+      });
+    });
+
+  update();
+</script>

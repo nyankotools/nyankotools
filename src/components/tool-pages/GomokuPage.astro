@@ -1,0 +1,407 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { gomokuContent } from '../../i18n/tools/gomoku';
+import { DEFAULT_LEVEL, LEVELS } from '../../lib/tools/gomoku';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = gomokuContent[locale];
+const levelNames = {
+  easy: t.levelEasy,
+  normal: t.levelNormal,
+  hard: t.levelHard,
+  expert: t.levelExpert,
+};
+---
+
+<ToolShell t={t}>
+  <section
+    id="gm-root"
+    data-cell-label={t.cellLabel}
+    data-cell-empty={t.cellEmpty}
+    data-cell-black={t.cellBlack}
+    data-cell-white={t.cellWhite}
+    data-turn-you={t.turnYou}
+    data-turn-cpu={t.turnCpu}
+    data-thinking={t.thinking}
+    data-you-won={t.youWon}
+    data-cpu-won={t.cpuWon}
+    data-draw={t.draw}
+    data-started={t.started}
+  >
+    <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
+      <div>
+        <span id="gm-level-label" class="ui-label">
+          {t.levelLabel}
+        </span>
+        <div
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-labelledby="gm-level-label"
+        >
+          {LEVELS.map((level) => (
+            <button
+              type="button"
+              class="ui-seg-btn"
+              data-level={level}
+              aria-pressed={level === DEFAULT_LEVEL ? 'true' : 'false'}
+            >
+              {levelNames[level]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <span id="gm-side-label" class="ui-label">
+          {t.sideLabel}
+        </span>
+        <div class="ui-seg" role="group" aria-labelledby="gm-side-label">
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-side="1"
+            aria-pressed="true"
+          >
+            {t.sideBlack}
+          </button>
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-side="2"
+            aria-pressed="false"
+          >
+            {t.sideWhite}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button id="gm-new-button" type="button" class="ui-btn-primary">
+        {t.newGame}
+      </button>
+      <button id="gm-undo-button" type="button" class="ui-btn" disabled>
+        {t.undo}
+      </button>
+    </div>
+
+    <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
+      <div class="flex items-center gap-2">
+        <dt class="flex items-center gap-1.5">
+          <span
+            class="inline-block h-3.5 w-3.5 rounded-full bg-gray-900 ring-1 ring-gray-400 dark:ring-gray-500"
+            aria-hidden="true"
+          ></span>
+          {t.blackLabel}
+        </dt>
+        <dd id="gm-black-count" class="font-semibold tabular-nums">
+          0
+        </dd>
+      </div>
+      <div class="flex items-center gap-2">
+        <dt class="flex items-center gap-1.5">
+          <span
+            class="inline-block h-3.5 w-3.5 rounded-full bg-white ring-1 ring-gray-400 dark:ring-gray-500"
+            aria-hidden="true"
+          ></span>
+          {t.whiteLabel}
+        </dt>
+        <dd id="gm-white-count" class="font-semibold tabular-nums">
+          0
+        </dd>
+      </div>
+    </dl>
+
+    <div class="relative mt-3 w-full max-w-xl">
+      <div
+        id="gm-board"
+        role="group"
+        aria-label={t.boardLabel}
+        class="grid w-full touch-manipulation grid-cols-15 gap-px border-2 border-amber-900 bg-amber-900 select-none"
+      ></div>
+      <div
+        id="gm-result"
+        aria-hidden="true"
+        hidden
+        class="absolute inset-0 flex cursor-pointer items-center justify-center p-4"
+      >
+        <p
+          id="gm-result-text"
+          class="max-w-full rounded-lg bg-gray-900/90 px-5 py-4 text-center text-lg font-bold text-white shadow-lg ring-1 ring-white/30"
+        ></p>
+      </div>
+    </div>
+
+    <p
+      id="gm-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    DEFAULT_LEVEL,
+    SIZE,
+    chooseMove,
+    countStones,
+    newGame,
+    playMove,
+    type GameState,
+    type Level,
+    type Player,
+  } from '../../lib/tools/gomoku';
+
+  const CPU_DELAY_MS = 300;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('gm-root');
+  const msg = root.dataset;
+  const boardEl = $('gm-board');
+  const statusEl = $('gm-status');
+  const resultEl = $('gm-result');
+  const resultTextEl = $('gm-result-text');
+  const blackCountEl = $('gm-black-count');
+  const whiteCountEl = $('gm-white-count');
+  const undoButton = $<HTMLButtonElement>('gm-undo-button');
+  const levelButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-level]'),
+  );
+  const sideButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-side]'),
+  );
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  let level: Level = DEFAULT_LEVEL;
+  let human: Player = 1;
+  let state: GameState = newGame();
+  /** あなたの手番になったときの盤面（「待った」で戻る先） */
+  let history: GameState[] = [];
+  let thinking = false;
+  let notice = '';
+  let timerId: number | undefined;
+  /** 勝敗メッセージを閉じたあと、次の対局まで再表示しない */
+  let resultDismissed = false;
+  let buttons: HTMLButtonElement[] = [];
+  let focusIndex = 0;
+
+  const CELL_BASE =
+    'relative flex aspect-square w-full items-center justify-center focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-600';
+
+  function buildBoard() {
+    boardEl.replaceChildren();
+    buttons = [];
+    for (let i = 0; i < SIZE * SIZE; i++) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.dataset.index = String(i);
+      b.tabIndex = i === 0 ? 0 : -1;
+      boardEl.append(b);
+      buttons.push(b);
+    }
+  }
+
+  function humanCanMove() {
+    return !state.over && !thinking && state.turn === human;
+  }
+
+  function render() {
+    const movable = humanCanMove();
+    const winCells = new Set(state.winLine);
+    buttons.forEach((button, i) => {
+      const stone = state.board[i];
+      const canPlace = movable && stone === 0;
+      const bg = winCells.has(i) ? 'bg-yellow-300' : 'bg-amber-200';
+      button.className = `${CELL_BASE} ${bg} ${
+        canPlace ? 'cursor-pointer hover:bg-amber-100' : 'cursor-default'
+      }`;
+      button.replaceChildren();
+      if (stone !== 0) {
+        const piece = document.createElement('span');
+        piece.className = `block h-4/5 w-4/5 rounded-full shadow ${
+          stone === 1
+            ? 'bg-gray-900 ring-1 ring-black'
+            : 'bg-white ring-1 ring-gray-500'
+        }`;
+        button.append(piece);
+        if (i === state.lastMove) {
+          const mark = document.createElement('span');
+          mark.className = 'absolute h-1.5 w-1.5 rounded-full bg-red-500';
+          mark.setAttribute('aria-hidden', 'true');
+          button.append(mark);
+        }
+      }
+      button.setAttribute(
+        'aria-label',
+        fill(msg.cellLabel, {
+          row: String(Math.floor(i / SIZE) + 1),
+          col: String((i % SIZE) + 1),
+          state:
+            (stone === 1
+              ? msg.cellBlack
+              : stone === 2
+                ? msg.cellWhite
+                : msg.cellEmpty) ?? '',
+        }),
+      );
+    });
+    const { black, white } = countStones(state.board);
+    blackCountEl.textContent = String(black);
+    whiteCountEl.textContent = String(white);
+    undoButton.disabled = thinking || history.length === 0;
+  }
+
+  function setStatus() {
+    let text: string;
+    if (state.over) {
+      text =
+        (state.winner === null
+          ? msg.draw
+          : state.winner === human
+            ? msg.youWon
+            : msg.cpuWon) ?? '';
+    } else if (thinking) {
+      text = msg.thinking ?? '';
+    } else {
+      text = state.turn === human ? (msg.turnYou ?? '') : (msg.turnCpu ?? '');
+    }
+    statusEl.textContent = [notice, text].filter(Boolean).join(' ');
+    // 勝敗は盤面中央にも表示する（読み上げは status 側で行うため overlay は aria-hidden）
+    resultTextEl.textContent = state.over ? text : '';
+    resultEl.hidden = !state.over || resultDismissed;
+  }
+
+  function refresh() {
+    render();
+    setStatus();
+  }
+
+  function cancelCpu() {
+    if (timerId !== undefined) {
+      window.clearTimeout(timerId);
+      timerId = undefined;
+    }
+    thinking = false;
+  }
+
+  function scheduleCpu() {
+    if (state.over || state.turn === human) {
+      thinking = false;
+      refresh();
+      return;
+    }
+    thinking = true;
+    refresh();
+    // 描画を先に済ませるため、少し待ってから探索する（探索中は画面が止まる）
+    timerId = window.setTimeout(() => {
+      timerId = undefined;
+      const move = chooseMove(state.board, state.turn, level);
+      if (move >= 0) state = playMove(state, move);
+      thinking = false;
+      scheduleCpu();
+    }, CPU_DELAY_MS);
+  }
+
+  function startGame() {
+    cancelCpu();
+    state = newGame();
+    history = [];
+    resultDismissed = false;
+    notice = msg.started ?? '';
+    scheduleCpu();
+  }
+
+  function humanMove(index: number) {
+    if (!humanCanMove()) return;
+    const next = playMove(state, index);
+    if (next === state) return;
+    history.push(state);
+    notice = '';
+    state = next;
+    scheduleCpu();
+  }
+
+  function undo() {
+    if (thinking || history.length === 0) return;
+    cancelCpu();
+    state = history.pop() as GameState;
+    resultDismissed = false;
+    notice = '';
+    refresh();
+  }
+
+  function setFocus(index: number) {
+    if (index < 0 || index >= buttons.length) return;
+    buttons[focusIndex].tabIndex = -1;
+    focusIndex = index;
+    buttons[index].tabIndex = 0;
+  }
+
+  boardEl.addEventListener('click', (e) => {
+    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-index]');
+    if (!el) return;
+    const index = Number(el.dataset.index);
+    setFocus(index);
+    humanMove(index);
+  });
+
+  boardEl.addEventListener('keydown', (e) => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const row = Math.floor(focusIndex / SIZE);
+    const col = focusIndex % SIZE;
+    let target = -1;
+    if (e.key === 'ArrowLeft' && col > 0) target = focusIndex - 1;
+    else if (e.key === 'ArrowRight' && col < SIZE - 1) target = focusIndex + 1;
+    else if (e.key === 'ArrowUp' && row > 0) target = focusIndex - SIZE;
+    else if (e.key === 'ArrowDown' && row < SIZE - 1)
+      target = focusIndex + SIZE;
+    if (e.key.startsWith('Arrow')) {
+      e.preventDefault();
+      if (target >= 0) {
+        setFocus(target);
+        buttons[target].focus();
+      }
+    }
+  });
+
+  levelButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      level = b.dataset.level as Level;
+      levelButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      startGame();
+    }),
+  );
+  sideButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      human = Number(b.dataset.side) as Player;
+      sideButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      startGame();
+    }),
+  );
+  resultEl.addEventListener('click', () => {
+    resultDismissed = true;
+    resultEl.hidden = true;
+  });
+  $('gm-new-button').addEventListener('click', startGame);
+  undoButton.addEventListener('click', undo);
+
+  buildBoard();
+  startGame();
+  notice = '';
+  setStatus();
+</script>

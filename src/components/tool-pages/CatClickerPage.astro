@@ -1,0 +1,253 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { catClickerContent } from '../../i18n/tools/cat-clicker';
+import { UPGRADES } from '../../lib/tools/cat-clicker';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = catClickerContent[locale];
+
+const stats = [
+  ['perclick', t.perClickLabel],
+  ['persecond', t.perSecondLabel],
+  ['total', t.totalLabel],
+  ['clicks', t.clicksLabel],
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="cc-root"
+    data-click-effect={t.clickEffect}
+    data-auto-effect={t.autoEffect}
+    data-offline-gain={t.offlineGain}
+    data-offline-capped={t.offlineCapped}
+    data-reset-confirm={t.resetConfirm}
+  >
+    <div class="flex flex-wrap items-center gap-4">
+      <button
+        id="cc-cat"
+        type="button"
+        aria-label={t.catLabel}
+        class="flex h-32 w-32 touch-manipulation items-center justify-center rounded-full border-2 border-gray-300 bg-amber-100 text-7xl shadow-md select-none hover:bg-amber-200 focus:outline-2 focus:outline-offset-2 focus:outline-blue-600 active:scale-95 dark:border-gray-700 dark:bg-amber-200"
+      >
+        <span aria-hidden="true">🐱</span>
+      </button>
+      <div>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          🐟 {t.pointsLabel}
+        </p>
+        <p
+          id="cc-points"
+          class="text-4xl font-bold text-gray-900 tabular-nums dark:text-gray-100"
+        >
+          0
+        </p>
+      </div>
+    </div>
+
+    <p
+      id="cc-message"
+      aria-live="polite"
+      class="mt-3 min-h-5 text-sm font-medium text-green-800 dark:text-green-400"
+    ></p>
+    <p
+      id="cc-save-failed"
+      hidden
+      class="mt-1 text-sm text-red-700 dark:text-red-400"
+    >
+      {t.saveFailed}
+    </p>
+
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full max-w-2xl min-w-[280px] border-collapse text-sm">
+        <tbody>
+          {stats.map(([id, label]) => (
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                {label}
+              </td>
+              <td
+                id={`cc-stat-${id}`}
+                class="py-2 text-right text-gray-900 tabular-nums dark:text-gray-100"
+              >
+                0
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="mt-6 text-lg font-bold">{t.upgradesHeading}</h2>
+    <ul class="mt-2 max-w-2xl space-y-2">
+      {UPGRADES.map((u) => (
+        <li
+          class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-gray-300 p-3 dark:border-gray-700"
+          data-upgrade={u.id}
+          data-kind={u.kind}
+          data-value={u.value}
+        >
+          <div class="min-w-0 flex-1 basis-48">
+            <p class="font-medium text-gray-900 dark:text-gray-100">
+              {t.upgrades[u.id].name}
+              <span class="ml-1 text-sm text-gray-600 dark:text-gray-400">
+                {t.levelLabel}
+                <span data-role="level">0</span>
+              </span>
+            </p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+              {t.upgrades[u.id].description}（
+              <span data-role="effect" />）
+            </p>
+          </div>
+          <button
+            type="button"
+            data-role="buy"
+            aria-label={`${t.buyLabel}: ${t.upgrades[u.id].name}`}
+            class="ui-btn ui-btn-primary"
+          >
+            {t.buyLabel}（🐟 <span data-role="cost">0</span>）
+          </button>
+        </li>
+      ))}
+    </ul>
+
+    <div class="mt-4">
+      <button id="cc-reset" type="button" class="ui-btn">
+        {t.resetLabel}
+      </button>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    UPGRADES,
+    buyUpgrade,
+    canBuy,
+    clickCat,
+    clickPower,
+    createState,
+    formatNumber,
+    parseState,
+    perSecond,
+    serializeState,
+    tick,
+    upgradeCost,
+  } from '../../lib/tools/cat-clicker';
+  import type { GameState, UpgradeId } from '../../lib/tools/cat-clicker';
+
+  const STORAGE_KEY = 'nyankotools:cat-clicker:save';
+
+  const root = document.getElementById('cc-root')!;
+  const d = root.dataset;
+  const message = document.getElementById('cc-message')!;
+  const saveFailed = document.getElementById('cc-save-failed')!;
+  const el = (id: string) => document.getElementById(id)!;
+  const rows = Array.from(
+    root.querySelectorAll<HTMLElement>('li[data-upgrade]'),
+  );
+
+  function loadSaved(): GameState | null {
+    try {
+      return parseState(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      return null;
+    }
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, serializeState(state));
+      saveFailed.hidden = true;
+    } catch {
+      saveFailed.hidden = false;
+    }
+  }
+
+  let state: GameState = loadSaved() ?? createState(Date.now());
+
+  function showOffline() {
+    const r = tick(state, Date.now());
+    state = r.state;
+    // 10秒未満の差は通常の経過なので知らせない
+    if (r.gained > 0 && r.elapsedMs >= 10_000) {
+      let text = d.offlineGain!.replace('{n}', formatNumber(r.gained));
+      if (r.capped) text += ` ${d.offlineCapped}`;
+      message.textContent = text;
+    }
+  }
+
+  function render() {
+    const levels = state.levels;
+    el('cc-points').textContent = formatNumber(state.points);
+    el('cc-stat-perclick').textContent = formatNumber(clickPower(levels));
+    el('cc-stat-persecond').textContent = formatNumber(perSecond(levels));
+    el('cc-stat-total').textContent = formatNumber(state.total);
+    el('cc-stat-clicks').textContent = formatNumber(state.clicks);
+    for (const row of rows) {
+      const id = row.dataset.upgrade as UpgradeId;
+      const def = UPGRADES.find((u) => u.id === id)!;
+      const tpl = def.kind === 'click' ? d.clickEffect! : d.autoEffect!;
+      row.querySelector('[data-role="level"]')!.textContent = String(
+        levels[id],
+      );
+      row.querySelector('[data-role="effect"]')!.textContent = tpl.replace(
+        '{n}',
+        formatNumber(def.value),
+      );
+      row.querySelector('[data-role="cost"]')!.textContent = formatNumber(
+        upgradeCost(id, levels[id]),
+      );
+      (row.querySelector('[data-role="buy"]') as HTMLButtonElement).disabled =
+        !canBuy(state, id);
+    }
+  }
+
+  el('cc-cat').addEventListener('click', () => {
+    state = clickCat(state);
+    render();
+  });
+
+  for (const row of rows) {
+    row.querySelector('[data-role="buy"]')!.addEventListener('click', () => {
+      state = tick(state, Date.now()).state;
+      const next = buyUpgrade(state, row.dataset.upgrade as UpgradeId);
+      if (next) state = next;
+      render();
+      save();
+    });
+  }
+
+  el('cc-reset').addEventListener('click', () => {
+    if (!window.confirm(d.resetConfirm!)) return;
+    state = createState(Date.now());
+    message.textContent = '';
+    render();
+    save();
+  });
+
+  showOffline();
+  render();
+  save();
+
+  setInterval(() => {
+    state = tick(state, Date.now()).state;
+    render();
+  }, 250);
+  setInterval(save, 5000);
+  window.addEventListener('pagehide', save);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      save();
+    } else {
+      showOffline();
+      render();
+    }
+  });
+</script>

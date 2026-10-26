@@ -1,0 +1,333 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { ticTacToeContent } from '../../i18n/tools/tic-tac-toe';
+import { DEFAULT_LEVEL, LEVELS } from '../../lib/tools/tic-tac-toe';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = ticTacToeContent[locale];
+const levelNames = {
+  easy: t.levelEasy,
+  normal: t.levelNormal,
+  hard: t.levelHard,
+};
+---
+
+<ToolShell t={t}>
+  <section
+    id="ttt-root"
+    data-cell-label={t.cellLabel}
+    data-cell-empty={t.cellEmpty}
+    data-cell-x={t.cellX}
+    data-cell-o={t.cellO}
+    data-turn-you={t.turnYou}
+    data-turn-cpu={t.turnCpu}
+    data-thinking={t.thinking}
+    data-you-won={t.youWon}
+    data-cpu-won={t.cpuWon}
+    data-draw={t.draw}
+    data-started={t.started}
+  >
+    <div class="flex flex-wrap items-end gap-x-6 gap-y-3">
+      <div>
+        <span id="ttt-level-label" class="ui-label">
+          {t.levelLabel}
+        </span>
+        <div
+          class="ui-seg flex-wrap"
+          role="group"
+          aria-labelledby="ttt-level-label"
+        >
+          {LEVELS.map((level) => (
+            <button
+              type="button"
+              class="ui-seg-btn"
+              data-level={level}
+              aria-pressed={level === DEFAULT_LEVEL ? 'true' : 'false'}
+            >
+              {levelNames[level]}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <span id="ttt-side-label" class="ui-label">
+          {t.sideLabel}
+        </span>
+        <div class="ui-seg" role="group" aria-labelledby="ttt-side-label">
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-side="1"
+            aria-pressed="true"
+          >
+            {t.sideFirst}
+          </button>
+          <button
+            type="button"
+            class="ui-seg-btn"
+            data-side="2"
+            aria-pressed="false"
+          >
+            {t.sideSecond}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-3 flex flex-wrap items-center gap-3">
+      <button id="ttt-new-button" type="button" class="ui-btn-primary">
+        {t.newGame}
+      </button>
+      <button id="ttt-undo-button" type="button" class="ui-btn" disabled>
+        {t.undo}
+      </button>
+    </div>
+
+    <div class="relative mt-4 w-full max-w-xs">
+      <div
+        id="ttt-board"
+        role="group"
+        aria-label={t.boardLabel}
+        class="grid w-full touch-manipulation grid-cols-3 gap-2"
+      ></div>
+      <div
+        id="ttt-result"
+        aria-hidden="true"
+        hidden
+        class="absolute inset-0 flex cursor-pointer items-center justify-center p-4"
+      >
+        <p
+          id="ttt-result-text"
+          class="max-w-full rounded-lg bg-gray-900/90 px-5 py-4 text-center text-lg font-bold text-white shadow-lg ring-1 ring-white/30"
+        ></p>
+      </div>
+    </div>
+
+    <p
+      id="ttt-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    CELLS,
+    DEFAULT_LEVEL,
+    chooseMove,
+    newGame,
+    playMove,
+    type GameState,
+    type Level,
+    type Player,
+  } from '../../lib/tools/tic-tac-toe';
+
+  const CPU_DELAY_MS = 400;
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('ttt-root');
+  const msg = root.dataset;
+  const boardEl = $('ttt-board');
+  const statusEl = $('ttt-status');
+  const resultEl = $('ttt-result');
+  const resultTextEl = $('ttt-result-text');
+  const undoButton = $<HTMLButtonElement>('ttt-undo-button');
+  const levelButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-level]'),
+  );
+  const sideButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-side]'),
+  );
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  let level: Level = DEFAULT_LEVEL;
+  let human: Player = 1;
+  let state: GameState = newGame();
+  /** あなたの手番になったときの盤面（「待った」で戻る先） */
+  let history: GameState[] = [];
+  let thinking = false;
+  let notice = '';
+  let timerId: number | undefined;
+  let resultDismissed = false;
+  let cells: HTMLButtonElement[] = [];
+
+  function buildBoard() {
+    boardEl.replaceChildren();
+    cells = [];
+    for (let i = 0; i < CELLS; i++) {
+      const cell = document.createElement('button');
+      cell.type = 'button';
+      cell.dataset.index = String(i);
+      boardEl.append(cell);
+      cells.push(cell);
+    }
+  }
+
+  function humanCanMove() {
+    return !state.over && !thinking && state.turn === human;
+  }
+
+  function render() {
+    const win = new Set(state.line);
+    const canMove = humanCanMove();
+    cells.forEach((cell, i) => {
+      const mark = state.board[i];
+      const base =
+        'flex aspect-square w-full items-center justify-center rounded-lg border-2 text-5xl font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 sm:text-6xl';
+      let tone =
+        'border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800';
+      if (win.has(i)) {
+        tone =
+          'border-green-700 bg-green-100 dark:border-green-400 dark:bg-green-900';
+      }
+      const color =
+        mark === 1
+          ? 'text-blue-700 dark:text-blue-300'
+          : 'text-red-700 dark:text-red-300';
+      const hover =
+        mark === 0 && canMove
+          ? ' hover:bg-gray-100 dark:hover:bg-gray-700'
+          : '';
+      const dim = state.over && mark !== 0 && !win.has(i) && win.size > 0;
+      cell.className = `${base} ${tone} ${color}${hover}${dim ? ' opacity-60' : ''}${
+        i === state.lastMove && !win.has(i) ? ' ring-2 ring-gray-500' : ''
+      }`;
+      const symbol =
+        mark === 1 ? (msg.cellX ?? '') : mark === 2 ? (msg.cellO ?? '') : '';
+      cell.textContent = symbol;
+      cell.disabled = mark !== 0 || !canMove;
+      cell.setAttribute(
+        'aria-label',
+        fill(msg.cellLabel, {
+          row: String(Math.floor(i / 3) + 1),
+          col: String((i % 3) + 1),
+          state: symbol || (msg.cellEmpty ?? ''),
+        }),
+      );
+    });
+    undoButton.disabled = thinking || history.length === 0;
+  }
+
+  function setStatus() {
+    let text: string;
+    if (state.over) {
+      text =
+        state.winner === null
+          ? (msg.draw ?? '')
+          : state.winner === human
+            ? (msg.youWon ?? '')
+            : (msg.cpuWon ?? '');
+    } else if (thinking) {
+      text = msg.thinking ?? '';
+    } else {
+      text = state.turn === human ? (msg.turnYou ?? '') : (msg.turnCpu ?? '');
+    }
+    statusEl.textContent = [notice, text].filter(Boolean).join(' ');
+    resultTextEl.textContent = state.over ? text : '';
+    resultEl.hidden = !state.over || resultDismissed;
+  }
+
+  function refresh() {
+    render();
+    setStatus();
+  }
+
+  function cancelCpu() {
+    if (timerId !== undefined) {
+      window.clearTimeout(timerId);
+      timerId = undefined;
+    }
+    thinking = false;
+  }
+
+  function scheduleCpu() {
+    if (state.over || state.turn === human) {
+      thinking = false;
+      refresh();
+      return;
+    }
+    thinking = true;
+    refresh();
+    timerId = window.setTimeout(() => {
+      timerId = undefined;
+      const index = chooseMove(state.board, state.turn, level);
+      if (index >= 0) state = playMove(state, index);
+      scheduleCpu();
+    }, CPU_DELAY_MS);
+  }
+
+  function startGame() {
+    cancelCpu();
+    state = newGame();
+    history = [];
+    resultDismissed = false;
+    notice = msg.started ?? '';
+    scheduleCpu();
+  }
+
+  function humanMove(index: number) {
+    if (!humanCanMove()) return;
+    const next = playMove(state, index);
+    if (next === state) return;
+    history.push(state);
+    notice = '';
+    state = next;
+    scheduleCpu();
+  }
+
+  function undo() {
+    if (thinking || history.length === 0) return;
+    cancelCpu();
+    state = history.pop() as GameState;
+    resultDismissed = false;
+    notice = '';
+    refresh();
+  }
+
+  boardEl.addEventListener('click', (e) => {
+    const el = (e.target as HTMLElement).closest<HTMLElement>('[data-index]');
+    if (el) humanMove(Number(el.dataset.index));
+  });
+
+  levelButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      level = b.dataset.level as Level;
+      levelButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      startGame();
+    }),
+  );
+  sideButtons.forEach((b) =>
+    b.addEventListener('click', () => {
+      human = Number(b.dataset.side) as Player;
+      sideButtons.forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)),
+      );
+      startGame();
+    }),
+  );
+  resultEl.addEventListener('click', () => {
+    resultDismissed = true;
+    resultEl.hidden = true;
+  });
+  $('ttt-new-button').addEventListener('click', startGame);
+  undoButton.addEventListener('click', undo);
+
+  buildBoard();
+  startGame();
+  notice = '';
+  setStatus();
+</script>

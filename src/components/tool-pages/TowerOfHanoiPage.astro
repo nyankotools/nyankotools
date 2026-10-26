@@ -1,0 +1,361 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { towerOfHanoiContent } from '../../i18n/tools/tower-of-hanoi';
+import {
+  MAX_DISCS,
+  MIN_DISCS,
+  PEG_COUNT,
+} from '../../lib/tools/tower-of-hanoi';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = towerOfHanoiContent[locale];
+
+const pegs = Array.from({ length: PEG_COUNT }, (_, i) => i);
+const counts = Array.from(
+  { length: MAX_DISCS - MIN_DISCS + 1 },
+  (_, i) => MIN_DISCS + i,
+);
+
+const stats = [
+  ['moves', t.movesLabel, '0'],
+  ['min', t.minLabel, '7'],
+  ['best', t.bestLabel, t.bestNone],
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="th-root"
+    data-state="ready"
+    data-peg-label={t.pegLabel}
+    data-peg-empty={t.pegEmpty}
+    data-peg-selected={t.pegSelected}
+    data-ready={t.ready}
+    data-picked={t.picked}
+    data-invalid={t.invalid}
+    data-solved-optimal={t.solvedOptimal}
+    data-solved-extra={t.solvedExtra}
+    data-new-best={t.newBest}
+    data-best-none={t.bestNone}
+    data-best-cleared={t.bestCleared}
+    data-auto-running={t.autoRunning}
+    data-auto-done={t.autoDone}
+    data-auto-stopped={t.autoStopped}
+    data-auto-label={t.autoLabel}
+    data-stop-label={t.stopLabel}
+  >
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="th-discs" class="ui-label">
+          {t.discsLabel}
+        </label>
+        <select id="th-discs" class="ui-input h-11 w-32 px-3 dark:bg-gray-900">
+          {counts.map((n) => (
+            <option value={String(n)} selected={n === 4}>
+              {t.discsOption.replace('{n}', String(n))}
+            </option>
+          ))}
+        </select>
+      </div>
+      <button id="th-reset" type="button" class="ui-btn">
+        {t.resetLabel}
+      </button>
+      <button id="th-auto" type="button" class="ui-btn ui-btn-primary">
+        {t.autoLabel}
+      </button>
+    </div>
+
+    <dl class="mt-4 grid max-w-md grid-cols-3 gap-x-4 gap-y-1 text-sm">
+      {stats.map(([id, label, value]) => (
+        <div>
+          <dt class="text-gray-600 dark:text-gray-400">{label}</dt>
+          <dd
+            id={`th-${id}`}
+            class="text-lg font-bold text-gray-900 tabular-nums dark:text-gray-100"
+          >
+            {value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+
+    <div
+      id="th-board"
+      role="group"
+      aria-label={t.boardLabel}
+      class="mt-4 grid max-w-xl grid-cols-3 gap-2"
+    >
+      {pegs.map((i) => (
+        <button
+          type="button"
+          data-peg={i}
+          aria-label={t.pegEmpty.replace('{n}', String(i + 1))}
+          class="relative flex h-60 w-full cursor-pointer touch-manipulation items-end justify-center overflow-hidden rounded-xl border-2 border-gray-300 bg-gray-50 pb-1 focus:outline-2 focus:outline-offset-2 focus:outline-blue-600 data-[selected=true]:border-blue-600 data-[selected=true]:bg-blue-50 dark:border-gray-600 dark:bg-gray-800 dark:focus:outline-blue-400 dark:data-[selected=true]:border-blue-400 dark:data-[selected=true]:bg-blue-950"
+        >
+          <span
+            aria-hidden="true"
+            class="absolute inset-y-2 left-1/2 w-2 -translate-x-1/2 rounded-full bg-gray-400 dark:bg-gray-500"
+          />
+          <span
+            data-stack
+            aria-hidden="true"
+            class="relative flex w-full flex-col-reverse items-center gap-0.5"
+          />
+          <span class="sr-only" data-peg-state />
+        </button>
+      ))}
+    </div>
+
+    <p
+      id="th-status"
+      role="status"
+      class="mt-3 min-h-6 max-w-xl text-sm font-medium text-gray-800 dark:text-gray-200"
+    >
+      {t.ready}
+    </p>
+
+    <button id="th-reset-best" type="button" class="ui-btn mt-3">
+      {t.resetBestLabel}
+    </button>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    PEG_COUNT,
+    clampDiscs,
+    createGame,
+    extraMoves,
+    isNewBest,
+    isOptimal,
+    isSolved,
+    minMoves,
+    move,
+    parseBest,
+    solve,
+  } from '../../lib/tools/tower-of-hanoi';
+  import type { HanoiState } from '../../lib/tools/tower-of-hanoi';
+
+  const STEP_MS = 400;
+
+  const root = document.getElementById('th-root')!;
+  const d = root.dataset;
+  const select = document.getElementById('th-discs') as HTMLSelectElement;
+  const resetButton = document.getElementById('th-reset')!;
+  const autoButton = document.getElementById('th-auto')!;
+  const resetBestButton = document.getElementById('th-reset-best')!;
+  const statusEl = document.getElementById('th-status')!;
+  const el = (id: string) => document.getElementById(`th-${id}`)!;
+  const pegButtons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('#th-board button[data-peg]'),
+  );
+
+  let game: HanoiState = createGame(Number(select.value));
+  let selected: number | null = null;
+  let timer = 0;
+  let auto = false;
+  let best = 0;
+
+  function fill(template: string, values: Record<string, string>): string {
+    return template.replace(/\{(\w+)\}/g, (m, k: string) => values[k] ?? m);
+  }
+
+  function storageKey(): string {
+    return `tower-of-hanoi-best-${game.discs}`;
+  }
+
+  function loadBest(): number {
+    try {
+      return parseBest(localStorage.getItem(storageKey()));
+    } catch {
+      // localStorageが使えない環境では、このページを開いている間だけの記録にする
+      return 0;
+    }
+  }
+
+  function saveBest() {
+    try {
+      if (best > 0) localStorage.setItem(storageKey(), String(best));
+      else localStorage.removeItem(storageKey());
+    } catch {
+      // 保存できない環境では今回の表示だけ反映する
+    }
+  }
+
+  function setState(state: 'ready' | 'playing' | 'solved' | 'auto') {
+    d.state = state;
+  }
+
+  function render() {
+    el('moves').textContent = String(game.moves);
+    el('min').textContent = String(minMoves(game.discs));
+    el('best').textContent = best > 0 ? String(best) : d.bestNone!;
+    pegButtons.forEach((button, i) => {
+      const peg = game.pegs[i]!;
+      const stack = button.querySelector<HTMLElement>('[data-stack]')!;
+      stack.replaceChildren(
+        ...peg.map((size) => {
+          const disc = document.createElement('span');
+          disc.dataset.disc = String(size);
+          disc.className = 'block h-5 rounded-md border border-black/30';
+          disc.style.width = `${22 + (68 * size) / game.discs}%`;
+          disc.style.backgroundColor = `hsl(${((size - 1) * 360) / game.discs} 70% 60%)`;
+          return disc;
+        }),
+      );
+      const isSel = selected === i;
+      button.dataset.selected = String(isSel);
+      button.setAttribute('aria-pressed', String(isSel));
+      const label =
+        peg.length === 0
+          ? fill(d.pegEmpty!, { n: String(i + 1) })
+          : fill(d.pegLabel!, {
+              n: String(i + 1),
+              list: peg.join(', '),
+            });
+      button.setAttribute('aria-label', label);
+      button.querySelector<HTMLElement>('[data-peg-state]')!.textContent = isSel
+        ? d.pegSelected!
+        : '';
+    });
+  }
+
+  function stopAuto() {
+    window.clearTimeout(timer);
+    auto = false;
+    autoButton.textContent = d.autoLabel!;
+  }
+
+  function newGame() {
+    stopAuto();
+    selected = null;
+    game = createGame(Number(select.value));
+    best = loadBest();
+    setState('ready');
+    statusEl.textContent = d.ready!;
+    render();
+  }
+
+  function handlePeg(index: number) {
+    if (auto || isSolved(game)) return;
+    if (selected === null) {
+      if (game.pegs[index]!.length === 0) return;
+      selected = index;
+      setState('playing');
+      statusEl.textContent = fill(d.picked!, { n: String(index + 1) });
+      render();
+      return;
+    }
+    if (selected === index) {
+      selected = null;
+      statusEl.textContent = d.ready!;
+      render();
+      return;
+    }
+    const next = move(game, selected, index);
+    if (!next) {
+      // 移動できないときは選択を保ったまま、別の移動先を選べるようにする
+      statusEl.textContent = d.invalid!;
+      return;
+    }
+    game = next;
+    selected = null;
+    if (isSolved(game)) {
+      setState('solved');
+      const min = minMoves(game.discs);
+      let message = isOptimal(game)
+        ? fill(d.solvedOptimal!, {
+            moves: String(game.moves),
+            min: String(min),
+          })
+        : fill(d.solvedExtra!, {
+            moves: String(game.moves),
+            min: String(min),
+            extra: String(extraMoves(game)),
+          });
+      if (isNewBest(game.moves, best)) {
+        best = game.moves;
+        saveBest();
+        message += ` ${d.newBest}`;
+      }
+      statusEl.textContent = message;
+    } else {
+      setState('playing');
+      statusEl.textContent = d.ready!;
+    }
+    render();
+  }
+
+  function startAuto() {
+    stopAuto();
+    selected = null;
+    game = createGame(Number(select.value));
+    const steps = solve(game.discs);
+    let i = 0;
+    auto = true;
+    setState('auto');
+    autoButton.textContent = d.stopLabel!;
+    statusEl.textContent = d.autoRunning!;
+    render();
+    const step = () => {
+      if (!auto) return;
+      const s = steps[i];
+      if (!s) {
+        auto = false;
+        autoButton.textContent = d.autoLabel!;
+        setState('solved');
+        statusEl.textContent = fill(d.autoDone!, { moves: String(game.moves) });
+        return;
+      }
+      i += 1;
+      game = move(game, s.from, s.to) ?? game;
+      render();
+      timer = window.setTimeout(step, STEP_MS);
+    };
+    timer = window.setTimeout(step, STEP_MS);
+  }
+
+  pegButtons.forEach((button, i) => {
+    button.addEventListener('click', () => handlePeg(i));
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    const target = event.target as HTMLElement | null;
+    if (
+      target &&
+      target.closest('input, textarea, select, a, button:not([data-peg])')
+    )
+      return;
+    const n = Number(event.key);
+    if (Number.isInteger(n) && n >= 1 && n <= PEG_COUNT) handlePeg(n - 1);
+  });
+
+  select.addEventListener('change', () => {
+    select.value = String(clampDiscs(Number(select.value)));
+    newGame();
+  });
+  resetButton.addEventListener('click', newGame);
+  autoButton.addEventListener('click', () => {
+    if (auto) {
+      stopAuto();
+      setState('playing');
+      statusEl.textContent = d.autoStopped!;
+    } else {
+      startAuto();
+    }
+  });
+  resetBestButton.addEventListener('click', () => {
+    best = 0;
+    saveBest();
+    render();
+    statusEl.textContent = d.bestCleared!;
+  });
+
+  newGame();
+</script>

@@ -1,0 +1,293 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { numberMemoryTestContent } from '../../i18n/tools/number-memory-test';
+import {
+  MAX_DIGITS,
+  START_DIGITS,
+  STORAGE_KEY,
+} from '../../lib/tools/number-memory-test';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = numberMemoryTestContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="nm-root"
+    data-start={START_DIGITS}
+    data-max={MAX_DIGITS}
+    data-storage-key={STORAGE_KEY}
+    data-unit={t.digitsUnit}
+    data-memorize={t.memorizeText}
+    data-correct={t.correctText}
+    data-game-over={t.gameOverText}
+    data-new-best={t.newBestText}
+    data-next={t.nextLabel}
+    data-retry={t.retryLabel}
+    data-reached={t.reachedLabel}
+    data-answer={t.correctAnswerLabel}
+    data-yours={t.yourAnswerLabel}
+  >
+    <dl class="flex max-w-2xl flex-wrap gap-x-8 gap-y-1 text-sm">
+      <div class="flex gap-2">
+        <dt class="text-gray-600 dark:text-gray-400">{t.levelLabel}</dt>
+        <dd
+          id="nm-level"
+          class="font-bold text-gray-900 tabular-nums dark:text-gray-100"
+        >
+          -
+        </dd>
+      </div>
+      <div class="flex gap-2">
+        <dt class="text-gray-600 dark:text-gray-400">{t.bestLabel}</dt>
+        <dd
+          id="nm-best"
+          class="font-bold text-gray-900 tabular-nums dark:text-gray-100"
+        >
+          -
+        </dd>
+      </div>
+    </dl>
+
+    <div class="mt-3 max-w-2xl rounded-xl border border-gray-300 p-4 text-center dark:border-gray-700">
+      <p
+        id="nm-status"
+        role="status"
+        class="min-h-6 text-sm font-medium text-gray-700 dark:text-gray-300"
+      >
+        {t.idleText}
+      </p>
+
+      <div
+        id="nm-number"
+        hidden
+        class="my-4 font-mono text-4xl font-bold tracking-widest break-all text-gray-900 tabular-nums sm:text-5xl dark:text-gray-100"
+      ></div>
+
+      <div
+        id="nm-bar-track"
+        hidden
+        aria-hidden="true"
+        class="mx-auto h-2 w-full max-w-md overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"
+      >
+        <div id="nm-bar" class="h-full w-full bg-blue-700"></div>
+      </div>
+
+      <form id="nm-form" hidden class="mt-4" autocomplete="off">
+        <label for="nm-input" class="ui-label">
+          {t.answerLabel}
+        </label>
+        <input
+          id="nm-input"
+          type="text"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          autocomplete="off"
+          data-no-persist
+          aria-describedby="nm-hint"
+          class="ui-input mx-auto w-full max-w-md text-center font-mono text-2xl tracking-widest"
+        />
+        <p id="nm-hint" class="mt-1 text-xs text-gray-600 dark:text-gray-400">
+          {t.answerHint}
+        </p>
+        <button type="submit" class="ui-btn ui-btn-primary mt-3">
+          {t.submitLabel}
+        </button>
+      </form>
+
+      <div id="nm-result" hidden class="mt-4 text-sm">
+        <p
+          id="nm-result-detail"
+          class="text-gray-900 tabular-nums dark:text-gray-100"
+        ></p>
+        <p
+          id="nm-new-best"
+          hidden
+          class="mt-1 font-bold text-green-800 dark:text-green-400"
+        >
+          {t.newBestText}
+        </p>
+      </div>
+
+      <button id="nm-start" type="button" class="ui-btn ui-btn-primary mt-3">
+        {t.startLabel}
+      </button>
+    </div>
+
+    <button id="nm-reset-best" type="button" class="ui-btn mt-4">
+      {t.resetBestLabel}
+    </button>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    displayMs,
+    generateDigits,
+    isCorrect,
+    normalizeAnswer,
+    parseBest,
+    updateBest,
+  } from '../../lib/tools/number-memory-test';
+
+  const root = document.getElementById('nm-root')!;
+  const d = root.dataset;
+  const startDigits = Number(d.start);
+  const maxDigits = Number(d.max);
+  const storageKey = d.storageKey!;
+  const unit = d.unit!;
+  const $ = (id: string) => document.getElementById(id)!;
+  const levelEl = $('nm-level');
+  const bestEl = $('nm-best');
+  const statusEl = $('nm-status');
+  const numberEl = $('nm-number');
+  const barTrack = $('nm-bar-track');
+  const bar = $('nm-bar');
+  const form = $('nm-form') as HTMLFormElement;
+  const input = $('nm-input') as HTMLInputElement;
+  const resultEl = $('nm-result');
+  const resultDetail = $('nm-result-detail');
+  const newBestEl = $('nm-new-best');
+  const startButton = $('nm-start') as HTMLButtonElement;
+  const resetBestButton = $('nm-reset-best');
+
+  let level = startDigits;
+  let target = '';
+  let timer = 0;
+  let best = 0;
+  // 'idle' | 'show' | 'input' | 'correct' | 'over'
+  let phase = 'idle';
+
+  function loadBest(): number {
+    try {
+      return parseBest(localStorage.getItem(storageKey));
+    } catch {
+      // localStorageが使えない環境では、このページを開いている間だけの記録にする
+      return best;
+    }
+  }
+
+  function saveBest(value: number) {
+    best = value;
+    try {
+      localStorage.setItem(storageKey, String(value));
+    } catch {
+      // 保存できなくても動作は続ける
+    }
+  }
+
+  function renderScores() {
+    levelEl.textContent = phase === 'idle' ? '-' : `${level} ${unit}`;
+    bestEl.textContent = best > 0 ? `${best} ${unit}` : '-';
+  }
+
+  function hideAll() {
+    window.clearTimeout(timer);
+    numberEl.hidden = true;
+    barTrack.hidden = true;
+    form.hidden = true;
+    resultEl.hidden = true;
+    newBestEl.hidden = true;
+  }
+
+  function show() {
+    hideAll();
+    phase = 'show';
+    target = generateDigits(level);
+    const ms = displayMs(level);
+    numberEl.textContent = target;
+    numberEl.hidden = false;
+    barTrack.hidden = false;
+    startButton.hidden = true;
+    statusEl.textContent = d.memorize!;
+    renderScores();
+    // バーを満タンに戻してから、表示時間をかけて縮める
+    bar.style.transition = 'none';
+    bar.style.width = '100%';
+    void bar.offsetWidth;
+    bar.style.transition = `width ${ms}ms linear`;
+    bar.style.width = '0%';
+    timer = window.setTimeout(askAnswer, ms);
+  }
+
+  function askAnswer() {
+    phase = 'input';
+    numberEl.hidden = true;
+    barTrack.hidden = true;
+    form.hidden = false;
+    input.value = '';
+    statusEl.textContent = `${level} ${unit}`;
+    input.focus();
+  }
+
+  function finish(correct: boolean, answer: string) {
+    hideAll();
+    resultEl.hidden = false;
+    startButton.hidden = false;
+    if (correct) {
+      phase = 'correct';
+      const reached = level;
+      const next = updateBest(best, reached);
+      const isNew = next > best;
+      if (isNew) saveBest(next);
+      newBestEl.hidden = !isNew;
+      statusEl.textContent = d.correct!;
+      resultDetail.textContent = `${d.reached}: ${reached} ${unit}`;
+      startButton.textContent = d.next!;
+      if (level >= maxDigits) {
+        // 上限に達したら終了扱いにする
+        phase = 'over';
+        startButton.textContent = d.retry!;
+      }
+    } else {
+      phase = 'over';
+      const reached = level - 1;
+      const next = updateBest(best, reached);
+      const isNew = next > best;
+      if (isNew) saveBest(next);
+      newBestEl.hidden = !isNew;
+      statusEl.textContent = d.gameOver!;
+      resultDetail.textContent = [
+        `${d.reached}: ${reached} ${unit}`,
+        `${d.answer}: ${target}`,
+        `${d.yours}: ${normalizeAnswer(answer) || '-'}`,
+      ].join(' / ');
+      startButton.textContent = d.retry!;
+    }
+    renderScores();
+    startButton.focus();
+  }
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (phase !== 'input') return;
+    finish(isCorrect(target, input.value), input.value);
+  });
+
+  startButton.addEventListener('click', () => {
+    if (phase === 'correct') {
+      level++;
+    } else {
+      level = startDigits;
+    }
+    show();
+  });
+
+  resetBestButton.addEventListener('click', () => {
+    best = 0;
+    try {
+      localStorage.removeItem(storageKey);
+    } catch {
+      // 削除できなくても表示は更新する
+    }
+    renderScores();
+  });
+
+  best = loadBest();
+  renderScores();
+</script>

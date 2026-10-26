@@ -1,0 +1,334 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { simonGameContent } from '../../i18n/tools/simon-game';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = simonGameContent[locale];
+const symbols = ['▲', '●', '■', '◆'];
+const tones = [
+  'bg-red-700 text-white',
+  'bg-blue-700 text-white',
+  'bg-green-700 text-white',
+  'bg-yellow-300 text-gray-900',
+];
+const panels = symbols.map((symbol, i) => ({
+  symbol,
+  tone: tones[i],
+  label: t.panelLabel
+    .replace('{n}', String(i + 1))
+    .replace('{color}', t.colorNames[i])
+    .replace('{symbol}', symbol),
+}));
+---
+
+<ToolShell t={t}>
+  <section
+    id="sg-root"
+    data-status-idle={t.statusIdle}
+    data-status-watch={t.statusWatch}
+    data-status-your-turn={t.statusYourTurn}
+    data-status-round-clear={t.statusRoundClear}
+    data-status-game-over={t.statusGameOver}
+    data-status-new-best={t.statusNewBest}
+    data-no-audio={t.noAudioNote}
+    data-restart={t.restartButton}
+  >
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <button id="sg-start-button" type="button" class="ui-btn-primary">
+        {t.startButton}
+      </button>
+      <label class="ui-check">
+        <input id="sg-sound" type="checkbox" checked />
+        <span>{t.soundLabel}</span>
+      </label>
+    </div>
+
+    <dl class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
+      <div class="flex gap-2">
+        <dt>{t.roundLabel}</dt>
+        <dd id="sg-round" class="font-semibold tabular-nums">
+          0
+        </dd>
+      </div>
+      <div class="flex gap-2">
+        <dt>{t.bestLabel}</dt>
+        <dd id="sg-best" class="font-semibold tabular-nums">
+          0
+        </dd>
+      </div>
+    </dl>
+
+    <div
+      id="sg-board"
+      role="group"
+      aria-label={t.boardLabel}
+      class="mt-3 grid w-full max-w-sm grid-cols-2 gap-3"
+    >
+      {panels.map((p, i) => (
+        <button
+          type="button"
+          data-panel={i}
+          aria-label={p.label}
+          aria-disabled="true"
+          class={`sg-panel flex aspect-square min-w-0 flex-col items-center justify-center rounded-2xl border-2 border-gray-900/30 touch-manipulation select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 ${p.tone}`}
+        >
+          <span class="text-4xl leading-none sm:text-5xl" aria-hidden="true">
+            {p.symbol}
+          </span>
+          <span class="mt-1 text-lg font-bold" aria-hidden="true">
+            {i + 1}
+          </span>
+        </button>
+      ))}
+    </div>
+
+    <p
+      id="sg-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    >
+      {t.statusIdle}
+    </p>
+    <p class="mt-1 text-xs text-gray-600 dark:text-gray-400">{t.keyHint}</p>
+    <p
+      id="sg-no-audio"
+      class="mt-1 hidden text-xs text-gray-600 dark:text-gray-400"
+    >
+      {t.noAudioNote}
+    </p>
+  </section>
+</ToolShell>
+
+<style is:global>
+  .sg-panel {
+    transition:
+      filter 80ms,
+      transform 80ms;
+  }
+  .sg-panel.sg-active {
+    filter: brightness(1.6) saturate(1.2);
+    transform: scale(0.95);
+    outline: 4px solid #fff;
+    outline-offset: -8px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .sg-panel {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import {
+    PANEL_FREQUENCIES,
+    clearedRounds,
+    gapDurationMs,
+    newGame,
+    nextRound,
+    panelFromKey,
+    parseBest,
+    pressPanel,
+    stepDurationMs,
+    updateBest,
+    type GameState,
+  } from '../../lib/tools/simon-game';
+
+  const STORAGE_KEY = 'simon-game-best';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('sg-root');
+  const msg = root.dataset;
+  const startBtn = $<HTMLButtonElement>('sg-start-button');
+  const soundEl = $<HTMLInputElement>('sg-sound');
+  const roundEl = $('sg-round');
+  const bestEl = $('sg-best');
+  const statusEl = $('sg-status');
+  const panelEls = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-panel]'),
+  );
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  function loadBest(): number {
+    try {
+      return parseBest(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      return 0;
+    }
+  }
+  function saveBest(n: number) {
+    try {
+      localStorage.setItem(STORAGE_KEY, String(n));
+    } catch {
+      // 保存できない環境では今回の表示だけ反映する
+    }
+  }
+
+  let best = loadBest();
+  let state: GameState = newGame();
+  let accepting = false;
+  /** 進行中のラウンドを無効化するための世代番号 */
+  let generation = 0;
+  let audioCtx: AudioContext | null = null;
+  let audioFailed = false;
+
+  function setStatus(text: string) {
+    statusEl.textContent = text;
+  }
+  function setAccepting(on: boolean) {
+    accepting = on;
+    panelEls.forEach((p) => p.setAttribute('aria-disabled', String(!on)));
+  }
+  function renderCounters() {
+    roundEl.textContent = String(state.sequence.length);
+    bestEl.textContent = String(best);
+  }
+
+  function ensureAudio(): AudioContext | null {
+    if (audioCtx) return audioCtx;
+    if (audioFailed) return null;
+    const Ctor: typeof AudioContext | undefined =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext?: typeof AudioContext })
+        .webkitAudioContext;
+    if (!Ctor) {
+      audioFailed = true;
+      $('sg-no-audio').classList.remove('hidden');
+      return null;
+    }
+    try {
+      audioCtx = new Ctor();
+    } catch {
+      audioFailed = true;
+      $('sg-no-audio').classList.remove('hidden');
+      return null;
+    }
+    return audioCtx;
+  }
+
+  function playTone(freq: number, ms: number) {
+    if (!soundEl.checked) return;
+    const ctx = ensureAudio();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') void ctx.resume();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const now = ctx.currentTime;
+    const dur = ms / 1000;
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.25, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + dur + 0.02);
+  }
+
+  const sleep = (ms: number) =>
+    new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+
+  async function flash(panel: number, ms: number) {
+    const el = panelEls[panel];
+    el.classList.add('sg-active');
+    playTone(PANEL_FREQUENCIES[panel], ms);
+    await sleep(ms);
+    el.classList.remove('sg-active');
+  }
+
+  async function playSequence(gen: number) {
+    setAccepting(false);
+    setStatus(msg.statusWatch ?? '');
+    const len = state.sequence.length;
+    await sleep(500);
+    for (const p of state.sequence) {
+      if (gen !== generation) return;
+      await flash(p, stepDurationMs(len));
+      await sleep(gapDurationMs(len));
+    }
+    if (gen !== generation) return;
+    setStatus(msg.statusYourTurn ?? '');
+    setAccepting(true);
+  }
+
+  function beginRound() {
+    state = nextRound(state);
+    renderCounters();
+    const gen = ++generation;
+    void playSequence(gen);
+  }
+
+  function gameOver() {
+    generation++;
+    setAccepting(false);
+    const score = clearedRounds(state, true);
+    const update = updateBest(best, score);
+    const parts = [fill(msg.statusGameOver, { score: String(score) })];
+    if (update.isNew) {
+      best = update.best;
+      saveBest(best);
+      parts.push(msg.statusNewBest ?? '');
+    }
+    setStatus(parts.join(' '));
+    renderCounters();
+    startBtn.textContent = msg.restart ?? '';
+    startBtn.disabled = false;
+  }
+
+  function press(panel: number) {
+    if (!accepting) return;
+    const wasActive = panelEls[panel];
+    wasActive.classList.add('sg-active');
+    playTone(PANEL_FREQUENCIES[panel], 220);
+    window.setTimeout(() => wasActive.classList.remove('sg-active'), 180);
+    const out = pressPanel(state, panel);
+    state = out.state;
+    if (out.result === 'wrong') {
+      gameOver();
+    } else if (out.result === 'complete') {
+      const gen = ++generation;
+      setAccepting(false);
+      setStatus(
+        fill(msg.statusRoundClear, { round: String(state.sequence.length) }),
+      );
+      void sleep(900).then(() => {
+        if (gen === generation) beginRound();
+      });
+    }
+  }
+
+  panelEls.forEach((el) =>
+    el.addEventListener('click', () => press(Number(el.dataset.panel))),
+  );
+
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const target = e.target as HTMLElement | null;
+    if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+    const panel = panelFromKey(e.key);
+    if (panel === -1) return;
+    e.preventDefault();
+    press(panel);
+  });
+
+  startBtn.addEventListener('click', () => {
+    // ユーザー操作の中でAudioContextを生成・再開する
+    const ctx = soundEl.checked ? ensureAudio() : null;
+    if (ctx && ctx.state === 'suspended') void ctx.resume();
+    state = newGame();
+    startBtn.disabled = true;
+    beginRound();
+  });
+
+  renderCounters();
+</script>

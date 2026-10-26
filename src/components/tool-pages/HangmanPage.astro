@@ -1,0 +1,313 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { hangmanContent } from '../../i18n/tools/hangman';
+import { CATEGORY_IDS, MAX_MISSES } from '../../lib/tools/hangman';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = hangmanContent[locale];
+const letters = 'abcdefghijklmnopqrstuvwxyz'.split('');
+---
+
+<ToolShell t={t}>
+  <section
+    id="hm-root"
+    data-started={t.started}
+    data-won={t.won}
+    data-lost={t.lost}
+    data-gave-up={t.gaveUp}
+    data-letter-hit={t.letterHit}
+    data-letter-miss={t.letterMiss}
+    data-letter-repeat={t.letterRepeat}
+    data-error-invalid={t.errorInvalid}
+    data-misses-value={t.missesValue}
+    data-figure-label={t.figureLabel}
+    data-none={t.wrongLettersNone}
+    data-category-all={t.categoryAll}
+    data-category-names={JSON.stringify(t.categoryNames)}
+    data-max-misses={MAX_MISSES}
+  >
+    <div class="flex flex-wrap items-end gap-x-3 gap-y-2">
+      <div>
+        <label for="hm-category" class="ui-label">
+          {t.categoryLabel}
+        </label>
+        <select
+          id="hm-category"
+          class="ui-input h-11 bg-white px-3 dark:bg-gray-900"
+        >
+          <option value="all">{t.categoryAll}</option>
+          {CATEGORY_IDS.map((id) => (
+            <option value={id}>{t.categoryNames[id]}</option>
+          ))}
+        </select>
+      </div>
+      <button id="hm-new-button" type="button" class="ui-btn-primary">
+        {t.newWord}
+      </button>
+      <button id="hm-giveup-button" type="button" class="ui-btn">
+        {t.giveUp}
+      </button>
+    </div>
+
+    <div class="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
+      <svg
+        id="hm-figure"
+        viewBox="0 0 120 140"
+        class="h-36 w-32 shrink-0 text-gray-800 dark:text-gray-200"
+        role="img"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="4"
+        stroke-linecap="round"
+      >
+        <path d="M10 132 H70 M30 132 V10 H85 V26"></path>
+        <circle data-part="0" cx="85" cy="38" r="12" class="hidden"></circle>
+        <path data-part="1" d="M85 50 V92" class="hidden"></path>
+        <path data-part="2" d="M85 60 L68 78" class="hidden"></path>
+        <path data-part="3" d="M85 60 L102 78" class="hidden"></path>
+        <path data-part="4" d="M85 92 L70 116" class="hidden"></path>
+        <path data-part="5" d="M85 92 L100 116" class="hidden"></path>
+      </svg>
+
+      <dl class="space-y-2 text-sm">
+        <div class="flex gap-2">
+          <dt class="text-gray-700 dark:text-gray-300">{t.missesLabel}</dt>
+          <dd id="hm-misses" class="font-semibold tabular-nums"></dd>
+        </div>
+        <div class="flex gap-2">
+          <dt class="text-gray-700 dark:text-gray-300">
+            {t.wrongLettersLabel}
+          </dt>
+          <dd
+            id="hm-wrong"
+            class="font-semibold tracking-widest uppercase"
+          ></dd>
+        </div>
+        <div id="hm-meaning-row" class="flex gap-2" hidden>
+          <dt class="text-gray-700 dark:text-gray-300">{t.meaningLabel}</dt>
+          <dd id="hm-meaning" class="font-semibold"></dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="mt-4">
+      <span class="ui-label">{t.wordLabel}</span>
+      <div
+        id="hm-word"
+        class="flex flex-wrap gap-1.5"
+        role="img"
+        aria-live="polite"
+      ></div>
+    </div>
+
+    <p
+      id="hm-status"
+      role="status"
+      class="mt-3 min-h-6 text-sm font-medium text-gray-800 dark:text-gray-200"
+    ></p>
+    <p id="hm-error" class="ui-error mt-2" role="alert" hidden></p>
+
+    <div class="mt-3 max-w-md">
+      <span id="hm-letters-label" class="ui-label">
+        {t.lettersLabel}
+      </span>
+      <div
+        class="flex flex-wrap gap-1.5"
+        role="group"
+        aria-labelledby="hm-letters-label"
+      >
+        {letters.map((l) => (
+          <button
+            type="button"
+            class="ui-btn h-11 w-10 px-0 uppercase"
+            data-letter={l}
+          >
+            {l}
+          </button>
+        ))}
+      </div>
+    </div>
+  </section>
+</ToolShell>
+
+<script>
+  import {
+    MAX_MISSES,
+    giveUp,
+    guessLetter,
+    maskWord,
+    missedLetters,
+    newGame,
+    normalizeLetter,
+    type CategorySelection,
+    type GameState,
+  } from '../../lib/tools/hangman';
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const root = $('hm-root');
+  const msg = root.dataset;
+  const categorySelect = $<HTMLSelectElement>('hm-category');
+  const giveUpButton = $<HTMLButtonElement>('hm-giveup-button');
+  const wordEl = $('hm-word');
+  const statusEl = $('hm-status');
+  const errorEl = $('hm-error');
+  const missesEl = $('hm-misses');
+  const wrongEl = $('hm-wrong');
+  const meaningRow = $('hm-meaning-row');
+  const meaningEl = $('hm-meaning');
+  const figure = document.getElementById('hm-figure') as unknown as SVGElement;
+  const parts = Array.from(figure.querySelectorAll('[data-part]'));
+  const letterButtons = Array.from(
+    root.querySelectorAll<HTMLButtonElement>('[data-letter]'),
+  );
+  const categoryNames = JSON.parse(msg.categoryNames ?? '{}') as Record<
+    string,
+    string
+  >;
+  const meaningEnabled = meaningRow.querySelector('dt')?.textContent?.trim();
+
+  function fill(template: string | undefined, values: Record<string, string>) {
+    return (template ?? '').replace(/\{(\w+)\}/g, (match, key: string) =>
+      Object.hasOwn(values, key) ? values[key] : match,
+    );
+  }
+
+  function categoryName(c: CategorySelection) {
+    return c === 'all' ? (msg.categoryAll ?? '') : (categoryNames[c] ?? c);
+  }
+
+  let state: GameState = newGame('all');
+
+  function clearError() {
+    errorEl.hidden = true;
+    errorEl.textContent = '';
+  }
+
+  function render() {
+    const playing = state.phase === 'playing';
+    const finished = !playing;
+    const missed = missedLetters(state);
+
+    const boxes = maskWord(state, finished).map((c, i) => {
+      const box = document.createElement('span');
+      const revealedByEnd =
+        finished && c !== null && !state.guessed.includes(c);
+      box.className =
+        'inline-flex h-11 w-8 items-end justify-center border-b-2 border-gray-600 text-2xl font-semibold uppercase dark:border-gray-400' +
+        (revealedByEnd ? ' text-red-700 dark:text-red-400' : '');
+      box.textContent = c ?? '';
+      box.dataset.index = String(i);
+      return box;
+    });
+    wordEl.replaceChildren(...boxes);
+    wordEl.setAttribute(
+      'aria-label',
+      maskWord(state, finished)
+        .map((c) => c ?? '_')
+        .join(' '),
+    );
+
+    letterButtons.forEach((b) => {
+      const l = b.dataset.letter ?? '';
+      const used = state.guessed.includes(l);
+      const hit = used && state.word.includes(l);
+      b.disabled = used || finished;
+      b.classList.toggle('bg-green-100', hit);
+      b.classList.toggle('dark:bg-green-900', hit);
+      b.classList.toggle('bg-gray-200', used && !hit);
+      b.classList.toggle('dark:bg-gray-700', used && !hit);
+    });
+
+    parts.forEach((p, i) => p.classList.toggle('hidden', i >= missed.length));
+    figure.setAttribute(
+      'aria-label',
+      fill(msg.figureLabel, { n: String(missed.length) }),
+    );
+    missesEl.textContent = fill(msg.missesValue, {
+      n: String(missed.length),
+      max: String(MAX_MISSES),
+    });
+    wrongEl.textContent =
+      missed.length > 0 ? missed.join(' ') : (msg.none ?? '');
+    giveUpButton.disabled = finished;
+
+    const showMeaning = finished && !!meaningEnabled;
+    meaningRow.hidden = !showMeaning;
+    meaningEl.textContent = showMeaning ? state.meaning : '';
+  }
+
+  function startGame() {
+    state = newGame(
+      categorySelect.value as CategorySelection,
+      undefined,
+      state.word,
+    );
+    clearError();
+    render();
+    statusEl.textContent = fill(msg.started, {
+      length: String(state.word.length),
+      category: categoryName(state.category),
+    });
+  }
+
+  function pick(input: string) {
+    const result = guessLetter(state, input);
+    if (!result.ok) {
+      if (result.error === 'invalid') {
+        errorEl.textContent = msg.errorInvalid ?? '';
+        errorEl.hidden = false;
+      } else if (result.error === 'duplicate') {
+        statusEl.textContent = fill(msg.letterRepeat, {
+          letter: (normalizeLetter(input) ?? '').toUpperCase(),
+        });
+      }
+      return;
+    }
+    clearError();
+    state = result.state;
+    render();
+    const letter = (normalizeLetter(input) ?? '').toUpperCase();
+    const word = state.word.toUpperCase();
+    if (state.phase === 'won') {
+      statusEl.textContent = fill(msg.won, {
+        word,
+        n: String(missedLetters(state).length),
+      });
+    } else if (state.phase === 'lost') {
+      statusEl.textContent = fill(msg.lost, { word });
+    } else {
+      statusEl.textContent = fill(result.hit ? msg.letterHit : msg.letterMiss, {
+        letter,
+      });
+    }
+  }
+
+  letterButtons.forEach((b) =>
+    b.addEventListener('click', () => pick(b.dataset.letter ?? '')),
+  );
+
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1) return;
+    const target = e.target as HTMLElement | null;
+    if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
+    if (normalizeLetter(e.key) === null) return;
+    pick(e.key);
+  });
+
+  giveUpButton.addEventListener('click', () => {
+    state = giveUp(state);
+    clearError();
+    render();
+    statusEl.textContent = fill(msg.gaveUp, { word: state.word.toUpperCase() });
+  });
+  $('hm-new-button').addEventListener('click', startGame);
+  categorySelect.addEventListener('change', startGame);
+
+  render();
+</script>

@@ -43,6 +43,7 @@ The checklist above was followed in past batches; these items outside it were no
 - Every 「…」 label quoted in `howToSteps` (and in `introHtml` / `notes`) must match a label in the same dictionary character for character (`src/i18n/how-to-labels.test.ts`). English quotes use `"…"`.
 - Watch type generics such as `Uint8ClampedArray` (`astro check` fails on them in the integration step).
 - Write regex backslashes with Write/Edit, not through the shell.
+- Never output a `style="…"` attribute (static or from a template expression) in a page component: the production CSP (`style-src 'self'`, no `unsafe-inline`) silently blocks it, dev has no CSP so it looks fine, and `tools-common.spec.ts` then fails on a console error. Use literal Tailwind classes (`aspect-[320/440]`, `w-32`; a class built by string interpolation is not picked up) or set sizes from the script via the CSSOM (`element.style.width = …`).
 
 ## Final report (required format, this exact order)
 

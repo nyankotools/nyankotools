@@ -35,6 +35,7 @@ Each tool has its own indexable URL (`/tools/<slug>/`, `/en/tools/<slug>/`) for 
 ## 複数ツールの同時実装（バッチ）
 
 - 未実装ツールを複数まとめて実装するときは [`parallel-implementation.md`](.claude/docs/parallel-implementation.md) に従う。ツール固有ファイルは `tool-implementer`（`.claude/agents/tool-implementer.md`）をツール1件につき1体、同一メッセージで並列起動して作らせ、共有ファイル（`src/data/tools.ts`・`e2e/helpers/how-to-slugs.ts`・`astro.config.mjs`・`scripts/bundle-budget.mjs`・`package.json`・`memo/実装予定一覧.md` など）は**メインセッションだけ**が編集する。
+- 「バッチXXを実装して」と指示されたら、`memo/実装予定一覧.md` の並列実装プランの表の該当行に載っている `No.` だけを実装する。着手前に `No.`→slug を一覧で突き合わせ、「バッチXX = No.aaa(slug)…」とユーザーに明示し、表と一覧が食い違う場合は推測せず確認する（手順は `parallel-implementation.md` 冒頭）。バッチ外の実装や前倒しをしたら表も同時に更新する。
 - ワーカーのプロンプトには「git禁止・共有ファイル編集禁止・build/E2E禁止」を毎回明記し、完了後に `git status` / `git log` / `ListAgents` で逸脱が無いか確認する。
 - レビュー・QAはバッチ単位で1回ずつ（実装 → `tool-reviewer` → `tool-qa` の順。QAは `pnpm qa <slug…>` で対象specのみ）。1バッチは3〜4件、新規依存・heavy系は1件まで。
 

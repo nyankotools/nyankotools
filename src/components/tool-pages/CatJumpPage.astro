@@ -1,0 +1,340 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { catJumpContent } from '../../i18n/tools/cat-jump';
+import { WORLD_HEIGHT, WORLD_WIDTH } from '../../lib/tools/cat-jump';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = catJumpContent[locale];
+---
+
+<ToolShell t={t}>
+  <div
+    id="ffc-root"
+    data-state="ready"
+    data-ready={t.ready}
+    data-playing={t.playing}
+    data-finished={t.finished}
+    data-new-best={t.newBest}
+    data-best-none={t.bestNone}
+    data-best-cleared={t.bestCleared}
+    data-start={t.startLabel}
+    data-restart={t.restartLabel}
+  >
+    <dl class="grid max-w-sm grid-cols-2 gap-x-4 gap-y-1 text-sm">
+      <div>
+        <dt class="text-gray-600 dark:text-gray-400">{t.scoreLabel}</dt>
+        <dd
+          id="ffc-score"
+          class="text-lg font-bold text-gray-900 tabular-nums dark:text-gray-100"
+        >
+          0
+        </dd>
+      </div>
+      <div>
+        <dt class="text-gray-600 dark:text-gray-400">{t.bestLabel}</dt>
+        <dd
+          id="ffc-best"
+          class="text-lg font-bold text-gray-900 tabular-nums dark:text-gray-100"
+        >
+          {t.bestNone}
+        </dd>
+      </div>
+    </dl>
+
+    <canvas
+      id="ffc-canvas"
+      width={WORLD_WIDTH}
+      height={WORLD_HEIGHT}
+      role="img"
+      aria-label={t.canvasLabel}
+      class="mt-3 block aspect-[320/440] w-full max-w-sm cursor-pointer touch-none rounded-lg border-2 border-sky-900 select-none"
+    ></canvas>
+
+    <p
+      id="ffc-status"
+      role="status"
+      class="mt-3 min-h-6 max-w-sm text-sm font-medium text-gray-800 dark:text-gray-200"
+    >
+      {t.ready}
+    </p>
+
+    <div class="mt-2 flex flex-wrap items-center gap-2">
+      <button id="ffc-start" type="button" class="ui-btn ui-btn-primary">
+        {t.startLabel}
+      </button>
+      <button id="ffc-reset-best" type="button" class="ui-btn">
+        {t.resetBestLabel}
+      </button>
+    </div>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    CAT_SIZE,
+    CAT_X,
+    FLOOR_Y,
+    PIPE_GAP,
+    PIPE_WIDTH,
+    WORLD_HEIGHT,
+    WORLD_WIDTH,
+    advance,
+    createGame,
+    flap,
+    isNewBest,
+    parseBest,
+  } from '../../lib/tools/cat-jump';
+  import type { CatJumpState } from '../../lib/tools/cat-jump';
+
+  const STORAGE_KEY = 'cat-jump-best';
+  // 終了直後の連打で、結果を見る前に再開してしまわないようにする
+  const RESTART_LOCK_MS = 600;
+
+  const root = document.getElementById('ffc-root')!;
+  const d = root.dataset;
+  const canvas = document.getElementById('ffc-canvas') as HTMLCanvasElement;
+  const ctx = canvas.getContext('2d')!;
+  const scoreEl = document.getElementById('ffc-score')!;
+  const bestEl = document.getElementById('ffc-best')!;
+  const statusEl = document.getElementById('ffc-status')!;
+  const startButton = document.getElementById('ffc-start')!;
+  const resetBestButton = document.getElementById('ffc-reset-best')!;
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = Math.round(WORLD_WIDTH * dpr);
+  canvas.height = Math.round(WORLD_HEIGHT * dpr);
+
+  let game: CatJumpState = createGame();
+  let best = 0;
+  let last = 0;
+  let frame = 0;
+  let endedAt = 0;
+  let clock = 0;
+
+  function loadBest(): number {
+    try {
+      return parseBest(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      // localStorageが使えない環境では、このページを開いている間だけの記録にする
+      return 0;
+    }
+  }
+
+  function saveBest() {
+    try {
+      if (best > 0) localStorage.setItem(STORAGE_KEY, String(best));
+      else localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // 保存できない環境では今回の表示だけ反映する
+    }
+  }
+
+  function setBestText() {
+    bestEl.textContent = best > 0 ? String(best) : d.bestNone!;
+  }
+
+  function setState(state: 'ready' | 'playing' | 'finished') {
+    d.state = state;
+  }
+
+  function draw() {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const sky = ctx.createLinearGradient(0, 0, 0, FLOOR_Y);
+    sky.addColorStop(0, '#7dd3fc');
+    sky.addColorStop(1, '#e0f2fe');
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+
+    // 雲（動きを減らす設定では止める）
+    const drift = reducedMotion.matches ? 0 : (clock * 12) % (WORLD_WIDTH + 80);
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    for (const [cx, cy, r] of [
+      [70, 70, 18],
+      [200, 120, 22],
+      [290, 40, 14],
+    ] as const) {
+      const x = ((cx - drift + WORLD_WIDTH + 80) % (WORLD_WIDTH + 80)) - 40;
+      ctx.beginPath();
+      ctx.arc(x, cy, r, 0, Math.PI * 2);
+      ctx.arc(x + r, cy + 4, r * 0.8, 0, Math.PI * 2);
+      ctx.arc(x - r, cy + 5, r * 0.7, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 土管
+    for (const p of game.pipes) {
+      const top = p.gapY - PIPE_GAP / 2;
+      const bottom = p.gapY + PIPE_GAP / 2;
+      ctx.fillStyle = '#16a34a';
+      ctx.strokeStyle = '#14532d';
+      ctx.lineWidth = 2;
+      ctx.fillRect(p.x, 0, PIPE_WIDTH, top);
+      ctx.strokeRect(p.x, -2, PIPE_WIDTH, top + 2);
+      ctx.fillRect(p.x, bottom, PIPE_WIDTH, FLOOR_Y - bottom);
+      ctx.strokeRect(p.x, bottom, PIPE_WIDTH, FLOOR_Y - bottom);
+      ctx.fillRect(p.x - 4, top - 14, PIPE_WIDTH + 8, 14);
+      ctx.strokeRect(p.x - 4, top - 14, PIPE_WIDTH + 8, 14);
+      ctx.fillRect(p.x - 4, bottom, PIPE_WIDTH + 8, 14);
+      ctx.strokeRect(p.x - 4, bottom, PIPE_WIDTH + 8, 14);
+    }
+
+    // 地面
+    ctx.fillStyle = '#a16207';
+    ctx.fillRect(0, FLOOR_Y, WORLD_WIDTH, WORLD_HEIGHT - FLOOR_Y);
+    ctx.fillStyle = '#65a30d';
+    ctx.fillRect(0, FLOOR_Y, WORLD_WIDTH, 8);
+
+    // 猫（待機中は軽く上下に揺らす）
+    const bob =
+      game.started || reducedMotion.matches ? 0 : Math.sin(clock * 4) * 6;
+    const catY = game.y + bob;
+    // 羽（上昇中は上向き、落下中は下向き。動きを減らす設定では水平に固定）
+    const lift = reducedMotion.matches
+      ? 0
+      : Math.max(-1, Math.min(1, -game.vy / 340));
+    const wingY = catY + CAT_SIZE * 0.5;
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 1.2;
+    ctx.lineJoin = 'round';
+    for (const side of [-1, 1]) {
+      ctx.save();
+      ctx.translate(CAT_X + CAT_SIZE / 2 + side * (CAT_SIZE * 0.38), wingY);
+      // 左側は x を反転して描くので、回転角も同じ式で左右対称になる
+      ctx.scale(side, 1);
+      ctx.rotate(-0.3 - lift * 0.75);
+      // 天使の羽: 上は大きな弧、下は羽根が重なる波形
+      ctx.beginPath();
+      ctx.moveTo(0, -2);
+      ctx.bezierCurveTo(4, -16, 22, -20, 32, -10);
+      ctx.quadraticCurveTo(34, -3, 27, -2);
+      ctx.quadraticCurveTo(28, 4, 21, 4);
+      ctx.quadraticCurveTo(21, 10, 14, 9);
+      ctx.quadraticCurveTo(12, 14, 6, 11);
+      ctx.quadraticCurveTo(2, 9, 0, 5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.font = `${CAT_SIZE}px sans-serif`;
+    // 絵文字の幅は CAT_SIZE と一致しないので、羽の基準と同じ中心に揃えて描く
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = '#000';
+    ctx.fillText('🐱', CAT_X + CAT_SIZE / 2, catY - 2);
+    ctx.textAlign = 'start';
+  }
+
+  function finish() {
+    setState('finished');
+    endedAt = performance.now();
+    let message = (d.finished ?? '').replace('{score}', String(game.score));
+    if (isNewBest(game.score, best)) {
+      best = game.score;
+      saveBest();
+      setBestText();
+      message += ` ${d.newBest}`;
+    }
+    statusEl.textContent = message;
+    startButton.textContent = d.restart!;
+  }
+
+  function loop(now: number) {
+    const dt = (now - last) / 1000;
+    last = now;
+    clock += dt;
+    if (d.state === 'playing') {
+      advance(game, dt, Math.random);
+      scoreEl.textContent = String(game.score);
+      if (game.over) {
+        draw();
+        finish();
+        return;
+      }
+    }
+    draw();
+    frame = window.requestAnimationFrame(loop);
+  }
+
+  function run() {
+    window.cancelAnimationFrame(frame);
+    last = performance.now();
+    frame = window.requestAnimationFrame(loop);
+  }
+
+  function reset() {
+    game = createGame();
+    scoreEl.textContent = '0';
+    setState('ready');
+    statusEl.textContent = d.ready!;
+    startButton.textContent = d.start!;
+  }
+
+  function press() {
+    if (d.state === 'finished') {
+      if (performance.now() - endedAt < RESTART_LOCK_MS) return;
+      reset();
+    }
+    if (d.state === 'ready') {
+      setState('playing');
+      statusEl.textContent = d.playing!;
+      startButton.textContent = d.restart!;
+      run();
+    }
+    flap(game);
+  }
+
+  canvas.addEventListener('pointerdown', (event) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    event.preventDefault();
+    press();
+  });
+  canvas.addEventListener('contextmenu', (event) => event.preventDefault());
+
+  window.addEventListener('keydown', (event) => {
+    if (event.repeat) return;
+    if (event.code !== 'Space' && event.code !== 'ArrowUp') return;
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    const target = event.target as HTMLElement | null;
+    // ボタンや入力欄にフォーカスがあるときは、その要素本来の動作を優先する
+    if (
+      target &&
+      target !== canvas &&
+      target.closest('button, a, input, select, textarea, [contenteditable]')
+    ) {
+      return;
+    }
+    event.preventDefault();
+    press();
+  });
+
+  startButton.addEventListener('click', () => {
+    // フォーカスが残るとSpaceキーがボタンのクリックとして働き、プレイ中にリセットされる
+    startButton.blur();
+    reset();
+    press();
+  });
+  resetBestButton.addEventListener('click', () => {
+    best = 0;
+    saveBest();
+    setBestText();
+    if (d.state !== 'playing') statusEl.textContent = d.bestCleared!;
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    // 画面が隠れている間のrAF停止で時間が飛ばないよう、再開時に基準時刻を更新する
+    last = performance.now();
+  });
+
+  best = loadBest();
+  setBestText();
+  setState('ready');
+  run();
+</script>

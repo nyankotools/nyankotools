@@ -25,13 +25,14 @@ const KB = 1024;
  * 2026-10-21: ツールが約700ページ分に増え、全ページの total に含まれる遅延読み込みのツール登録簿（tools.*.js、gzip後 約82KB）
  * が膨らんだため、通常ページ120→140KB、figlet-text 150→170KB、qr-code-reader 140→160KB に見直した。
  * 2026-10-24: 登録簿の増加で通常ページ140→145KB、figlet-text 170→175KB、qr-code-reader 160→165KB、heic-converter 870→875KB に見直した。
+ * 2026-10-26: ゲーム系17ツール追加による登録簿の増加で、通常ページ145→150KB、heavy 440→445KB、個別予算も一律+5KB（pdf-image-converter は ZIP 出力追加で 455KB）に見直した。
  * wasm・PDFワーカーなど、JSの静的/動的importで辿れないアセット（qpdf.wasm 等）は計測対象外。
  */
 export const budgets = {
   // 通常ページ・通常ツール（initial / total の両方に適用）
-  normal: 145 * KB,
+  normal: 150 * KB,
   // heavy ツールの total（PDF・wasm・大きめのライブラリ。遅延読み込み先を含む）
-  heavy: 440 * KB,
+  heavy: 445 * KB,
   // heavy ツールの initial（最初に読み込むJS）。重い処理は操作時の動的importに逃がすこと
   heavyInitial: 200 * KB,
 };
@@ -41,31 +42,31 @@ export const budgets = {
  * heic-to（gzip後 約720KB）を遅延読み込みする heic-converter のみ。
  */
 export const slugBudgets = {
-  'heic-converter': 880 * KB,
+  'heic-converter': 885 * KB,
   // prettier・terser・csso を言語・操作ごとに遅延読み込みするため、全体は大きいが初回は小さい
-  'code-minifier': 605 * KB,
+  'code-minifier': 610 * KB,
   // フォント・jsQR など操作時に遅延読み込みするデータ
-  'figlet-text': 180 * KB,
-  'qr-code-reader': 170 * KB,
+  'figlet-text': 185 * KB,
+  'qr-code-reader': 175 * KB,
   // 共通チャンクの増加でわずかに通常予算を超えたツール
-  'csv-excel-converter': 155 * KB,
-  'toml-converter': 155 * KB,
-  'yaml-formatter': 150 * KB,
-  'yaml-json-converter': 150 * KB,
-  'pdf-password-protector': 460 * KB,
+  'csv-excel-converter': 160 * KB,
+  'toml-converter': 160 * KB,
+  'yaml-formatter': 155 * KB,
+  'yaml-json-converter': 155 * KB,
+  'pdf-password-protector': 465 * KB,
   // pdf.js に fflate が加わり heavy 予算をわずかに超える
-  'pdf-image-extractor': 460 * KB,
-  'pdf-stamp': 445 * KB,
-  'pdf-crop': 445 * KB,
-  'pdf-to-markdown': 445 * KB,
-  'pdf-page-editor': 445 * KB,
-  'pdf-redactor': 445 * KB,
-  'pdf-compressor': 445 * KB,
-  'pdf-image-converter': 445 * KB,
-  'pdf-nup': 445 * KB,
-  'pdf-page-number-watermark': 445 * KB,
-  'exif-viewer': 150 * KB,
-  'markdown-preview': 150 * KB,
+  'pdf-image-extractor': 465 * KB,
+  'pdf-stamp': 450 * KB,
+  'pdf-crop': 450 * KB,
+  'pdf-to-markdown': 450 * KB,
+  'pdf-page-editor': 450 * KB,
+  'pdf-redactor': 450 * KB,
+  'pdf-compressor': 450 * KB,
+  'pdf-image-converter': 455 * KB,
+  'pdf-nup': 450 * KB,
+  'pdf-page-number-watermark': 450 * KB,
+  'exif-viewer': 155 * KB,
+  'markdown-preview': 155 * KB,
 };
 
 const STATIC_IMPORT = /(?:\bfrom|\bimport)\s*["'](\.[^"']+\.m?js)["']/g;

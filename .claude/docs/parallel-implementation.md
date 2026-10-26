@@ -13,6 +13,16 @@ Adding one tool touches two kinds of files.
 
 Workers never edit shared files. They return an **integration report** (below) and the main session applies it serially. This removes every write-write conflict, so no worktrees are needed.
 
+## Resolving "バッチXXを実装して" (do this before anything else)
+
+The batch plan table in `memo/実装予定一覧.md` ("並列実装プラン" の表) is the **only** source for which `No.` belong to a batch. Never pick tools from memory, from "similar-looking" unimplemented items, or from the previous conversation.
+
+1. Read the table row for the requested batch (`Grep` for `| XX |`) and note its `No.` list and any 「先行実装済み」「実装済み」「単独実装」 remarks.
+2. For each `No.`, look up its line in the 未実装/実装済み list and confirm the slug, name and category. Drop `No.` already marked `[x]` (report them as "already done"), and do not substitute other tools to fill the batch.
+3. Before spawning, state the resolved list to the user in one line: `バッチXX = No.aaa(slug)・No.bbb(slug)…`. If the row and the list disagree (e.g. a `No.` is missing from the list, or a remark contradicts the row), stop and ask instead of choosing.
+4. Pass the `No.` and slug to each worker exactly as resolved. At integration, check that every created slug maps back to a `No.` of this batch; an extra or missing slug is a deviation to fix or report.
+5. When a batch ends up different from the table (a tool done early, moved to another batch, or implemented alone), update the table row and its remarks in the same memo edit (step 8), so the next "バッチXX" lookup is not stale.
+
 ## Workflow
 
 1. **Pick the batch (main).** 3-4 tools per batch (see "Batch sizing"). Prefer tools from the same batch group in `実装予定一覧.md`. Resolve every "着手前に確認" note (duplicate check, user decision) _before_ spawning; an unresolved one means the tool is not ready for the batch. Assign the `No.` / slug / category / sibling tools to reuse.

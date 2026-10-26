@@ -1,7 +1,7 @@
 ---
 import ToolShell from '../ToolShell.astro';
-import { flappyCatContent } from '../../i18n/tools/flappy-cat';
-import { WORLD_HEIGHT, WORLD_WIDTH } from '../../lib/tools/flappy-cat';
+import { catJumpContent } from '../../i18n/tools/cat-jump';
+import { WORLD_HEIGHT, WORLD_WIDTH } from '../../lib/tools/cat-jump';
 import type { Locale } from '../../data/tools';
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
 }
 
 const { locale } = Astro.props;
-const t = flappyCatContent[locale];
+const t = catJumpContent[locale];
 ---
 
 <ToolShell t={t}>
@@ -88,10 +88,10 @@ const t = flappyCatContent[locale];
     flap,
     isNewBest,
     parseBest,
-  } from '../../lib/tools/flappy-cat';
-  import type { FlappyState } from '../../lib/tools/flappy-cat';
+  } from '../../lib/tools/cat-jump';
+  import type { CatJumpState } from '../../lib/tools/cat-jump';
 
-  const STORAGE_KEY = 'flappy-cat-best';
+  const STORAGE_KEY = 'cat-jump-best';
   // 終了直後の連打で、結果を見る前に再開してしまわないようにする
   const RESTART_LOCK_MS = 600;
 
@@ -110,7 +110,7 @@ const t = flappyCatContent[locale];
   canvas.width = Math.round(WORLD_WIDTH * dpr);
   canvas.height = Math.round(WORLD_HEIGHT * dpr);
 
-  let game: FlappyState = createGame();
+  let game: CatJumpState = createGame();
   let best = 0;
   let last = 0;
   let frame = 0;

@@ -15372,7 +15372,7 @@ export const tools: Tool[] = [
     },
   },
   {
-    slug: 'flappy-cat',
+    slug: 'cat-jump',
     category: 'games',
     addedAt: '2026-10-26',
     updatedAt: '2026-10-26',

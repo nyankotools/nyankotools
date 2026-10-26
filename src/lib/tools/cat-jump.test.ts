@@ -17,8 +17,8 @@ import {
   isNewBest,
   parseBest,
   pickGapY,
-} from './flappy-cat';
-import type { FlappyState } from './flappy-cat';
+} from './cat-jump';
+import type { CatJumpState } from './cat-jump';
 
 const mid = () => 0.5;
 
@@ -104,7 +104,7 @@ describe('flap / advance', () => {
 });
 
 describe('土管の生成', () => {
-  function hover(s: FlappyState) {
+  function hover(s: CatJumpState) {
     // 穴の中心の高さを保ち続ける（テスト用に毎ステップ位置を戻す）
     s.y = s.pipes.length ? s.pipes[0]!.gapY - CAT_SIZE / 2 : s.y;
     s.vy = 0;

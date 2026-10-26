@@ -228,6 +228,6 @@ export const howToSlugs = [
   'number-memory-test',
   'cat-clicker',
   'tower-of-hanoi',
-  'flappy-cat',
+  'cat-jump',
   'peg-solitaire',
 ];

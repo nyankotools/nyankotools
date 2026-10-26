@@ -29,7 +29,7 @@ export interface Pipe {
   passed: boolean;
 }
 
-export interface FlappyState {
+export interface CatJumpState {
   /** 猫の上端の y（上が 0） */
   y: number;
   vy: number;
@@ -40,7 +40,7 @@ export interface FlappyState {
   cause: DeathCause | null;
 }
 
-export function createGame(): FlappyState {
+export function createGame(): CatJumpState {
   return {
     y: (FLOOR_Y - CAT_SIZE) / 2,
     vy: 0,
@@ -61,7 +61,7 @@ export function pickGapY(rng: Rng): number {
 }
 
 /** 羽ばたく。最初の1回でゲームが始まる。終了後は何も起きない。 */
-export function flap(state: FlappyState): void {
+export function flap(state: CatJumpState): void {
   if (state.over) return;
   state.started = true;
   state.vy = FLAP_VELOCITY;
@@ -79,7 +79,7 @@ export function hitsPipe(y: number, pipe: Pipe): boolean {
   return top < gapTop || bottom > gapBottom;
 }
 
-function stepOnce(state: FlappyState, dt: number, rng: Rng): void {
+function stepOnce(state: CatJumpState, dt: number, rng: Rng): void {
   state.vy = Math.min(MAX_FALL_SPEED, state.vy + GRAVITY * dt);
   state.y += state.vy * dt;
   // 天井は突き抜けず、頭が当たって止まるだけにする
@@ -119,7 +119,7 @@ function stepOnce(state: FlappyState, dt: number, rng: Rng): void {
 }
 
 /** dt（秒）だけ進める。開始前・終了後は何もしない。 */
-export function advance(state: FlappyState, dt: number, rng: Rng): void {
+export function advance(state: CatJumpState, dt: number, rng: Rng): void {
   if (!state.started || state.over || !(dt > 0)) return;
   let left = Math.min(dt, MAX_FRAME_DT);
   while (left > 1e-9 && !state.over) {

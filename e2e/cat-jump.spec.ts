@@ -3,7 +3,7 @@ import { test, expect } from './helpers/test';
 test('猫ジャンプゲームはスペースキーで始まり、何もしないと地面に落ちて終了する', async ({
   page,
 }) => {
-  await page.goto('/tools/flappy-cat/');
+  await page.goto('/tools/cat-jump/');
   const root = page.locator('#ffc-root');
   await expect(root).toHaveAttribute('data-state', 'ready');
 
@@ -28,7 +28,7 @@ test('猫ジャンプゲームはスペースキーで始まり、何もしな�
 test('スペースを連打すると羽ばたいて、地面に落ちずに続けられる', async ({
   page,
 }) => {
-  await page.goto('/tools/flappy-cat/');
+  await page.goto('/tools/cat-jump/');
   const root = page.locator('#ffc-root');
   await page.keyboard.press('Space');
   await expect(root).toHaveAttribute('data-state', 'playing');
@@ -43,7 +43,7 @@ test('スペースを連打すると羽ばたいて、地面に落ちずに続�
 test('スタートボタンを押した後はフォーカスが外れ、Spaceで再スタートしない', async ({
   page,
 }) => {
-  await page.goto('/tools/flappy-cat/');
+  await page.goto('/tools/cat-jump/');
   const start = page.locator('#ffc-start');
   await start.click();
   await expect(page.locator('#ffc-root')).toHaveAttribute(
@@ -56,7 +56,7 @@ test('スタートボタンを押した後はフォーカスが外れ、Spaceで
 test('プレイ中にキャンバスをクリックしても中断せず羽ばたく', async ({
   page,
 }) => {
-  await page.goto('/tools/flappy-cat/');
+  await page.goto('/tools/cat-jump/');
   const root = page.locator('#ffc-root');
   await page.locator('#ffc-canvas').click();
   await expect(root).toHaveAttribute('data-state', 'playing');
@@ -66,14 +66,14 @@ test('プレイ中にキャンバスをクリックしても中断せず羽ば�
 
 test('ベスト記録を消すボタンで保存値が消える', async ({ page }) => {
   await page.addInitScript(() => {
-    localStorage.setItem('flappy-cat-best', '7');
+    localStorage.setItem('cat-jump-best', '7');
   });
-  await page.goto('/tools/flappy-cat/');
+  await page.goto('/tools/cat-jump/');
   await expect(page.locator('#ffc-best')).toHaveText('7');
   await page.locator('#ffc-reset-best').click();
   await expect(page.locator('#ffc-best')).not.toHaveText('7');
   expect(
-    await page.evaluate(() => localStorage.getItem('flappy-cat-best')),
+    await page.evaluate(() => localStorage.getItem('cat-jump-best')),
   ).toBeNull();
 });
 
@@ -87,7 +87,7 @@ test('localStorageが使えなくても遊べる', async ({ page }) => {
   });
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('/tools/flappy-cat/');
+  await page.goto('/tools/cat-jump/');
   await page.locator('#ffc-start').click();
   await expect(page.locator('#ffc-root')).toHaveAttribute(
     'data-state',
@@ -97,7 +97,7 @@ test('localStorageが使えなくても遊べる', async ({ page }) => {
 });
 
 test('猫ジャンプゲーム（英語）が表示される', async ({ page }) => {
-  await page.goto('/en/tools/flappy-cat/');
+  await page.goto('/en/tools/cat-jump/');
   await expect(page.locator('main h1')).toContainText('Cat Jump Game');
   await expect(page.locator('#ffc-start')).toHaveText('Start');
 });

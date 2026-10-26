@@ -5,7 +5,7 @@ interface GlossaryTerm {
   description: string;
 }
 
-export interface FlappyCatPageContent {
+export interface CatJumpPageContent {
   title: string;
   description: string;
   h1: string;
@@ -32,7 +32,7 @@ export interface FlappyCatPageContent {
   glossaryTerms: GlossaryTerm[];
 }
 
-export const flappyCatContent: Record<Locale, FlappyCatPageContent> = {
+export const catJumpContent: Record<Locale, CatJumpPageContent> = {
   ja: {
     title: '猫ジャンプゲーム｜タップで羽ばたく1ボタンの無料ミニゲーム',
     description:

@@ -230,4 +230,8 @@ export const howToSlugs = [
   'tower-of-hanoi',
   'cat-jump',
   'peg-solitaire',
+  'hangman',
+  'tic-tac-toe',
+  'gomoku',
+  'sokoban',
 ];

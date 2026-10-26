@@ -15445,6 +15445,149 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'hangman',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['hit-and-blow', 'sudoku', 'word-search-generator'],
+    translations: {
+      ja: {
+        name: 'ハングマン（英単語当て）',
+        description:
+          '文字を1つずつ推測して英単語を当てるハングマン。動物・食べ物・旅行などカテゴリを選べ、英語の語彙学習にも使えます。',
+        keywords: [
+          'ハングマン',
+          '英単語',
+          '英単語ゲーム',
+          '単語当て',
+          '文字当て',
+          'hangman',
+          '語彙学習',
+          '英語学習',
+        ],
+      },
+      en: {
+        name: 'Hangman',
+        description:
+          'Guess the hidden English word one letter at a time. Pick a category like animals, food or travel.',
+        keywords: [
+          'hangman',
+          'word game',
+          'guess the word',
+          'vocabulary game',
+          'letter guessing',
+          'english vocabulary',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'tic-tac-toe',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['connect-four', 'reversi', 'gomoku'],
+    translations: {
+      ja: {
+        name: '三目並べ（○×ゲーム）',
+        description:
+          '3段階のCPUと対戦できる三目並べ。最強はミニマックスで負けません。先手・後手も選べます。',
+        keywords: [
+          '三目並べ',
+          '○×ゲーム',
+          'マルバツゲーム',
+          'tic-tac-toe',
+          'CPU対戦',
+          'ミニマックス',
+          'ボードゲーム',
+        ],
+      },
+      en: {
+        name: 'Tic-Tac-Toe',
+        description:
+          'Play against the computer at three levels, including an unbeatable minimax mode. Choose to move first or second.',
+        keywords: [
+          'tic-tac-toe',
+          'noughts and crosses',
+          'xo game',
+          'minimax',
+          'vs computer',
+          'board game',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'gomoku',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['connect-four', 'reversi', 'tic-tac-toe'],
+    translations: {
+      ja: {
+        name: '五目並べ',
+        description:
+          '15×15の盤面でCPUと対戦。強さ4段階、先手・後手を選べて「待った」も可。禁じ手なし。',
+        keywords: [
+          '五目並べ',
+          'ごもくならべ',
+          'gomoku',
+          '5目並べ',
+          '五目',
+          'CPU対戦',
+          'ボードゲーム',
+        ],
+      },
+      en: {
+        name: 'Gomoku (Five in a Row)',
+        description:
+          'Play Gomoku against the computer on a 15×15 board. Four levels, choose first or second, undo moves, no restricted moves.',
+        keywords: [
+          'gomoku',
+          'five in a row',
+          'five in a line',
+          'board game',
+          'vs computer',
+          'connect five',
+        ],
+      },
+    },
+  },
+  {
+    slug: 'sokoban',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['peg-solitaire', 'tower-of-hanoi', 'lights-out'],
+    translations: {
+      ja: {
+        name: '箱押しパズル',
+        description:
+          '箱を押してすべてのゴールに運ぶパズル。全20面、キー・スワイプ・ボタン操作、1手戻す、最短手数の記録つき。',
+        keywords: [
+          '倉庫番',
+          '箱押し',
+          'ソコバン',
+          'sokoban',
+          'パズル',
+          'ブラウザゲーム',
+        ],
+      },
+      en: {
+        name: 'Box Push Puzzle',
+        description:
+          'Push every box onto a goal across 20 levels. Arrow keys, swipe or buttons, undo, and best-move records. Free browser puzzle.',
+        keywords: [
+          'sokoban',
+          'box push',
+          'crate puzzle',
+          'warehouse puzzle',
+          'puzzle game',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

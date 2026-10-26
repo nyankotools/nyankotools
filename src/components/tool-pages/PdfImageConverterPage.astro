@@ -218,6 +218,7 @@ const selectClass =
     type PdfImageInput,
   } from '../../lib/tools/pdf-image-converter';
 
+  import { buildZip, type ZipEntry } from '../../lib/tools/pdf-image-extractor';
   import { enableFileDrop } from '../../lib/file-drop';
   import { preloadPdfLibs } from '../../lib/pdf-preload';
 
@@ -497,6 +498,7 @@ const selectClass =
     a.textContent = `${(resultEl.dataset.download ?? '').replace('{name}', () => name)}${paren(formatBytes(blob.size))}`;
     li.append(a);
     resultList.append(li);
+    return li;
   }
 
   async function convertToImages() {
@@ -508,6 +510,7 @@ const selectClass =
     const mime = isJpeg ? 'image/jpeg' : 'image/png';
     const scale = Number(scaleSelect.value);
     const quality = Number(qualityInput.value) / 100;
+    const zipEntries: ZipEntry[] = [];
     const { doc, task } = await openPdf(pdfBytes);
     try {
       for (const index of indices) {
@@ -535,22 +538,32 @@ const selectClass =
           );
           canvas.width = canvas.height = 0;
           if (!blob) throw new Error('toBlob failed');
-          addResult(
-            imageFileName(
-              baseName(pdfName),
-              index + 1,
-              pdfPages,
-              isJpeg ? 'jpg' : 'png',
-            ),
-            blob,
-            { preview: true },
+          const fileName = imageFileName(
+            baseName(pdfName),
+            index + 1,
+            pdfPages,
+            isJpeg ? 'jpg' : 'png',
           );
+          zipEntries.push({
+            name: fileName,
+            data: new Uint8Array(await blob.arrayBuffer()),
+          });
+          addResult(fileName, blob, { preview: true });
         } finally {
           page.cleanup();
         }
       }
     } finally {
       void task.destroy();
+    }
+    // 2枚以上のときは一括ダウンロード用のZIPを先頭に置く
+    if (zipEntries.length >= 2) {
+      const zip = buildZip(zipEntries);
+      const li = addResult(
+        `${baseName(pdfName)}.zip`,
+        new Blob([zip as BlobPart], { type: 'application/zip' }),
+      );
+      resultList.prepend(li);
     }
   }
 

@@ -126,7 +126,7 @@ export const pdfImageConverterContent: Record<
       '変換方向として「PDF → 画像」または「画像 → PDF」を選びます。',
       'PDF、または画像ファイルを選択します（画像は選んだ順に1枚1ページになり、「上へ」「下へ」で入れ替えられます）。',
       '出力形式・解像度・変換するページ（PDF→画像）や、ページサイズ（画像→PDF）を必要に応じて設定します。',
-      '「変換」を押し、結果のファイルをダウンロードします。',
+      '「変換」を押し、結果のファイルをダウンロードします（PDF→画像で2ページ以上のときは、ZIPで一括ダウンロードもできます）。',
     ],
     glossaryHeading: '用語解説',
     glossaryTerms: [
@@ -210,7 +210,7 @@ export const pdfImageConverterContent: Record<
       'Choose a direction: "PDF → Images" or "Images → PDF".',
       'Choose the PDF or image files (images become one page each in the order chosen; use "Move up" / "Move down" to reorder).',
       'Adjust the output format, resolution and pages (PDF → Images), or the page size (Images → PDF), if needed.',
-      'Press "Convert" and download the result.',
+      'Press "Convert" and download the result (for PDF → Images with 2+ pages, you can also download everything as one ZIP).',
     ],
     glossaryHeading: 'Glossary',
     glossaryTerms: [

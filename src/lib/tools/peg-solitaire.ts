@@ -162,13 +162,17 @@ export function isStuck(state: GameState): boolean {
 
 /**
  * 状況の評価。
- * - perfect: 残り1個で、それが中央
- * - solved: 残り1個（中央以外）
+ * - perfect: 残り1個。英国式は、それが中央にある場合だけ（欧州式は中央スタート→中央1個の解が存在しないため、1個残れば常に perfect）
+ * - solved: 残り1個（英国式で中央以外）
  * - stuck: 2個以上残っていて手がない
  */
 export function evaluate(state: GameState): Outcome {
   const count = pegCount(state);
-  if (count === 1) return state.pegs[CENTER] ? 'perfect' : 'solved';
+  if (count === 1) {
+    return state.type === 'european' || state.pegs[CENTER]
+      ? 'perfect'
+      : 'solved';
+  }
   return isStuck(state) ? 'stuck' : 'playing';
 }
 

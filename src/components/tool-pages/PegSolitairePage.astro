@@ -25,6 +25,7 @@ const typeNames = { english: t.typeEnglish, european: t.typeEuropean };
     data-status-selected={t.statusSelected}
     data-status-no-moves={t.statusNoMoves}
     data-status-perfect={t.statusPerfect}
+    data-status-perfect-european={t.statusPerfectEuropean}
     data-status-solved={t.statusSolved}
     data-status-stuck={t.statusStuck}
     data-rank-genius={t.rankGenius}
@@ -206,9 +207,12 @@ const typeNames = { english: t.typeEnglish, european: t.typeEuropean };
     const outcome = evaluate(state);
     rankEl.textContent = '';
     if (outcome === 'perfect') {
-      statusEl.textContent = fill(msg.statusPerfect, {
-        n: String(state.history.length),
-      });
+      statusEl.textContent = fill(
+        (state.type === 'european'
+          ? msg.statusPerfectEuropean
+          : msg.statusPerfect) ?? '',
+        { n: String(state.history.length) },
+      );
       rankEl.textContent = rankText(remaining);
     } else if (outcome === 'solved') {
       statusEl.textContent = msg.statusSolved ?? '';

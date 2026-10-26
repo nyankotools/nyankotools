@@ -126,6 +126,10 @@ describe('評価', () => {
     expect(evaluate(custom('english', [toIndex(0, 2)]))).toBe('solved');
   });
 
+  it('欧州式は中央1個の解が存在しないので、1個残れば位置を問わず perfect', () => {
+    expect(evaluate(custom('european', [toIndex(0, 2)]))).toBe('perfect');
+  });
+
   it('離れた2個は詰み', () => {
     const s = custom('english', [toIndex(0, 2), toIndex(6, 4)]);
     expect(isStuck(s)).toBe(true);

@@ -36,6 +36,8 @@ export interface PegSolitairePageContent {
   statusNoMoves: string;
   /** {n} を置換して表示する */
   statusPerfect: string;
+  /** 欧州式用（中央に1個残す解は存在しない）。{n} を置換して表示する */
+  statusPerfectEuropean: string;
   /** {n} を置換して表示する */
   statusSolved: string;
   /** {n} を置換して表示する */
@@ -58,7 +60,7 @@ export const pegSolitaireContent: Record<Locale, PegSolitairePageContent> = {
       'ブラウザで遊べるペグソリティア。駒を飛び越えて取り、最後の1個を目指すパズルです。英国式33穴・欧州式37穴を選べ、残数表示と「1手戻す」に対応。データはブラウザ内で処理され、サーバーには送信されません。',
     h1: 'ペグソリティア｜駒を飛び越えて最後の1個を目指すパズル',
     introHtml:
-      '駒を別の駒の上で飛び越えて取り、盤上の駒をできるだけ減らすひとり用パズルです。理想は中央に1個だけ残すこと。盤面は英国式（33穴）と欧州式（37穴）から選べ、間違えたら1手ずつ戻せます。ほかのパズルでは <a href="/tools/sudoku/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">数独</a> もどうぞ。',
+      '駒を別の駒の上で飛び越えて取り、盤上の駒をできるだけ減らすひとり用パズルです。理想は1個だけ残すこと（英国式は中央に残すと完全クリア）。盤面は英国式（33穴）と欧州式（37穴）から選べ、間違えたら1手ずつ戻せます。ほかのパズルでは <a href="/tools/sudoku/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">数独</a> もどうぞ。',
     howToHeading: '使い方',
     howToSteps: [
       '「盤面」で英国式（33穴）か欧州式（37穴）を選びます。最初は中央だけが空いています。',
@@ -83,6 +85,7 @@ export const pegSolitaireContent: Record<Locale, PegSolitairePageContent> = {
     statusSelected: '選択中。強調された穴をクリックすると移動します。',
     statusNoMoves: 'その駒は動かせません。',
     statusPerfect: '完全クリア！ 中央に1個だけ残りました（{n} 手）。',
+    statusPerfectEuropean: '完全クリア！ 1個まで減らしました（{n} 手）。',
     statusSolved: 'クリア！ 1個まで減らしました。中央に残すとさらに完璧です。',
     statusStuck: '動かせる駒がなくなりました。残り {n} 個。',
     rankGenius: '評価：天才',
@@ -92,7 +95,7 @@ export const pegSolitaireContent: Record<Locale, PegSolitairePageContent> = {
     notesHeading: '注意事項',
     notes: [
       '駒は縦または横に隣り合う駒を飛び越え、その先の空き穴に着地します。斜めには動けません。',
-      '残り1個で、それが中央にあれば完全クリアです。残り1個でも中央以外でもクリアとして扱います。',
+      '英国式は、残り1個が中央にあれば完全クリアです（中央以外はクリア）。欧州式は中央スタートから中央に1個残す解が存在しないため、1個まで減らせば完全クリアです。',
       '評価は終了時の残数で決まります（1個＝天才、2個＝優秀、3〜4個＝普通、5個以上＝もう少し）。',
       '「1手戻す」は何手でもさかのぼれます。「リセット」または盤面の切り替えで初期配置に戻ります。',
       'ゲームの途中経過は保存されません。ページを再読み込みすると初期配置に戻ります。',
@@ -107,17 +110,17 @@ export const pegSolitaireContent: Record<Locale, PegSolitairePageContent> = {
       {
         term: '英国式・欧州式',
         description:
-          '英国式は十字形の33穴、欧州式は角を丸めた37穴の盤です。どちらも初期配置は中央だけが空きで、欧州式のほうが穴が多く、完全クリアはより難しいといわれます。',
+          '英国式は十字形の33穴、欧州式は角を丸めた37穴の盤です。どちらも初期配置は中央だけが空きで、欧州式は穴が多く、中央に1個だけ残す解は存在しません（どこかに1個残せば完全クリア）。',
       },
     ],
   },
   en: {
     title: 'Peg Solitaire – Free Online Puzzle with Undo',
     description:
-      'Play peg solitaire in your browser. Jump pegs to remove them and leave one in the center. 33-hole and 37-hole boards, with undo. Nothing is uploaded.',
+      'Play peg solitaire in your browser. Jump pegs to remove them and leave just one. 33-hole and 37-hole boards, with undo. Nothing is uploaded.',
     h1: 'Peg Solitaire – Jump Pegs and Leave Just One',
     introHtml:
-      'A one-player puzzle: jump a peg over a neighbor to capture it and clear the board down to as few pegs as you can. The perfect finish leaves a single peg in the center. Choose the English (33-hole) or European (37-hole) board, and step back one move at a time if you slip. Want another puzzle? Try <a href="/en/tools/sudoku/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Sudoku</a>.',
+      'A one-player puzzle: jump a peg over a neighbor to capture it and clear the board down to as few pegs as you can. The perfect finish leaves a single peg (in the center on the English board). Choose the English (33-hole) or European (37-hole) board, and step back one move at a time if you slip. Want another puzzle? Try <a href="/en/tools/sudoku/" class="text-blue-700 underline hover:no-underline dark:text-blue-400">Sudoku</a>.',
     howToHeading: 'How to use',
     howToSteps: [
       'Pick the English (33 holes) or European (37 holes) board under "Board". Only the center hole is empty at the start.',
@@ -142,6 +145,7 @@ export const pegSolitaireContent: Record<Locale, PegSolitairePageContent> = {
     statusSelected: 'Selected. Click a highlighted hole to jump.',
     statusNoMoves: 'That peg cannot move.',
     statusPerfect: 'Perfect! One peg left in the center ({n} moves).',
+    statusPerfectEuropean: 'Perfect! Down to one peg ({n} moves).',
     statusSolved:
       'Solved! Down to one peg. Leave it in the center for a perfect finish.',
     statusStuck: 'No more jumps are possible. {n} pegs left.',
@@ -152,7 +156,7 @@ export const pegSolitaireContent: Record<Locale, PegSolitairePageContent> = {
     notesHeading: 'Notes',
     notes: [
       'A peg jumps over an adjacent peg, up, down, left or right, and lands in the empty hole beyond it. Diagonal jumps are not allowed.',
-      'One peg left in the center is a perfect finish. One peg left anywhere else still counts as solved.',
+      'On the English board, one peg left in the center is a perfect finish; one peg anywhere else counts as solved. The European board has no solution that ends in the center, so any single peg is a perfect finish there.',
       'The rank depends on the pegs left at the end: 1 is Genius, 2 is Excellent, 3-4 is Average, 5 or more is Keep trying.',
       'You can undo as many moves as you like. "Reset" or switching the board returns to the starting layout.',
       'Progress is not saved. Reloading the page restores the starting layout.',
@@ -167,7 +171,7 @@ export const pegSolitaireContent: Record<Locale, PegSolitairePageContent> = {
       {
         term: 'English and European boards',
         description:
-          'The English board is a cross with 33 holes; the European (French) board has rounded corners and 37 holes. Both start with only the center empty. The European board has more holes and is generally harder to finish with a single center peg.',
+          'The English board is a cross with 33 holes; the European (French) board has rounded corners and 37 holes. Both start with only the center empty. On the European board, ending with one peg in the center is impossible, so any single peg counts as a perfect finish.',
       },
     ],
   },

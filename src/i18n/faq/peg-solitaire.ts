@@ -10,12 +10,12 @@ export const faq: FaqContent = {
     {
       question: '英国式と欧州式の違いは？',
       answer:
-        '英国式は十字形の33穴、欧州式は四隅を1穴ずつ足して角を丸めた37穴です。どちらも中央だけを空けて開始します。欧州式は穴が多いぶん、中央1個を残して終える完全クリアの難度が上がります。',
+        '英国式は十字形の33穴、欧州式は四隅を1穴ずつ足して角を丸めた37穴です。どちらも中央だけを空けて開始します。欧州式は穴が多く、中央から始めて中央に1個だけ残す解は存在しません（総当たりで確認済み）。',
     },
     {
       question: '「完全クリア」と「クリア」の違いは？',
       answer:
-        '残りが1個で、その駒が盤の中央にあれば完全クリアです。1個まで減らせても中央以外にあれば「クリア」として扱います。2個以上残って動かせなくなった場合は、残数に応じた評価が表示されます。',
+        '英国式では、残りが1個でその駒が盤の中央にあれば完全クリアです。中央以外なら「クリア」として扱います。欧州式は中央に残す解が存在しないため、1個まで減らせば完全クリアです。2個以上残って動かせなくなった場合は、残数に応じた評価が表示されます。',
     },
     {
       question: '間違えたときは戻せますか？',
@@ -38,12 +38,12 @@ export const faq: FaqContent = {
       question:
         'What is the difference between the English and European boards?',
       answer:
-        'The English board is a cross with 33 holes. The European board adds one hole at each corner of the cross for 37 holes. Both start with only the center empty, and the extra holes make a perfect finish harder on the European board.',
+        'The English board is a cross with 33 holes. The European board adds one hole at each corner of the cross for 37 holes. Both start with only the center empty, and on the European board it is impossible to end with a single peg in the center (confirmed by exhaustive search).',
     },
     {
       question: 'What counts as a perfect finish?',
       answer:
-        'One peg left, sitting in the center hole, is a perfect finish. One peg anywhere else still counts as solved. If two or more pegs remain and nothing can jump, you get a rank based on how many are left.',
+        'On the English board, one peg left in the center hole is a perfect finish, and one peg anywhere else counts as solved. The European board has no solution that ends in the center, so any single peg is a perfect finish there. If two or more pegs remain and nothing can jump, you get a rank based on how many are left.',
     },
     {
       question: 'Can I undo a mistake?',

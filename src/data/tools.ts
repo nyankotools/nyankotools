@@ -15701,6 +15701,43 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'word-guess-game',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['hangman', 'hit-and-blow', 'word-search-generator'],
+    translations: {
+      ja: {
+        name: '英単語5文字当てゲーム',
+        description:
+          '6回以内に5文字の英単語を当てる言葉ゲーム。緑・黄・灰の色ヒントで推理でき、英語の語彙学習にも使えます。',
+        keywords: [
+          '5文字当て',
+          '英単語',
+          '英単語ゲーム',
+          '単語当て',
+          '言葉ゲーム',
+          'ワードゲーム',
+          '5文字',
+          '英語学習',
+        ],
+      },
+      en: {
+        name: '5-Letter Word Guessing Game',
+        description:
+          'Guess the hidden five-letter English word in six tries, using green, yellow and gray clues.',
+        keywords: [
+          '5 letter word game',
+          'word guessing game',
+          'five letter words',
+          'word puzzle',
+          'guess the word',
+          'vocabulary game',
+        ],
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

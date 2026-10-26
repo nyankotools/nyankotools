@@ -237,4 +237,5 @@ export const howToSlugs = [
   'blackjack',
   'optical-illusions',
   'one-stroke-puzzle',
+  'word-guess-game',
 ];

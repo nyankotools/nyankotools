@@ -15163,6 +15163,145 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'aim-trainer',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['reaction-test', 'mouse-tester', 'memory-match'],
+    translations: {
+      ja: {
+        name: 'エイム練習',
+        keywords: [
+          'エイム',
+          'エイム練習',
+          '的クリック',
+          'FPS',
+          'マウス',
+          '精度',
+          'aim trainer',
+        ],
+        description:
+          '出てくる的を20個クリックして、命中までの平均時間・精度・ミス回数を測るエイム練習。ベスト記録も保存。',
+      },
+      en: {
+        name: 'Aim Trainer',
+        keywords: [
+          'aim trainer',
+          'aim practice',
+          'target click',
+          'FPS',
+          'mouse accuracy',
+          'click speed',
+        ],
+        description:
+          'Click 20 targets to measure your average hit time, accuracy and misses. Best score saved in your browser.',
+      },
+    },
+  },
+  {
+    slug: 'whack-a-mole',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['reaction-test', 'memory-match', 'breakout-game'],
+    translations: {
+      ja: {
+        name: 'モグラ叩きゲーム',
+        keywords: [
+          'モグラ叩き',
+          'もぐらたたき',
+          'ミニゲーム',
+          '反射神経',
+          'ネコ',
+          'whack a mole',
+        ],
+        description:
+          '穴から出るネコを30秒で何匹叩けるか挑戦。時間とともに速くなり、ベストスコアも保存',
+      },
+      en: {
+        name: 'Whack-a-Mole Game',
+        keywords: [
+          'whack a mole',
+          'mole game',
+          'mini game',
+          'reflex game',
+          'tap game',
+          'cat',
+        ],
+        description:
+          'Whack the cats popping out of holes in 30 seconds. It speeds up as you play and saves your best score.',
+      },
+    },
+  },
+  {
+    slug: 'simon-game',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['memory-match', 'number-memory-test', 'reaction-test'],
+    translations: {
+      ja: {
+        name: '色と音の記憶ゲーム',
+        keywords: [
+          '記憶ゲーム',
+          '記憶力',
+          '色と音',
+          '順番',
+          'メモリーゲーム',
+          'ワーキングメモリ',
+        ],
+        description:
+          '4色のパネルが光る順番と音を覚えて再現する記憶力ゲーム。キーボード1〜4にも対応',
+      },
+      en: {
+        name: 'Color & Sound Memory Game',
+        keywords: [
+          'memory game',
+          'sequence memory',
+          'color sound game',
+          'pattern memory',
+          'repeat the pattern',
+        ],
+        description:
+          'Remember and repeat the order of four glowing, sounding panels. Keys 1-4 supported.',
+      },
+    },
+  },
+  {
+    slug: 'number-memory-test',
+    category: 'games',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['memory-match', 'simon-game', 'reaction-test'],
+    translations: {
+      ja: {
+        name: '数字記憶テスト',
+        keywords: [
+          '数字記憶',
+          '記憶力テスト',
+          '短期記憶',
+          'ナンバーメモリー',
+          '桁数',
+          '記憶ゲーム',
+        ],
+        description:
+          '一瞬表示される数字を覚えて入力。正解のたびに桁数が増える短期記憶ゲーム',
+      },
+      en: {
+        name: 'Number Memory Test',
+        keywords: [
+          'number memory',
+          'memory test',
+          'digit span',
+          'short-term memory',
+          'memory game',
+        ],
+        description:
+          'Memorize a number flashed on screen and type it back. One more digit each round.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

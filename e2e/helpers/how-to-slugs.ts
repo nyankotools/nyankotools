@@ -222,4 +222,8 @@ export const howToSlugs = [
   'file-splitter',
   'bulk-file-renamer',
   'hex-viewer',
+  'aim-trainer',
+  'whack-a-mole',
+  'simon-game',
+  'number-memory-test',
 ];

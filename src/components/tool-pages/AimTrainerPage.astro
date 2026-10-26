@@ -1,0 +1,310 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { aimTrainerContent } from '../../i18n/tools/aim-trainer';
+import {
+  TARGET_COUNT,
+  TARGET_SIZE,
+  TARGET_SIZES,
+} from '../../lib/tools/aim-trainer';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = aimTrainerContent[locale];
+
+const stats = [
+  ['progress', t.progressLabel],
+  ['hits', t.hitsLabel],
+  ['misses', t.missesLabel],
+  ['accuracy', t.accuracyLabel],
+  ['average', t.averageLabel],
+  ['best', t.bestLabel],
+  ['worst', t.worstLabel],
+  ['median', t.medianLabel],
+  ['record', t.recordLabel],
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="at-root"
+    data-count={TARGET_COUNT}
+    data-unit={t.unit}
+    data-arena-idle={t.arenaIdle}
+    data-arena-done={t.arenaDone}
+  >
+    <div class="flex flex-wrap items-end gap-2">
+      <div>
+        <label for="at-size" class="ui-label">
+          {t.sizeLabel}
+        </label>
+        <select
+          id="at-size"
+          data-no-persist
+          class="ui-input h-11 px-3 dark:bg-gray-900"
+        >
+          {t.sizeOptions
+            .filter((o) =>
+              (TARGET_SIZES as readonly number[]).includes(o.value),
+            )
+            .map((o) => (
+              <option value={o.value} selected={o.value === TARGET_SIZE}>
+                {o.label}
+              </option>
+            ))}
+        </select>
+      </div>
+      <button id="at-start" type="button" class="ui-btn ui-btn-primary">
+        {t.startLabel}
+      </button>
+      <button id="at-reset" type="button" class="ui-btn">
+        {t.resetLabel}
+      </button>
+    </div>
+
+    <div
+      id="at-arena"
+      role="group"
+      aria-label={t.arenaLabel}
+      class="relative mt-4 h-72 w-full max-w-2xl touch-manipulation overflow-hidden rounded-xl border-2 border-gray-300 bg-slate-100 select-none dark:border-gray-700 dark:bg-slate-800"
+    >
+      <p
+        id="at-message"
+        aria-live="polite"
+        class="pointer-events-none absolute inset-0 flex items-center justify-center p-4 text-center text-base font-medium text-gray-700 dark:text-gray-200"
+      >
+        {t.arenaIdle}
+      </p>
+      <button
+        id="at-target"
+        type="button"
+        hidden
+        aria-label={t.targetLabel}
+        class="absolute rounded-full border-2 border-white bg-red-700 shadow-md focus:outline-2 focus:outline-offset-2 focus:outline-blue-600"
+      ></button>
+    </div>
+
+    <p
+      id="at-new-record"
+      hidden
+      class="mt-3 text-sm font-bold text-green-800 dark:text-green-400"
+    >
+      {t.newRecord}
+    </p>
+
+    <div class="mt-4 overflow-x-auto">
+      <table class="w-full max-w-2xl min-w-[280px] border-collapse text-sm">
+        <tbody>
+          {stats.map(([id, label]) => (
+            <tr class="border-b border-gray-100 dark:border-gray-800">
+              <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">
+                {label}
+              </td>
+              <td
+                id={`at-stat-${id}`}
+                class="py-2 text-right text-gray-900 tabular-nums dark:text-gray-100"
+              >
+                -
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    <p class="mt-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+      {t.historyLabel}
+    </p>
+    <ol
+      id="at-history"
+      class="mt-1 flex max-w-2xl flex-wrap gap-2 text-sm tabular-nums"
+    ></ol>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    formatMs,
+    formatPercent,
+    generateTargetPosition,
+    isNewBest,
+    parseBest,
+    parseTargetSize,
+    serializeBest,
+    summarize,
+  } from '../../lib/tools/aim-trainer';
+  import type { TargetPosition } from '../../lib/tools/aim-trainer';
+
+  const STORAGE_KEY = 'nyankotools:aim-trainer:best';
+  // ベスト記録は的の大きさごとに保存する
+  const storageKey = () => `${STORAGE_KEY}:${size}`;
+
+  const root = document.getElementById('at-root')!;
+  const d = root.dataset;
+  const count = Number(d.count);
+  const unit = d.unit!;
+  const arena = document.getElementById('at-arena')!;
+  const message = document.getElementById('at-message')!;
+  const target = document.getElementById('at-target')!;
+  const sizeSelect = document.getElementById('at-size') as HTMLSelectElement;
+  let size = parseTargetSize(sizeSelect.value);
+  const newRecord = document.getElementById('at-new-record')!;
+  function applySize() {
+    size = parseTargetSize(sizeSelect.value);
+    target.style.width = `${size}px`;
+    target.style.height = `${size}px`;
+  }
+  applySize();
+  const history = document.getElementById('at-history')!;
+  const startButton = document.getElementById('at-start')!;
+  const resetButton = document.getElementById('at-reset')!;
+  const stat = (id: string) => document.getElementById(`at-stat-${id}`)!;
+
+  let playing = false;
+  let times: number[] = [];
+  let misses = 0;
+  let shownAt = 0;
+  let lastPos: TargetPosition | null = null;
+  // localStorageが使えない環境では、このページを開いている間だけの記録にする
+  const memoryBest = new Map<number, number>();
+
+  function loadBest(): number | null {
+    try {
+      return parseBest(localStorage.getItem(storageKey()));
+    } catch {
+      return memoryBest.get(size) ?? null;
+    }
+  }
+
+  function saveBest(best: number) {
+    memoryBest.set(size, best);
+    try {
+      localStorage.setItem(storageKey(), serializeBest(best));
+    } catch {
+      // 保存できなくても計測は続ける
+    }
+  }
+
+  function render() {
+    const s = summarize(times, misses);
+    const fmt = (v: number | undefined) =>
+      v === undefined ? '-' : `${formatMs(v)} ${unit}`;
+    const best = loadBest();
+    stat('progress').textContent =
+      `${Math.max(count - times.length, 0)} / ${count}`;
+    stat('hits').textContent = String(times.length);
+    stat('misses').textContent = String(misses);
+    stat('accuracy').textContent = formatPercent(
+      times.length + misses > 0
+        ? (times.length / (times.length + misses)) * 100
+        : null,
+    );
+    stat('average').textContent = fmt(s?.average);
+    stat('best').textContent = fmt(s?.best);
+    stat('worst').textContent = fmt(s?.worst);
+    stat('median').textContent = fmt(s?.median);
+    stat('record').textContent = fmt(best ?? undefined);
+    history.replaceChildren(
+      ...times.map((ms, i) => {
+        const li = document.createElement('li');
+        li.className =
+          'rounded-md border border-gray-300 px-2 py-1 dark:border-gray-700';
+        li.textContent = `${i + 1}: ${formatMs(ms)} ${unit}`;
+        return li;
+      }),
+    );
+  }
+
+  function spawn() {
+    const pos = generateTargetPosition(
+      arena.clientWidth - 4,
+      arena.clientHeight - 4,
+      size,
+      lastPos,
+    );
+    lastPos = pos;
+    target.style.left = `${pos.left}px`;
+    target.style.top = `${pos.top}px`;
+    target.hidden = false;
+    shownAt = performance.now();
+  }
+
+  function start() {
+    applySize();
+    sizeSelect.disabled = true;
+    times = [];
+    misses = 0;
+    lastPos = null;
+    playing = true;
+    newRecord.hidden = true;
+    message.textContent = '';
+    render();
+    spawn();
+  }
+
+  function finish() {
+    playing = false;
+    sizeSelect.disabled = false;
+    target.hidden = true;
+    message.textContent = d.arenaDone!;
+    const s = summarize(times, misses);
+    if (s && isNewBest(loadBest(), s.average)) {
+      saveBest(s.average);
+      newRecord.hidden = false;
+    }
+    render();
+  }
+
+  function reset() {
+    playing = false;
+    sizeSelect.disabled = false;
+    applySize();
+    times = [];
+    misses = 0;
+    lastPos = null;
+    target.hidden = true;
+    newRecord.hidden = true;
+    message.textContent = d.arenaIdle!;
+    render();
+  }
+
+  arena.addEventListener('pointerdown', (event) => {
+    if (!playing || event.button !== 0) return;
+    event.preventDefault();
+    if (event.target instanceof Node && target.contains(event.target)) {
+      times.push(Math.max(0, event.timeStamp - shownAt));
+      if (times.length >= count) {
+        finish();
+      } else {
+        render();
+        spawn();
+      }
+    } else {
+      misses++;
+      render();
+    }
+  });
+  // キーボード（Enter/Space）で的を押した場合は、clickだけが発火する
+  target.addEventListener('click', (event) => {
+    if (!playing || event.detail !== 0) return;
+    times.push(Math.max(0, performance.now() - shownAt));
+    if (times.length >= count) {
+      finish();
+    } else {
+      render();
+      spawn();
+    }
+  });
+  arena.addEventListener('contextmenu', (event) => event.preventDefault());
+  sizeSelect.addEventListener('change', () => {
+    applySize();
+    render();
+  });
+  startButton.addEventListener('click', start);
+  resetButton.addEventListener('click', reset);
+
+  render();
+</script>

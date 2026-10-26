@@ -1,0 +1,288 @@
+---
+import ToolShell from '../ToolShell.astro';
+import { whackAMoleContent } from '../../i18n/tools/whack-a-mole';
+import { DURATION_MS, HOLE_COUNT } from '../../lib/tools/whack-a-mole';
+import type { Locale } from '../../data/tools';
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const t = whackAMoleContent[locale];
+
+const holes = Array.from({ length: HOLE_COUNT }, (_, i) => i);
+const secs = Math.ceil(DURATION_MS / 1000);
+
+const holeClass =
+  'relative flex aspect-square w-full cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-amber-950 bg-amber-900 select-none touch-manipulation focus:outline-2 focus:outline-offset-2 focus:outline-blue-600 dark:focus:outline-blue-400';
+const moleClass =
+  'pointer-events-none text-5xl leading-none transition-transform duration-100 translate-y-[120%] data-[active=true]:translate-y-0 sm:text-6xl';
+
+const stats = [
+  ['time', t.timeLabel, t.timeValue.replace('{n}', String(secs))],
+  ['score', t.scoreLabel, '0'],
+  ['miss', t.missLabel, '0'],
+  ['accuracy', t.accuracyLabel, '-'],
+];
+---
+
+<ToolShell t={t}>
+  <div
+    id="wam-root"
+    data-state="ready"
+    data-duration={DURATION_MS}
+    data-time-value={t.timeValue}
+    data-hole-empty={t.holeEmpty}
+    data-hole-mole={t.holeMole}
+    data-ready={t.ready}
+    data-playing={t.playing}
+    data-finished={t.finished}
+    data-new-best={t.newBest}
+    data-best-none={t.bestNone}
+    data-best-cleared={t.bestCleared}
+    data-start={t.startLabel}
+    data-restart={t.restartLabel}
+  >
+    <dl class="grid max-w-sm grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-4">
+      {stats.map(([id, label, value]) => (
+        <div>
+          <dt class="text-gray-600 dark:text-gray-400">{label}</dt>
+          <dd
+            id={`wam-${id}`}
+            class="text-lg font-bold text-gray-900 tabular-nums dark:text-gray-100"
+          >
+            {value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+
+    <div
+      id="wam-board"
+      role="group"
+      aria-label={t.boardLabel}
+      data-state="ready"
+      class="mt-4 grid max-w-sm grid-cols-3 gap-2 touch-manipulation data-[state=playing]:touch-none"
+    >
+      {holes.map((i) => (
+        <button
+          type="button"
+          class={holeClass}
+          data-hole={i}
+          aria-label={t.holeEmpty.replace('{n}', String(i + 1))}
+        >
+          <span class={moleClass} data-active="false" aria-hidden="true">
+            🐱
+          </span>
+        </button>
+      ))}
+    </div>
+
+    <p
+      id="wam-status"
+      role="status"
+      class="mt-3 min-h-6 max-w-sm text-sm font-medium text-gray-800 dark:text-gray-200"
+    >
+      {t.ready}
+    </p>
+
+    <div class="mt-2 flex flex-wrap items-center gap-2">
+      <button id="wam-start" type="button" class="ui-btn ui-btn-primary">
+        {t.startLabel}
+      </button>
+    </div>
+
+    <p class="mt-4 text-sm text-gray-700 dark:text-gray-300">
+      {t.bestLabel}:
+      <span id="wam-best" class="font-bold tabular-nums">
+        {t.bestNone}
+      </span>
+    </p>
+    <button id="wam-reset-best" type="button" class="ui-btn mt-2">
+      {t.resetBestLabel}
+    </button>
+  </div>
+</ToolShell>
+
+<script>
+  import {
+    accuracyPercent,
+    advance,
+    createGame,
+    isFinished,
+    isNewBest,
+    parseBest,
+    remainingMs,
+    whack,
+  } from '../../lib/tools/whack-a-mole';
+  import type { GameState } from '../../lib/tools/whack-a-mole';
+
+  const STORAGE_KEY = 'whack-a-mole-best';
+
+  const root = document.getElementById('wam-root')!;
+  const d = root.dataset;
+  const board = document.getElementById('wam-board')!;
+  const statusEl = document.getElementById('wam-status')!;
+  const startButton = document.getElementById('wam-start')!;
+  const resetBestButton = document.getElementById('wam-reset-best')!;
+  const bestEl = document.getElementById('wam-best')!;
+  const el = (id: string) => document.getElementById(`wam-${id}`)!;
+  const holeButtons = Array.from(
+    board.querySelectorAll<HTMLButtonElement>('button[data-hole]'),
+  );
+
+  let game: GameState = createGame();
+  let startedAt = 0;
+  let frame = 0;
+  let playing = false;
+  let best = 0;
+  let shown: boolean[] = holeButtons.map(() => false);
+
+  function loadBest(): number {
+    try {
+      return parseBest(localStorage.getItem(STORAGE_KEY));
+    } catch {
+      // localStorageが使えない環境では、このページを開いている間だけの記録にする
+      return 0;
+    }
+  }
+
+  function saveBest() {
+    try {
+      if (best > 0) localStorage.setItem(STORAGE_KEY, String(best));
+      else localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // 保存できない環境では今回の表示だけ反映する
+    }
+  }
+
+  function fill(template: string, values: Record<string, string>): string {
+    return template.replace(/\{(\w+)\}/g, (m, k: string) => values[k] ?? m);
+  }
+
+  function setBestText() {
+    bestEl.textContent = best > 0 ? String(best) : d.bestNone!;
+  }
+
+  function setState(state: 'ready' | 'playing' | 'finished') {
+    d.state = state;
+    board.dataset.state = state;
+  }
+
+  function renderStats(elapsed: number) {
+    el('time').textContent = fill(d.timeValue!, {
+      n: String(Math.ceil(remainingMs(elapsed) / 1000)),
+    });
+    el('score').textContent = String(game.hits);
+    el('miss').textContent = String(game.misses);
+    el('accuracy').textContent =
+      game.hits + game.misses === 0 ? '-' : `${accuracyPercent(game)}%`;
+  }
+
+  function renderHoles() {
+    const active = new Set(game.moles.map((m) => m.hole));
+    holeButtons.forEach((button, i) => {
+      const on = active.has(i);
+      if (on === shown[i]) return;
+      shown[i] = on;
+      const mole = button.firstElementChild as HTMLElement;
+      mole.dataset.active = String(on);
+      button.setAttribute(
+        'aria-label',
+        fill(on ? d.holeMole! : d.holeEmpty!, { n: String(i + 1) }),
+      );
+    });
+  }
+
+  function finish() {
+    playing = false;
+    window.cancelAnimationFrame(frame);
+    game = advance(game, Number.MAX_SAFE_INTEGER);
+    renderHoles();
+    renderStats(Number.MAX_SAFE_INTEGER);
+    setState('finished');
+    let message = fill(d.finished!, {
+      hits: String(game.hits),
+      accuracy: String(accuracyPercent(game)),
+    });
+    if (isNewBest(game.hits, best)) {
+      best = game.hits;
+      saveBest();
+      setBestText();
+      message += ` ${d.newBest}`;
+    }
+    statusEl.textContent = message;
+    startButton.textContent = d.restart!;
+  }
+
+  function tick() {
+    if (!playing) return;
+    const elapsed = performance.now() - startedAt;
+    if (isFinished(elapsed)) {
+      finish();
+      return;
+    }
+    game = advance(game, elapsed);
+    renderHoles();
+    renderStats(elapsed);
+    frame = window.requestAnimationFrame(tick);
+  }
+
+  function start() {
+    window.cancelAnimationFrame(frame);
+    game = createGame();
+    shown = holeButtons.map(() => false);
+    holeButtons.forEach((button, i) => {
+      (button.firstElementChild as HTMLElement).dataset.active = 'false';
+      button.setAttribute(
+        'aria-label',
+        fill(d.holeEmpty!, { n: String(i + 1) }),
+      );
+    });
+    startedAt = performance.now();
+    playing = true;
+    setState('playing');
+    statusEl.textContent = d.playing!;
+    startButton.textContent = d.restart!;
+    renderStats(0);
+    frame = window.requestAnimationFrame(tick);
+  }
+
+  function hit(index: number) {
+    if (!playing) return;
+    const elapsed = performance.now() - startedAt;
+    if (isFinished(elapsed)) return;
+    // 直前の描画以降に出現・引っ込みが済んでいるかもしれないので、時刻を合わせてから判定する
+    game = advance(game, elapsed);
+    game = whack(game, index, elapsed).state;
+    renderHoles();
+    renderStats(elapsed);
+  }
+
+  holeButtons.forEach((button, i) => {
+    button.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      // タッチ時の拡大・長押しメニュー・後続の合成クリックを防ぐ
+      event.preventDefault();
+      hit(i);
+    });
+    // キーボード操作（Enter / Space は detail が 0 の click になる）
+    button.addEventListener('click', (event) => {
+      if (event.detail === 0) hit(i);
+    });
+    button.addEventListener('contextmenu', (event) => event.preventDefault());
+  });
+
+  startButton.addEventListener('click', start);
+  resetBestButton.addEventListener('click', () => {
+    best = 0;
+    saveBest();
+    setBestText();
+    if (!playing) statusEl.textContent = d.bestCleared!;
+  });
+
+  best = loadBest();
+  setBestText();
+  setState('ready');
+</script>

@@ -31,8 +31,10 @@ for (const [locale, base] of [
       await expect(page.locator('#conv-pdf-info')).toContainText('doc.pdf');
       await page.locator('#conv-run').click();
       const links = page.locator('#conv-result-list a');
-      await expect(links).toHaveCount(3);
-      await expect(links.first()).toHaveAttribute('download', 'doc_1.png');
+      // 先頭は一括ダウンロード用のZIP
+      await expect(links).toHaveCount(4);
+      await expect(links.first()).toHaveAttribute('download', 'doc.zip');
+      await expect(links.nth(1)).toHaveAttribute('download', 'doc_1.png');
     });
 
     test('PDF→画像: ページ範囲とJPEG形式を指定できる', async ({ page }) => {
@@ -48,8 +50,9 @@ for (const [locale, base] of [
       await page.locator('#conv-range').fill('2-3');
       await page.locator('#conv-run').click();
       const links = page.locator('#conv-result-list a');
-      await expect(links).toHaveCount(2);
-      await expect(links.first()).toHaveAttribute('download', 'doc_2.jpg');
+      await expect(links).toHaveCount(3);
+      await expect(links.first()).toHaveAttribute('download', 'doc.zip');
+      await expect(links.nth(1)).toHaveAttribute('download', 'doc_2.jpg');
     });
 
     test('PDF→画像: 範囲外のページはエラー', async ({ page }) => {
@@ -136,7 +139,7 @@ for (const [locale, base] of [
       await page.locator('#conv-run').click();
       // 空の範囲は "全ページ" と同じで動作するため、エラーではなく変換される
       const links = page.locator('#conv-result-list a');
-      await expect(links).toHaveCount(3);
+      await expect(links).toHaveCount(4);
     });
 
     test('PDF→画像: JPEG品質スライダーが表示・動作する', async ({ page }) => {

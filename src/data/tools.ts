@@ -15738,6 +15738,43 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    slug: 'large-number-chart',
+    category: 'calc',
+    addedAt: '2026-10-26',
+    updatedAt: '2026-10-26',
+    related: ['cat-clicker', 'kanji-number-converter', 'base-converter'],
+    translations: {
+      ja: {
+        name: '大きな数の早見表',
+        keywords: [
+          '放置ゲーム',
+          'インクリメンタル',
+          'K M B T',
+          '万 億 兆',
+          '桁区切り',
+          '位取り',
+          '単位換算',
+        ],
+        description:
+          '放置ゲームの大きな数を、カンマ区切り・K/M/B/T表記・万/億/兆表記で一覧・相互変換する早見表。',
+      },
+      en: {
+        name: 'Large Number Chart',
+        keywords: [
+          'incremental game',
+          'idle game',
+          'K M B T',
+          'number suffix',
+          'oku cho',
+          'thousands separator',
+          'scientific notation',
+        ],
+        description:
+          'Idle-game number cheat sheet: compare commas, K/M/B/T suffixes and Japanese units (万・億・兆), and convert any value.',
+      },
+    },
+  },
 ];
 
 export function getLocalizedTools(locale: Locale): LocalizedTool[] {

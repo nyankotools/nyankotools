@@ -12,6 +12,8 @@ export type AxisView = {
 /** 結果画面に出す文言をまとめたもの（部品IDを文言に置き換えた結果） */
 export type ResultView = {
   title: string;
+  /** 称号の区切り（カード画像で改行してよい位置。連結すると title になる） */
+  titleSegments: string[];
   typeId: string;
   typeName: string;
   typeDescription: string;
@@ -50,8 +52,14 @@ export function buildResultView(
       ? theme.scoring
       : (theme.legacyScoring?.[result.themeVersion] ?? theme.scoring);
 
+  // 後半（極の名前）と猫の短縮名は1語として扱い、間で改行しない
+  const prefixes = TITLE_SLOTS.slice(0, -1).flatMap(pick);
+  const last = `${pick(TITLE_SLOTS[TITLE_SLOTS.length - 1]).join('')}${type?.shortName ?? ''}`;
+  const titleSegments = [...prefixes, last].filter((s) => s !== '');
+
   return {
-    title: [...TITLE_SLOTS.flatMap(pick), type?.shortName ?? ''].join(''),
+    title: titleSegments.join(''),
+    titleSegments,
     typeId: result.typeId,
     typeName: type?.name ?? '',
     typeDescription: type?.description ?? '',

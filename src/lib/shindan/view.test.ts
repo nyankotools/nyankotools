@@ -33,6 +33,7 @@ function idTexts(theme: ThemeSpec): ShindanThemeTexts {
       ]),
     ),
     howItWorks: [],
+    shareHashtags: [],
   };
 }
 
@@ -54,6 +55,12 @@ describe('buildResultView', () => {
     expect(view.title).toBe(
       `<${r.parts.rarityPrefix[0]}><${r.parts.titlePrefix[0]}><${r.parts.titleSuffix[0]}>[${r.typeId}]`,
     );
+    // 後半と短縮名は1つの区切り（カード画像で間に改行を入れない）
+    expect(view.titleSegments).toEqual([
+      `<${r.parts.rarityPrefix[0]}>`,
+      `<${r.parts.titlePrefix[0]}>`,
+      `<${r.parts.titleSuffix[0]}>[${r.typeId}]`,
+    ]);
   });
 
   it('レア度接頭辞が空（SSR未満）のときは飛ばす', () => {
@@ -63,6 +70,8 @@ describe('buildResultView', () => {
     expect(view.title).toBe(
       `<${r.parts.titlePrefix[0]}><${r.parts.titleSuffix[0]}>[${r.typeId}]`,
     );
+    expect(view.titleSegments).toHaveLength(2);
+    expect(view.titleSegments.join('')).toBe(view.title);
   });
 
   it('出現率を%表記で返す（千分率 / 10）', () => {

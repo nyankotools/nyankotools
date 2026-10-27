@@ -4,6 +4,8 @@ import { shindanThemes } from '../src/data/themes';
 import { nekoCatImages, nekoTheme } from '../src/data/themes/neko';
 import { nekoTextsJa } from '../src/i18n/shindan/neko';
 import { diagnose } from '../src/lib/shindan/compose';
+import { nameVariant } from '../src/lib/shindan/normalize';
+import { RARITIES, type Rarity } from '../src/lib/shindan/types';
 
 // 診断セクション（/shindan/）共通の検証（設計書16.7 #10）。
 //   - 375px幅で表示され、h1が1つ・横スクロールなし・コンソールエラーなし
@@ -454,4 +456,424 @@ test.describe('猫タイプ診断: 操作と入力の境界', () => {
         .toEqual([]);
     }
   });
+});
+
+test.describe('猫タイプ診断: 共有', () => {
+  /** 結果まで進め、Xリンクから共有URLを取り出す */
+  async function finishAndGetShareUrl(page: Page, name = '') {
+    await page.goto('/shindan/neko/');
+    if (name) await page.getByLabel('名前（任意）').fill(name);
+    await page.getByRole('button', { name: '診断をはじめる' }).click();
+    await answerWith(page, (i) => (i * 3) % 4);
+    await expect(page.locator('#shindan-title')).toBeVisible();
+    const href = await page
+      .getByRole('link', { name: 'Xでポスト' })
+      .getAttribute('href');
+    const shareUrl = new URL(href!).searchParams.get('url')!;
+    return shareUrl;
+  }
+
+  test('結果画面でシェア用の画像・投稿文・URLが用意される', async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    const shareUrl = await finishAndGetShareUrl(page);
+    expect(shareUrl).toMatch(
+      /^http:\/\/localhost:4322\/shindan\/neko\/#r=1\.1\.[A-Za-z0-9_-]{6}$/,
+    );
+
+    const x = new URL(
+      (await page
+        .getByRole('link', { name: 'Xでポスト' })
+        .getAttribute('href'))!,
+    );
+    const title = (await page.locator('#shindan-title').textContent())!;
+    expect(x.searchParams.get('text')).toContain(title);
+    expect(x.searchParams.get('text')).toContain('#にゃんこ診断');
+    const line = new URL(
+      (await page
+        .getByRole('link', { name: 'LINEで送る' })
+        .getAttribute('href'))!,
+    );
+    expect(line.searchParams.get('text')).toContain(shareUrl);
+
+    // カード画像（横長 1200×630）がブラウザ内で作られる
+    const card = page.getByRole('img', { name: '結果のシェア用画像' });
+    await expect(card).toBeVisible();
+    await expect(card).toHaveAttribute('src', /^blob:/);
+    await expect
+      .poll(() => card.evaluate((img: HTMLImageElement) => img.naturalWidth))
+      .toBe(1200);
+    expect(
+      await card.evaluate((img: HTMLImageElement) => img.naturalHeight),
+    ).toBe(630);
+    await expect(
+      page.getByRole('button', { name: '画像を保存' }),
+    ).toBeEnabled();
+
+    // 縦長に切り替えると 1080×1350 で作り直す
+    await page.getByLabel('縦長（スマホ向け）').check();
+    await expect
+      .poll(() => card.evaluate((img: HTMLImageElement) => img.naturalWidth))
+      .toBe(1080);
+    expect(
+      await card.evaluate((img: HTMLImageElement) => img.naturalHeight),
+    ).toBe(1350);
+
+    // 保存するとPNGがダウンロードされる
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByRole('button', { name: '画像を保存' }).click(),
+    ]);
+    expect(download.suggestedFilename()).toMatch(
+      /^nyanko-shindan-neko-[a-z-]+-portrait\.png$/,
+    );
+    expect(errors).toEqual([]);
+  });
+
+  test('名前を入れたときだけ「画像に名前を載せる」が出る', async ({ page }) => {
+    await finishAndGetShareUrl(page);
+    await expect(page.getByLabel('画像に名前を載せる')).toBeHidden();
+    await page
+      .getByRole('button', { name: '最初からもう一度診断する' })
+      .click();
+    await page.getByLabel('名前（任意）').fill('たま');
+    await page.getByRole('button', { name: '診断をはじめる' }).click();
+    await answerWith(page, () => 0);
+    const checkbox = page.getByLabel('画像に名前を載せる');
+    await expect(checkbox).toBeVisible();
+    await expect(checkbox).not.toBeChecked();
+    await checkbox.check();
+    await expect(
+      page.getByRole('img', { name: '結果のシェア用画像' }),
+    ).toHaveAttribute('src', /^blob:/);
+  });
+
+  test('共有URLを開くと同じ結果が「友達の結果」として出て、URLからハッシュが消える', async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    const shareUrl = await finishAndGetShareUrl(page, 'たま');
+    const title = await page.locator('#shindan-title').textContent();
+    const type = (await page.locator('#shindan-type').textContent())!;
+    // 名前はURLに入らない
+    expect(shareUrl).not.toContain(encodeURIComponent('たま'));
+
+    await page.goto('about:blank');
+    await page.goto(shareUrl);
+    await expect(page.locator('#shindan-title')).toHaveText(title!);
+    await expect(page.locator('#shindan-result-for')).toHaveText('友達の結果');
+    await expect(page.locator('#shindan-type')).toHaveText(
+      type.replace('あなたを猫に例えると', '猫に例えると'),
+    );
+    await expect(page.locator('#shindan-share')).toBeHidden();
+    await expect(page).toHaveURL('http://localhost:4322/shindan/neko/');
+
+    const axe = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+    expect.soft(axe.violations.map((v) => v.id)).toEqual([]);
+
+    // 再読み込みしても友達の結果のまま（タブ内の sessionStorage）
+    await page.reload();
+    await expect(page.locator('#shindan-title')).toHaveText(title!);
+
+    // 再読み込み以外で開き直すと持ち越さない（その後の再読み込みでも開始画面）
+    await page.goto('/shindan/neko/');
+    await expect(
+      page.getByRole('button', { name: '診断をはじめる' }),
+    ).toBeVisible();
+    await page.reload();
+    await expect(
+      page.getByRole('button', { name: '診断をはじめる' }),
+    ).toBeVisible();
+
+    // 共有URLから開き直し、「あなたも診断してみる」
+    await page.goto(shareUrl);
+    await expect(page.locator('#shindan-title')).toHaveText(title!);
+    // 「あなたも診断してみる」で開始画面へ。以後は再読み込みしても開始画面
+    await page
+      .getByRole('button', { name: 'あなたも診断してみる' })
+      .first()
+      .click();
+    await expect(
+      page.getByRole('button', { name: '診断をはじめる' }),
+    ).toBeVisible();
+    await page.reload();
+    await expect(
+      page.getByRole('button', { name: '診断をはじめる' }),
+    ).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+
+  test('ページを開いたままハッシュが変わっても結果を表示する', async ({
+    page,
+  }) => {
+    const code = diagnose(nekoTheme, Array(12).fill(1), 0)!.code;
+    await page.goto('/shindan/neko/');
+    await page.evaluate((c) => {
+      location.hash = `r=${c}`;
+    }, code);
+    await expect(page.locator('#shindan-result-for')).toHaveText('友達の結果');
+    await expect(page).toHaveURL('http://localhost:4322/shindan/neko/');
+  });
+
+  /** 表示中のシェア用画像のサイズを待つ（naturalWidth/Height で判定） */
+  async function expectCardSize(page: Page, width: number, height: number) {
+    const card = page.getByRole('img', { name: '結果のシェア用画像' });
+    await expect
+      .poll(() =>
+        card.evaluate(
+          (img: HTMLImageElement) => `${img.naturalWidth}x${img.naturalHeight}`,
+        ),
+      )
+      .toBe(`${width}x${height}`);
+  }
+
+  /** 表示中のシェア用画像の画素をハッシュにする（同じ入力なら同じ値になる） */
+  async function cardPixelHash(page: Page): Promise<string> {
+    const card = page.getByRole('img', { name: '結果のシェア用画像' });
+    return card.evaluate((img: HTMLImageElement) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      let h = 0;
+      for (let i = 0; i < data.length; i++) {
+        h = (Math.imul(h, 31) + data[i]) | 0;
+      }
+      return `${canvas.width}x${canvas.height}:${h}`;
+    });
+  }
+
+  test('シェア画像の形と名前の選択を素早く切り替えても、最後の選択の画像になる', async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    const errors = collectErrors(page);
+    await finishAndGetShareUrl(page, 'たま');
+    const save = page.getByRole('button', { name: '画像を保存' });
+    const portrait = page.getByLabel('縦長（スマホ向け）');
+    const landscape = page.getByLabel('横長（X・LINE向け）');
+    // 前の画像が描き終わる前に次の選択をする（古い描画が後から上書きしないこと）
+    await portrait.check();
+    await landscape.check();
+    await portrait.check();
+    await landscape.check();
+    await portrait.check();
+    await page.getByLabel('画像に名前を載せる').check();
+    await expect(save).toBeEnabled();
+    await expectCardSize(page, 1080, 1350);
+    const rapid = await cardPixelHash(page);
+
+    // 同じ結果を、選択を1回ずつにして作り直した画像と一致する
+    await page.goto('/shindan/neko/');
+    await page.getByLabel('名前（任意）').fill('たま');
+    await page.getByRole('button', { name: '診断をはじめる' }).click();
+    await answerWith(page, (i) => (i * 3) % 4);
+    await expect(page.locator('#shindan-title')).toBeVisible();
+    await expect(save).toBeEnabled();
+    await page.getByLabel('縦長（スマホ向け）').check();
+    await page.getByLabel('画像に名前を載せる').check();
+    await expect(save).toBeEnabled();
+    await expectCardSize(page, 1080, 1350);
+    expect(await cardPixelHash(page)).toBe(rapid);
+    expect(errors).toEqual([]);
+  });
+
+  test('結果表示中に「最初からもう一度」を押しても、古い結果の画像は残らず、別の結果の画像に差し替わる', async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    const errors = collectErrors(page);
+    await finishAndGetShareUrl(page, 'たま');
+    // 画像の生成が終わる前にやり直す
+    await page
+      .getByRole('button', { name: '最初からもう一度診断する' })
+      .click();
+    // 非表示の要素は role で引けないので id で見る（src が外れていること）
+    await expect(page.locator('#shindan-card')).not.toHaveAttribute('src');
+
+    await page.getByLabel('名前（任意）').fill('');
+    await page.getByRole('button', { name: '診断をはじめる' }).click();
+    await answerWith(page, () => 0);
+    await expect(page.locator('#shindan-title')).toBeVisible();
+    const save = page.getByRole('button', { name: '画像を保存' });
+    await expect(save).toBeEnabled();
+    await expectCardSize(page, 1200, 630);
+    const afterRestart = await cardPixelHash(page);
+    const x = new URL(
+      (await page
+        .getByRole('link', { name: 'Xでポスト' })
+        .getAttribute('href'))!,
+    );
+    expect(x.searchParams.get('text')).toContain(
+      (await page.locator('#shindan-title').textContent())!,
+    );
+
+    // 同じ回答・名前で最初から作った画像と一致する（古い結果の画像が混ざらない）
+    await page.goto('/shindan/neko/');
+    await page.getByRole('button', { name: '診断をはじめる' }).click();
+    await answerWith(page, () => 0);
+    await expect(save).toBeEnabled();
+    await expectCardSize(page, 1200, 630);
+    expect(await cardPixelHash(page)).toBe(afterRestart);
+    expect(errors).toEqual([]);
+  });
+
+  test('名前の絵文字・30文字・空白のみでも画像が作れ、空白のみなら名前の選択肢は出ない', async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    const errors = collectErrors(page);
+    const cases: { name: string; hasNameOption: boolean }[] = [
+      { name: '🐱🐾', hasNameOption: true },
+      { name: 'あ'.repeat(30), hasNameOption: true },
+      { name: '👨‍👩‍👧'.repeat(10), hasNameOption: true },
+      { name: '   ', hasNameOption: false },
+      { name: '​‍', hasNameOption: false },
+    ];
+    for (const { name, hasNameOption } of cases) {
+      await page.goto('/shindan/neko/');
+      await page.getByLabel('名前（任意）').fill(name);
+      await page.getByRole('button', { name: '診断をはじめる' }).click();
+      await answerWith(page, () => 2);
+      await expect(page.locator('#shindan-title')).toBeVisible();
+      const checkbox = page.getByLabel('画像に名前を載せる');
+      if (hasNameOption) {
+        await expect(checkbox).toBeVisible();
+        await checkbox.check();
+      } else {
+        await expect(checkbox).toBeHidden();
+      }
+      await expect(
+        page.getByRole('button', { name: '画像を保存' }),
+      ).toBeEnabled();
+      await expectCardSize(page, 1200, 630);
+      await page.getByLabel('縦長（スマホ向け）').check();
+      await expectCardSize(page, 1080, 1350);
+    }
+    expect(errors).toEqual([]);
+  });
+
+  test('全レア度（N〜LR）× 横長・縦長で画像が作れる', async ({ page }) => {
+    test.setTimeout(240_000);
+    const errors = collectErrors(page);
+    // 同じ回答でも名前で結果（レア度）が変わるので、レア度ごとに名前を探す
+    const answers = Array.from({ length: 12 }, (_, i) => i % 4);
+    const found = new Map<Rarity, string>();
+    for (let k = 0; k < 5000 && found.size < RARITIES.length; k++) {
+      const name = `テスト${k}`;
+      const { rarity } = diagnose(nekoTheme, answers, nameVariant(name))!;
+      if (!found.has(rarity)) found.set(rarity, name);
+    }
+    expect([...found.keys()].sort()).toEqual([...RARITIES].sort());
+
+    for (const [rarity, name] of found) {
+      await page.goto('/shindan/neko/');
+      await page.getByLabel('名前（任意）').fill(name);
+      await page.getByRole('button', { name: '診断をはじめる' }).click();
+      await answerWith(page, (i) => i % 4);
+      await expect(page.locator('#shindan-rarity')).toHaveText(rarity);
+      await expect(
+        page.getByRole('button', { name: '画像を保存' }),
+      ).toBeEnabled();
+      await expectCardSize(page, 1200, 630);
+      await page.getByLabel('画像に名前を載せる').check();
+      await expectCardSize(page, 1200, 630);
+      await page.getByLabel('縦長（スマホ向け）').check();
+      await expectCardSize(page, 1080, 1350);
+      await expect(
+        page.getByRole('button', { name: '画像を保存' }),
+      ).toBeEnabled();
+    }
+    expect(errors).toEqual([]);
+  });
+
+  test('友達の結果画面を明るい／ダークで表示でき、axe違反がなく、375pxで横スクロールしない', async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 375, height: 800 });
+    const shareUrl = await finishAndGetShareUrl(page, 'たま');
+    for (const colorScheme of ['light', 'dark'] as const) {
+      await page.emulateMedia({ colorScheme });
+      await page.goto('about:blank');
+      await page.goto(shareUrl);
+      await expect(page.locator('#shindan-result-for')).toHaveText(
+        '友達の結果',
+      );
+      await expect(page.locator('#shindan-shared-lead')).toBeVisible();
+      const overflow = await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth >
+          document.documentElement.clientWidth,
+      );
+      expect.soft(overflow, colorScheme).toBe(false);
+      const axe = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+        .analyze();
+      expect
+        .soft(
+          axe.violations.map((v) => v.id),
+          colorScheme,
+        )
+        .toEqual([]);
+    }
+  });
+
+  test('共有URLのエンコード違い（%2E・キーの%72）も同じ結果を開き、余分な文字が付いたものは開始画面', async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    const shareUrl = await finishAndGetShareUrl(page, 'たま');
+    const title = (await page.locator('#shindan-title').textContent())!;
+    const code = new URL(shareUrl).hash.replace(/^#r=/, '');
+    const samePlace = [
+      `#r=${code.replaceAll('.', '%2E')}`,
+      `#%72=${code}`,
+      `#r=${code}&`,
+    ];
+    for (const hash of samePlace) {
+      await page.goto('about:blank');
+      await page.goto(`/shindan/neko/${hash}`);
+      await expect(page.locator('#shindan-result-for')).toHaveText(
+        '友達の結果',
+      );
+      await expect(page.locator('#shindan-title')).toHaveText(title);
+      await expect(page).toHaveURL('http://localhost:4322/shindan/neko/');
+    }
+    for (const hash of [`#r=${code}%0A`, `#r=${code}%20`]) {
+      await page.goto('about:blank');
+      await page.goto(`/shindan/neko/${hash}`);
+      await expect(
+        page.getByRole('button', { name: '診断をはじめる' }),
+      ).toBeVisible();
+      await expect(page.locator('[data-screen="result"]')).toBeHidden();
+    }
+    expect(errors).toEqual([]);
+  });
+
+  for (const hash of [
+    '#r=garbage',
+    '#r=1.1.AAAAA',
+    '#r=9.1.AAAAAA',
+    '#r=1.99.AAAAAA',
+    '#r=1.1.%3Cscript%3E',
+  ]) {
+    test(`壊れた共有URL（${hash}）は開始画面を出し、エラーにならない`, async ({
+      page,
+    }) => {
+      const errors = collectErrors(page);
+      await page.goto(`/shindan/neko/${hash}`);
+      await expect(
+        page.getByRole('button', { name: '診断をはじめる' }),
+      ).toBeVisible();
+      await expect(page.locator('[data-screen="result"]')).toBeHidden();
+      await expect(page).toHaveURL('http://localhost:4322/shindan/neko/');
+      expect(errors).toEqual([]);
+    });
+  }
 });

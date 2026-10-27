@@ -172,3 +172,23 @@ describe('codec', () => {
     expect(parsed).toBeGreaterThan(0);
   });
 });
+
+describe('共有ハッシュのエンコード違い', () => {
+  const code = '1.1.AbC-_9';
+
+  it('パーセント符号化された区切り（%2E）やキー（%72 = r）も同じ値に戻す', () => {
+    expect(parseShareHash(`#r=${code.replaceAll('.', '%2E')}`)).toEqual({
+      self: code,
+    });
+    expect(parseShareHash(`#%72=${code}`)).toEqual({ self: code });
+  });
+
+  it('余分なキー・末尾の & は無視し、値の前後の空白や改行は残して後段で拒否させる', () => {
+    expect(parseShareHash(`#x=1&r=${code}&`)).toEqual({ self: code });
+    // URLSearchParams は %0A・%20 を文字として残すので、共有コードの形式で拒否される
+    const withNewline = parseShareHash(`#r=${code}%0A`)!;
+    expect(withNewline.self).toBe(`${code}\n`);
+    expect(parseShareCode(withNewline.self)).toBeNull();
+    expect(parseShareCode(parseShareHash(`#r=${code}%20`)!.self)).toBeNull();
+  });
+});

@@ -28,6 +28,63 @@ export const shindanUiJa = {
   luckyItem: 'ラッキーアイテム',
   luckyAction: 'ラッキーアクション',
   retry: '最初からもう一度診断する',
+  sharedResultFor: '友達の結果',
+  sharedTypeIs: '猫に例えると「{type}」タイプ',
+  sharedLead: '友達から共有された診断結果です。',
+  tryYourself: 'あなたも診断してみる',
+  shareHeading: '結果をシェア',
+  shareNote:
+    'シェアするURLを開くと、同じ結果が表示されます。名前はURLに含まれません。',
+  cardShapeLabel: '画像の形',
+  cardShapeLandscape: '横長（X・LINE向け）',
+  cardShapePortrait: '縦長（スマホ向け）',
+  cardNameLabel: '画像に名前を載せる',
+  cardAlt: '結果のシェア用画像',
+  cardGenerating: '画像を作成中…',
+  cardFailed: '画像を作成できませんでした。',
+  inAppHint:
+    'アプリ内のブラウザでは保存できないことがあります。画像を長押しして保存するか、ブラウザで開き直してください。',
+  shareImage: '画像付きでシェア',
+  shareX: 'Xでポスト',
+  shareLine: 'LINEで送る',
+  copyUrl: 'URLをコピー',
+  copied: 'URLをコピーしました',
+  copyFailed: 'コピーできませんでした',
+  saveImage: '画像を保存',
+  cardSite: 'nyankotools.com',
+  /** 投稿文（レア度ごとに数種類から結果で決まる）。{title} {type} {rarity} {label} {rate} を置き換える */
+  shareTexts: {
+    N: [
+      '猫タイプ診断の結果は「{title}」。王道の{type}タイプでした🐾',
+      'わたしを猫に例えると{type}。王道をいく「{title}」です🐱',
+      '「{title}」になりました。安心と信頼の王道{type}タイプ🐾',
+    ],
+    R: [
+      '猫タイプ診断で「{title}」に。個性派の【R】でした🐾',
+      'わたしを猫に例えると{type}。個性が光る「{title}」です🐱',
+      '個性派【R】の「{title}」が出ました🐾 {type}タイプです',
+    ],
+    SR: [
+      '猫タイプ診断で注目株【SR】の「{title}」が出ました✨',
+      'わたしを猫に例えると{type}。注目株の「{title}」です✨',
+      '【SR】「{title}」になりました🐾 {type}タイプです',
+    ],
+    SSR: [
+      '猫タイプ診断で【SSR】「{title}」が出ました✨（設計上の出現率{rate}%）',
+      'わたしを猫に例えると{type}。人気者【SSR】の「{title}」です✨',
+      '人気者【SSR】の「{title}」になりました🐾 {type}タイプ',
+    ],
+    UR: [
+      '猫タイプ診断で稀少な【UR】「{title}」が出ました🌈（設計上の出現率{rate}%）',
+      'わたしを猫に例えると{type}。稀少【UR】の「{title}」です🌈',
+      '【UR】「{title}」に出会いました🌈 {type}タイプです',
+    ],
+    LR: [
+      '猫タイプ診断で伝説の【LR】「{title}」が出ました👑（設計上の出現率{rate}%）',
+      'わたしを猫に例えると{type}。伝説【LR】の「{title}」です👑',
+      '伝説の【LR】「{title}」になりました👑 {type}タイプ',
+    ],
+  } satisfies Record<Rarity, string[]>,
   resultNote:
     'エンタメ目的の診断で、医学的・心理学的な診断ではありません。出現率は診断上の設計値です。',
   howItWorksHeading: '診断の仕組み',

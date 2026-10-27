@@ -25,4 +25,6 @@ export type ShindanThemeTexts = {
   parts: Record<string, Record<string, string>>;
   /** 静的テキスト「診断の仕組み」 */
   howItWorks: string[];
+  /** 投稿文に付けるハッシュタグ（# なし） */
+  shareHashtags: string[];
 };

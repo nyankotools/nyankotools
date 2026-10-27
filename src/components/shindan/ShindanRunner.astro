@@ -18,6 +18,8 @@ const payload = JSON.stringify({
 });
 const sectionTitle =
   'mb-2 text-sm font-bold text-[#6b5a7c] dark:text-violet-300';
+const primaryButton =
+  'min-h-12 rounded-full bg-[#4a2f63] px-8 text-base font-bold text-white hover:bg-[#3a2450] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4a2f63] dark:bg-violet-300 dark:text-gray-950 dark:hover:bg-violet-200';
 ---
 
 <section id="shindan-root" data-theme={payload} class="mb-10">
@@ -37,11 +39,7 @@ const sectionTitle =
       class="ui-input h-11 w-full max-w-sm px-3 dark:bg-gray-900"
     />
     <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{ui.nameHint}</p>
-    <button
-      id="shindan-start"
-      type="button"
-      class="mt-6 min-h-12 rounded-full bg-[#4a2f63] px-8 text-base font-bold text-white hover:bg-[#3a2450] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4a2f63] dark:bg-violet-300 dark:text-gray-950 dark:hover:bg-violet-200"
-    >
+    <button id="shindan-start" type="button" class={`mt-6 ${primaryButton}`}>
       {ui.start}
     </button>
   </div>
@@ -90,6 +88,16 @@ const sectionTitle =
   <p id="shindan-status" role="status" class="sr-only"></p>
 
   <div data-screen="result" hidden>
+    <div
+      id="shindan-shared-lead"
+      class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-violet-50 p-4 dark:bg-gray-900"
+      hidden
+    >
+      <p class="font-medium">{ui.sharedLead}</p>
+      <button type="button" data-try-yourself class={primaryButton}>
+        {ui.tryYourself}
+      </button>
+    </div>
     <p
       id="shindan-result-for"
       class="mb-2 text-sm text-gray-600 dark:text-gray-400"
@@ -164,8 +172,121 @@ const sectionTitle =
       </dl>
     </div>
 
+    <section
+      id="shindan-share"
+      aria-labelledby="shindan-share-heading"
+      class="mt-10 rounded-2xl border border-violet-200 p-4 sm:p-6 dark:border-gray-700"
+    >
+      <h3 id="shindan-share-heading" class="mb-1 text-lg font-bold">
+        {ui.shareHeading}
+      </h3>
+      <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+        {ui.shareNote}
+      </p>
+      <div class="mb-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        <fieldset class="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <legend class="sr-only">{ui.cardShapeLabel}</legend>
+          <span aria-hidden="true" class="font-bold">
+            {ui.cardShapeLabel}
+          </span>
+          <label class="flex min-h-11 items-center gap-1.5">
+            <input
+              type="radio"
+              name="shindan-card-shape"
+              value="landscape"
+              checked
+            />
+            {ui.cardShapeLandscape}
+          </label>
+          <label class="flex min-h-11 items-center gap-1.5">
+            <input type="radio" name="shindan-card-shape" value="portrait" />
+            {ui.cardShapePortrait}
+          </label>
+        </fieldset>
+        <label
+          id="shindan-card-name-wrap"
+          class="flex min-h-11 items-center gap-1.5"
+          hidden
+        >
+          <input id="shindan-card-name" type="checkbox" />
+          {ui.cardNameLabel}
+        </label>
+      </div>
+      <div
+        id="shindan-card-frame"
+        class="mx-auto flex max-w-xl items-center justify-center overflow-hidden rounded-xl bg-violet-50 data-[shape=portrait]:max-w-sm dark:bg-gray-900"
+      >
+        <p
+          id="shindan-card-status"
+          class="p-8 text-sm text-gray-600 dark:text-gray-400"
+        >
+          {ui.cardGenerating}
+        </p>
+        <img id="shindan-card" alt={ui.cardAlt} class="h-auto w-full" hidden />
+      </div>
+      <p
+        id="shindan-in-app-hint"
+        class="mt-3 text-sm text-amber-800 dark:text-amber-300"
+        hidden
+      >
+        {ui.inAppHint}
+      </p>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button
+          id="shindan-share-image"
+          type="button"
+          class={primaryButton}
+          hidden
+        >
+          {ui.shareImage}
+        </button>
+        <a
+          id="shindan-share-x"
+          class="ui-btn inline-flex items-center"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-share-method="x"
+        >
+          {ui.shareX}
+        </a>
+        <a
+          id="shindan-share-line"
+          class="ui-btn inline-flex items-center"
+          target="_blank"
+          rel="noopener noreferrer"
+          data-share-method="line"
+        >
+          {ui.shareLine}
+        </a>
+        <button id="shindan-copy" type="button" class="ui-btn">
+          {ui.copyUrl}
+        </button>
+        <button
+          id="shindan-save"
+          type="button"
+          class="ui-btn disabled:opacity-50"
+          disabled
+        >
+          {ui.saveImage}
+        </button>
+      </div>
+      <p
+        id="shindan-share-status"
+        role="status"
+        class="mt-2 min-h-5 text-sm"
+      ></p>
+    </section>
+
     <button id="shindan-retry" type="button" class="ui-btn mt-8">
       {ui.retry}
+    </button>
+    <button
+      type="button"
+      data-try-yourself
+      class={`mt-8 ${primaryButton}`}
+      hidden
+    >
+      {ui.tryYourself}
     </button>
     <p class="mt-4 text-xs text-gray-600 dark:text-gray-400">{ui.resultNote}</p>
   </div>
@@ -173,15 +294,31 @@ const sectionTitle =
 
 <script>
   import { trackEvent } from '../../lib/analytics';
-  import { diagnose } from '../../lib/shindan/compose';
+  import { copyText } from '../../lib/clipboard';
+  import { downloadBlob } from '../../lib/download';
+  import type { CardData, CardShape } from '../../lib/shindan/card';
+  import { parseShareHash } from '../../lib/shindan/codec';
+  import { diagnose, restore } from '../../lib/shindan/compose';
   import {
     NAME_MAX_LENGTH,
     nameVariant,
     normalizeName,
     truncateGraphemes,
   } from '../../lib/shindan/normalize';
-  import type { Rarity, ThemeSpec } from '../../lib/shindan/types';
-  import { buildResultView } from '../../lib/shindan/view';
+  import {
+    buildShareText,
+    buildShareUrl,
+    cardFileName,
+    isInAppBrowser,
+    lineShareUrl,
+    xIntentUrl,
+  } from '../../lib/shindan/share';
+  import type {
+    DiagnosisResult,
+    Rarity,
+    ThemeSpec,
+  } from '../../lib/shindan/types';
+  import { buildResultView, type ResultView } from '../../lib/shindan/view';
   import type { CatImage } from '../../data/themes/neko';
   import type { ShindanThemeTexts } from '../../i18n/shindan/types';
   import type { ShindanUi } from '../../i18n/shindan/ui';
@@ -288,12 +425,32 @@ const sectionTitle =
       restart();
       return;
     }
+    showResult(result, { name });
+    trackEvent('shindan_complete', { theme: spec.id });
+  }
+
+  type ResultMode = { name: string; shared?: false } | { shared: true };
+
+  /** 結果画面を表示する。shared は共有URLから開いた友達の結果（名前なし・シェア欄なし） */
+  function showResult(result: DiagnosisResult, mode: ResultMode) {
     const view = buildResultView(spec, texts, result);
     const image = images[view.typeId];
+    const name = mode.shared ? '' : mode.name;
 
-    $('shindan-result-for').textContent = name
-      ? fill(ui.resultFor, { name })
-      : ui.resultDefault;
+    $('shindan-shared-lead').hidden = !mode.shared;
+    for (const button of root.querySelectorAll<HTMLElement>(
+      '[data-try-yourself]',
+    )) {
+      button.hidden = !mode.shared;
+    }
+    $('shindan-retry').hidden = !!mode.shared;
+    $('shindan-share').hidden = !!mode.shared;
+
+    $('shindan-result-for').textContent = mode.shared
+      ? ui.sharedResultFor
+      : name
+        ? fill(ui.resultFor, { name })
+        : ui.resultDefault;
     const cat = $<HTMLImageElement>('shindan-cat');
     cat.src = image.src;
     cat.width = image.width;
@@ -307,7 +464,10 @@ const sectionTitle =
       rate: view.rarityRate,
     });
     $('shindan-title').textContent = view.title;
-    $('shindan-type').textContent = fill(ui.typeIs, { type: view.typeName });
+    $('shindan-type').textContent = fill(
+      mode.shared ? ui.sharedTypeIs : ui.typeIs,
+      { type: view.typeName },
+    );
     $('shindan-axes').replaceChildren(
       ...view.axes.flatMap((axis) => {
         const dt = document.createElement('dt');
@@ -340,16 +500,276 @@ const sectionTitle =
     $('shindan-status').textContent = '';
     root.scrollIntoView({ block: 'start' });
     $('shindan-title').focus({ preventScroll: true });
-    trackEvent('shindan_complete', { theme: spec.id });
+    if (!mode.shared) prepareShare(result, view, name);
   }
 
   function restart() {
     window.clearTimeout(analyzingTimer);
     $('shindan-status').textContent = '';
     answers = [];
+    resetShare();
     show('start');
     $('shindan-start').focus();
   }
+
+  // ---- 共有（設計書8章・16.9） ----
+
+  type ShareState = {
+    result: DiagnosisResult;
+    view: ResultView;
+    name: string;
+    url: string;
+    text: string;
+    blob?: Blob;
+  };
+
+  /** 表示中の自分の結果（共有ボタンが参照する） */
+  let current: ShareState | null = null;
+  /** カード画像の生成の世代（古い生成結果を捨てる） */
+  let cardGeneration = 0;
+  let cardUrl: string | null = null;
+
+  const cardImage = $<HTMLImageElement>('shindan-card');
+  const cardStatus = $('shindan-card-status');
+
+  /** 表示中の結果を捨てる。生成中のカードも無効にし、画像の blob URL を解放する */
+  function resetShare() {
+    current = null;
+    cardGeneration++;
+    if (cardUrl) URL.revokeObjectURL(cardUrl);
+    cardUrl = null;
+    cardImage.removeAttribute('src');
+    cardImage.hidden = true;
+    cardStatus.textContent = ui.cardGenerating;
+    cardStatus.hidden = false;
+    saveButton.disabled = true;
+    shareImageButton.hidden = true;
+  }
+  const shareStatus = $('shindan-share-status');
+  const saveButton = $<HTMLButtonElement>('shindan-save');
+  const shareImageButton = $<HTMLButtonElement>('shindan-share-image');
+  const cardNameWrap = $('shindan-card-name-wrap');
+  const cardNameInput = $<HTMLInputElement>('shindan-card-name');
+
+  $('shindan-in-app-hint').hidden = !isInAppBrowser(navigator.userAgent);
+
+  function prepareShare(
+    result: DiagnosisResult,
+    view: ResultView,
+    name: string,
+  ) {
+    const url = buildShareUrl(location.origin, spec.id, result.code);
+    const text = buildShareText(
+      ui.shareTexts,
+      {
+        title: view.title,
+        type: view.typeName,
+        rarity: view.rarity,
+        label: ui.rarityLabels[view.rarity],
+        rate: view.rarityRate,
+      },
+      result.code,
+      texts.shareHashtags,
+    );
+    current = { result, view, name, url, text };
+    $<HTMLAnchorElement>('shindan-share-x').href = xIntentUrl(text, url);
+    $<HTMLAnchorElement>('shindan-share-line').href = lineShareUrl(text, url);
+    shareStatus.textContent = '';
+    // 名前は既定では画像に載せない（載せると選んだときだけ端末内で描く。16.11）
+    cardNameWrap.hidden = name === '';
+    cardNameInput.checked = false;
+    void updateCard();
+  }
+
+  function selectedShape(): CardShape {
+    const checked = root.querySelector<HTMLInputElement>(
+      'input[name="shindan-card-shape"]:checked',
+    );
+    return checked?.value === 'portrait' ? 'portrait' : 'landscape';
+  }
+
+  async function updateCard() {
+    const state = current;
+    if (!state) return;
+    const generation = ++cardGeneration;
+    const shape = selectedShape();
+    $('shindan-card-frame').dataset.shape = shape;
+    const { view } = state;
+    const data: CardData = {
+      rarity: view.rarity,
+      rarityLabel: ui.rarityLabels[view.rarity],
+      titleSegments: view.titleSegments,
+      typeLine: fill(ui.typeIs, { type: view.typeName }),
+      axes: view.axes.map(({ poleLabel, stars }) => ({ poleLabel, stars })),
+      nameLine:
+        cardNameInput.checked && state.name
+          ? fill(ui.resultFor, { name: state.name })
+          : undefined,
+      sectionName: ui.sectionName,
+      siteLine: `${ui.cardSite}/shindan/${spec.id}/`,
+    };
+    // 作り直す間は前の画像を出したままにする（枠の高さが縮んでガタつかないように）
+    saveButton.disabled = true;
+    shareImageButton.hidden = true;
+    try {
+      const { renderCard } = await import('./share-card');
+      const blob = await renderCard(shape, data, images[view.typeId].src);
+      if (generation !== cardGeneration) return;
+      if (cardUrl) URL.revokeObjectURL(cardUrl);
+      cardUrl = URL.createObjectURL(blob);
+      cardImage.src = cardUrl;
+      cardImage.hidden = false;
+      cardStatus.hidden = true;
+      state.blob = blob;
+      saveButton.disabled = false;
+      shareImageButton.hidden = !canShareFile(cardFile(state));
+    } catch {
+      if (generation !== cardGeneration) return;
+      cardImage.hidden = true;
+      cardStatus.textContent = ui.cardFailed;
+      cardStatus.hidden = false;
+    }
+  }
+
+  function cardFile(state: ShareState): File | null {
+    if (!state.blob) return null;
+    return new File(
+      [state.blob],
+      cardFileName(spec.id, state.view.typeId, selectedShape()),
+      { type: 'image/png' },
+    );
+  }
+
+  function canShareFile(file: File | null): file is File {
+    try {
+      return !!file && !!navigator.canShare?.({ files: [file] });
+    } catch {
+      return false;
+    }
+  }
+
+  function trackShare(method: string) {
+    trackEvent('shindan_share', { theme: spec.id, method });
+  }
+
+  for (const input of root.querySelectorAll<HTMLInputElement>(
+    'input[name="shindan-card-shape"]',
+  )) {
+    input.addEventListener('change', () => void updateCard());
+  }
+  cardNameInput.addEventListener('change', () => void updateCard());
+
+  for (const link of root.querySelectorAll<HTMLElement>(
+    '[data-share-method]',
+  )) {
+    link.addEventListener('click', () =>
+      trackShare(link.dataset.shareMethod ?? ''),
+    );
+  }
+
+  $('shindan-copy').addEventListener('click', async () => {
+    if (!current) return;
+    const ok = await copyText(current.url, { track: false });
+    shareStatus.textContent = ok ? ui.copied : ui.copyFailed;
+    if (ok) trackShare('copy');
+  });
+
+  saveButton.addEventListener('click', () => {
+    if (!current?.blob) return;
+    downloadBlob(
+      current.blob,
+      cardFileName(spec.id, current.view.typeId, selectedShape()),
+    );
+    trackShare('image');
+  });
+
+  shareImageButton.addEventListener('click', async () => {
+    const state = current;
+    const file = state && cardFile(state);
+    if (!state || !canShareFile(file)) return;
+    try {
+      await navigator.share({
+        files: [file],
+        text: `${state.text}\n${state.url}`,
+      });
+      trackShare('webshare');
+    } catch {
+      // 共有シートを閉じた（AbortError）などは何もしない
+    }
+  });
+
+  // ---- 共有URLからの復元（16.4・16.12） ----
+
+  /** 共有URLから開いた結果。再読み込みしても表示できるよう sessionStorage にも持つ */
+  const SHARED_KEY = `shindan:${spec.id}:shared`;
+
+  function storeShared(code: string | null) {
+    try {
+      if (code) sessionStorage.setItem(SHARED_KEY, code);
+      else sessionStorage.removeItem(SHARED_KEY);
+    } catch {
+      // 保存できなくても表示は続ける
+    }
+  }
+
+  function loadShared(): string | null {
+    try {
+      return sessionStorage.getItem(SHARED_KEY);
+    } catch {
+      return null;
+    }
+  }
+
+  /** 再読み込みで開かれたか（友達の結果を sessionStorage から戻すのは再読み込みのときだけ） */
+  function isReload(): boolean {
+    const [entry] = performance.getEntriesByType('navigation');
+    return (
+      (entry as PerformanceNavigationTiming | undefined)?.type === 'reload'
+    );
+  }
+
+  /**
+   * URLハッシュ（#r=...）を読んですぐURLから消す。GA4・広告スクリプトにページURLとして回答由来の値を見せないため。
+   * 復号できない値は何も表示せず、通常の開始画面のままにする。
+   * allowStored: ハッシュが無いとき、sessionStorage の友達の結果を表示してよいか
+   */
+  function openShared(allowStored: boolean) {
+    const shared = parseShareHash(location.hash);
+    const fromUrl = shared !== null;
+    if (fromUrl) {
+      history.replaceState(
+        history.state,
+        '',
+        location.pathname + location.search,
+      );
+    }
+    const code = shared ? shared.self : allowStored ? loadShared() : null;
+    if (!code) return;
+    const result = restore(spec, code);
+    if (!result) {
+      storeShared(null);
+      return;
+    }
+    storeShared(code);
+    window.clearTimeout(analyzingTimer);
+    resetShare();
+    showResult(result, { shared: true });
+    if (fromUrl) trackEvent('shindan_restore', { theme: spec.id });
+  }
+
+  for (const button of root.querySelectorAll<HTMLElement>(
+    '[data-try-yourself]',
+  )) {
+    button.addEventListener('click', () => {
+      storeShared(null);
+      restart();
+    });
+  }
+  window.addEventListener('hashchange', () => openShared(false));
+  // 再読み込み以外（リンクから来た等）では前の友達の結果を持ち越さない
+  const reloaded = isReload();
+  if (!reloaded) storeShared(null);
+  openShared(reloaded);
 
   // 名前は見た目の文字数で上限を設ける（maxlength は UTF-16 単位で絵文字を2文字と数えるため使わない）。
   // IME の変換中に切ると入力が壊れるので、変換中は待って確定時に切る。

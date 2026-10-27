@@ -18,6 +18,7 @@ const EXPECTED_PLACEHOLDERS: Partial<
   remaining: ['n'],
   resultFor: ['name'],
   typeIs: ['type'],
+  sharedTypeIs: ['type'],
   rarityRate: ['rate'],
 };
 

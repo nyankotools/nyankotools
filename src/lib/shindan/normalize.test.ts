@@ -1,5 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import { nameVariant, normalizeName, VARIANT_MAX } from './normalize';
+import {
+  nameVariant,
+  normalizeName,
+  truncateGraphemes,
+  VARIANT_MAX,
+} from './normalize';
+
+describe('truncateGraphemes', () => {
+  it('上限以下ならそのまま返す', () => {
+    expect(truncateGraphemes('', 3)).toBe('');
+    expect(truncateGraphemes('たま', 3)).toBe('たま');
+    expect(truncateGraphemes('あいう', 3)).toBe('あいう');
+  });
+
+  it('見た目の文字数で切り詰める', () => {
+    expect(truncateGraphemes('あいうえお', 3)).toBe('あいう');
+    // サロゲートペアの絵文字も1文字
+    expect(truncateGraphemes('🐱'.repeat(40), 30)).toBe('🐱'.repeat(30));
+    // ZWJで結合した絵文字・肌色修飾・国旗・結合文字も1文字として扱い、途中で切らない
+    const family = '👨‍👩‍👧';
+    expect(truncateGraphemes(`${family}${family}`, 1)).toBe(family);
+    expect(truncateGraphemes('👍🏽👍🏽', 1)).toBe('👍🏽');
+    expect(truncateGraphemes('🇯🇵🇯🇵', 1)).toBe('🇯🇵');
+    expect(truncateGraphemes('がき', 1)).toBe('が');
+  });
+});
 
 describe('normalize', () => {
   it('全角・半角、大文字・小文字、空白の違いを吸収する', () => {

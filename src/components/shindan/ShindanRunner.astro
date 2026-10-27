@@ -1,0 +1,379 @@
+---
+// 診断の進行（開始 → 質問 → 分析中 → 結果）。テーマ非依存で、テーマのデータは JSON で script に渡す。
+import type { ShindanTheme } from '../../data/themes';
+import { shindanUiJa as ui } from '../../i18n/shindan/ui';
+
+interface Props {
+  theme: ShindanTheme;
+}
+
+const { theme } = Astro.props;
+const texts = theme.texts.ja;
+const total = theme.spec.scoring.questions.length;
+const payload = JSON.stringify({
+  spec: theme.spec,
+  texts,
+  images: theme.images,
+  ui,
+});
+const sectionTitle =
+  'mb-2 text-sm font-bold text-[#6b5a7c] dark:text-violet-300';
+---
+
+<section id="shindan-root" data-theme={payload} class="mb-10">
+  <div data-screen="start">
+    <p class="mb-4 text-gray-700 dark:text-gray-300">{texts.intro}</p>
+    <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+      {ui.questionCount.replace('{total}', String(total))}
+    </p>
+    <label for="shindan-name" class="ui-label">
+      {ui.nameLabel}
+    </label>
+    <input
+      id="shindan-name"
+      type="text"
+      autocomplete="off"
+      spellcheck="false"
+      class="ui-input h-11 w-full max-w-sm px-3 dark:bg-gray-900"
+    />
+    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{ui.nameHint}</p>
+    <button
+      id="shindan-start"
+      type="button"
+      class="mt-6 min-h-12 rounded-full bg-[#4a2f63] px-8 text-base font-bold text-white hover:bg-[#3a2450] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#4a2f63] dark:bg-violet-300 dark:text-gray-950 dark:hover:bg-violet-200"
+    >
+      {ui.start}
+    </button>
+  </div>
+
+  <div data-screen="question" hidden>
+    <div class="mb-1 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+      <span id="shindan-progress-text"></span>
+      <span id="shindan-remaining"></span>
+    </div>
+    <div
+      class="mb-6 h-2 overflow-hidden rounded-full bg-violet-100 dark:bg-gray-800"
+      aria-hidden="true"
+    >
+      <div
+        id="shindan-progress-bar"
+        class="h-full w-0 rounded-full bg-[#4a2f63] transition-[width] motion-reduce:transition-none dark:bg-violet-300"
+      ></div>
+    </div>
+    <h2
+      id="shindan-question"
+      tabindex="-1"
+      class="mb-4 text-xl font-bold focus:outline-none"
+    ></h2>
+    <div id="shindan-choices" class="grid gap-3"></div>
+    <button id="shindan-back" type="button" class="ui-btn mt-6">
+      {ui.back}
+    </button>
+  </div>
+
+  <div data-screen="analyzing" hidden>
+    <div class="flex flex-col items-center gap-4 py-16">
+      <span
+        class="h-12 w-12 rounded-full border-4 border-violet-200 border-t-[#4a2f63] motion-safe:animate-spin dark:border-gray-700 dark:border-t-violet-300"
+        aria-hidden="true"
+      ></span>
+      <p
+        id="shindan-analyzing"
+        tabindex="-1"
+        class="text-lg font-bold focus:outline-none"
+      >
+        {ui.analyzing}
+      </p>
+    </div>
+  </div>
+  <!-- 非表示の画面ごと表示した role=status は読み上げられないことがあるため、常にある要素へ文言を入れる -->
+  <p id="shindan-status" role="status" class="sr-only"></p>
+
+  <div data-screen="result" hidden>
+    <p
+      id="shindan-result-for"
+      class="mb-2 text-sm text-gray-600 dark:text-gray-400"
+    ></p>
+    <div class="flex flex-col gap-6 sm:flex-row sm:items-start">
+      <img
+        id="shindan-cat"
+        alt=""
+        width="512"
+        height="512"
+        class="mx-auto h-auto w-56 shrink-0 rounded-3xl sm:mx-0 sm:w-64"
+      />
+      <div class="min-w-0 flex-1">
+        <p class="flex flex-wrap items-center gap-2">
+          <span
+            id="shindan-rarity"
+            class="rounded-md px-2.5 py-0.5 text-sm font-black tracking-wider"
+          ></span>
+          <span id="shindan-rarity-label" class="text-sm font-bold"></span>
+        </p>
+        <p
+          id="shindan-rarity-rate"
+          class="mt-1 text-xs text-gray-600 dark:text-gray-400"
+        ></p>
+        <h2
+          id="shindan-title"
+          tabindex="-1"
+          class="mt-3 text-2xl font-black break-words text-[#4a2f63] focus:outline-none sm:text-3xl dark:text-violet-200"
+        ></h2>
+        <p id="shindan-type" class="mt-2 font-medium"></p>
+        <h3 class={`mt-5 ${sectionTitle}`}>{ui.axesHeading}</h3>
+        <dl
+          id="shindan-axes"
+          class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm"
+        ></dl>
+      </div>
+    </div>
+
+    <div class="mt-8 space-y-6">
+      <section>
+        <h3 class={sectionTitle}>{ui.typeHeading}</h3>
+        <p id="shindan-type-description"></p>
+      </section>
+      <section>
+        <h3 class={sectionTitle}>{ui.strengthsHeading}</h3>
+        <ul id="shindan-strengths" class="list-disc space-y-2 pl-5"></ul>
+      </section>
+      <section>
+        <h3 class={sectionTitle}>{ui.hiddenHeading}</h3>
+        <p id="shindan-hidden"></p>
+      </section>
+      <section>
+        <h3 class={sectionTitle}>{ui.quoteHeading}</h3>
+        <blockquote
+          id="shindan-quote"
+          class="border-l-4 border-violet-300 pl-4 text-lg font-bold dark:border-violet-700"
+        ></blockquote>
+      </section>
+      <dl class="grid gap-3 sm:grid-cols-2">
+        <div class="rounded-lg bg-violet-50 p-3 dark:bg-gray-900">
+          <dt class="text-xs text-gray-600 dark:text-gray-400">
+            {ui.luckyItem}
+          </dt>
+          <dd id="shindan-lucky-item" class="font-bold"></dd>
+        </div>
+        <div class="rounded-lg bg-violet-50 p-3 dark:bg-gray-900">
+          <dt class="text-xs text-gray-600 dark:text-gray-400">
+            {ui.luckyAction}
+          </dt>
+          <dd id="shindan-lucky-action" class="font-bold"></dd>
+        </div>
+      </dl>
+    </div>
+
+    <button id="shindan-retry" type="button" class="ui-btn mt-8">
+      {ui.retry}
+    </button>
+    <p class="mt-4 text-xs text-gray-600 dark:text-gray-400">{ui.resultNote}</p>
+  </div>
+</section>
+
+<script>
+  import { trackEvent } from '../../lib/analytics';
+  import { diagnose } from '../../lib/shindan/compose';
+  import {
+    NAME_MAX_LENGTH,
+    nameVariant,
+    normalizeName,
+    truncateGraphemes,
+  } from '../../lib/shindan/normalize';
+  import type { Rarity, ThemeSpec } from '../../lib/shindan/types';
+  import { buildResultView } from '../../lib/shindan/view';
+  import type { CatImage } from '../../data/themes/neko';
+  import type { ShindanThemeTexts } from '../../i18n/shindan/types';
+  import type { ShindanUi } from '../../i18n/shindan/ui';
+
+  type Payload = {
+    spec: ThemeSpec;
+    texts: ShindanThemeTexts;
+    images: Record<string, CatImage>;
+    ui: ShindanUi;
+  };
+
+  /** 「分析中…」の表示時間（設計書9章: 1.5〜2秒） */
+  const ANALYZING_MS = 1500;
+  /** 質問を切り替えた直後は選択肢を押せなくする（素早い2回タップで次の質問まで答えてしまうのを防ぐ） */
+  const CHOICE_GUARD_MS = 250;
+
+  // Tailwind が検出できるよう、クラス名は省略せずに書く
+  const RARITY_CLASSES: Record<Rarity, string> = {
+    N: 'bg-violet-100 text-violet-900',
+    R: 'border-2 border-violet-500 bg-white text-violet-800',
+    SR: 'bg-linear-to-r from-slate-200 to-slate-400 text-slate-900',
+    SSR: 'bg-linear-to-r from-amber-200 to-yellow-400 text-amber-950',
+    UR: 'bg-linear-to-r from-pink-200 via-violet-200 to-sky-200 text-gray-900',
+    LR: 'border border-amber-400 bg-gray-900 text-amber-300',
+  };
+
+  const root = document.getElementById('shindan-root')!;
+  const { spec, texts, images, ui } = JSON.parse(
+    root.dataset.theme ?? '{}',
+  ) as Payload;
+  const questions = spec.scoring.questions;
+
+  const $ = <T extends HTMLElement = HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+  const screens = root.querySelectorAll<HTMLElement>('[data-screen]');
+  const nameInput = $<HTMLInputElement>('shindan-name');
+  const questionHeading = $('shindan-question');
+  const choiceList = $('shindan-choices');
+  const progressBar = $('shindan-progress-bar');
+
+  let answers: number[] = [];
+  let analyzingTimer: number | undefined;
+
+  const fill = (template: string, values: Record<string, string | number>) =>
+    template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key]));
+
+  function show(name: string) {
+    for (const screen of screens) {
+      screen.hidden = screen.dataset.screen !== name;
+    }
+  }
+
+  function renderQuestion() {
+    const index = answers.length;
+    const question = questions[index];
+    const questionTexts = texts.questions[question.id];
+    $('shindan-progress-text').textContent = fill(ui.progress, {
+      current: index + 1,
+      total: questions.length,
+    });
+    $('shindan-remaining').textContent = fill(ui.remaining, {
+      n: questions.length - index,
+    });
+    progressBar.style.width = `${(index / questions.length) * 100}%`;
+    questionHeading.textContent = questionTexts.text;
+    choiceList.replaceChildren(
+      ...question.choices.map((choice, i) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className =
+          'min-h-12 rounded-xl border border-gray-300 bg-white px-4 py-3 text-left font-medium hover:border-[#4a2f63] hover:bg-violet-50 focus-visible:outline-2 focus-visible:outline-[#4a2f63] dark:border-gray-700 dark:bg-gray-900 dark:hover:border-violet-300 dark:hover:bg-gray-800 dark:focus-visible:outline-violet-300';
+        button.textContent = questionTexts.choices[choice.id];
+        button.disabled = true;
+        button.addEventListener('click', () => answer(i));
+        return button;
+      }),
+    );
+    const buttons = [...choiceList.querySelectorAll('button')];
+    window.setTimeout(() => {
+      for (const button of buttons) button.disabled = false;
+    }, CHOICE_GUARD_MS);
+    show('question');
+    questionHeading.focus();
+  }
+
+  function answer(choiceIndex: number) {
+    answers.push(choiceIndex);
+    if (answers.length < questions.length) {
+      renderQuestion();
+      return;
+    }
+    show('analyzing');
+    $('shindan-analyzing').focus();
+    $('shindan-status').textContent = ui.analyzing;
+    analyzingTimer = window.setTimeout(renderResult, ANALYZING_MS);
+  }
+
+  function renderResult() {
+    // 見えない文字だけの名前は名前なしとして扱う（nameVariant の判定と揃える）
+    const rawName = nameInput.value.trim();
+    const name = normalizeName(rawName) === '' ? '' : rawName;
+    const result = diagnose(spec, answers, nameVariant(name));
+    if (!result) {
+      restart();
+      return;
+    }
+    const view = buildResultView(spec, texts, result);
+    const image = images[view.typeId];
+
+    $('shindan-result-for').textContent = name
+      ? fill(ui.resultFor, { name })
+      : ui.resultDefault;
+    const cat = $<HTMLImageElement>('shindan-cat');
+    cat.src = image.src;
+    cat.width = image.width;
+    cat.height = image.height;
+    cat.alt = view.typeName;
+    const rarity = $('shindan-rarity');
+    rarity.textContent = view.rarity;
+    rarity.className = `rounded-md px-2.5 py-0.5 text-sm font-black tracking-wider ${RARITY_CLASSES[view.rarity]}`;
+    $('shindan-rarity-label').textContent = ui.rarityLabels[view.rarity];
+    $('shindan-rarity-rate').textContent = fill(ui.rarityRate, {
+      rate: view.rarityRate,
+    });
+    $('shindan-title').textContent = view.title;
+    $('shindan-type').textContent = fill(ui.typeIs, { type: view.typeName });
+    $('shindan-axes').replaceChildren(
+      ...view.axes.flatMap((axis) => {
+        const dt = document.createElement('dt');
+        dt.className = 'text-gray-600 dark:text-gray-400';
+        dt.textContent = axis.label;
+        const dd = document.createElement('dd');
+        dd.className = 'font-medium';
+        const stars = document.createElement('span');
+        stars.className = 'ml-1 text-amber-600 dark:text-amber-400';
+        stars.textContent = '★'.repeat(axis.stars);
+        stars.setAttribute('aria-label', `★${axis.stars}`);
+        dd.append(axis.poleLabel, stars);
+        return [dt, dd];
+      }),
+    );
+    $('shindan-type-description').textContent = view.typeDescription;
+    $('shindan-strengths').replaceChildren(
+      ...view.strengths.map((text) => {
+        const li = document.createElement('li');
+        li.textContent = text;
+        return li;
+      }),
+    );
+    $('shindan-hidden').textContent = view.hiddenSide;
+    $('shindan-quote').textContent = `「${view.quote}」`;
+    $('shindan-lucky-item').textContent = view.luckyItem;
+    $('shindan-lucky-action').textContent = view.luckyAction;
+
+    show('result');
+    $('shindan-status').textContent = '';
+    root.scrollIntoView({ block: 'start' });
+    $('shindan-title').focus({ preventScroll: true });
+    trackEvent('shindan_complete', { theme: spec.id });
+  }
+
+  function restart() {
+    window.clearTimeout(analyzingTimer);
+    $('shindan-status').textContent = '';
+    answers = [];
+    show('start');
+    $('shindan-start').focus();
+  }
+
+  // 名前は見た目の文字数で上限を設ける（maxlength は UTF-16 単位で絵文字を2文字と数えるため使わない）。
+  // IME の変換中に切ると入力が壊れるので、変換中は待って確定時に切る。
+  function limitName() {
+    const limited = truncateGraphemes(nameInput.value, NAME_MAX_LENGTH);
+    if (limited !== nameInput.value) nameInput.value = limited;
+  }
+  nameInput.addEventListener('input', (event) => {
+    if (!(event as InputEvent).isComposing) limitName();
+  });
+  nameInput.addEventListener('compositionend', limitName);
+
+  $('shindan-start').addEventListener('click', () => {
+    answers = [];
+    trackEvent('shindan_start', { theme: spec.id });
+    renderQuestion();
+  });
+  $('shindan-back').addEventListener('click', () => {
+    if (answers.length === 0) {
+      restart();
+      return;
+    }
+    answers.pop();
+    renderQuestion();
+  });
+  $('shindan-retry').addEventListener('click', restart);
+</script>

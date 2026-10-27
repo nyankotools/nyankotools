@@ -15,6 +15,7 @@ import FavoriteToggle from '../components/FavoriteToggle.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import Faq from '../components/Faq.astro';
 import AdSlot from '../components/AdSlot.astro';
+import ToolsShellScripts from '../components/ToolsShellScripts.astro';
 import { AD_CSP, shouldShowAds } from '../lib/ads';
 import { getFaqItems } from '../i18n/faq';
 
@@ -29,6 +30,15 @@ interface Props {
   structuredName?: string;
   /** 広告を出してよい静的ページ（トップ・カテゴリ一覧など）。ツールページは tools.ts の ads/sensitive で判定 */
   adPage?: boolean;
+  /**
+   * 外枠の種類。tools はサイドバー・コマンドパレット付き、minimal はそれらを出さない（診断セクション用）。
+   * minimal のナビは呼び出し側が `slot="nav"` で渡す。
+   */
+  shell?: 'tools' | 'minimal';
+  /** hreflang（ja/en の対応ページ）を出すか。別言語版が存在しないページは false */
+  alternates?: boolean;
+  /** パンくずのトップと現在ページの間に入る階層（構造化データ用） */
+  breadcrumbs?: { name: string; path: string }[];
 }
 
 const {
@@ -39,7 +49,11 @@ const {
   languageSwitchToHome = false,
   structuredName = title,
   adPage = false,
+  shell = 'tools',
+  alternates = true,
+  breadcrumbs = [],
 } = Astro.props;
+const isToolsShell = shell === 'tools';
 
 const lang = resolveLocale(Astro.currentLocale);
 const t = useTranslations(lang);
@@ -115,19 +129,17 @@ const breadcrumbJsonLd: Record<string, unknown> | null =
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
         itemListElement: [
-          {
-            '@type': 'ListItem',
-            position: 1,
-            name: siteName,
-            item: homeURL.toString(),
-          },
-          {
-            '@type': 'ListItem',
-            position: 2,
-            name: structuredName,
-            item: canonicalURL.toString(),
-          },
-        ],
+          { name: siteName, item: homeURL.toString() },
+          ...breadcrumbs.map((crumb) => ({
+            name: crumb.name,
+            item: new URL(crumb.path, Astro.site).toString(),
+          })),
+          { name: structuredName, item: canonicalURL.toString() },
+        ].map((entry, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          ...entry,
+        })),
       };
 
 const faqItems = !noindex && toolMatch ? getFaqItems(toolMatch[1], lang) : [];
@@ -186,7 +198,9 @@ const jsonLd: Record<string, unknown> | null = noindex
       止めないと、パース途中の描画で一瞬スクロールが先頭のまま表示されてちらつく。
       非対応ブラウザでは無視され、従来どおりの描画になる。
     -->
-    <link rel="expect" href="#sidebar-ready" blocking="render" />
+    {isToolsShell && (
+      <link rel="expect" href="#sidebar-ready" blocking="render" />
+    )}
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
@@ -197,11 +211,13 @@ const jsonLd: Record<string, unknown> | null = noindex
     {noindex ? (
       <meta name="robots" content="noindex" />
     ) : (
-      <>
-        <link rel="alternate" hreflang="ja" href={jaURL} />
-        <link rel="alternate" hreflang="en" href={enURL} />
-        <link rel="alternate" hreflang="x-default" href={jaURL} />
-      </>
+      alternates && (
+        <>
+          <link rel="alternate" hreflang="ja" href={jaURL} />
+          <link rel="alternate" hreflang="en" href={enURL} />
+          <link rel="alternate" hreflang="x-default" href={jaURL} />
+        </>
+      )
     )}
 
     <meta property="og:type" content="website" />
@@ -211,7 +227,12 @@ const jsonLd: Record<string, unknown> | null = noindex
     <meta property="og:site_name" content={siteName} />
     <meta property="og:image" content={ogImage} />
     <meta property="og:locale" content={ogLocaleMap[lang]} />
-    <meta property="og:locale:alternate" content={ogLocaleMap[alternateLang]} />
+    {alternates && (
+      <meta
+        property="og:locale:alternate"
+        content={ogLocaleMap[alternateLang]}
+      />
+    )}
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@nyankotools" />
@@ -270,6 +291,8 @@ const jsonLd: Record<string, unknown> | null = noindex
           // トップの絞り込み（?q=検索語&c=カテゴリ）も、検索語を計測に載せない
           gaUrl.searchParams.delete('q');
           gaUrl.searchParams.delete('c');
+          // 診断の共有URL（#r=...）には回答由来の値が入るため、ハッシュも送らない
+          gaUrl.hash = '';
           gtag('config', GA_MEASUREMENT_ID, { page_location: gaUrl.href });
         </script>
       </>
@@ -287,152 +310,126 @@ const jsonLd: Record<string, unknown> | null = noindex
     >
       {t('nav.skip')}
     </a>
-    <div class="flex min-h-screen flex-col md:flex-row">
-      <header class="flex items-center justify-between print:hidden border-b border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900 md:hidden">
-        <a href={localePath(lang, '/')} class="block">
-          <img src="/logo.png" alt={siteName} class="h-8 w-auto" />
-        </a>
-        <div class="flex items-center gap-1">
-          <a
-            href={alternatePath}
-            hreflang={alternateLang}
-            data-lang-switch-mobile
-            aria-label={t('nav.language.switch')}
-            class="rounded px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            {lang === 'ja' ? 'EN' : '日本語'}
-          </a>
-          <ThemeToggle id="theme-toggle-mobile" />
-        </div>
-        <button
-          id="sidebar-toggle"
-          type="button"
-          aria-expanded="false"
-          aria-controls="sidebar"
-          aria-label={t('nav.menu.open')}
-          class="rounded p-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M4 6h16M4 12h16M4 18h16"
-            />
-          </svg>
-        </button>
-      </header>
-
-      <div
-        id="sidebar-overlay"
-        class="fixed inset-0 z-30 hidden bg-black/40 md:hidden print:hidden"
-      ></div>
-
-      <aside
-        id="sidebar"
-        tabindex="-1"
-        class="print:hidden focus:outline-none fixed inset-y-0 left-0 z-40 w-72 max-w-[80%] -translate-x-full overflow-y-auto border-r border-gray-200 bg-white px-4 pb-4 transition-transform duration-200 ease-in-out dark:border-gray-800 dark:bg-gray-900 md:sticky md:top-0 md:z-auto md:h-screen md:w-64 md:translate-x-0 md:self-start md:border-r"
-      >
-        <div class="-mx-4 bg-white px-4 pt-4 dark:bg-gray-900 [@media(min-height:600px)]:sticky [@media(min-height:600px)]:top-0 [@media(min-height:600px)]:z-10">
-          <div class="mb-4 hidden items-center gap-2 md:flex">
-            <a href={localePath(lang, '/')} class="block w-40 min-w-0 flex-1">
-              <img
-                src="/logo.png"
-                alt={siteName}
-                class="h-auto w-full"
-                width="1376"
-                height="280"
-              />
+    <div
+      class:list={['flex min-h-screen flex-col', isToolsShell && 'md:flex-row']}
+    >
+      {!isToolsShell && <slot name="nav" />}
+      {isToolsShell && (
+        <>
+          <header class="flex items-center justify-between print:hidden border-b border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900 md:hidden">
+            <a href={localePath(lang, '/')} class="block">
+              <img src="/logo.png" alt={siteName} class="h-8 w-auto" />
             </a>
+            <div class="flex items-center gap-1">
+              <a
+                href={alternatePath}
+                hreflang={alternateLang}
+                data-lang-switch-mobile
+                aria-label={t('nav.language.switch')}
+                class="rounded px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                {lang === 'ja' ? 'EN' : '日本語'}
+              </a>
+              <ThemeToggle id="theme-toggle-mobile" />
+            </div>
             <button
-              id="sidebar-collapse"
+              id="sidebar-toggle"
               type="button"
-              aria-label={t('nav.sidebar.collapse')}
-              title={t('nav.sidebar.collapse')}
-              class="flex h-8 w-8 shrink-0 items-center justify-center rounded text-gray-500 hover:bg-gray-100 hover:text-blue-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-blue-400"
+              aria-expanded="false"
+              aria-controls="sidebar"
+              aria-label={t('nav.menu.open')}
+              class="rounded p-2 text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
+                class="h-6 w-6"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
                 stroke-width="2"
-                aria-hidden="true"
               >
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5"
+                  d="M4 6h16M4 12h16M4 18h16"
                 />
               </svg>
             </button>
-          </div>
+          </header>
 
-          <button
-            type="button"
-            data-palette-open
-            class="mb-3 flex min-h-11 w-full items-center justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-500 hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-400 dark:hover:border-blue-500 dark:hover:text-blue-400"
-          >
-            <span>{t('palette.open')}</span>
-            <kbd
-              data-palette-kbd
-              class="hidden rounded border border-gray-300 px-1.5 text-xs md:inline dark:border-gray-600"
-            >
-              Ctrl K
-            </kbd>
-          </button>
-        </div>
+          <div
+            id="sidebar-overlay"
+            class="fixed inset-0 z-30 hidden bg-black/40 md:hidden print:hidden"
+          ></div>
 
-        <nav>
-          <details
-            id="sidebar-favorites"
-            hidden
-            open
-            class="group mb-2 border-b border-gray-200 pb-2 dark:border-gray-800"
+          <aside
+            id="sidebar"
+            tabindex="-1"
+            class="print:hidden focus:outline-none fixed inset-y-0 left-0 z-40 w-72 max-w-[80%] -translate-x-full overflow-y-auto border-r border-gray-200 bg-white px-4 pb-4 transition-transform duration-200 ease-in-out dark:border-gray-800 dark:bg-gray-900 md:sticky md:top-0 md:z-auto md:h-screen md:w-64 md:translate-x-0 md:self-start md:border-r"
           >
-            <summary class="flex cursor-pointer items-center justify-between rounded px-3 py-2 text-sm font-bold tracking-wide text-gray-900 hover:text-blue-700 dark:text-gray-100 dark:hover:text-blue-400">
-              {t('nav.favorites')}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-3 w-3 shrink-0 text-gray-400 transition-transform group-open:rotate-90 dark:text-gray-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-                aria-hidden="true"
+            <div class="-mx-4 bg-white px-4 pt-4 dark:bg-gray-900 [@media(min-height:600px)]:sticky [@media(min-height:600px)]:top-0 [@media(min-height:600px)]:z-10">
+              <div class="mb-4 hidden items-center gap-2 md:flex">
+                <a
+                  href={localePath(lang, '/')}
+                  class="block w-40 min-w-0 flex-1"
+                >
+                  <img
+                    src="/logo.png"
+                    alt={siteName}
+                    class="h-auto w-full"
+                    width="1376"
+                    height="280"
+                  />
+                </a>
+                <button
+                  id="sidebar-collapse"
+                  type="button"
+                  aria-label={t('nav.sidebar.collapse')}
+                  title={t('nav.sidebar.collapse')}
+                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded text-gray-500 hover:bg-gray-100 hover:text-blue-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-blue-400"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                data-palette-open
+                class="mb-3 flex min-h-11 w-full items-center justify-between gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm text-gray-500 hover:border-blue-300 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-950 dark:text-gray-400 dark:hover:border-blue-500 dark:hover:text-blue-400"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="m8.25 4.5 7.5 7.5-7.5 7.5"
-                />
-              </svg>
-            </summary>
-            <ul
-              id="sidebar-favorites-list"
-              class="ml-3 space-y-1 border-l border-gray-200 pb-1 dark:border-gray-800"
-            ></ul>
-          </details>
-          {toolsByCategory.map((category) => {
-            const hasActiveTool = category.tools.some((tool) => {
-              const href = localePath(lang, `/tools/${tool.slug}/`);
-              return pathname === href;
-            });
-            return (
+                <span>{t('palette.open')}</span>
+                <kbd
+                  data-palette-kbd
+                  class="hidden rounded border border-gray-300 px-1.5 text-xs md:inline dark:border-gray-600"
+                >
+                  Ctrl K
+                </kbd>
+              </button>
+            </div>
+
+            <nav>
               <details
-                class="group mb-1 last:mb-0"
-                data-category={category.id}
-                open={hasActiveTool}
+                id="sidebar-favorites"
+                hidden
+                open
+                class="group mb-2 border-b border-gray-200 pb-2 dark:border-gray-800"
               >
                 <summary class="flex cursor-pointer items-center justify-between rounded px-3 py-2 text-sm font-bold tracking-wide text-gray-900 hover:text-blue-700 dark:text-gray-100 dark:hover:text-blue-400">
-                  {category.label}
+                  {t('nav.favorites')}
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     class="h-3 w-3 shrink-0 text-gray-400 transition-transform group-open:rotate-90 dark:text-gray-500"
@@ -449,33 +446,69 @@ const jsonLd: Record<string, unknown> | null = noindex
                     />
                   </svg>
                 </summary>
-                <ul class="ml-3 space-y-1 border-l border-gray-200 pb-1 dark:border-gray-800">
-                  {category.tools.map((tool) => {
-                    const href = localePath(lang, `/tools/${tool.slug}/`);
-                    return (
-                      <li class="flex items-center gap-0.5">
-                        <a
-                          href={href}
-                          class="sidebar-link"
-                          aria-current={pathname === href ? 'page' : undefined}
-                        >
-                          {tool.name}
-                        </a>
-                        <FavoriteToggle
-                          slug={tool.slug}
-                          locale={lang}
-                          class="fav-toggle-side"
-                        />
-                      </li>
-                    );
-                  })}
-                </ul>
+                <ul
+                  id="sidebar-favorites-list"
+                  class="ml-3 space-y-1 border-l border-gray-200 pb-1 dark:border-gray-800"
+                ></ul>
               </details>
-            );
-          })}
-        </nav>
+              {toolsByCategory.map((category) => {
+                const hasActiveTool = category.tools.some((tool) => {
+                  const href = localePath(lang, `/tools/${tool.slug}/`);
+                  return pathname === href;
+                });
+                return (
+                  <details
+                    class="group mb-1 last:mb-0"
+                    data-category={category.id}
+                    open={hasActiveTool}
+                  >
+                    <summary class="flex cursor-pointer items-center justify-between rounded px-3 py-2 text-sm font-bold tracking-wide text-gray-900 hover:text-blue-700 dark:text-gray-100 dark:hover:text-blue-400">
+                      {category.label}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-3 w-3 shrink-0 text-gray-400 transition-transform group-open:rotate-90 dark:text-gray-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        aria-hidden="true"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                        />
+                      </svg>
+                    </summary>
+                    <ul class="ml-3 space-y-1 border-l border-gray-200 pb-1 dark:border-gray-800">
+                      {category.tools.map((tool) => {
+                        const href = localePath(lang, `/tools/${tool.slug}/`);
+                        return (
+                          <li class="flex items-center gap-0.5">
+                            <a
+                              href={href}
+                              class="sidebar-link"
+                              aria-current={
+                                pathname === href ? 'page' : undefined
+                              }
+                            >
+                              {tool.name}
+                            </a>
+                            <FavoriteToggle
+                              slug={tool.slug}
+                              locale={lang}
+                              class="fav-toggle-side"
+                            />
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </details>
+                );
+              })}
+            </nav>
 
-        <!--
+            <!--
           ツール切り替え時（ページ全体の再読み込み）に、保存済みの開閉状態を
           レイアウト確定前（初回ペイント前）に反映することで、複数カテゴリが
           開いている場合の展開チラつきを防ぐ。トグル時の保存処理は
@@ -483,68 +516,75 @@ const jsonLd: Record<string, unknown> | null = noindex
           外部ファイル + src属性にしているのは、インラインスクリプトの中身は
           AstroのCSP自動ハッシュ化の対象外でブロックされるため（theme-init.jsと同じ理由）。
         -->
-        <script src="/sidebar-category-init.js" is:inline></script>
-        <span id="sidebar-ready" hidden></span>
-      </aside>
+            <script src="/sidebar-category-init.js" is:inline></script>
+            <span id="sidebar-ready" hidden></span>
+          </aside>
 
-      <button
-        id="sidebar-expand"
-        type="button"
-        aria-label={t('nav.sidebar.expand')}
-        title={t('nav.sidebar.expand')}
-        class="print:hidden fixed left-3 top-3 z-30 h-10 w-10 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 shadow-md hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-blue-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          stroke-width="2"
-          aria-hidden="true"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M4 6h16M4 12h16M4 18h16"
-          />
-        </svg>
-      </button>
+          <button
+            id="sidebar-expand"
+            type="button"
+            aria-label={t('nav.sidebar.expand')}
+            title={t('nav.sidebar.expand')}
+            class="print:hidden fixed left-3 top-3 z-30 h-10 w-10 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 shadow-md hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-blue-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
+        </>
+      )}
 
       <main
         id="main-content"
         tabindex="-1"
-        class="flex min-w-0 flex-1 flex-col p-4 pb-20 focus:outline-none sm:p-6 sm:pb-20 md:p-10 print:p-0"
+        class:list={[
+          'flex min-w-0 flex-1 flex-col p-4 pb-20 focus:outline-none sm:p-6 sm:pb-20 print:p-0',
+          isToolsShell ? 'md:p-10' : 'mx-auto w-full max-w-3xl',
+        ]}
       >
-        <div class="-mt-4 mb-2 hidden items-center justify-end gap-2 md:flex print:hidden">
-          <div
-            class="flex items-center gap-1 text-sm"
-            data-lang-switch-desktop
-            role="group"
-            aria-label={t('nav.language')}
-          >
-            <a
-              href={jaURL.pathname}
-              hreflang="ja"
-              aria-current={lang === 'ja' ? 'true' : undefined}
-              class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=true]:font-semibold aria-[current=true]:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=true]:text-blue-400"
+        {isToolsShell && (
+          <div class="-mt-4 mb-2 hidden items-center justify-end gap-2 md:flex print:hidden">
+            <div
+              class="flex items-center gap-1 text-sm"
+              data-lang-switch-desktop
+              role="group"
+              aria-label={t('nav.language')}
             >
-              {languageNames.ja}
-            </a>
-            <span class="text-gray-300 dark:text-gray-700" aria-hidden="true">
-              |
-            </span>
-            <a
-              href={enURL.pathname}
-              hreflang="en"
-              aria-current={lang === 'en' ? 'true' : undefined}
-              class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=true]:font-semibold aria-[current=true]:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=true]:text-blue-400"
-            >
-              {languageNames.en}
-            </a>
+              <a
+                href={jaURL.pathname}
+                hreflang="ja"
+                aria-current={lang === 'ja' ? 'true' : undefined}
+                class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=true]:font-semibold aria-[current=true]:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=true]:text-blue-400"
+              >
+                {languageNames.ja}
+              </a>
+              <span class="text-gray-300 dark:text-gray-700" aria-hidden="true">
+                |
+              </span>
+              <a
+                href={enURL.pathname}
+                hreflang="en"
+                aria-current={lang === 'en' ? 'true' : undefined}
+                class="rounded px-2 py-1 text-gray-600 hover:bg-blue-50 hover:text-blue-700 aria-[current=true]:font-semibold aria-[current=true]:text-blue-700 dark:text-gray-400 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 dark:aria-[current=true]:text-blue-400"
+              >
+                {languageNames.en}
+              </a>
+            </div>
+            <ThemeToggle id="theme-toggle-desktop" />
           </div>
-          <ThemeToggle id="theme-toggle-desktop" />
-        </div>
+        )}
         <div
           class:list={['relative flex-1', toolMatch && '[&>h1]:pr-12']}
           data-tool-page={currentTool?.slug}
@@ -630,52 +670,54 @@ const jsonLd: Record<string, unknown> | null = noindex
       </main>
     </div>
 
-    <dialog
-      id="command-palette"
-      aria-label={t('palette.open')}
-      class="print:hidden m-auto mt-[12vh] w-[min(36rem,calc(100%-2rem))] rounded-lg border border-gray-200 bg-white p-0 text-gray-900 shadow-xl backdrop:bg-black/40 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-    >
-      <input
-        id="palette-input"
-        type="search"
-        role="combobox"
-        aria-expanded="true"
-        aria-controls="palette-list"
-        aria-autocomplete="list"
-        autocomplete="off"
-        placeholder={t('palette.placeholder')}
+    {isToolsShell && (
+      <dialog
+        id="command-palette"
         aria-label={t('palette.open')}
-        class="w-full rounded-t-lg border-b border-gray-200 bg-transparent px-4 py-3 text-base focus:border-blue-600 focus:outline-none dark:focus:border-blue-400 dark:border-gray-700 dark:placeholder-gray-500"
-      />
-      <ul
-        id="palette-list"
-        role="listbox"
-        class="max-h-[50vh] overflow-y-auto p-2"
-      ></ul>
-      <p
-        id="palette-empty"
-        hidden
-        class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400"
+        class="print:hidden m-auto mt-[12vh] w-[min(36rem,calc(100%-2rem))] rounded-lg border border-gray-200 bg-white p-0 text-gray-900 shadow-xl backdrop:bg-black/40 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
       >
-        {t('palette.empty')}
-      </p>
-      <p class="border-t border-gray-200 px-4 py-2 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
-        {t('palette.hint.nav')}
-        <span id="palette-tool-hint" hidden>
-          <br />
-          <span data-hint-run hidden>
-            {t('palette.hint.run')}
+        <input
+          id="palette-input"
+          type="search"
+          role="combobox"
+          aria-expanded="true"
+          aria-controls="palette-list"
+          aria-autocomplete="list"
+          autocomplete="off"
+          placeholder={t('palette.placeholder')}
+          aria-label={t('palette.open')}
+          class="w-full rounded-t-lg border-b border-gray-200 bg-transparent px-4 py-3 text-base focus:border-blue-600 focus:outline-none dark:focus:border-blue-400 dark:border-gray-700 dark:placeholder-gray-500"
+        />
+        <ul
+          id="palette-list"
+          role="listbox"
+          class="max-h-[50vh] overflow-y-auto p-2"
+        ></ul>
+        <p
+          id="palette-empty"
+          hidden
+          class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400"
+        >
+          {t('palette.empty')}
+        </p>
+        <p class="border-t border-gray-200 px-4 py-2 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">
+          {t('palette.hint.nav')}
+          <span id="palette-tool-hint" hidden>
+            <br />
+            <span data-hint-run hidden>
+              {t('palette.hint.run')}
+            </span>
+            <span
+              data-hint-copy
+              hidden
+              class="[[data-hint-run]:not([hidden])+&]:ml-3"
+            >
+              {t('palette.hint.copy')}
+            </span>
           </span>
-          <span
-            data-hint-copy
-            hidden
-            class="[[data-hint-run]:not([hidden])+&]:ml-3"
-          >
-            {t('palette.hint.copy')}
-          </span>
-        </span>
-      </p>
-    </dialog>
+        </p>
+      </dialog>
+    )}
 
     <button
       id="back-to-top"
@@ -719,46 +761,12 @@ const jsonLd: Record<string, unknown> | null = noindex
     </div>
 
     <script>
-      import {
-        initSidebar,
-        initTheme,
-        initCategoryPersistence,
-        initSidebarScroll,
-      } from '../lib/layout-nav';
-      import { initFavorites } from '../lib/favorites-ui';
-      import { initCommandPalette } from '../lib/command-palette';
-      import { initShortcuts } from '../lib/shortcuts';
-      import { initQueryInit } from '../lib/query-init';
-      import { initInputPersist } from '../lib/input-persist';
-      import { initInputHelpers } from '../lib/input-helpers';
-      import { initPrint } from '../lib/print';
+      import { initTheme } from '../lib/layout-nav';
       import { initBackToTop } from '../lib/back-to-top';
-      import { recordRecentTool } from '../lib/recent-tools';
 
-      initSidebar();
       initTheme();
-      initCategoryPersistence();
-      initFavorites();
-      initSidebarScroll();
-      initCommandPalette();
-      initShortcuts();
-      initPrint();
       initBackToTop();
-      recordRecentTool();
-
-      // 入力値の復元・URLクエリの初期値・入力補助UIは、各ツールのスクリプトが
-      // リスナーを付けて初期化を終えた後（DOMContentLoaded）に行い、`input` イベントで
-      // ツールの処理に反映させる。順序: 復元 → URLクエリ（優先） → 補助UI（文字数は最終値で数える）
-      function initToolInputs() {
-        initInputPersist();
-        initQueryInit();
-        initInputHelpers();
-      }
-      if (document.readyState === 'complete') {
-        initToolInputs();
-      } else {
-        document.addEventListener('DOMContentLoaded', initToolInputs);
-      }
     </script>
+    {isToolsShell && <ToolsShellScripts />}
   </body>
 </html>

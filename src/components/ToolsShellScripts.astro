@@ -1,0 +1,43 @@
+---
+// ツール用の外枠（Layout の shell="tools"）でだけ読み込むスクリプト。
+// サイドバー・コマンドパレット・ツール入力の補助など、診断セクション（shell="minimal"）では使わないものをまとめる。
+---
+
+<script>
+  import {
+    initSidebar,
+    initCategoryPersistence,
+    initSidebarScroll,
+  } from '../lib/layout-nav';
+  import { initFavorites } from '../lib/favorites-ui';
+  import { initCommandPalette } from '../lib/command-palette';
+  import { initShortcuts } from '../lib/shortcuts';
+  import { initQueryInit } from '../lib/query-init';
+  import { initInputPersist } from '../lib/input-persist';
+  import { initInputHelpers } from '../lib/input-helpers';
+  import { initPrint } from '../lib/print';
+  import { recordRecentTool } from '../lib/recent-tools';
+
+  initSidebar();
+  initCategoryPersistence();
+  initFavorites();
+  initSidebarScroll();
+  initCommandPalette();
+  initShortcuts();
+  initPrint();
+  recordRecentTool();
+
+  // 入力値の復元・URLクエリの初期値・入力補助UIは、各ツールのスクリプトが
+  // リスナーを付けて初期化を終えた後（DOMContentLoaded）に行い、`input` イベントで
+  // ツールの処理に反映させる。順序: 復元 → URLクエリ（優先） → 補助UI（文字数は最終値で数える）
+  function initToolInputs() {
+    initInputPersist();
+    initQueryInit();
+    initInputHelpers();
+  }
+  if (document.readyState === 'complete') {
+    initToolInputs();
+  } else {
+    document.addEventListener('DOMContentLoaded', initToolInputs);
+  }
+</script>

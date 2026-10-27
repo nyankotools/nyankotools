@@ -51,6 +51,10 @@ Each tool has its own indexable URL (`/tools/<slug>/`, `/en/tools/<slug>/`) for 
 - PRがマージされたら、続けて `develop` に切り替え、`git fetch` のうえ `git merge --ff-only origin/main` で `main` に追いつかせ、`develop` も push すること（確認は不要）。あわせて、ローカルの `main` も `git fetch origin main:main`（fast-forwardのみ。`develop` にいる状態で実行する）で `origin/main` に追いつかせること（Sourcetree等で遅れ表示になるのを防ぐ）。最終的に `develop` ブランチにいる状態で終える。
 - Dependabot PR など `main` に直接マージされた変更がある場合は、`develop` が `main` と分岐していて `--ff-only` が失敗することがある。その場合は `git merge origin/main`（通常のマージ）で `develop` に取り込んでから push する。
 - ただし PRの作成・マージ（`main` への反映）自体は、これまで通りユーザーの明示的な指示があるときだけ行う。
+- **診断セクション（`/shindan/`）の開発は `feature/shindan` ブランチで行う**（全フェーズ実装後に公開する方針のため、`develop` に未完成の診断ページを入れない）。設計は `memo/企画・アイデア/診断サイト共通基盤設計書.md`。
+  - 診断以外にも無害な基盤の変更（GA4のハッシュ除去、`Layout.astro` の props 追加など）は、先に `develop` で入れてよい。
+  - 共有ファイルの衝突を小さくするため、`develop` を定期的に `feature/shindan` へマージする。
+  - 公開時は `feature/shindan` → `develop` にマージし、通常どおり `develop` → `main` のPRで反映する（いずれもユーザーの指示があるときだけ）。
 - **PRを作成する前に、`develop` で `pnpm precheck`（prettier・eslint・astro check・vitest・build・bundle予算。PR Check相当）を実行し、成功を確認すること。** 失敗した場合はPRを作らず、修正してから再実行する（PR Checkの失敗は手元で防げるものが大半のため）。
 - **更新情報（`src/data/updates.ts`、ツールの `updatedAt` など）はデプロイ時点の情報なので、`develop` → `main` のPRを作成する前に作成・反映すること。** 実装やコミットの都度ではなく、PR作成の直前にまとめて更新し、そのコミットを含めた状態でPRを作る。
 

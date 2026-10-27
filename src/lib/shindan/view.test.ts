@@ -3,7 +3,7 @@ import type { ShindanThemeTexts } from '../../i18n/shindan/types';
 import { diagnose } from './compose';
 import { testTheme, TEST_AXES } from './test-theme';
 import type { DiagnosisResult, ThemeSpec } from './types';
-import { buildResultView } from './view';
+import { buildCompatView, buildResultView } from './view';
 
 /** テスト用テーマの全IDに「ID自体」を文言として割り当てる */
 function idTexts(theme: ThemeSpec): ShindanThemeTexts {
@@ -32,6 +32,14 @@ function idTexts(theme: ThemeSpec): ShindanThemeTexts {
         Object.fromEntries(slot.parts.map((p) => [p.id, `<${p.id}>`])),
       ]),
     ),
+    compat: {
+      relations: Array.from({ length: TEST_AXES.length + 1 }, (_, i) => ({
+        name: `rel${i}`,
+        comments: [`rel${i}-a`, `rel${i}-b`],
+      })),
+      twins: { name: 'twins', comments: ['twins-a'] },
+      partnerNote: '',
+    },
     howItWorks: [],
     shareHashtags: [],
   };
@@ -138,5 +146,72 @@ describe('buildResultView', () => {
     const view = buildResultView(testTheme, { ...texts, parts: {} }, r);
     expect(view.quote).toBe('');
     expect(view.strengths.every((s) => s === '')).toBe(true);
+  });
+});
+
+describe('buildCompatView', () => {
+  const allPlus = diagnose(testTheme, Array(12).fill(0), 0)!;
+  const allMinus = diagnose(testTheme, Array(12).fill(3), 0)!;
+
+  it('一致軸数の関係タイプとコメントを返し、どちらから見ても同じ', () => {
+    const ab = buildCompatView(testTheme, texts, allPlus, allMinus);
+    const ba = buildCompatView(testTheme, texts, allMinus, allPlus);
+    expect(ab.matches).toBe(0);
+    expect(ab.relationName).toBe('rel0');
+    expect(['rel0-a', 'rel0-b']).toContain(ab.comment);
+    expect(ba.comment).toBe(ab.comment);
+    expect(ba.percent).toBe(ab.percent);
+  });
+
+  it('軸ごとに本人と相手の極を並べ、同じかどうかを返す', () => {
+    const view = buildCompatView(testTheme, texts, allPlus, allMinus);
+    expect(view.axes).toEqual(
+      TEST_AXES.map((id) => ({
+        label: id,
+        selfPole: `${id}+`,
+        otherPole: `${id}-`,
+        same: false,
+      })),
+    );
+    const same = buildCompatView(testTheme, texts, allPlus, allPlus);
+    expect(same.axes.every((a) => a.same)).toBe(true);
+  });
+
+  it('回答が完全一致なら双子の文言', () => {
+    const named = diagnose(testTheme, Array(12).fill(0), 123)!;
+    const view = buildCompatView(testTheme, texts, allPlus, named);
+    expect(view).toMatchObject({
+      twins: true,
+      percent: 100,
+      relationName: 'twins',
+      comment: 'twins-a',
+    });
+  });
+
+  it('両方の結果が持つ軸だけを比べる（版が違って軸が欠けている相手）', () => {
+    const [firstId] = Object.keys(allMinus.axes);
+    const partial: DiagnosisResult = {
+      ...allMinus,
+      axes: { [firstId]: allMinus.axes[firstId] },
+    };
+    const view = buildCompatView(testTheme, texts, allPlus, partial);
+    expect(view.axes.map((a) => a.label)).toEqual([firstId]);
+  });
+
+  it('ベストパートナーは本人のタイプから引き、定義がなければ undefined', () => {
+    expect(
+      buildCompatView(testTheme, texts, allPlus, allMinus).partner,
+    ).toBeUndefined();
+    const theme = {
+      ...testTheme,
+      compat: {
+        ...testTheme.compat,
+        partners: { [allPlus.typeId]: allMinus.typeId },
+      },
+    };
+    expect(buildCompatView(theme, texts, allPlus, allMinus).partner).toEqual({
+      typeId: allMinus.typeId,
+      typeName: `name:${allMinus.typeId}`,
+    });
   });
 });

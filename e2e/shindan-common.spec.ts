@@ -6,6 +6,7 @@ import { nekoTextsJa } from '../src/i18n/shindan/neko';
 import { diagnose } from '../src/lib/shindan/compose';
 import { nameVariant } from '../src/lib/shindan/normalize';
 import { RARITIES, type Rarity } from '../src/lib/shindan/types';
+import { buildCompatView, buildResultView } from '../src/lib/shindan/view';
 
 // 診断セクション（/shindan/）共通の検証（設計書16.7 #10）。
 //   - 375px幅で表示され、h1が1つ・横スクロールなし・コンソールエラーなし
@@ -248,10 +249,20 @@ const answersByType = (() => {
   return map;
 })();
 
-/** 全問を pick(質問番号) 番目の選択肢で答える */
-async function answerWith(page: Page, pick: (questionIndex: number) => number) {
+/** 結果発表の演出（段階表示・全画面演出）が終わるのを待つ */
+async function waitRevealEnd(page: Page) {
+  await expect(page.locator('.shindan-revealing')).toHaveCount(0);
+  await expect(page.locator('#shindan-reveal')).toBeHidden();
+}
+
+/** from 問目（0始まり）から最後まで、pick(質問番号) 番目の選択肢で答える */
+async function answerWith(
+  page: Page,
+  pick: (questionIndex: number) => number,
+  from = 0,
+) {
   const total = nekoTheme.scoring.questions.length;
-  for (let i = 0; i < total; i++) {
+  for (let i = from; i < total; i++) {
     await expect(page.locator('#shindan-progress-text')).toHaveText(
       `質問 ${i + 1} / ${total}`,
     );
@@ -439,6 +450,8 @@ test.describe('猫タイプ診断: 操作と入力の境界', () => {
       await page.getByRole('button', { name: '診断をはじめる' }).click();
       await answerWith(page, (i) => i % 4);
       await expect(page.locator('#shindan-title')).toBeFocused();
+      // 演出中（半透明のフェードイン）はコントラストを正しく測れないので、終わるのを待つ
+      await waitRevealEnd(page);
       const overflow = await page.evaluate(
         () =>
           document.documentElement.scrollWidth >
@@ -588,12 +601,12 @@ test.describe('猫タイプ診断: 共有', () => {
       page.getByRole('button', { name: '診断をはじめる' }),
     ).toBeVisible();
 
-    // 共有URLから開き直し、「あなたも診断してみる」
+    // 共有URLから開き直し、「あなたも診断して相性を見る」
     await page.goto(shareUrl);
     await expect(page.locator('#shindan-title')).toHaveText(title!);
-    // 「あなたも診断してみる」で開始画面へ。以後は再読み込みしても開始画面
+    // 「あなたも診断して相性を見る」で開始画面へ。以後は再読み込みしても開始画面
     await page
-      .getByRole('button', { name: 'あなたも診断してみる' })
+      .getByRole('button', { name: 'あなたも診断して相性を見る' })
       .first()
       .click();
     await expect(
@@ -876,4 +889,557 @@ test.describe('猫タイプ診断: 共有', () => {
       expect(errors).toEqual([]);
     });
   }
+});
+
+/** 回答パターン（と名前）から結果を作る */
+function resultOf(pick: (i: number) => number, name = '') {
+  const answers = nekoTheme.scoring.questions.map((_, i) => pick(i));
+  return diagnose(nekoTheme, answers, nameVariant(name))!;
+}
+
+/** 名前を入れて診断を最後まで進める */
+async function diagnoseWith(
+  page: Page,
+  pick: (i: number) => number,
+  name = '',
+) {
+  await page.getByLabel('名前（任意）').fill(name);
+  await page.getByRole('button', { name: '診断をはじめる' }).click();
+  await answerWith(page, pick);
+  await expect(page.locator('#shindan-title')).toBeVisible();
+}
+
+test.describe('猫タイプ診断: 相性', () => {
+  const pickA = (i: number) => (i * 3) % 4;
+  const pickB = (i: number) => (i + 1) % 4;
+
+  test('友達の結果から「相性を見る」で診断すると、自分の結果に相性が出て、相性URLは相手側でも同じ相性になる', async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    const errors = collectErrors(page);
+    const a = resultOf(pickA, 'たま');
+    const b = resultOf(pickB);
+    const expected = buildCompatView(nekoTheme, nekoTextsJa, b, a);
+
+    await page.goto(`/shindan/neko/#r=${a.code}`);
+    await expect(page.locator('#shindan-result-for')).toHaveText('友達の結果');
+    await expect(page.locator('#shindan-compat')).toBeHidden();
+    await page
+      .getByRole('button', { name: 'あなたも診断して相性を見る' })
+      .first()
+      .click();
+    await expect(
+      page.getByText('診断が終わると、友達との相性も表示されます。'),
+    ).toBeVisible();
+    await diagnoseWith(page, pickB);
+
+    const compat = page.locator('#shindan-compat');
+    await expect(compat).toBeVisible();
+    await expect(page.locator('#shindan-compat-percent')).toHaveText(
+      `${expected.percent}%`,
+    );
+    await expect(page.locator('#shindan-compat-relation')).toHaveText(
+      expected.relationName,
+    );
+    await expect(page.locator('#shindan-compat-comment')).toHaveText(
+      expected.comment,
+    );
+    await expect(page.locator('#shindan-compat-axes tr')).toHaveCount(4);
+    await expect(page.locator('#shindan-compat-partner-name')).toHaveText(
+      expected.partner!.typeName,
+    );
+    await expect(page.locator('#shindan-compat-self-type')).toHaveText(
+      nekoTextsJa.types[b.typeId].name,
+    );
+    await expect(page.locator('#shindan-compat-other-type')).toHaveText(
+      nekoTextsJa.types[a.typeId].name,
+    );
+
+    // 相性URL: #r=<自分>&vs=<友達>。名前は含めない
+    const x = new URL(
+      (await page
+        .getByRole('link', { name: '相性をXでポスト' })
+        .getAttribute('href'))!,
+    );
+    const compatUrl = x.searchParams.get('url')!;
+    expect(compatUrl).toBe(
+      `http://localhost:4322/shindan/neko/#r=${b.code}&vs=${a.code}`,
+    );
+    expect(x.searchParams.get('text')).toContain(`${expected.percent}%`);
+    expect(x.searchParams.get('text')).toContain('#にゃんこ診断');
+
+    await waitRevealEnd(page);
+    const axe = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze();
+    expect.soft(axe.violations.map((v) => v.id)).toEqual([]);
+
+    // 相性URLを開く（友達側）: 友達の結果 b と、「あなた」= a 側から見た相性（値は同じ）
+    await page.goto('about:blank');
+    await page.goto(compatUrl);
+    await expect(page.locator('#shindan-result-for')).toHaveText('友達の結果');
+    await expect(page.locator('#shindan-compat')).toBeVisible();
+    await expect(page.locator('#shindan-compat-percent')).toHaveText(
+      `${expected.percent}%`,
+    );
+    await expect(page.locator('#shindan-compat-self-type')).toHaveText(
+      nekoTextsJa.types[a.typeId].name,
+    );
+    // 友達の相性URLを見ているときは、相性の共有ボタン・貼り付け欄を出さない
+    await expect(page.locator('#shindan-compat-share')).toBeHidden();
+    await expect(page.locator('#shindan-compat-form')).toBeHidden();
+    await expect(page).toHaveURL('http://localhost:4322/shindan/neko/');
+
+    // 再読み込みしても相性ごと表示される
+    await page.reload();
+    await expect(page.locator('#shindan-compat-percent')).toHaveText(
+      `${expected.percent}%`,
+    );
+    expect(errors).toEqual([]);
+  });
+
+  test('結果画面で友達の結果URLを貼り付けると相性が出て、不正な値はエラーを表示する', async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    const a = resultOf(pickA);
+    const b = resultOf(pickB);
+    await page.goto('/shindan/neko/');
+    await diagnoseWith(page, pickB);
+    await expect(page.locator('#shindan-compat')).toBeHidden();
+
+    const input = page.getByLabel('友達の結果URL');
+    await input.fill('https://nyankotools.com/shindan/neko/#r=garbage');
+    await page.getByRole('button', { name: '相性を見る' }).click();
+    await expect(page.locator('#shindan-compat-error')).toContainText(
+      '読み取れませんでした',
+    );
+    await expect(input).toHaveAttribute('aria-invalid', 'true');
+    await expect(input).toBeFocused();
+    await expect(page.locator('#shindan-compat')).toBeHidden();
+
+    await input.fill(`https://nyankotools.com/shindan/neko/#r=${a.code}`);
+    await input.press('Enter');
+    await expect(page.locator('#shindan-compat')).toBeVisible();
+    await expect(page.locator('#shindan-compat-percent')).toHaveText(
+      `${buildCompatView(nekoTheme, nekoTextsJa, b, a).percent}%`,
+    );
+    await expect(page.locator('#shindan-compat-error')).toHaveText('');
+    await expect(input).not.toHaveAttribute('aria-invalid');
+
+    // 自分と同じ回答なら双子（100%）
+    await input.fill(b.code);
+    await page.getByRole('button', { name: '相性を見る' }).click();
+    await expect(page.locator('#shindan-compat-percent')).toHaveText('100%');
+    await expect(page.locator('#shindan-compat-relation')).toHaveText(
+      nekoTextsJa.compat.twins.name,
+    );
+    expect(errors).toEqual([]);
+  });
+
+  test('相性URLの相手が壊れていても、友達の結果だけを表示する', async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    const a = resultOf(pickA);
+    await page.goto(`/shindan/neko/#r=${a.code}&vs=garbage`);
+    await expect(page.locator('#shindan-result-for')).toHaveText('友達の結果');
+    await expect(page.locator('#shindan-compat')).toBeHidden();
+    await expect(page).toHaveURL('http://localhost:4322/shindan/neko/');
+    expect(errors).toEqual([]);
+  });
+
+  test('相性の相手は1回の診断で使い切り、やり直し・履歴の表示には持ち越さない', async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    const a = resultOf(pickA);
+    await page.goto(`/shindan/neko/#r=${a.code}`);
+    await page
+      .getByRole('button', { name: 'あなたも診断して相性を見る' })
+      .first()
+      .click();
+    await diagnoseWith(page, pickB);
+    await expect(page.locator('#shindan-compat')).toBeVisible();
+
+    await page
+      .getByRole('button', { name: '最初からもう一度診断する' })
+      .click();
+    await expect(page.locator('#shindan-compat-pending')).toBeHidden();
+    await page
+      .locator('#shindan-history-list li')
+      .first()
+      .getByRole('button', { name: '表示' })
+      .click();
+    await expect(page.locator('#shindan-title')).toBeVisible();
+    await expect(page.locator('#shindan-compat')).toBeHidden();
+  });
+
+  test('診断の途中で友達の共有URLを開いて「相性を見る」を選んでも、途中の回答は「続きから」で再開できる', async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    const a = resultOf(pickA);
+    await page.goto('/shindan/neko/');
+    await page.getByRole('button', { name: '診断をはじめる' }).click();
+    for (let i = 0; i < 3; i++) {
+      await expect(page.locator('#shindan-progress-text')).toHaveText(
+        `質問 ${i + 1} / 12`,
+      );
+      await page.locator('#shindan-choices button').nth(pickB(i)).click();
+    }
+    await expect(page.locator('#shindan-progress-text')).toHaveText(
+      '質問 4 / 12',
+    );
+    await page.evaluate((c) => {
+      location.hash = `r=${c}`;
+    }, a.code);
+    await expect(page.locator('#shindan-result-for')).toHaveText('友達の結果');
+    await page
+      .getByRole('button', { name: 'あなたも診断して相性を見る' })
+      .first()
+      .click();
+    await expect(
+      page.getByText('前回の途中の回答があります（3 / 12問）。'),
+    ).toBeVisible();
+    await page.getByRole('button', { name: '続きから答える' }).click();
+    await answerWith(page, pickB, 3);
+    await expect(page.locator('#shindan-compat-percent')).toHaveText(
+      `${buildCompatView(nekoTheme, nekoTextsJa, resultOf(pickB), a).percent}%`,
+    );
+  });
+});
+
+test.describe('猫タイプ診断: 履歴と途中保存', () => {
+  test('結果は履歴に保存され（名前は保存しない）、表示・1件削除・全件削除ができる', async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    const errors = collectErrors(page);
+    const first = resultOf(() => 0, 'たまこ');
+    const firstTitle = buildResultView(nekoTheme, nekoTextsJa, first).title;
+    await page.goto('/shindan/neko/');
+    await expect(page.locator('#shindan-history')).toBeHidden();
+    await diagnoseWith(page, () => 0, 'たまこ');
+    await page
+      .getByRole('button', { name: '最初からもう一度診断する' })
+      .click();
+    await diagnoseWith(page, () => 3);
+
+    const items = page.locator('#shindan-history-list li');
+    await expect(items).toHaveCount(2);
+    const stored = await page.evaluate(() =>
+      JSON.stringify({ ...localStorage, ...sessionStorage }),
+    );
+    expect(stored).not.toContain('たまこ');
+    expect(stored).toContain(first.code);
+
+    // 開き直しても残っている（開始画面にも出る）。新しい順
+    await page.goto('/shindan/neko/');
+    await expect(page.locator('#shindan-history')).toBeVisible();
+    await expect(items).toHaveCount(2);
+    await expect(items.nth(1)).toContainText(firstTitle);
+
+    // 表示: 保存日時付きの見出しで、シェア欄あり。件数は増えない
+    await items.nth(1).getByRole('button', { name: '表示' }).click();
+    await expect(page.locator('#shindan-title')).toHaveText(firstTitle);
+    await expect(page.locator('#shindan-result-for')).toHaveText(/の結果$/);
+    await expect(page.locator('#shindan-share')).toBeVisible();
+    await expect(items).toHaveCount(2);
+
+    await items.first().getByRole('button', { name: '削除' }).click();
+    await expect(items).toHaveCount(1);
+    await expect(page.locator('#shindan-history-heading')).toBeFocused();
+
+    await page.getByRole('button', { name: '履歴をすべて削除' }).click();
+    await expect(page.locator('#shindan-history')).toBeHidden();
+    expect(
+      await page.evaluate(() => localStorage.getItem('shindan:history')),
+    ).toBeNull();
+    expect(errors).toEqual([]);
+  });
+
+  test('壊れた履歴が保存されていても、エラーにならず正しい項目だけ表示する', async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    const valid = resultOf(() => 1);
+    await page.goto('/shindan/neko/');
+    await page.evaluate((code) => {
+      localStorage.setItem(
+        'shindan:history',
+        JSON.stringify([
+          { themeId: 'neko', code, at: 1700000000000 },
+          { themeId: 'neko', code: '1.99.AAAAAA', at: 1 },
+          { themeId: 'neko', code: '<img src=x>', at: 1 },
+          'garbage',
+        ]),
+      );
+    }, valid.code);
+    await page.reload();
+    await expect(page.locator('#shindan-history-list li')).toHaveCount(1);
+
+    await page.evaluate(() =>
+      localStorage.setItem('shindan:history', '{broken'),
+    );
+    await page.reload();
+    await expect(page.locator('#shindan-history')).toBeHidden();
+    expect(errors).toEqual([]);
+  });
+
+  test('途中で再読み込みすると続きから答えられ、最後まで答えると途中保存は消える', async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    const errors = collectErrors(page);
+    const pick = (i: number) => (i * 5) % 4;
+    await page.goto('/shindan/neko/');
+    await page.getByLabel('名前（任意）').fill('みけ');
+    await page.getByRole('button', { name: '診断をはじめる' }).click();
+    for (let i = 0; i < 5; i++) {
+      await expect(page.locator('#shindan-progress-text')).toHaveText(
+        `質問 ${i + 1} / 12`,
+      );
+      await page.locator('#shindan-choices button').nth(pick(i)).click();
+    }
+    await expect(page.locator('#shindan-progress-text')).toHaveText(
+      '質問 6 / 12',
+    );
+    expect(
+      await page.evaluate(() => JSON.stringify({ ...sessionStorage })),
+    ).not.toContain('みけ');
+
+    await page.reload();
+    await expect(
+      page.getByText('前回の途中の回答があります（5 / 12問）。'),
+    ).toBeVisible();
+    // 名前は保存しないので、入れ直したときだけ見出しに出る（variant は保存済みなので結果は同じ）
+    await page.getByLabel('名前（任意）').fill('みけ');
+    await page.getByRole('button', { name: '続きから答える' }).click();
+    for (let i = 5; i < 12; i++) {
+      await expect(page.locator('#shindan-progress-text')).toHaveText(
+        `質問 ${i + 1} / 12`,
+      );
+      await page.locator('#shindan-choices button').nth(pick(i)).click();
+    }
+    const expected = buildResultView(
+      nekoTheme,
+      nekoTextsJa,
+      resultOf(pick, 'みけ'),
+    );
+    await expect(page.locator('#shindan-title')).toHaveText(expected.title);
+    await expect(page.locator('#shindan-result-for')).toHaveText(
+      'みけさんの結果',
+    );
+
+    await page.reload();
+    await expect(page.locator('#shindan-resume')).toBeHidden();
+    expect(errors).toEqual([]);
+  });
+
+  test('名前を入れ直さずに再開しても、結果（称号）は名前ありのときと同じ', async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    await page.goto('/shindan/neko/');
+    await page.getByLabel('名前（任意）').fill('みけ');
+    await page.getByRole('button', { name: '診断をはじめる' }).click();
+    await page.locator('#shindan-choices button').first().click();
+    await expect(page.locator('#shindan-progress-text')).toHaveText(
+      '質問 2 / 12',
+    );
+    await page.reload();
+    await page.getByLabel('名前（任意）').fill('');
+    await page.getByRole('button', { name: '続きから答える' }).click();
+    await answerWith(page, () => 0, 1);
+    const expected = buildResultView(
+      nekoTheme,
+      nekoTextsJa,
+      resultOf(() => 0, 'みけ'),
+    );
+    await expect(page.locator('#shindan-title')).toHaveText(expected.title);
+    await expect(page.locator('#shindan-result-for')).toHaveText(
+      'あなたの結果',
+    );
+  });
+
+  test('「最初から答える」で途中保存を捨てる', async ({ page }) => {
+    await page.goto('/shindan/neko/');
+    await page.getByRole('button', { name: '診断をはじめる' }).click();
+    await page.locator('#shindan-choices button').first().click();
+    await expect(page.locator('#shindan-progress-text')).toHaveText(
+      '質問 2 / 12',
+    );
+    await page.reload();
+    await page.getByRole('button', { name: '最初から答える' }).click();
+    await expect(page.locator('#shindan-resume')).toBeHidden();
+    await expect(
+      page.getByRole('button', { name: '診断をはじめる' }),
+    ).toBeFocused();
+    await page.reload();
+    await expect(page.locator('#shindan-resume')).toBeHidden();
+  });
+});
+
+test.describe('猫タイプ診断: 結果発表の演出', () => {
+  const answers = Array.from({ length: 12 }, (_, i) => i % 4);
+  /** 指定のレア度になる名前を探す */
+  function nameFor(rarity: Rarity): string {
+    for (let k = 0; k < 5000; k++) {
+      const name = `テスト${k}`;
+      if (diagnose(nekoTheme, answers, nameVariant(name))!.rarity === rarity) {
+        return name;
+      }
+    }
+    throw new Error(`no ${rarity}`);
+  }
+
+  test('LRは全画面演出と紙吹雪が出て、スキップすると即座に最終表示になる', async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    await page.goto('/shindan/neko/');
+    await diagnoseWith(page, (i) => answers[i], nameFor('LR'));
+    const overlay = page.locator('#shindan-reveal');
+    await expect(overlay).toBeVisible();
+    await expect(page.locator('#shindan-reveal-rarity')).toHaveText('LR');
+    await expect(page.locator('#shindan-confetti span')).toHaveCount(40);
+    // 演出中もタイトルにフォーカスがある（結果は読み上げられる）
+    await expect(page.locator('#shindan-title')).toBeFocused();
+    await page.getByRole('button', { name: '演出をスキップ' }).click();
+    await expect(overlay).toBeHidden();
+    await expect(page.locator('.shindan-revealing')).toHaveCount(0);
+    await expect(page.locator('#shindan-confetti span')).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+
+  test('URは全画面演出が出て、自動で終わる', async ({ page }) => {
+    await page.goto('/shindan/neko/');
+    await diagnoseWith(page, (i) => answers[i], nameFor('UR'));
+    await expect(page.locator('#shindan-reveal')).toBeVisible();
+    await expect(page.locator('#shindan-reveal-rarity')).toHaveText('UR');
+    await expect(page.locator('#shindan-confetti span')).toHaveCount(0);
+    await waitRevealEnd(page);
+  });
+
+  test('Nは全画面演出なしで段階表示だけ行う', async ({ page }) => {
+    await page.goto('/shindan/neko/');
+    await diagnoseWith(page, (i) => answers[i], nameFor('N'));
+    await expect(page.locator('#shindan-reveal')).toBeHidden();
+    await waitRevealEnd(page);
+  });
+
+  test('Escキーで全画面演出をスキップできる', async ({ page }) => {
+    await page.goto('/shindan/neko/');
+    await diagnoseWith(page, (i) => answers[i], nameFor('LR'));
+    await expect(page.locator('#shindan-reveal')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#shindan-reveal')).toBeHidden();
+    await expect(page.locator('.shindan-revealing')).toHaveCount(0);
+  });
+
+  test('動きを減らす設定では演出を出さない', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.goto('/shindan/neko/');
+    await diagnoseWith(page, (i) => answers[i], nameFor('LR'));
+    await expect(page.locator('#shindan-title')).toBeFocused();
+    await expect(page.locator('#shindan-reveal')).toBeHidden();
+    await expect(page.locator('.shindan-revealing')).toHaveCount(0);
+    await expect(page.locator('#shindan-confetti span')).toHaveCount(0);
+  });
+
+  test('演出中に「最初からもう一度」を押すと演出が止まる', async ({ page }) => {
+    await page.goto('/shindan/neko/');
+    await diagnoseWith(page, (i) => answers[i], nameFor('LR'));
+    await expect(page.locator('#shindan-reveal')).toBeVisible();
+    await page
+      .getByRole('button', { name: '最初からもう一度診断する' })
+      .click();
+    await expect(page.locator('#shindan-reveal')).toBeHidden();
+    await expect(page.locator('#shindan-confetti span')).toHaveCount(0);
+    await expect(
+      page.getByRole('button', { name: '診断をはじめる' }),
+    ).toBeVisible();
+  });
+});
+
+test.describe('猫タイプ診断: 相性・履歴の表示確認（375px・明暗）', () => {
+  const pickA = (i: number) => (i * 3) % 4;
+  const pickB = (i: number) => (i + 1) % 4;
+
+  test('相性カードと履歴を 375px の明暗で表示でき、横スクロールせず axe 違反がない', async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    const errors = collectErrors(page);
+    const a = resultOf(pickA);
+    await page.setViewportSize({ width: 375, height: 800 });
+    for (const colorScheme of ['light', 'dark'] as const) {
+      await page.emulateMedia({ colorScheme });
+      // 同じURLへの goto は fragment 遷移になり再読み込みされないので、間に空ページを挟む
+      await page.goto('about:blank');
+      await page.goto(`/shindan/neko/#r=${a.code}`);
+      await page
+        .getByRole('button', { name: 'あなたも診断して相性を見る' })
+        .first()
+        .click();
+      await diagnoseWith(page, pickB);
+      await expect(page.locator('#shindan-compat')).toBeVisible();
+      await expect(page.locator('#shindan-history')).toBeVisible();
+      await waitRevealEnd(page);
+      const overflow = await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth >
+          document.documentElement.clientWidth,
+      );
+      expect.soft(overflow, colorScheme).toBe(false);
+      const axe = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+        .analyze();
+      expect
+        .soft(
+          axe.violations.map((v) => v.id),
+          colorScheme,
+        )
+        .toEqual([]);
+    }
+    expect(errors).toEqual([]);
+  });
+
+  test('同じ結果を2回出しても履歴は1件のまま', async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.goto('/shindan/neko/');
+    await diagnoseWith(page, pickB);
+    await page
+      .getByRole('button', { name: '最初からもう一度診断する' })
+      .click();
+    await diagnoseWith(page, pickB);
+    await expect(page.locator('#shindan-history-list li')).toHaveCount(1);
+  });
+
+  test('他テーマの履歴と旧版の途中保存は表示も再開もしない', async ({
+    page,
+  }) => {
+    const errors = collectErrors(page);
+    const valid = resultOf(() => 1);
+    await page.goto('/shindan/neko/');
+    await page.evaluate((code) => {
+      localStorage.setItem(
+        'shindan:history',
+        JSON.stringify([{ themeId: 'inu', code, at: 1700000000000 }]),
+      );
+      sessionStorage.setItem(
+        'shindan:neko:progress',
+        JSON.stringify({ version: 0, answers: [0, 1], variant: 0 }),
+      );
+    }, valid.code);
+    await page.reload();
+    await expect(page.locator('#shindan-history')).toBeHidden();
+    await expect(page.locator('#shindan-resume')).toBeHidden();
+    await expect(
+      page.getByRole('button', { name: '診断をはじめる' }),
+    ).toBeVisible();
+    expect(errors).toEqual([]);
+  });
 });

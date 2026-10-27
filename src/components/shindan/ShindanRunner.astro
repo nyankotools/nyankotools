@@ -24,6 +24,25 @@ const primaryButton =
 
 <section id="shindan-root" data-theme={payload} class="mb-10">
   <div data-screen="start">
+    <div
+      id="shindan-resume"
+      class="mb-6 rounded-xl bg-violet-50 p-4 dark:bg-gray-900"
+      hidden
+    >
+      <p id="shindan-resume-lead" class="mb-3 font-medium"></p>
+      <div class="flex flex-wrap gap-2">
+        <button
+          id="shindan-resume-continue"
+          type="button"
+          class={primaryButton}
+        >
+          {ui.resume}
+        </button>
+        <button id="shindan-resume-discard" type="button" class="ui-btn">
+          {ui.resumeDiscard}
+        </button>
+      </div>
+    </div>
     <p class="mb-4 text-gray-700 dark:text-gray-300">{texts.intro}</p>
     <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
       {ui.questionCount.replace('{total}', String(total))}
@@ -39,6 +58,13 @@ const primaryButton =
       class="ui-input h-11 w-full max-w-sm px-3 dark:bg-gray-900"
     />
     <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{ui.nameHint}</p>
+    <p
+      id="shindan-compat-pending"
+      class="mt-4 rounded-lg bg-violet-50 p-3 text-sm font-medium dark:bg-gray-900"
+      hidden
+    >
+      {ui.compatPending}
+    </p>
     <button id="shindan-start" type="button" class={`mt-6 ${primaryButton}`}>
       {ui.start}
     </button>
@@ -95,48 +121,55 @@ const primaryButton =
     >
       <p class="font-medium">{ui.sharedLead}</p>
       <button type="button" data-try-yourself class={primaryButton}>
-        {ui.tryYourself}
+        {ui.tryCompat}
       </button>
     </div>
     <p
       id="shindan-result-for"
       class="mb-2 text-sm text-gray-600 dark:text-gray-400"
     ></p>
+    <!-- data-stage: 結果発表の段階表示の順（1 称号 → 2 レア度 → 3 詳細。reveal.ts） -->
     <div class="flex flex-col gap-6 sm:flex-row sm:items-start">
       <img
         id="shindan-cat"
         alt=""
         width="512"
         height="512"
+        data-stage="1"
         class="mx-auto h-auto w-56 shrink-0 rounded-3xl sm:mx-0 sm:w-64"
       />
       <div class="min-w-0 flex-1">
-        <p class="flex flex-wrap items-center gap-2">
-          <span
-            id="shindan-rarity"
-            class="rounded-md px-2.5 py-0.5 text-sm font-black tracking-wider"
-          ></span>
-          <span id="shindan-rarity-label" class="text-sm font-bold"></span>
-        </p>
-        <p
-          id="shindan-rarity-rate"
-          class="mt-1 text-xs text-gray-600 dark:text-gray-400"
-        ></p>
+        <div data-stage="2">
+          <p class="flex flex-wrap items-center gap-2">
+            <span
+              id="shindan-rarity"
+              class="rounded-md px-2.5 py-0.5 text-sm font-black tracking-wider"
+            ></span>
+            <span id="shindan-rarity-label" class="text-sm font-bold"></span>
+          </p>
+          <p
+            id="shindan-rarity-rate"
+            class="mt-1 text-xs text-gray-600 dark:text-gray-400"
+          ></p>
+        </div>
         <h2
           id="shindan-title"
           tabindex="-1"
+          data-stage="1"
           class="mt-3 text-2xl font-black break-words text-[#4a2f63] focus:outline-none sm:text-3xl dark:text-violet-200"
         ></h2>
-        <p id="shindan-type" class="mt-2 font-medium"></p>
-        <h3 class={`mt-5 ${sectionTitle}`}>{ui.axesHeading}</h3>
-        <dl
-          id="shindan-axes"
-          class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm"
-        ></dl>
+        <p id="shindan-type" data-stage="1" class="mt-2 font-medium"></p>
+        <div data-stage="3">
+          <h3 class={`mt-5 ${sectionTitle}`}>{ui.axesHeading}</h3>
+          <dl
+            id="shindan-axes"
+            class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm"
+          ></dl>
+        </div>
       </div>
     </div>
 
-    <div class="mt-8 space-y-6">
+    <div class="mt-8 space-y-6" data-stage="3">
       <section>
         <h3 class={sectionTitle}>{ui.typeHeading}</h3>
         <p id="shindan-type-description"></p>
@@ -173,8 +206,141 @@ const primaryButton =
     </div>
 
     <section
+      id="shindan-compat"
+      aria-labelledby="shindan-compat-heading"
+      data-stage="3"
+      class="mt-10 rounded-2xl bg-violet-50 p-4 sm:p-6 dark:bg-gray-900"
+      hidden
+    >
+      <h3
+        id="shindan-compat-heading"
+        tabindex="-1"
+        class="mb-4 text-lg font-bold focus:outline-none"
+      >
+        {ui.compatHeading}
+      </h3>
+      <div class="grid grid-cols-[1fr_auto_1fr] items-start gap-2 text-center">
+        <figure class="min-w-0">
+          <img
+            id="shindan-compat-self-img"
+            alt=""
+            width="512"
+            height="512"
+            class="mx-auto h-auto w-24 rounded-2xl sm:w-32"
+          />
+          <figcaption class="mt-1">
+            <span class="block text-xs text-gray-600 dark:text-gray-400">
+              {ui.compatSelf}
+            </span>
+            <span
+              id="shindan-compat-self-type"
+              class="font-bold break-words"
+            ></span>
+          </figcaption>
+        </figure>
+        <span aria-hidden="true" class="self-center text-2xl font-black">
+          ×
+        </span>
+        <figure class="min-w-0">
+          <img
+            id="shindan-compat-other-img"
+            alt=""
+            width="512"
+            height="512"
+            class="mx-auto h-auto w-24 rounded-2xl sm:w-32"
+          />
+          <figcaption class="mt-1">
+            <span class="block text-xs text-gray-600 dark:text-gray-400">
+              {ui.compatOther}
+            </span>
+            <span
+              id="shindan-compat-other-type"
+              class="font-bold break-words"
+            ></span>
+          </figcaption>
+        </figure>
+      </div>
+      <p class="mt-4 text-center">
+        <span class="sr-only">{ui.compatPercentLabel}</span>
+        <span
+          id="shindan-compat-percent"
+          class="text-5xl font-black text-[#4a2f63] dark:text-violet-200"
+        ></span>
+      </p>
+      <p id="shindan-compat-relation" class="text-center text-xl font-bold"></p>
+      <p
+        id="shindan-compat-rarity"
+        class="mt-1 text-center text-xs text-gray-600 dark:text-gray-400"
+      ></p>
+      <p id="shindan-compat-comment" class="mt-4"></p>
+      <h4 class={`mt-5 ${sectionTitle}`}>{ui.compatAxesHeading}</h4>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs text-gray-600 dark:text-gray-400">
+            <th scope="col">
+              <span class="sr-only">{ui.compatAxisColumn}</span>
+            </th>
+            <th scope="col" class="pb-1 font-medium">
+              {ui.compatSelf}
+            </th>
+            <th scope="col" class="pb-1 font-medium">
+              {ui.compatOther}
+            </th>
+          </tr>
+        </thead>
+        <tbody id="shindan-compat-axes"></tbody>
+      </table>
+      <div id="shindan-compat-partner" class="mt-5">
+        <h4 class={sectionTitle}>{ui.compatPartnerHeading}</h4>
+        <div class="flex items-center gap-3">
+          <img
+            id="shindan-compat-partner-img"
+            alt=""
+            width="512"
+            height="512"
+            class="h-16 w-16 shrink-0 rounded-xl"
+          />
+          <div class="min-w-0">
+            <p id="shindan-compat-partner-name" class="font-bold"></p>
+            <p class="text-sm text-gray-700 dark:text-gray-300">
+              {texts.compat.partnerNote}
+            </p>
+          </div>
+        </div>
+      </div>
+      <div id="shindan-compat-share" class="mt-6">
+        <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+          {ui.compatShareNote}
+        </p>
+        <div class="flex flex-wrap gap-2">
+          <a
+            id="shindan-compat-x"
+            class="ui-btn inline-flex items-center bg-white dark:bg-gray-950"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {ui.compatShareX}
+          </a>
+          <button
+            id="shindan-compat-copy"
+            type="button"
+            class="ui-btn bg-white dark:bg-gray-950"
+          >
+            {ui.compatCopy}
+          </button>
+        </div>
+        <p
+          id="shindan-compat-status"
+          role="status"
+          class="mt-2 min-h-5 text-sm"
+        ></p>
+      </div>
+    </section>
+
+    <section
       id="shindan-share"
       aria-labelledby="shindan-share-heading"
+      data-stage="3"
       class="mt-10 rounded-2xl border border-violet-200 p-4 sm:p-6 dark:border-gray-700"
     >
       <h3 id="shindan-share-heading" class="mb-1 text-lg font-bold">
@@ -277,6 +443,46 @@ const primaryButton =
       ></p>
     </section>
 
+    <section
+      id="shindan-compat-form"
+      aria-labelledby="shindan-compat-form-heading"
+      class="mt-6 rounded-2xl border border-violet-200 p-4 sm:p-6 dark:border-gray-700"
+    >
+      <h3 id="shindan-compat-form-heading" class="mb-3 text-lg font-bold">
+        {ui.compatFormHeading}
+      </h3>
+      <form id="shindan-compat-paste" novalidate>
+        <label for="shindan-compat-input" class="ui-label">
+          {ui.compatFormLabel}
+        </label>
+        <div class="flex flex-wrap gap-2">
+          <input
+            id="shindan-compat-input"
+            type="url"
+            inputmode="url"
+            autocomplete="off"
+            spellcheck="false"
+            aria-describedby="shindan-compat-hint shindan-compat-error"
+            class="ui-input h-11 min-w-0 flex-1 basis-60 px-3 dark:bg-gray-900"
+          />
+          <button type="submit" class="ui-btn">
+            {ui.compatFormSubmit}
+          </button>
+        </div>
+        <p
+          id="shindan-compat-hint"
+          class="mt-1 text-sm text-gray-600 dark:text-gray-400"
+        >
+          {ui.compatFormHint}
+        </p>
+        <p
+          id="shindan-compat-error"
+          aria-live="polite"
+          class="mt-1 text-sm text-red-700 dark:text-red-400"
+        ></p>
+      </form>
+    </section>
+
     <button id="shindan-retry" type="button" class="ui-btn mt-8">
       {ui.retry}
     </button>
@@ -286,19 +492,228 @@ const primaryButton =
       class={`mt-8 ${primaryButton}`}
       hidden
     >
-      {ui.tryYourself}
+      {ui.tryCompat}
     </button>
     <p class="mt-4 text-xs text-gray-600 dark:text-gray-400">{ui.resultNote}</p>
   </div>
+
+  <section
+    id="shindan-history"
+    aria-labelledby="shindan-history-heading"
+    class="mt-12"
+    hidden
+  >
+    <h2
+      id="shindan-history-heading"
+      tabindex="-1"
+      class="mb-1 text-lg font-bold focus:outline-none"
+    >
+      {ui.historyHeading}
+    </h2>
+    <p class="mb-3 text-sm text-gray-600 dark:text-gray-400">
+      {ui.historyNote}
+    </p>
+    <ul id="shindan-history-list" class="space-y-2"></ul>
+    <button id="shindan-history-clear" type="button" class="ui-btn mt-3">
+      {ui.historyClear}
+    </button>
+  </section>
+
+  <!-- 全画面演出（UR以上）。装飾は aria-hidden で、スキップボタンだけ操作できる -->
+  <div
+    id="shindan-reveal"
+    class="pointer-events-none fixed inset-0 z-50 flex items-center justify-center"
+    hidden
+  >
+    <div
+      class="shindan-reveal-backdrop absolute inset-0"
+      aria-hidden="true"
+    ></div>
+    <p class="shindan-reveal-text relative text-center" aria-hidden="true">
+      <span id="shindan-reveal-rarity" class="block text-7xl font-black"></span>
+      <span
+        id="shindan-reveal-label"
+        class="mt-2 block text-2xl font-bold"
+      ></span>
+    </p>
+    <button
+      id="shindan-reveal-skip"
+      type="button"
+      class="pointer-events-auto absolute right-4 bottom-6 min-h-11 rounded-full bg-white px-5 text-sm font-bold text-gray-900 shadow"
+    >
+      {ui.revealSkip}
+    </button>
+  </div>
+  <div
+    id="shindan-confetti"
+    class="pointer-events-none fixed inset-0 z-50 overflow-hidden"
+    aria-hidden="true"
+    hidden
+  ></div>
 </section>
+
+<style is:global>
+  /* 結果発表の演出（reveal.ts）。時間・遅れは JS が CSS 変数で渡す */
+  @keyframes shindan-stage-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .shindan-revealing [data-stage] {
+    animation: shindan-stage-in var(--stage-ms) ease-out both;
+    animation-delay: calc(var(--reveal-offset) + var(--stage-delay));
+  }
+
+  @keyframes shindan-ring {
+    from {
+      box-shadow: 0 0 0 0 var(--fx-color);
+    }
+    to {
+      box-shadow: 0 0 0 14px transparent;
+    }
+  }
+  @keyframes shindan-glow {
+    50% {
+      box-shadow: 0 0 18px 6px var(--fx-color);
+      transform: scale(1.12);
+    }
+  }
+  @keyframes shindan-hue {
+    50% {
+      box-shadow: 0 0 18px 6px rgb(196 181 253 / 0.9);
+    }
+    to {
+      filter: hue-rotate(360deg);
+    }
+  }
+  .shindan-revealing #shindan-rarity {
+    --fx-start: calc(var(--reveal-offset) + var(--fx-delay));
+  }
+  .shindan-revealing #shindan-rarity[data-fx='R'] {
+    --fx-color: rgb(139 92 246 / 0.6);
+    animation: shindan-ring 600ms ease-out var(--fx-start) 1;
+  }
+  .shindan-revealing #shindan-rarity[data-fx='SR'] {
+    --fx-color: rgb(148 163 184 / 0.8);
+    animation: shindan-ring 500ms ease-out var(--fx-start) 2;
+  }
+  .shindan-revealing #shindan-rarity[data-fx='SSR'] {
+    --fx-color: rgb(251 191 36 / 0.85);
+    animation: shindan-glow 450ms ease-in-out var(--fx-start) 2;
+  }
+  .shindan-revealing #shindan-rarity[data-fx='UR'] {
+    animation: shindan-hue 900ms linear var(--fx-start) 1;
+  }
+  .shindan-revealing #shindan-rarity[data-fx='LR'] {
+    --fx-color: rgb(252 211 77 / 0.9);
+    animation: shindan-glow 400ms ease-in-out var(--fx-start) 2;
+  }
+
+  @keyframes shindan-overlay {
+    0% {
+      opacity: 0;
+    }
+    15%,
+    80% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  @keyframes shindan-pop {
+    0% {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    30% {
+      opacity: 1;
+      transform: scale(1.08);
+    }
+    80% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+  .shindan-reveal-backdrop {
+    animation: shindan-overlay var(--overlay-ms) ease-in-out both;
+  }
+  .shindan-reveal-text {
+    animation: shindan-pop var(--overlay-ms) ease-out both;
+  }
+  #shindan-reveal[data-rarity='UR'] .shindan-reveal-backdrop {
+    background: linear-gradient(135deg, #fbcfe8, #ddd6fe 50%, #bae6fd);
+  }
+  #shindan-reveal[data-rarity='UR'] .shindan-reveal-text {
+    color: #1f2937;
+  }
+  #shindan-reveal[data-rarity='LR'] .shindan-reveal-backdrop {
+    background: radial-gradient(circle, #3f2d0c, #0b0b10 70%);
+  }
+  #shindan-reveal[data-rarity='LR'] .shindan-reveal-text {
+    color: #fcd34d;
+  }
+
+  @keyframes shindan-fall {
+    to {
+      transform: translateY(105vh) rotate(var(--rotate));
+    }
+  }
+  .shindan-confetti-piece {
+    position: absolute;
+    top: -16px;
+    width: 8px;
+    height: 14px;
+    border-radius: 2px;
+    animation: shindan-fall var(--duration) linear var(--delay) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shindan-revealing [data-stage],
+    .shindan-revealing #shindan-rarity,
+    .shindan-reveal-backdrop,
+    .shindan-reveal-text,
+    .shindan-confetti-piece {
+      animation: none !important;
+    }
+  }
+</style>
 
 <script>
   import { trackEvent } from '../../lib/analytics';
   import { copyText } from '../../lib/clipboard';
   import { downloadBlob } from '../../lib/download';
   import type { CardData, CardShape } from '../../lib/shindan/card';
-  import { parseShareHash } from '../../lib/shindan/codec';
+  import {
+    buildShareHash,
+    extractShareCode,
+    parseShareHash,
+  } from '../../lib/shindan/codec';
   import { diagnose, restore } from '../../lib/shindan/compose';
+  import { cyrb53 } from '../../lib/shindan/hash';
+  import {
+    HISTORY_KEY,
+    addHistory,
+    parseHistory,
+    removeHistory,
+    type HistoryEntry,
+  } from '../../lib/shindan/history';
+  import { parseProgress, progressKey } from '../../lib/shindan/progress';
+  import {
+    REVEAL_PLANS,
+    STAGE_ANIMATION_MS,
+    STAGE_DELAYS_MS,
+    confettiPieces,
+    revealDuration,
+  } from '../../lib/shindan/reveal';
   import {
     NAME_MAX_LENGTH,
     nameVariant,
@@ -306,6 +721,7 @@ const primaryButton =
     truncateGraphemes,
   } from '../../lib/shindan/normalize';
   import {
+    appendHashtags,
     buildShareText,
     buildShareUrl,
     cardFileName,
@@ -318,7 +734,11 @@ const primaryButton =
     Rarity,
     ThemeSpec,
   } from '../../lib/shindan/types';
-  import { buildResultView, type ResultView } from '../../lib/shindan/view';
+  import {
+    buildCompatView,
+    buildResultView,
+    type ResultView,
+  } from '../../lib/shindan/view';
   import type { CatImage } from '../../data/themes/neko';
   import type { ShindanThemeTexts } from '../../i18n/shindan/types';
   import type { ShindanUi } from '../../i18n/shindan/ui';
@@ -360,6 +780,10 @@ const primaryButton =
   const progressBar = $('shindan-progress-bar');
 
   let answers: number[] = [];
+  /** 診断中の名前と variant（開始時に決める。途中保存から再開したときは保存した variant） */
+  let session = { name: '', variant: 0 };
+  /** 診断後に相性を見る相手の共有コード（友達の結果から「相性を見る」を選んだとき等） */
+  let pendingVs: string | null = null;
   let analyzingTimer: number | undefined;
 
   const fill = (template: string, values: Record<string, string | number>) =>
@@ -369,6 +793,15 @@ const primaryButton =
     for (const screen of screens) {
       screen.hidden = screen.dataset.screen !== name;
     }
+    $('shindan-compat-pending').hidden = name !== 'start' || !pendingVs;
+    historyVisible = name === 'start' || name === 'result';
+    renderHistory();
+  }
+
+  /** 名前の入力欄の値（見えない文字だけなら名前なし。nameVariant の判定と揃える） */
+  function inputName(): string {
+    const rawName = nameInput.value.trim();
+    return normalizeName(rawName) === '' ? '' : rawName;
   }
 
   function renderQuestion() {
@@ -407,6 +840,7 @@ const primaryButton =
   function answer(choiceIndex: number) {
     answers.push(choiceIndex);
     if (answers.length < questions.length) {
+      saveProgress();
       renderQuestion();
       return;
     }
@@ -417,40 +851,71 @@ const primaryButton =
   }
 
   function renderResult() {
-    // 見えない文字だけの名前は名前なしとして扱う（nameVariant の判定と揃える）
-    const rawName = nameInput.value.trim();
-    const name = normalizeName(rawName) === '' ? '' : rawName;
-    const result = diagnose(spec, answers, nameVariant(name));
+    const result = diagnose(spec, answers, session.variant);
     if (!result) {
       restart();
       return;
     }
-    showResult(result, { name });
+    clearProgress();
+    addToHistory(result);
+    showResult(result, {
+      kind: 'own',
+      name: session.name,
+      vs: pendingVs ? restore(spec, pendingVs) : null,
+    });
+    playReveal(result);
     trackEvent('shindan_complete', { theme: spec.id });
+    if (!$('shindan-compat').hidden) {
+      trackEvent('shindan_compat', { theme: spec.id, source: 'invite' });
+    }
+    // 相性の相手は1回の診断で使い切る（やり直しや履歴の表示に持ち越さない）
+    pendingVs = null;
   }
 
-  type ResultMode = { name: string; shared?: false } | { shared: true };
+  /**
+   * own: 自分の結果（date は履歴から開いたときの保存日時の表示、vs は相性の相手）
+   * shared: 共有URLから開いた友達の結果（名前なし・シェア欄なし）。vs は相性URLの「あなた」側
+   */
+  type ResultMode =
+    | {
+        kind: 'own';
+        name: string;
+        date?: string;
+        vs?: DiagnosisResult | null;
+      }
+    | { kind: 'shared'; vs?: DiagnosisResult };
 
-  /** 結果画面を表示する。shared は共有URLから開いた友達の結果（名前なし・シェア欄なし） */
   function showResult(result: DiagnosisResult, mode: ResultMode) {
     const view = buildResultView(spec, texts, result);
     const image = images[view.typeId];
-    const name = mode.shared ? '' : mode.name;
+    const shared = mode.kind === 'shared';
+    const name = shared ? '' : mode.name;
 
-    $('shindan-shared-lead').hidden = !mode.shared;
+    $('shindan-shared-lead').hidden = !shared;
     for (const button of root.querySelectorAll<HTMLElement>(
       '[data-try-yourself]',
     )) {
-      button.hidden = !mode.shared;
+      button.hidden = !shared;
     }
-    $('shindan-retry').hidden = !!mode.shared;
-    $('shindan-share').hidden = !!mode.shared;
+    $('shindan-retry').hidden = shared;
+    $('shindan-share').hidden = shared;
+    $('shindan-compat-form').hidden = shared;
+    resetCompatForm();
+    if (shared) {
+      sharedCode = result.code;
+      renderCompat(mode.vs ?? null, mode.vs ? result : null);
+    } else {
+      sharedCode = null;
+      renderCompat(result, mode.vs ?? null);
+    }
 
-    $('shindan-result-for').textContent = mode.shared
+    $('shindan-result-for').textContent = shared
       ? ui.sharedResultFor
-      : name
-        ? fill(ui.resultFor, { name })
-        : ui.resultDefault;
+      : mode.date
+        ? fill(ui.historyResultFor, { date: mode.date })
+        : name
+          ? fill(ui.resultFor, { name })
+          : ui.resultDefault;
     const cat = $<HTMLImageElement>('shindan-cat');
     cat.src = image.src;
     cat.width = image.width;
@@ -464,10 +929,9 @@ const primaryButton =
       rate: view.rarityRate,
     });
     $('shindan-title').textContent = view.title;
-    $('shindan-type').textContent = fill(
-      mode.shared ? ui.sharedTypeIs : ui.typeIs,
-      { type: view.typeName },
-    );
+    $('shindan-type').textContent = fill(shared ? ui.sharedTypeIs : ui.typeIs, {
+      type: view.typeName,
+    });
     $('shindan-axes').replaceChildren(
       ...view.axes.flatMap((axis) => {
         const dt = document.createElement('dt');
@@ -500,17 +964,436 @@ const primaryButton =
     $('shindan-status').textContent = '';
     root.scrollIntoView({ block: 'start' });
     $('shindan-title').focus({ preventScroll: true });
-    if (!mode.shared) prepareShare(result, view, name);
+    if (!shared) prepareShare(result, view, name);
   }
 
-  function restart() {
+  /**
+   * 開始画面に戻る。keepProgress のときは途中保存を消さず「続きから答える」を出す
+   * （診断の途中で友達の共有URLを開き、そこから「相性を見る」を選んだときなど）
+   */
+  function restart(keepProgress = false) {
     window.clearTimeout(analyzingTimer);
+    cancelReveal();
     $('shindan-status').textContent = '';
     answers = [];
+    const saved = keepProgress ? loadProgress() : null;
+    if (saved && saved.answers.length > 0) {
+      writeProgress(saved.answers, saved.variant);
+      showResume(saved.answers.length);
+    } else {
+      saveProgress();
+      $('shindan-resume').hidden = true;
+    }
     resetShare();
     show('start');
     $('shindan-start').focus();
   }
+
+  function showResume(answered: number) {
+    $('shindan-resume-lead').textContent = fill(ui.resumeLead, {
+      n: answered,
+      total: questions.length,
+    });
+    $('shindan-resume').hidden = false;
+  }
+
+  // ---- 途中保存（16.9。sessionStorage） ----
+
+  const PROGRESS_KEY = progressKey(spec.id);
+
+  /** 答えた分の回答と variant（と相性の相手）を保存する。何もなければ消す */
+  function saveProgress() {
+    writeProgress(answers, session.variant);
+  }
+
+  function writeProgress(saved: readonly number[], variant: number) {
+    try {
+      if (saved.length === 0 && !pendingVs) {
+        sessionStorage.removeItem(PROGRESS_KEY);
+        return;
+      }
+      sessionStorage.setItem(
+        PROGRESS_KEY,
+        JSON.stringify({
+          version: spec.version,
+          answers: saved,
+          variant,
+          ...(pendingVs ? { vs: pendingVs } : {}),
+        }),
+      );
+    } catch {
+      // 保存できなくても診断は続ける
+    }
+  }
+
+  function loadProgress() {
+    try {
+      return parseProgress(sessionStorage.getItem(PROGRESS_KEY), spec);
+    } catch {
+      return null;
+    }
+  }
+
+  function clearProgress() {
+    try {
+      sessionStorage.removeItem(PROGRESS_KEY);
+    } catch {
+      // 何もしない
+    }
+  }
+
+  // ---- 履歴（16.9。localStorage。名前は保存しない） ----
+
+  /** 履歴欄を出してよい画面か（開始・結果画面のみ） */
+  let historyVisible = false;
+  const historyList = $('shindan-history-list');
+
+  function loadHistory(): HistoryEntry[] {
+    try {
+      return parseHistory(localStorage.getItem(HISTORY_KEY));
+    } catch {
+      return [];
+    }
+  }
+
+  function saveHistory(entries: HistoryEntry[]) {
+    try {
+      if (entries.length === 0) localStorage.removeItem(HISTORY_KEY);
+      else localStorage.setItem(HISTORY_KEY, JSON.stringify(entries));
+    } catch {
+      // 保存できなくても結果の表示は続ける
+    }
+  }
+
+  function addToHistory(result: DiagnosisResult) {
+    saveHistory(
+      addHistory(loadHistory(), {
+        themeId: spec.id,
+        code: result.code,
+        at: Date.now(),
+      }),
+    );
+  }
+
+  const formatDate = (at: number) =>
+    new Date(at).toLocaleString('ja-JP', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+
+  function renderHistory() {
+    // 質問中は描かない（1問ごとに storage を読み直さない）
+    if (!historyVisible) {
+      $('shindan-history').hidden = true;
+      return;
+    }
+    const items = loadHistory()
+      .filter((entry) => entry.themeId === spec.id)
+      .flatMap((entry) => {
+        const result = restore(spec, entry.code);
+        return result ? [{ entry, result }] : [];
+      });
+    $('shindan-history').hidden = !historyVisible || items.length === 0;
+    historyList.replaceChildren(
+      ...items.map(({ entry, result }) => {
+        const view = buildResultView(spec, texts, result);
+        const date = formatDate(entry.at);
+        const labels = { date, type: view.typeName };
+        const li = document.createElement('li');
+        li.className =
+          'flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-900';
+        const img = document.createElement('img');
+        const image = images[view.typeId];
+        img.src = image.src;
+        img.width = image.width;
+        img.height = image.height;
+        img.alt = '';
+        img.loading = 'lazy';
+        img.className = 'h-12 w-12 shrink-0 rounded-lg';
+        const body = document.createElement('div');
+        body.className = 'min-w-0 flex-1 basis-40';
+        const meta = document.createElement('p');
+        meta.className = 'text-xs text-gray-600 dark:text-gray-400';
+        meta.textContent = `${date} ・ ${view.rarity} ・ ${view.typeName}`;
+        const title = document.createElement('p');
+        title.className = 'font-bold break-words';
+        title.textContent = view.title;
+        body.append(meta, title);
+        const actions = document.createElement('div');
+        actions.className = 'flex gap-2';
+        const showButton = document.createElement('button');
+        showButton.type = 'button';
+        showButton.className = 'ui-btn';
+        showButton.textContent = ui.historyShow;
+        showButton.setAttribute(
+          'aria-label',
+          fill(ui.historyShowLabel, labels),
+        );
+        showButton.addEventListener('click', () => {
+          window.clearTimeout(analyzingTimer);
+          cancelReveal();
+          resetShare();
+          showResult(result, { kind: 'own', name: '', date });
+        });
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'ui-btn';
+        deleteButton.textContent = ui.historyDelete;
+        deleteButton.setAttribute(
+          'aria-label',
+          fill(ui.historyDeleteLabel, labels),
+        );
+        deleteButton.addEventListener('click', () => {
+          saveHistory(removeHistory(loadHistory(), spec.id, entry.code));
+          renderHistory();
+          focusAfterHistoryChange();
+        });
+        actions.append(showButton, deleteButton);
+        li.append(img, body, actions);
+        return li;
+      }),
+    );
+  }
+
+  /** 削除したボタンが消えるので、フォーカスを見出し（履歴が空なら開始ボタン等）へ移す */
+  function focusAfterHistoryChange() {
+    if (!$('shindan-history').hidden) {
+      $('shindan-history-heading').focus();
+    } else if (!$('shindan-title').closest<HTMLElement>('[hidden]')) {
+      $('shindan-title').focus();
+    } else {
+      $('shindan-start').focus();
+    }
+  }
+
+  $('shindan-history-clear').addEventListener('click', () => {
+    saveHistory(loadHistory().filter((entry) => entry.themeId !== spec.id));
+    renderHistory();
+    $('shindan-status').textContent = ui.historyCleared;
+    focusAfterHistoryChange();
+  });
+
+  // ---- 相性（16.9） ----
+
+  /** 表示中の友達の結果の共有コード（「相性を見る」で pendingVs にする） */
+  let sharedCode: string | null = null;
+  /** 表示中の相性の共有用URLと投稿文（自分の結果のときのみ） */
+  let compatShare: { url: string; text: string } | null = null;
+
+  /** 相性を表示する。self = 見ている本人、other = 相手。どちらかが無ければ隠す */
+  function renderCompat(
+    self: DiagnosisResult | null,
+    other: DiagnosisResult | null,
+  ) {
+    const section = $('shindan-compat');
+    compatShare = null;
+    $('shindan-compat-status').textContent = '';
+    if (!self || !other) {
+      section.hidden = true;
+      return;
+    }
+    const view = buildCompatView(spec, texts, self, other);
+    const setCat = (id: string, typeId: string) => {
+      const img = $<HTMLImageElement>(id);
+      const image = images[typeId];
+      img.src = image.src;
+      img.width = image.width;
+      img.height = image.height;
+    };
+    const typeName = (result: DiagnosisResult) =>
+      texts.types[result.typeId]?.name ?? '';
+    setCat('shindan-compat-self-img', self.typeId);
+    setCat('shindan-compat-other-img', other.typeId);
+    $('shindan-compat-self-type').textContent = typeName(self);
+    $('shindan-compat-other-type').textContent = typeName(other);
+    $('shindan-compat-percent').textContent = `${view.percent}%`;
+    $('shindan-compat-relation').textContent = view.relationName;
+    $('shindan-compat-rarity').textContent = fill(ui.compatRarityPair, {
+      self: self.rarity,
+      other: other.rarity,
+    });
+    $('shindan-compat-comment').textContent = view.comment;
+    $('shindan-compat-axes').replaceChildren(
+      ...view.axes.map((axis) => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-t border-violet-200 dark:border-gray-700';
+        const th = document.createElement('th');
+        th.scope = 'row';
+        th.className =
+          'py-1.5 pr-2 text-left font-medium text-gray-600 dark:text-gray-400';
+        th.textContent = axis.label;
+        const selfCell = document.createElement('td');
+        selfCell.className = 'py-1.5 pr-2 font-medium';
+        selfCell.textContent = axis.selfPole;
+        const otherCell = document.createElement('td');
+        otherCell.className = 'py-1.5 font-medium';
+        otherCell.textContent = axis.otherPole;
+        if (axis.same) {
+          const same = document.createElement('span');
+          same.className =
+            'ml-1.5 rounded bg-violet-200 px-1.5 text-xs text-violet-900 dark:bg-violet-900 dark:text-violet-100';
+          same.textContent = ui.compatSame;
+          otherCell.append(same);
+        }
+        tr.append(th, selfCell, otherCell);
+        return tr;
+      }),
+    );
+    const partnerBox = $('shindan-compat-partner');
+    partnerBox.hidden = !view.partner;
+    if (view.partner) {
+      setCat('shindan-compat-partner-img', view.partner.typeId);
+      $('shindan-compat-partner-name').textContent = view.partner.typeName;
+    }
+
+    // 共有できるのは自分の結果を見ているときだけ（友達の相性URLを開いたときは出さない）
+    const shareable = $('shindan-share').hidden === false;
+    $('shindan-compat-share').hidden = !shareable;
+    if (shareable) {
+      const url = buildShareUrl(
+        location.origin,
+        spec.id,
+        self.code,
+        other.code,
+      );
+      const text = appendHashtags(
+        fill(ui.compatShareText, {
+          percent: view.percent,
+          relation: view.relationName,
+        }),
+        texts.shareHashtags,
+      );
+      compatShare = { url, text };
+      $<HTMLAnchorElement>('shindan-compat-x').href = xIntentUrl(text, url);
+    }
+    section.hidden = false;
+  }
+
+  const compatInput = $<HTMLInputElement>('shindan-compat-input');
+  const compatError = $('shindan-compat-error');
+
+  function resetCompatForm() {
+    compatInput.value = '';
+    compatInput.removeAttribute('aria-invalid');
+    compatError.textContent = '';
+  }
+
+  $('shindan-compat-paste').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const self = current?.result;
+    const code = extractShareCode(compatInput.value);
+    const other = code ? restore(spec, code) : null;
+    if (!self || !code || !other) {
+      compatInput.setAttribute('aria-invalid', 'true');
+      compatError.textContent = ui.compatFormError;
+      compatInput.focus();
+      return;
+    }
+    resetCompatForm();
+    renderCompat(self, other);
+    const heading = $('shindan-compat-heading');
+    heading.scrollIntoView({ block: 'start' });
+    heading.focus({ preventScroll: true });
+    trackEvent('shindan_compat', { theme: spec.id, source: 'paste' });
+  });
+
+  $('shindan-compat-x').addEventListener('click', () =>
+    trackEvent('shindan_share', {
+      theme: spec.id,
+      method: 'x',
+      kind: 'compat',
+    }),
+  );
+
+  $('shindan-compat-copy').addEventListener('click', async () => {
+    if (!compatShare) return;
+    const ok = await copyText(compatShare.url, { track: false });
+    $('shindan-compat-status').textContent = ok
+      ? ui.compatCopied
+      : ui.copyFailed;
+    if (ok) {
+      trackEvent('shindan_share', {
+        theme: spec.id,
+        method: 'copy',
+        kind: 'compat',
+      });
+    }
+  });
+
+  // ---- 結果発表の演出（6.3。reveal.ts） ----
+
+  const resultScreen = root.querySelector<HTMLElement>(
+    '[data-screen="result"]',
+  )!;
+  const rarityBadge = $('shindan-rarity');
+  const revealOverlay = $('shindan-reveal');
+  const confettiLayer = $('shindan-confetti');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let revealTimers: number[] = [];
+
+  resultScreen.style.setProperty('--stage-ms', `${STAGE_ANIMATION_MS}ms`);
+  resultScreen.style.setProperty('--fx-delay', `${STAGE_DELAYS_MS[1] + 200}ms`);
+  for (const el of resultScreen.querySelectorAll<HTMLElement>('[data-stage]')) {
+    const stage = Number(el.dataset.stage) - 1;
+    el.style.setProperty('--stage-delay', `${STAGE_DELAYS_MS[stage] ?? 0}ms`);
+  }
+
+  function hideOverlay() {
+    revealOverlay.hidden = true;
+  }
+
+  /** 演出を止めて、すぐに最終の表示にする */
+  function cancelReveal() {
+    for (const timer of revealTimers) window.clearTimeout(timer);
+    revealTimers = [];
+    resultScreen.classList.remove('shindan-revealing');
+    delete rarityBadge.dataset.fx;
+    hideOverlay();
+    confettiLayer.replaceChildren();
+    confettiLayer.hidden = true;
+  }
+
+  function playReveal(result: DiagnosisResult) {
+    cancelReveal();
+    if (reducedMotion.matches) return;
+    const plan = REVEAL_PLANS[result.rarity];
+    const total = revealDuration(result.rarity);
+    resultScreen.style.setProperty('--reveal-offset', `${plan.overlayMs}ms`);
+    rarityBadge.dataset.fx = result.rarity;
+    resultScreen.classList.add('shindan-revealing');
+    if (plan.overlayMs > 0) {
+      revealOverlay.dataset.rarity = result.rarity;
+      revealOverlay.style.setProperty('--overlay-ms', `${plan.overlayMs}ms`);
+      $('shindan-reveal-rarity').textContent = result.rarity;
+      $('shindan-reveal-label').textContent = ui.rarityLabels[result.rarity];
+      revealOverlay.hidden = false;
+      revealTimers.push(window.setTimeout(hideOverlay, plan.overlayMs));
+    }
+    if (plan.confetti > 0) {
+      confettiLayer.replaceChildren(
+        ...confettiPieces(plan.confetti, cyrb53(result.code), total).map(
+          (piece) => {
+            const span = document.createElement('span');
+            span.className = 'shindan-confetti-piece';
+            span.style.left = `${piece.left}%`;
+            span.style.background = piece.color;
+            span.style.setProperty('--delay', `${piece.delay}ms`);
+            span.style.setProperty('--duration', `${piece.duration}ms`);
+            span.style.setProperty('--rotate', `${piece.rotate}deg`);
+            return span;
+          },
+        ),
+      );
+      confettiLayer.hidden = false;
+    }
+    revealTimers.push(window.setTimeout(cancelReveal, total));
+  }
+
+  $('shindan-reveal-skip').addEventListener('click', cancelReveal);
+  document.addEventListener('keydown', (event) => {
+    // 全画面演出の後の段階表示・紙吹雪も含め、演出中ならいつでも飛ばせる
+    if (event.key === 'Escape' && revealTimers.length > 0) cancelReveal();
+  });
 
   // ---- 共有（設計書8章・16.9） ----
 
@@ -734,8 +1617,7 @@ const primaryButton =
    * allowStored: ハッシュが無いとき、sessionStorage の友達の結果を表示してよいか
    */
   function openShared(allowStored: boolean) {
-    const shared = parseShareHash(location.hash);
-    const fromUrl = shared !== null;
+    const fromUrl = parseShareHash(location.hash);
     if (fromUrl) {
       history.replaceState(
         history.state,
@@ -743,33 +1625,37 @@ const primaryButton =
         location.pathname + location.search,
       );
     }
-    const code = shared ? shared.self : allowStored ? loadShared() : null;
-    if (!code) return;
-    const result = restore(spec, code);
+    const stored = allowStored ? loadShared() : null;
+    const shared = fromUrl ?? (stored ? parseShareHash(stored) : null);
+    if (!shared) return;
+    const result = restore(spec, shared.self);
     if (!result) {
       storeShared(null);
       return;
     }
-    storeShared(code);
+    // 相性URL（&vs=）の相手が壊れていても、友達の結果だけは表示する
+    const vs = shared.vs ? restore(spec, shared.vs) : null;
+    storeShared(buildShareHash(shared.self, vs ? shared.vs : undefined));
     window.clearTimeout(analyzingTimer);
+    cancelReveal();
     resetShare();
-    showResult(result, { shared: true });
-    if (fromUrl) trackEvent('shindan_restore', { theme: spec.id });
+    showResult(result, { kind: 'shared', vs: vs ?? undefined });
+    if (fromUrl) {
+      trackEvent('shindan_restore', { theme: spec.id });
+      if (vs) trackEvent('shindan_compat', { theme: spec.id, source: 'link' });
+    }
   }
 
   for (const button of root.querySelectorAll<HTMLElement>(
     '[data-try-yourself]',
   )) {
     button.addEventListener('click', () => {
+      // 友達の結果を相性の相手として持ったまま、自分の診断を始める
+      pendingVs = sharedCode;
       storeShared(null);
-      restart();
+      restart(true);
     });
   }
-  window.addEventListener('hashchange', () => openShared(false));
-  // 再読み込み以外（リンクから来た等）では前の友達の結果を持ち越さない
-  const reloaded = isReload();
-  if (!reloaded) storeShared(null);
-  openShared(reloaded);
 
   // 名前は見た目の文字数で上限を設ける（maxlength は UTF-16 単位で絵文字を2文字と数えるため使わない）。
   // IME の変換中に切ると入力が壊れるので、変換中は待って確定時に切る。
@@ -784,6 +1670,10 @@ const primaryButton =
 
   $('shindan-start').addEventListener('click', () => {
     answers = [];
+    const name = inputName();
+    session = { name, variant: nameVariant(name) };
+    $('shindan-resume').hidden = true;
+    saveProgress();
     trackEvent('shindan_start', { theme: spec.id });
     renderQuestion();
   });
@@ -793,7 +1683,46 @@ const primaryButton =
       return;
     }
     answers.pop();
+    saveProgress();
     renderQuestion();
   });
-  $('shindan-retry').addEventListener('click', restart);
+  $('shindan-retry').addEventListener('click', () => restart());
+
+  // 途中保存からの再開。名前は保存しないので、入力欄の名前が保存した variant と合うときだけ使う
+  $('shindan-resume-continue').addEventListener('click', () => {
+    const saved = loadProgress();
+    $('shindan-resume').hidden = true;
+    if (!saved) {
+      $('shindan-start').focus();
+      return;
+    }
+    const name = inputName();
+    session = {
+      name: nameVariant(name) === saved.variant ? name : '',
+      variant: saved.variant,
+    };
+    answers = [...saved.answers];
+    renderQuestion();
+  });
+  $('shindan-resume-discard').addEventListener('click', () => {
+    answers = [];
+    saveProgress();
+    $('shindan-resume').hidden = true;
+    $('shindan-start').focus();
+  });
+
+  {
+    const saved = loadProgress();
+    if (saved) {
+      pendingVs = saved.vs ?? null;
+      if (saved.answers.length > 0) showResume(saved.answers.length);
+    }
+  }
+  show('start');
+
+  window.addEventListener('hashchange', () => openShared(false));
+  // 再読み込み以外（リンクから来た等）では前の友達の結果を持ち越さない
+  const reloaded = isReload();
+  if (!reloaded) storeShared(null);
+  openShared(reloaded);
 </script>

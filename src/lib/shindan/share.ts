@@ -6,13 +6,14 @@ import { buildShareHash } from './codec';
 import { cyrb53 } from './hash';
 import type { Rarity } from './types';
 
-/** 共有URL（`<origin>/shindan/<themeId>/#r=<code>`） */
+/** 共有URL（`<origin>/shindan/<themeId>/#r=<code>`。相性なら `&vs=<相手>` が付く） */
 export function buildShareUrl(
   origin: string,
   themeId: string,
   code: string,
+  vs?: string,
 ): string {
-  return `${origin}/shindan/${themeId}/${buildShareHash(code)}`;
+  return `${origin}/shindan/${themeId}/${buildShareHash(code, vs)}`;
 }
 
 export type ShareTextValues = {
@@ -41,6 +42,14 @@ export function buildShareText(
       ? String(values[key as keyof ShareTextValues])
       : match,
   );
+  return appendHashtags(body, hashtags);
+}
+
+/** 本文の次の行にハッシュタグ（# なしで渡す）を付ける */
+export function appendHashtags(
+  body: string,
+  hashtags: readonly string[],
+): string {
   const tags = hashtags.map((tag) => `#${tag}`).join(' ');
   return tags ? `${body}\n${tags}` : body;
 }

@@ -71,6 +71,8 @@ export type Slot = {
 export type CompatConfig = {
   /** 一致した軸の数（0〜軸数）ごとの相性%の範囲 [min, max]。100は回答が完全一致した相手専用 */
   bands: [number, number][];
+  /** 結果タイプID → ベストパートナーのタイプID（タイプごとに固定。16.9） */
+  partners?: Record<string, string>;
 };
 
 export type ThemeSpec = {

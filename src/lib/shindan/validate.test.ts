@@ -360,4 +360,25 @@ describe('validateTheme', () => {
       );
     }
   });
+
+  it('ベストパートナーは全タイプに定義され、実在のタイプを指す', () => {
+    const ids = testTheme.scoring.types.map((t) => t.id);
+    const partners = Object.fromEntries(ids.map((id) => [id, id]));
+    expect(
+      validateTheme({
+        ...testTheme,
+        compat: { ...testTheme.compat, partners },
+      }),
+    ).toEqual([]);
+    const missing = Object.fromEntries(ids.slice(1).map((id) => [id, id]));
+    expect(
+      validateTheme({
+        ...testTheme,
+        compat: { ...testTheme.compat, partners: { ...missing, x: ids[1] } },
+      }),
+    ).toEqual([
+      `タイプ ${ids[0]} のベストパートナーが未定義か未知のタイプ`,
+      'ベストパートナーに未知のタイプ: x',
+    ]);
+  });
 });

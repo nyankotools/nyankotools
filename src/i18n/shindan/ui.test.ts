@@ -20,6 +20,12 @@ const EXPECTED_PLACEHOLDERS: Partial<
   typeIs: ['type'],
   sharedTypeIs: ['type'],
   rarityRate: ['rate'],
+  compatRarityPair: ['self', 'other'],
+  compatShareText: ['percent', 'relation'],
+  resumeLead: ['n', 'total'],
+  historyShowLabel: ['date', 'type'],
+  historyDeleteLabel: ['date', 'type'],
+  historyResultFor: ['date'],
 };
 
 describe('診断の共通文言（shindanUiJa）', () => {

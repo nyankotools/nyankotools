@@ -3,6 +3,7 @@ import { shindanUiJa } from '../../i18n/shindan/ui';
 import { parseShareHash } from './codec';
 import { diagnose } from './compose';
 import {
+  appendHashtags,
   buildShareText,
   buildShareUrl,
   cardFileName,
@@ -35,6 +36,33 @@ describe('buildShareUrl', () => {
     const url = buildShareUrl('https://nyankotools.com', 'neko', r.code);
     expect(url).toBe(`https://nyankotools.com/shindan/neko/#r=${r.code}`);
     expect(parseShareHash(new URL(url).hash)).toEqual({ self: r.code });
+  });
+
+  it('相性URLは #r=<自分>&vs=<相手> の形になり、両方読み戻せる', () => {
+    const r = diagnose(testTheme, Array(12).fill(1), 5)!;
+    const other = diagnose(testTheme, Array(12).fill(2), 7)!;
+    const url = buildShareUrl(
+      'https://nyankotools.com',
+      'neko',
+      r.code,
+      other.code,
+    );
+    expect(url).toBe(
+      `https://nyankotools.com/shindan/neko/#r=${r.code}&vs=${other.code}`,
+    );
+    expect(parseShareHash(new URL(url).hash)).toEqual({
+      self: r.code,
+      vs: other.code,
+    });
+  });
+});
+
+describe('appendHashtags', () => {
+  it('タグが無ければ本文のまま、あれば次の行に # を付けて並べる', () => {
+    expect(appendHashtags('本文', [])).toBe('本文');
+    expect(appendHashtags('本文', ['a', 'にゃんこ診断'])).toBe(
+      '本文\n#a #にゃんこ診断',
+    );
   });
 });
 

@@ -3,6 +3,7 @@ import {
   buildShareHash,
   decodePayload,
   encodePayload,
+  extractShareCode,
   formatShareCode,
   parseShareCode,
   parseShareHash,
@@ -190,5 +191,40 @@ describe('共有ハッシュのエンコード違い', () => {
     expect(withNewline.self).toBe(`${code}\n`);
     expect(parseShareCode(withNewline.self)).toBeNull();
     expect(parseShareCode(parseShareHash(`#r=${code}%20`)!.self)).toBeNull();
+  });
+});
+
+describe('extractShareCode', () => {
+  const code = '1.1.AbC-_9';
+
+  it('共有URL・ハッシュ・共有コードそのものから取り出す', () => {
+    for (const text of [
+      `https://nyankotools.com/shindan/neko/#r=${code}`,
+      `  https://nyankotools.com/shindan/neko/#r=${code}\n`,
+      `#r=${code}`,
+      code,
+    ]) {
+      expect(extractShareCode(text), text).toBe(code);
+    }
+  });
+
+  it('相性URLは持ち主（r）のコードを返す', () => {
+    expect(
+      extractShareCode(
+        `https://nyankotools.com/shindan/neko/#r=${code}&vs=1.1.AAAAAA`,
+      ),
+    ).toBe(code);
+  });
+
+  it('形式が違えば null', () => {
+    for (const text of [
+      '',
+      'https://nyankotools.com/shindan/neko/',
+      'https://nyankotools.com/shindan/neko/#vs=1.1.AAAAAA',
+      '#r=garbage',
+      '1.1.AbC-_9 extra',
+    ]) {
+      expect(extractShareCode(text), text).toBeNull();
+    }
   });
 });

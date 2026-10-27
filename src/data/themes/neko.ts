@@ -69,6 +69,24 @@ const types: ResultType[] = TYPE_TABLE.map(([id, ...poles]) => ({
   poles: Object.fromEntries(NEKO_AXES.map((axis, i) => [axis, poles[i]])),
 }));
 
+/**
+ * ベストパートナー（16.9）: 社交性・甘え（人との距離感）は同じで、活動性・好奇心（ペース）が反対のタイプ。
+ * 距離感が合うので心地よく、ペースの違いで互いの世界を広げられる組み合わせ。対応は対称になる。
+ */
+const flip = (pole: Pole): Pole => (pole === '+' ? '-' : '+');
+const partners: Record<string, string> = Object.fromEntries(
+  TYPE_TABLE.map(([id, energy, social, curious, affection]) => {
+    const partner = TYPE_TABLE.find(
+      ([, e, s, c, a]) =>
+        e === flip(energy) &&
+        s === social &&
+        c === flip(curious) &&
+        a === affection,
+    )!;
+    return [id, partner[0]];
+  }),
+);
+
 const POLE_KEYS: { axis: NekoAxis; pole: Pole; key: string }[] =
   NEKO_AXES.flatMap((axis) =>
     (['+', '-'] as const).map((pole) => ({
@@ -141,6 +159,7 @@ export const nekoTheme: ThemeSpec = {
       [82, 93],
       [90, 99],
     ],
+    partners,
   },
 };
 

@@ -98,3 +98,15 @@ export function parseShareHash(
   const vs = params.get('vs');
   return vs ? { self, vs } : { self };
 }
+
+/**
+ * 貼り付けられた文字列（共有URL・`#r=...`・共有コードそのもの）から共有コードを取り出す。
+ * 相性用URL（`&vs=`付き）の場合は、そのURLの持ち主（r）のコードを返す。形式が違えば null。
+ */
+export function extractShareCode(text: string): string | null {
+  const trimmed = text.trim();
+  const hashIndex = trimmed.indexOf('#');
+  const code =
+    hashIndex >= 0 ? parseShareHash(trimmed.slice(hashIndex))?.self : trimmed;
+  return code && parseShareCode(code) ? code : null;
+}

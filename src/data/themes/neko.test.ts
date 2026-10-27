@@ -33,6 +33,11 @@ const allPartTexts = Object.values(nekoTextsJa.parts).flatMap((slot) =>
   Object.values(slot),
 );
 
+const compatTexts = [
+  ...nekoTextsJa.compat.relations,
+  nekoTextsJa.compat.twins,
+].flatMap((r) => [r.name, ...r.comments]);
+
 describe('猫タイプ診断のテーマ定義', () => {
   it('整合性検査に通る', () => {
     expect(validateTheme(nekoTheme)).toEqual([]);
@@ -101,6 +106,7 @@ describe('猫タイプ診断のテーマ定義', () => {
       ...allPartTexts,
       ...Object.values(nekoTextsJa.types).map((t) => t.description),
       ...Object.values(shindanUiJa.rarityLabels),
+      ...compatTexts,
     ];
     for (const text of texts) {
       for (const word of FORBIDDEN) {
@@ -117,6 +123,34 @@ describe('猫タイプ診断のテーマ定義', () => {
     ];
     for (const text of texts) {
       expect(text, text).toMatch(/(です|ます|ません)。$/);
+    }
+  });
+
+  it('相性の関係タイプは一致軸数（0〜4）の5つで、どれにもコメントがある', () => {
+    const { relations, twins, partnerNote } = nekoTextsJa.compat;
+    expect(relations).toHaveLength(nekoTheme.scoring.axes.length + 1);
+    for (const r of [...relations, twins]) {
+      expect(r.name.trim(), r.name).not.toBe('');
+      expect(r.comments.length, r.name).toBeGreaterThan(0);
+      for (const c of r.comments) expect(c, c).toMatch(/(です|ます|ません)。$/);
+    }
+    expect(partnerNote.trim()).not.toBe('');
+  });
+
+  it('ベストパートナーは対称で、距離感（社交性・甘え）が同じ・ペース（活動性・好奇心）が反対', () => {
+    const partners = nekoTheme.compat.partners!;
+    const poles = (id: string) =>
+      nekoTheme.scoring.types.find((t) => t.id === id)!.poles;
+    expect(Object.keys(partners).sort()).toEqual([...NEKO_TYPE_IDS].sort());
+    for (const id of NEKO_TYPE_IDS) {
+      const partner = partners[id];
+      expect(partners[partner], id).toBe(id);
+      const a = poles(id);
+      const b = poles(partner);
+      expect(a.social).toBe(b.social);
+      expect(a.affection).toBe(b.affection);
+      expect(a.energy).not.toBe(b.energy);
+      expect(a.curious).not.toBe(b.curious);
     }
   });
 

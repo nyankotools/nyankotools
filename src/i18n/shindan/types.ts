@@ -23,6 +23,15 @@ export type ShindanThemeTexts = {
   >;
   /** スロットID → 部品ID → 文言 */
   parts: Record<string, Record<string, string>>;
+  /** 相性（16.9）。文言は全て肯定的にする（P2） */
+  compat: {
+    /** 極が一致した軸の数（0〜軸数）ごとの関係タイプ。コメントは2人の結果で1つ選ぶ */
+    relations: { name: string; comments: string[] }[];
+    /** 回答が完全一致した相手（100%） */
+    twins: { name: string; comments: string[] };
+    /** ベストパートナー猫の説明 */
+    partnerNote: string;
+  };
   /** 静的テキスト「診断の仕組み」 */
   howItWorks: string[];
   /** 投稿文に付けるハッシュタグ（# なし） */

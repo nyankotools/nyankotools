@@ -220,5 +220,18 @@ export function validateTheme(theme: ThemeSpec): string[] {
       errors.push(`相性の bands [${min}, ${max}] は 0 < min ≤ max ≤ 99`);
     }
   }
+  const partners = theme.compat.partners;
+  if (partners) {
+    const typeIds = new Set(theme.scoring.types.map((t) => t.id));
+    for (const id of typeIds) {
+      if (!typeIds.has(partners[id])) {
+        errors.push(`タイプ ${id} のベストパートナーが未定義か未知のタイプ`);
+      }
+    }
+    for (const id of Object.keys(partners)) {
+      if (!typeIds.has(id))
+        errors.push(`ベストパートナーに未知のタイプ: ${id}`);
+    }
+  }
   return errors;
 }

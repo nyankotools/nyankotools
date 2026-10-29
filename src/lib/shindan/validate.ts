@@ -220,6 +220,15 @@ export function validateTheme(theme: ThemeSpec): string[] {
       errors.push(`相性の bands [${min}, ${max}] は 0 < min ≤ max ≤ 99`);
     }
   }
+  // 一致数が多いほど相性%が高くなるよう、範囲は重ならずに昇順で並べる
+  theme.compat.bands.forEach(([min], i) => {
+    const prevMax = theme.compat.bands[i - 1]?.[1];
+    if (prevMax !== undefined && min <= prevMax) {
+      errors.push(
+        `相性の bands ${i} 番目の min ${min} は前の max ${prevMax} より大きくする`,
+      );
+    }
+  });
   const partners = theme.compat.partners;
   if (partners) {
     const typeIds = new Set(theme.scoring.types.map((t) => t.id));

@@ -361,6 +361,20 @@ describe('validateTheme', () => {
     }
   });
 
+  it('相性の bands の重なり・逆順を検出する（一致数が多いほど高い%にする）', () => {
+    const [b0, b1, ...rest] = testTheme.compat.bands;
+    for (const bands of [
+      [b0, [b0[1], b1[1]], ...rest],
+      [b1, b0, ...rest],
+    ] as [number, number][][]) {
+      const errors = validateTheme({ ...testTheme, compat: { bands } });
+      expect(
+        errors.some((e) => e.startsWith('相性の bands 1 番目の min')),
+      ).toBe(true);
+    }
+    expect(validateTheme(testTheme)).toEqual([]);
+  });
+
   it('ベストパートナーは全タイプに定義され、実在のタイプを指す', () => {
     const ids = testTheme.scoring.types.map((t) => t.id);
     const partners = Object.fromEntries(ids.map((id) => [id, id]));

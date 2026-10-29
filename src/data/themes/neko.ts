@@ -153,11 +153,11 @@ export const nekoTheme: ThemeSpec = {
   slots,
   compat: {
     bands: [
-      [65, 74],
-      [70, 79],
-      [75, 86],
-      [82, 93],
-      [90, 99],
+      [65, 71],
+      [72, 78],
+      [79, 85],
+      [86, 92],
+      [93, 99],
     ],
     partners,
   },

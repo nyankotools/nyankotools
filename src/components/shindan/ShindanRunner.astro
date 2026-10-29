@@ -750,8 +750,8 @@ const primaryButton =
     ui: ShindanUi;
   };
 
-  /** 「分析中…」の表示時間（設計書9章: 1.5〜2秒） */
-  const ANALYZING_MS = 1500;
+  /** 「分析中…」の表示時間（設計書9章。計算は一瞬なので演出としての待ち時間） */
+  const ANALYZING_MS = 1000;
   /** 質問を切り替えた直後は選択肢を押せなくする（素早い2回タップで次の質問まで答えてしまうのを防ぐ） */
   const CHOICE_GUARD_MS = 250;
 
